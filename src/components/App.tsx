@@ -78,19 +78,19 @@ const Navbar: React.FC = () => {
     <nav className={`w-full py-6 mb-10 border-b border-gray-100 bg-white/80 backdrop-blur-sm ${isHome ? 'sticky top-0 z-50' : ''}`}>
       <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
         {/* Brand */}
-        <div className="flex items-center gap-3">
+        <Link to="/home" className="flex items-center gap-3">
            <div className="w-12 h-12 flex-shrink-0 text-black">
              <Logo />
            </div>
            <div className="flex flex-col">
-             <Link to="/home" className="text-xl font-bold tracking-tight leading-none hover:opacity-70 transition-opacity">
+             <span className="text-xl font-bold tracking-tight leading-none">
                infraphysics
-             </Link>
+             </span>
              <span className="text-[10px] text-gray-500 font-mono tracking-wide mt-1">
                A lossy compression of artifacts
              </span>
            </div>
-        </div>
+        </Link>
         
         {/* Links Container */}
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-medium">
@@ -269,6 +269,7 @@ const SectionView: React.FC<SectionProps> = ({ category, colorClass }) => {
 // 5. Field Notes View (formerly Wetware)
 const FieldNotesView: React.FC = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
 
   // Date Range Slider State
@@ -288,10 +289,17 @@ const FieldNotesView: React.FC = () => {
       .filter(p => (p.displayTitle || p.title).toLowerCase().includes(query.toLowerCase()) || p.content.toLowerCase().includes(query.toLowerCase()));
   }, [query, dateRange, allFieldNotes]);
 
+  // Auto-select first note if none selected
+  useEffect(() => {
+    if (!id && filteredNotes.length > 0) {
+      navigate(`/fieldnotes/${filteredNotes[0].id}`, { replace: true });
+    }
+  }, [id, filteredNotes, navigate]);
+
   // Active Post
   const activePost = useMemo(() => {
     if (id) return filteredNotes.find(p => p.id === id);
-    return null;
+    return filteredNotes[0] || null;
   }, [id, filteredNotes]);
 
   const formatDateYYMMDD = (dateStr: string) => {
@@ -299,16 +307,18 @@ const FieldNotesView: React.FC = () => {
   };
 
   // Slider Handlers
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.target.value);
-    setDateRange([minTime, val]);
+    setDateRange([Math.min(val, dateRange[1]), dateRange[1]]);
   };
 
-  // Conditional Layout: Split vs Full
-  const isSplitView = !!id;
+  const handleEndChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value);
+    setDateRange([dateRange[0], Math.max(val, dateRange[0])]);
+  };
 
   return (
-    <div className="animate-fade-in flex flex-col h-[calc(100vh-200px)]">
+    <div className="flex flex-col h-[calc(100vh-200px)]">
        {/* Header & Filter - Fixed at top */}
        <header className="mb-6 pb-4 border-b-4 border-black flex-shrink-0">
         <h1 className="text-4xl md:text-5xl font-bold tracking-tighter lowercase text-black mb-6">
@@ -329,7 +339,7 @@ const FieldNotesView: React.FC = () => {
           {/* Date Range Slider */}
           <div className="w-full md:w-1/3 flex flex-col gap-2">
             <div className="flex justify-between text-[10px] font-mono text-gray-400 uppercase">
-               <span>{new Date(minTime).toLocaleDateString()}</span>
+               <span>{new Date(dateRange[0]).toLocaleDateString()}</span>
                <span>{new Date(dateRange[1]).toLocaleDateString()}</span>
             </div>
             <div className="relative h-4 flex items-center">
@@ -338,28 +348,30 @@ const FieldNotesView: React.FC = () => {
                  type="range"
                  min={minTime} max={maxTime}
                  value={dateRange[0]}
-                 readOnly
-                 className="absolute w-full h-full opacity-0 pointer-events-none z-10"
+                 onChange={handleStartChange}
+                 className="dual-range-input absolute w-full h-full opacity-0 cursor-pointer"
+                 style={{ zIndex: dateRange[0] > (minTime + maxTime) / 2 ? 20 : 10 }}
                />
                <input
                  type="range"
                  min={minTime} max={maxTime}
                  value={dateRange[1]}
-                 onChange={handleSliderChange}
-                 className="absolute w-full h-full opacity-0 cursor-pointer z-20"
+                 onChange={handleEndChange}
+                 className="dual-range-input absolute w-full h-full opacity-0 cursor-pointer"
+                 style={{ zIndex: dateRange[1] <= (minTime + maxTime) / 2 ? 20 : 10 }}
                />
                <div
-                 className="absolute w-3 h-3 bg-gray-300 rounded-full pointer-events-none"
-                 style={{ left: '0%', transform: 'translateX(-50%)' }}
+                 className="absolute w-3 h-3 bg-gray-400 rounded-full pointer-events-none border-2 border-white shadow-sm"
+                 style={{ left: `${((dateRange[0] - minTime) / (maxTime - minTime || 1)) * 100}%`, transform: 'translateX(-50%)' }}
                ></div>
                <div
-                 className="absolute w-3 h-3 bg-black rounded-full pointer-events-none"
+                 className="absolute w-3 h-3 bg-black rounded-full pointer-events-none border-2 border-white shadow-sm"
                  style={{ left: `${((dateRange[1] - minTime) / (maxTime - minTime || 1)) * 100}%`, transform: 'translateX(-50%)' }}
                ></div>
                <div
                   className="absolute h-0.5 bg-black"
                   style={{
-                    left: '0%',
+                    left: `${((dateRange[0] - minTime) / (maxTime - minTime || 1)) * 100}%`,
                     right: `${100 - ((dateRange[1] - minTime) / (maxTime - minTime || 1)) * 100}%`
                   }}
                ></div>
@@ -370,30 +382,26 @@ const FieldNotesView: React.FC = () => {
 
       {/* Main content area - gray box that fills remaining height */}
       <div className="flex-1 min-h-0 bg-gray-50 border border-gray-200 rounded-sm">
-        <div className={`h-full grid ${isSplitView ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1'}`}>
+        <div className="h-full grid grid-cols-1 md:grid-cols-3">
           {/* LEFT COLUMN: LIST - scrollable */}
-          <div className={`h-full overflow-y-auto p-4 ${isSplitView ? 'md:col-span-1 md:border-r border-gray-200' : 'md:col-span-1'}`}>
+          <div className="h-full overflow-y-auto p-4 md:col-span-1 md:border-r border-gray-200">
             <ul className="space-y-1">
               {filteredNotes.length > 0 ? filteredNotes.map(p => {
                 const isSelected = id === p.id;
-                const targetPath = isSelected ? '/fieldnotes' : `/fieldnotes/${p.id}`;
 
                 return (
                   <li key={p.id} className="w-full">
                     <Link
-                      to={targetPath}
+                      to={`/fieldnotes/${p.id}`}
                       className={`
-                        group flex justify-between items-center py-2 px-3 text-xs font-mono transition-all rounded-sm
+                        flex justify-between items-center py-2 px-3 text-xs font-mono transition-all rounded-sm
                         ${isSelected ? 'bg-black text-white' : 'hover:bg-gray-100 text-gray-600'}
                       `}
                     >
                       <span className={`${isSelected ? 'text-gray-300' : 'text-gray-400'} mr-4 tracking-tighter`}>{formatDateYYMMDD(p.date)}</span>
-                      <span className={`flex-grow ${!isSplitView ? 'text-left' : 'truncate'}`}>
+                      <span className="flex-grow truncate">
                         {p.displayTitle || p.title}
                       </span>
-                      {!isSplitView && (
-                        <span className="opacity-0 group-hover:opacity-100 text-gray-300">→</span>
-                      )}
                     </Link>
                   </li>
                 );
@@ -403,27 +411,25 @@ const FieldNotesView: React.FC = () => {
             </ul>
           </div>
 
-          {/* RIGHT COLUMN: CONTENT - scrollable */}
-          {isSplitView && (
-            <div className="h-full overflow-y-auto p-6 md:col-span-2 bg-white">
-              {activePost ? (
-                <div className="animate-fade-in">
-                   <header className="mb-6 pb-4 border-b border-gray-100 flex justify-between items-baseline font-mono text-xs text-gray-400">
-                      <span>id: {activePost.id}</span>
-                      <span>{activePost.date}</span>
-                   </header>
-                   <div
-                      className="font-sans text-xs md:text-sm leading-loose text-gray-800 font-light content-html"
-                      dangerouslySetInnerHTML={{ __html: activePost.content }}
-                   />
-                </div>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-gray-300 text-xs font-mono">
-                   <p>encrypted data.</p>
-                </div>
-              )}
-            </div>
-          )}
+          {/* RIGHT COLUMN: CONTENT - always visible */}
+          <div className="h-full overflow-y-auto p-6 md:col-span-2 bg-white">
+            {activePost ? (
+              <div>
+                 <header className="mb-6 pb-4 border-b border-gray-100 flex justify-between items-baseline font-mono text-xs text-gray-400">
+                    <span>id: {activePost.id}</span>
+                    <span>{activePost.date}</span>
+                 </header>
+                 <div
+                    className="font-sans text-xs md:text-sm leading-loose text-gray-800 font-light content-html"
+                    dangerouslySetInnerHTML={{ __html: activePost.content }}
+                 />
+              </div>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-gray-300 text-xs font-mono">
+                 <p>no field notes available.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -8,7 +8,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Custom renderer for images with positioning
+// Custom renderer for images with positioning (center/full only - left/right handled by preprocessor)
 const customRenderer = new Renderer();
 
 customRenderer.image = function({ href, title, text }) {
@@ -23,6 +23,14 @@ customRenderer.image = function({ href, title, text }) {
       const width = positionMatch[2];
 
       switch (position) {
+        case 'center':
+          className = 'img-center';
+          if (width) style = `width: ${width};`;
+          break;
+        case 'full':
+          className = 'img-full';
+          break;
+        // left/right are handled by preprocessSideImages, but keep fallback
         case 'right':
           className = 'img-float-right';
           if (width) style = `width: ${width};`;
@@ -30,13 +38,6 @@ customRenderer.image = function({ href, title, text }) {
         case 'left':
           className = 'img-float-left';
           if (width) style = `width: ${width};`;
-          break;
-        case 'center':
-          className = 'img-center';
-          if (width) style = `width: ${width};`;
-          break;
-        case 'full':
-          className = 'img-full';
           break;
       }
       finalTitle = null;
@@ -57,6 +58,49 @@ marked.setOptions({
   breaks: false,
 });
 
+// Preprocess markdown to handle side-by-side image layouts
+// Pattern: ![alt](src "left|right:width") followed by text lines until empty line
+function preprocessSideImages(markdown) {
+  const blocks = markdown.split(/\n\n+/);
+  const result = [];
+
+  for (const block of blocks) {
+    // Match image with left/right position at start of block
+    const match = block.match(/^!\[([^\]]*)\]\(([^\s)]+)(?:\s+"(left|right):?(\d+px)?")?\)([\s\S]*)/);
+
+    if (match && (match[3] === 'left' || match[3] === 'right')) {
+      const [, alt, src, position, width, restOfBlock] = match;
+      const widthStyle = width ? `width: ${width};` : '';
+
+      // Get text lines after the image (same block = no empty line between)
+      const textLines = restOfBlock.trim().split('\n').filter(l => l.trim());
+
+      if (textLines.length > 0) {
+        // Process each line through marked for inline formatting (bold, italic, links, etc.)
+        const paragraphs = textLines.map(line => {
+          const processed = marked.parseInline(line);
+          return `<p>${processed}</p>`;
+        }).join('\n');
+
+        // Create flexbox container with image and text side by side
+        result.push(`<div class="img-side-layout img-side-${position}">
+<img src="${src}" alt="${alt}" class="img-side-img" style="${widthStyle}">
+<div class="img-side-content">
+${paragraphs}
+</div>
+</div>`);
+      } else {
+        // No text after image, let marked handle it normally
+        result.push(block);
+      }
+    } else {
+      result.push(block);
+    }
+  }
+
+  return result.join('\n\n');
+}
+
 const PAGES_DIR = path.join(__dirname, '../src/data/pages');
 const OUTPUT_FILE = path.join(__dirname, '../src/data/posts.generated.json');
 const CATEGORIES_OUTPUT = path.join(__dirname, '../src/data/categories.generated.json');
@@ -64,7 +108,10 @@ const CATEGORIES_OUTPUT = path.join(__dirname, '../src/data/categories.generated
 function processMarkdownFile(filePath) {
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   const { data: frontmatter, content } = matter(fileContent);
-  const htmlContent = marked.parse(content);
+
+  // Preprocess for side-by-side images, then parse with marked
+  const preprocessed = preprocessSideImages(content);
+  const htmlContent = marked.parse(preprocessed);
 
   return {
     id: frontmatter.id,
