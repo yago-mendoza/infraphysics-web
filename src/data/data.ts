@@ -1,12 +1,13 @@
 import { Post } from '../types';
-import { logPosts } from './data-logs';
-import { projectPosts } from './data-projects';
-import { threadPosts } from './data-threads';
-import { bits2bricksPosts } from './data-bits2bricks';
+import postsData from './posts.generated.json';
+import categoriesData from './categories.generated.json';
 
-export const posts: Post[] = [
-  ...logPosts,
-  ...projectPosts,
-  ...threadPosts,
-  ...bits2bricksPosts
-];
+export interface CategoryConfig {
+  name: string;
+  displayName: string;
+  description: string;
+  color: string;
+}
+
+export const posts: Post[] = postsData as Post[];
+export const categoryConfigs: Record<string, CategoryConfig> = categoriesData;

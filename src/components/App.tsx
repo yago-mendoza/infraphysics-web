@@ -29,43 +29,6 @@ const calculateReadingTime = (content: string) => {
   return Math.ceil(words / wordsPerMinute);
 };
 
-const parseContent = (content: string) => {
-  const lines = content.split('\n');
-  return lines.map((line, index) => {
-    // H1
-    const h1Match = line.match(/^#\s+(.*)/);
-    if (h1Match) return <h1 key={index} className="text-xl md:text-2xl font-bold mt-8 mb-4 first:mt-0 tracking-tight">{h1Match[1]}</h1>;
-
-    // H2
-    const h2Match = line.match(/^##\s+(.*)/);
-    if (h2Match) return <h2 key={index} className="text-lg font-semibold mt-6 mb-3">{h2Match[1]}</h2>;
-    
-    // Image: ![alt](url)
-    const imgMatch = line.match(/!\[(.*?)\]\((.*?)\)/);
-    if (imgMatch) {
-      const alt = imgMatch[1];
-      const src = imgMatch[2];
-      return (
-        <figure key={index} className="my-6">
-           <img src={src} alt={alt} className="w-full max-h-[450px] object-contain bg-gray-50 border border-gray-100 rounded-sm" />
-           {alt && <figcaption className="text-xs text-gray-500 mt-2 text-center font-mono">fig: {alt}</figcaption>}
-        </figure>
-      );
-    }
-    
-    // Empty line
-    if (!line.trim()) return <div key={index} className="h-3"></div>;
-
-    // Lists
-    if (line.trim().startsWith('- ')) {
-       return <li key={index} className="ml-4 list-disc text-sm md:text-base text-gray-800 leading-relaxed pl-1">{line.substring(2)}</li>
-    }
-
-    // Paragraph
-    return <p key={index} className="mb-2 text-justify leading-relaxed text-sm md:text-base text-gray-700">{line}</p>;
-  });
-};
-
 // Component to Highlight Text
 const Highlight: React.FC<{ text: string; query: string; className?: string }> = ({ text, query, className }) => {
   if (!query) return <span className={className}>{text}</span>;
@@ -463,9 +426,10 @@ const FieldNotesView: React.FC = () => {
                     <span>{activePost.date}</span>
                  </header>
                  {/* Reduced font size for content */}
-                 <div className="font-sans text-xs md:text-sm leading-loose text-gray-800 font-light">
-                    {parseContent(activePost.content)}
-                 </div>
+                 <div
+                    className="font-sans text-xs md:text-sm leading-loose text-gray-800 font-light content-html"
+                    dangerouslySetInnerHTML={{ __html: activePost.content }}
+                 />
               </div>
             ) : (
               // Fallback just in case ID is invalid but URL has ID
@@ -522,9 +486,10 @@ const PostView: React.FC = () => {
         </div>
       </header>
       
-      <div className="max-w-none text-base leading-loose text-gray-800 font-light">
-        {parseContent(post.content)}
-      </div>
+      <div
+        className="max-w-none text-base leading-loose text-gray-800 font-light content-html"
+        dangerouslySetInnerHTML={{ __html: post.content }}
+      />
 
       {/* RECOMMENDED SECTION */}
       <div className="mt-20 pt-10 border-t border-black">

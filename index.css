@@ -1,0 +1,175 @@
+/* Image positioning classes for markdown content */
+
+.img-float-right {
+  float: right;
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+  max-width: 100%;
+}
+
+.img-float-left {
+  float: left;
+  margin-right: 1.5rem;
+  margin-bottom: 1rem;
+  max-width: 100%;
+}
+
+.img-center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  max-width: 100%;
+}
+
+.img-full {
+  width: 100%;
+  display: block;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Markdown content styling */
+.content-html h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  letter-spacing: -0.025em;
+}
+
+.content-html h1:first-child {
+  margin-top: 0;
+}
+
+.content-html h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.content-html p {
+  margin-bottom: 0.5rem;
+  text-align: justify;
+  line-height: 1.625;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.content-html ul,
+.content-html ol {
+  margin-left: 1rem;
+  margin-bottom: 1rem;
+}
+
+.content-html li {
+  margin-left: 1rem;
+  list-style-type: disc;
+  font-size: 0.875rem;
+  color: #1f2937;
+  line-height: 1.625;
+  padding-left: 0.25rem;
+}
+
+.content-html img {
+  border-radius: 0.125rem;
+  border: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.content-html img:not([class]) {
+  width: 100%;
+  max-height: 450px;
+  object-fit: contain;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.content-html blockquote {
+  border-left: 3px solid #e5e7eb;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.content-html code {
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875em;
+}
+
+.content-html pre {
+  background-color: #1f2937;
+  color: #f9fafb;
+  padding: 1rem;
+  border-radius: 0.25rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.content-html pre code {
+  background-color: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+.content-html a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.content-html a:hover {
+  color: #1d4ed8;
+}
+
+.content-html table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.content-html th,
+.content-html td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.content-html th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+
+/* Clear floats after content */
+.content-html::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .img-float-right,
+  .img-float-left {
+    float: none;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+  }
+}
+
+@media (min-width: 768px) {
+  .content-html h1 {
+    font-size: 1.5rem;
+  }
+
+  .content-html p,
+  .content-html li {
+    font-size: 1rem;
+  }
+}
