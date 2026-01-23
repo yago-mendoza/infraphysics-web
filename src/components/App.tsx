@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate, useParams, Navigate } from 'react-router-dom';
 import { posts } from '../data/data';
 import { Post, Category } from '../types';
 
@@ -60,8 +60,8 @@ const Navbar: React.FC = () => {
     navigate(`/${randomPost.category}/${randomPost.id}`);
   };
 
-  // Logic: Sticky ONLY on home ('/').
-  const isHome = location.pathname === '/';
+  // Logic: Sticky ONLY on home ('/home').
+  const isHome = location.pathname === '/home';
   
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
@@ -83,7 +83,7 @@ const Navbar: React.FC = () => {
              <Logo />
            </div>
            <div className="flex flex-col">
-             <Link to="/" className="text-xl font-bold tracking-tight leading-none hover:opacity-70 transition-opacity">
+             <Link to="/home" className="text-xl font-bold tracking-tight leading-none hover:opacity-70 transition-opacity">
                infraphysics
              </Link>
              <span className="text-[10px] text-gray-500 font-mono tracking-wide mt-1">
@@ -270,7 +270,7 @@ const SectionView: React.FC<SectionProps> = ({ category, colorClass }) => {
 const FieldNotesView: React.FC = () => {
   const { id } = useParams();
   const [query, setQuery] = useState('');
-  
+
   // Date Range Slider State
   const allFieldNotes = posts.filter(p => p.category === 'fieldnotes');
   const timestamps = allFieldNotes.map(p => new Date(p.date).getTime()).sort((a,b) => a - b);
@@ -291,7 +291,7 @@ const FieldNotesView: React.FC = () => {
   // Active Post
   const activePost = useMemo(() => {
     if (id) return filteredNotes.find(p => p.id === id);
-    return null; 
+    return null;
   }, [id, filteredNotes]);
 
   const formatDateYYMMDD = (dateStr: string) => {
@@ -301,7 +301,6 @@ const FieldNotesView: React.FC = () => {
   // Slider Handlers
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.target.value);
-    // Only update the max value, min is fixed
     setDateRange([minTime, val]);
   };
 
@@ -309,19 +308,19 @@ const FieldNotesView: React.FC = () => {
   const isSplitView = !!id;
 
   return (
-    <div className="animate-fade-in">
-       {/* Header & Filter - Always Visible */}
-       <header className="mb-8 pb-4 border-b-4 border-black">
+    <div className="animate-fade-in flex flex-col h-[calc(100vh-200px)]">
+       {/* Header & Filter - Fixed at top */}
+       <header className="mb-6 pb-4 border-b-4 border-black flex-shrink-0">
         <h1 className="text-4xl md:text-5xl font-bold tracking-tighter lowercase text-black mb-6">
           field notes
         </h1>
-        
+
         {/* Filters Container */}
         <div className="flex flex-col md:flex-row gap-6 items-end justify-between">
           <div className="w-full md:w-1/3">
-             <input 
-                type="text" 
-                placeholder="filter logs ..." 
+             <input
+                type="text"
+                placeholder="filter logs ..."
                 onChange={(e) => setQuery(e.target.value)}
                 className="w-full text-xs font-mono border border-gray-200 p-2 rounded-sm focus:outline-none focus:border-black placeholder-gray-400 bg-gray-50"
              />
@@ -335,39 +334,31 @@ const FieldNotesView: React.FC = () => {
             </div>
             <div className="relative h-4 flex items-center">
                <div className="absolute w-full h-0.5 bg-gray-200 rounded-full"></div>
-               {/* Fixed Left Input (Min) - ReadOnly */}
-               <input 
-                 type="range" 
-                 min={minTime} max={maxTime} 
-                 value={dateRange[0]} 
+               <input
+                 type="range"
+                 min={minTime} max={maxTime}
+                 value={dateRange[0]}
                  readOnly
                  className="absolute w-full h-full opacity-0 pointer-events-none z-10"
                />
-               {/* Active Right Input (Max) */}
-               <input 
-                 type="range" 
-                 min={minTime} max={maxTime} 
-                 value={dateRange[1]} 
+               <input
+                 type="range"
+                 min={minTime} max={maxTime}
+                 value={dateRange[1]}
                  onChange={handleSliderChange}
                  className="absolute w-full h-full opacity-0 cursor-pointer z-20"
                />
-               
-               {/* Visual Thumbs */}
-               {/* Left Thumb - Gray to indicate fixed */}
-               <div 
+               <div
                  className="absolute w-3 h-3 bg-gray-300 rounded-full pointer-events-none"
                  style={{ left: '0%', transform: 'translateX(-50%)' }}
                ></div>
-               {/* Right Thumb - Black for interaction */}
-               <div 
+               <div
                  className="absolute w-3 h-3 bg-black rounded-full pointer-events-none"
                  style={{ left: `${((dateRange[1] - minTime) / (maxTime - minTime || 1)) * 100}%`, transform: 'translateX(-50%)' }}
                ></div>
-               
-               {/* Highlight Range */}
-               <div 
+               <div
                   className="absolute h-0.5 bg-black"
-                  style={{ 
+                  style={{
                     left: '0%',
                     right: `${100 - ((dateRange[1] - minTime) / (maxTime - minTime || 1)) * 100}%`
                   }}
@@ -377,68 +368,63 @@ const FieldNotesView: React.FC = () => {
         </div>
       </header>
 
-      <div className={`grid gap-10 transition-all duration-500 ${isSplitView ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1'}`}>
-        {/* LEFT COLUMN: LIST */}
-        <div className={`${isSplitView ? 'md:col-span-1 border-r border-gray-100 pr-6' : 'md:col-span-1'} transition-all`}>
-          <ul className="space-y-2">
-            {filteredNotes.length > 0 ? filteredNotes.map(p => {
-              const isSelected = id === p.id;
-              // Toggle logic: if already selected, go back to main list (deselect), else go to the note
-              const targetPath = isSelected ? '/fieldnotes' : `/fieldnotes/${p.id}`;
+      {/* Main content area - gray box that fills remaining height */}
+      <div className="flex-1 min-h-0 bg-gray-50 border border-gray-200 rounded-sm">
+        <div className={`h-full grid ${isSplitView ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1'}`}>
+          {/* LEFT COLUMN: LIST - scrollable */}
+          <div className={`h-full overflow-y-auto p-4 ${isSplitView ? 'md:col-span-1 md:border-r border-gray-200' : 'md:col-span-1'}`}>
+            <ul className="space-y-1">
+              {filteredNotes.length > 0 ? filteredNotes.map(p => {
+                const isSelected = id === p.id;
+                const targetPath = isSelected ? '/fieldnotes' : `/fieldnotes/${p.id}`;
 
-              return (
-                <li key={p.id} className="w-full">
-                  <Link 
-                    to={targetPath}
-                    className={`
-                      group flex justify-between items-center py-2 px-3 text-xs font-mono transition-all rounded-sm border-b border-gray-50
-                      ${isSelected ? 'bg-black text-white' : 'hover:bg-gray-50 text-gray-600 hover:pl-4'}
-                      ${!isSplitView ? 'hover:bg-gray-50' : ''}
-                    `}
-                  >
-                    <span className={`${isSelected ? 'text-gray-300' : 'text-gray-400'} mr-4 tracking-tighter`}>{formatDateYYMMDD(p.date)}</span>
-                    
-                    {/* Title fills remaining space in expanded view */}
-                    <span className={`flex-grow ${!isSplitView ? 'text-left' : 'truncate'}`}>
-                      {p.displayTitle || p.title}
-                    </span>
-                    
-                    {/* Decorative arrow only in expanded list view */}
-                    {!isSplitView && (
-                      <span className="opacity-0 group-hover:opacity-100 text-gray-300">→</span>
-                    )}
-                  </Link>
-                </li>
-              );
-            }) : (
-               <li className="text-xs font-mono text-gray-300 py-4 italic">no traces found in this timeline.</li>
-            )}
-          </ul>
-        </div>
-
-        {/* RIGHT COLUMN: CONTENT (Only Visible if Selected) */}
-        {isSplitView && (
-          <div className="md:col-span-2 min-h-[50vh]">
-            {activePost ? (
-              <div className="animate-fade-in">
-                 <header className="mb-8 pb-4 border-b border-gray-100 flex justify-between items-baseline font-mono text-xs text-gray-400">
-                    <span>id: {activePost.id}</span>
-                    <span>{activePost.date}</span>
-                 </header>
-                 {/* Reduced font size for content */}
-                 <div
-                    className="font-sans text-xs md:text-sm leading-loose text-gray-800 font-light content-html"
-                    dangerouslySetInnerHTML={{ __html: activePost.content }}
-                 />
-              </div>
-            ) : (
-              // Fallback just in case ID is invalid but URL has ID
-              <div className="h-full flex flex-col items-center justify-center text-gray-300 text-xs font-mono">
-                 <p>encrypted data.</p>
-              </div>
-            )}
+                return (
+                  <li key={p.id} className="w-full">
+                    <Link
+                      to={targetPath}
+                      className={`
+                        group flex justify-between items-center py-2 px-3 text-xs font-mono transition-all rounded-sm
+                        ${isSelected ? 'bg-black text-white' : 'hover:bg-gray-100 text-gray-600'}
+                      `}
+                    >
+                      <span className={`${isSelected ? 'text-gray-300' : 'text-gray-400'} mr-4 tracking-tighter`}>{formatDateYYMMDD(p.date)}</span>
+                      <span className={`flex-grow ${!isSplitView ? 'text-left' : 'truncate'}`}>
+                        {p.displayTitle || p.title}
+                      </span>
+                      {!isSplitView && (
+                        <span className="opacity-0 group-hover:opacity-100 text-gray-300">→</span>
+                      )}
+                    </Link>
+                  </li>
+                );
+              }) : (
+                 <li className="text-xs font-mono text-gray-300 py-4 italic">no traces found in this timeline.</li>
+              )}
+            </ul>
           </div>
-        )}
+
+          {/* RIGHT COLUMN: CONTENT - scrollable */}
+          {isSplitView && (
+            <div className="h-full overflow-y-auto p-6 md:col-span-2 bg-white">
+              {activePost ? (
+                <div className="animate-fade-in">
+                   <header className="mb-6 pb-4 border-b border-gray-100 flex justify-between items-baseline font-mono text-xs text-gray-400">
+                      <span>id: {activePost.id}</span>
+                      <span>{activePost.date}</span>
+                   </header>
+                   <div
+                      className="font-sans text-xs md:text-sm leading-loose text-gray-800 font-light content-html"
+                      dangerouslySetInnerHTML={{ __html: activePost.content }}
+                   />
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-gray-300 text-xs font-mono">
+                   <p>encrypted data.</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -686,8 +672,9 @@ const App: React.FC = () => {
         {/* Adjusted bottom padding for mobile: pb-10 md:pb-20 */}
         <main className="flex-grow w-full max-w-4xl mx-auto px-6 pb-10 md:pb-20">
           <Routes>
-            <Route path="/" element={<HomeView />} />
-            
+            <Route path="/" element={<Navigate to="/home" replace />} />
+            <Route path="/home" element={<HomeView />} />
+
             <Route path="/projects" element={<SectionView category="projects" colorClass="text-emerald-600" />} />
             <Route path="/threads" element={<SectionView category="threads" colorClass="text-amber-600" />} />
             <Route path="/bits2bricks" element={<SectionView category="bits2bricks" colorClass="text-blue-600" />} />
