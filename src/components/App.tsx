@@ -669,7 +669,7 @@ const HomeView: React.FC = () => {
 const App: React.FC = () => {
   return (
     <BrowserRouter>
-      <div className="min-h-screen flex flex-col bg-white text-black font-sans selection:bg-black selection:text-white relative">
+      <div className="min-h-screen flex flex-col font-sans selection:bg-white selection:text-black relative">
         {/* Top Heavy Bar */}
         <div className="h-2 w-full bg-black"></div>
         

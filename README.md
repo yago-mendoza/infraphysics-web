@@ -1,47 +1,69 @@
-# infraphysics-web
+# infraphysics
 
-No hydration. No wrappers. No bloatware. Just text and images.
+A personal website. A place to store thoughts, articles, and logs. Nothing mystical about it.
 
-## Content
+![build](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)
 
-Custom static site generator. Write posts in `src/data/pages/**/*.md` with YAML frontmatter:
+### Boring Stack
 
-```markdown
----
-id: post-id
-title: post-id
-displayTitle: post title
-category: projects
-date: 2025-01-22
-thumbnail: https://...
-description: short description.
----
+* **Astro / Node.js**
+* **Markdown** (Resolved at build time, not interpreted)
+* **Cloudflare R2** (Image hosting)
 
-# content here
-```
+### File Layout
 
-At build time, `scripts/build-content.js` processes all `.md` files → generates JSON → Vite bundles it. No markdown libs in the browser bundle.
-
-Custom image positioning:
-```markdown
-![alt](url "right:300px")   # float right
-![alt](url "left:400px")    # float left
-![alt](url "center")        # centered
-![alt](url "full")          # full width
-```
-
-## Structure
-
-```
-src/data/
-  pages/**/*.md             # content source
-  pages/**/_category.yaml   # category metadata
-  data.ts                   # exports posts[] + categoryConfigs
+```text
+src/
+  data/
+    pages/        <-- The MD files (posts/articles)
+    categories/   <-- YAML configs (_category.yaml)
 scripts/
-  build-content.js          # prebuild: md → json
+  build-content.js <-- The "Minimalist Zola" engine
+
 ```
 
-## Infra
+Boring on purpose `¯\_(ツ)_/¯`
 
-Hosted on [Cloudflare Pages](https://pages.cloudflare.com/) via GitHub.
-Images are also loaded from R2 Cloudflare storage
+---
+
+### Infraphysics Engine
+
+I use Markdown for articles and posts. The `build-content.js` script is a minimalist build-time processor. It avoids client-side overhead by flattening everything into optimized JSON before the site even deploys.
+
+> **Markdown Image Hacks:**\
+> Use titles in MD to control layout: `![alt](url "position:width")`.
+> * `left` / `right`: floats the image.
+> * `center` / `full`: standard block positioning.
+> 
+> 
+> **Cheap trick:** successive text lines (no break) align to the side of the image. To "reset" and return to normal left-aligned text under the image, just leave a blank line.
+
+---
+
+### The Build Pipeline
+
+```javascript
+// build-content.js internals
+- Scans /pages for .md files
+- Parses Frontmatter (gray-matter)
+- Preprocesses side-by-side layouts:
+    - Finds ![alt](src "left|right")
+    - Aggregates following lines into a flexbox container
+    - Stops at the first empty line \n\n
+- Compiles Markdown to HTML (marked.js)
+- Maps YAML category configs
+- Spits out posts.generated.json
+
+```
+
+---
+
+### Workflow (notes to self)
+
+* **Creating a post:** not rocket science. Upload the `.md` and compile.
+* **Media:** do not bloat the repo. Images must be uploaded to **Cloudflare R2**.
+* **Deployment:** `npm run build`. This triggers the pipeline. If the JSON is stale, the site is stale.
+
+### Dev notes
+
+The `preprocessSideImages` function is the only "clever" part. It captures text lines following a positioned image and wraps them into `div.img-side-layout`. This keeps the CSS logic out of the writing flow while allowing for complex layouts.
