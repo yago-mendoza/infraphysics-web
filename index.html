@@ -3,13 +3,52 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>InfraPhysics</title>
+    <title>InfraPhysics — Software Systems & Hardware Design</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="A digital laboratory exploring software systems, hardware design, and the philosophy of building things. Projects, essays, and observations from the frontier of technology." />
+    <meta name="keywords" content="software engineering, systems design, FPGA, hardware, programming, technology, blog" />
+    <meta name="author" content="Yago" />
+
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="InfraPhysics — Software Systems & Hardware Design" />
+    <meta property="og:description" content="A digital laboratory exploring software systems, hardware design, and the philosophy of building things." />
+    <meta property="og:url" content="https://infraphysics.net" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="InfraPhysics" />
+    <meta name="twitter:description" content="Software entropy, hardware permanence, minimal logic." />
+
+    <!-- Theme Color for Mobile -->
+    <meta name="theme-color" content="#2D2D2D" />
+
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'brand-dark': '#2D2D2D',
+              'brand-blue': '#3B82F6',
+              'brand-emerald': '#10B981',
+              'brand-amber': '#F59E0B',
+            },
+            fontFamily: {
+              mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'SF Mono', 'Consolas', 'Liberation Mono', 'Menlo', 'monospace'],
+            },
+          },
+        },
+      }
+    </script>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
       :root {
         --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono',
                      Consolas, 'Liberation Mono', Menlo, monospace;
+        --color-blue-accent: #3B82F6;
+        --color-dark: #2D2D2D;
       }
       body {
         font-family: var(--font-mono);
@@ -19,25 +58,36 @@
         -moz-osx-font-smoothing: grayscale;
       }
 
-      /* Forzar herencia de fuente en todos los elementos (anula Tailwind) */
+      /* Force font inheritance (overrides Tailwind) */
       * { font-family: inherit; }
 
-      /* Clase utilitaria .font-mono (para uso explicito si es necesario) */
+      /* Utility class .font-mono */
       .font-mono {
         font-family: var(--font-mono);
       }
 
       /* ============================================================
-         UI - Scrollbar minimalista
+         UI - Minimal Scrollbar with Blue Accent
          ============================================================ */
       ::-webkit-scrollbar {
         width: 6px;
+        height: 6px;
       }
       ::-webkit-scrollbar-track {
         background: transparent;
       }
       ::-webkit-scrollbar-thumb {
-        background: #000;
+        background: #c4c4c4;
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #3B82F6;
+      }
+
+      /* Firefox scrollbar */
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: #c4c4c4 transparent;
       }
     </style>
   <script type="importmap">
