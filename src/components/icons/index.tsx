@@ -187,3 +187,23 @@ export const CloseIcon: React.FC = () => (
     <line x1="6" y1="6" x2="18" y2="18"></line>
   </svg>
 );
+
+export const GraphIcon: React.FC = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="6" cy="6" r="3"></circle>
+    <circle cx="18" cy="6" r="3"></circle>
+    <circle cx="6" cy="18" r="3"></circle>
+    <circle cx="18" cy="18" r="3"></circle>
+    <line x1="8.5" y1="7.5" x2="15.5" y2="16.5"></line>
+    <line x1="15.5" y1="7.5" x2="8.5" y2="16.5"></line>
+    <line x1="6" y1="9" x2="6" y2="15"></line>
+    <line x1="18" y1="9" x2="18" y2="15"></line>
+  </svg>
+);
+
+export const BacklinkIcon: React.FC = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="15 14 20 9 15 4"></polyline>
+    <path d="M4 20v-7a4 4 0 0 1 4-4h12"></path>
+  </svg>
+);
