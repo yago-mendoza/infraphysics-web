@@ -9,17 +9,58 @@ import {
   ThreadIcon,
   GradCapIcon,
   DiamondIcon,
+  MailIcon,
   GitHubIcon,
   LinkedInIcon,
-  TwitterIcon
+  TwitterIcon,
 } from '../icons';
 import { COLORS } from '../../constants/theme';
+import { SOCIAL_LINKS } from '../../config/navigation';
+
+const SOCIAL_ICONS: Record<string, React.ReactNode> = {
+  GitHub: <GitHubIcon />,
+  LinkedIn: <LinkedInIcon />,
+  'Twitter/X': <TwitterIcon />,
+};
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
   const { sidebar, category } = COLORS;
+
+  const navLink = (
+    to: string,
+    icon: React.ReactNode,
+    label: React.ReactNode,
+    accent: string,
+  ) => {
+    const active = isActive(to);
+    return (
+      <Link
+        to={to}
+        className={`flex flex-col items-center gap-1.5 py-3 rounded-sm transition-all ${
+          active ? 'font-medium' : 'opacity-80 hover:opacity-100'
+        }`}
+        style={{
+          color: active ? sidebar.textActive : sidebar.text,
+          backgroundColor: active ? `${accent}26` : 'transparent',
+        }}
+      >
+        <span style={{ color: active ? accent : sidebar.icon }}>{icon}</span>
+        <span className="text-[11px]">{label}</span>
+      </Link>
+    );
+  };
+
+  const sectionLabel = (text: string) => (
+    <div
+      className="text-[9px] uppercase tracking-[0.2em] text-center mt-4 mb-1 select-none"
+      style={{ color: sidebar.sectionLabel }}
+    >
+      {text}
+    </div>
+  );
 
   return (
     <aside
@@ -29,118 +70,54 @@ export const Sidebar: React.FC = () => {
       {/* Logo */}
       <Link
         to="/home"
-        className="flex justify-center mb-10 mt-6 group"
+        className="flex justify-center mb-6 mt-6 group"
       >
         <div className="w-10 h-10 transition-transform group-hover:scale-110">
           <Logo color={sidebar.text} />
         </div>
       </Link>
 
-      {/* Home */}
-      <Link
-        to="/home"
-        className={`flex flex-col items-center gap-1.5 py-3 mb-2 rounded-sm transition-all ${isActive("/home") ? 'font-medium' : 'opacity-80 hover:opacity-100'}`}
-        style={{
-          color: isActive("/home") ? sidebar.textActive : sidebar.text,
-          backgroundColor: isActive("/home") ? sidebar.activeBg : 'transparent'
-        }}
-      >
-        <span style={{ color: isActive("/home") ? sidebar.activeAccent : sidebar.icon }}><HomeIcon /></span>
-        <span className="text-[11px]">home</span>
-      </Link>
-
-      {/* Divider */}
-      <div className="w-8 h-px bg-gray-600 mx-auto my-3"></div>
-
-      {/* Categories */}
+      {/* ── LAB ── */}
+      {sectionLabel('lab')}
       <nav className="flex flex-col gap-1">
-        <Link
-          to="/projects"
-          className={`flex flex-col items-center gap-1.5 py-3 rounded-sm transition-all ${isActive("/projects") ? 'font-medium' : 'opacity-80 hover:opacity-100'}`}
-          style={{
-            color: isActive("/projects") ? sidebar.textActive : sidebar.text,
-            backgroundColor: isActive("/projects") ? sidebar.activeBg : 'transparent'
-          }}
-        >
-          <span style={{ color: isActive("/projects") ? category.projects.accent : sidebar.icon }}><GearIcon /></span>
-          <span className="text-[11px]">projects</span>
-        </Link>
+        {navLink('/projects', <GearIcon />, 'projects', category.projects.accent)}
+        {navLink('/threads', <ThreadIcon />, 'threads', category.threads.accent)}
+        {navLink('/bits2bricks', <GradCapIcon />, 'bits2bricks', category.bits2bricks.accent)}
+      </nav>
 
-        <Link
-          to="/threads"
-          className={`flex flex-col items-center gap-1.5 py-3 rounded-sm transition-all ${isActive("/threads") ? 'font-medium' : 'opacity-80 hover:opacity-100'}`}
-          style={{
-            color: isActive("/threads") ? sidebar.textActive : sidebar.text,
-            backgroundColor: isActive("/threads") ? sidebar.activeBg : 'transparent'
-          }}
-        >
-          <span style={{ color: isActive("/threads") ? category.threads.accent : sidebar.icon }}><ThreadIcon /></span>
-          <span className="text-[11px]">threads</span>
-        </Link>
+      {/* ── WIKI ── */}
+      {sectionLabel('wiki')}
+      <nav className="flex flex-col gap-1">
+        {navLink('/second-brain', <DiamondIcon />, <span>2<sup>nd</sup> Brain</span>, category.secondBrain.accent)}
+      </nav>
 
-        <Link
-          to="/bits2bricks"
-          className={`flex flex-col items-center gap-1.5 py-3 rounded-sm transition-all ${isActive("/bits2bricks") ? 'font-medium' : 'opacity-80 hover:opacity-100'}`}
-          style={{
-            color: isActive("/bits2bricks") ? sidebar.textActive : sidebar.text,
-            backgroundColor: isActive("/bits2bricks") ? sidebar.activeBg : 'transparent'
-          }}
-        >
-          <span style={{ color: isActive("/bits2bricks") ? category.bits2bricks.accent : sidebar.icon }}><GradCapIcon /></span>
-          <span className="text-[11px]">bits2bricks</span>
-        </Link>
+      {/* ── META ── */}
+      {sectionLabel('meta')}
+      <nav className="flex flex-col gap-1">
+        {navLink('/about', <HomeIcon />, 'about', sidebar.activeAccent)}
+        {navLink('/contact', <MailIcon />, 'contact', sidebar.activeAccent)}
       </nav>
 
       {/* Spacer */}
-      <div className="flex-grow"></div>
+      <div className="flex-1" />
 
-      {/* Second Brain - Bottom Section */}
-      <Link
-        to="/second-brain"
-        className={`flex flex-col items-center gap-1.5 py-3 rounded-sm transition-all ${
-          isActive("/second-brain") ? 'font-medium' : 'opacity-80 hover:opacity-100'
-        }`}
-        style={{
-          color: isActive("/second-brain") ? sidebar.textActive : sidebar.text,
-          backgroundColor: isActive("/second-brain") ? sidebar.activeBg : 'transparent'
-        }}
-      >
-        <span style={{ color: isActive("/second-brain") ? sidebar.activeAccent : sidebar.icon }}><DiamondIcon /></span>
-        <span className="text-[11px]">notes</span>
-      </Link>
-
-      {/* Divider */}
-      <div className="w-8 h-px bg-gray-600 mx-auto my-3"></div>
-
-      {/* Social Links */}
-      <div className="flex justify-center gap-2 mb-4">
-        <a
-          href="https://github.com/yago"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="p-2 text-gray-500 hover:text-white hover:bg-white/10 rounded-sm transition-all"
-          aria-label="GitHub"
-        >
-          <GitHubIcon />
-        </a>
-        <a
-          href="https://linkedin.com/in/yago"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="p-2 text-gray-500 hover:text-blue-400 hover:bg-blue-400/10 rounded-sm transition-all"
-          aria-label="LinkedIn"
-        >
-          <LinkedInIcon />
-        </a>
-        <a
-          href="https://x.com/yago"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="p-2 text-gray-500 hover:text-white hover:bg-white/10 rounded-sm transition-all"
-          aria-label="Twitter/X"
-        >
-          <TwitterIcon />
-        </a>
+      {/* Social Icons */}
+      <div className="flex justify-center gap-2 pb-2">
+        {SOCIAL_LINKS.map(link => (
+          <a
+            key={link.label}
+            href={link.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2 rounded-sm transition-all hover:opacity-100"
+            style={{ color: sidebar.icon, opacity: 0.6 }}
+            aria-label={link.label}
+            onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+            onMouseLeave={e => (e.currentTarget.style.opacity = '0.6')}
+          >
+            {SOCIAL_ICONS[link.label]}
+          </a>
+        ))}
       </div>
     </aside>
   );

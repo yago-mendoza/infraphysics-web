@@ -5,6 +5,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { posts } from '../data/data';
 import { formatDate, formatRelativeTime, calculateReadingTime } from '../lib';
 import { StatusBadge } from '../components/ui';
+import { WikiContent } from '../components/WikiContent';
 import {
   GitHubIcon,
   ExternalLinkIcon,
@@ -15,6 +16,9 @@ export const PostView: React.FC = () => {
   const { category, id } = useParams();
   const navigate = useNavigate();
   const post = posts.find(p => p.id === id && p.category === category);
+
+  // All fieldnotes for wiki-link resolution
+  const allFieldNotes = useMemo(() => posts.filter(p => p.category === 'fieldnotes'), []);
 
   // Get random recommended posts
   const recommendedPosts = useMemo(() => {
@@ -27,8 +31,8 @@ export const PostView: React.FC = () => {
   if (!post) return (
     <div className="py-20 text-center">
       <div className="text-6xl mb-4 text-gray-200">404</div>
-      <p className="font-mono text-gray-400">Entry not found in the archive</p>
-      <Link to="/home" className="inline-block mt-6 px-4 py-2 bg-gray-900 text-white text-sm font-mono hover:bg-gray-800 transition-colors">
+      <p className="text-gray-400">Entry not found in the archive</p>
+      <Link to="/home" className="inline-block mt-6 px-4 py-2 bg-gray-900 text-white text-sm hover:bg-gray-800 transition-colors">
         Return Home
       </Link>
     </div>
@@ -44,7 +48,7 @@ export const PostView: React.FC = () => {
   // Mock project metadata - in real app would come from post frontmatter
   const projectMeta = {
     status: 'completed' as const,
-    github: `https://github.com/yago/${post.id}`,
+    github: `https://github.com/yago-mendoza/${post.id}`,
     technologies: ['React', 'TypeScript', 'Vite'],
     duration: '3 months'
   };
@@ -52,7 +56,7 @@ export const PostView: React.FC = () => {
   return (
     <article className="animate-fade-in max-w-3xl">
       {/* Breadcrumb */}
-      <nav className="mb-6 text-xs font-mono text-gray-400 flex items-center gap-2">
+      <nav className="mb-6 text-xs text-gray-400 flex items-center gap-2">
         <Link to="/home" className="hover:text-gray-600 transition-colors">home</Link>
         <span>/</span>
         <Link to={`/${post.category}`} className={`hover:text-gray-600 transition-colors`}>{post.category}</Link>
@@ -66,7 +70,7 @@ export const PostView: React.FC = () => {
         <div className="flex flex-wrap items-center gap-3 mb-4">
           <Link
             to={`/${post.category}`}
-            className={`inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-mono uppercase tracking-wider ${accentBg} ${accentClass} ${accentBorder} border rounded-sm hover:opacity-80 transition-opacity`}
+            className={`inline-flex items-center gap-1.5 px-3 py-1 text-[10px] uppercase tracking-wider ${accentBg} ${accentClass} ${accentBorder} border rounded-sm hover:opacity-80 transition-opacity`}
           >
             {post.category}
           </Link>
@@ -79,26 +83,26 @@ export const PostView: React.FC = () => {
         </h1>
 
         {/* Description */}
-        <p className="text-lg text-gray-500 leading-relaxed mb-6">
+        <p className="text-lg text-gray-500 leading-relaxed mb-6 font-sans">
           {post.description}
         </p>
 
         {/* Meta Grid - Industrial Info Panel */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 border border-gray-200 rounded-sm">
           <div>
-            <span className="text-[10px] font-mono text-gray-400 uppercase block mb-1">Published</span>
+            <span className="text-[10px] text-gray-400 uppercase block mb-1">Published</span>
             <span className="text-sm font-medium">{formatDate(post.date)}</span>
           </div>
           <div>
-            <span className="text-[10px] font-mono text-gray-400 uppercase block mb-1">Read Time</span>
+            <span className="text-[10px] text-gray-400 uppercase block mb-1">Read Time</span>
             <span className="text-sm font-medium">{calculateReadingTime(post.content)} min</span>
           </div>
           <div>
-            <span className="text-[10px] font-mono text-gray-400 uppercase block mb-1">Updated</span>
+            <span className="text-[10px] text-gray-400 uppercase block mb-1">Updated</span>
             <span className="text-sm font-medium">{formatRelativeTime(post.date)}</span>
           </div>
           <div>
-            <span className="text-[10px] font-mono text-gray-400 uppercase block mb-1">Source</span>
+            <span className="text-[10px] text-gray-400 uppercase block mb-1">Source</span>
             <a
               href={projectMeta.github}
               target="_blank"
@@ -115,11 +119,11 @@ export const PostView: React.FC = () => {
         {/* Technologies Tags */}
         {post.category === 'projects' && (
           <div className="flex flex-wrap items-center gap-2 mt-4">
-            <span className="text-[10px] font-mono text-gray-400 uppercase">Stack:</span>
+            <span className="text-[10px] text-gray-400 uppercase">Stack:</span>
             {projectMeta.technologies.map(tech => (
               <span
                 key={tech}
-                className="px-2 py-0.5 text-[10px] font-mono bg-gray-900 text-white rounded-sm"
+                className="px-2 py-0.5 text-[10px] bg-gray-900 text-white rounded-sm"
               >
                 {tech}
               </span>
@@ -140,15 +144,16 @@ export const PostView: React.FC = () => {
       )}
 
       {/* Article Content */}
-      <div
+      <WikiContent
+        html={post.content}
+        allFieldNotes={allFieldNotes}
         className="max-w-none text-base leading-loose text-gray-800 font-light content-html"
-        dangerouslySetInnerHTML={{ __html: post.content }}
       />
 
       {/* Share & Actions Bar */}
       <div className="mt-12 pt-6 border-t border-gray-200 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <span className="text-xs font-mono text-gray-400">Share:</span>
+          <span className="text-xs text-gray-400">Share:</span>
           <a
             href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.displayTitle || post.title)}&url=${encodeURIComponent(window.location.href)}`}
             target="_blank"
@@ -170,7 +175,7 @@ export const PostView: React.FC = () => {
           href={projectMeta.github}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-xs font-mono hover:bg-gray-800 transition-colors rounded-sm"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-xs hover:bg-gray-800 transition-colors rounded-sm"
         >
           <GitHubIcon />
           View on GitHub
@@ -180,8 +185,8 @@ export const PostView: React.FC = () => {
       {/* Related Posts - Case Studies */}
       <div className="mt-16 pt-8 border-t border-gray-200">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xs font-mono text-gray-400 uppercase tracking-wider">Related Case Studies</h3>
-          <Link to={`/${post.category}`} className="text-xs font-mono text-blue-600 hover:underline flex items-center gap-1">
+          <h3 className="text-xs text-gray-400 uppercase tracking-wider">Related Case Studies</h3>
+          <Link to={`/${post.category}`} className="text-xs text-blue-600 hover:underline flex items-center gap-1">
             View all <ArrowRightIcon />
           </Link>
         </div>
@@ -199,8 +204,8 @@ export const PostView: React.FC = () => {
                 </div>
                 <div className="p-4">
                   <div className="flex items-baseline gap-2 mb-2">
-                    <span className={`text-[10px] uppercase font-mono ${recAccent}`}>{rec.category}</span>
-                    <span className="text-[10px] text-gray-400 font-mono">{formatDate(rec.date)}</span>
+                    <span className={`text-[10px] uppercase ${recAccent}`}>{rec.category}</span>
+                    <span className="text-[10px] text-gray-400">{formatDate(rec.date)}</span>
                   </div>
                   <h4 className="text-sm font-semibold leading-tight group-hover:text-blue-600 transition-colors lowercase">{rec.displayTitle || rec.title}</h4>
                 </div>

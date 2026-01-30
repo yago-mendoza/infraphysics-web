@@ -17,3 +17,5 @@ the goal: can a texture "heal" itself if parts of it are erased?
 ![cellular growth](https://images.unsplash.com/photo-1518640467707-6811f4a6ab73?q=80&w=800&auto=format&fit=crop)
 
 results: yes, with sufficient training on the target image, the system creates a robust homeostasis.
+
+the output is best observed through a [[UI//GUI]] — watching patterns emerge in real time.

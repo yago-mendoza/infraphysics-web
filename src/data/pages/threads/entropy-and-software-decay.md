@@ -17,3 +17,5 @@ physics dictates that closed systems move towards disorder. software is no diffe
 dependencies update, hardware changes, and human understanding of the original codebase fades. this is the "bit rot".
 
 maintenance is not just fixing bugs; it is the active injection of energy to counteract entropy.
+
+a [[Headless device]] is particularly vulnerable — without a visual interface, decay goes unnoticed longer.

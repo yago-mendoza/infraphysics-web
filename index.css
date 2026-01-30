@@ -85,6 +85,17 @@
 }
 
 /* Markdown content styling */
+.content-html {
+  font-family: var(--font-sans);
+}
+
+.content-html h1,
+.content-html h2,
+.content-html h3,
+.content-html h4 {
+  font-family: var(--font-mono);
+}
+
 .content-html h1 {
   font-size: 1.25rem;
   font-weight: 700;

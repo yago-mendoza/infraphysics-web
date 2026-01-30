@@ -34,7 +34,7 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
     accent: '#F59E0B',
   },
   bits2bricks: {
-    title: 'Bits to Bricks',
+    title: 'Bits2Bricks',
     description: 'Hardware projects bridging digital logic and physical reality. From FPGAs to 3D printing, exploring where code meets atoms.',
     icon: <GradCapIcon />,
     colorClass: 'text-blue-600',

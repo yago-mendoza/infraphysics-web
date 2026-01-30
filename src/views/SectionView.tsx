@@ -74,14 +74,14 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight lowercase text-black mb-2">
               {categoryInfo.title}
             </h1>
-            <p className="text-sm text-gray-500 leading-relaxed max-w-2xl">
+            <p className="text-sm text-gray-500 leading-relaxed max-w-2xl font-sans">
               {categoryInfo.description}
             </p>
           </div>
         </div>
 
         {/* Stats Bar */}
-        <div className="flex items-center gap-6 mt-4 text-xs font-mono text-gray-400">
+        <div className="flex items-center gap-6 mt-4 text-xs text-gray-400">
           <span className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-blue-400"></span>
             {filteredPosts.length} {filteredPosts.length === 1 ? 'entry' : 'entries'}
@@ -103,14 +103,14 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
               type="text"
               onChange={(e) => setQuery(e.target.value)}
               placeholder={`Search ${category}...`}
-              className="w-full bg-transparent border-none ml-2.5 font-mono text-sm focus:outline-none placeholder-gray-400 text-black"
+              className="w-full bg-transparent border-none ml-2.5 text-sm focus:outline-none placeholder-gray-400 text-black"
             />
           </div>
 
           {/* Filter Toggle */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`px-4 py-2.5 border border-gray-200 flex items-center gap-2 text-xs font-mono transition-all ${showFilters ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 hover:border-gray-400'}`}
+            className={`px-4 py-2.5 border border-gray-200 flex items-center gap-2 text-xs transition-all ${showFilters ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 hover:border-gray-400'}`}
           >
             <FilterIcon />
             Filters
@@ -137,11 +137,11 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
         {showFilters && (
           <div className="flex flex-wrap gap-4 p-4 bg-gray-50 border border-gray-200 rounded-sm animate-fade-in">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono text-gray-500 uppercase">Sort by:</span>
+              <span className="text-xs text-gray-500 uppercase">Sort by:</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest' | 'title')}
-                className="text-xs font-mono border border-gray-300 rounded-sm px-2 py-1.5 bg-white focus:outline-none focus:border-blue-400"
+                className="text-xs border border-gray-300 rounded-sm px-2 py-1.5 bg-white focus:outline-none focus:border-blue-400"
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
@@ -168,7 +168,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
                   <div className="flex flex-col md:flex-row md:gap-6 md:items-start p-4 md:p-0 border border-gray-100 md:border-0 rounded-sm bg-white md:bg-transparent hover:bg-gray-50 md:hover:bg-transparent">
 
                     {/* Index Number - Industrial Style */}
-                    <div className="hidden md:flex flex-shrink-0 w-8 h-8 items-center justify-center text-xs font-mono text-gray-300 border border-gray-200 rounded-sm">
+                    <div className="hidden md:flex flex-shrink-0 w-8 h-8 items-center justify-center text-xs text-gray-300 border border-gray-200 rounded-sm">
                       {String(index + 1).padStart(2, '0')}
                     </div>
 
@@ -188,18 +188,18 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
                           <Highlight text={post.displayTitle || post.title} query={query} />
                         </h2>
                         <div className="flex items-center gap-3">
-                          <span className="text-xs text-gray-400 font-mono whitespace-nowrap">
+                          <span className="text-xs text-gray-400 whitespace-nowrap">
                             {formatDate(post.date)}
                           </span>
                         </div>
                       </div>
 
-                      <p className="text-gray-500 text-sm leading-relaxed line-clamp-2 mb-3">
+                      <p className="text-gray-500 text-sm leading-relaxed line-clamp-2 mb-3 font-sans">
                         <Highlight text={post.description} query={query} />
                       </p>
 
                       {/* Meta Row */}
-                      <div className="flex items-center gap-4 text-xs text-gray-400 font-mono">
+                      <div className="flex items-center gap-4 text-xs text-gray-400">
                         <span className="flex items-center gap-1">
                           <ClockIcon />
                           {calculateReadingTime(post.content)} min
@@ -212,7 +212,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
 
                       {/* Search Excerpt */}
                       {contentExcerpt && (
-                        <div className="mt-3 text-xs text-gray-500 font-mono bg-yellow-50 p-2 border-l-2 border-yellow-400">
+                        <div className="mt-3 text-xs text-gray-500 bg-yellow-50 p-2 border-l-2 border-yellow-400">
                           <Highlight text={contentExcerpt} query={query} />
                         </div>
                       )}
@@ -224,7 +224,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
           ) : (
             <div className="py-16 text-center">
               <div className="text-gray-300 text-4xl mb-4">&empty;</div>
-              <p className="text-gray-400 font-mono text-sm">No entries found matching "{query}"</p>
+              <p className="text-gray-400 text-sm">No entries found matching "{query}"</p>
             </div>
           )}
         </div>
@@ -247,20 +247,20 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
                 </div>
                 <div className="p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-mono text-gray-400 uppercase">{formatDate(post.date)}</span>
-                    <span className="text-[10px] font-mono text-gray-400">{calculateReadingTime(post.content)} min</span>
+                    <span className="text-[10px] text-gray-400 uppercase">{formatDate(post.date)}</span>
+                    <span className="text-[10px] text-gray-400">{calculateReadingTime(post.content)} min</span>
                   </div>
                   <h3 className="font-semibold text-sm lowercase mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
                     {post.displayTitle || post.title}
                   </h3>
-                  <p className="text-xs text-gray-500 line-clamp-2">{post.description}</p>
+                  <p className="text-xs text-gray-500 line-clamp-2 font-sans">{post.description}</p>
                 </div>
               </Link>
             ))
           ) : (
             <div className="col-span-full py-16 text-center">
               <div className="text-gray-300 text-4xl mb-4">&empty;</div>
-              <p className="text-gray-400 font-mono text-sm">No entries found</p>
+              <p className="text-gray-400 text-sm">No entries found</p>
             </div>
           )}
         </div>

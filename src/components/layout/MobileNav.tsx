@@ -10,12 +10,20 @@ import {
   ThreadIcon,
   GradCapIcon,
   DiamondIcon,
+  MailIcon,
   GitHubIcon,
   LinkedInIcon,
   TwitterIcon,
   MenuIcon,
   CloseIcon
 } from '../icons';
+import { SOCIAL_LINKS } from '../../config/navigation';
+
+const SOCIAL_ICONS: Record<string, React.ReactNode> = {
+  GitHub: <GitHubIcon />,
+  LinkedIn: <LinkedInIcon />,
+  'Twitter/X': <TwitterIcon />,
+};
 
 export const MobileNav: React.FC = () => {
   const location = useLocation();
@@ -46,6 +54,12 @@ export const MobileNav: React.FC = () => {
     </Link>
   );
 
+  const SectionLabel = ({ children }: { children: React.ReactNode }) => (
+    <div className="text-[9px] uppercase tracking-[0.2em] text-gray-400 px-4 pt-4 pb-1 select-none">
+      {children}
+    </div>
+  );
+
   return (
     <div className="md:hidden fixed top-0 left-0 right-0 z-50">
       {/* Mobile Header */}
@@ -74,48 +88,44 @@ export const MobileNav: React.FC = () => {
           ></div>
           <div className="absolute top-14 left-0 right-0 bg-white border-b border-gray-200 z-50 shadow-lg animate-fade-in">
             <nav className="flex flex-col p-4 gap-1">
-              <NavLink to="/home" colorClass="text-gray-900" icon={<HomeIcon />}>Home</NavLink>
+              {/* LAB */}
+              <SectionLabel>lab</SectionLabel>
               <NavLink to="/projects" colorClass="text-emerald-600" icon={<GearIcon />}>Projects</NavLink>
               <NavLink to="/threads" colorClass="text-amber-600" icon={<ThreadIcon />}>Threads</NavLink>
               <NavLink to="/bits2bricks" colorClass="text-blue-600" icon={<GradCapIcon />}>Bits2Bricks</NavLink>
-              <NavLink to="/second-brain" colorClass="text-gray-900" icon={<DiamondIcon />}>Second Brain</NavLink>
+
+              {/* WIKI */}
+              <SectionLabel>wiki</SectionLabel>
+              <NavLink to="/second-brain" colorClass="text-violet-600" icon={<DiamondIcon />}>2<sup>nd</sup> Brain</NavLink>
+
+              {/* META */}
+              <SectionLabel>meta</SectionLabel>
+              <NavLink to="/about" colorClass="text-gray-900" icon={<HomeIcon />}>About</NavLink>
+              <NavLink to="/contact" colorClass="text-gray-900" icon={<MailIcon />}>Contact</NavLink>
 
               {/* Divider */}
               <div className="my-3 border-t border-gray-100"></div>
 
               {/* Social Links */}
               <div className="flex items-center gap-3 px-4 py-2">
-                <span className="text-xs font-mono text-gray-400 uppercase">Connect:</span>
-                <a
-                  href="https://github.com/yago"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-sm transition-all"
-                >
-                  <GitHubIcon />
-                </a>
-                <a
-                  href="https://linkedin.com/in/yago"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-sm transition-all"
-                >
-                  <LinkedInIcon />
-                </a>
-                <a
-                  href="https://x.com/yago"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-sm transition-all"
-                >
-                  <TwitterIcon />
-                </a>
+                <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400">connect</span>
+                {SOCIAL_LINKS.map(link => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-sm transition-all"
+                  >
+                    {SOCIAL_ICONS[link.label]}
+                  </a>
+                ))}
               </div>
 
               {/* Random Button */}
               <button
                 onClick={handleRandom}
-                className="flex items-center gap-2 px-4 py-2 text-xs font-mono text-gray-400 hover:text-gray-600 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-xs text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <span className="w-4 h-4 flex items-center justify-center bg-gray-100 rounded-sm text-[10px]">?</span>
                 Random post

@@ -22,7 +22,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           type="text"
           onChange={(e) => onSearch(e.target.value)}
           placeholder={placeholder}
-          className="w-full bg-transparent border-none ml-2.5 font-mono text-sm focus:outline-none placeholder-gray-400 text-black"
+          className="w-full bg-transparent border-none ml-2.5 text-sm focus:outline-none placeholder-gray-400 text-black"
           autoFocus={autoFocus}
         />
       </div>

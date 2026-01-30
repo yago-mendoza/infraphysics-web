@@ -19,20 +19,17 @@ export interface Post {
   duration?: string; // Project duration
   featured?: boolean; // Whether to feature this post
   tags?: string[]; // Content tags for filtering
+  // Fieldnotes-specific (only present for category === 'fieldnotes')
+  address?: string;
+  addressParts?: string[];
+  references?: string[];      // outgoing [[...]] addresses
+  trailingRefs?: string[];    // trailing [[...]] for "Related" section
 }
 
 export interface NavigationItem {
   label: string;
   path: string;
   colorClass: string;
-}
-
-// Knowledge graph types for Second Brain
-export interface NoteConnection {
-  sourceId: string;
-  targetId: string;
-  strength: number; // Connection strength based on shared concepts
-  sharedConcepts: string[];
 }
 
 // Author/Profile information
