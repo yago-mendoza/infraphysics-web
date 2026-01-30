@@ -2,66 +2,69 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useHub } from '../contexts/SecondBrainHubContext';
 import { useSecondBrain } from '../hooks/useSecondBrain';
 import { WikiContent } from '../components/WikiContent';
-import {
-  SearchIcon,
-  DiamondIcon,
-} from '../components/icons';
+import { SearchIcon } from '../components/icons';
 
 export const SecondBrainView: React.FC = () => {
-  const {
-    query,
-    setQuery,
-    allFieldNotes,
-    totalLinks,
-    orphanCount,
-    filteredNotes,
-    activePost,
-    backlinks,
-    relatedConcepts,
-    breadcrumbs,
-    outgoingRefCount,
-  } = useSecondBrain();
+  const hub = useHub();
+  // Always call useSecondBrain (hooks must be unconditional).
+  // Used as fallback on mobile where hub sidebar context is absent.
+  const brain = useSecondBrain();
+
+  const hasHub = hub !== null;
+
+  const allFieldNotes = hasHub ? hub.allFieldNotes : brain.allFieldNotes;
+  const sortedResults = hasHub ? hub.sortedResults : brain.filteredNotes;
+  const activePost = hasHub ? hub.activePost : brain.activePost;
+  const backlinks = hasHub ? hub.backlinks : brain.backlinks;
+  const relatedConcepts = hasHub ? hub.relatedConcepts : brain.relatedConcepts;
+  const breadcrumbs = hasHub ? hub.breadcrumbs : brain.breadcrumbs;
+  const outgoingRefCount = hasHub ? hub.outgoingRefCount : brain.outgoingRefCount;
+  const query = hasHub ? hub.query : brain.query;
+  const setQuery = hasHub ? hub.setQuery : brain.setQuery;
 
   return (
     <div className="animate-fade-in">
-      {/* Header */}
-      <header className="mb-8 pb-6 border-b border-th-border">
-        <h1 className="text-3xl font-bold tracking-tight lowercase text-violet-400 mb-2">
-          second brain
-        </h1>
-        <p className="text-xs text-th-secondary font-light leading-relaxed mt-2 mb-3 max-w-lg">
-          Everything I know, linked together. A growing knowledge graph.
-        </p>
-        <div className="flex items-center gap-4 mb-4">
-          <span className="text-xs text-th-tertiary">
-            {allFieldNotes.length} concepts &middot; {totalLinks} links &middot; {orphanCount} orphans
-          </span>
-        </div>
-
-        {/* Search */}
-        <div className="w-full">
-          <div className="flex items-center border border-th-border px-3 py-2 bg-th-surface-alt focus-within:border-th-border-active transition-colors">
-            <span className="text-th-tertiary"><SearchIcon /></span>
-            <input
-              type="text"
-              placeholder="Search concepts..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="w-full text-xs ml-2 focus:outline-none placeholder-th-tertiary bg-transparent text-th-primary"
-            />
-            {query && (
-              <button
-                onClick={() => setQuery('')}
-                className="text-th-tertiary hover:text-th-secondary text-xs ml-2"
-              >
-                clear
-              </button>
-            )}
+      {/* Header — only shown when hub sidebar is NOT available (mobile) */}
+      {!hasHub && (
+        <header className="mb-8 pb-6 border-b border-th-border">
+          <h1 className="text-3xl font-bold tracking-tight lowercase text-violet-400 mb-2">
+            second brain
+          </h1>
+          <p className="text-xs text-th-secondary font-light leading-relaxed mt-2 mb-3 max-w-lg">
+            Everything I know, linked together. A growing knowledge graph.
+          </p>
+          <div className="flex items-center gap-4 mb-4">
+            <span className="text-xs text-th-tertiary">
+              {brain.allFieldNotes.length} concepts &middot; {brain.totalLinks} links &middot; {brain.orphanCount} orphans
+            </span>
           </div>
-        </div>
-      </header>
+
+          {/* Search */}
+          <div className="w-full">
+            <div className="flex items-center border border-th-border px-3 py-2 bg-th-surface-alt focus-within:border-th-border-active transition-colors">
+              <span className="text-th-tertiary"><SearchIcon /></span>
+              <input
+                type="text"
+                placeholder="Search concepts..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full text-xs ml-2 focus:outline-none placeholder-th-tertiary bg-transparent text-th-primary"
+              />
+              {query && (
+                <button
+                  onClick={() => setQuery('')}
+                  className="text-th-tertiary hover:text-th-secondary text-xs ml-2"
+                >
+                  clear
+                </button>
+              )}
+            </div>
+          </div>
+        </header>
+      )}
 
       {/* Main Content */}
       {activePost ? (
@@ -178,13 +181,13 @@ export const SecondBrainView: React.FC = () => {
         <div>
           {query && (
             <div className="text-xs text-th-tertiary mb-4">
-              {filteredNotes.length} result{filteredNotes.length !== 1 ? 's' : ''} for &ldquo;{query}&rdquo;
+              {sortedResults.length} result{sortedResults.length !== 1 ? 's' : ''} for &ldquo;{query}&rdquo;
             </div>
           )}
 
           <div className="space-y-2">
-            {filteredNotes.length > 0 ? (
-              filteredNotes.map(note => (
+            {sortedResults.length > 0 ? (
+              sortedResults.map(note => (
                 <Link
                   key={note.id}
                   to={`/second-brain/${note.id}`}

@@ -541,6 +541,24 @@ button:focus {
   background: var(--text-tertiary);
 }
 
+/* Hub sidebar scrollbar */
+.hub-scrollbar::-webkit-scrollbar {
+  width: 3px;
+}
+
+.hub-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.hub-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--hub-sidebar-border);
+  border-radius: 2px;
+}
+
+.hub-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
 /* ============================================================
    Tooltip styling — theme-aware
    ============================================================ */

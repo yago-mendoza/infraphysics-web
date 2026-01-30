@@ -3,9 +3,10 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
-import { Sidebar, MobileNav, Footer, DualGrid, Starfield } from './layout';
+import { SecondBrainHubProvider } from '../contexts/SecondBrainHubContext';
+import { Sidebar, MobileNav, Footer, DualGrid, Starfield, SecondBrainSidebar } from './layout';
 import { HomeView, AboutView, ContactView, ThanksView, SectionView, PostView, SecondBrainView } from '../views';
-import { SIDEBAR_WIDTH } from '../constants/layout';
+import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../constants/layout';
 
 const STARFIELD_PAGES = ['/', '/home', '/about', '/contact', '/thanks'];
 
@@ -19,13 +20,18 @@ const AppLayout: React.FC = () => {
   const isStarfieldPage = STARFIELD_PAGES.includes(location.pathname);
   const showGrid = location.pathname.startsWith('/lab') ||
                    location.pathname.startsWith('/second-brain');
+  const isSecondBrain = location.pathname.startsWith('/second-brain');
 
-  return (
+  const gridOffset = isSecondBrain
+    ? SIDEBAR_WIDTH + SECOND_BRAIN_SIDEBAR_WIDTH
+    : SIDEBAR_WIDTH;
+
+  const content = (
     <div className="min-h-screen flex relative bg-th-base">
       {/* Background — Starfield on personal pages (fades with theme), DualGrid on lab/wiki */}
       <div className="hidden md:block">
         {isStarfieldPage && <Starfield sidebarWidth={SIDEBAR_WIDTH} visible={theme === 'dark'} />}
-        {showGrid && <DualGrid sidebarWidth={SIDEBAR_WIDTH} />}
+        {showGrid && <DualGrid sidebarWidth={gridOffset} />}
       </div>
 
       {/* Mobile Navigation */}
@@ -33,6 +39,9 @@ const AppLayout: React.FC = () => {
 
       {/* Desktop Sidebar */}
       <Sidebar />
+
+      {/* Hub Sidebar (second-brain only, desktop only) */}
+      {isSecondBrain && <SecondBrainSidebar />}
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-h-screen">
@@ -65,10 +74,17 @@ const AppLayout: React.FC = () => {
           </Routes>
         </main>
 
-        <Footer />
+        {!isSecondBrain && <Footer />}
       </div>
     </div>
   );
+
+  // Wrap second-brain routes in HubProvider
+  if (isSecondBrain) {
+    return <SecondBrainHubProvider>{content}</SecondBrainHubProvider>;
+  }
+
+  return content;
 };
 
 const App: React.FC = () => {
