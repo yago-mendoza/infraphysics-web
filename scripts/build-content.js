@@ -5,12 +5,14 @@ import { marked, Renderer } from 'marked';
 import { load as loadYaml } from 'js-yaml';
 import { fileURLToPath } from 'url';
 import { validateFieldnotes } from './validate-fieldnotes.js';
+import compilerConfig from './compiler.config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Custom renderer for images with positioning (center/full only - left/right handled by preprocessor)
 const customRenderer = new Renderer();
+const { titlePattern, classMap } = compilerConfig.imagePositions;
 
 customRenderer.image = function({ href, title, text }) {
   let className = '';
@@ -18,29 +20,12 @@ customRenderer.image = function({ href, title, text }) {
   let finalTitle = title;
 
   if (title) {
-    const positionMatch = title.match(/^(right|left|center|full):?(\d+px)?$/);
+    const positionMatch = title.match(titlePattern);
     if (positionMatch) {
       const position = positionMatch[1];
       const width = positionMatch[2];
-
-      switch (position) {
-        case 'center':
-          className = 'img-center';
-          if (width) style = `width: ${width};`;
-          break;
-        case 'full':
-          className = 'img-full';
-          break;
-        // left/right are handled by preprocessSideImages, but keep fallback
-        case 'right':
-          className = 'img-float-right';
-          if (width) style = `width: ${width};`;
-          break;
-        case 'left':
-          className = 'img-float-left';
-          if (width) style = `width: ${width};`;
-          break;
-      }
+      className = classMap[position] || '';
+      if (width && position !== 'full') style = `width: ${width};`;
       finalTitle = null;
     }
   }
@@ -55,9 +40,26 @@ customRenderer.image = function({ href, title, text }) {
 
 marked.setOptions({
   renderer: customRenderer,
-  gfm: true,
-  breaks: false,
+  ...compilerConfig.marked,
 });
+
+// Apply pre-processors (before marked.parse, on raw markdown)
+function applyPreProcessors(markdown) {
+  let result = markdown;
+  for (const rule of compilerConfig.preProcessors) {
+    result = result.replace(rule.pattern, rule.replace);
+  }
+  return result;
+}
+
+// Apply post-processors (after marked.parse, on HTML)
+function applyPostProcessors(html) {
+  let result = html;
+  for (const rule of compilerConfig.postProcessors) {
+    result = result.replace(rule.pattern, rule.replace);
+  }
+  return result;
+}
 
 // Preprocess markdown to handle side-by-side image layouts
 // Pattern: ![alt](src "left|right:width") followed by text lines until empty line
@@ -111,9 +113,10 @@ function processMarkdownFile(filePath) {
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   const { data: frontmatter, content } = matter(fileContent);
 
-  // Preprocess for side-by-side images, then parse with marked
-  const preprocessed = preprocessSideImages(content);
-  const htmlContent = marked.parse(preprocessed);
+  // Pipeline: preProcessors → sideImages → marked → postProcessors
+  const withCustomSyntax = applyPreProcessors(content);
+  const withSideImages = preprocessSideImages(withCustomSyntax);
+  const htmlContent = applyPostProcessors(marked.parse(withSideImages));
 
   return {
     id: frontmatter.id,
@@ -233,9 +236,10 @@ function processFieldnotesFile() {
       }
     }
 
-    // Parse markdown to HTML
-    const preprocessed = preprocessSideImages(bodyMd);
-    const htmlContent = marked.parse(preprocessed);
+    // Pipeline: preProcessors → sideImages → marked → postProcessors
+    const withCustomSyntax = applyPreProcessors(bodyMd);
+    const withSideImages = preprocessSideImages(withCustomSyntax);
+    const htmlContent = applyPostProcessors(marked.parse(withSideImages));
 
     return {
       id,
@@ -257,10 +261,9 @@ function processFieldnotesFile() {
 // --- Wiki-link build-time processing for ALL posts ---
 
 function processWikiLinks(html) {
-  return html.replace(/\[\[([^\]]+)\]\]/g, (_match, address) => {
-    const segments = address.split('//');
-    const displayText = segments[segments.length - 1].trim();
-    return `<a class="wiki-ref" data-address="${address}">${displayText}</a>`;
+  if (!compilerConfig.wikiLinks.enabled) return html;
+  return html.replace(compilerConfig.wikiLinks.pattern, (_match, address) => {
+    return compilerConfig.wikiLinks.toHtml(address);
   });
 }
 
@@ -280,7 +283,7 @@ const allPosts = [...regularPosts, ...fieldnotePosts].map(post => ({
 const categories = getAllCategoryConfigs(PAGES_DIR);
 
 // Validate fieldnotes
-validateFieldnotes(fieldnotePosts);
+validateFieldnotes(fieldnotePosts, allPosts, compilerConfig.validation);
 
 // --- Home featured posts ---
 

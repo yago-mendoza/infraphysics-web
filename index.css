@@ -248,6 +248,110 @@
 }
 
 /* ============================================================
+   Wiki-link styles
+   ============================================================ */
+
+.wiki-ref-resolved {
+  color: #7C3AED !important;
+  text-decoration: none !important;
+  border-bottom: 1px dashed #7C3AED !important;
+  transition: border-bottom-style 0.15s ease, color 0.15s ease;
+  cursor: pointer;
+}
+
+.wiki-ref-resolved:hover {
+  border-bottom-style: solid !important;
+  color: #6D28D9 !important;
+}
+
+.wiki-ref-icon {
+  font-size: 0.55em;
+  color: #7C3AED;
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+  margin-left: 1px;
+  vertical-align: super;
+  line-height: 1;
+}
+
+.wiki-ref-resolved:hover .wiki-ref-icon {
+  opacity: 1;
+}
+
+.wiki-ref-unresolved {
+  color: #9CA3AF;
+  border-bottom: 1px dotted #9CA3AF;
+  cursor: not-allowed;
+}
+
+.wiki-ref-unresolved .wiki-ref-icon {
+  color: #EF4444;
+  opacity: 0.8;
+}
+
+/* Wiki-link hover preview card */
+.wiki-preview-card {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  max-width: 320px;
+  min-width: 220px;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-left: 3px solid #7C3AED;
+  border-radius: 4px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  animation: wikiPreviewFadeIn 0.15s ease-out forwards;
+}
+
+@keyframes wikiPreviewFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.wiki-preview-title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #1F2937;
+  text-transform: lowercase;
+  margin-bottom: 2px;
+}
+
+.wiki-preview-address {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: #7C3AED;
+  margin-bottom: 6px;
+  opacity: 0.8;
+}
+
+.wiki-preview-description {
+  font-size: 0.8rem;
+  color: #6B7280;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.wiki-preview-hint {
+  font-size: 0.65rem;
+  color: #9CA3AF;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ============================================================
    Animations
    ============================================================ */
 

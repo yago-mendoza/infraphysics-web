@@ -78,7 +78,7 @@ export const Sidebar: React.FC = () => {
       {/* ── WIKI ── */}
       {sectionLabel('wiki')}
       <nav className="flex flex-col gap-1">
-        {navLink('/second-brain', <DiamondIcon />, <span>2<sup>nd</sup> Brain</span>, category.secondBrain.accent)}
+        {navLink('/second-brain', <DiamondIcon />, <span>2<sup>nd</sup> brain</span>, category.secondBrain.accent)}
       </nav>
 
       {/* ── META ── */}

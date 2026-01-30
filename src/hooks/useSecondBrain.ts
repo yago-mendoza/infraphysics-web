@@ -57,6 +57,25 @@ export const useSecondBrain = () => {
     return activePost?.references?.length || 0;
   }, [activePost]);
 
+  // Global stats
+  const totalLinks = useMemo(() => {
+    return allFieldNotes.reduce((sum, n) => sum + (n.references?.length || 0), 0);
+  }, [allFieldNotes]);
+
+  const orphanCount = useMemo(() => {
+    const linkedTo = new Set<string>();
+    allFieldNotes.forEach(n => {
+      (n.references || []).forEach(ref => {
+        linkedTo.add(ref.toLowerCase().replace(/\/\//g, '--').replace(/\s+/g, '-'));
+      });
+    });
+    return allFieldNotes.filter(n => {
+      const hasOutgoing = (n.references?.length || 0) > 0;
+      const hasIncoming = linkedTo.has(n.id);
+      return !hasOutgoing && !hasIncoming;
+    }).length;
+  }, [allFieldNotes]);
+
   // Smart search: address matches first, then content matches
   const filteredNotes = useMemo(() => {
     if (!query) return allFieldNotes;
@@ -95,6 +114,8 @@ export const useSecondBrain = () => {
     relatedConcepts,
     breadcrumbs,
     outgoingRefCount,
+    totalLinks,
+    orphanCount,
     navigateToNote,
   };
 };

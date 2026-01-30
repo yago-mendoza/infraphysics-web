@@ -14,6 +14,8 @@ export const SecondBrainView: React.FC = () => {
     query,
     setQuery,
     allFieldNotes,
+    totalLinks,
+    orphanCount,
     filteredNotes,
     activePost,
     backlinks,
@@ -34,9 +36,14 @@ export const SecondBrainView: React.FC = () => {
             second brain
           </h1>
         </div>
-        <div className="flex items-center gap-4 mt-2 mb-4">
+        <p className="text-xs text-gray-500 font-light leading-relaxed mt-2 mb-3 max-w-lg">
+          A living network of interconnected concepts. Nodes link to each other
+          through <span className="text-gray-400">[[references]]</span>, forming
+          a knowledge graph that grows organically.
+        </p>
+        <div className="flex items-center gap-4 mb-4">
           <span className="text-xs text-gray-400">
-            {allFieldNotes.length} concepts
+            {allFieldNotes.length} concepts &middot; {totalLinks} links &middot; {orphanCount} orphans
           </span>
         </div>
 

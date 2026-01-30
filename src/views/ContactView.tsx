@@ -36,9 +36,12 @@ export const ContactView: React.FC = () => {
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-3">
           I'd love to hear from you
         </h1>
-        <p className="text-gray-400 text-sm font-sans mb-12 max-w-lg leading-relaxed">
+        <p className="text-gray-400 text-sm font-sans mb-2 max-w-lg leading-relaxed">
           Whether it's a question, a collaboration idea, or just a conversation worth having — drop me a line.
-          I typically respond within a few days. I'm especially interested in conversations about distributed systems, complexity science, and hardware projects.
+          I typically respond within a few days.
+        </p>
+        <p className="text-gray-400 text-sm font-sans mb-12 max-w-lg leading-relaxed">
+          I'm especially interested in conversations about distributed systems, complexity science, and hardware projects.
         </p>
 
         {/* Contact Form */}

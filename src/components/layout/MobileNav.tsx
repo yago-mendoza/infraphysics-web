@@ -86,7 +86,7 @@ export const MobileNav: React.FC = () => {
 
               {/* WIKI */}
               <SectionLabel>wiki</SectionLabel>
-              <NavLink to="/second-brain" colorClass="text-violet-600" icon={<DiamondIcon />}>2<sup>nd</sup> Brain</NavLink>
+              <NavLink to="/second-brain" colorClass="text-violet-600" icon={<DiamondIcon />}>2<sup>nd</sup> brain</NavLink>
 
               {/* META */}
               <SectionLabel>meta</SectionLabel>

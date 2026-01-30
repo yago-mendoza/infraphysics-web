@@ -1,0 +1,44 @@
+---
+id: anatomy-of-a-markdown-compiler
+title: anatomy-of-a-markdown-compiler
+displayTitle: anatomy of a markdown compiler
+category: threads
+date: 2025-01-30
+thumbnail: https://images.unsplash.com/photo-1516116216517-838c2b4c4e8e?q=80&w=400&auto=format&fit=crop
+description: how custom syntax coexists with standard markdown.
+---
+
+# anatomy of a markdown compiler
+
+writing your own markup extensions on top of markdown is a {~:delicate} balance. the trick is {==:ordering} — knowing {_:when} each transformation runs.
+
+## the ordering problem
+
+imagine you write `{#e74c3c:some **bold** text}`. what happens?
+
+1. {#7C3AED:pre-processors} fire first — the color syntax becomes `<span style="color:#e74c3c">some **bold** text</span>`
+2. {#7C3AED:marked} parses next — it sees `**bold**` inside the span and converts it to `<strong>bold</strong>`
+3. result: {#e74c3c:some **bold** text} — both work
+
+if the order were reversed, marked would see `{#e74c3c:...}` as plain text and leave it as-is. the braces would survive into the HTML literally. {-.:that would be a bug}.
+
+## entropy and compilers
+
+every transformation adds entropy to the pipeline. a [[Headless device]] analogy: each processing stage is a black box that transforms input without visual feedback. errors compound silently.
+
+the solution: {==:validation at the end}. after the full pipeline runs, the validator checks every `data-address` attribute in the output HTML against the fieldnotes database. broken links are caught at {_:build time}, not runtime.
+
+## syntax cheat sheet
+
+| what you write | what you get |
+|---|---|
+| `{#FF0000:text}` | {#FF0000:colored} |
+| `{_:text}` | {_:solid underline} |
+| `{-.:text}` | {-.:dashed underline} |
+| `{..:text}` | {..:dotted underline} |
+| `{~:text}` | {~:wavy underline} |
+| `{==:text}` | {==:highlighted} |
+| `{sc:text}` | {sc:small caps} |
+| `{^:text}` | x{^:2} |
+| `{v:text}` | H{v:2}O |
+| `{kbd:text}` | {kbd:Enter} |
