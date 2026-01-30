@@ -1,4 +1,4 @@
-// Background grid pattern component (dark variant)
+// Background grid pattern component — theme-aware via CSS custom properties
 
 import React, { useState, useEffect } from 'react';
 
@@ -34,8 +34,8 @@ export const DualGrid: React.FC<DualGridProps> = ({ sidebarWidth }) => {
         className="absolute inset-0"
         style={{
           backgroundImage: `
-            linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)
+            linear-gradient(to right, var(--grid-small) 1px, transparent 1px),
+            linear-gradient(to bottom, var(--grid-small) 1px, transparent 1px)
           `,
           backgroundSize: `${gridSize.smallCellSize}px ${gridSize.smallCellSize}px`,
           backgroundPosition: '0 0',
@@ -46,8 +46,8 @@ export const DualGrid: React.FC<DualGridProps> = ({ sidebarWidth }) => {
         className="absolute inset-0"
         style={{
           backgroundImage: `
-            linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)
+            linear-gradient(to right, var(--grid-large) 1px, transparent 1px),
+            linear-gradient(to bottom, var(--grid-large) 1px, transparent 1px)
           `,
           backgroundSize: `${gridSize.largeCellSize}px ${gridSize.largeCellSize}px`,
           backgroundPosition: '0 0',

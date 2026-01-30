@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 
 interface StarfieldProps {
   sidebarWidth: number;
+  visible?: boolean;
 }
 
 function generateStars(count: number, maxW: number, maxH: number, opacityMin: number, opacityMax: number): string {
@@ -17,7 +18,7 @@ function generateStars(count: number, maxW: number, maxH: number, opacityMin: nu
   return shadows.join(', ');
 }
 
-export const Starfield: React.FC<StarfieldProps> = ({ sidebarWidth }) => {
+export const Starfield: React.FC<StarfieldProps> = ({ sidebarWidth, visible = true }) => {
   // Generate stars once — spread across a large canvas so they work with scrolling
   const W = 2560;
   const H = 5000;
@@ -29,7 +30,7 @@ export const Starfield: React.FC<StarfieldProps> = ({ sidebarWidth }) => {
   return (
     <div
       className="fixed top-0 bottom-0 right-0 pointer-events-none z-0"
-      style={{ left: sidebarWidth, backgroundColor: '#000' }}
+      style={{ left: sidebarWidth, backgroundColor: '#000', opacity: visible ? 1 : 0, transition: 'opacity 0.95s ease' }}
     >
       {/* Layer 1: bright stars — 1px */}
       <div

@@ -1,8 +1,9 @@
-// Mobile hamburger menu navigation component — dark theme
+// Mobile hamburger menu navigation component — theme-aware
 
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { posts } from '../../data/data';
+import { useTheme } from '../../contexts/ThemeContext';
 import {
   Logo,
   UserIcon,
@@ -12,13 +13,16 @@ import {
   DiamondIcon,
   MailIcon,
   MenuIcon,
-  CloseIcon
+  CloseIcon,
+  SunIcon,
+  MoonIcon,
 } from '../icons';
 
 export const MobileNav: React.FC = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   const handleRandom = () => {
     const validPosts = posts.filter(p => p.category !== 'fieldnotes');
@@ -36,16 +40,16 @@ export const MobileNav: React.FC = () => {
       to={to}
       onClick={() => setIsOpen(false)}
       className={`flex items-center gap-3 py-3 px-4 rounded-sm transition-all ${
-        isActive(to) ? colorClass + ' bg-white/[0.06] font-medium' : 'text-gray-400 hover:bg-white/[0.04]'
+        isActive(to) ? colorClass + ' bg-th-elevated font-medium' : 'text-th-secondary hover:bg-th-surface-alt'
       }`}
     >
-      <span className={isActive(to) ? colorClass : 'text-gray-500'}>{icon}</span>
+      <span className={isActive(to) ? colorClass : 'text-th-tertiary'}>{icon}</span>
       <span>{children}</span>
     </Link>
   );
 
   const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-    <div className="text-[9px] uppercase tracking-[0.2em] text-gray-500 px-4 pt-4 pb-1 select-none">
+    <div className="text-[9px] uppercase tracking-[0.2em] text-th-tertiary px-4 pt-4 pb-1 select-none">
       {children}
     </div>
   );
@@ -53,30 +57,39 @@ export const MobileNav: React.FC = () => {
   return (
     <div className="md:hidden fixed top-0 left-0 right-0 z-50">
       {/* Mobile Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-black/95 backdrop-blur-sm border-b border-white/10">
+      <div className="flex items-center justify-between px-4 py-3 bg-th-base backdrop-blur-sm border-b border-th-border">
         <Link to="/home" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-white/10 rounded-sm flex items-center justify-center">
-            <Logo className="w-5 h-5" color="#E8EAED" />
+          <div className="w-8 h-8 bg-th-active rounded-sm flex items-center justify-center">
+            <Logo className="w-5 h-5" color="var(--text-primary)" />
           </div>
-          <span className="font-bold text-sm text-gray-200">InfraPhysics</span>
+          <span className="font-bold text-sm text-th-primary">InfraPhysics</span>
         </Link>
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="p-2 hover:bg-white/10 rounded-sm transition-colors text-gray-300"
-          aria-label="Toggle menu"
-        >
-          {isOpen ? <CloseIcon /> : <MenuIcon />}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleTheme}
+            className="p-2 hover:bg-th-active rounded-sm transition-colors text-th-secondary"
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          >
+            {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+          </button>
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="p-2 hover:bg-th-active rounded-sm transition-colors text-th-secondary"
+            aria-label="Toggle menu"
+          >
+            {isOpen ? <CloseIcon /> : <MenuIcon />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu Overlay */}
       {isOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black/60 z-40"
+            className="fixed inset-0 bg-th-overlay z-40"
             onClick={() => setIsOpen(false)}
           ></div>
-          <div className="absolute top-14 left-0 right-0 bg-[#111111] border-b border-white/10 z-50 shadow-lg animate-fade-in">
+          <div className="absolute top-14 left-0 right-0 bg-th-sidebar border-b border-th-border z-50 shadow-lg animate-fade-in">
             <nav className="flex flex-col p-4 gap-1">
               {/* LAB */}
               <SectionLabel>lab</SectionLabel>
@@ -90,18 +103,18 @@ export const MobileNav: React.FC = () => {
 
               {/* META */}
               <SectionLabel>meta</SectionLabel>
-              <NavLink to="/about" colorClass="text-gray-200" icon={<UserIcon />}>About</NavLink>
-              <NavLink to="/contact" colorClass="text-gray-200" icon={<MailIcon />}>Contact</NavLink>
+              <NavLink to="/about" colorClass="text-th-primary" icon={<UserIcon />}>About</NavLink>
+              <NavLink to="/contact" colorClass="text-th-primary" icon={<MailIcon />}>Contact</NavLink>
 
               {/* Divider */}
-              <div className="my-3 border-t border-white/8"></div>
+              <div className="my-3 border-t border-th-border"></div>
 
               {/* Random Button */}
               <button
                 onClick={handleRandom}
-                className="flex items-center gap-2 px-4 py-2 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-xs text-th-tertiary hover:text-th-secondary transition-colors"
               >
-                <span className="w-4 h-4 flex items-center justify-center bg-white/[0.06] rounded-sm text-[10px]">?</span>
+                <span className="w-4 h-4 flex items-center justify-center bg-th-elevated rounded-sm text-[10px]">?</span>
                 Random post
               </button>
             </nav>

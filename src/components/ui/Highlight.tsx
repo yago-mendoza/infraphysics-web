@@ -17,7 +17,7 @@ export const Highlight: React.FC<HighlightProps> = ({ text, query, className }) 
     <span className={className}>
       {parts.map((part, i) =>
         part.toLowerCase() === query.toLowerCase() ?
-          <span key={i} className="bg-yellow-200 text-black px-0.5 rounded-sm">{part}</span> :
+          <span key={i} style={{ backgroundColor: 'var(--highlight-bg)', color: 'var(--highlight-text)' }} className="px-0.5 rounded-sm">{part}</span> :
           part
       )}
     </span>

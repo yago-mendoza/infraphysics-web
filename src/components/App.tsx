@@ -1,7 +1,8 @@
 // App shell: provides layout structure and top-level routing
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { Sidebar, MobileNav, Footer, DualGrid, Starfield } from './layout';
 import { HomeView, AboutView, ContactView, ThanksView, SectionView, PostView, SecondBrainView } from '../views';
 import { SIDEBAR_WIDTH } from '../constants/layout';
@@ -10,18 +11,20 @@ const STARFIELD_PAGES = ['/', '/home', '/about', '/contact', '/thanks'];
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
-  const showStarfield = STARFIELD_PAGES.includes(location.pathname);
+  const { theme } = useTheme();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+  const isStarfieldPage = STARFIELD_PAGES.includes(location.pathname);
   const showGrid = location.pathname.startsWith('/lab') ||
                    location.pathname.startsWith('/second-brain');
 
   return (
-    <div
-      className="min-h-screen flex selection:bg-yellow-100 selection:text-black relative"
-      style={{ backgroundColor: '#000' }}
-    >
-      {/* Background — Starfield on personal pages, DualGrid on lab/wiki, clean on posts */}
+    <div className="min-h-screen flex relative bg-th-base">
+      {/* Background — Starfield on personal pages (fades with theme), DualGrid on lab/wiki */}
       <div className="hidden md:block">
-        {showStarfield && <Starfield sidebarWidth={SIDEBAR_WIDTH} />}
+        {isStarfieldPage && <Starfield sidebarWidth={SIDEBAR_WIDTH} visible={theme === 'dark'} />}
         {showGrid && <DualGrid sidebarWidth={SIDEBAR_WIDTH} />}
       </div>
 
@@ -70,9 +73,11 @@ const AppLayout: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <BrowserRouter>
-      <AppLayout />
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <AppLayout />
+      </BrowserRouter>
+    </ThemeProvider>
   );
 };
 

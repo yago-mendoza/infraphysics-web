@@ -13,42 +13,179 @@
               sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
               mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
             },
+            colors: {
+              'th-base':        'var(--bg-base)',
+              'th-surface':     'var(--bg-surface)',
+              'th-surface-alt': 'var(--bg-surface-alt)',
+              'th-elevated':    'var(--bg-elevated)',
+              'th-active':      'var(--bg-active)',
+              'th-active-hover':'var(--bg-active-hover)',
+              'th-heading':     'var(--text-heading)',
+              'th-primary':     'var(--text-primary)',
+              'th-secondary':   'var(--text-secondary)',
+              'th-tertiary':    'var(--text-tertiary)',
+              'th-muted':       'var(--text-muted)',
+              'th-border':      'var(--border-default)',
+              'th-border-hover':'var(--border-hover)',
+              'th-border-active':'var(--border-active)',
+              'th-sidebar':     'var(--sidebar-bg)',
+              'th-overlay':     'var(--overlay-bg)',
+            },
           },
         },
       };
     </script>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+      /* ─── Theme tokens ─── */
       :root {
+        color-scheme: dark;
         --font-mono: 'JetBrains Mono', ui-monospace, monospace;
         --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+        /* Backgrounds */
+        --bg-base:        #000000;
+        --bg-surface:     rgba(255,255,255,0.02);
+        --bg-surface-alt: rgba(255,255,255,0.04);
+        --bg-elevated:    rgba(255,255,255,0.06);
+        --bg-active:      rgba(255,255,255,0.10);
+        --bg-active-hover:rgba(255,255,255,0.15);
+
+        /* Text */
+        --text-heading:   #ffffff;
+        --text-primary:   #e8eaed;
+        --text-secondary: #9ca3af;
+        --text-tertiary:  #6b7280;
+        --text-muted:     #4b5563;
+
+        /* Borders */
+        --border-default: rgba(255,255,255,0.10);
+        --border-hover:   rgba(255,255,255,0.20);
+        --border-active:  rgba(255,255,255,0.25);
+
+        /* Grid */
+        --grid-small: rgba(255,255,255,0.03);
+        --grid-large: rgba(255,255,255,0.06);
+
+        /* Sidebar */
+        --sidebar-bg:          #2D2D2D;
+        --sidebar-text:        #E8EAED;
+        --sidebar-text-active: #FFFFFF;
+        --sidebar-icon:        #9AA0A6;
+        --sidebar-section:     #6B7280;
+
+        /* Content (markdown) */
+        --content-text:              #D1D5DB;
+        --content-heading:           #F3F4F6;
+        --content-link:              #60A5FA;
+        --content-link-hover:        #93BBFD;
+        --content-code-bg:           rgba(255,255,255,0.06);
+        --content-code-text:         #E8EAED;
+        --content-pre-bg:            rgba(255,255,255,0.05);
+        --content-pre-border:        rgba(255,255,255,0.08);
+        --content-blockquote-border: rgba(255,255,255,0.15);
+        --content-blockquote-text:   #9CA3AF;
+        --content-table-border:      rgba(255,255,255,0.10);
+        --content-table-header:      rgba(255,255,255,0.05);
+        --content-img-border:        rgba(255,255,255,0.10);
+        --content-img-bg:            rgba(255,255,255,0.03);
+
+        /* Wiki links */
+        --wiki-link:            #A78BFA;
+        --wiki-link-hover:      #C4B5FD;
+        --wiki-preview-bg:      #111111;
+        --wiki-preview-border:  rgba(255,255,255,0.10);
+        --wiki-preview-title:   #E8EAED;
+        --wiki-preview-desc:    #9CA3AF;
+        --wiki-preview-hint:    #6B7280;
+        --wiki-unresolved:      #6B7280;
+
+        /* Misc */
+        --scrollbar-thumb:  #333333;
+        --highlight-bg:     rgba(252,211,77,0.15);
+        --highlight-text:   #fcd34d;
+        --overlay-bg:       rgba(0,0,0,0.60);
+        --selection-bg:     rgba(59,130,246,0.20);
+        --focus-ring:       rgba(59,130,246,0.15);
       }
+
+      [data-theme="light"] {
+        color-scheme: light;
+
+        --bg-base:        #ffffff;
+        --bg-surface:     #f9fafb;
+        --bg-surface-alt: #f3f4f6;
+        --bg-elevated:    #e5e7eb;
+        --bg-active:      rgba(0,0,0,0.06);
+        --bg-active-hover:rgba(0,0,0,0.10);
+
+        --text-heading:   #111827;
+        --text-primary:   #1f2937;
+        --text-secondary: #4b5563;
+        --text-tertiary:  #6b7280;
+        --text-muted:     #9ca3af;
+
+        --border-default: rgba(0,0,0,0.10);
+        --border-hover:   rgba(0,0,0,0.20);
+        --border-active:  rgba(0,0,0,0.30);
+
+        --grid-small: rgba(0,0,0,0.05);
+        --grid-large: rgba(0,0,0,0.09);
+
+        --sidebar-bg:          #f3f4f6;
+        --sidebar-text:        #374151;
+        --sidebar-text-active: #111827;
+        --sidebar-icon:        #6B7280;
+        --sidebar-section:     #9CA3AF;
+
+        --content-text:              #374151;
+        --content-heading:           #111827;
+        --content-link:              #2563EB;
+        --content-link-hover:        #1D4ED8;
+        --content-code-bg:           #f3f4f6;
+        --content-code-text:         #1f2937;
+        --content-pre-bg:            #1f2937;
+        --content-pre-border:        #374151;
+        --content-blockquote-border: #d1d5db;
+        --content-blockquote-text:   #6b7280;
+        --content-table-border:      #e5e7eb;
+        --content-table-header:      #f9fafb;
+        --content-img-border:        #e5e7eb;
+        --content-img-bg:            #f9fafb;
+
+        --wiki-link:            #7C3AED;
+        --wiki-link-hover:      #6D28D9;
+        --wiki-preview-bg:      #ffffff;
+        --wiki-preview-border:  #e5e7eb;
+        --wiki-preview-title:   #1F2937;
+        --wiki-preview-desc:    #6B7280;
+        --wiki-preview-hint:    #9CA3AF;
+        --wiki-unresolved:      #9CA3AF;
+
+        --scrollbar-thumb:  #d1d5db;
+        --highlight-bg:     rgba(252,211,77,0.30);
+        --highlight-text:   #92400e;
+        --overlay-bg:       rgba(0,0,0,0.20);
+        --selection-bg:     rgba(59,130,246,0.15);
+        --focus-ring:       rgba(59,130,246,0.10);
+      }
+
       body {
         font-family: var(--font-mono);
-        background-color: #f1f1f1;
-        color: #313131;
+        background-color: var(--bg-base);
+        color: var(--text-primary);
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
       }
 
       * { font-family: inherit; }
-      .font-mono {
-        font-family: var(--font-mono);
-      }
-      .font-sans {
-        font-family: var(--font-sans);
-      }
+      .font-mono { font-family: var(--font-mono); }
+      .font-sans { font-family: var(--font-sans); }
 
-      /* Scrollbar */
-      ::-webkit-scrollbar {
-        width: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #000;
-      }
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); }
     </style>
   <script type="importmap">
 {

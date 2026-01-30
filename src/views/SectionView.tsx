@@ -1,4 +1,4 @@
-// Category listing view component (projects, threads, bits2bricks) — dark theme
+// Category listing view component (projects, threads, bits2bricks) — theme-aware
 
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
@@ -80,27 +80,27 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
   return (
     <div className="animate-fade-in">
       {/* Breadcrumb */}
-      <nav className="mb-6 text-xs text-gray-500 flex items-center gap-2">
-        <Link to="/home" className="hover:text-gray-300 transition-colors">home</Link>
-        <span className="text-gray-600">/</span>
-        <span className="text-gray-600">lab</span>
-        <span className="text-gray-600">/</span>
-        <span className="text-gray-400">{category}</span>
+      <nav className="mb-6 text-xs text-th-tertiary flex items-center gap-2">
+        <Link to="/home" className="hover:text-th-secondary transition-colors">home</Link>
+        <span className="text-th-muted">/</span>
+        <span className="text-th-muted">lab</span>
+        <span className="text-th-muted">/</span>
+        <span className="text-th-secondary">{category}</span>
       </nav>
 
       {/* Header — clean, no icon box */}
-      <header className="mb-8 pb-6 border-b border-white/10">
+      <header className="mb-8 pb-6 border-b border-th-border">
         <div className="flex items-baseline justify-between gap-4 mb-3">
           <h1 className={`text-3xl font-bold tracking-tight lowercase ${colorClass}`}>
             {categoryInfo.title}
           </h1>
-          <div className="flex items-center gap-4 text-xs text-gray-500">
+          <div className="flex items-center gap-4 text-xs text-th-tertiary">
             <span>{filteredPosts.length} {filteredPosts.length === 1 ? 'entry' : 'entries'}</span>
-            <span className="text-gray-600">&middot;</span>
+            <span className="text-th-muted">&middot;</span>
             <span>{filteredPosts.reduce((acc, p) => acc + calculateReadingTime(p.content), 0)} min total</span>
           </div>
         </div>
-        <p className="text-sm text-gray-400 leading-relaxed max-w-2xl font-sans">
+        <p className="text-sm text-th-secondary leading-relaxed max-w-2xl font-sans">
           {categoryInfo.description}
         </p>
       </header>
@@ -108,34 +108,34 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
       {/* Toolbar — Search & Filters */}
       <div className="mb-8 space-y-4">
         <div className="flex gap-3">
-          <div className="flex-1 group flex items-center border border-white/10 px-3 py-2.5 focus-within:border-white/25 transition-colors bg-white/[0.03]">
-            <span className="text-gray-500"><SearchIcon /></span>
+          <div className="flex-1 group flex items-center border border-th-border px-3 py-2.5 focus-within:border-th-border-active transition-colors bg-th-surface-alt">
+            <span className="text-th-tertiary"><SearchIcon /></span>
             <input
               type="text"
               onChange={(e) => setQuery(e.target.value)}
               placeholder={`Search ${category}...`}
-              className="w-full bg-transparent border-none ml-2.5 text-sm focus:outline-none placeholder-gray-500 text-gray-200"
+              className="w-full bg-transparent border-none ml-2.5 text-sm focus:outline-none placeholder-th-tertiary text-th-primary"
             />
           </div>
 
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`px-4 py-2.5 border flex items-center gap-2 text-xs transition-all ${showFilters ? 'bg-white/10 text-white border-white/20' : 'border-white/10 text-gray-400 hover:border-white/20 bg-white/[0.03]'}`}
+            className={`px-4 py-2.5 border flex items-center gap-2 text-xs transition-all ${showFilters ? 'bg-th-active text-th-heading border-th-border-hover' : 'border-th-border text-th-secondary hover:border-th-border-hover bg-th-surface-alt'}`}
           >
             <FilterIcon />
             Filters
           </button>
 
-          <div className="flex border border-white/10 bg-white/[0.03]">
+          <div className="flex border border-th-border bg-th-surface-alt">
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2.5 transition-colors ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'}`}
+              className={`p-2.5 transition-colors ${viewMode === 'list' ? 'bg-th-active text-th-heading' : 'text-th-tertiary hover:text-th-secondary'}`}
             >
               <ListIcon />
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2.5 transition-colors ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'}`}
+              className={`p-2.5 transition-colors ${viewMode === 'grid' ? 'bg-th-active text-th-heading' : 'text-th-tertiary hover:text-th-secondary'}`}
             >
               <GridIcon />
             </button>
@@ -143,13 +143,13 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
         </div>
 
         {showFilters && (
-          <div className="flex flex-wrap gap-4 p-4 bg-white/[0.03] border border-white/10 rounded-sm animate-fade-in">
+          <div className="flex flex-wrap gap-4 p-4 bg-th-surface-alt border border-th-border rounded-sm animate-fade-in">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 uppercase">Sort by:</span>
+              <span className="text-xs text-th-tertiary uppercase">Sort by:</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest' | 'title')}
-                className="text-xs border border-white/10 rounded-sm px-2 py-1.5 bg-white/[0.05] text-gray-300 focus:outline-none focus:border-white/25"
+                className="text-xs border border-th-border rounded-sm px-2 py-1.5 bg-th-elevated text-th-secondary focus:outline-none focus:border-th-border-active"
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
@@ -171,12 +171,12 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
                 <div key={post.id} className="group relative">
                   <Link
                     to={`/${post.category}/${post.id}`}
-                    className="block p-4 border border-white/8 rounded-sm bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04] transition-all"
+                    className="block p-4 border border-th-border rounded-sm bg-th-surface hover:border-th-border-hover hover:bg-th-surface-alt transition-all"
                   >
                     <div className="flex flex-col md:flex-row md:gap-5">
                       {/* Thumbnail */}
                       {post.thumbnail && (
-                        <div className="w-full md:w-44 md:h-28 flex-shrink-0 bg-white/[0.03] border border-white/8 overflow-hidden rounded-sm mb-3 md:mb-0">
+                        <div className="w-full md:w-44 md:h-28 flex-shrink-0 bg-th-surface-alt border border-th-border overflow-hidden rounded-sm mb-3 md:mb-0">
                           <img
                             src={post.thumbnail}
                             alt=""
@@ -191,17 +191,17 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
                           <div className="flex items-center gap-2 min-w-0">
                             {/* Pinned badge */}
                             {post.featured && index === 0 && (
-                              <span className="text-[10px] text-gray-500 border border-white/10 px-1.5 py-0.5 rounded-sm flex-shrink-0">
+                              <span className="text-[10px] text-th-tertiary border border-th-border px-1.5 py-0.5 rounded-sm flex-shrink-0">
                                 pinned
                               </span>
                             )}
-                            <h2 className="text-base font-semibold lowercase leading-tight text-gray-100 group-hover:text-blue-400 transition-colors truncate">
+                            <h2 className="text-base font-semibold lowercase leading-tight text-th-primary group-hover:text-blue-400 transition-colors truncate">
                               <Highlight text={post.displayTitle || post.title} query={query} />
                             </h2>
                           </div>
-                          <div className="flex items-center gap-2 text-xs text-gray-500 whitespace-nowrap flex-shrink-0">
+                          <div className="flex items-center gap-2 text-xs text-th-tertiary whitespace-nowrap flex-shrink-0">
                             <span>{formatDate(post.date)}</span>
-                            <span className="text-gray-600">&middot;</span>
+                            <span className="text-th-muted">&middot;</span>
                             <span className="flex items-center gap-1">
                               <ClockIcon />
                               {calculateReadingTime(post.content)} min
@@ -209,7 +209,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
                           </div>
                         </div>
 
-                        <p className={`text-gray-400 text-sm leading-relaxed font-sans mb-3 ${isThreads ? 'line-clamp-3' : 'line-clamp-2'}`}>
+                        <p className={`text-th-secondary text-sm leading-relaxed font-sans mb-3 ${isThreads ? 'line-clamp-3' : 'line-clamp-2'}`}>
                           <Highlight text={post.description} query={query} />
                         </p>
 
@@ -221,9 +221,9 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
                               {post.status && <StatusBadge status={post.status} />}
                               {post.technologies && post.technologies.length > 0 && (
                                 <div className="flex items-center gap-1.5">
-                                  <span className="text-gray-600">stack:</span>
+                                  <span className="text-th-muted">stack:</span>
                                   {post.technologies.slice(0, 3).map(tech => (
-                                    <span key={tech} className="px-1.5 py-0.5 text-[10px] bg-white/[0.06] text-gray-400 rounded-sm">
+                                    <span key={tech} className="px-1.5 py-0.5 text-[10px] bg-th-elevated text-th-secondary rounded-sm">
                                       {tech}
                                     </span>
                                   ))}
@@ -238,9 +238,9 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
                               {post.status && <StatusBadge status={post.status} />}
                               {post.technologies && post.technologies.length > 0 && (
                                 <div className="flex items-center gap-1.5">
-                                  <span className="text-gray-600">components:</span>
+                                  <span className="text-th-muted">components:</span>
                                   {post.technologies.slice(0, 3).map(tech => (
-                                    <span key={tech} className="px-1.5 py-0.5 text-[10px] bg-white/[0.06] text-gray-400 rounded-sm">
+                                    <span key={tech} className="px-1.5 py-0.5 text-[10px] bg-th-elevated text-th-secondary rounded-sm">
                                       {tech}
                                     </span>
                                   ))}
@@ -258,14 +258,14 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
                           )}
 
                           {/* CTA */}
-                          <span className="text-gray-500 group-hover:text-blue-400 transition-colors flex items-center gap-1 ml-auto">
+                          <span className="text-th-tertiary group-hover:text-blue-400 transition-colors flex items-center gap-1 ml-auto">
                             {ctaLabel} <ArrowRightIcon />
                           </span>
                         </div>
 
                         {/* Search Excerpt */}
                         {contentExcerpt && (
-                          <div className="mt-3 text-xs text-gray-400 bg-yellow-400/5 p-2 border-l-2 border-yellow-400/40">
+                          <div className="mt-3 text-xs text-th-secondary p-2 border-l-2" style={{ backgroundColor: 'var(--highlight-bg)', borderColor: 'var(--highlight-text)' }}>
                             <Highlight text={contentExcerpt} query={query} />
                           </div>
                         )}
@@ -279,7 +279,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
                       href={post.github}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="absolute top-4 right-4 p-1.5 text-gray-500 hover:text-white bg-white/[0.03] border border-white/8 rounded-sm hover:border-white/20 transition-all z-10"
+                      className="absolute top-4 right-4 p-1.5 text-th-tertiary hover:text-th-heading bg-th-surface-alt border border-th-border rounded-sm hover:border-th-border-hover transition-all z-10"
                       onClick={(e) => e.stopPropagation()}
                       aria-label="View on GitHub"
                     >
@@ -291,8 +291,8 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
             })
           ) : (
             <div className="py-16 text-center">
-              <div className="text-gray-600 text-4xl mb-4">&empty;</div>
-              <p className="text-gray-500 text-sm">No entries found matching "{query}"</p>
+              <div className="text-th-muted text-4xl mb-4">&empty;</div>
+              <p className="text-th-tertiary text-sm">No entries found matching "{query}"</p>
             </div>
           )}
         </div>
@@ -304,9 +304,9 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
               <Link
                 key={post.id}
                 to={`/${post.category}/${post.id}`}
-                className="group block border border-white/8 rounded-sm overflow-hidden bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04] transition-all"
+                className="group block border border-th-border rounded-sm overflow-hidden bg-th-surface hover:border-th-border-hover hover:bg-th-surface-alt transition-all"
               >
-                <div className="aspect-video bg-white/[0.03] overflow-hidden">
+                <div className="aspect-video bg-th-surface-alt overflow-hidden">
                   <img
                     src={post.thumbnail || 'https://via.placeholder.com/150'}
                     alt=""
@@ -315,13 +315,13 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
                 </div>
                 <div className="p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] text-gray-500 uppercase">{formatDate(post.date)}</span>
-                    <span className="text-[10px] text-gray-500">{calculateReadingTime(post.content)} min</span>
+                    <span className="text-[10px] text-th-tertiary uppercase">{formatDate(post.date)}</span>
+                    <span className="text-[10px] text-th-tertiary">{calculateReadingTime(post.content)} min</span>
                   </div>
-                  <h3 className="font-semibold text-sm lowercase mb-2 text-gray-100 group-hover:text-blue-400 transition-colors line-clamp-2">
+                  <h3 className="font-semibold text-sm lowercase mb-2 text-th-primary group-hover:text-blue-400 transition-colors line-clamp-2">
                     {post.displayTitle || post.title}
                   </h3>
-                  <p className="text-xs text-gray-400 line-clamp-2 font-sans">{post.description}</p>
+                  <p className="text-xs text-th-secondary line-clamp-2 font-sans">{post.description}</p>
                   {isProjects && post.status && (
                     <div className="mt-2">
                       <StatusBadge status={post.status} />
@@ -332,8 +332,8 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
             ))
           ) : (
             <div className="col-span-full py-16 text-center">
-              <div className="text-gray-600 text-4xl mb-4">&empty;</div>
-              <p className="text-gray-500 text-sm">No entries found</p>
+              <div className="text-th-muted text-4xl mb-4">&empty;</div>
+              <p className="text-th-tertiary text-sm">No entries found</p>
             </div>
           )}
         </div>
