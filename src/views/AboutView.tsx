@@ -19,20 +19,31 @@ export const AboutView: React.FC = () => {
 
       {/* Hero: Photo + Name + Rotating subtitle */}
       <section className="pb-16">
-        <div className="flex items-center gap-5 mb-12">
-          <img
-            src="https://avatars.githubusercontent.com/yago-mendoza"
-            alt="Yago Mendoza"
-            className="w-20 h-20 rounded-full border-2 border-th-border object-cover"
-          />
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-th-heading mb-1">
-              Yago Mendoza
-            </h1>
-            <p className="text-sm text-th-secondary h-5">
-              <RotatingTitle />
-            </p>
+        <div className="relative mb-16 pt-4">
+          {/* Photo — large, with subtle glow */}
+          <div className="relative w-28 h-28 md:w-36 md:h-36 mb-6">
+            <div className="absolute inset-0 rounded-full bg-violet-400/10 blur-2xl scale-125" />
+            <img
+              src="https://avatars.githubusercontent.com/yago-mendoza"
+              alt="Yago Mendoza"
+              className="relative w-full h-full rounded-full border border-th-border object-cover"
+            />
           </div>
+
+          {/* Name */}
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-th-heading mb-2">
+            Yago Mendoza
+          </h1>
+
+          {/* Rotating subtitle */}
+          <p className="text-base text-th-secondary h-6 mb-5">
+            <RotatingTitle />
+          </p>
+
+          {/* Tagline */}
+          <p className="text-sm text-th-tertiary italic tracking-wide max-w-md">
+            My competitive advantage is that I'm having fun.
+          </p>
         </div>
 
         {/* The Journey */}
