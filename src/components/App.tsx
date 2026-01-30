@@ -3,10 +3,10 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Sidebar, MobileNav, Footer, DualGrid, Starfield } from './layout';
-import { HomeView, AboutView, ContactView, SectionView, PostView, SecondBrainView } from '../views';
+import { HomeView, AboutView, ContactView, ThanksView, SectionView, PostView, SecondBrainView } from '../views';
 import { SIDEBAR_WIDTH } from '../constants/layout';
 
-const DARK_PAGES = ['/', '/home', '/about', '/contact'];
+const DARK_PAGES = ['/', '/home', '/about', '/contact', '/thanks'];
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
@@ -40,6 +40,7 @@ const AppLayout: React.FC = () => {
             <Route path="/home" element={<HomeView />} />
             <Route path="/about" element={<AboutView />} />
             <Route path="/contact" element={<ContactView />} />
+            <Route path="/thanks" element={<ThanksView />} />
 
             <Route path="/projects" element={<SectionView category="projects" colorClass="text-emerald-600" />} />
             <Route path="/threads" element={<SectionView category="threads" colorClass="text-amber-600" />} />

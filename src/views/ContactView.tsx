@@ -1,41 +1,126 @@
-// Contact page — emails, social links, dark theme
+// Contact page — form, social links, dark theme
 
-import React from 'react';
+import React, { useState } from 'react';
 import { GitHubIcon, LinkedInIcon, TwitterIcon } from '../components/icons';
 
 export const ContactView: React.FC = () => {
+  const [status, setStatus] = useState<'idle' | 'submitting' | 'error'>('idle');
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setStatus('submitting');
+
+    const form = e.currentTarget;
+    const data = new FormData(form);
+
+    try {
+      const res = await fetch('https://formspree.io/f/xojwnobl', {
+        method: 'POST',
+        body: data,
+        headers: { Accept: 'application/json' },
+      });
+
+      if (res.ok) {
+        window.location.href = '/thanks';
+      } else {
+        setStatus('error');
+      }
+    } catch {
+      setStatus('error');
+    }
+  };
+
   return (
     <div className="flex flex-col animate-fade-in">
-      <section className="pb-16">
+      <section className="pt-6 md:pt-10 pb-16">
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-3">
           I'd love to hear from you
         </h1>
-        <p className="text-gray-400 text-sm font-sans mb-14 max-w-lg leading-relaxed">
+        <p className="text-gray-400 text-sm font-sans mb-12 max-w-lg leading-relaxed">
           Whether it's a question, a collaboration idea, or just a conversation worth having — drop me a line.
+          I typically respond within a few days. I'm especially interested in conversations about distributed systems, complexity science, and hardware projects.
         </p>
 
-        {/* Email Sections */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-14">
-          <div className="p-6 border border-white/10 rounded-sm bg-white/[0.02]">
-            <h2 className="text-xs text-gray-500 uppercase tracking-wider mb-4">General Inquiries</h2>
-            <a
-              href="mailto:contact@infraphysics.net"
-              className="text-white text-sm hover:text-blue-400 transition-colors"
-            >
-              contact@infraphysics.net
-            </a>
+        {/* Contact Form */}
+        <form onSubmit={handleSubmit} className="max-w-lg mb-14">
+          <div className="flex flex-col gap-5">
+            <div>
+              <label htmlFor="name" className="block text-xs text-gray-500 uppercase tracking-wider mb-2">
+                Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                required
+                className="w-full px-4 py-3 bg-white/[0.03] border border-white/10 rounded-sm text-white text-sm
+                           placeholder-gray-600 outline-none transition-colors
+                           focus:border-white/25 focus:bg-white/[0.05]"
+                placeholder="Your name"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-xs text-gray-500 uppercase tracking-wider mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                required
+                className="w-full px-4 py-3 bg-white/[0.03] border border-white/10 rounded-sm text-white text-sm
+                           placeholder-gray-600 outline-none transition-colors
+                           focus:border-white/25 focus:bg-white/[0.05]"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="message" className="block text-xs text-gray-500 uppercase tracking-wider mb-2">
+                Message
+              </label>
+              <textarea
+                id="message"
+                name="message"
+                required
+                rows={5}
+                className="w-full px-4 py-3 bg-white/[0.03] border border-white/10 rounded-sm text-white text-sm
+                           placeholder-gray-600 outline-none transition-colors resize-y
+                           focus:border-white/25 focus:bg-white/[0.05]"
+                placeholder="What's on your mind?"
+              />
+            </div>
           </div>
 
-          <div className="p-6 border border-white/10 rounded-sm bg-white/[0.02]">
-            <h2 className="text-xs text-gray-500 uppercase tracking-wider mb-4">Research & Collaborations</h2>
-            <a
-              href="mailto:yagomj@gmail.com"
-              className="text-white text-sm hover:text-blue-400 transition-colors"
-            >
+          {status === 'error' && (
+            <p className="text-red-400 text-xs mt-3">
+              Something went wrong. You can also reach me at contact@infraphysics.net.
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={status === 'submitting'}
+            className="mt-6 px-6 py-2.5 bg-white/10 border border-white/10 rounded-sm text-white text-sm
+                       transition-all hover:bg-white/15 hover:border-white/20
+                       disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {status === 'submitting' ? 'Sending...' : 'Send message'}
+          </button>
+
+          <p className="mt-4 text-xs text-gray-600 leading-relaxed">
+            Not a form person —{' '}
+            <a href="mailto:contact@infraphysics.net" className="text-gray-500 hover:text-white transition-colors">
+              contact@infraphysics.net
+            </a>
+            {' '}or{' '}
+            <a href="mailto:yagomj@gmail.com" className="text-gray-500 hover:text-white transition-colors">
               yagomj@gmail.com
             </a>
-          </div>
-        </div>
+            {' '}work just as well.
+          </p>
+        </form>
 
         {/* Elsewhere */}
         <div className="mb-14">

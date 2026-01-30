@@ -10,18 +10,8 @@ import {
   GradCapIcon,
   DiamondIcon,
   MailIcon,
-  GitHubIcon,
-  LinkedInIcon,
-  TwitterIcon,
 } from '../icons';
 import { COLORS } from '../../constants/theme';
-import { SOCIAL_LINKS } from '../../config/navigation';
-
-const SOCIAL_ICONS: Record<string, React.ReactNode> = {
-  GitHub: <GitHubIcon />,
-  LinkedIn: <LinkedInIcon />,
-  'Twitter/X': <TwitterIcon />,
-};
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
@@ -100,25 +90,6 @@ export const Sidebar: React.FC = () => {
 
       {/* Spacer */}
       <div className="flex-1" />
-
-      {/* Social Icons */}
-      <div className="flex justify-center gap-2 pb-2">
-        {SOCIAL_LINKS.map(link => (
-          <a
-            key={link.label}
-            href={link.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2 rounded-sm transition-all hover:opacity-100"
-            style={{ color: sidebar.icon, opacity: 0.6 }}
-            aria-label={link.label}
-            onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
-            onMouseLeave={e => (e.currentTarget.style.opacity = '0.6')}
-          >
-            {SOCIAL_ICONS[link.label]}
-          </a>
-        ))}
-      </div>
     </aside>
   );
 };

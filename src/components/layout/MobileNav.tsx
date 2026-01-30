@@ -11,19 +11,9 @@ import {
   GradCapIcon,
   DiamondIcon,
   MailIcon,
-  GitHubIcon,
-  LinkedInIcon,
-  TwitterIcon,
   MenuIcon,
   CloseIcon
 } from '../icons';
-import { SOCIAL_LINKS } from '../../config/navigation';
-
-const SOCIAL_ICONS: Record<string, React.ReactNode> = {
-  GitHub: <GitHubIcon />,
-  LinkedIn: <LinkedInIcon />,
-  'Twitter/X': <TwitterIcon />,
-};
 
 export const MobileNav: React.FC = () => {
   const location = useLocation();
@@ -105,22 +95,6 @@ export const MobileNav: React.FC = () => {
 
               {/* Divider */}
               <div className="my-3 border-t border-gray-100"></div>
-
-              {/* Social Links */}
-              <div className="flex items-center gap-3 px-4 py-2">
-                <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400">connect</span>
-                {SOCIAL_LINKS.map(link => (
-                  <a
-                    key={link.label}
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-sm transition-all"
-                  >
-                    {SOCIAL_ICONS[link.label]}
-                  </a>
-                ))}
-              </div>
 
               {/* Random Button */}
               <button
