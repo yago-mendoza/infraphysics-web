@@ -14,12 +14,13 @@ export interface SocialLink {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { path: '/about', label: 'about', colorClass: 'text-gray-900' },
-  { path: '/projects', label: 'projects', colorClass: 'text-emerald-600', activeAccent: '#10B981' },
-  { path: '/threads', label: 'threads', colorClass: 'text-amber-600', activeAccent: '#F59E0B' },
-  { path: '/bits2bricks', label: 'bits2bricks', colorClass: 'text-blue-600', activeAccent: '#3B82F6' },
-  { path: '/second-brain', label: '2ⁿᵈ Brain', colorClass: 'text-violet-600', activeAccent: '#8B5CF6' },
-  { path: '/contact', label: 'contact', colorClass: 'text-gray-900' },
+  { path: '/home', label: 'home', colorClass: 'text-blue-400', activeAccent: '#3B82F6' },
+  { path: '/about', label: 'about', colorClass: 'text-gray-200' },
+  { path: '/lab/projects', label: 'projects', colorClass: 'text-emerald-400', activeAccent: '#10B981' },
+  { path: '/lab/threads', label: 'threads', colorClass: 'text-amber-400', activeAccent: '#F59E0B' },
+  { path: '/lab/bits2bricks', label: 'bits2bricks', colorClass: 'text-blue-400', activeAccent: '#3B82F6' },
+  { path: '/second-brain', label: '2\u207F\u1D48 Brain', colorClass: 'text-violet-400', activeAccent: '#8B5CF6' },
+  { path: '/contact', label: 'contact', colorClass: 'text-gray-200' },
 ];
 
 export const SOCIAL_LINKS: SocialLink[] = [

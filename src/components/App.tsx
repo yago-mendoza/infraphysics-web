@@ -6,24 +6,23 @@ import { Sidebar, MobileNav, Footer, DualGrid, Starfield } from './layout';
 import { HomeView, AboutView, ContactView, ThanksView, SectionView, PostView, SecondBrainView } from '../views';
 import { SIDEBAR_WIDTH } from '../constants/layout';
 
-const DARK_PAGES = ['/', '/home', '/about', '/contact', '/thanks'];
+const STARFIELD_PAGES = ['/', '/home', '/about', '/contact', '/thanks'];
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
-  const isDarkPage = DARK_PAGES.includes(location.pathname);
+  const showStarfield = STARFIELD_PAGES.includes(location.pathname);
+  const showGrid = location.pathname.startsWith('/lab') ||
+                   location.pathname.startsWith('/second-brain');
 
   return (
     <div
       className="min-h-screen flex selection:bg-yellow-100 selection:text-black relative"
-      style={isDarkPage ? { backgroundColor: '#000' } : undefined}
+      style={{ backgroundColor: '#000' }}
     >
-      {/* Background — Starfield on dark pages, DualGrid elsewhere */}
+      {/* Background — Starfield on personal pages, DualGrid on lab/wiki, clean on posts */}
       <div className="hidden md:block">
-        {isDarkPage ? (
-          <Starfield sidebarWidth={SIDEBAR_WIDTH} />
-        ) : (
-          <DualGrid sidebarWidth={SIDEBAR_WIDTH} />
-        )}
+        {showStarfield && <Starfield sidebarWidth={SIDEBAR_WIDTH} />}
+        {showGrid && <DualGrid sidebarWidth={SIDEBAR_WIDTH} />}
       </div>
 
       {/* Mobile Navigation */}
@@ -42,25 +41,28 @@ const AppLayout: React.FC = () => {
             <Route path="/contact" element={<ContactView />} />
             <Route path="/thanks" element={<ThanksView />} />
 
-            <Route path="/projects" element={<SectionView category="projects" colorClass="text-emerald-600" />} />
-            <Route path="/threads" element={<SectionView category="threads" colorClass="text-amber-600" />} />
-            <Route path="/bits2bricks" element={<SectionView category="bits2bricks" colorClass="text-blue-600" />} />
-
-            {/* Second Brain (formerly Field Notes) */}
-            <Route path="/second-brain" element={<SecondBrainView />} />
-            <Route path="/second-brain/:id" element={<SecondBrainView />} />
+            {/* Lab sections */}
+            <Route path="/lab/projects" element={<SectionView category="projects" colorClass="text-emerald-400" />} />
+            <Route path="/lab/threads" element={<SectionView category="threads" colorClass="text-amber-400" />} />
+            <Route path="/lab/bits2bricks" element={<SectionView category="bits2bricks" colorClass="text-blue-400" />} />
 
             {/* Legacy redirects */}
+            <Route path="/projects" element={<Navigate to="/lab/projects" replace />} />
+            <Route path="/threads" element={<Navigate to="/lab/threads" replace />} />
+            <Route path="/bits2bricks" element={<Navigate to="/lab/bits2bricks" replace />} />
+
+            {/* Second Brain */}
+            <Route path="/second-brain" element={<SecondBrainView />} />
+            <Route path="/second-brain/:id" element={<SecondBrainView />} />
             <Route path="/fieldnotes" element={<Navigate to="/second-brain" replace />} />
             <Route path="/fieldnotes/:id" element={<Navigate to="/second-brain" replace />} />
 
-            {/* General post view for other categories */}
+            {/* Post detail views */}
             <Route path="/:category/:id" element={<PostView />} />
           </Routes>
         </main>
 
-        {/* Hide footer on dark pages */}
-        {!isDarkPage && <Footer />}
+        <Footer />
       </div>
     </div>
   );

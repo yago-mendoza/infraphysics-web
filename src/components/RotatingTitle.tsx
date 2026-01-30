@@ -3,13 +3,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const titles = [
-  'Systems architect',
   'Industrial engineer',
-  'Infra tinkerer',
-  'Complexity wrangler',
+  'Systems builder',
   'Generalist with leverage',
-  'ATOMS Engineer',
-  'Head of AI',
+  'Software craftsman',
 ];
 
 type Phase = 'show' | 'fadeOut' | 'fadeIn';

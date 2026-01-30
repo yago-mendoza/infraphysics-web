@@ -64,8 +64,8 @@
   max-width: 50%;
   height: auto;
   border-radius: 0.125rem;
-  border: 1px solid #e5e7eb;
-  background-color: #f9fafb;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
 .img-side-content {
@@ -77,16 +77,19 @@
   text-align: justify;
   line-height: 1.625;
   font-size: 0.875rem;
-  color: #374151;
+  color: #9CA3AF;
 }
 
 .img-side-content p:last-child {
   margin-bottom: 0;
 }
 
-/* Markdown content styling */
+/* ============================================================
+   Markdown content styling — dark theme
+   ============================================================ */
 .content-html {
   font-family: var(--font-sans);
+  color: #D1D5DB;
 }
 
 .content-html h1,
@@ -94,6 +97,7 @@
 .content-html h3,
 .content-html h4 {
   font-family: var(--font-mono);
+  color: #F3F4F6;
 }
 
 .content-html h1 {
@@ -120,7 +124,7 @@
   text-align: justify;
   line-height: 1.625;
   font-size: 0.875rem;
-  color: #374151;
+  color: #D1D5DB;
 }
 
 .content-html ul,
@@ -133,15 +137,15 @@
   margin-left: 1rem;
   list-style-type: disc;
   font-size: 0.875rem;
-  color: #1f2937;
+  color: #D1D5DB;
   line-height: 1.625;
   padding-left: 0.25rem;
 }
 
 .content-html img {
   border-radius: 0.125rem;
-  border: 1px solid #e5e7eb;
-  background-color: #f9fafb;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
 .content-html img:not([class]) {
@@ -153,15 +157,16 @@
 }
 
 .content-html blockquote {
-  border-left: 3px solid #e5e7eb;
+  border-left: 3px solid rgba(255, 255, 255, 0.15);
   padding-left: 1rem;
   margin: 1rem 0;
-  color: #6b7280;
+  color: #9CA3AF;
   font-style: italic;
 }
 
 .content-html code {
-  background-color: #f3f4f6;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #E8EAED;
   padding: 0.125rem 0.25rem;
   border-radius: 0.25rem;
   font-family: var(--font-mono);
@@ -169,12 +174,13 @@
 }
 
 .content-html pre {
-  background-color: #1f2937;
-  color: #f9fafb;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #E8EAED;
   padding: 1rem;
   border-radius: 0.25rem;
   overflow-x: auto;
   margin: 1rem 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .content-html pre code {
@@ -184,12 +190,15 @@
 }
 
 .content-html a {
-  color: #2563eb;
-  text-decoration: underline;
+  color: #60A5FA;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
 }
 
 .content-html a:hover {
-  color: #1d4ed8;
+  border-bottom-color: #60A5FA;
+  color: #93BBFD;
 }
 
 .content-html table {
@@ -200,14 +209,15 @@
 
 .content-html th,
 .content-html td {
-  border: 1px solid #e5e7eb;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 0.5rem;
   text-align: left;
 }
 
 .content-html th {
-  background-color: #f9fafb;
+  background-color: rgba(255, 255, 255, 0.05);
   font-weight: 600;
+  color: #F3F4F6;
 }
 
 /* Clear floats after content */
@@ -252,21 +262,21 @@
    ============================================================ */
 
 .wiki-ref-resolved {
-  color: #7C3AED !important;
+  color: #A78BFA !important;
   text-decoration: none !important;
-  border-bottom: 1px dashed #7C3AED !important;
+  border-bottom: 1px dashed #A78BFA !important;
   transition: border-bottom-style 0.15s ease, color 0.15s ease;
   cursor: pointer;
 }
 
 .wiki-ref-resolved:hover {
   border-bottom-style: solid !important;
-  color: #6D28D9 !important;
+  color: #C4B5FD !important;
 }
 
 .wiki-ref-icon {
   font-size: 0.55em;
-  color: #7C3AED;
+  color: #A78BFA;
   opacity: 0.6;
   transition: opacity 0.15s ease;
   margin-left: 1px;
@@ -279,8 +289,8 @@
 }
 
 .wiki-ref-unresolved {
-  color: #9CA3AF;
-  border-bottom: 1px dotted #9CA3AF;
+  color: #6B7280;
+  border-bottom: 1px dotted #6B7280;
   cursor: not-allowed;
 }
 
@@ -289,19 +299,19 @@
   opacity: 0.8;
 }
 
-/* Wiki-link hover preview card */
+/* Wiki-link hover preview card — dark */
 .wiki-preview-card {
   position: fixed;
   z-index: 9999;
   pointer-events: none;
   max-width: 320px;
   min-width: 220px;
-  background: white;
-  border: 1px solid #E5E7EB;
-  border-left: 3px solid #7C3AED;
+  background: #111111;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 3px solid #A78BFA;
   border-radius: 4px;
   padding: 12px 14px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   animation: wikiPreviewFadeIn 0.15s ease-out forwards;
 }
 
@@ -319,7 +329,7 @@
 .wiki-preview-title {
   font-weight: 600;
   font-size: 0.875rem;
-  color: #1F2937;
+  color: #E8EAED;
   text-transform: lowercase;
   margin-bottom: 2px;
 }
@@ -327,14 +337,14 @@
 .wiki-preview-address {
   font-family: var(--font-mono);
   font-size: 0.7rem;
-  color: #7C3AED;
+  color: #A78BFA;
   margin-bottom: 6px;
   opacity: 0.8;
 }
 
 .wiki-preview-description {
   font-size: 0.8rem;
-  color: #6B7280;
+  color: #9CA3AF;
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -345,7 +355,7 @@
 
 .wiki-preview-hint {
   font-size: 0.65rem;
-  color: #9CA3AF;
+  color: #6B7280;
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -392,25 +402,13 @@ input:focus,
 select:focus,
 button:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
 }
 
 /* Selection color */
 ::selection {
-  background-color: rgba(59, 130, 246, 0.15);
+  background-color: rgba(59, 130, 246, 0.2);
   color: inherit;
-}
-
-/* Link hover states */
-.content-html a {
-  color: #2563eb;
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.2s ease;
-}
-
-.content-html a:hover {
-  border-bottom-color: #2563eb;
 }
 
 /* ============================================================
@@ -420,8 +418,8 @@ button:focus {
 /* Subtle grid pattern for certain backgrounds */
 .industrial-grid {
   background-image:
-    linear-gradient(to right, rgba(0,0,0,0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0,0,0,0.03) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
   background-size: 20px 20px;
 }
 
@@ -431,7 +429,7 @@ button:focus {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #9ca3af;
+  color: #6B7280;
 }
 
 /* Status indicator */
@@ -458,7 +456,7 @@ button:focus {
 
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* Line clamp utilities */
@@ -477,7 +475,7 @@ button:focus {
 }
 
 /* ============================================================
-   Filter Tags & Chips
+   Filter Tags & Chips — dark
    ============================================================ */
 
 .chip {
@@ -493,20 +491,20 @@ button:focus {
 }
 
 .chip-outline {
-  border: 1px solid #e5e7eb;
-  background: white;
-  color: #6b7280;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: #9CA3AF;
 }
 
 .chip-outline:hover {
   border-color: #3b82f6;
-  color: #3b82f6;
+  color: #60A5FA;
 }
 
 .chip-filled {
-  background: #1f2937;
+  background: rgba(255, 255, 255, 0.1);
   color: white;
-  border: 1px solid #1f2937;
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 /* ============================================================
@@ -526,16 +524,16 @@ button:focus {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: #4B5563;
   border-radius: 2px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: #6B7280;
 }
 
 /* ============================================================
-   Tooltip styling
+   Tooltip styling — dark
    ============================================================ */
 
 .tooltip {
@@ -550,11 +548,12 @@ button:focus {
   transform: translateX(-50%);
   padding: 4px 8px;
   background: #1f2937;
-  color: white;
+  color: #E8EAED;
   font-size: 10px;
   font-family: var(--font-mono);
   white-space: nowrap;
   border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;

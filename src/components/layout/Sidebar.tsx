@@ -4,7 +4,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Logo,
-  HomeIcon,
+  UserIcon,
   GearIcon,
   ThreadIcon,
   GradCapIcon,
@@ -70,9 +70,9 @@ export const Sidebar: React.FC = () => {
       {/* ── LAB ── */}
       {sectionLabel('lab')}
       <nav className="flex flex-col gap-1">
-        {navLink('/projects', <GearIcon />, 'projects', category.projects.accent)}
-        {navLink('/threads', <ThreadIcon />, 'threads', category.threads.accent)}
-        {navLink('/bits2bricks', <GradCapIcon />, 'bits2bricks', category.bits2bricks.accent)}
+        {navLink('/lab/projects', <GearIcon />, 'projects', category.projects.accent)}
+        {navLink('/lab/threads', <ThreadIcon />, 'threads', category.threads.accent)}
+        {navLink('/lab/bits2bricks', <GradCapIcon />, 'bits2bricks', category.bits2bricks.accent)}
       </nav>
 
       {/* ── WIKI ── */}
@@ -84,7 +84,7 @@ export const Sidebar: React.FC = () => {
       {/* ── META ── */}
       {sectionLabel('meta')}
       <nav className="flex flex-col gap-1">
-        {navLink('/about', <HomeIcon />, 'about', sidebar.activeAccent)}
+        {navLink('/about', <UserIcon />, 'about', sidebar.activeAccent)}
         {navLink('/contact', <MailIcon />, 'contact', sidebar.activeAccent)}
       </nav>
 

@@ -41,14 +41,14 @@ export const AboutView: React.FC = () => {
 
           <div className="space-y-8 max-w-2xl font-sans">
             <p className="text-gray-300 leading-relaxed border-l-2 border-white/10 pl-5">
-              I started in the physical world — industrial engineering, factory floors, atoms.
-              Understanding how materials behave under stress, how systems fail, and how processes
-              compound. That foundation never left.
+              I started in the physical world. Industrial engineering. Factory floors. Understanding
+              how materials behave under stress, how systems fail, how processes compound. That
+              foundation never left.
             </p>
             <p className="text-gray-300 leading-relaxed">
-              Then came software. Not as a career pivot, but as an expansion of the same questions:
-              how do you build things that survive contact with reality? I learned to write code
-              the way I learned to design processes — by studying what breaks.
+              Then came software — not as a pivot, but as the same questions asked in a different
+              substrate. I learned to write code the way I learned to design processes: by studying
+              what breaks.
             </p>
 
             <blockquote className="border-l-2 border-violet-400/40 pl-5 py-2">
@@ -58,11 +58,12 @@ export const AboutView: React.FC = () => {
             </blockquote>
 
             <p className="text-gray-300 leading-relaxed">
-              Now the two worlds are converging. AI infrastructure, embedded systems, distributed
-              architectures — that boundary is where I build.
+              Now both worlds are converging faster than anyone expected. AI infrastructure, embedded
+              systems, edge computing — the boundary is where everything happens. And it's where I build.
             </p>
             <p className="text-gray-300 leading-relaxed">
-              This site is where I think out loud about all of it.
+              This site is where I document everything I learn. A living record. Interconnected,
+              permanent, honest.
             </p>
           </div>
         </div>
@@ -71,30 +72,25 @@ export const AboutView: React.FC = () => {
         <div className="mb-14">
           <h2 className="text-xs text-gray-500 uppercase tracking-wider mb-6">What I Believe</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="p-5 border border-white/10 rounded-sm bg-white/[0.02]">
-              <h3 className="text-white font-semibold mb-2 text-sm">Generalist Advantage</h3>
-              <p className="text-gray-400 text-sm leading-relaxed font-sans">
-                The best solutions come from people who can hold multiple domains in their head
-                simultaneously. Depth matters, but range compounds.
-              </p>
-            </div>
-
-            <div className="p-5 border border-white/10 rounded-sm bg-white/[0.02]">
-              <h3 className="text-white font-semibold mb-2 text-sm">Intelligence is a Resource</h3>
-              <p className="text-gray-400 text-sm leading-relaxed font-sans">
-                With AI, intelligence becomes an infrastructure problem — something to be provisioned,
-                orchestrated, and allocated rather than exclusively hired.
-              </p>
-            </div>
-
-            <div className="p-5 border border-white/10 rounded-sm bg-white/[0.02]">
-              <h3 className="text-white font-semibold mb-2 text-sm">Orchestration over Implementation</h3>
-              <p className="text-gray-400 text-sm leading-relaxed font-sans">
-                The leverage is in knowing what to build and why, not just how. Systems thinking
-                beats local optimization every time.
-              </p>
-            </div>
+          <div className="space-y-6 max-w-2xl font-sans">
+            <p className="text-gray-300 leading-relaxed">
+              I tend to approach things from a physics framework — reason from first principles, then build.
+            </p>
+            <p className="text-white leading-relaxed font-semibold text-lg">
+              My competitive advantage is that I'm having fun.
+            </p>
+            <p className="text-gray-300 leading-relaxed">
+              Without hardware, software is dead. The real breakthroughs happen where bits meet atoms.
+            </p>
+            <p className="text-gray-300 leading-relaxed">
+              AI is not magic. It's compute — and the faster we push it to the edge, the faster everything accelerates.
+            </p>
+            <p className="text-gray-300 leading-relaxed">
+              I'd rather be optimistic and wrong than pessimistic and right.
+            </p>
+            <p className="text-gray-300 leading-relaxed">
+              People should pursue what they're passionate about. That will make them happier than pretty much anything else.
+            </p>
           </div>
         </div>
 

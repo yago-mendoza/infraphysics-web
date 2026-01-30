@@ -1,4 +1,4 @@
-// Category metadata with associated icons and colors
+// Category metadata with associated icons and colors — dark theme
 
 import React from 'react';
 import { GearIcon, ThreadIcon, GradCapIcon } from '../components/icons';
@@ -18,31 +18,31 @@ export interface CategoryDisplayConfig {
 export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
   projects: {
     title: 'Projects',
-    description: 'Technical explorations, implementations, and case studies. Each project includes architecture decisions, challenges faced, and lessons learned.',
+    description: "What I've built, why, and what broke along the way.",
     icon: <GearIcon />,
-    colorClass: 'text-emerald-600',
-    bgClass: 'bg-emerald-50',
-    borderClass: 'border-emerald-200',
+    colorClass: 'text-emerald-400',
+    bgClass: 'bg-emerald-400/10',
+    borderClass: 'border-emerald-400/20',
     accent: '#10B981',
     darkBadge: 'text-emerald-400 border-emerald-400/30 bg-emerald-400/10',
   },
   threads: {
     title: 'Threads',
-    description: 'Long-form essays and connected thoughts on software engineering, systems design, and the philosophy of building things.',
+    description: 'Long-form thinking on engineering, systems, and how things work.',
     icon: <ThreadIcon />,
-    colorClass: 'text-amber-600',
-    bgClass: 'bg-amber-50',
-    borderClass: 'border-amber-200',
+    colorClass: 'text-amber-400',
+    bgClass: 'bg-amber-400/10',
+    borderClass: 'border-amber-400/20',
     accent: '#F59E0B',
     darkBadge: 'text-amber-400 border-amber-400/30 bg-amber-400/10',
   },
   bits2bricks: {
     title: 'Bits2Bricks',
-    description: 'Hardware projects bridging digital logic and physical reality. From FPGAs to 3D printing, exploring where code meets atoms.',
+    description: 'Where code meets atoms. Hardware, fabrication, physical computing.',
     icon: <GradCapIcon />,
-    colorClass: 'text-blue-600',
-    bgClass: 'bg-blue-50',
-    borderClass: 'border-blue-200',
+    colorClass: 'text-blue-400',
+    bgClass: 'bg-blue-400/10',
+    borderClass: 'border-blue-400/20',
     accent: '#3B82F6',
     darkBadge: 'text-blue-400 border-blue-400/30 bg-blue-400/10',
   },
@@ -52,18 +52,18 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
  * Get category color class (text color)
  */
 export const getCategoryColor = (cat: Category): string => {
-  if (cat === 'projects') return 'text-emerald-600';
-  if (cat === 'threads') return 'text-amber-600';
-  if (cat === 'bits2bricks') return 'text-blue-600';
-  return 'text-gray-600';
+  if (cat === 'projects') return 'text-emerald-400';
+  if (cat === 'threads') return 'text-amber-400';
+  if (cat === 'bits2bricks') return 'text-blue-400';
+  return 'text-gray-400';
 };
 
 /**
  * Get category background classes (bg + border)
  */
 export const getCategoryBg = (cat: Category): string => {
-  if (cat === 'projects') return 'bg-emerald-50 border-emerald-200';
-  if (cat === 'threads') return 'bg-amber-50 border-amber-200';
-  if (cat === 'bits2bricks') return 'bg-blue-50 border-blue-200';
-  return 'bg-gray-50 border-gray-200';
+  if (cat === 'projects') return 'bg-emerald-400/10 border-emerald-400/20';
+  if (cat === 'threads') return 'bg-amber-400/10 border-amber-400/20';
+  if (cat === 'bits2bricks') return 'bg-blue-400/10 border-blue-400/20';
+  return 'bg-white/5 border-white/10';
 };

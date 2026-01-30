@@ -34,7 +34,7 @@ export const ContactView: React.FC = () => {
     <div className="flex flex-col animate-fade-in">
       <section className="pt-6 md:pt-10 pb-16">
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-3">
-          I'd love to hear from you
+          Let's talk
         </h1>
         <p className="text-gray-400 text-sm font-sans mb-2 max-w-lg leading-relaxed">
           Whether it's a question, a collaboration idea, or just a conversation worth having — drop me a line.

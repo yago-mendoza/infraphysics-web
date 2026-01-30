@@ -66,24 +66,31 @@ export const HomeView: React.FC = () => {
       {/* Hero */}
       <section className="pt-8 md:pt-20 pb-20">
         <div className="max-w-xl">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-8">
-            <span className="text-white">I chase questions</span>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-3">
+            <span className="text-white">From systems to atoms</span>
             <br />
-            <span className="text-gray-400">that don't have answers yet.</span>
+            <span className="text-gray-400">and back.</span>
           </h1>
 
+          <p className="text-sm text-gray-500 italic tracking-wide mb-8">
+            Engineering is engineering. The substrate doesn't matter.
+          </p>
+
           <p className="text-gray-400 leading-relaxed text-base max-w-lg">
-            InfraPhysics is where engineering meets curiosity. I build at the intersection of
-            software systems, hardware, and AI — exploring how intelligence becomes infrastructure
-            and how complex systems emerge from simple rules.
+            Industrial engineer by training. I picked up code because every engineer
+            should &mdash; not to become a developer, but to move faster. Now I build at the boundary.
+          </p>
+
+          <p className="text-gray-400 leading-relaxed text-base max-w-lg mt-3">
+            This is my <span className="text-white font-semibold">lab</span>, my <span className="text-white font-semibold">notebook</span>, and my <span className="text-white font-semibold">proof of work</span>.
           </p>
 
           <p className="mt-4 text-sm text-gray-500">
             by{' '}
-            <Link to="/about" className="text-gray-400 hover:text-white transition-colors">
+            <Link to="/about" className="text-gray-400 hover:text-white transition-colors underline underline-offset-4 decoration-white/30">
               Yago Mendoza
             </Link>
-            {' '}&mdash; engineer, researcher, tinkerer
+            {' '}&mdash; industrial engineer, systems builder
           </p>
         </div>
       </section>
@@ -98,7 +105,7 @@ export const HomeView: React.FC = () => {
             return (
               <Link
                 key={key}
-                to={`/${key}`}
+                to={`/lab/${key}`}
                 className="group p-5 border border-white/10 rounded-sm bg-white/[0.02] hover:border-white/25 hover:bg-white/[0.04] transition-all"
               >
                 <div className="flex items-center gap-3 mb-3">
@@ -126,7 +133,7 @@ export const HomeView: React.FC = () => {
             <Link
               key={`${post.category}-${post.id}`}
               to={`/${post.category}/${post.id}`}
-              className="group p-5 border border-white/10 rounded-sm bg-white/[0.02] hover:border-white/25 hover:bg-white/[0.04] transition-all"
+              className="group p-5 border border-white/10 rounded-sm bg-white/[0.02] hover:border-white/25 hover:bg-white/[0.04] transition-all flex flex-col"
             >
               {post.thumbnail && (
                 <img
@@ -155,7 +162,7 @@ export const HomeView: React.FC = () => {
                 {post.highlight || post.description}
               </p>
 
-              <span className="inline-flex items-center gap-1 mt-4 text-xs text-gray-500 group-hover:text-blue-400 transition-colors">
+              <span className="inline-flex items-center gap-1 mt-auto pt-4 text-xs text-gray-500 group-hover:text-blue-400 transition-colors">
                 Read <ArrowRightIcon />
               </span>
             </Link>
@@ -168,7 +175,7 @@ export const HomeView: React.FC = () => {
         <div className="max-w-xl">
           <h2 className="text-xs text-violet-400 uppercase tracking-wider mb-4">Second Brain</h2>
           <p className="text-gray-300 leading-relaxed mb-4 font-sans">
-            Explore my working notes — an interconnected web of concepts, references, and ideas.
+            Everything I know, linked together. A growing knowledge graph.
           </p>
           <div className="flex gap-6 mb-6">
             <span className="text-sm text-gray-500">
