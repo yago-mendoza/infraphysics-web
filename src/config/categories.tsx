@@ -12,6 +12,7 @@ export interface CategoryDisplayConfig {
   bgClass: string;
   borderClass: string;
   accent: string;
+  darkBadge: string;
 }
 
 export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
@@ -23,6 +24,7 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
     bgClass: 'bg-emerald-50',
     borderClass: 'border-emerald-200',
     accent: '#10B981',
+    darkBadge: 'text-emerald-400 border-emerald-400/30 bg-emerald-400/10',
   },
   threads: {
     title: 'Threads',
@@ -32,6 +34,7 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
     bgClass: 'bg-amber-50',
     borderClass: 'border-amber-200',
     accent: '#F59E0B',
+    darkBadge: 'text-amber-400 border-amber-400/30 bg-amber-400/10',
   },
   bits2bricks: {
     title: 'Bits2Bricks',
@@ -41,6 +44,7 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
     bgClass: 'bg-blue-50',
     borderClass: 'border-blue-200',
     accent: '#3B82F6',
+    darkBadge: 'text-blue-400 border-blue-400/30 bg-blue-400/10',
   },
 };
 

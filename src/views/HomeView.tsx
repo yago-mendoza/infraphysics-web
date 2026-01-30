@@ -5,11 +5,14 @@ import { Link } from 'react-router-dom';
 import { posts } from '../data/data';
 import { Post } from '../types';
 import { ArrowRightIcon } from '../components/icons';
+import { CATEGORY_CONFIG } from '../config/categories';
 import homeFeaturedData from '../data/home-featured.generated.json';
 
 // Resolve featured post refs ("category/id") to actual Post objects
-function resolveFeatured(refs: { ref: string; highlight?: string }[]): (Post & { highlight?: string })[] {
-  const resolved: (Post & { highlight?: string })[] = [];
+type DisplayPost = Post & { highlight?: string };
+
+function resolveFeatured(refs: { ref: string; highlight?: string }[]): DisplayPost[] {
+  const resolved: DisplayPost[] = [];
   for (const entry of refs) {
     const [category, id] = entry.ref.split('/');
     const post = posts.find(p => p.category === category && p.id === id);
@@ -20,15 +23,42 @@ function resolveFeatured(refs: { ref: string; highlight?: string }[]): (Post & {
   return resolved;
 }
 
-// Category badge colors for dark theme
-const badgeColors: Record<string, string> = {
-  projects: 'text-emerald-400 border-emerald-400/30 bg-emerald-400/10',
-  threads: 'text-amber-400 border-amber-400/30 bg-amber-400/10',
-  bits2bricks: 'text-blue-400 border-blue-400/30 bg-blue-400/10',
-};
+const categoryKeys = ['projects', 'threads', 'bits2bricks'] as const;
 
 export const HomeView: React.FC = () => {
   const featuredPosts = useMemo(() => resolveFeatured(homeFeaturedData.featured), []);
+
+  // Post counts per category
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const key of categoryKeys) {
+      counts[key] = posts.filter(p => p.category === key).length;
+    }
+    return counts;
+  }, []);
+
+  // Inject latest non-fieldnotes post if not already featured
+  const { displayPosts, latestNewId } = useMemo(() => {
+    const nonFieldnotes = posts.filter(p => p.category !== 'fieldnotes');
+    const sorted = [...nonFieldnotes].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    const latest = sorted[0];
+    if (latest && !featuredPosts.some(fp => fp.id === latest.id && fp.category === latest.category)) {
+      return {
+        displayPosts: [{ ...latest } as DisplayPost, ...featuredPosts],
+        latestNewId: latest.id,
+      };
+    }
+    return { displayPosts: featuredPosts, latestNewId: null as string | null };
+  }, [featuredPosts]);
+
+  // Second Brain stats
+  const brainStats = useMemo(() => {
+    const fieldnotes = posts.filter(p => p.category === 'fieldnotes');
+    const totalRefs = fieldnotes.reduce((sum, fn) => sum + (fn.references?.length || 0), 0);
+    return { notes: fieldnotes.length, connections: totalRefs };
+  }, []);
 
   return (
     <div className="flex flex-col animate-fade-in font-sans">
@@ -47,6 +77,43 @@ export const HomeView: React.FC = () => {
             software systems, hardware, and AI — exploring how intelligence becomes infrastructure
             and how complex systems emerge from simple rules.
           </p>
+
+          <p className="mt-4 text-sm text-gray-500">
+            by{' '}
+            <Link to="/about" className="text-gray-400 hover:text-white transition-colors">
+              Yago Mendoza
+            </Link>
+            {' '}&mdash; engineer, researcher, tinkerer
+          </p>
+        </div>
+      </section>
+
+      {/* Categories */}
+      <section className="pb-16 border-t border-white/10 pt-12">
+        <h2 className="text-xs text-gray-500 uppercase tracking-wider mb-8">Explore</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {categoryKeys.map(key => {
+            const config = CATEGORY_CONFIG[key];
+            return (
+              <Link
+                key={key}
+                to={`/${key}`}
+                className="group p-5 border border-white/10 rounded-sm bg-white/[0.02] hover:border-white/25 hover:bg-white/[0.04] transition-all"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-gray-400 group-hover:text-gray-300 transition-colors">{config.icon}</span>
+                  <h3 className="text-white font-semibold">{config.title}</h3>
+                </div>
+                <p className="text-gray-400 text-sm leading-relaxed line-clamp-2 mb-3 font-sans">
+                  {config.description}
+                </p>
+                <span className="text-xs text-gray-500">
+                  {categoryCounts[key]} {categoryCounts[key] === 1 ? 'post' : 'posts'}
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </section>
 
@@ -55,16 +122,30 @@ export const HomeView: React.FC = () => {
         <h2 className="text-xs text-gray-500 uppercase tracking-wider mb-8">Latest Work</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {featuredPosts.map(post => (
+          {displayPosts.map(post => (
             <Link
-              key={post.id}
+              key={`${post.category}-${post.id}`}
               to={`/${post.category}/${post.id}`}
               className="group p-5 border border-white/10 rounded-sm bg-white/[0.02] hover:border-white/25 hover:bg-white/[0.04] transition-all"
             >
-              {/* Category badge */}
-              <span className={`inline-block px-2 py-0.5 text-[10px] uppercase border rounded-sm mb-3 ${badgeColors[post.category] || 'text-gray-400 border-gray-600'}`}>
-                {post.category}
-              </span>
+              {post.thumbnail && (
+                <img
+                  src={post.thumbnail}
+                  alt=""
+                  className="w-full h-32 object-cover rounded mb-4"
+                />
+              )}
+
+              <div className="flex items-center gap-2 mb-3">
+                <span className={`inline-block px-2 py-0.5 text-[10px] uppercase border rounded-sm ${CATEGORY_CONFIG[post.category]?.darkBadge || 'text-gray-400 border-gray-600'}`}>
+                  {post.category}
+                </span>
+                {post.id === latestNewId && (
+                  <span className="px-2 py-0.5 text-[10px] uppercase text-violet-400 border border-violet-400/30 bg-violet-400/10 rounded-sm">
+                    New
+                  </span>
+                )}
+              </div>
 
               <h3 className="text-white font-semibold leading-snug mb-2 group-hover:text-blue-400 transition-colors lowercase">
                 {post.displayTitle || post.title}
@@ -80,6 +161,43 @@ export const HomeView: React.FC = () => {
             </Link>
           ))}
         </div>
+      </section>
+
+      {/* Second Brain */}
+      <section className="pb-16 border-t border-white/10 pt-12">
+        <div className="max-w-xl">
+          <h2 className="text-xs text-violet-400 uppercase tracking-wider mb-4">Second Brain</h2>
+          <p className="text-gray-300 leading-relaxed mb-4 font-sans">
+            Explore my working notes — an interconnected web of concepts, references, and ideas.
+          </p>
+          <div className="flex gap-6 mb-6">
+            <span className="text-sm text-gray-500">
+              <span className="text-white font-semibold">{brainStats.notes}</span> notes
+            </span>
+            <span className="text-sm text-gray-500">
+              <span className="text-white font-semibold">{brainStats.connections}</span> connections
+            </span>
+          </div>
+          <Link
+            to="/second-brain"
+            className="inline-flex items-center gap-1 text-sm text-violet-400 hover:text-violet-300 transition-colors"
+          >
+            Open Second Brain <ArrowRightIcon />
+          </Link>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="pb-16 border-t border-white/10 pt-12">
+        <p className="text-gray-400 text-sm font-sans">
+          Interested in collaborating?{' '}
+          <Link
+            to="/contact"
+            className="text-white hover:text-blue-400 transition-colors underline underline-offset-4 decoration-white/30"
+          >
+            Get in touch
+          </Link>.
+        </p>
       </section>
     </div>
   );
