@@ -9,11 +9,9 @@ import {
   FolderIcon,
   BarChartIcon,
   SlidersIcon,
-  PanelLeftCloseIcon,
-  PanelLeftOpenIcon,
   SortAscIcon,
 } from '../icons';
-import { SECOND_BRAIN_SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_COLLAPSED_WIDTH } from '../../constants/layout';
+import { SECOND_BRAIN_SIDEBAR_WIDTH } from '../../constants/layout';
 import type { TreeNode, SearchMode, SortMode, FilterMode } from '../../hooks/useSecondBrainHub';
 
 // --- Collapsible Section ---
@@ -126,30 +124,7 @@ export const SecondBrainSidebar: React.FC = () => {
     sortMode, setSortMode,
     activeFilters, toggleFilter,
     stats, tree,
-    collapsed, setCollapsed,
   } = hub;
-
-  // Collapsed strip
-  if (collapsed) {
-    return (
-      <aside
-        className="hidden md:flex flex-col items-center sticky top-0 h-screen border-r border-th-hub-border"
-        style={{
-          width: SECOND_BRAIN_SIDEBAR_COLLAPSED_WIDTH,
-          minWidth: SECOND_BRAIN_SIDEBAR_COLLAPSED_WIDTH,
-          backgroundColor: 'var(--hub-sidebar-bg)',
-        }}
-      >
-        <button
-          onClick={() => setCollapsed(false)}
-          className="mt-3 text-th-muted hover:text-th-secondary transition-colors p-1"
-          title="Expand hub sidebar"
-        >
-          <PanelLeftOpenIcon />
-        </button>
-      </aside>
-    );
-  }
 
   return (
     <aside
@@ -161,22 +136,13 @@ export const SecondBrainSidebar: React.FC = () => {
       }}
     >
       {/* Header */}
-      <div className="px-3 py-3 border-b border-th-hub-border flex items-center justify-between flex-shrink-0">
-        <div>
-          <div className="text-[11px] font-semibold text-violet-400 lowercase tracking-wide">
-            knowledge hub
-          </div>
-          <div className="text-[9px] text-th-muted mt-0.5">
-            {stats.totalConcepts} concepts
-          </div>
+      <div className="px-3 py-3 border-b border-th-hub-border flex-shrink-0">
+        <div className="text-[11px] font-semibold text-violet-400 lowercase tracking-wide">
+          knowledge hub
         </div>
-        <button
-          onClick={() => setCollapsed(true)}
-          className="text-th-muted hover:text-th-secondary transition-colors p-1"
-          title="Collapse hub sidebar"
-        >
-          <PanelLeftCloseIcon />
-        </button>
+        <div className="text-[9px] text-th-muted mt-0.5">
+          {stats.totalConcepts} concepts
+        </div>
       </div>
 
       {/* Scrollable content */}

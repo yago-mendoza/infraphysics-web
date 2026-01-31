@@ -19,14 +19,26 @@ const PAUSE_BETWEEN = 200;
 
 export const RotatingTitle: React.FC = () => {
   const spanRef = useRef<HTMLSpanElement>(null);
-  const cancelRef = useRef(false);
 
   useEffect(() => {
-    cancelRef.current = false;
     const el = spanRef.current;
     if (!el) return;
 
-    const wait = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+    // Each effect invocation gets its own cancel flag object.
+    // Stale loops from StrictMode double-mount see their own flag go true
+    // and stop, while the fresh loop keeps its own flag false.
+    const cancel = { current: false };
+
+    const wait = (ms: number) =>
+      new Promise<void>((resolve, reject) => {
+        const id = setTimeout(() => {
+          if (cancel.current) reject('cancelled');
+          else resolve();
+        }, ms);
+        // If cancelled before timeout fires, we still need cleanup
+        // but the reject in the timeout is sufficient
+        void id;
+      });
 
     const setFade = (opacity: number, y: number, animate: boolean) => {
       el.style.transition = animate ? `opacity ${FADE_MS}ms ease, transform ${FADE_MS}ms ease` : 'none';
@@ -36,7 +48,7 @@ export const RotatingTitle: React.FC = () => {
 
     const typeIn = async (s: string) => {
       for (let i = 1; i <= s.length; i++) {
-        if (cancelRef.current) return;
+        if (cancel.current) return;
         el.textContent = s.slice(0, i);
         await wait(TYPE_IN.min + Math.random() * TYPE_IN.jitter);
       }
@@ -44,7 +56,7 @@ export const RotatingTitle: React.FC = () => {
 
     const typeOut = async (s: string) => {
       for (let i = s.length - 1; i >= 0; i--) {
-        if (cancelRef.current) return;
+        if (cancel.current) return;
         el.textContent = i === 0 ? '\u200B' : s.slice(0, i);
         await wait(TYPE_OUT.min + Math.random() * TYPE_OUT.jitter);
       }
@@ -52,38 +64,39 @@ export const RotatingTitle: React.FC = () => {
 
     const loop = async () => {
       let ci = 0;
-      while (!cancelRef.current) {
-        // Official: fade in, hold, fade out
-        el.textContent = OFFICIAL;
-        setFade(0, 8, false);
-        await wait(30);
-        setFade(1, 0, true);
-        await wait(FADE_MS);
-        if (cancelRef.current) return;
-        await wait(OFFICIAL_HOLD);
-        if (cancelRef.current) return;
-        setFade(0, -8, true);
-        await wait(FADE_MS);
-        if (cancelRef.current) return;
-        await wait(PAUSE_BETWEEN);
+      try {
+        while (!cancel.current) {
+          // Official: fade in, hold, fade out
+          el.textContent = OFFICIAL;
+          setFade(0, 8, false);
+          await wait(30);
+          setFade(1, 0, true);
+          await wait(FADE_MS);
+          await wait(OFFICIAL_HOLD);
+          setFade(0, -8, true);
+          await wait(FADE_MS);
+          await wait(PAUSE_BETWEEN);
 
-        // Creative: type in, pause, type out
-        setFade(1, 0, false);
-        el.textContent = '\u200B';
-        await typeIn(creatives[ci % creatives.length]);
-        if (cancelRef.current) return;
-        await wait(PAUSE_AFTER_TYPE);
-        if (cancelRef.current) return;
-        await typeOut(creatives[ci % creatives.length]);
-        if (cancelRef.current) return;
-        await wait(PAUSE_BETWEEN);
+          // Creative: type in, pause, type out
+          setFade(1, 0, false);
+          el.textContent = '\u200B';
+          await typeIn(creatives[ci % creatives.length]);
+          await wait(PAUSE_AFTER_TYPE);
+          await typeOut(creatives[ci % creatives.length]);
+          await wait(PAUSE_BETWEEN);
 
-        ci++;
+          ci++;
+        }
+      } catch {
+        // Cancelled — loop exits silently
       }
     };
 
     loop();
-    return () => { cancelRef.current = true; };
+
+    return () => {
+      cancel.current = true;
+    };
   }, []);
 
   return <span ref={spanRef} className="inline-block">{OFFICIAL}</span>;

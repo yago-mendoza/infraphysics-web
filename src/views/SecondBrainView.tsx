@@ -24,6 +24,11 @@ export const SecondBrainView: React.FC = () => {
   const outgoingRefCount = hasHub ? hub.outgoingRefCount : brain.outgoingRefCount;
   const query = hasHub ? hub.query : brain.query;
   const setQuery = hasHub ? hub.setQuery : brain.setQuery;
+  const previousConcept = hasHub ? hub.previousConcept : null;
+  const searchActive = hasHub ? hub.searchActive : (brain.query.length > 0);
+
+  // When search is active, force list view even if we're on a detail URL
+  const showDetail = activePost && !searchActive;
 
   return (
     <div className="animate-fade-in">
@@ -67,18 +72,30 @@ export const SecondBrainView: React.FC = () => {
       )}
 
       {/* Main Content */}
-      {activePost ? (
+      {showDetail ? (
         /* --- Concept Detail View --- */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
           {/* Left: Content */}
-          <div className="lg:col-span-8">
+          <div className="lg:col-span-3">
             {/* Back to list */}
             <Link
               to="/second-brain"
-              className="text-xs text-th-tertiary hover:text-th-secondary transition-colors mb-4 inline-block"
+              className="text-xs text-th-tertiary hover:text-th-secondary transition-colors inline-block"
             >
               &larr; all concepts
             </Link>
+
+            {/* Previous concept link */}
+            {previousConcept && previousConcept.id !== activePost!.id && (
+              <Link
+                to={`/second-brain/${previousConcept.id}`}
+                className="text-xs text-violet-400 hover:text-violet-300 transition-colors ml-4 inline-block"
+              >
+                &larr; {previousConcept.displayTitle || previousConcept.title}
+              </Link>
+            )}
+
+            <div className="mb-4" />
 
             {/* Breadcrumb */}
             {breadcrumbs.length > 1 && (
@@ -103,7 +120,7 @@ export const SecondBrainView: React.FC = () => {
 
             {/* Concept Title */}
             <h2 className="text-2xl font-bold lowercase mb-2 text-th-heading">
-              {activePost.displayTitle || activePost.title}
+              {activePost!.displayTitle || activePost!.title}
             </h2>
 
             {/* Metadata line */}
@@ -113,14 +130,14 @@ export const SecondBrainView: React.FC = () => {
 
             {/* Content */}
             <WikiContent
-              html={activePost.content}
+              html={activePost!.content}
               allFieldNotes={allFieldNotes}
               className="text-sm leading-relaxed text-th-secondary font-light content-html"
             />
           </div>
 
           {/* Right: Connections panel */}
-          <div className="lg:col-span-4 space-y-6">
+          <div className="lg:col-span-2 space-y-6">
             {/* Related section */}
             {relatedConcepts.length > 0 && (
               <div>
@@ -185,7 +202,7 @@ export const SecondBrainView: React.FC = () => {
             </div>
           )}
 
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {sortedResults.length > 0 ? (
               sortedResults.map(note => (
                 <Link
@@ -193,25 +210,25 @@ export const SecondBrainView: React.FC = () => {
                   to={`/second-brain/${note.id}`}
                   className="block p-4 border border-th-border rounded-sm bg-th-surface hover:border-th-border-hover transition-all group"
                 >
-                  <div className="flex items-baseline gap-2 mb-0.5">
+                  <div className="mb-0.5">
                     <span className="text-sm font-medium text-violet-400 group-hover:text-th-primary transition-colors">
                       {note.displayTitle || note.title}
                     </span>
-                    {note.addressParts && note.addressParts.length > 1 && (
-                      <span className="text-[10px] text-th-tertiary">
-                        {note.address}
-                      </span>
-                    )}
                   </div>
+                  {note.addressParts && note.addressParts.length > 1 && (
+                    <div className="text-[10px] text-th-tertiary mb-1">
+                      {note.address}
+                    </div>
+                  )}
                   {note.description && (
-                    <div className="text-xs text-th-secondary truncate font-sans">
+                    <div className="text-xs text-th-secondary line-clamp-2 font-sans">
                       {note.description}
                     </div>
                   )}
                 </Link>
               ))
             ) : (
-              <div className="text-xs text-th-tertiary py-8 text-center">
+              <div className="text-xs text-th-tertiary py-8 text-center col-span-3">
                 No concepts match your search
               </div>
             )}

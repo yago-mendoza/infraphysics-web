@@ -45,7 +45,7 @@ const AppLayout: React.FC = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-h-screen">
-        <main className="flex-grow w-full max-w-4xl mx-auto px-6 py-10 md:py-16 relative z-10">
+        <main className={`flex-grow w-full mx-auto relative z-10 ${isSecondBrain ? 'max-w-6xl px-10 py-10 md:py-12' : 'max-w-4xl px-6 py-10 md:py-16'}`}>
           <Routes>
             <Route path="/" element={<Navigate to="/home" replace />} />
             <Route path="/home" element={<HomeView />} />

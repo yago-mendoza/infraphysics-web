@@ -1,6 +1,6 @@
 // Second Brain Hub hook — tree building, multi-mode search, filters, sorts, stats
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { posts } from '../data/data';
 import { Post } from '../types';
@@ -37,7 +37,6 @@ export const useSecondBrainHub = () => {
   const [searchMode, setSearchMode] = useState<SearchMode>('name');
   const [sortMode, setSortMode] = useState<SortMode>('a-z');
   const [activeFilters, setActiveFilters] = useState<Set<FilterMode>>(new Set());
-  const [collapsed, setCollapsed] = useState(false);
 
   // All field notes
   const allFieldNotes = useMemo(() => posts.filter(p => p.category === 'fieldnotes'), []);
@@ -47,6 +46,44 @@ export const useSecondBrainHub = () => {
     if (id) return allFieldNotes.find(p => p.id === id) || null;
     return null;
   }, [id, allFieldNotes]);
+
+  // Track previous concept for "go back" navigation
+  const prevIdRef = useRef<string | undefined>(undefined);
+  const [previousConceptId, setPreviousConceptId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    // When id changes and we had a previous one, record it
+    if (id && prevIdRef.current && prevIdRef.current !== id) {
+      setPreviousConceptId(prevIdRef.current);
+    }
+    prevIdRef.current = id;
+  }, [id]);
+
+  const previousConcept = useMemo(() => {
+    if (!previousConceptId) return null;
+    return allFieldNotes.find(p => p.id === previousConceptId) || null;
+  }, [previousConceptId, allFieldNotes]);
+
+  // Track which concept we were viewing before searching, so we can return to it
+  const savedIdRef = useRef<string | undefined>(undefined);
+
+  // When query becomes non-empty, save current concept id; when cleared, restore it
+  const handleSetQuery = useCallback((q: string) => {
+    if (q && !query && id) {
+      // Starting a search — save where we are
+      savedIdRef.current = id;
+    }
+    if (!q && query && savedIdRef.current) {
+      // Clearing search — navigate back to saved concept
+      const restoreId = savedIdRef.current;
+      savedIdRef.current = undefined;
+      navigate(`/second-brain/${restoreId}`);
+    }
+    if (!q) {
+      savedIdRef.current = undefined;
+    }
+    setQuery(q);
+  }, [query, id, navigate]);
 
   // Backlinks map: conceptId -> list of concepts that reference it
   const backlinksMap = useMemo(() => {
@@ -314,14 +351,19 @@ export const useSecondBrainHub = () => {
     navigate(`/second-brain/${noteId}`);
   }, [navigate]);
 
+  // Search is active = has query text (used to force list view in the main view)
+  const searchActive = query.length > 0;
+
   return {
     // URL state
     id,
     activePost,
+    previousConcept,
 
     // Search
     query,
-    setQuery,
+    setQuery: handleSetQuery,
+    searchActive,
     searchMode,
     setSearchMode,
 
@@ -345,10 +387,6 @@ export const useSecondBrainHub = () => {
     breadcrumbs,
     outgoingRefCount,
     backlinksMap,
-
-    // Sidebar collapse
-    collapsed,
-    setCollapsed,
 
     // Navigation
     navigateToNote,
