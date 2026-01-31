@@ -26,6 +26,8 @@ export const SecondBrainView: React.FC = () => {
   const setQuery = hasHub ? hub.setQuery : brain.setQuery;
   const previousConcept = hasHub ? hub.previousConcept : null;
   const searchActive = hasHub ? hub.searchActive : (brain.query.length > 0);
+  const directoryScope = hasHub ? hub.directoryScope : null;
+  const setDirectoryScope = hasHub ? hub.setDirectoryScope : null;
 
   // When search is active, force list view even if we're on a detail URL
   const showDetail = activePost && !searchActive;
@@ -196,11 +198,28 @@ export const SecondBrainView: React.FC = () => {
       ) : (
         /* --- Concept List View --- */
         <div>
-          {query && (
-            <div className="text-xs text-th-tertiary mb-4">
-              {sortedResults.length} result{sortedResults.length !== 1 ? 's' : ''} for &ldquo;{query}&rdquo;
-            </div>
-          )}
+          {/* Scope + search indicators */}
+          <div className="flex items-center gap-3 mb-4 flex-wrap">
+            {directoryScope && (
+              <div className="flex items-center gap-1 text-xs text-th-tertiary">
+                <span className="text-th-muted">scope:</span>
+                <span className="text-violet-400">{directoryScope.replace(/\/\//g, ' / ')}</span>
+                {setDirectoryScope && (
+                  <button
+                    onClick={() => setDirectoryScope(null)}
+                    className="text-th-muted hover:text-th-secondary ml-0.5"
+                  >
+                    &times;
+                  </button>
+                )}
+              </div>
+            )}
+            {query && (
+              <div className="text-xs text-th-tertiary">
+                {sortedResults.length} result{sortedResults.length !== 1 ? 's' : ''} for &ldquo;{query}&rdquo;
+              </div>
+            )}
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {sortedResults.length > 0 ? (

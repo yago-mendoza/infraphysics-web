@@ -6,14 +6,30 @@ import { posts } from '../data/data';
 import { Post } from '../types';
 
 export type SearchMode = 'name' | 'content' | 'backlinks';
-export type SortMode = 'a-z' | 'most-links' | 'fewest-links' | 'depth';
-export type FilterMode = 'orphans' | 'hubs' | 'leaf' | 'depth1' | 'depth2' | 'depth3+';
+export type SortMode = 'a-z' | 'most-links' | 'fewest-links' | 'depth' | 'shuffle';
+
+export interface FilterState {
+  orphans: boolean;
+  leaf: boolean;
+  hubThreshold: number;  // 0 = off
+  depthMin: number;      // 1-based
+  depthMax: number;      // Infinity = no upper bound
+}
+
+const DEFAULT_FILTER_STATE: FilterState = {
+  orphans: false,
+  leaf: false,
+  hubThreshold: 0,
+  depthMin: 1,
+  depthMax: Infinity,
+};
 
 export interface TreeNode {
   label: string;
+  path: string;           // full path e.g. "LAPTOP//UI//SCROLLING"
   concept: Post | null;
   children: TreeNode[];
-  childCount: number; // total descendants (concepts only)
+  childCount: number;     // total descendants (concepts only)
 }
 
 export interface HubStats {
@@ -21,7 +37,24 @@ export interface HubStats {
   totalLinks: number;
   orphanCount: number;
   avgRefs: number;
+  maxDepth: number;
+  density: number;        // links as % of possible connections
   mostConnectedHub: Post | null;
+}
+
+// Seeded Fisher-Yates shuffle for stable random ordering
+function seededShuffle<T>(arr: T[], seed: number): T[] {
+  const result = [...arr];
+  let s = seed;
+  const random = () => {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    return (s >>> 0) / 0xffffffff;
+  };
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
 }
 
 export const useSecondBrainHub = () => {
@@ -36,7 +69,10 @@ export const useSecondBrainHub = () => {
   }, [location.pathname]);
   const [searchMode, setSearchMode] = useState<SearchMode>('name');
   const [sortMode, setSortMode] = useState<SortMode>('a-z');
-  const [activeFilters, setActiveFilters] = useState<Set<FilterMode>>(new Set());
+  const [filterState, setFilterState] = useState<FilterState>(DEFAULT_FILTER_STATE);
+  const [directoryScope, setDirectoryScope] = useState<string | null>(null); // tree path
+  const [directoryQuery, setDirectoryQuery] = useState('');
+  const [shuffleSeed, setShuffleSeed] = useState(() => Math.floor(Math.random() * 0xffffffff));
 
   // All field notes
   const allFieldNotes = useMemo(() => posts.filter(p => p.category === 'fieldnotes'), []);
@@ -52,7 +88,6 @@ export const useSecondBrainHub = () => {
   const [previousConceptId, setPreviousConceptId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    // When id changes and we had a previous one, record it
     if (id && prevIdRef.current && prevIdRef.current !== id) {
       setPreviousConceptId(prevIdRef.current);
     }
@@ -67,14 +102,11 @@ export const useSecondBrainHub = () => {
   // Track which concept we were viewing before searching, so we can return to it
   const savedIdRef = useRef<string | undefined>(undefined);
 
-  // When query becomes non-empty, save current concept id; when cleared, restore it
   const handleSetQuery = useCallback((q: string) => {
     if (q && !query && id) {
-      // Starting a search — save where we are
       savedIdRef.current = id;
     }
     if (!q && query && savedIdRef.current) {
-      // Clearing search — navigate back to saved concept
       const restoreId = savedIdRef.current;
       savedIdRef.current = undefined;
       navigate(`/second-brain/${restoreId}`);
@@ -149,6 +181,19 @@ export const useSecondBrainHub = () => {
       ? Math.round((totalLinks / allFieldNotes.length) * 10) / 10
       : 0;
 
+    // Max depth
+    const maxDepth = allFieldNotes.reduce((max, n) => {
+      const d = (n.addressParts || [n.title]).length;
+      return d > max ? d : max;
+    }, 0);
+
+    // Density: links / possible connections (n*(n-1))
+    const n = allFieldNotes.length;
+    const possibleConnections = n * (n - 1);
+    const density = possibleConnections > 0
+      ? Math.round((totalLinks / possibleConnections) * 1000) / 10 // percentage with 1 decimal
+      : 0;
+
     // Most connected = most total connections (outgoing + incoming)
     let mostConnected: Post | null = null;
     let maxConnections = 0;
@@ -162,7 +207,7 @@ export const useSecondBrainHub = () => {
       }
     });
 
-    return { totalConcepts: allFieldNotes.length, totalLinks, orphanCount, avgRefs, mostConnectedHub: mostConnected };
+    return { totalConcepts: allFieldNotes.length, totalLinks, orphanCount, avgRefs, maxDepth, density, mostConnectedHub: mostConnected };
   }, [allFieldNotes, backlinksMap]);
 
   // --- Directory Tree ---
@@ -170,7 +215,6 @@ export const useSecondBrainHub = () => {
     const roots: TreeNode[] = [];
     const nodeMap = new Map<string, TreeNode>();
 
-    // First pass: create nodes for all concepts
     allFieldNotes.forEach(note => {
       const parts = note.addressParts || [note.title];
       let currentPath = '';
@@ -183,6 +227,7 @@ export const useSecondBrainHub = () => {
           const isLastPart = depth === parts.length - 1;
           const node: TreeNode = {
             label: part,
+            path: currentPath,
             concept: isLastPart ? note : null,
             children: [],
             childCount: 0,
@@ -198,14 +243,13 @@ export const useSecondBrainHub = () => {
             }
           }
         } else if (depth === parts.length - 1) {
-          // Node exists as intermediate, now assign concept
           const existing = nodeMap.get(currentPath)!;
           if (!existing.concept) existing.concept = note;
         }
       });
     });
 
-    // Second pass: count descendants
+    // Count descendants
     const countDescendants = (node: TreeNode): number => {
       let count = node.concept ? 1 : 0;
       node.children.forEach(child => {
@@ -216,12 +260,33 @@ export const useSecondBrainHub = () => {
     };
 
     roots.forEach(countDescendants);
-
-    // Sort roots alphabetically
     roots.sort((a, b) => a.label.localeCompare(b.label));
 
     return roots;
   }, [allFieldNotes]);
+
+  // --- Filtered tree (by directoryQuery) ---
+  const filteredTree = useMemo(() => {
+    if (!directoryQuery) return tree;
+    const q = directoryQuery.toLowerCase();
+
+    const filterNodes = (nodes: TreeNode[]): TreeNode[] => {
+      return nodes.reduce<TreeNode[]>((acc, node) => {
+        const labelMatch = node.label.toLowerCase().includes(q);
+        const filteredChildren = filterNodes(node.children);
+
+        if (labelMatch || filteredChildren.length > 0) {
+          acc.push({
+            ...node,
+            children: labelMatch ? node.children : filteredChildren,
+          });
+        }
+        return acc;
+      }, []);
+    };
+
+    return filterNodes(tree);
+  }, [tree, directoryQuery]);
 
   // --- Multi-mode search ---
   const searchResults = useMemo(() => {
@@ -243,7 +308,6 @@ export const useSecondBrainHub = () => {
       );
     }
 
-    // backlinks mode — find concepts that are referenced by the query match
     if (searchMode === 'backlinks') {
       return allFieldNotes.filter(note => {
         const bl = backlinksMap.get(note.id) || [];
@@ -258,51 +322,57 @@ export const useSecondBrainHub = () => {
     return allFieldNotes;
   }, [query, searchMode, allFieldNotes, backlinksMap]);
 
+  // --- Directory scope filter ---
+  const scopedResults = useMemo(() => {
+    if (!directoryScope) return searchResults;
+    // Include concepts whose address path starts with the scope path
+    return searchResults.filter(note => {
+      const parts = note.addressParts || [note.title];
+      const notePath = parts.join('//');
+      return notePath === directoryScope || notePath.startsWith(directoryScope + '//');
+    });
+  }, [searchResults, directoryScope]);
+
   // --- Filters ---
   const filteredNotes = useMemo(() => {
-    if (activeFilters.size === 0) return searchResults;
+    const { orphans, leaf, hubThreshold, depthMin, depthMax } = filterState;
+    const hasAnyFilter = orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity;
+    if (!hasAnyFilter) return scopedResults;
 
-    return searchResults.filter(note => {
+    return scopedResults.filter(note => {
       const depth = (note.addressParts || [note.title]).length;
       const outgoing = note.references?.length || 0;
       const incoming = (backlinksMap.get(note.id) || []).length;
       const totalConnections = outgoing + incoming;
 
-      for (const f of activeFilters) {
-        switch (f) {
-          case 'orphans':
-            if (outgoing > 0 || incoming > 0) return false;
-            break;
-          case 'hubs':
-            if (totalConnections < 5) return false;
-            break;
-          case 'leaf':
-            // leaf = no children in the tree (no concepts with this address as prefix)
-            if (allFieldNotes.some(other =>
-              other.id !== note.id &&
-              other.addressParts &&
-              note.addressParts &&
-              other.addressParts.length > note.addressParts.length &&
-              (other.address || '').startsWith(note.address || '\0')
-            )) return false;
-            break;
-          case 'depth1':
-            if (depth !== 1) return false;
-            break;
-          case 'depth2':
-            if (depth !== 2) return false;
-            break;
-          case 'depth3+':
-            if (depth < 3) return false;
-            break;
-        }
+      if (orphans && (outgoing > 0 || incoming > 0)) return false;
+
+      if (leaf) {
+        // leaf = no children in the tree (no concepts with this address as prefix)
+        const hasChild = allFieldNotes.some(other =>
+          other.id !== note.id &&
+          other.addressParts &&
+          note.addressParts &&
+          other.addressParts.length > note.addressParts.length &&
+          (other.address || '').startsWith(note.address || '\0')
+        );
+        if (hasChild) return false;
       }
+
+      if (hubThreshold > 0 && totalConnections < hubThreshold) return false;
+      if (depth < depthMin) return false;
+      if (depthMax < Infinity && depth > depthMax) return false;
+
       return true;
     });
-  }, [searchResults, activeFilters, backlinksMap, allFieldNotes]);
+  }, [scopedResults, filterState, backlinksMap, allFieldNotes]);
 
   // --- Sort ---
   const sortedResults = useMemo(() => {
+    if (sortMode === 'shuffle') {
+      return seededShuffle(filteredNotes, shuffleSeed);
+    }
+
     const sorted = [...filteredNotes];
     switch (sortMode) {
       case 'a-z':
@@ -331,20 +401,32 @@ export const useSecondBrainHub = () => {
         break;
     }
     return sorted;
-  }, [filteredNotes, sortMode, backlinksMap]);
+  }, [filteredNotes, sortMode, backlinksMap, shuffleSeed]);
 
-  // --- Filter toggling ---
-  const toggleFilter = useCallback((filter: FilterMode) => {
-    setActiveFilters(prev => {
-      const next = new Set(prev);
-      if (next.has(filter)) {
-        next.delete(filter);
-      } else {
-        next.add(filter);
-      }
-      return next;
-    });
+  // --- Reshuffle ---
+  const reshuffle = useCallback(() => {
+    setShuffleSeed(Math.floor(Math.random() * 0xffffffff));
   }, []);
+
+  // Handle sort mode changes — clicking shuffle when already shuffled re-randomizes
+  const handleSetSortMode = useCallback((mode: SortMode) => {
+    if (mode === 'shuffle' && sortMode === 'shuffle') {
+      reshuffle();
+    } else {
+      setSortMode(mode);
+    }
+  }, [sortMode, reshuffle]);
+
+  // --- Reset filters ---
+  const resetFilters = useCallback(() => {
+    setFilterState(DEFAULT_FILTER_STATE);
+  }, []);
+
+  // Check if any filter is active
+  const hasActiveFilters = useMemo(() => {
+    const { orphans, leaf, hubThreshold, depthMin, depthMax } = filterState;
+    return orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity;
+  }, [filterState]);
 
   // Navigation
   const navigateToNote = useCallback((noteId: string) => {
@@ -369,11 +451,20 @@ export const useSecondBrainHub = () => {
 
     // Sort
     sortMode,
-    setSortMode,
+    setSortMode: handleSetSortMode,
 
     // Filters
-    activeFilters,
-    toggleFilter,
+    filterState,
+    setFilterState,
+    hasActiveFilters,
+    resetFilters,
+
+    // Directory
+    directoryScope,
+    setDirectoryScope,
+    directoryQuery,
+    setDirectoryQuery,
+    filteredTree,
 
     // Data
     allFieldNotes,

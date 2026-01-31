@@ -1,4 +1,4 @@
-// Knowledge Hub Sidebar — data exploration dashboard for /second-brain* routes
+// Second Brain Manager Sidebar — data exploration dashboard for /second-brain* routes
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -12,7 +12,7 @@ import {
   SortAscIcon,
 } from '../icons';
 import { SECOND_BRAIN_SIDEBAR_WIDTH } from '../../constants/layout';
-import type { TreeNode, SearchMode, SortMode, FilterMode } from '../../hooks/useSecondBrainHub';
+import type { TreeNode, SearchMode, SortMode, FilterState } from '../../hooks/useSecondBrainHub';
 
 // --- Collapsible Section ---
 const Section: React.FC<{
@@ -37,35 +37,116 @@ const Section: React.FC<{
   );
 };
 
+// --- StepperInput ---
+const StepperInput: React.FC<{
+  value: number;
+  displayValue?: string;
+  onDecrement: () => void;
+  onIncrement: () => void;
+  min?: number;
+  max?: number;
+}> = ({ value, displayValue, onDecrement, onIncrement, min = -Infinity, max = Infinity }) => {
+  return (
+    <span className="inline-flex items-center border border-th-hub-border text-[10px] tabular-nums">
+      <button
+        onClick={onDecrement}
+        disabled={value <= min}
+        className="px-1 py-0.5 text-th-muted hover:text-th-secondary disabled:opacity-30 transition-colors"
+      >
+        &minus;
+      </button>
+      <span className="px-1 py-0.5 text-th-primary min-w-[20px] text-center">
+        {displayValue ?? value}
+      </span>
+      <button
+        onClick={onIncrement}
+        disabled={value >= max}
+        className="px-1 py-0.5 text-th-muted hover:text-th-secondary disabled:opacity-30 transition-colors"
+      >
+        +
+      </button>
+    </span>
+  );
+};
+
+// --- Scope Icon (for concept+folder nodes) ---
+const ScopeIcon: React.FC<{ onClick: (e: React.MouseEvent) => void }> = ({ onClick }) => (
+  <button
+    onClick={onClick}
+    className="opacity-0 group-hover:opacity-100 text-th-muted hover:text-violet-400 transition-all flex-shrink-0"
+    title="Scope to this folder"
+  >
+    <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="8" cy="8" r="5" />
+      <circle cx="8" cy="8" r="2" />
+    </svg>
+  </button>
+);
+
 // --- Tree Node ---
-const TreeNodeItem: React.FC<{ node: TreeNode; depth?: number }> = ({ node, depth = 0 }) => {
+const TreeNodeItem: React.FC<{
+  node: TreeNode;
+  depth?: number;
+  activeScope: string | null;
+  onScope: (path: string) => void;
+  forceExpanded?: boolean;
+}> = ({ node, depth = 0, activeScope, onScope, forceExpanded = false }) => {
   const [expanded, setExpanded] = useState(false);
   const hasChildren = node.children.length > 0;
+  const isExpanded = forceExpanded || expanded;
+  const isScoped = activeScope === node.path;
+  const isConceptAndFolder = node.concept && hasChildren;
 
   return (
     <div>
       <div
-        className="flex items-center gap-1 py-0.5 group"
+        className={`flex items-center gap-1 py-0.5 group ${
+          isScoped ? 'bg-violet-400/10' : ''
+        }`}
         style={{ paddingLeft: `${depth * 12}px` }}
       >
         {hasChildren ? (
           <button
-            onClick={() => setExpanded(!expanded)}
+            onClick={() => setExpanded(!isExpanded)}
             className="w-3 h-3 flex items-center justify-center text-th-muted hover:text-th-secondary transition-colors flex-shrink-0"
           >
-            <ChevronIcon isOpen={expanded} />
+            <ChevronIcon isOpen={isExpanded} />
           </button>
         ) : (
           <span className="w-3 h-3 flex-shrink-0" />
         )}
 
         {node.concept ? (
-          <Link
-            to={`/second-brain/${node.concept.id}`}
-            className="text-[11px] text-th-secondary hover:text-violet-400 transition-colors truncate flex-1"
+          isConceptAndFolder ? (
+            // Concept + folder: label links to detail, scope icon on hover
+            <>
+              <Link
+                to={`/second-brain/${node.concept.id}`}
+                className="text-[11px] text-th-secondary hover:text-violet-400 transition-colors truncate flex-1"
+              >
+                {node.label}
+              </Link>
+              <ScopeIcon onClick={(e) => { e.preventDefault(); onScope(node.path); }} />
+            </>
+          ) : (
+            // Pure concept leaf: link to detail
+            <Link
+              to={`/second-brain/${node.concept.id}`}
+              className="text-[11px] text-th-secondary hover:text-violet-400 transition-colors truncate flex-1"
+            >
+              {node.label}
+            </Link>
+          )
+        ) : hasChildren ? (
+          // Pure folder: click label to scope
+          <button
+            onClick={() => onScope(node.path)}
+            className={`text-[11px] truncate flex-1 text-left transition-colors ${
+              isScoped ? 'text-violet-400' : 'text-th-muted hover:text-th-secondary'
+            }`}
           >
             {node.label}
-          </Link>
+          </button>
         ) : (
           <span className="text-[11px] text-th-muted truncate flex-1">{node.label}</span>
         )}
@@ -75,12 +156,19 @@ const TreeNodeItem: React.FC<{ node: TreeNode; depth?: number }> = ({ node, dept
         )}
       </div>
 
-      {expanded && hasChildren && (
+      {isExpanded && hasChildren && (
         <div>
           {node.children
             .sort((a, b) => a.label.localeCompare(b.label))
             .map(child => (
-              <TreeNodeItem key={child.label} node={child} depth={depth + 1} />
+              <TreeNodeItem
+                key={child.label}
+                node={child}
+                depth={depth + 1}
+                activeScope={activeScope}
+                onScope={onScope}
+                forceExpanded={forceExpanded}
+              />
             ))}
         </div>
       )}
@@ -97,20 +185,11 @@ const SEARCH_MODES: { value: SearchMode; label: string }[] = [
 
 // --- Sort Options ---
 const SORT_OPTIONS: { value: SortMode; label: string }[] = [
-  { value: 'a-z', label: 'A–Z' },
+  { value: 'a-z', label: 'A\u2013Z' },
   { value: 'most-links', label: 'most links' },
   { value: 'fewest-links', label: 'fewest links' },
   { value: 'depth', label: 'address depth' },
-];
-
-// --- Filter Chips ---
-const FILTER_OPTIONS: { value: FilterMode; label: string }[] = [
-  { value: 'orphans', label: 'orphans' },
-  { value: 'hubs', label: 'hubs (5+)' },
-  { value: 'leaf', label: 'leaf nodes' },
-  { value: 'depth1', label: 'depth 1' },
-  { value: 'depth2', label: 'depth 2' },
-  { value: 'depth3+', label: 'depth 3+' },
+  { value: 'shuffle', label: 'shuffle' },
 ];
 
 // --- Main Sidebar ---
@@ -122,9 +201,24 @@ export const SecondBrainSidebar: React.FC = () => {
     query, setQuery,
     searchMode, setSearchMode,
     sortMode, setSortMode,
-    activeFilters, toggleFilter,
-    stats, tree,
+    filterState, setFilterState, hasActiveFilters, resetFilters,
+    directoryScope, setDirectoryScope,
+    directoryQuery, setDirectoryQuery,
+    filteredTree,
+    stats,
   } = hub;
+
+  const handleScope = (path: string) => {
+    // Toggle: clicking already-scoped folder clears scope
+    setDirectoryScope(directoryScope === path ? null : path);
+  };
+
+  const updateFilter = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
+    setFilterState(prev => ({ ...prev, [key]: value }));
+  };
+
+  // Format scope path for display: "LAPTOP // UI" → "LAPTOP / UI"
+  const scopeDisplay = directoryScope ? directoryScope.replace(/\/\//g, ' / ') : null;
 
   return (
     <aside
@@ -137,8 +231,9 @@ export const SecondBrainSidebar: React.FC = () => {
     >
       {/* Header */}
       <div className="px-3 py-3 border-b border-th-hub-border flex-shrink-0">
-        <div className="text-[11px] font-semibold text-violet-400 lowercase tracking-wide">
-          knowledge hub
+        <div className="text-[11px] lowercase tracking-wide">
+          <span className="font-semibold text-violet-400">second brain</span>{' '}
+          <span className="text-th-muted font-normal">manager</span>
         </div>
         <div className="text-[9px] text-th-muted mt-0.5">
           {stats.totalConcepts} concepts
@@ -202,50 +297,145 @@ export const SecondBrainSidebar: React.FC = () => {
               <div className="text-[9px] text-th-muted">avg refs</div>
               <div className="text-[11px] text-th-primary tabular-nums">{stats.avgRefs}</div>
             </div>
-            {stats.mostConnectedHub && (
-              <div className="col-span-2 mt-1">
-                <div className="text-[9px] text-th-muted">most connected</div>
-                <Link
-                  to={`/second-brain/${stats.mostConnectedHub.id}`}
-                  className="text-[10px] text-violet-400 hover:text-violet-300 transition-colors"
-                >
-                  {stats.mostConnectedHub.displayTitle || stats.mostConnectedHub.title}
-                </Link>
-              </div>
-            )}
+            <div>
+              <div className="text-[9px] text-th-muted">max depth</div>
+              <div className="text-[11px] text-th-primary tabular-nums">{stats.maxDepth}</div>
+            </div>
+            <div>
+              <div className="text-[9px] text-th-muted">density</div>
+              <div className="text-[11px] text-th-primary tabular-nums">{stats.density}%</div>
+            </div>
           </div>
         </Section>
 
         {/* Directory Tree */}
         <Section title="directory" icon={<FolderIcon />} defaultOpen={true}>
+          {/* Tree search */}
+          <div className="flex items-center border border-th-hub-border px-2 py-1 bg-th-surface focus-within:border-th-border-active transition-colors mb-2">
+            <input
+              type="text"
+              placeholder="Filter tree..."
+              value={directoryQuery}
+              onChange={(e) => setDirectoryQuery(e.target.value)}
+              className="w-full text-[10px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
+            />
+            {directoryQuery && (
+              <button
+                onClick={() => setDirectoryQuery('')}
+                className="text-th-muted hover:text-th-secondary text-[9px] ml-1 flex-shrink-0"
+              >
+                &times;
+              </button>
+            )}
+          </div>
+
+          {/* Scope indicator */}
+          {directoryScope && (
+            <div className="flex items-center gap-1 mb-2 px-1 py-1 bg-violet-400/10 border border-violet-400/20 text-[9px]">
+              <span className="text-th-muted">scope:</span>
+              <span className="text-violet-400 truncate flex-1">{scopeDisplay}</span>
+              <button
+                onClick={() => setDirectoryScope(null)}
+                className="text-th-muted hover:text-th-secondary flex-shrink-0"
+              >
+                &times;
+              </button>
+            </div>
+          )}
+
           <div className="space-y-0.5 max-h-60 overflow-y-auto hub-scrollbar">
-            {tree.map(node => (
-              <TreeNodeItem key={node.label} node={node} />
+            {filteredTree.map(node => (
+              <TreeNodeItem
+                key={node.label}
+                node={node}
+                activeScope={directoryScope}
+                onScope={handleScope}
+                forceExpanded={directoryQuery.length > 0}
+              />
             ))}
           </div>
         </Section>
 
         {/* Filters */}
         <Section title="filters" icon={<SlidersIcon />} defaultOpen={false}>
-          <div className="flex flex-wrap gap-1">
-            {FILTER_OPTIONS.map(f => (
+          <div className="space-y-2">
+            {/* Toggle chips */}
+            <div className="flex gap-1 flex-wrap">
               <button
-                key={f.value}
-                onClick={() => toggleFilter(f.value)}
+                onClick={() => updateFilter('orphans', !filterState.orphans)}
                 className={`text-[9px] px-1.5 py-0.5 transition-colors ${
-                  activeFilters.has(f.value)
+                  filterState.orphans
                     ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
                     : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
                 }`}
               >
-                {f.label}
+                orphans
               </button>
-            ))}
+              <button
+                onClick={() => updateFilter('leaf', !filterState.leaf)}
+                className={`text-[9px] px-1.5 py-0.5 transition-colors ${
+                  filterState.leaf
+                    ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
+                    : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
+                }`}
+              >
+                leaf nodes
+              </button>
+            </div>
+
+            {/* Depth range */}
+            <div className="flex items-center gap-1.5 text-[10px] text-th-muted">
+              <span>depth</span>
+              <StepperInput
+                value={filterState.depthMin}
+                onDecrement={() => updateFilter('depthMin', Math.max(1, filterState.depthMin - 1))}
+                onIncrement={() => updateFilter('depthMin', filterState.depthMin + 1)}
+                min={1}
+              />
+              <span>to</span>
+              <StepperInput
+                value={filterState.depthMax}
+                displayValue={filterState.depthMax === Infinity ? '\u221e' : String(filterState.depthMax)}
+                onDecrement={() => updateFilter('depthMax', filterState.depthMax === Infinity ? stats.maxDepth : Math.max(1, filterState.depthMax - 1))}
+                onIncrement={() => {
+                  if (filterState.depthMax === Infinity) return;
+                  if (filterState.depthMax >= stats.maxDepth) {
+                    updateFilter('depthMax', Infinity);
+                  } else {
+                    updateFilter('depthMax', filterState.depthMax + 1);
+                  }
+                }}
+              />
+            </div>
+
+            {/* Hub threshold */}
+            <div className="flex items-center gap-1.5 text-[10px] text-th-muted">
+              <span>hubs &ge;</span>
+              <StepperInput
+                value={filterState.hubThreshold}
+                onDecrement={() => updateFilter('hubThreshold', Math.max(0, filterState.hubThreshold - 1))}
+                onIncrement={() => updateFilter('hubThreshold', filterState.hubThreshold + 1)}
+                min={0}
+              />
+              {filterState.hubThreshold === 0 && (
+                <span className="text-[9px] text-th-muted">off</span>
+              )}
+            </div>
+
+            {/* Reset */}
+            {hasActiveFilters && (
+              <button
+                onClick={resetFilters}
+                className="text-[9px] text-th-muted hover:text-violet-400 transition-colors"
+              >
+                reset filters
+              </button>
+            )}
           </div>
         </Section>
 
         {/* Sort */}
-        <Section title="sort" icon={<SortAscIcon />} defaultOpen={false}>
+        <Section title="grid sort" icon={<SortAscIcon />} defaultOpen={false}>
           <div className="space-y-0.5">
             {SORT_OPTIONS.map(opt => (
               <button
@@ -258,6 +448,9 @@ export const SecondBrainSidebar: React.FC = () => {
                 }`}
               >
                 {opt.label}
+                {opt.value === 'shuffle' && sortMode === 'shuffle' && (
+                  <span className="text-[8px] text-th-muted ml-1">(click to reshuffle)</span>
+                )}
               </button>
             ))}
           </div>
