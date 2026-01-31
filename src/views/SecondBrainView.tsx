@@ -6,6 +6,15 @@ import { useHub } from '../contexts/SecondBrainHubContext';
 import { useSecondBrain } from '../hooks/useSecondBrain';
 import { WikiContent } from '../components/WikiContent';
 import { SearchIcon } from '../components/icons';
+import type { SortMode } from '../hooks/useSecondBrainHub';
+
+const SORT_OPTIONS: { value: SortMode; label: string }[] = [
+  { value: 'a-z', label: 'A\u2013Z' },
+  { value: 'most-links', label: 'most links' },
+  { value: 'fewest-links', label: 'fewest links' },
+  { value: 'depth', label: 'depth' },
+  { value: 'shuffle', label: 'shuffle' },
+];
 
 export const SecondBrainView: React.FC = () => {
   const hub = useHub();
@@ -28,6 +37,8 @@ export const SecondBrainView: React.FC = () => {
   const searchActive = hasHub ? hub.searchActive : (brain.query.length > 0);
   const directoryScope = hasHub ? hub.directoryScope : null;
   const setDirectoryScope = hasHub ? hub.setDirectoryScope : null;
+  const sortMode = hasHub ? hub.sortMode : 'a-z';
+  const setSortMode = hasHub ? hub.setSortMode : null;
 
   // When search is active, force list view even if we're on a detail URL
   const showDetail = activePost && !searchActive;
@@ -220,6 +231,25 @@ export const SecondBrainView: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* Sort control */}
+          {setSortMode && (
+            <div className="flex items-center justify-end gap-1.5 mb-3">
+              {SORT_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setSortMode(opt.value)}
+                  className={`text-[10px] px-2 py-0.5 rounded-sm transition-colors ${
+                    sortMode === opt.value
+                      ? 'text-violet-400 bg-violet-400/10'
+                      : 'text-th-muted hover:text-th-secondary'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {sortedResults.length > 0 ? (

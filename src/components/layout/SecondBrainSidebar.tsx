@@ -9,10 +9,9 @@ import {
   FolderIcon,
   BarChartIcon,
   SlidersIcon,
-  SortAscIcon,
 } from '../icons';
 import { SECOND_BRAIN_SIDEBAR_WIDTH } from '../../constants/layout';
-import type { TreeNode, SearchMode, SortMode, FilterState } from '../../hooks/useSecondBrainHub';
+import type { TreeNode, SearchMode, FilterState } from '../../hooks/useSecondBrainHub';
 
 // --- Collapsible Section ---
 const Section: React.FC<{
@@ -183,14 +182,6 @@ const SEARCH_MODES: { value: SearchMode; label: string }[] = [
   { value: 'backlinks', label: 'backlinks' },
 ];
 
-// --- Sort Options ---
-const SORT_OPTIONS: { value: SortMode; label: string }[] = [
-  { value: 'a-z', label: 'A\u2013Z' },
-  { value: 'most-links', label: 'most links' },
-  { value: 'fewest-links', label: 'fewest links' },
-  { value: 'depth', label: 'address depth' },
-  { value: 'shuffle', label: 'shuffle' },
-];
 
 // --- Main Sidebar ---
 export const SecondBrainSidebar: React.FC = () => {
@@ -200,7 +191,6 @@ export const SecondBrainSidebar: React.FC = () => {
   const {
     query, setQuery,
     searchMode, setSearchMode,
-    sortMode, setSortMode,
     filterState, setFilterState, hasActiveFilters, resetFilters,
     directoryScope, setDirectoryScope,
     directoryQuery, setDirectoryQuery,
@@ -434,27 +424,6 @@ export const SecondBrainSidebar: React.FC = () => {
           </div>
         </Section>
 
-        {/* Sort */}
-        <Section title="grid sort" icon={<SortAscIcon />} defaultOpen={false}>
-          <div className="space-y-0.5">
-            {SORT_OPTIONS.map(opt => (
-              <button
-                key={opt.value}
-                onClick={() => setSortMode(opt.value)}
-                className={`block w-full text-left text-[10px] px-2 py-1 transition-colors ${
-                  sortMode === opt.value
-                    ? 'text-violet-400 bg-violet-400/10'
-                    : 'text-th-muted hover:text-th-secondary hover:bg-th-surface'
-                }`}
-              >
-                {opt.label}
-                {opt.value === 'shuffle' && sortMode === 'shuffle' && (
-                  <span className="text-[8px] text-th-muted ml-1">(click to reshuffle)</span>
-                )}
-              </button>
-            ))}
-          </div>
-        </Section>
       </div>
     </aside>
   );
