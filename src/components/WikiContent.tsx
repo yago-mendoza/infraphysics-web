@@ -26,7 +26,7 @@ const INITIAL_PREVIEW: PreviewState = {
 
 interface WikiContentProps {
   html: string;
-  allFieldNotes: Post[];
+  allFieldNotes?: Post[];
   className?: string;
   onWikiLinkClick?: (conceptId: string) => void;
 }
@@ -39,6 +39,7 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const resolvedHtml = useMemo(() => {
+    if (!allFieldNotes) return html;
     const { html: processed } = resolveWikiLinks(html, allFieldNotes);
     return processed;
   }, [html, allFieldNotes]);

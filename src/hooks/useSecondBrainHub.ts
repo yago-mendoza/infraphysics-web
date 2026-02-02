@@ -2,8 +2,15 @@
 
 import { useState, useMemo, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { posts } from '../data/data';
 import { Post } from '../types';
+import {
+  allFieldNotes,
+  noteById,
+  backlinksMap,
+  relatedConceptsMap,
+  resolvedHtmlMap,
+} from '../lib/brainIndex';
+import { addressToId } from '../lib/addressToId';
 
 export type SearchMode = 'name' | 'content' | 'backlinks';
 export type SortMode = 'a-z' | 'most-links' | 'fewest-links' | 'depth' | 'shuffle';
@@ -74,14 +81,11 @@ export const useSecondBrainHub = () => {
   const [directoryQuery, setDirectoryQuery] = useState('');
   const [shuffleSeed, setShuffleSeed] = useState(() => Math.floor(Math.random() * 0xffffffff));
 
-  // All field notes
-  const allFieldNotes = useMemo(() => posts.filter(p => p.category === 'fieldnotes'), []);
-
-  // Active post from URL
+  // Active post from URL — O(1) lookup
   const activePost = useMemo(() => {
-    if (id) return allFieldNotes.find(p => p.id === id) || null;
+    if (id) return noteById.get(id) || null;
     return null;
-  }, [id, allFieldNotes]);
+  }, [id]);
 
   // Track which concept we were viewing before searching, so we can return to it
   const savedIdRef = useRef<string | undefined>(undefined);
@@ -101,41 +105,26 @@ export const useSecondBrainHub = () => {
     setQuery(q);
   }, [query, id, navigate]);
 
-  // Backlinks map: conceptId -> list of concepts that reference it (deduplicated per note)
-  const backlinksMap = useMemo(() => {
-    const map = new Map<string, Post[]>();
-    allFieldNotes.forEach(note => {
-      const seen = new Set<string>();
-      (note.references || []).forEach(ref => {
-        const refId = ref.toLowerCase().replace(/\/\//g, '--').replace(/\s+/g, '-');
-        if (seen.has(refId)) return;
-        seen.add(refId);
-        if (!map.has(refId)) map.set(refId, []);
-        map.get(refId)!.push(note);
-      });
-    });
-    return map;
-  }, [allFieldNotes]);
-
-  // Backlinks for active post
+  // Backlinks for active post — O(1) lookup
   const backlinks = useMemo(() => {
     if (!activePost) return [];
     return (backlinksMap.get(activePost.id) || []).filter(n => n.id !== activePost.id);
-  }, [activePost, backlinksMap]);
+  }, [activePost]);
 
-  // Related concepts from trailingRefs
+  // Related concepts — O(1) lookup
   const relatedConcepts = useMemo(() => {
-    if (!activePost || !activePost.trailingRefs) return [];
-    return activePost.trailingRefs
-      .map(ref => {
-        const refId = ref.toLowerCase().replace(/\/\//g, '--').replace(/\s+/g, '-');
-        return allFieldNotes.find(n => n.id === refId);
-      })
-      .filter((n): n is Post => n !== undefined);
-  }, [activePost, allFieldNotes]);
+    if (!activePost) return [];
+    return relatedConceptsMap.get(activePost.id) || [];
+  }, [activePost]);
 
   // Outgoing ref count
   const outgoingRefCount = useMemo(() => activePost?.references?.length || 0, [activePost]);
+
+  // Pre-resolved HTML — O(1) lookup
+  const resolvedHtml = useMemo(() => {
+    if (!activePost) return '';
+    return resolvedHtmlMap.get(activePost.id) || activePost.content;
+  }, [activePost]);
 
   // --- Stats ---
   const stats: HubStats = useMemo(() => {
@@ -144,7 +133,7 @@ export const useSecondBrainHub = () => {
     const linkedToSet = new Set<string>();
     allFieldNotes.forEach(n => {
       (n.references || []).forEach(ref => {
-        linkedToSet.add(ref.toLowerCase().replace(/\/\//g, '--').replace(/\s+/g, '-'));
+        linkedToSet.add(addressToId(ref));
       });
     });
 
@@ -185,7 +174,7 @@ export const useSecondBrainHub = () => {
     });
 
     return { totalConcepts: allFieldNotes.length, totalLinks, orphanCount, avgRefs, maxDepth, density, mostConnectedHub: mostConnected };
-  }, [allFieldNotes, backlinksMap]);
+  }, []);
 
   // --- Directory Tree ---
   const tree = useMemo(() => {
@@ -240,7 +229,7 @@ export const useSecondBrainHub = () => {
     roots.sort((a, b) => a.label.localeCompare(b.label));
 
     return roots;
-  }, [allFieldNotes]);
+  }, []);
 
   // --- Filtered tree (by directoryQuery) ---
   const filteredTree = useMemo(() => {
@@ -297,7 +286,7 @@ export const useSecondBrainHub = () => {
     }
 
     return allFieldNotes;
-  }, [query, searchMode, allFieldNotes, backlinksMap]);
+  }, [query, searchMode]);
 
   // --- Directory scope filter ---
   const scopedResults = useMemo(() => {
@@ -342,7 +331,7 @@ export const useSecondBrainHub = () => {
 
       return true;
     });
-  }, [scopedResults, filterState, backlinksMap, allFieldNotes]);
+  }, [scopedResults, filterState]);
 
   // --- Sort ---
   const sortedResults = useMemo(() => {
@@ -378,7 +367,7 @@ export const useSecondBrainHub = () => {
         break;
     }
     return sorted;
-  }, [filteredNotes, sortMode, backlinksMap, shuffleSeed]);
+  }, [filteredNotes, sortMode, shuffleSeed]);
 
   // --- Reshuffle ---
   const reshuffle = useCallback(() => {
@@ -452,6 +441,7 @@ export const useSecondBrainHub = () => {
     backlinks,
     relatedConcepts,
     outgoingRefCount,
+    resolvedHtml,
     backlinksMap,
 
     // Navigation

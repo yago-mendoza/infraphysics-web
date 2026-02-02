@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { posts } from '../data/data';
 import { formatDate, formatRelativeTime, calculateReadingTime } from '../lib';
+import { allFieldNotes } from '../lib/brainIndex';
 import { StatusBadge } from '../components/ui';
 import { WikiContent } from '../components/WikiContent';
 import {
@@ -15,8 +16,6 @@ import {
 export const PostView: React.FC = () => {
   const { category, id } = useParams();
   const post = posts.find(p => p.id === id && p.category === category);
-
-  const allFieldNotes = useMemo(() => posts.filter(p => p.category === 'fieldnotes'), []);
 
   const recommendedPosts = useMemo(() => {
     if (!post) return [];

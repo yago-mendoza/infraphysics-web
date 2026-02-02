@@ -1,6 +1,6 @@
 // Second Brain / Concept Wiki view component — theme-aware
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useHub } from '../contexts/SecondBrainHubContext';
 import { useSecondBrain } from '../hooks/useSecondBrain';
@@ -26,6 +26,10 @@ const toTrailItem = (post: Post) => ({
   label: post.displayTitle || post.title,
 });
 
+type TrailAction =
+  | { type: 'reset'; post: Post }
+  | { type: 'extend'; post: Post };
+
 export const SecondBrainView: React.FC = () => {
   const hub = useHub();
   // Always call useSecondBrain (hooks must be unconditional).
@@ -41,6 +45,7 @@ export const SecondBrainView: React.FC = () => {
   const backlinks = hasHub ? hub.backlinks : brain.backlinks;
   const relatedConcepts = hasHub ? hub.relatedConcepts : brain.relatedConcepts;
   const outgoingRefCount = hasHub ? hub.outgoingRefCount : brain.outgoingRefCount;
+  const resolvedHtml = hasHub ? hub.resolvedHtml : brain.resolvedHtml;
   const query = hasHub ? hub.query : brain.query;
   const setQuery = hasHub ? hub.setQuery : brain.setQuery;
   const searchActive = hasHub ? hub.searchActive : (brain.query.length > 0);
@@ -49,20 +54,46 @@ export const SecondBrainView: React.FC = () => {
   const sortMode = hasHub ? hub.sortMode : 'a-z';
   const setSortMode = hasHub ? hub.setSortMode : null;
 
-  // Seed trail on page refresh when landing directly on a concept
+  // Pending trail action — set synchronously in click handlers, consumed by
+  // the useEffect below so the breadcrumb updates in the same render as content.
+  const pendingTrailAction = useRef<TrailAction | null>(null);
+
+  // Trail sync: when activePost changes, apply any pending trail action.
+  // Falls back to initTrail for page-refresh / direct-URL landing.
   useEffect(() => {
-    if (activePost) {
+    if (!activePost) return;
+    const action = pendingTrailAction.current;
+    pendingTrailAction.current = null;
+
+    if (action) {
+      if (action.type === 'reset') {
+        resetTrail(toTrailItem(action.post));
+      } else {
+        extendTrail(toTrailItem(action.post));
+      }
+    } else {
+      // No pending action — page refresh or browser back/forward
       initTrail(toTrailItem(activePost));
     }
-  }, [activePost, initTrail]);
+  }, [activePost, resetTrail, extendTrail, initTrail]);
 
   // Wiki-link click handler — extend trail with the clicked concept
   const handleWikiLinkClick = useCallback((conceptId: string) => {
     const concept = allFieldNotes.find(n => n.id === conceptId);
     if (concept) {
-      extendTrail(toTrailItem(concept));
+      pendingTrailAction.current = { type: 'extend', post: concept };
     }
-  }, [allFieldNotes, extendTrail]);
+  }, [allFieldNotes]);
+
+  // Grid card click — reset trail to single item
+  const handleGridCardClick = useCallback((post: Post) => {
+    pendingTrailAction.current = { type: 'reset', post };
+  }, []);
+
+  // Related / backlink click — extend trail
+  const handleConnectionClick = useCallback((post: Post) => {
+    pendingTrailAction.current = { type: 'extend', post };
+  }, []);
 
   // When search is active, force list view even if we're on a detail URL
   const showDetail = activePost && !searchActive;
@@ -134,10 +165,9 @@ export const SecondBrainView: React.FC = () => {
               links to {outgoingRefCount} &middot; linked from {backlinks.length}
             </div>
 
-            {/* Content */}
+            {/* Content — pre-resolved HTML, no allFieldNotes needed */}
             <WikiContent
-              html={activePost!.content}
-              allFieldNotes={allFieldNotes}
+              html={resolvedHtml}
               className="text-sm leading-relaxed text-th-secondary font-light content-html"
               onWikiLinkClick={handleWikiLinkClick}
             />
@@ -156,7 +186,7 @@ export const SecondBrainView: React.FC = () => {
                     <Link
                       key={concept.id}
                       to={`/second-brain/${concept.id}`}
-                      onClick={() => extendTrail(toTrailItem(concept))}
+                      onClick={() => handleConnectionClick(concept)}
                       className="block p-3 border border-th-border rounded-sm bg-th-surface hover:border-violet-400/30 transition-all group"
                     >
                       <div className="text-xs font-medium text-th-secondary group-hover:text-violet-400 transition-colors">
@@ -184,7 +214,7 @@ export const SecondBrainView: React.FC = () => {
                     <Link
                       key={bl.id}
                       to={`/second-brain/${bl.id}`}
-                      onClick={() => extendTrail(toTrailItem(bl))}
+                      onClick={() => handleConnectionClick(bl)}
                       className="block p-3 border border-th-border rounded-sm bg-th-surface hover:border-violet-400/30 transition-all group"
                     >
                       <div className="text-xs font-medium text-th-secondary group-hover:text-violet-400 transition-colors">
@@ -253,7 +283,7 @@ export const SecondBrainView: React.FC = () => {
                 <Link
                   key={note.id}
                   to={`/second-brain/${note.id}`}
-                  onClick={() => resetTrail(toTrailItem(note))}
+                  onClick={() => handleGridCardClick(note)}
                   className="block p-4 border border-th-border rounded-sm bg-th-surface hover:border-th-border-hover transition-all group"
                 >
                   <div className="mb-0.5">

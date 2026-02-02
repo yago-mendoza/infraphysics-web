@@ -1,10 +1,12 @@
 // Shared utility for resolving wiki-links at runtime
 
 import { Post } from '../types';
+import { addressToId } from './addressToId';
 
 export function resolveWikiLinks(
   html: string,
   allFieldNotes: Post[],
+  noteMap?: Map<string, Post>,
 ): { html: string; resolvedRefs: string[]; unresolvedRefs: string[] } {
   const resolvedRefs: string[] = [];
   const unresolvedRefs: string[] = [];
@@ -12,8 +14,8 @@ export function resolveWikiLinks(
   const processed = html.replace(
     /<a class="wiki-ref" data-address="([^"]+)">([^<]+)<\/a>/g,
     (_match, address: string, displayText: string) => {
-      const targetId = address.toLowerCase().replace(/\/\//g, '--').replace(/\s+/g, '-');
-      const target = allFieldNotes.find(n => n.id === targetId);
+      const targetId = addressToId(address);
+      const target = noteMap ? noteMap.get(targetId) : allFieldNotes.find(n => n.id === targetId);
 
       if (target) {
         resolvedRefs.push(address);
