@@ -399,6 +399,12 @@ export const useSecondBrainHub = () => {
     navigate(`/second-brain/${noteId}`);
   }, [navigate]);
 
+  // Signal from sidebar directory: "this click should reset the trail"
+  const directoryNavRef = useRef(false);
+  const signalDirectoryNav = useCallback(() => {
+    directoryNavRef.current = true;
+  }, []);
+
   // Search is active = has query text (used to force list view in the main view)
   const searchActive = query.length > 0;
 
@@ -446,5 +452,9 @@ export const useSecondBrainHub = () => {
 
     // Navigation
     navigateToNote,
+
+    // Directory nav signal (sidebar → view trail reset)
+    directoryNavRef,
+    signalDirectoryNav,
   };
 };

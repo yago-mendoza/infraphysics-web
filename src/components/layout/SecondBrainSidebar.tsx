@@ -89,8 +89,9 @@ const TreeNodeItem: React.FC<{
   depth?: number;
   activeScope: string | null;
   onScope: (path: string) => void;
+  onConceptClick?: () => void;
   forceExpanded?: boolean;
-}> = ({ node, depth = 0, activeScope, onScope, forceExpanded = false }) => {
+}> = ({ node, depth = 0, activeScope, onScope, onConceptClick, forceExpanded = false }) => {
   const [expanded, setExpanded] = useState(false);
   const hasChildren = node.children.length > 0;
   const isExpanded = forceExpanded || expanded;
@@ -122,6 +123,7 @@ const TreeNodeItem: React.FC<{
             <>
               <Link
                 to={`/second-brain/${node.concept.id}`}
+                onClick={onConceptClick}
                 className="text-[11px] text-th-secondary hover:text-violet-400 transition-colors truncate flex-1"
               >
                 {node.label}
@@ -132,6 +134,7 @@ const TreeNodeItem: React.FC<{
             // Pure concept leaf: link to detail
             <Link
               to={`/second-brain/${node.concept.id}`}
+              onClick={onConceptClick}
               className="text-[11px] text-th-secondary hover:text-violet-400 transition-colors truncate flex-1"
             >
               {node.label}
@@ -167,6 +170,7 @@ const TreeNodeItem: React.FC<{
                 depth={depth + 1}
                 activeScope={activeScope}
                 onScope={onScope}
+                onConceptClick={onConceptClick}
                 forceExpanded={forceExpanded}
               />
             ))}
@@ -198,6 +202,7 @@ export const SecondBrainSidebar: React.FC = () => {
     directoryQuery, setDirectoryQuery,
     filteredTree,
     stats,
+    signalDirectoryNav,
   } = hub;
 
   const handleScope = (path: string) => {
@@ -322,6 +327,7 @@ export const SecondBrainSidebar: React.FC = () => {
               node={node}
               activeScope={directoryScope}
               onScope={handleScope}
+              onConceptClick={signalDirectoryNav}
               forceExpanded={directoryQuery.length > 0}
             />
           ))}

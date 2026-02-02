@@ -58,6 +58,9 @@ export const SecondBrainView: React.FC = () => {
   // the useEffect below so the breadcrumb updates in the same render as content.
   const pendingTrailAction = useRef<TrailAction | null>(null);
 
+  // Directory nav signal from sidebar — treat as trail reset
+  const directoryNavRef = hasHub ? hub.directoryNavRef : null;
+
   // Trail sync: when activePost changes, apply any pending trail action.
   // Falls back to initTrail for page-refresh / direct-URL landing.
   useEffect(() => {
@@ -65,17 +68,24 @@ export const SecondBrainView: React.FC = () => {
     const action = pendingTrailAction.current;
     pendingTrailAction.current = null;
 
+    // Check sidebar directory signal
+    const fromDirectory = directoryNavRef?.current ?? false;
+    if (directoryNavRef) directoryNavRef.current = false;
+
     if (action) {
       if (action.type === 'reset') {
         resetTrail(toTrailItem(action.post));
       } else {
         extendTrail(toTrailItem(action.post));
       }
+    } else if (fromDirectory) {
+      // Sidebar directory click — reset trail (new context)
+      resetTrail(toTrailItem(activePost));
     } else {
       // No pending action — page refresh or browser back/forward
       initTrail(toTrailItem(activePost));
     }
-  }, [activePost, resetTrail, extendTrail, initTrail]);
+  }, [activePost, resetTrail, extendTrail, initTrail, directoryNavRef]);
 
   // Wiki-link click handler — extend trail with the clicked concept
   const handleWikiLinkClick = useCallback((conceptId: string) => {
