@@ -6,6 +6,9 @@ category: projects
 date: 2023-11-02
 thumbnail: https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=400&auto=format&fit=crop
 description: growing textures with local rules.
+status: completed
+technologies: [Python, PyTorch, WebGL]
+tags: [machine-learning, simulation, generative]
 ---
 
 # neural cellular automata

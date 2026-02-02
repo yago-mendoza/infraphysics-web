@@ -39,3 +39,14 @@ export const formatRelativeTime = (dateStr: string): string => {
   if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
   return `${Math.floor(diffDays / 365)} years ago`;
 };
+
+/**
+ * Format date for timeline display (// DATE 2025.05.22)
+ */
+export const formatDateTimeline = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `// DATE ${y}.${m}.${d}`;
+};

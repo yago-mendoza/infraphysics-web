@@ -6,6 +6,7 @@ import { ProjectStatus } from '../../types';
 
 interface StatusBadgeProps {
   status: ProjectStatus;
+  label?: string;
 }
 
 const statusConfig: Record<ProjectStatus, { color: string; text: string; icon: React.ReactNode }> = {
@@ -15,13 +16,13 @@ const statusConfig: Record<ProjectStatus, { color: string; text: string; icon: R
   'in-progress': { color: 'bg-amber-500', text: 'In Progress', icon: <CircleIcon /> },
 };
 
-export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
+export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label }) => {
   const config = statusConfig[status] || statusConfig['active'];
 
   return (
     <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] uppercase tracking-wider text-white rounded-sm ${config.color}`}>
       {config.icon}
-      {config.text}
+      {label || config.text}
     </span>
   );
 };

@@ -127,6 +127,13 @@ function processMarkdownFile(filePath) {
     thumbnail: frontmatter.thumbnail || null,
     description: frontmatter.description,
     content: htmlContent,
+    status: frontmatter.status || null,
+    technologies: frontmatter.technologies || null,
+    tags: frontmatter.tags || null,
+    github: frontmatter.github || null,
+    demo: frontmatter.demo || null,
+    duration: frontmatter.duration || null,
+    featured: frontmatter.featured || null,
   };
 }
 
