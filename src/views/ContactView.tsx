@@ -41,7 +41,7 @@ export const ContactView: React.FC = () => {
           I typically respond within a few days.
         </p>
         <p className="text-th-secondary text-sm font-sans mb-12 max-w-lg leading-relaxed">
-          I'm especially interested in conversations about distributed systems, complexity science, and hardware projects.
+          I'm especially interested in conversations about distributed systems, complexity science, optimisation and software/hardware projects.
         </p>
 
         {/* Contact Form */}
@@ -112,7 +112,7 @@ export const ContactView: React.FC = () => {
             {status === 'submitting' ? 'Sending...' : 'Send message'}
           </button>
 
-          <p className="mt-4 text-xs text-th-muted leading-relaxed">
+          <p className="mt-6 text-xs text-th-muted leading-relaxed">
             Not a form person —{' '}
             <a href="mailto:contact@infraphysics.net" className="text-th-tertiary hover:text-th-heading transition-colors">
               contact@infraphysics.net

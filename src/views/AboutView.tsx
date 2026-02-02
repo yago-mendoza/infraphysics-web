@@ -65,14 +65,15 @@ export const AboutView: React.FC = () => {
             <div>
               <h3 className="text-th-heading font-semibold mb-2">The Convergence</h3>
               <p className="text-th-secondary leading-relaxed">
-                I started on factory floors, studying stress and failure. That industrial engineering foundation defines my code: I design software by understanding what breaks. I don't see hardware and software as separate worlds. The most critical problems—and the biggest breakthroughs—live at the boundary where bits meet atoms.
+                I learned to build by watching systems fail. My industrial engineering training: design from the failure point backward: find the bottleneck, then architect around it. Hardware and software aren't separate worlds to me; they're two sides of the same constraint. The critical problems live where bits meet atoms.
               </p>
+              
             </div>
 
             <div>
               <h3 className="text-th-heading font-semibold mb-2">The Work</h3>
               <p className="text-th-secondary leading-relaxed">
-                Now those worlds are converging (faster than anyone expected). AI, infrastructure, edge computing—this is where I build. I don't just write code; I study the physics of infrastructure to unlock compute. Whether it's in a hyperscale data center or a constrained edge device, if it involves the friction between software and physics, I'm interested.
+              Those worlds are converging faster than anyone expected. AI, infrastructure, distributed systems. This is where I build. I'm drawn to problems where software meets physical limits. Whether it's in a hyperscale data center or a constrained edge device, I want to understand the physics, not just abstract it away.
               </p>
             </div>
 
@@ -94,16 +95,22 @@ export const AboutView: React.FC = () => {
               To truly build, it seems essential to move beyond narrow specialization and understand the entire stack. Removing black boxes—from the bare metal to the reasoning model—allows for genuine agency over the system.
             </p>
             <p className="text-th-secondary leading-relaxed">
-              The rate-limiting step for progress often isn't software; it is atoms. Since we cannot cheat thermodynamics, adapting hardware to bridge the gap between digital code and the physical world appears to be the real bottleneck.
+              The rate-limiting step for progress often isn't software; it is atoms. We cannot cheat thermodynamics. We can only build the missing infrastructure to bridge the gap. The faster we deploy reliable, production-grade substrate that satisfies real constraints at scale—from data centers to edge devices—the faster humanity accelerates.
             </p>
             <p className="text-th-secondary leading-relaxed">
-              Intelligence should arguably be as ubiquitous and invisible as electricity. As demand scales, building the rigorous infrastructure to make compute a silent, fundamental resource becomes the priority.
+              Intelligence should arguably be as ubiquitous and invisible as electricity. As capabilities expand, so do the problems we attempt to solve with them. Building the rigorous infrastructure to make compute a silent, fundamental resource becomes the priority.
+            </p>
+            <p className="text-th-secondary leading-relaxed">
+              The patterns that scale are the ones that transfer. Good principles don't know what domain they're solving for—they work because they're indifferent to it. What looks like separate problems often shares the same structure. 
             </p>
             <p className="text-th-secondary leading-relaxed">
               Optimism is perhaps a necessary, pragmatic stance. It suggests that by solving the hard physical constraints today, we might unlock the freedom to pursue a better future tomorrow.
             </p>
             <p className="text-th-secondary leading-relaxed">
-              Passion is likely the highest form of leverage against entropy. Pursuing what one is truly obsessed with isn't just a luxury; it seems to be the only efficient way to sustain the effort required to solve difficult problems.
+              In a world of infinite problems and finite time, passion is the only sustainable filter. I work on what I can't stop thinking about—not because it's strategic, but because it's the only sustainable way to outlast hard problems. Obsession compounds.
+            </p>
+            <p className="text-th-secondary leading-relaxed">
+            The future is bright.
             </p>
           </div>
         </div>
@@ -112,9 +119,15 @@ export const AboutView: React.FC = () => {
         <div className="mb-14">
           <h2 className="text-xs text-th-tertiary uppercase tracking-wider mb-6">Beyond the Stack</h2>
 
-          <div className="max-w-2xl font-sans">
+          <div className="space-y-6 max-w-2xl font-sans">
             <p className="text-th-secondary leading-relaxed">
-              Patterns transfer. Outside of engineering, I study organizational design, the history of technology, and the craft of making hard things simple.
+              I study how organizations scale, how technologies fail, and how to make hard things feel simple. It turns out patterns surface everywhere. The best engineers I know aren't just good at code—they're good at understanding why systems exist the way they do.
+            </p>
+            <p className="text-th-secondary leading-relaxed">
+              Outside of engineering, I try to keep things simple. I read because good writing forces clear thinking, and I write to figure out what I actually believe. Most of what I learn gets documented because patterns are easier to catch when they're on paper. Memory is terrible at version control.
+            </p>
+            <p className="text-th-secondary leading-relaxed">
+              I lift weights, eat well, sleep enough. Boring fundamentals, but they work. The goal in all of it is the same: understand better, need less.
             </p>
           </div>
         </div>

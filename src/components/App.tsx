@@ -74,7 +74,7 @@ const AppLayout: React.FC = () => {
           </Routes>
         </main>
 
-        {!isSecondBrain && <Footer />}
+        {!isSecondBrain && location.pathname !== '/contact' && <Footer />}
       </div>
     </div>
   );
