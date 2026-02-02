@@ -1,7 +1,7 @@
-// Shared React component for rendering HTML content with wiki-link click handling + hover preview
+// Renders HTML content with wiki-link hover preview and click navigation.
 
 import React, { useEffect, useRef, useMemo, useState, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Post } from '../types';
 import { resolveWikiLinks } from '../lib/wikilinks';
 import { WikiLinkPreview } from './WikiLinkPreview';
@@ -31,8 +31,8 @@ interface WikiContentProps {
 }
 
 export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, className }) => {
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const [preview, setPreview] = useState<PreviewState>(INITIAL_PREVIEW);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -58,37 +58,11 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
   }, []);
 
   // -----------------------------------------------------------------
-  // Global document-level click handler for wiki-links.
-  // Attached to `document` so it fires regardless of React's
-  // synthetic event system or stopPropagation in the tree.
-  // -----------------------------------------------------------------
-  useEffect(() => {
-    const onClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const link = target.closest('a.wiki-ref-resolved') as HTMLAnchorElement | null;
-      if (!link) return;
-
-      // Only handle links inside our container
-      if (!containerRef.current || !containerRef.current.contains(link)) return;
-
-      e.preventDefault();
-      e.stopImmediatePropagation();
-
-      const href = link.getAttribute('href');
-      if (href) {
-        setPreview(INITIAL_PREVIEW);
-        clearHide();
-        navigate(href);
-      }
-    };
-
-    document.addEventListener('click', onClick, true); // capture phase
-    return () => document.removeEventListener('click', onClick, true);
-  }, [navigate, clearHide]);
-
-  // -----------------------------------------------------------------
-  // Hover preview via native listeners on the container.
-  // mouseover/mouseout bubble naturally through dangerouslySetInnerHTML.
+  // Hover preview. One event does everything:
+  //   mouseover on a wiki-link  → show preview
+  //   mouseover on anything else → schedule hide (80 ms debounce)
+  //   mouseleave container       → instant hide
+  // No mouseout / relatedTarget gymnastics needed.
   // -----------------------------------------------------------------
   useEffect(() => {
     const el = containerRef.current;
@@ -97,38 +71,56 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
     const onOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const link = target.closest('a.wiki-ref-resolved') as HTMLElement | null;
-      if (!link) return;
 
-      clearHide();
-
-      const title = decodeURIComponent(link.getAttribute('data-title') || '');
-      const address = link.getAttribute('data-address') || '';
-      const description = decodeURIComponent(link.getAttribute('data-description') || '');
-
-      setPreview({ visible: true, title, address, description, x: e.clientX, y: e.clientY });
-    };
-
-    const onOut = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const related = e.relatedTarget as HTMLElement | null;
-      const link = target.closest('a.wiki-ref-resolved');
-      if (!link) return;
-
-      // Only hide when mouse actually leaves the link (not moving to child/icon)
-      if (!related || !link.contains(related)) {
+      if (link) {
+        // Mouse entered a wiki-link — show / update preview
         clearHide();
-        hideTimer.current = setTimeout(() => setPreview(INITIAL_PREVIEW), 80);
+        const title = decodeURIComponent(link.getAttribute('data-title') || '');
+        const address = link.getAttribute('data-address') || '';
+        const description = decodeURIComponent(link.getAttribute('data-description') || '');
+        setPreview({ visible: true, title, address, description, x: e.clientX, y: e.clientY });
+      } else {
+        // Mouse is on non-link content — schedule hide
+        if (!hideTimer.current) {
+          hideTimer.current = setTimeout(() => {
+            setPreview(INITIAL_PREVIEW);
+            hideTimer.current = null;
+          }, 80);
+        }
       }
     };
 
+    const onLeave = () => {
+      clearHide();
+      setPreview(INITIAL_PREVIEW);
+    };
+
     el.addEventListener('mouseover', onOver);
-    el.addEventListener('mouseout', onOut);
+    el.addEventListener('mouseleave', onLeave);
     return () => {
       el.removeEventListener('mouseover', onOver);
-      el.removeEventListener('mouseout', onOut);
+      el.removeEventListener('mouseleave', onLeave);
       clearHide();
     };
   }, [clearHide]);
+
+  // Navigate via React Router when a resolved wiki-link is clicked.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const onClick = (e: MouseEvent) => {
+      const link = (e.target as HTMLElement).closest('a.wiki-ref-resolved') as HTMLAnchorElement | null;
+      if (link) {
+        e.preventDefault();
+        const href = link.getAttribute('href');
+        if (href) navigate(href);
+      }
+    };
+
+    el.addEventListener('click', onClick);
+    return () => el.removeEventListener('click', onClick);
+  }, [navigate]);
 
   return (
     <>
