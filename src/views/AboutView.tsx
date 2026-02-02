@@ -90,28 +90,35 @@ export const AboutView: React.FC = () => {
         <div className="mb-14">
           <h2 className="text-xs text-th-tertiary uppercase tracking-wider mb-6">What I Believe</h2>
 
-          <div className="space-y-6 max-w-2xl font-sans">
-            <p className="text-th-secondary leading-relaxed">
-              To truly build, it seems essential to move beyond narrow specialization and understand the entire stack. Removing black boxes—from the bare metal to the reasoning model—allows for genuine agency over the system.
-            </p>
-            <p className="text-th-secondary leading-relaxed">
-              The rate-limiting step for progress often isn't software; it is atoms. We cannot cheat thermodynamics. We can only build the missing infrastructure to bridge the gap. The faster we deploy reliable, production-grade substrate that satisfies real constraints at scale—from data centers to edge devices—the faster humanity accelerates.
-            </p>
-            <p className="text-th-secondary leading-relaxed">
-              Intelligence should arguably be as ubiquitous and invisible as electricity. As capabilities expand, so do the problems we attempt to solve with them. Building the rigorous infrastructure to make compute a silent, fundamental resource becomes the priority.
-            </p>
-            <p className="text-th-secondary leading-relaxed">
-              The patterns that scale are the ones that transfer. Good principles don't know what domain they're solving for—they work because they're indifferent to it. What looks like separate problems often shares the same structure. 
-            </p>
-            <p className="text-th-secondary leading-relaxed">
-              Optimism is perhaps a necessary, pragmatic stance. It suggests that by solving the hard physical constraints today, we might unlock the freedom to pursue a better future tomorrow.
-            </p>
-            <p className="text-th-secondary leading-relaxed">
-              In a world of infinite problems and finite time, passion is the only sustainable filter. I work on what I can't stop thinking about—not because it's strategic, but because it's the only sustainable way to outlast hard problems. Obsession compounds.
-            </p>
-            <p className="text-th-secondary leading-relaxed">
-            The future is bright.
-            </p>
+          <div className="space-y-4 max-w-2xl font-sans">
+            <div className="flex gap-3">
+              <span className="text-th-tertiary shrink-0 mt-0.5">—</span>
+              <p className="text-th-secondary leading-relaxed">To truly build, it seems essential to move beyond narrow specialization and understand the entire stack. Removing black boxes—from the bare metal to the reasoning model—allows for genuine agency over the system.</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="text-th-tertiary shrink-0 mt-0.5">—</span>
+              <p className="text-th-secondary leading-relaxed">The rate-limiting step for progress often isn't software; it is atoms. We cannot cheat thermodynamics. We can only build the missing infrastructure to bridge the gap. The faster we deploy reliable, production-grade substrate that satisfies real constraints at scale—from data centers to edge devices—the faster humanity accelerates.</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="text-th-tertiary shrink-0 mt-0.5">—</span>
+              <p className="text-th-secondary leading-relaxed">Intelligence should arguably be as ubiquitous and invisible as electricity. As capabilities expand, so do the problems we attempt to solve with them. Building the rigorous infrastructure to make compute a silent, fundamental resource becomes the priority.</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="text-th-tertiary shrink-0 mt-0.5">—</span>
+              <p className="text-th-secondary leading-relaxed">The patterns that scale are the ones that transfer. Good principles don't know what domain they're solving for—they work because they're indifferent to it. What looks like separate problems often shares the same structure.</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="text-th-tertiary shrink-0 mt-0.5">—</span>
+              <p className="text-th-secondary leading-relaxed">Optimism is perhaps a necessary, pragmatic stance. It suggests that by solving the hard physical constraints today, we might unlock the freedom to pursue a better future tomorrow.</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="text-th-tertiary shrink-0 mt-0.5">—</span>
+              <p className="text-th-secondary leading-relaxed">In a world of infinite problems and finite time, passion is the only sustainable filter. I work on what I can't stop thinking about—not because it's strategic, but because it's the only sustainable way to outlast hard problems. Obsession compounds.</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="text-th-tertiary shrink-0 mt-0.5">—</span>
+              <p className="text-th-secondary leading-relaxed">The future is bright.</p>
+            </div>
           </div>
         </div>
 

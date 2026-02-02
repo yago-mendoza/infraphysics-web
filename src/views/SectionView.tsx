@@ -209,7 +209,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
                           </div>
                         </div>
 
-                        <p className={`text-th-secondary text-sm leading-relaxed font-sans mb-3 ${isThreads ? 'line-clamp-3' : 'line-clamp-2'}`}>
+                        <p className={`text-th-secondary text-sm leading-relaxed font-sans mb-3 line-clamp-2`}>
                           <Highlight text={post.description} query={query} />
                         </p>
 
@@ -247,14 +247,6 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
                                 </div>
                               )}
                             </>
-                          )}
-
-                          {/* Threads: reading time highlighted */}
-                          {isThreads && (
-                            <span className="text-amber-400/60 flex items-center gap-1">
-                              <ClockIcon />
-                              {calculateReadingTime(post.content)} min read
-                            </span>
                           )}
 
                           {/* CTA */}
