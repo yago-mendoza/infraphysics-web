@@ -18,16 +18,16 @@ const AppLayout: React.FC = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
   const isStarfieldPage = STARFIELD_PAGES.includes(location.pathname);
-  const showGrid = location.pathname.startsWith('/lab') ||
-                   location.pathname.startsWith('/second-brain');
-  const isSecondBrain = location.pathname.startsWith('/second-brain');
+  const showGrid = location.pathname.startsWith('/lab');
+  const isBlog = location.pathname.startsWith('/blog');
+  const isSecondBrain = location.pathname.startsWith('/lab/second-brain');
 
   const gridOffset = isSecondBrain
     ? SIDEBAR_WIDTH + SECOND_BRAIN_SIDEBAR_WIDTH
     : SIDEBAR_WIDTH;
 
   const content = (
-    <div className="min-h-screen flex relative bg-th-base">
+    <div className={`min-h-screen flex relative ${isBlog ? 'bg-th-blog' : 'bg-th-base'}`}>
       {/* Background — Starfield on personal pages (fades with theme), DualGrid on lab/wiki */}
       <div className="hidden md:block">
         {isStarfieldPage && <Starfield sidebarWidth={SIDEBAR_WIDTH} visible={theme === 'dark'} />}
@@ -55,19 +55,23 @@ const AppLayout: React.FC = () => {
 
             {/* Lab sections */}
             <Route path="/lab/projects" element={<SectionView category="projects" colorClass="text-emerald-400" />} />
-            <Route path="/lab/threads" element={<SectionView category="threads" colorClass="text-amber-400" />} />
-            <Route path="/lab/bits2bricks" element={<SectionView category="bits2bricks" colorClass="text-blue-400" />} />
+            <Route path="/blog/threads" element={<SectionView category="threads" colorClass="text-amber-400" />} />
+            <Route path="/blog/bits2bricks" element={<SectionView category="bits2bricks" colorClass="text-blue-400" />} />
 
             {/* Legacy redirects */}
             <Route path="/projects" element={<Navigate to="/lab/projects" replace />} />
-            <Route path="/threads" element={<Navigate to="/lab/threads" replace />} />
-            <Route path="/bits2bricks" element={<Navigate to="/lab/bits2bricks" replace />} />
+            <Route path="/threads" element={<Navigate to="/blog/threads" replace />} />
+            <Route path="/bits2bricks" element={<Navigate to="/blog/bits2bricks" replace />} />
+            <Route path="/lab/threads" element={<Navigate to="/blog/threads" replace />} />
+            <Route path="/lab/bits2bricks" element={<Navigate to="/blog/bits2bricks" replace />} />
+            <Route path="/second-brain" element={<Navigate to="/lab/second-brain" replace />} />
+            <Route path="/second-brain/:id" element={<Navigate to="/lab/second-brain" replace />} />
 
             {/* Second Brain */}
-            <Route path="/second-brain" element={<SecondBrainView />} />
-            <Route path="/second-brain/:id" element={<SecondBrainView />} />
-            <Route path="/fieldnotes" element={<Navigate to="/second-brain" replace />} />
-            <Route path="/fieldnotes/:id" element={<Navigate to="/second-brain" replace />} />
+            <Route path="/lab/second-brain" element={<SecondBrainView />} />
+            <Route path="/lab/second-brain/:id" element={<SecondBrainView />} />
+            <Route path="/fieldnotes" element={<Navigate to="/lab/second-brain" replace />} />
+            <Route path="/fieldnotes/:id" element={<Navigate to="/lab/second-brain" replace />} />
 
             {/* Post detail views */}
             <Route path="/:category/:id" element={<PostView />} />

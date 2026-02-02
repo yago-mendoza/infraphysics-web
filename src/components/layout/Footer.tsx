@@ -56,9 +56,9 @@ export const Footer: React.FC = () => {
             <h4 className="text-[10px] uppercase tracking-wider text-th-tertiary mb-4">Explore</h4>
             <nav className="flex flex-col gap-2">
               <Link to="/lab/projects" className="text-xs text-th-secondary hover:text-emerald-400 transition-colors">Projects</Link>
-              <Link to="/lab/threads" className="text-xs text-th-secondary hover:text-amber-400 transition-colors">Threads</Link>
-              <Link to="/lab/bits2bricks" className="text-xs text-th-secondary hover:text-blue-400 transition-colors">Bits2Bricks</Link>
-              <Link to="/second-brain" className="text-xs text-th-secondary hover:text-violet-400 transition-colors">Second Brain</Link>
+              <Link to="/blog/threads" className="text-xs text-th-secondary hover:text-amber-400 transition-colors">Threads</Link>
+              <Link to="/blog/bits2bricks" className="text-xs text-th-secondary hover:text-blue-400 transition-colors">Bits2Bricks</Link>
+              <Link to="/lab/second-brain" className="text-xs text-th-secondary hover:text-violet-400 transition-colors">Second Brain</Link>
               <Link to="/contact" className="text-xs text-th-secondary hover:text-th-heading transition-colors">Contact</Link>
             </nav>
           </div>

@@ -40,7 +40,9 @@ export const PostView: React.FC = () => {
   if (post.category === 'threads') { accentClass = "text-amber-400"; accentBadge = "text-amber-400 border-amber-400/30 bg-amber-400/10"; }
   if (post.category === 'bits2bricks') { accentClass = "text-blue-400"; accentBadge = "text-blue-400 border-blue-400/30 bg-blue-400/10"; }
 
-  const labPath = `/lab/${post.category}`;
+  const isBlog = post.category === 'threads' || post.category === 'bits2bricks';
+  const sectionPath = isBlog ? `/blog/${post.category}` : `/lab/${post.category}`;
+  const sectionGroup = isBlog ? 'blog' : 'lab';
 
   return (
     <article className="animate-fade-in max-w-3xl">
@@ -48,9 +50,9 @@ export const PostView: React.FC = () => {
       <nav className="mb-6 text-xs text-th-tertiary flex items-center gap-2">
         <Link to="/home" className="hover:text-th-secondary transition-colors">home</Link>
         <span className="text-th-muted">/</span>
-        <span className="text-th-muted">lab</span>
+        <span className="text-th-muted">{sectionGroup}</span>
         <span className="text-th-muted">/</span>
-        <Link to={labPath} className="hover:text-th-secondary transition-colors">{post.category}</Link>
+        <Link to={sectionPath} className="hover:text-th-secondary transition-colors">{post.category}</Link>
         <span className="text-th-muted">/</span>
         <span className="text-th-secondary">{post.id}</span>
       </nav>

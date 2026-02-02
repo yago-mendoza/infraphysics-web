@@ -21,7 +21,7 @@ export function resolveWikiLinks(
         resolvedRefs.push(address);
         const title = encodeURIComponent(target.displayTitle || displayText);
         const desc = encodeURIComponent(target.description || '');
-        return `<a class="wiki-ref wiki-ref-resolved" href="/second-brain/${target.id}" data-address="${address}" data-title="${title}" data-description="${desc}">${displayText}<sup class="wiki-ref-icon">\u25C7</sup></a>`;
+        return `<a class="wiki-ref wiki-ref-resolved" href="/lab/second-brain/${target.id}" data-address="${address}" data-title="${title}" data-description="${desc}">${displayText}<sup class="wiki-ref-icon">\u25C7</sup></a>`;
       } else {
         unresolvedRefs.push(address);
         return `<span class="wiki-ref wiki-ref-unresolved" data-address="${address}">${displayText}<sup class="wiki-ref-icon">?</sup></span>`;

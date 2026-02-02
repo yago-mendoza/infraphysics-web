@@ -79,14 +79,14 @@ export const Sidebar: React.FC = () => {
       {sectionLabel('lab')}
       <nav className="flex flex-col gap-1">
         {navLink('/lab/projects', <GearIcon />, 'projects', CATEGORY_ACCENTS.projects)}
-        {navLink('/lab/threads', <ThreadIcon />, 'threads', CATEGORY_ACCENTS.threads)}
-        {navLink('/lab/bits2bricks', <GradCapIcon />, 'bits2bricks', CATEGORY_ACCENTS.bits2bricks)}
+        {navLink('/lab/second-brain', <DiamondIcon />, <span>2<sup>nd</sup> brain</span>, CATEGORY_ACCENTS.secondBrain)}
       </nav>
 
-      {/* WIKI */}
-      {sectionLabel('wiki')}
+      {/* BLOG */}
+      {sectionLabel('blog')}
       <nav className="flex flex-col gap-1">
-        {navLink('/second-brain', <DiamondIcon />, <span>2<sup>nd</sup> brain</span>, CATEGORY_ACCENTS.secondBrain)}
+        {navLink('/blog/threads', <ThreadIcon />, 'threads', CATEGORY_ACCENTS.threads)}
+        {navLink('/blog/bits2bricks', <GradCapIcon />, 'bits2bricks', CATEGORY_ACCENTS.bits2bricks)}
       </nav>
 
       {/* META */}

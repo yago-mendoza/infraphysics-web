@@ -184,7 +184,10 @@ export const SecondBrainView: React.FC = () => {
                         {i > 0 && <span className="mx-0.5 text-th-muted">/</span>}
                         {isLast
                           ? <span>{part}</span>
-                          : <Link to={`/second-brain/${id}`} className="hover:text-violet-400 transition-colors">{part}</Link>
+                          : <Link to={`/lab/second-brain/${id}`} className="hover:text-violet-400 transition-colors" onClick={() => {
+                              const target = noteById.get(id);
+                              if (target) pendingTrailAction.current = { type: 'reset', post: target };
+                            }}>{part}</Link>
                         }
                       </React.Fragment>
                     );
@@ -217,7 +220,7 @@ export const SecondBrainView: React.FC = () => {
                   {relatedConcepts.map(concept => (
                     <Link
                       key={concept.id}
-                      to={`/second-brain/${concept.id}`}
+                      to={`/lab/second-brain/${concept.id}`}
                       onClick={() => handleConnectionClick(concept)}
                       className="block p-3 border border-th-border rounded-sm bg-th-surface hover:border-violet-400/30 transition-all group"
                     >
@@ -245,7 +248,7 @@ export const SecondBrainView: React.FC = () => {
                   {backlinks.map(bl => (
                     <Link
                       key={bl.id}
-                      to={`/second-brain/${bl.id}`}
+                      to={`/lab/second-brain/${bl.id}`}
                       onClick={() => handleConnectionClick(bl)}
                       className="block p-3 border border-th-border rounded-sm bg-th-surface hover:border-violet-400/30 transition-all group"
                     >
@@ -314,7 +317,7 @@ export const SecondBrainView: React.FC = () => {
               sortedResults.map(note => (
                 <Link
                   key={note.id}
-                  to={`/second-brain/${note.id}`}
+                  to={`/lab/second-brain/${note.id}`}
                   onClick={() => handleGridCardClick(note)}
                   className="block p-4 border border-th-border rounded-sm bg-th-surface hover:border-th-border-hover transition-all group"
                 >

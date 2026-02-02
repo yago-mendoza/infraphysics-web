@@ -186,7 +186,7 @@ export const HomeView: React.FC = () => {
             </span>
           </div>
           <Link
-            to="/second-brain"
+            to="/lab/second-brain"
             className="inline-flex items-center gap-1 text-sm text-violet-400 hover:text-violet-300 transition-colors"
           >
             Open Second Brain <ArrowRightIcon />

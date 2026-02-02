@@ -118,7 +118,7 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
         setPreview(INITIAL_PREVIEW);
         const href = link.getAttribute('href');
         if (href) {
-          // Extract concept ID from /second-brain/{id} and notify parent
+          // Extract concept ID from /lab/second-brain/{id} and notify parent
           const match = href.match(/^\/second-brain\/(.+)$/);
           if (match && onWikiLinkClickRef.current) {
             onWikiLinkClickRef.current(match[1]);

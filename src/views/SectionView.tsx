@@ -83,7 +83,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
       <nav className="mb-6 text-xs text-th-tertiary flex items-center gap-2">
         <Link to="/home" className="hover:text-th-secondary transition-colors">home</Link>
         <span className="text-th-muted">/</span>
-        <span className="text-th-muted">lab</span>
+        <span className="text-th-muted">{category === 'threads' || category === 'bits2bricks' ? 'blog' : 'lab'}</span>
         <span className="text-th-muted">/</span>
         <span className="text-th-secondary">{category}</span>
       </nav>

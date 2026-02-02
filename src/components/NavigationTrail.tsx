@@ -24,7 +24,7 @@ export const NavigationTrail: React.FC<NavigationTrailProps> = ({
       {/* "all concepts" — link when trail has items, plain span on list view */}
       {hasTrail ? (
         <Link
-          to="/second-brain"
+          to="/lab/second-brain"
           onClick={onAllConceptsClick}
           className="text-violet-400 hover:text-violet-300 transition-colors"
         >
@@ -52,7 +52,7 @@ export const NavigationTrail: React.FC<NavigationTrailProps> = ({
               <span className="text-violet-400">{item.label}</span>
             ) : (
               <Link
-                to={`/second-brain/${item.id}`}
+                to={`/lab/second-brain/${item.id}`}
                 onClick={() => onItemClick(i)}
                 className="text-th-tertiary hover:text-violet-400 transition-colors"
               >

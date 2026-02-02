@@ -122,7 +122,7 @@ const TreeNodeItem: React.FC<{
             // Concept + folder: label links to detail, scope icon on hover
             <>
               <Link
-                to={`/second-brain/${node.concept.id}`}
+                to={`/lab/second-brain/${node.concept.id}`}
                 onClick={onConceptClick}
                 className="text-[11px] text-th-secondary hover:text-violet-400 transition-colors truncate flex-1"
               >
@@ -133,7 +133,7 @@ const TreeNodeItem: React.FC<{
           ) : (
             // Pure concept leaf: link to detail
             <Link
-              to={`/second-brain/${node.concept.id}`}
+              to={`/lab/second-brain/${node.concept.id}`}
               onClick={onConceptClick}
               className="text-[11px] text-th-secondary hover:text-violet-400 transition-colors truncate flex-1"
             >

@@ -70,7 +70,7 @@ export const useSecondBrain = () => {
 
   // Navigation
   const navigateToNote = useCallback((noteId: string) => {
-    navigate(`/second-brain/${noteId}`);
+    navigate(`/lab/second-brain/${noteId}`);
   }, [navigate]);
 
   return {

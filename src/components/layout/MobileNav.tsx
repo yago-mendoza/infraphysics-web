@@ -94,12 +94,12 @@ export const MobileNav: React.FC = () => {
               {/* LAB */}
               <SectionLabel>lab</SectionLabel>
               <NavLink to="/lab/projects" colorClass="text-emerald-400" icon={<GearIcon />}>Projects</NavLink>
-              <NavLink to="/lab/threads" colorClass="text-amber-400" icon={<ThreadIcon />}>Threads</NavLink>
-              <NavLink to="/lab/bits2bricks" colorClass="text-blue-400" icon={<GradCapIcon />}>Bits2Bricks</NavLink>
+              <NavLink to="/lab/second-brain" colorClass="text-violet-400" icon={<DiamondIcon />}>2<sup>nd</sup> brain</NavLink>
 
-              {/* WIKI */}
-              <SectionLabel>wiki</SectionLabel>
-              <NavLink to="/second-brain" colorClass="text-violet-400" icon={<DiamondIcon />}>2<sup>nd</sup> brain</NavLink>
+              {/* BLOG */}
+              <SectionLabel>blog</SectionLabel>
+              <NavLink to="/blog/threads" colorClass="text-amber-400" icon={<ThreadIcon />}>Threads</NavLink>
+              <NavLink to="/blog/bits2bricks" colorClass="text-blue-400" icon={<GradCapIcon />}>Bits2Bricks</NavLink>
 
               {/* META */}
               <SectionLabel>meta</SectionLabel>

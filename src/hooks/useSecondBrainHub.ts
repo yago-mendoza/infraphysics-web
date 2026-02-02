@@ -97,7 +97,7 @@ export const useSecondBrainHub = () => {
     if (!q && query && savedIdRef.current) {
       const restoreId = savedIdRef.current;
       savedIdRef.current = undefined;
-      navigate(`/second-brain/${restoreId}`);
+      navigate(`/lab/second-brain/${restoreId}`);
     }
     if (!q) {
       savedIdRef.current = undefined;
@@ -396,7 +396,7 @@ export const useSecondBrainHub = () => {
 
   // Navigation
   const navigateToNote = useCallback((noteId: string) => {
-    navigate(`/second-brain/${noteId}`);
+    navigate(`/lab/second-brain/${noteId}`);
   }, [navigate]);
 
   // Signal from sidebar directory: "this click should reset the trail"
