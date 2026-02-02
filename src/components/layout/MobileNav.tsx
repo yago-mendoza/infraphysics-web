@@ -93,7 +93,7 @@ export const MobileNav: React.FC = () => {
             <nav className="flex flex-col p-4 gap-1">
               {/* LAB */}
               <SectionLabel>lab</SectionLabel>
-              <NavLink to="/lab/projects" colorClass="text-emerald-400" icon={<GearIcon />}>Projects</NavLink>
+              <NavLink to="/lab/projects" colorClass="text-lime-400" icon={<GearIcon />}>Projects</NavLink>
               <NavLink to="/lab/second-brain" colorClass="text-violet-400" icon={<DiamondIcon />}>2<sup>nd</sup> brain</NavLink>
 
               {/* BLOG */}

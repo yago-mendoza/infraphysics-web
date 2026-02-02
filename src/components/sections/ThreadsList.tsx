@@ -62,7 +62,7 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
 
               {/* Thumbnail */}
               {post.thumbnail && (
-                <div className="hidden sm:block flex-shrink-0 w-28 h-28 overflow-hidden rounded-sm">
+                <div className="hidden sm:block flex-shrink-0 w-40 h-40 overflow-hidden rounded-sm">
                   <img
                     src={post.thumbnail}
                     alt=""

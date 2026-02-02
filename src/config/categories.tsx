@@ -17,14 +17,14 @@ export interface CategoryDisplayConfig {
 
 export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
   projects: {
-    title: 'Projects',
+    title: 'PROJECTS',
     description: "What I've built, why, and what broke along the way.",
     icon: <GearIcon />,
-    colorClass: 'text-emerald-400',
-    bgClass: 'bg-emerald-400/10',
-    borderClass: 'border-emerald-400/20',
-    accent: '#10B981',
-    darkBadge: 'text-emerald-400 border-emerald-400/30 bg-emerald-400/10',
+    colorClass: 'text-lime-400',
+    bgClass: 'bg-lime-400/10',
+    borderClass: 'border-lime-400/20',
+    accent: '#a3e635',
+    darkBadge: 'text-lime-400 border-lime-400/30 bg-lime-400/10',
   },
   threads: {
     title: 'Threads',
@@ -52,7 +52,7 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
  * Get category color class (text color)
  */
 export const getCategoryColor = (cat: Category): string => {
-  if (cat === 'projects') return 'text-emerald-400';
+  if (cat === 'projects') return 'text-lime-400';
   if (cat === 'threads') return 'text-amber-400';
   if (cat === 'bits2bricks') return 'text-blue-400';
   return 'text-gray-400';
@@ -62,7 +62,7 @@ export const getCategoryColor = (cat: Category): string => {
  * Get category background classes (bg + border)
  */
 export const getCategoryBg = (cat: Category): string => {
-  if (cat === 'projects') return 'bg-emerald-400/10 border-emerald-400/20';
+  if (cat === 'projects') return 'bg-lime-400/10 border-lime-400/20';
   if (cat === 'threads') return 'bg-amber-400/10 border-amber-400/20';
   if (cat === 'bits2bricks') return 'bg-blue-400/10 border-blue-400/20';
   return 'bg-white/5 border-white/10';

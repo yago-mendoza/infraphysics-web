@@ -39,7 +39,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
               {index > 0 && <div className="w-px flex-grow bg-th-border" />}
               {index === 0 && <div className="flex-grow" />}
               {/* Node */}
-              <div className="w-3 h-3 rounded-full border-2 border-emerald-400 bg-th-base flex-shrink-0" />
+              <div className="w-3 h-3 rounded-full border-2 border-lime-400 bg-th-base flex-shrink-0" />
               {/* Line below node */}
               {index < posts.length - 1 && <div className="w-px flex-grow bg-th-border" />}
               {index === posts.length - 1 && <div className="flex-grow" />}
@@ -48,10 +48,10 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
             {/* Card content */}
             <div className={`flex-grow pb-8 ${index === posts.length - 1 ? 'pb-0' : ''}`}>
               <div className="flex flex-col md:flex-row gap-5">
-                {/* Photo with L-corner frame */}
+                {/* Photo */}
                 {post.thumbnail && (
                   <Link to={`/${post.category}/${post.id}`} className="flex-shrink-0">
-                    <div className="photo-l-frame w-full md:w-56 h-56 overflow-hidden">
+                    <div className="w-full md:w-56 h-56 overflow-hidden">
                       <img
                         src={post.thumbnail}
                         alt=""
@@ -71,7 +71,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
 
                   {/* Title */}
                   <Link to={`/${post.category}/${post.id}`} className="group">
-                    <h3 className="text-xl font-bold uppercase tracking-wide text-th-primary group-hover:text-emerald-400 transition-colors leading-tight mb-2">
+                    <h3 className="text-xl font-bold uppercase tracking-wide text-th-primary group-hover:text-lime-400 transition-colors leading-tight mb-2">
                       <Highlight text={post.displayTitle || post.title} query={query} />
                     </h3>
                   </Link>
@@ -85,7 +85,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                   {techs.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mb-3">
                       {techs.map(tech => (
-                        <span key={tech} className="text-[11px] px-2 py-0.5 border border-emerald-400/30 text-emerald-400 rounded-sm">
+                        <span key={tech} className="text-[11px] px-2 py-0.5 border border-lime-400/30 text-lime-400 rounded-sm">
                           {tech}
                         </span>
                       ))}
@@ -114,7 +114,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                     )}
                     <Link
                       to={`/${post.category}/${post.id}`}
-                      className="inline-flex items-center gap-1.5 text-th-tertiary hover:text-emerald-400 transition-colors"
+                      className="inline-flex items-center gap-1.5 text-th-tertiary hover:text-lime-400 transition-colors"
                     >
                       <ExternalLinkIcon /> Case Study
                     </Link>

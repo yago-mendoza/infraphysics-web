@@ -16,7 +16,7 @@ export interface SocialLink {
 export const NAV_ITEMS: NavItem[] = [
   { path: '/home', label: 'home', colorClass: 'text-blue-400', activeAccent: '#3B82F6' },
   { path: '/about', label: 'about', colorClass: 'text-gray-200' },
-  { path: '/lab/projects', label: 'projects', colorClass: 'text-emerald-400', activeAccent: '#10B981' },
+  { path: '/lab/projects', label: 'projects', colorClass: 'text-lime-400', activeAccent: '#a3e635' },
   { path: '/blog/threads', label: 'threads', colorClass: 'text-amber-400', activeAccent: '#F59E0B' },
   { path: '/blog/bits2bricks', label: 'bits2bricks', colorClass: 'text-blue-400', activeAccent: '#3B82F6' },
   { path: '/lab/second-brain', label: '2\u207F\u1D48 Brain', colorClass: 'text-violet-400', activeAccent: '#8B5CF6' },

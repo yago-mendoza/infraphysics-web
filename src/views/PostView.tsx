@@ -36,7 +36,7 @@ export const PostView: React.FC = () => {
 
   let accentClass = "text-th-secondary";
   let accentBadge = "text-th-secondary border-th-border bg-th-surface";
-  if (post.category === 'projects') { accentClass = "text-emerald-400"; accentBadge = "text-emerald-400 border-emerald-400/30 bg-emerald-400/10"; }
+  if (post.category === 'projects') { accentClass = "text-lime-400"; accentBadge = "text-lime-400 border-lime-400/30 bg-lime-400/10"; }
   if (post.category === 'threads') { accentClass = "text-amber-400"; accentBadge = "text-amber-400 border-amber-400/30 bg-amber-400/10"; }
   if (post.category === 'bits2bricks') { accentClass = "text-blue-400"; accentBadge = "text-blue-400 border-blue-400/30 bg-blue-400/10"; }
 
@@ -192,7 +192,7 @@ export const PostView: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {recommendedPosts.map(rec => {
             let recAccent = "text-th-secondary";
-            if (rec.category === 'projects') recAccent = "text-emerald-400";
+            if (rec.category === 'projects') recAccent = "text-lime-400";
             if (rec.category === 'threads') recAccent = "text-amber-400";
             if (rec.category === 'bits2bricks') recAccent = "text-blue-400";
 

@@ -54,7 +54,7 @@ const AppLayout: React.FC = () => {
             <Route path="/thanks" element={<ThanksView />} />
 
             {/* Lab sections */}
-            <Route path="/lab/projects" element={<SectionView category="projects" colorClass="text-emerald-400" />} />
+            <Route path="/lab/projects" element={<SectionView category="projects" colorClass="text-lime-400" />} />
             <Route path="/blog/threads" element={<SectionView category="threads" colorClass="text-amber-400" />} />
             <Route path="/blog/bits2bricks" element={<SectionView category="bits2bricks" colorClass="text-blue-400" />} />
 

@@ -85,7 +85,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
       {/* Header */}
       <header className="mb-8 pb-6 border-b border-th-border">
         <div className="flex items-baseline justify-between gap-4 mb-3">
-          <h1 className={`text-3xl font-bold tracking-tight lowercase ${colorClass}`}>
+          <h1 className={`text-4xl font-bold tracking-tight ${category === 'projects' ? 'title-l-frame uppercase' : `lowercase ${colorClass}`}`}>
             {categoryInfo.title}
           </h1>
           <div className="flex items-center gap-4 text-xs text-th-tertiary">

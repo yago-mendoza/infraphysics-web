@@ -630,3 +630,39 @@ button:focus {
   border-bottom: 2px solid #a3e635;
   border-right: 2px solid #a3e635;
 }
+
+/* ============================================================
+   Title L-corner frame — brackets framing a text heading
+   Padding keeps text clear of the bracket arms.
+   ============================================================ */
+
+.title-l-frame {
+  position: relative;
+  display: inline-block;
+  padding: 10px 20px 12px;
+}
+
+.title-l-frame::before,
+.title-l-frame::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+
+/* Top-left L bracket */
+.title-l-frame::before {
+  top: 0;
+  left: 0;
+  border-top: 2px solid #a3e635;
+  border-left: 2px solid #a3e635;
+}
+
+/* Bottom-right L bracket */
+.title-l-frame::after {
+  bottom: 0;
+  right: 0;
+  border-bottom: 2px solid #a3e635;
+  border-right: 2px solid #a3e635;
+}
