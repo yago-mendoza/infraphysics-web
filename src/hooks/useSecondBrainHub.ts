@@ -101,12 +101,15 @@ export const useSecondBrainHub = () => {
     setQuery(q);
   }, [query, id, navigate]);
 
-  // Backlinks map: conceptId -> list of concepts that reference it
+  // Backlinks map: conceptId -> list of concepts that reference it (deduplicated per note)
   const backlinksMap = useMemo(() => {
     const map = new Map<string, Post[]>();
     allFieldNotes.forEach(note => {
+      const seen = new Set<string>();
       (note.references || []).forEach(ref => {
         const refId = ref.toLowerCase().replace(/\/\//g, '--').replace(/\s+/g, '-');
+        if (seen.has(refId)) return;
+        seen.add(refId);
         if (!map.has(refId)) map.set(refId, []);
         map.get(refId)!.push(note);
       });
