@@ -1,6 +1,6 @@
 // Second Brain Hub hook — tree building, multi-mode search, filters, sorts, stats
 
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { posts } from '../data/data';
 import { Post } from '../types';
@@ -83,22 +83,6 @@ export const useSecondBrainHub = () => {
     return null;
   }, [id, allFieldNotes]);
 
-  // Track previous concept for "go back" navigation
-  const prevIdRef = useRef<string | undefined>(undefined);
-  const [previousConceptId, setPreviousConceptId] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    if (id && prevIdRef.current && prevIdRef.current !== id) {
-      setPreviousConceptId(prevIdRef.current);
-    }
-    prevIdRef.current = id;
-  }, [id]);
-
-  const previousConcept = useMemo(() => {
-    if (!previousConceptId) return null;
-    return allFieldNotes.find(p => p.id === previousConceptId) || null;
-  }, [previousConceptId, allFieldNotes]);
-
   // Track which concept we were viewing before searching, so we can return to it
   const savedIdRef = useRef<string | undefined>(undefined);
 
@@ -145,16 +129,6 @@ export const useSecondBrainHub = () => {
         return allFieldNotes.find(n => n.id === refId);
       })
       .filter((n): n is Post => n !== undefined);
-  }, [activePost, allFieldNotes]);
-
-  // Breadcrumbs
-  const breadcrumbs = useMemo(() => {
-    if (!activePost || !activePost.addressParts) return [];
-    return activePost.addressParts.map(part => {
-      const partId = part.toLowerCase().replace(/\s+/g, '-');
-      const concept = allFieldNotes.find(n => n.id === partId);
-      return { label: part, concept: concept || null };
-    });
   }, [activePost, allFieldNotes]);
 
   // Outgoing ref count
@@ -440,7 +414,6 @@ export const useSecondBrainHub = () => {
     // URL state
     id,
     activePost,
-    previousConcept,
 
     // Search
     query,
@@ -475,7 +448,6 @@ export const useSecondBrainHub = () => {
     // Detail view data
     backlinks,
     relatedConcepts,
-    breadcrumbs,
     outgoingRefCount,
     backlinksMap,
 

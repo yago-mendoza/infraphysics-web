@@ -28,9 +28,10 @@ interface WikiContentProps {
   html: string;
   allFieldNotes: Post[];
   className?: string;
+  onWikiLinkClick?: (conceptId: string) => void;
 }
 
-export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, className }) => {
+export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, className, onWikiLinkClick }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -57,12 +58,23 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
     if (hideTimer.current) { clearTimeout(hideTimer.current); hideTimer.current = null; }
   }, []);
 
+  // Keep callbacks in refs so the click handler always has the latest functions
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
+  const onWikiLinkClickRef = useRef(onWikiLinkClick);
+  onWikiLinkClickRef.current = onWikiLinkClick;
+
+  // Track the currently hovered wiki link element + href so the document-level
+  // mousedown handler can navigate even when the preview portal intercepts clicks.
+  const hoveredLinkRef = useRef<{ el: HTMLElement; href: string } | null>(null);
+
   // -----------------------------------------------------------------
-  // Hover preview. One event does everything:
+  // Hover preview + click navigation. Shares a single useEffect so
+  // both listeners have identical lifecycle on the same container ref.
   //   mouseover on a wiki-link  → show preview
   //   mouseover on anything else → schedule hide (80 ms debounce)
   //   mouseleave container       → instant hide
-  // No mouseout / relatedTarget gymnastics needed.
+  //   click on a wiki-link       → navigate via React Router
   // -----------------------------------------------------------------
   useEffect(() => {
     const el = containerRef.current;
@@ -78,11 +90,13 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
         const title = decodeURIComponent(link.getAttribute('data-title') || '');
         const address = link.getAttribute('data-address') || '';
         const description = decodeURIComponent(link.getAttribute('data-description') || '');
+        hoveredLinkRef.current = { el: link, href: link.getAttribute('href') || '' };
         setPreview({ visible: true, title, address, description, x: e.clientX, y: e.clientY });
       } else {
         // Mouse is on non-link content — schedule hide
         if (!hideTimer.current) {
           hideTimer.current = setTimeout(() => {
+            hoveredLinkRef.current = null;
             setPreview(INITIAL_PREVIEW);
             hideTimer.current = null;
           }, 80);
@@ -92,35 +106,71 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
 
     const onLeave = () => {
       clearHide();
+      hoveredLinkRef.current = null;
       setPreview(INITIAL_PREVIEW);
     };
-
-    el.addEventListener('mouseover', onOver);
-    el.addEventListener('mouseleave', onLeave);
-    return () => {
-      el.removeEventListener('mouseover', onOver);
-      el.removeEventListener('mouseleave', onLeave);
-      clearHide();
-    };
-  }, [clearHide]);
-
-  // Navigate via React Router when a resolved wiki-link is clicked.
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
 
     const onClick = (e: MouseEvent) => {
       const link = (e.target as HTMLElement).closest('a.wiki-ref-resolved') as HTMLAnchorElement | null;
       if (link) {
         e.preventDefault();
+        setPreview(INITIAL_PREVIEW);
         const href = link.getAttribute('href');
-        if (href) navigate(href);
+        if (href) {
+          // Extract concept ID from /second-brain/{id} and notify parent
+          const match = href.match(/^\/second-brain\/(.+)$/);
+          if (match && onWikiLinkClickRef.current) {
+            onWikiLinkClickRef.current(match[1]);
+          }
+          navigateRef.current(href);
+        }
       }
     };
 
+    el.addEventListener('mouseover', onOver);
+    el.addEventListener('mouseleave', onLeave);
     el.addEventListener('click', onClick);
-    return () => el.removeEventListener('click', onClick);
-  }, [navigate]);
+    return () => {
+      el.removeEventListener('mouseover', onOver);
+      el.removeEventListener('mouseleave', onLeave);
+      el.removeEventListener('click', onClick);
+      clearHide();
+    };
+  }, [clearHide]);
+
+  // -----------------------------------------------------------------
+  // Document-level mousedown (capture) — the preview portal at document.body
+  // can visually cover the wiki link even with pointer-events:none, preventing
+  // clicks from reaching the container's click handler. This listener bypasses
+  // that by checking if the cursor falls within the hovered link's bounding
+  // rect, regardless of which DOM element the browser considers the target.
+  // -----------------------------------------------------------------
+  useEffect(() => {
+    const onDocMouseDown = (e: MouseEvent) => {
+      const info = hoveredLinkRef.current;
+      if (!info) return;
+
+      const rect = info.el.getBoundingClientRect();
+      if (
+        e.clientX >= rect.left && e.clientX <= rect.right &&
+        e.clientY >= rect.top && e.clientY <= rect.bottom
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        hoveredLinkRef.current = null;
+        setPreview(INITIAL_PREVIEW);
+        const { href } = info;
+        const match = href.match(/^\/second-brain\/(.+)$/);
+        if (match && onWikiLinkClickRef.current) {
+          onWikiLinkClickRef.current(match[1]);
+        }
+        navigateRef.current(href);
+      }
+    };
+
+    document.addEventListener('mousedown', onDocMouseDown, true);
+    return () => document.removeEventListener('mousedown', onDocMouseDown, true);
+  }, []);
 
   return (
     <>

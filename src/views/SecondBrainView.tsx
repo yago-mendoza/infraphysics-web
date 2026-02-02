@@ -1,12 +1,15 @@
 // Second Brain / Concept Wiki view component — theme-aware
 
-import React from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useHub } from '../contexts/SecondBrainHubContext';
 import { useSecondBrain } from '../hooks/useSecondBrain';
+import { useNavigationTrail } from '../hooks/useNavigationTrail';
 import { WikiContent } from '../components/WikiContent';
+import { NavigationTrail } from '../components/NavigationTrail';
 import { SearchIcon } from '../components/icons';
 import type { SortMode } from '../hooks/useSecondBrainHub';
+import type { Post } from '../types';
 
 const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: 'a-z', label: 'A\u2013Z' },
@@ -16,11 +19,19 @@ const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: 'shuffle', label: 'shuffle' },
 ];
 
+const MAX_TRAIL = 25;
+
+const toTrailItem = (post: Post) => ({
+  id: post.id,
+  label: post.displayTitle || post.title,
+});
+
 export const SecondBrainView: React.FC = () => {
   const hub = useHub();
   // Always call useSecondBrain (hooks must be unconditional).
   // Used as fallback on mobile where hub sidebar context is absent.
   const brain = useSecondBrain();
+  const { trail, resetTrail, extendTrail, truncateTrail, clearTrail, initTrail } = useNavigationTrail();
 
   const hasHub = hub !== null;
 
@@ -29,19 +40,34 @@ export const SecondBrainView: React.FC = () => {
   const activePost = hasHub ? hub.activePost : brain.activePost;
   const backlinks = hasHub ? hub.backlinks : brain.backlinks;
   const relatedConcepts = hasHub ? hub.relatedConcepts : brain.relatedConcepts;
-  const breadcrumbs = hasHub ? hub.breadcrumbs : brain.breadcrumbs;
   const outgoingRefCount = hasHub ? hub.outgoingRefCount : brain.outgoingRefCount;
   const query = hasHub ? hub.query : brain.query;
   const setQuery = hasHub ? hub.setQuery : brain.setQuery;
-  const previousConcept = hasHub ? hub.previousConcept : null;
   const searchActive = hasHub ? hub.searchActive : (brain.query.length > 0);
   const directoryScope = hasHub ? hub.directoryScope : null;
   const setDirectoryScope = hasHub ? hub.setDirectoryScope : null;
   const sortMode = hasHub ? hub.sortMode : 'a-z';
   const setSortMode = hasHub ? hub.setSortMode : null;
 
+  // Seed trail on page refresh when landing directly on a concept
+  useEffect(() => {
+    if (activePost) {
+      initTrail(toTrailItem(activePost));
+    }
+  }, [activePost, initTrail]);
+
+  // Wiki-link click handler — extend trail with the clicked concept
+  const handleWikiLinkClick = useCallback((conceptId: string) => {
+    const concept = allFieldNotes.find(n => n.id === conceptId);
+    if (concept) {
+      extendTrail(toTrailItem(concept));
+    }
+  }, [allFieldNotes, extendTrail]);
+
   // When search is active, force list view even if we're on a detail URL
   const showDetail = activePost && !searchActive;
+
+  const isOverflowing = trail.length >= MAX_TRAIL;
 
   return (
     <div className="animate-fade-in">
@@ -90,46 +116,13 @@ export const SecondBrainView: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
           {/* Left: Content */}
           <div className="lg:col-span-3">
-            {/* Back to list */}
-            <Link
-              to="/second-brain"
-              className="text-xs text-th-tertiary hover:text-th-secondary transition-colors inline-block"
-            >
-              &larr; all concepts
-            </Link>
-
-            {/* Previous concept link */}
-            {previousConcept && previousConcept.id !== activePost!.id && (
-              <Link
-                to={`/second-brain/${previousConcept.id}`}
-                className="text-xs text-violet-400 hover:text-violet-300 transition-colors ml-4 inline-block"
-              >
-                &larr; {previousConcept.displayTitle || previousConcept.title}
-              </Link>
-            )}
-
-            <div className="mb-4" />
-
-            {/* Breadcrumb */}
-            {breadcrumbs.length > 1 && (
-              <nav className="text-xs text-th-tertiary mb-3 flex items-center gap-1 flex-wrap">
-                {breadcrumbs.map((crumb, i) => (
-                  <React.Fragment key={i}>
-                    {i > 0 && <span className="text-th-muted">&rsaquo;</span>}
-                    {crumb.concept ? (
-                      <Link
-                        to={`/second-brain/${crumb.concept.id}`}
-                        className="hover:text-violet-400 transition-colors"
-                      >
-                        {crumb.label}
-                      </Link>
-                    ) : (
-                      <span className="text-th-secondary">{crumb.label}</span>
-                    )}
-                  </React.Fragment>
-                ))}
-              </nav>
-            )}
+            {/* Navigation Trail */}
+            <NavigationTrail
+              trail={trail}
+              onItemClick={(index) => truncateTrail(index)}
+              onAllConceptsClick={clearTrail}
+              isOverflowing={isOverflowing}
+            />
 
             {/* Concept Title */}
             <h2 className="text-2xl font-bold lowercase mb-2 text-th-heading">
@@ -146,6 +139,7 @@ export const SecondBrainView: React.FC = () => {
               html={activePost!.content}
               allFieldNotes={allFieldNotes}
               className="text-sm leading-relaxed text-th-secondary font-light content-html"
+              onWikiLinkClick={handleWikiLinkClick}
             />
           </div>
 
@@ -162,6 +156,7 @@ export const SecondBrainView: React.FC = () => {
                     <Link
                       key={concept.id}
                       to={`/second-brain/${concept.id}`}
+                      onClick={() => extendTrail(toTrailItem(concept))}
                       className="block p-3 border border-th-border rounded-sm bg-th-surface hover:border-violet-400/30 transition-all group"
                     >
                       <div className="text-xs font-medium text-th-secondary group-hover:text-violet-400 transition-colors">
@@ -189,6 +184,7 @@ export const SecondBrainView: React.FC = () => {
                     <Link
                       key={bl.id}
                       to={`/second-brain/${bl.id}`}
+                      onClick={() => extendTrail(toTrailItem(bl))}
                       className="block p-3 border border-th-border rounded-sm bg-th-surface hover:border-violet-400/30 transition-all group"
                     >
                       <div className="text-xs font-medium text-th-secondary group-hover:text-violet-400 transition-colors">
@@ -209,47 +205,47 @@ export const SecondBrainView: React.FC = () => {
       ) : (
         /* --- Concept List View --- */
         <div>
-          {/* Scope + search indicators */}
-          <div className="flex items-center gap-3 mb-4 flex-wrap">
-            {directoryScope && (
-              <div className="flex items-center gap-1 text-xs text-th-tertiary">
-                <span className="text-th-muted">scope:</span>
-                <span className="text-violet-400">{directoryScope.replace(/\/\//g, ' / ')}</span>
-                {setDirectoryScope && (
+          {/* Sort control + scope/search indicators */}
+          <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+            <div className="flex items-center gap-3 flex-wrap">
+              {directoryScope && (
+                <div className="flex items-center gap-1 text-xs text-th-tertiary">
+                  <span className="text-th-muted">scope:</span>
+                  <span className="text-violet-400">{directoryScope.replace(/\/\//g, ' / ')}</span>
+                  {setDirectoryScope && (
+                    <button
+                      onClick={() => setDirectoryScope(null)}
+                      className="text-th-muted hover:text-th-secondary ml-0.5"
+                    >
+                      &times;
+                    </button>
+                  )}
+                </div>
+              )}
+              {query && (
+                <div className="text-xs text-th-tertiary">
+                  {sortedResults.length} result{sortedResults.length !== 1 ? 's' : ''} for &ldquo;{query}&rdquo;
+                </div>
+              )}
+            </div>
+            {setSortMode && (
+              <div className="flex items-center gap-1.5">
+                {SORT_OPTIONS.map(opt => (
                   <button
-                    onClick={() => setDirectoryScope(null)}
-                    className="text-th-muted hover:text-th-secondary ml-0.5"
+                    key={opt.value}
+                    onClick={() => setSortMode(opt.value)}
+                    className={`text-[10px] px-2 py-0.5 rounded-sm transition-colors ${
+                      sortMode === opt.value
+                        ? 'text-violet-400 bg-violet-400/10'
+                        : 'text-th-muted hover:text-th-secondary'
+                    }`}
                   >
-                    &times;
+                    {opt.label}
                   </button>
-                )}
-              </div>
-            )}
-            {query && (
-              <div className="text-xs text-th-tertiary">
-                {sortedResults.length} result{sortedResults.length !== 1 ? 's' : ''} for &ldquo;{query}&rdquo;
+                ))}
               </div>
             )}
           </div>
-
-          {/* Sort control */}
-          {setSortMode && (
-            <div className="flex items-center justify-end gap-1.5 mb-3">
-              {SORT_OPTIONS.map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => setSortMode(opt.value)}
-                  className={`text-[10px] px-2 py-0.5 rounded-sm transition-colors ${
-                    sortMode === opt.value
-                      ? 'text-violet-400 bg-violet-400/10'
-                      : 'text-th-muted hover:text-th-secondary'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {sortedResults.length > 0 ? (
@@ -257,6 +253,7 @@ export const SecondBrainView: React.FC = () => {
                 <Link
                   key={note.id}
                   to={`/second-brain/${note.id}`}
+                  onClick={() => resetTrail(toTrailItem(note))}
                   className="block p-4 border border-th-border rounded-sm bg-th-surface hover:border-th-border-hover transition-all group"
                 >
                   <div className="mb-0.5">

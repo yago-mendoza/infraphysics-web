@@ -41,7 +41,7 @@ export const WikiLinkPreview: React.FC<WikiLinkPreviewProps> = ({
   top = Math.max(margin, top);
 
   return createPortal(
-    <div className="wiki-preview-card" style={{ left, top }}>
+    <div className="wiki-preview-card" style={{ left, top, pointerEvents: 'none' }}>
       <div className="wiki-preview-title">{title}</div>
       <div className="wiki-preview-address">{address}</div>
       {description && (

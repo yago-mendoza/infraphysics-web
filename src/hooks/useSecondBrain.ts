@@ -42,16 +42,6 @@ export const useSecondBrain = () => {
       .filter((n): n is Post => n !== undefined);
   }, [activePost, allFieldNotes]);
 
-  // Breadcrumb data: each address part resolved to its concept if it exists
-  const breadcrumbs = useMemo(() => {
-    if (!activePost || !activePost.addressParts) return [];
-    return activePost.addressParts.map(part => {
-      const partId = part.toLowerCase().replace(/\s+/g, '-');
-      const concept = allFieldNotes.find(n => n.id === partId);
-      return { label: part, concept: concept || null };
-    });
-  }, [activePost, allFieldNotes]);
-
   // Outgoing reference count
   const outgoingRefCount = useMemo(() => {
     return activePost?.references?.length || 0;
@@ -112,7 +102,6 @@ export const useSecondBrain = () => {
     activePost,
     backlinks,
     relatedConcepts,
-    breadcrumbs,
     outgoingRefCount,
     totalLinks,
     orphanCount,
