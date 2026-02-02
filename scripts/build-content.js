@@ -195,8 +195,8 @@ function processFieldnotesFile() {
     const bodyLines = lines.slice(1);
     const bodyMd = bodyLines.join('\n').trim();
 
-    // Generate ID: lowercase, // → --, space → -
-    const id = address.toLowerCase().replace(/\/\//g, '--').replace(/\s+/g, '-');
+    // Generate ID: lowercase, // → --, / → -, space → -
+    const id = address.toLowerCase().replace(/\/\//g, '--').replace(/\//g, '-').replace(/\s+/g, '-');
 
     // Address parts
     const addressParts = address.split('//').map(s => s.trim());

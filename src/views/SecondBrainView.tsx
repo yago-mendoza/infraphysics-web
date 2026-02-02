@@ -8,6 +8,8 @@ import { useNavigationTrail } from '../hooks/useNavigationTrail';
 import { WikiContent } from '../components/WikiContent';
 import { NavigationTrail } from '../components/NavigationTrail';
 import { SearchIcon } from '../components/icons';
+import { addressToId } from '../lib/addressToId';
+import { noteById } from '../lib/brainIndex';
 import type { SortMode } from '../hooks/useSecondBrainHub';
 import type { Post } from '../types';
 
@@ -49,6 +51,7 @@ export const SecondBrainView: React.FC = () => {
   const query = hasHub ? hub.query : brain.query;
   const setQuery = hasHub ? hub.setQuery : brain.setQuery;
   const searchActive = hasHub ? hub.searchActive : (brain.query.length > 0);
+  const clearSearch = hasHub ? hub.clearSearch : () => brain.setQuery('');
   const directoryScope = hasHub ? hub.directoryScope : null;
   const setDirectoryScope = hasHub ? hub.setDirectoryScope : null;
   const sortMode = hasHub ? hub.sortMode : 'a-z';
@@ -89,16 +92,17 @@ export const SecondBrainView: React.FC = () => {
 
   // Wiki-link click handler — extend trail with the clicked concept
   const handleWikiLinkClick = useCallback((conceptId: string) => {
-    const concept = allFieldNotes.find(n => n.id === conceptId);
+    const concept = noteById.get(conceptId);
     if (concept) {
       pendingTrailAction.current = { type: 'extend', post: concept };
     }
-  }, [allFieldNotes]);
+  }, []);
 
-  // Grid card click — reset trail to single item
+  // Grid card click — reset trail to single item & clear search so detail view shows
   const handleGridCardClick = useCallback((post: Post) => {
     pendingTrailAction.current = { type: 'reset', post };
-  }, []);
+    clearSearch();
+  }, [clearSearch]);
 
   // Related / backlink click — extend trail
   const handleConnectionClick = useCallback((post: Post) => {
@@ -166,9 +170,27 @@ export const SecondBrainView: React.FC = () => {
             />
 
             {/* Concept Title */}
-            <h2 className="text-2xl font-bold lowercase mb-2 text-th-heading">
+            <h2 className="text-2xl font-bold mb-1 text-th-heading">
               {activePost!.displayTitle || activePost!.title}
             </h2>
+            <div className="text-[11px] text-th-tertiary mb-2">
+              {activePost!.addressParts && activePost!.addressParts.length > 1
+                ? activePost!.addressParts.map((part, i) => {
+                    const pathUpTo = activePost!.addressParts!.slice(0, i + 1).join('//');
+                    const id = addressToId(pathUpTo);
+                    const isLast = i === activePost!.addressParts!.length - 1;
+                    return (
+                      <React.Fragment key={i}>
+                        {i > 0 && <span className="mx-0.5 text-th-muted">/</span>}
+                        {isLast
+                          ? <span>{part}</span>
+                          : <Link to={`/second-brain/${id}`} className="hover:text-violet-400 transition-colors">{part}</Link>
+                        }
+                      </React.Fragment>
+                    );
+                  })
+                : <span>Root node</span>}
+            </div>
 
             {/* Metadata line */}
             <div className="text-xs text-th-tertiary mb-6">

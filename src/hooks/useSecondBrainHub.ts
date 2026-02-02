@@ -408,6 +408,12 @@ export const useSecondBrainHub = () => {
   // Search is active = has query text (used to force list view in the main view)
   const searchActive = query.length > 0;
 
+  // Lightweight clear — just wipe the query without the restore-navigate logic
+  const clearSearch = useCallback(() => {
+    setQuery('');
+    savedIdRef.current = undefined;
+  }, []);
+
   return {
     // URL state
     id,
@@ -416,6 +422,7 @@ export const useSecondBrainHub = () => {
     // Search
     query,
     setQuery: handleSetQuery,
+    clearSearch,
     searchActive,
     searchMode,
     setSearchMode,
