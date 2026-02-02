@@ -9,6 +9,7 @@ import {
   FolderIcon,
   BarChartIcon,
   SlidersIcon,
+  CloseIcon,
 } from '../icons';
 import { SECOND_BRAIN_SIDEBAR_WIDTH } from '../../constants/layout';
 import type { TreeNode, SearchMode, FilterState } from '../../hooks/useSecondBrainHub';
@@ -186,6 +187,7 @@ const SEARCH_MODES: { value: SearchMode; label: string }[] = [
 // --- Main Sidebar ---
 export const SecondBrainSidebar: React.FC = () => {
   const hub = useHub();
+  const [mobileOpen, setMobileOpen] = useState(false);
   if (!hub) return null;
 
   const {
@@ -210,221 +212,275 @@ export const SecondBrainSidebar: React.FC = () => {
   // Format scope path for display: "LAPTOP // UI" → "LAPTOP / UI"
   const scopeDisplay = directoryScope ? directoryScope.replace(/\/\//g, ' / ') : null;
 
-  return (
-    <aside
-      className="hidden md:flex flex-col sticky top-0 h-screen border-r border-th-hub-border overflow-hidden"
-      style={{
-        width: SECOND_BRAIN_SIDEBAR_WIDTH,
-        minWidth: SECOND_BRAIN_SIDEBAR_WIDTH,
-        backgroundColor: 'var(--hub-sidebar-bg)',
-      }}
-    >
-      {/* Header */}
-      <div className="px-3 py-3 border-b border-th-hub-border flex-shrink-0">
-        <div className="text-[11px] lowercase tracking-wide">
-          <span className="font-semibold text-violet-400">second brain</span>{' '}
-          <span className="text-th-muted font-normal">manager</span>
-        </div>
-        <div className="text-[9px] text-th-muted mt-0.5">
-          {stats.totalConcepts} concepts
-        </div>
-      </div>
-
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto hub-scrollbar">
-        {/* Search */}
-        <Section title="search" icon={<SearchIcon />} defaultOpen={true}>
-          <div className="flex items-center border border-th-hub-border px-2 py-1.5 bg-th-surface focus-within:border-th-border-active transition-colors mb-2">
-            <input
-              type="text"
-              placeholder="Search..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="w-full text-[11px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
-            />
-            {query && (
-              <button
-                onClick={() => setQuery('')}
-                className="text-th-muted hover:text-th-secondary text-[10px] ml-1 flex-shrink-0"
-              >
-                &times;
-              </button>
-            )}
-          </div>
-          <div className="flex gap-1 flex-wrap">
-            {SEARCH_MODES.map(mode => (
-              <button
-                key={mode.value}
-                onClick={() => setSearchMode(mode.value)}
-                className={`text-[9px] px-1.5 py-0.5 transition-colors ${
-                  searchMode === mode.value
-                    ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
-                    : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
-                }`}
-              >
-                {mode.label}
-              </button>
-            ))}
-          </div>
-        </Section>
-
-        {/* Stats */}
-        <Section title="stats" icon={<BarChartIcon />} defaultOpen={true}>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-            <div>
-              <div className="text-[9px] text-th-muted">concepts</div>
-              <div className="text-[11px] text-th-primary tabular-nums">{stats.totalConcepts}</div>
-            </div>
-            <div>
-              <div className="text-[9px] text-th-muted">links</div>
-              <div className="text-[11px] text-th-primary tabular-nums">{stats.totalLinks}</div>
-            </div>
-            <div>
-              <div className="text-[9px] text-th-muted">orphans</div>
-              <div className="text-[11px] text-th-primary tabular-nums">{stats.orphanCount}</div>
-            </div>
-            <div>
-              <div className="text-[9px] text-th-muted">avg refs</div>
-              <div className="text-[11px] text-th-primary tabular-nums">{stats.avgRefs}</div>
-            </div>
-            <div>
-              <div className="text-[9px] text-th-muted">max depth</div>
-              <div className="text-[11px] text-th-primary tabular-nums">{stats.maxDepth}</div>
-            </div>
-            <div>
-              <div className="text-[9px] text-th-muted">density</div>
-              <div className="text-[11px] text-th-primary tabular-nums">{stats.density}%</div>
-            </div>
-          </div>
-        </Section>
-
-        {/* Directory Tree */}
-        <Section title="directory" icon={<FolderIcon />} defaultOpen={true}>
-          {/* Tree search */}
-          <div className="flex items-center border border-th-hub-border px-2 py-1 bg-th-surface focus-within:border-th-border-active transition-colors mb-2">
-            <input
-              type="text"
-              placeholder="Filter tree..."
-              value={directoryQuery}
-              onChange={(e) => setDirectoryQuery(e.target.value)}
-              className="w-full text-[10px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
-            />
-            {directoryQuery && (
-              <button
-                onClick={() => setDirectoryQuery('')}
-                className="text-th-muted hover:text-th-secondary text-[9px] ml-1 flex-shrink-0"
-              >
-                &times;
-              </button>
-            )}
-          </div>
-
-          {/* Scope indicator */}
-          {directoryScope && (
-            <div className="flex items-center gap-1 mb-2 px-1 py-1 bg-violet-400/10 border border-violet-400/20 text-[9px]">
-              <span className="text-th-muted">scope:</span>
-              <span className="text-violet-400 truncate flex-1">{scopeDisplay}</span>
-              <button
-                onClick={() => setDirectoryScope(null)}
-                className="text-th-muted hover:text-th-secondary flex-shrink-0"
-              >
-                &times;
-              </button>
-            </div>
+  const sections = (
+    <>
+      {/* Search */}
+      <Section title="search" icon={<SearchIcon />} defaultOpen={true}>
+        <div className="flex items-center border border-th-hub-border px-2 py-1.5 bg-th-surface focus-within:border-th-border-active transition-colors mb-2">
+          <input
+            type="text"
+            placeholder="Search..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="w-full text-[11px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery('')}
+              className="text-th-muted hover:text-th-secondary text-[10px] ml-1 flex-shrink-0"
+            >
+              &times;
+            </button>
           )}
+        </div>
+        <div className="flex gap-1 flex-wrap">
+          {SEARCH_MODES.map(mode => (
+            <button
+              key={mode.value}
+              onClick={() => setSearchMode(mode.value)}
+              className={`text-[9px] px-1.5 py-0.5 transition-colors ${
+                searchMode === mode.value
+                  ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
+                  : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
+              }`}
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
+      </Section>
 
-          <div className="space-y-0.5 max-h-60 overflow-y-auto hub-scrollbar">
-            {filteredTree.map(node => (
-              <TreeNodeItem
-                key={node.label}
-                node={node}
-                activeScope={directoryScope}
-                onScope={handleScope}
-                forceExpanded={directoryQuery.length > 0}
-              />
-            ))}
+      {/* Stats */}
+      <Section title="stats" icon={<BarChartIcon />} defaultOpen={true}>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+          <div>
+            <div className="text-[9px] text-th-muted">concepts</div>
+            <div className="text-[11px] text-th-primary tabular-nums">{stats.totalConcepts}</div>
           </div>
-        </Section>
+          <div>
+            <div className="text-[9px] text-th-muted">links</div>
+            <div className="text-[11px] text-th-primary tabular-nums">{stats.totalLinks}</div>
+          </div>
+          <div>
+            <div className="text-[9px] text-th-muted">orphans</div>
+            <div className="text-[11px] text-th-primary tabular-nums">{stats.orphanCount}</div>
+          </div>
+          <div>
+            <div className="text-[9px] text-th-muted">avg refs</div>
+            <div className="text-[11px] text-th-primary tabular-nums">{stats.avgRefs}</div>
+          </div>
+          <div>
+            <div className="text-[9px] text-th-muted">max depth</div>
+            <div className="text-[11px] text-th-primary tabular-nums">{stats.maxDepth}</div>
+          </div>
+          <div>
+            <div className="text-[9px] text-th-muted">density</div>
+            <div className="text-[11px] text-th-primary tabular-nums">{stats.density}%</div>
+          </div>
+        </div>
+      </Section>
 
-        {/* Filters */}
-        <Section title="filters" icon={<SlidersIcon />} defaultOpen={false}>
-          <div className="space-y-2">
-            {/* Toggle chips */}
-            <div className="flex gap-1 flex-wrap">
-              <button
-                onClick={() => updateFilter('orphans', !filterState.orphans)}
-                className={`text-[9px] px-1.5 py-0.5 transition-colors ${
-                  filterState.orphans
-                    ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
-                    : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
-                }`}
-              >
-                orphans
-              </button>
-              <button
-                onClick={() => updateFilter('leaf', !filterState.leaf)}
-                className={`text-[9px] px-1.5 py-0.5 transition-colors ${
-                  filterState.leaf
-                    ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
-                    : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
-                }`}
-              >
-                leaf nodes
-              </button>
-            </div>
+      {/* Directory Tree */}
+      <Section title="directory" icon={<FolderIcon />} defaultOpen={true}>
+        {/* Tree search */}
+        <div className="flex items-center border border-th-hub-border px-2 py-1 bg-th-surface focus-within:border-th-border-active transition-colors mb-2">
+          <input
+            type="text"
+            placeholder="Filter tree..."
+            value={directoryQuery}
+            onChange={(e) => setDirectoryQuery(e.target.value)}
+            className="w-full text-[10px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
+          />
+          {directoryQuery && (
+            <button
+              onClick={() => setDirectoryQuery('')}
+              className="text-th-muted hover:text-th-secondary text-[9px] ml-1 flex-shrink-0"
+            >
+              &times;
+            </button>
+          )}
+        </div>
 
-            {/* Depth range */}
-            <div className="flex items-center gap-1.5 text-[10px] text-th-muted">
-              <span>depth</span>
-              <StepperInput
-                value={filterState.depthMin}
-                onDecrement={() => updateFilter('depthMin', Math.max(1, filterState.depthMin - 1))}
-                onIncrement={() => updateFilter('depthMin', filterState.depthMin + 1)}
-                min={1}
-              />
-              <span>to</span>
-              <StepperInput
-                value={filterState.depthMax}
-                displayValue={filterState.depthMax === Infinity ? '\u221e' : String(filterState.depthMax)}
-                onDecrement={() => updateFilter('depthMax', filterState.depthMax === Infinity ? stats.maxDepth : Math.max(1, filterState.depthMax - 1))}
-                onIncrement={() => {
-                  if (filterState.depthMax === Infinity) return;
-                  if (filterState.depthMax >= stats.maxDepth) {
-                    updateFilter('depthMax', Infinity);
-                  } else {
-                    updateFilter('depthMax', filterState.depthMax + 1);
-                  }
-                }}
-              />
-            </div>
+        {/* Scope indicator */}
+        {directoryScope && (
+          <div className="flex items-center gap-1 mb-2 px-1 py-1 bg-violet-400/10 border border-violet-400/20 text-[9px]">
+            <span className="text-th-muted">scope:</span>
+            <span className="text-violet-400 truncate flex-1">{scopeDisplay}</span>
+            <button
+              onClick={() => setDirectoryScope(null)}
+              className="text-th-muted hover:text-th-secondary flex-shrink-0"
+            >
+              &times;
+            </button>
+          </div>
+        )}
 
-            {/* Hub threshold */}
-            <div className="flex items-center gap-1.5 text-[10px] text-th-muted">
-              <span>hubs &ge;</span>
-              <StepperInput
-                value={filterState.hubThreshold}
-                onDecrement={() => updateFilter('hubThreshold', Math.max(0, filterState.hubThreshold - 1))}
-                onIncrement={() => updateFilter('hubThreshold', filterState.hubThreshold + 1)}
-                min={0}
-              />
-              {filterState.hubThreshold === 0 && (
-                <span className="text-[9px] text-th-muted">off</span>
-              )}
-            </div>
+        <div className="space-y-0.5 max-h-60 overflow-y-auto hub-scrollbar">
+          {filteredTree.map(node => (
+            <TreeNodeItem
+              key={node.label}
+              node={node}
+              activeScope={directoryScope}
+              onScope={handleScope}
+              forceExpanded={directoryQuery.length > 0}
+            />
+          ))}
+        </div>
+      </Section>
 
-            {/* Reset */}
-            {hasActiveFilters && (
-              <button
-                onClick={resetFilters}
-                className="text-[9px] text-th-muted hover:text-violet-400 transition-colors"
-              >
-                reset filters
-              </button>
+      {/* Filters */}
+      <Section title="filters" icon={<SlidersIcon />} defaultOpen={false}>
+        <div className="space-y-2">
+          {/* Toggle chips */}
+          <div className="flex gap-1 flex-wrap">
+            <button
+              onClick={() => updateFilter('orphans', !filterState.orphans)}
+              className={`text-[9px] px-1.5 py-0.5 transition-colors ${
+                filterState.orphans
+                  ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
+                  : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
+              }`}
+            >
+              orphans
+            </button>
+            <button
+              onClick={() => updateFilter('leaf', !filterState.leaf)}
+              className={`text-[9px] px-1.5 py-0.5 transition-colors ${
+                filterState.leaf
+                  ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
+                  : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
+              }`}
+            >
+              leaf nodes
+            </button>
+          </div>
+
+          {/* Depth range */}
+          <div className="flex items-center gap-1.5 text-[10px] text-th-muted">
+            <span>depth</span>
+            <StepperInput
+              value={filterState.depthMin}
+              onDecrement={() => updateFilter('depthMin', Math.max(1, filterState.depthMin - 1))}
+              onIncrement={() => updateFilter('depthMin', filterState.depthMin + 1)}
+              min={1}
+            />
+            <span>to</span>
+            <StepperInput
+              value={filterState.depthMax}
+              displayValue={filterState.depthMax === Infinity ? '\u221e' : String(filterState.depthMax)}
+              onDecrement={() => updateFilter('depthMax', filterState.depthMax === Infinity ? stats.maxDepth : Math.max(1, filterState.depthMax - 1))}
+              onIncrement={() => {
+                if (filterState.depthMax === Infinity) return;
+                if (filterState.depthMax >= stats.maxDepth) {
+                  updateFilter('depthMax', Infinity);
+                } else {
+                  updateFilter('depthMax', filterState.depthMax + 1);
+                }
+              }}
+            />
+          </div>
+
+          {/* Hub threshold */}
+          <div className="flex items-center gap-1.5 text-[10px] text-th-muted">
+            <span>hubs &ge;</span>
+            <StepperInput
+              value={filterState.hubThreshold}
+              onDecrement={() => updateFilter('hubThreshold', Math.max(0, filterState.hubThreshold - 1))}
+              onIncrement={() => updateFilter('hubThreshold', filterState.hubThreshold + 1)}
+              min={0}
+            />
+            {filterState.hubThreshold === 0 && (
+              <span className="text-[9px] text-th-muted">off</span>
             )}
           </div>
-        </Section>
 
-      </div>
-    </aside>
+          {/* Reset */}
+          {hasActiveFilters && (
+            <button
+              onClick={resetFilters}
+              className="text-[9px] text-th-muted hover:text-violet-400 transition-colors"
+            >
+              reset filters
+            </button>
+          )}
+        </div>
+      </Section>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile toggle button */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="md:hidden fixed bottom-4 right-4 z-40 w-10 h-10 rounded-full bg-violet-500/90 text-white shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+        aria-label="Open manager sidebar"
+      >
+        <SlidersIcon />
+      </button>
+
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-0 z-50">
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setMobileOpen(false)}
+          />
+          <aside
+            className="absolute left-0 top-0 bottom-0 w-72 flex flex-col overflow-hidden"
+            style={{ backgroundColor: 'var(--hub-sidebar-bg)' }}
+          >
+            {/* Header with close */}
+            <div className="px-3 py-3 border-b border-th-hub-border flex-shrink-0 flex items-center justify-between">
+              <div>
+                <div className="text-[11px] lowercase tracking-wide">
+                  <span className="font-semibold text-violet-400">second brain</span>{' '}
+                  <span className="text-th-muted font-normal">manager</span>
+                </div>
+                <div className="text-[9px] text-th-muted mt-0.5">
+                  {stats.totalConcepts} concepts
+                </div>
+              </div>
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="p-1 text-th-muted hover:text-th-secondary transition-colors"
+                aria-label="Close sidebar"
+              >
+                <CloseIcon />
+              </button>
+            </div>
+            {/* Scrollable sections */}
+            <div className="flex-1 overflow-y-auto hub-scrollbar">
+              {sections}
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/* Desktop sidebar */}
+      <aside
+        className="hidden md:flex flex-col sticky top-0 h-screen border-r border-th-hub-border overflow-hidden"
+        style={{
+          width: SECOND_BRAIN_SIDEBAR_WIDTH,
+          minWidth: SECOND_BRAIN_SIDEBAR_WIDTH,
+          backgroundColor: 'var(--hub-sidebar-bg)',
+        }}
+      >
+        {/* Header */}
+        <div className="px-3 py-3 border-b border-th-hub-border flex-shrink-0">
+          <div className="text-[11px] lowercase tracking-wide">
+            <span className="font-semibold text-violet-400">second brain</span>{' '}
+            <span className="text-th-muted font-normal">manager</span>
+          </div>
+          <div className="text-[9px] text-th-muted mt-0.5">
+            {stats.totalConcepts} concepts
+          </div>
+        </div>
+        {/* Scrollable sections */}
+        <div className="flex-1 overflow-y-auto hub-scrollbar">
+          {sections}
+        </div>
+      </aside>
+    </>
   );
 };
