@@ -594,3 +594,39 @@ button:focus {
 .tooltip:hover::after {
   opacity: 1;
 }
+
+/* ============================================================
+   Photo L-corner frame — lime bracket accents at inner corners
+   ============================================================ */
+
+.photo-l-frame {
+  position: relative;
+}
+
+.photo-l-frame::before,
+.photo-l-frame::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Top-left L bracket */
+.photo-l-frame::before {
+  top: 6px;
+  left: 6px;
+  width: 20px;
+  height: 20px;
+  border-top: 2px solid #a3e635;
+  border-left: 2px solid #a3e635;
+}
+
+/* Bottom-right L bracket */
+.photo-l-frame::after {
+  bottom: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  border-bottom: 2px solid #a3e635;
+  border-right: 2px solid #a3e635;
+}
