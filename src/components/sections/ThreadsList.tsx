@@ -31,7 +31,7 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
             <div className="flex gap-5">
               {/* Text content */}
               <div className="flex-grow min-w-0">
-                <h3 className="font-bold text-lg text-th-primary group-hover:text-amber-400 transition-colors leading-tight mb-1.5">
+                <h3 className="font-bold text-lg text-th-primary group-hover:text-rose-400 transition-colors leading-tight mb-1.5">
                   <Highlight text={post.displayTitle || post.title} query={query} />
                 </h3>
 

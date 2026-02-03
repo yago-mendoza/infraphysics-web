@@ -68,46 +68,48 @@ export const Sidebar: React.FC = () => {
       {/* Logo */}
       <Link
         to="/home"
-        className="flex justify-center mb-6 mt-6 group"
+        className="flex justify-center mb-6 mt-6 group flex-shrink-0"
       >
         <div className="w-10 h-10 transition-transform group-hover:scale-110">
           <Logo color="var(--sidebar-text)" />
         </div>
       </Link>
 
-      {/* LAB */}
-      {sectionLabel('lab')}
-      <nav className="flex flex-col gap-1">
-        {navLink('/lab/projects', <GearIcon />, 'projects', CATEGORY_ACCENTS.projects)}
-        {navLink('/lab/second-brain', <DiamondIcon />, <span>2<sup>nd</sup> brain</span>, CATEGORY_ACCENTS.secondBrain)}
-      </nav>
+      {/* Nav + theme toggle — scrollable when viewport is short (e.g. browser zoom) */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain sidebar-scrollbar">
+        {/* LAB */}
+        {sectionLabel('lab')}
+        <nav className="flex flex-col gap-1">
+          {navLink('/lab/projects', <GearIcon />, 'projects', CATEGORY_ACCENTS.projects)}
+          {navLink('/lab/second-brain', <DiamondIcon />, <span>2<sup>nd</sup> brain</span>, CATEGORY_ACCENTS.secondBrain)}
+        </nav>
 
-      {/* BLOG */}
-      {sectionLabel('blog')}
-      <nav className="flex flex-col gap-1">
-        {navLink('/blog/threads', <ThreadIcon />, 'threads', CATEGORY_ACCENTS.threads)}
-        {navLink('/blog/bits2bricks', <GradCapIcon />, 'bits2bricks', CATEGORY_ACCENTS.bits2bricks)}
-      </nav>
+        {/* BLOG */}
+        {sectionLabel('blog')}
+        <nav className="flex flex-col gap-1">
+          {navLink('/blog/threads', <ThreadIcon />, 'threads', CATEGORY_ACCENTS.threads)}
+          {navLink('/blog/bits2bricks', <GradCapIcon />, 'bits2bricks', CATEGORY_ACCENTS.bits2bricks)}
+        </nav>
 
-      {/* META */}
-      {sectionLabel('meta')}
-      <nav className="flex flex-col gap-1">
-        {navLink('/about', <UserIcon />, 'about', CATEGORY_ACCENTS.meta)}
-        {navLink('/contact', <MailIcon />, 'contact', CATEGORY_ACCENTS.meta)}
-      </nav>
+        {/* META */}
+        {sectionLabel('meta')}
+        <nav className="flex flex-col gap-1">
+          {navLink('/about', <UserIcon />, 'about', CATEGORY_ACCENTS.meta)}
+          {navLink('/contact', <MailIcon />, 'contact', CATEGORY_ACCENTS.meta)}
+        </nav>
 
-      {/* Spacer */}
-      <div className="flex-1" />
-
-      {/* Theme Toggle */}
-      <button
-        onClick={toggleTheme}
-        className="flex items-center justify-center p-2 rounded-sm transition-all mx-auto mb-2"
-        style={{ color: 'var(--sidebar-icon)' }}
-        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-      >
-        {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-      </button>
+        {/* Theme Toggle */}
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={toggleTheme}
+            className="flex items-center justify-center p-2 rounded-sm transition-all"
+            style={{ color: 'var(--sidebar-icon)' }}
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          >
+            {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+          </button>
+        </div>
+      </div>
     </aside>
   );
 };

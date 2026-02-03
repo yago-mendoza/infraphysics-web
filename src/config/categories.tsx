@@ -17,7 +17,7 @@ export interface CategoryDisplayConfig {
 
 export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
   projects: {
-    title: 'PROJECTS',
+    title: 'Projects',
     description: "What I've built, why, and what broke along the way.",
     icon: <GearIcon />,
     colorClass: 'text-lime-400',
@@ -30,11 +30,11 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
     title: 'Threads',
     description: 'Long-form thinking on engineering, systems, and how things work.',
     icon: <ThreadIcon />,
-    colorClass: 'text-amber-400',
-    bgClass: 'bg-amber-400/10',
-    borderClass: 'border-amber-400/20',
-    accent: '#F59E0B',
-    darkBadge: 'text-amber-400 border-amber-400/30 bg-amber-400/10',
+    colorClass: 'text-amber-200',
+    bgClass: 'bg-amber-200/10',
+    borderClass: 'border-amber-200/20',
+    accent: '#fb7185',
+    darkBadge: 'text-amber-200 border-amber-200/30 bg-amber-200/10',
   },
   bits2bricks: {
     title: 'Bits2Bricks',
@@ -51,19 +51,13 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
 /**
  * Get category color class (text color)
  */
-export const getCategoryColor = (cat: Category): string => {
-  if (cat === 'projects') return 'text-lime-400';
-  if (cat === 'threads') return 'text-amber-400';
-  if (cat === 'bits2bricks') return 'text-blue-400';
-  return 'text-gray-400';
-};
+export const getCategoryColor = (cat: Category): string =>
+  CATEGORY_CONFIG[cat]?.colorClass || 'text-gray-400';
 
 /**
  * Get category background classes (bg + border)
  */
 export const getCategoryBg = (cat: Category): string => {
-  if (cat === 'projects') return 'bg-lime-400/10 border-lime-400/20';
-  if (cat === 'threads') return 'bg-amber-400/10 border-amber-400/20';
-  if (cat === 'bits2bricks') return 'bg-blue-400/10 border-blue-400/20';
-  return 'bg-white/5 border-white/10';
+  const cfg = CATEGORY_CONFIG[cat];
+  return cfg ? `${cfg.bgClass} ${cfg.borderClass}` : 'bg-white/5 border-white/10';
 };

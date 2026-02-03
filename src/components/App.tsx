@@ -7,6 +7,7 @@ import { SecondBrainHubProvider } from '../contexts/SecondBrainHubContext';
 import { Sidebar, MobileNav, Footer, DualGrid, Starfield, SecondBrainSidebar } from './layout';
 import { HomeView, AboutView, ContactView, ThanksView, SectionView, PostView, SecondBrainView } from '../views';
 import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../constants/layout';
+import { CATEGORY_CONFIG } from '../config/categories';
 
 const STARFIELD_PAGES = ['/', '/home', '/about', '/contact', '/thanks'];
 
@@ -54,9 +55,9 @@ const AppLayout: React.FC = () => {
             <Route path="/thanks" element={<ThanksView />} />
 
             {/* Lab sections */}
-            <Route path="/lab/projects" element={<SectionView category="projects" colorClass="text-lime-400" />} />
-            <Route path="/blog/threads" element={<SectionView category="threads" colorClass="text-amber-400" />} />
-            <Route path="/blog/bits2bricks" element={<SectionView category="bits2bricks" colorClass="text-blue-400" />} />
+            <Route path="/lab/projects" element={<SectionView category="projects" colorClass={CATEGORY_CONFIG.projects.colorClass} />} />
+            <Route path="/blog/threads" element={<SectionView category="threads" colorClass={CATEGORY_CONFIG.threads.colorClass} />} />
+            <Route path="/blog/bits2bricks" element={<SectionView category="bits2bricks" colorClass={CATEGORY_CONFIG.bits2bricks.colorClass} />} />
 
             {/* Legacy redirects */}
             <Route path="/projects" element={<Navigate to="/lab/projects" replace />} />

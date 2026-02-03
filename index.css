@@ -564,6 +564,24 @@ button:focus {
   background: var(--text-tertiary);
 }
 
+/* Main sidebar scrollbar — only visible when zoomed in */
+.sidebar-scrollbar::-webkit-scrollbar {
+  width: 3px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--sidebar-section);
+  border-radius: 2px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--sidebar-text);
+}
+
 /* ============================================================
    Tooltip styling — theme-aware
    ============================================================ */
@@ -655,14 +673,14 @@ button:focus {
 .title-l-frame::before {
   top: 0;
   left: 0;
-  border-top: 2px solid #a3e635;
-  border-left: 2px solid #a3e635;
+  border-top: 2px solid currentColor;
+  border-left: 2px solid currentColor;
 }
 
 /* Bottom-right L bracket */
 .title-l-frame::after {
   bottom: 0;
   right: 0;
-  border-bottom: 2px solid #a3e635;
-  border-right: 2px solid #a3e635;
+  border-bottom: 2px solid currentColor;
+  border-right: 2px solid currentColor;
 }

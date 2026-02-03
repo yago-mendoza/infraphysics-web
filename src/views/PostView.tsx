@@ -12,6 +12,7 @@ import {
   ExternalLinkIcon,
   ArrowRightIcon
 } from '../components/icons';
+import { CATEGORY_CONFIG } from '../config/categories';
 
 export const PostView: React.FC = () => {
   const { category, id } = useParams();
@@ -34,11 +35,9 @@ export const PostView: React.FC = () => {
     </div>
   );
 
-  let accentClass = "text-th-secondary";
-  let accentBadge = "text-th-secondary border-th-border bg-th-surface";
-  if (post.category === 'projects') { accentClass = "text-lime-400"; accentBadge = "text-lime-400 border-lime-400/30 bg-lime-400/10"; }
-  if (post.category === 'threads') { accentClass = "text-amber-400"; accentBadge = "text-amber-400 border-amber-400/30 bg-amber-400/10"; }
-  if (post.category === 'bits2bricks') { accentClass = "text-blue-400"; accentBadge = "text-blue-400 border-blue-400/30 bg-blue-400/10"; }
+  const catCfg = CATEGORY_CONFIG[post.category];
+  const accentClass = catCfg?.colorClass || "text-th-secondary";
+  const accentBadge = catCfg?.darkBadge || "text-th-secondary border-th-border bg-th-surface";
 
   const isBlog = post.category === 'threads' || post.category === 'bits2bricks';
   const sectionPath = isBlog ? `/blog/${post.category}` : `/lab/${post.category}`;
@@ -191,10 +190,7 @@ export const PostView: React.FC = () => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {recommendedPosts.map(rec => {
-            let recAccent = "text-th-secondary";
-            if (rec.category === 'projects') recAccent = "text-lime-400";
-            if (rec.category === 'threads') recAccent = "text-amber-400";
-            if (rec.category === 'bits2bricks') recAccent = "text-blue-400";
+            const recAccent = CATEGORY_CONFIG[rec.category]?.colorClass || "text-th-secondary";
 
             return (
               <Link key={rec.id} to={`/${rec.category}/${rec.id}`} className="group block border border-th-border rounded-sm overflow-hidden bg-th-surface hover:border-th-border-hover transition-all">

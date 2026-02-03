@@ -1,5 +1,7 @@
 // Navigation items and social links
 
+import { CATEGORY_CONFIG } from './categories';
+
 export interface NavItem {
   path: string;
   label: string;
@@ -16,9 +18,9 @@ export interface SocialLink {
 export const NAV_ITEMS: NavItem[] = [
   { path: '/home', label: 'home', colorClass: 'text-blue-400', activeAccent: '#3B82F6' },
   { path: '/about', label: 'about', colorClass: 'text-gray-200' },
-  { path: '/lab/projects', label: 'projects', colorClass: 'text-lime-400', activeAccent: '#a3e635' },
-  { path: '/blog/threads', label: 'threads', colorClass: 'text-amber-400', activeAccent: '#F59E0B' },
-  { path: '/blog/bits2bricks', label: 'bits2bricks', colorClass: 'text-blue-400', activeAccent: '#3B82F6' },
+  { path: '/lab/projects', label: 'projects', colorClass: CATEGORY_CONFIG.projects.colorClass, activeAccent: CATEGORY_CONFIG.projects.accent },
+  { path: '/blog/threads', label: 'threads', colorClass: CATEGORY_CONFIG.threads.colorClass, activeAccent: CATEGORY_CONFIG.threads.accent },
+  { path: '/blog/bits2bricks', label: 'bits2bricks', colorClass: CATEGORY_CONFIG.bits2bricks.colorClass, activeAccent: CATEGORY_CONFIG.bits2bricks.accent },
   { path: '/lab/second-brain', label: '2\u207F\u1D48 Brain', colorClass: 'text-violet-400', activeAccent: '#8B5CF6' },
   { path: '/contact', label: 'contact', colorClass: 'text-gray-200' },
 ];

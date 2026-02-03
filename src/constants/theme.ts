@@ -1,10 +1,12 @@
 // Category accent colors — constant across dark/light themes
-// All other design tokens live in CSS custom properties (index.html)
+// Derived from CATEGORY_CONFIG; only secondBrain and meta are standalone.
+
+import { CATEGORY_CONFIG } from '../config/categories';
 
 export const CATEGORY_ACCENTS = {
-  projects: '#10B981',
-  threads: '#F59E0B',
-  bits2bricks: '#3B82F6',
+  projects: CATEGORY_CONFIG.projects.accent,
+  threads: CATEGORY_CONFIG.threads.accent,
+  bits2bricks: CATEGORY_CONFIG.bits2bricks.accent,
   secondBrain: '#8B5CF6',
   meta: '#3B82F6',
 } as const;

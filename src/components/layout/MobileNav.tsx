@@ -98,7 +98,7 @@ export const MobileNav: React.FC = () => {
 
               {/* BLOG */}
               <SectionLabel>blog</SectionLabel>
-              <NavLink to="/blog/threads" colorClass="text-amber-400" icon={<ThreadIcon />}>Threads</NavLink>
+              <NavLink to="/blog/threads" colorClass="text-rose-400" icon={<ThreadIcon />}>Threads</NavLink>
               <NavLink to="/blog/bits2bricks" colorClass="text-blue-400" icon={<GradCapIcon />}>Bits2Bricks</NavLink>
 
               {/* META */}
