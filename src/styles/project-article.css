@@ -639,6 +639,12 @@
   font-weight: bold;
 }
 
+.project-article .bkqt code:not(pre code) {
+  color: var(--bkqt-color) !important;
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.06);
+}
+
 .project-article .bkqt-label {
   font-weight: 400;
   color: var(--bkqt-color);

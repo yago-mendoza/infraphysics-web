@@ -143,7 +143,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
       </div>
 
       {/* Delegated renderer */}
-      <Renderer posts={filteredPosts} query={query} getExcerpt={getExcerpt} color={categoryInfo.color || 'gray-400'} />
+      <Renderer posts={filteredPosts} query={query} getExcerpt={getExcerpt} color={categoryInfo.color || 'gray-400'} accent={categoryInfo.accent || '#9ca3af'} />
     </div>
   );
 };

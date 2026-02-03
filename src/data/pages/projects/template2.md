@@ -109,7 +109,7 @@ Custom syntax inside backticks is **never** processed:
 - `{#ff0000:text}` shows as literal text, not colored
 - `[[address]]` shows as literal text, not a wiki-link
 - `[[projects/slug|text]]` shows as literal text, not a cross-doc link
-- `{bkqt:note:text}` shows as literal text, not a blockquote
+- `{bkqt/note:text}` shows as literal text, not a blockquote
 
 
 # code blocks
@@ -134,21 +134,23 @@ def health_check(instance: Server) -> bool:
 
 # blockquotes
 
-Typed blockquotes with `{bkqt:type:text}`. Six predefined types,
+Typed blockquotes with `{bkqt/type:text}`. Six predefined types,
 each with its own color and label. Use `/n` to separate paragraphs.
 Lists are supported — `/n` before `- ` or `1. ` starts a list.
+Inline code inside blockquotes always takes the blockquote color,
+even if wrapped in `{#hex:...}` — the blockquote color wins.
 
-{bkqt:note:this is a note blockquote for additional context or clarifications that complement the main explanation/nuse `/n` anywhere inside a blockquote to start a new paragraph}
+{bkqt/note:this is a note blockquote for additional context or clarifications that complement the main explanation/ninline code like `variables` or `functions()` always matches the blockquote color/nuse `/n` anywhere inside a blockquote to start a new paragraph}
 
-{bkqt:tip:practical advice, shortcuts, or best practices/n- keep them concise and actionable/n- use lists for multiple tips/n- the bullet color matches the blockquote type}
+{bkqt/tip:practical advice, shortcuts, or best practices/n- keep them concise and actionable/n- use lists for multiple tips/n- the bullet color matches the blockquote type}
 
-{bkqt:warning:common mistakes, traps, and gotchas — SHA-256 is **not** encryption, this algorithm looks O(n) but worst-case is O(n{^:2})}
+{bkqt/warning:common mistakes, traps, and gotchas — SHA-256 is **not** encryption, this algorithm looks O(n) but worst-case is O(n{^:2})}
 
-{bkqt:danger:things that go seriously wrong/n1. security vulnerabilities/n2. data loss/n3. undefined behavior/nin crypto topics this is critical}
+{bkqt/danger:things that go seriously wrong/n1. security vulnerabilities/n2. data loss/n3. undefined behavior/nin crypto and if I use this here like `is this red` topics this is critical}
 
-{bkqt:deepdive:for when you dig into the internal "why" — you don't need this to use it, but if you want to understand what's happening underneath, keep reading}
+{bkqt/deepdive:for when you dig into the internal "why" — you don't need this to use it, but if you want to understand what's happening underneath, keep reading}
 
-{bkqt:keyconcept:fundamental ideas the reader must take away/n- a hash is a one-way function/n- Big-O describes growth not absolute time}
+{bkqt/keyconcept:fundamental ideas the reader must take away/n- a hash is a one-way function/n- Big-O describes growth not absolute time}
 
 
 # small text
@@ -253,7 +255,7 @@ Backtick protection ensures these render as literal code:
 - `{#ff0000:not red}` — color preserved
 - `[[not a link]]` — wiki-link preserved
 - `[[projects/slug|text]]` — cross-doc preserved
-- `{bkqt:note:not a blockquote}` — bkqt preserved
+- `{bkqt/note:not a blockquote}` — bkqt preserved
 
 Empty and minimal syntax:
 

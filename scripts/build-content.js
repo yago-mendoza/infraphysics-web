@@ -102,7 +102,7 @@ const BKQT_TYPES = {
 
 function processCustomBlockquotes(markdown, placeholders) {
   return markdown.replace(
-    /\{bkqt:(note|tip|warning|danger|deepdive|keyconcept):([\s\S]*?)\}/g,
+    /\{bkqt\/(note|tip|warning|danger|deepdive|keyconcept):([\s\S]*?)\}/g,
     (_, type, text) => {
       const config = BKQT_TYPES[type];
       const withNewlines = text.trim()

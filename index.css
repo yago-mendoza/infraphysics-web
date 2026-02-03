@@ -679,6 +679,16 @@ button:focus {
   transform: scale(1.05);
 }
 
+.project-card:has(.project-title-link:hover) .project-card-title {
+  color: var(--card-accent);
+}
+
+.project-thumb img {
+  border: none;
+  outline: none;
+  color: transparent;
+}
+
 /* ============================================================
    Title L-corner frame — brackets framing a text heading
    Padding keeps text clear of the bracket arms.
