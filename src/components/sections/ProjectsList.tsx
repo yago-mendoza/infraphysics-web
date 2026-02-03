@@ -33,7 +33,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
         const statusLabel = post.status ? STATUS_LABELS[post.status] || post.status.toUpperCase() : null;
 
         return (
-          <div key={post.id} className="relative flex gap-6">
+          <div key={post.id} className="project-card relative flex gap-6">
             {/* Timeline rail */}
             <div className="hidden sm:flex flex-col items-center flex-shrink-0 w-7">
               {/* Line above node */}
@@ -51,15 +51,13 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
               <div className="flex flex-col md:flex-row gap-6">
                 {/* Photo */}
                 {post.thumbnail && (
-                  <Link to={postPath(post.category, post.id)} className="flex-shrink-0">
-                    <div className="w-full md:w-72 h-64 overflow-hidden">
-                      <img
-                        src={post.thumbnail}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  </Link>
+                  <div className="project-thumb relative w-full md:w-72 h-64 overflow-hidden flex-shrink-0">
+                    <img
+                      src={post.thumbnail}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 )}
 
                 {/* Text */}
@@ -71,7 +69,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                   </div>
 
                   {/* Title */}
-                  <Link to={postPath(post.category, post.id)} className="group">
+                  <Link to={postPath(post.category, post.id)} className="group project-title-link">
                     <h3 className={`text-2xl font-bold uppercase tracking-wide text-th-primary group-hover:text-${color} transition-colors leading-tight mb-3`}>
                       <Highlight text={post.displayTitle || post.title} query={query} />
                     </h3>

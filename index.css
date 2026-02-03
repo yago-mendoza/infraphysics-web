@@ -650,6 +650,24 @@ button:focus {
 }
 
 /* ============================================================
+   Project thumbnail — grayscale + L-corner expand on hover
+   ============================================================ */
+
+.project-thumb {
+  position: relative;
+}
+
+.project-thumb img {
+  filter: grayscale(100%);
+  transition: filter 0.5s ease, transform 0.5s ease;
+}
+
+.project-card:has(.project-title-link:hover) .project-thumb img {
+  filter: grayscale(0%);
+  transform: scale(1.05);
+}
+
+/* ============================================================
    Title L-corner frame — brackets framing a text heading
    Padding keeps text clear of the bracket arms.
    ============================================================ */
