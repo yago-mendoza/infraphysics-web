@@ -1,8 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════
    PROJECT POST VIEW — Terminal/Cyberpunk Theme
    Aplica SOLO a category === 'projects'
+   Responds to light/dark via CSS custom properties (--prj-*)
 
    ESTRUCTURA:
+   Theme tokens — CSS variables for dark (default) and light
    Section A — Layout shell (ProjectPostView)
    Section B — Article content (HTML compilado desde markdown)
    Section C — Bottom sections (actions, related)
@@ -10,11 +12,106 @@
 
    PARA CREAR OTRO TEMPLATE:
    1. Copiar este archivo → <category>-article.css
-   2. Renombrar .project-* → .<category>-*
+   2. Renombrar .project-* → .<category>-*, --prj-* → --<cat>-*
    3. Ajustar colores/tipografía/layout
    4. Crear <Category>PostView.tsx
    5. Añadir al router en PostView.tsx
    ═══════════════════════════════════════════════════════════════ */
+
+
+/* ─────────────────────────────────────────────────
+   THEME TOKENS
+   ───────────────────────────────────────────────── */
+
+:root {
+  /* Surfaces */
+  --prj-surface:      #111111;
+  --prj-surface-alt:  #0d0d0d;
+  --prj-surface-code: #0a0a0a;
+  --prj-surface-bar:  #1a1a1a;
+  --prj-surface-card: #0d0d0d;
+
+  /* Borders */
+  --prj-border:       #2a2a2a;
+  --prj-border-subtle:#222;
+  --prj-border-strong:#333;
+  --prj-border-card:  #1a1a1a;
+
+  /* Accent (lime) */
+  --prj-accent:             #a3e635;
+  --prj-accent-dim:         rgba(163,230,53,0.3);
+  --prj-accent-bg:          rgba(163,230,53,0.05);
+  --prj-accent-code-bg:     rgba(163,230,53,0.08);
+  --prj-accent-code-border: rgba(163,230,53,0.15);
+  --prj-accent-mark-bg:     rgba(163,230,53,0.15);
+  --prj-accent-quote-bg:    rgba(163,230,53,0.04);
+  --prj-accent-hover-border:rgba(163,230,53,0.4);
+  --prj-accent-hover-bg:    rgba(163,230,53,0.05);
+
+  /* Purple (topics) */
+  --prj-purple:      #a855f7;
+  --prj-purple-dim:  rgba(168,85,247,0.3);
+  --prj-purple-bg:   rgba(168,85,247,0.05);
+
+  /* Text hierarchy */
+  --prj-text-title:    #f0f0f0;
+  --prj-text-strong:   #e0e0e0;
+  --prj-text-h2:       #e8e8e8;
+  --prj-text-h3:       #d0d0d0;
+  --prj-text-h4:       #c0c0c0;
+  --prj-text-bright:   #ccc;
+  --prj-text-body:     #b0b0b0;
+  --prj-text-mid:      #888;
+  --prj-text-subtitle: #777;
+  --prj-text-dim:      #666;
+  --prj-text-muted:    #555;
+  --prj-text-card:     #ccc;
+
+  /* Dividers */
+  --prj-divider-thick: #555;
+}
+
+[data-theme="light"] {
+  --prj-surface:      #ffffff;
+  --prj-surface-alt:  #f7f7f7;
+  --prj-surface-code: #f5f5f5;
+  --prj-surface-bar:  #eeeeee;
+  --prj-surface-card: #fafafa;
+
+  --prj-border:       #e0e0e0;
+  --prj-border-subtle:#eaeaea;
+  --prj-border-strong:#ccc;
+  --prj-border-card:  #e8e8e8;
+
+  --prj-accent:             #4d7c0f;
+  --prj-accent-dim:         rgba(77,124,15,0.3);
+  --prj-accent-bg:          rgba(77,124,15,0.06);
+  --prj-accent-code-bg:     rgba(77,124,15,0.08);
+  --prj-accent-code-border: rgba(77,124,15,0.2);
+  --prj-accent-mark-bg:     rgba(77,124,15,0.12);
+  --prj-accent-quote-bg:    rgba(77,124,15,0.06);
+  --prj-accent-hover-border:rgba(77,124,15,0.4);
+  --prj-accent-hover-bg:    rgba(77,124,15,0.05);
+
+  --prj-purple:      #7c3aed;
+  --prj-purple-dim:  rgba(124,58,237,0.3);
+  --prj-purple-bg:   rgba(124,58,237,0.06);
+
+  --prj-text-title:    #1a1a1a;
+  --prj-text-strong:   #1a1a1a;
+  --prj-text-h2:       #222;
+  --prj-text-h3:       #333;
+  --prj-text-h4:       #444;
+  --prj-text-bright:   #555;
+  --prj-text-body:     #444;
+  --prj-text-mid:      #666;
+  --prj-text-subtitle: #666;
+  --prj-text-dim:      #888;
+  --prj-text-muted:    #999;
+  --prj-text-card:     #333;
+
+  --prj-divider-thick: #bbb;
+}
 
 
 /* ─────────────────────────────────────────────────
@@ -30,11 +127,10 @@
 /* A1. Container box */
 
 .project-container {
-  background: #111111;
-  border: 1px solid #2a2a2a;
+  background: var(--prj-surface);
+  border: 1px solid var(--prj-border);
   border-radius: 2px;
   overflow: hidden;
-  color-scheme: dark;
 }
 
 /* A2. Header bar */
@@ -46,9 +142,9 @@
   padding: 0.5rem 1rem;
   font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
   font-size: 0.7rem;
-  color: #555;
-  border-bottom: 1px solid #2a2a2a;
-  background: #0d0d0d;
+  color: var(--prj-text-muted);
+  border-bottom: 1px solid var(--prj-border);
+  background: var(--prj-surface-alt);
 }
 
 .project-header-log {
@@ -59,7 +155,7 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  color: #a3e635;
+  color: var(--prj-accent);
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
@@ -68,7 +164,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #a3e635;
+  background: var(--prj-accent);
   display: inline-block;
 }
 
@@ -79,7 +175,7 @@
   width: 100%;
   aspect-ratio: 16 / 7;
   overflow: hidden;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid var(--prj-border);
 }
 
 .project-hero-img {
@@ -89,13 +185,17 @@
   filter: grayscale(80%) brightness(0.6) contrast(1.1);
 }
 
+[data-theme="light"] .project-hero-img {
+  filter: grayscale(50%) brightness(0.8) contrast(1.05);
+}
+
 .project-hero-gradient {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   height: 40%;
-  background: linear-gradient(to top, #111111, transparent);
+  background: linear-gradient(to top, var(--prj-surface), transparent);
   pointer-events: none;
 }
 
@@ -117,7 +217,7 @@
 .project-back-link {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
-  color: #a3e635;
+  color: var(--prj-accent);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   text-decoration: none;
@@ -141,18 +241,18 @@
   justify-content: center;
   width: 34px;
   height: 34px;
-  border: 1px solid #2a2a2a;
-  background: #111111;
-  color: #555;
+  border: 1px solid var(--prj-border);
+  background: var(--prj-surface);
+  color: var(--prj-text-muted);
   transition: all 0.2s ease;
   border-radius: 2px;
   text-decoration: none;
 }
 
 .project-social-github:hover {
-  color: #a3e635;
-  border-color: rgba(163, 230, 53, 0.4);
-  background: rgba(163, 230, 53, 0.05);
+  color: var(--prj-accent);
+  border-color: var(--prj-accent-hover-border);
+  background: var(--prj-accent-hover-bg);
 }
 
 .project-social-linkedin:hover {
@@ -188,16 +288,16 @@
 
 /* Topics → purple */
 .project-pill-topic {
-  border: 1px solid rgba(168, 85, 247, 0.3);
-  color: #a855f7;
-  background: rgba(168, 85, 247, 0.05);
+  border: 1px solid var(--prj-purple-dim);
+  color: var(--prj-purple);
+  background: var(--prj-purple-bg);
 }
 
 /* Technologies → lime */
 .project-pill-tech {
-  border: 1px solid rgba(163, 230, 53, 0.3);
-  color: #a3e635;
-  background: rgba(163, 230, 53, 0.05);
+  border: 1px solid var(--prj-accent-dim);
+  color: var(--prj-accent);
+  background: var(--prj-accent-bg);
 }
 
 /* A8. Title block */
@@ -211,7 +311,7 @@
   font-size: 2.75rem;
   font-weight: 800;
   line-height: 1.1;
-  color: #f0f0f0;
+  color: var(--prj-text-title);
   text-transform: uppercase;
   letter-spacing: -0.01em;
   margin: 0;
@@ -222,7 +322,7 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 1.1rem;
   font-weight: 500;
-  color: #777;
+  color: var(--prj-text-subtitle);
   text-transform: uppercase;
   letter-spacing: 0.02em;
   margin-top: 0.5rem;
@@ -250,31 +350,31 @@
 }
 
 .project-meta-date {
-  color: #a3e635;
+  color: var(--prj-accent);
 }
 
 .project-meta-author {
-  color: #888;
+  color: var(--prj-text-mid);
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .project-meta-author:hover {
-  color: #a3e635;
+  color: var(--prj-text-title);
 }
 
 /* A10. Dividers */
 
 /* Thin gray line (between meta and notes) */
 .project-divider-thin {
-  border-top: 1px solid #2a2a2a;
+  border-top: 1px solid var(--prj-border);
   margin-top: 0.25rem;
   margin-bottom: 0.75rem;
 }
 
-/* Thick white line (between notes and article) */
+/* Thick line (between notes and article) */
 .project-divider-thick {
-  border-top: 2px solid #555;
+  border-top: 2px solid var(--prj-divider-thick);
   margin-top: 0.5rem;
   margin-bottom: 2rem;
 }
@@ -288,7 +388,7 @@
 .project-notes-line {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.7rem;
-  color: #555;
+  color: var(--prj-text-muted);
   line-height: 1.6;
   margin-bottom: 0.15rem;
 }
@@ -313,27 +413,27 @@
 
 .project-article h1 {
   font-size: 1.75rem;
-  color: #a3e635;
+  color: var(--prj-accent);
   margin: 2.5rem 0 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid #222;
+  border-bottom: 1px solid var(--prj-border-subtle);
 }
 
 .project-article h2 {
   font-size: 1.35rem;
-  color: #e8e8e8;
+  color: var(--prj-text-h2);
   margin: 2rem 0 0.75rem;
 }
 
 .project-article h3 {
   font-size: 1.05rem;
-  color: #d0d0d0;
+  color: var(--prj-text-h3);
   margin: 1.5rem 0 0.5rem;
 }
 
 .project-article h4 {
   font-size: 0.9rem;
-  color: #c0c0c0;
+  color: var(--prj-text-h4);
   margin: 1.25rem 0 0.4rem;
 }
 
@@ -342,7 +442,7 @@
 .project-article p {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.875rem;
-  color: #b0b0b0;
+  color: var(--prj-text-body);
   line-height: 1.8;
   margin-bottom: 1rem;
 }
@@ -350,15 +450,15 @@
 /* B3. Blockquotes */
 
 .project-article blockquote {
-  border-left: 3px solid #a3e635;
-  background: rgba(163, 230, 53, 0.04);
+  border-left: 3px solid var(--prj-accent);
+  background: var(--prj-accent-quote-bg);
   padding: 1rem 1.25rem;
   margin: 1.5rem 0;
   border-radius: 0 4px 4px 0;
 }
 
 .project-article blockquote p {
-  color: #ccc;
+  color: var(--prj-text-bright);
   margin-bottom: 0;
 }
 
@@ -376,7 +476,7 @@
   margin-bottom: 0.5rem;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.875rem;
-  color: #b0b0b0;
+  color: var(--prj-text-body);
   line-height: 1.7;
 }
 
@@ -384,7 +484,7 @@
   content: '•';
   position: absolute;
   left: 0;
-  color: #a3e635;
+  color: var(--prj-accent);
   font-weight: bold;
   font-size: 1rem;
 }
@@ -399,21 +499,21 @@
 .project-article ol li {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.875rem;
-  color: #b0b0b0;
+  color: var(--prj-text-body);
   line-height: 1.7;
   margin-bottom: 0.5rem;
 }
 
 .project-article ol li::marker {
-  color: #a3e635;
+  color: var(--prj-accent);
   font-weight: bold;
 }
 
 /* B6. Code blocks — terminal macOS */
 
 .project-article .code-terminal {
-  background: #0a0a0a;
-  border: 1px solid #2a2a2a;
+  background: var(--prj-surface-code);
+  border: 1px solid var(--prj-border);
   border-radius: 8px;
   margin: 1.5rem 0;
   overflow: hidden;
@@ -424,8 +524,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem 0.75rem;
-  background: #1a1a1a;
-  border-bottom: 1px solid #222;
+  background: var(--prj-surface-bar);
+  border-bottom: 1px solid var(--prj-border-subtle);
 }
 
 .project-article .code-terminal-dots {
@@ -446,7 +546,7 @@
 .project-article .code-terminal-lang {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.65rem;
-  color: #555;
+  color: var(--prj-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -462,7 +562,7 @@
 .project-article .code-terminal code {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.8rem;
-  color: #ccc;
+  color: var(--prj-text-bright);
   line-height: 1.6;
   background: transparent;
   padding: 0;
@@ -472,8 +572,8 @@
 
 /* Fallback: pre>code without wrapper */
 .project-article pre:not(.code-terminal pre) {
-  background: #0a0a0a;
-  border: 1px solid #2a2a2a;
+  background: var(--prj-surface-code);
+  border: 1px solid var(--prj-border);
   border-radius: 8px;
   padding: 1rem;
   margin: 1.5rem 0;
@@ -483,7 +583,7 @@
 .project-article pre:not(.code-terminal pre) code {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.8rem;
-  color: #ccc;
+  color: var(--prj-text-bright);
   background: transparent;
   padding: 0;
   border: none;
@@ -494,9 +594,9 @@
 .project-article code:not(pre code) {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.8em;
-  color: #a3e635;
-  background: rgba(163, 230, 53, 0.08);
-  border: 1px solid rgba(163, 230, 53, 0.15);
+  color: var(--prj-accent);
+  background: var(--prj-accent-code-bg);
+  border: 1px solid var(--prj-accent-code-border);
   padding: 0.15em 0.4em;
   border-radius: 4px;
 }
@@ -505,28 +605,28 @@
 
 .project-article hr {
   border: none;
-  border-top: 1px solid #2a2a2a;
+  border-top: 1px solid var(--prj-border);
   margin: 2rem 0;
 }
 
 /* B9. Links */
 
 .project-article a:not(.wiki-ref):not(.wiki-ref-resolved) {
-  color: #a3e635;
+  color: var(--prj-accent);
   text-decoration: none;
-  border-bottom: 1px solid rgba(163, 230, 53, 0.3);
+  border-bottom: 1px solid var(--prj-accent-dim);
   transition: border-color 0.2s;
 }
 
 .project-article a:not(.wiki-ref):not(.wiki-ref-resolved):hover {
-  border-bottom-color: #a3e635;
+  border-bottom-color: var(--prj-accent);
 }
 
 /* B10. Images */
 
 .project-article img {
   border-radius: 4px;
-  border: 1px solid #2a2a2a;
+  border: 1px solid var(--prj-border);
   margin: 1.5rem 0;
 }
 
@@ -541,39 +641,39 @@
 }
 
 .project-article th {
-  background: #1a1a1a;
-  color: #a3e635;
+  background: var(--prj-surface-bar);
+  color: var(--prj-accent);
   text-transform: uppercase;
   font-size: 0.7rem;
   letter-spacing: 0.05em;
   padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--prj-border-strong);
   text-align: left;
 }
 
 .project-article td {
   padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid #1a1a1a;
-  color: #b0b0b0;
+  border-bottom: 1px solid var(--prj-border-subtle);
+  color: var(--prj-text-body);
 }
 
 /* B12. Strong / Em */
 
 .project-article strong {
-  color: #e0e0e0;
+  color: var(--prj-text-strong);
   font-weight: 700;
 }
 
 .project-article em {
-  color: #ccc;
+  color: var(--prj-text-bright);
   font-style: italic;
 }
 
 /* B13. <mark> highlight */
 
 .project-article mark {
-  background: rgba(163, 230, 53, 0.15);
-  color: #a3e635;
+  background: var(--prj-accent-mark-bg);
+  color: var(--prj-accent);
   padding: 0.1em 0.3em;
   border-radius: 2px;
 }
@@ -583,10 +683,10 @@
 .project-article kbd {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75em;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-bottom: 2px solid #333;
-  color: #ccc;
+  background: var(--prj-surface-bar);
+  border: 1px solid var(--prj-border-strong);
+  border-bottom: 2px solid var(--prj-border-strong);
+  color: var(--prj-text-bright);
   padding: 0.1em 0.4em;
   border-radius: 3px;
 }
@@ -595,8 +695,8 @@
 
 .project-article .wiki-ref,
 .project-article .wiki-ref-resolved {
-  color: #a3e635;
-  border-bottom: 1px dashed rgba(163, 230, 53, 0.4);
+  color: var(--prj-accent);
+  border-bottom: 1px dashed var(--prj-accent-hover-border);
   cursor: pointer;
   text-decoration: none;
 }
@@ -614,11 +714,11 @@
 
 .project-article .img-side-layout .img-side-img {
   border-radius: 4px;
-  border: 1px solid #2a2a2a;
+  border: 1px solid var(--prj-border);
 }
 
 .project-article .img-side-layout .img-side-content p {
-  color: #b0b0b0;
+  color: var(--prj-text-body);
 }
 
 
@@ -631,7 +731,7 @@
 .project-actions {
   margin-top: 3rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #2a2a2a;
+  border-top: 1px solid var(--prj-border);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -648,20 +748,20 @@
 .project-actions-label {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.7rem;
-  color: #555;
+  color: var(--prj-text-muted);
   text-transform: uppercase;
 }
 
 .project-actions-link {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
-  color: #666;
+  color: var(--prj-text-dim);
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .project-actions-link:hover {
-  color: #a3e635;
+  color: var(--prj-accent);
 }
 
 .project-actions-github {
@@ -671,17 +771,17 @@
   padding: 0.4rem 0.8rem;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.7rem;
-  color: #888;
-  border: 1px solid #2a2a2a;
-  background: #111;
+  color: var(--prj-text-mid);
+  border: 1px solid var(--prj-border);
+  background: var(--prj-surface);
   text-decoration: none;
   transition: all 0.2s;
   border-radius: 2px;
 }
 
 .project-actions-github:hover {
-  color: #a3e635;
-  border-color: rgba(163, 230, 53, 0.3);
+  color: var(--prj-accent);
+  border-color: var(--prj-accent-dim);
 }
 
 /* C2. Related posts (OUTSIDE box) */
@@ -700,7 +800,7 @@
 .project-related-title {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.65rem;
-  color: #555;
+  color: var(--prj-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
@@ -708,7 +808,7 @@
 .project-related-viewall {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.65rem;
-  color: #a3e635;
+  color: var(--prj-accent);
   text-decoration: none;
   display: flex;
   align-items: center;
@@ -734,21 +834,21 @@
 
 .project-related-card {
   display: block;
-  border: 1px solid #1a1a1a;
+  border: 1px solid var(--prj-border-card);
   overflow: hidden;
-  background: #0d0d0d;
+  background: var(--prj-surface-card);
   transition: border-color 0.2s;
   text-decoration: none;
 }
 
 .project-related-card:hover {
-  border-color: #2a2a2a;
+  border-color: var(--prj-border);
 }
 
 .project-related-thumb {
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  background: #0a0a0a;
+  background: var(--prj-surface-code);
 }
 
 .project-related-thumb img {
@@ -772,14 +872,14 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #ccc;
+  color: var(--prj-text-card);
   text-transform: lowercase;
   line-height: 1.3;
   transition: color 0.2s;
 }
 
 .project-related-card:hover .project-related-name {
-  color: #a3e635;
+  color: var(--prj-accent);
 }
 
 
