@@ -7,6 +7,7 @@ import { Category } from '../types';
 import { calculateReadingTime, stripHtml } from '../lib';
 import { CATEGORY_CONFIG } from '../config/categories';
 import { useSectionState } from '../contexts/SectionStateContext';
+import { useTheme } from '../contexts/ThemeContext';
 import {
   SearchIcon,
   FilterIcon,
@@ -34,19 +35,34 @@ const PAGE_CONFIG: Record<string, { initial: number; page: number }> = {
   bits2bricks: { initial: 6, page: 3 },
 };
 
+const STATUS_FILTER_CONFIG: Record<string, { label: string; color: string }> = {
+  'active': { label: 'Active', color: 'emerald-400' },
+  'in-progress': { label: 'In Progress', color: 'amber-400' },
+  'completed': { label: 'Completed', color: 'blue-400' },
+  'archived': { label: 'Archived', color: 'gray-400' },
+};
+
 export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
   const { getState, setState: setSectionState } = useSectionState();
-  const { query, sortBy, showFilters, selectedTopics, selectedTechs, visibleCount } = getState(category);
+  const { query, sortBy, showFilters, selectedTopics, selectedTechs, selectedStatuses, visibleCount } = getState(category);
   const setQuery = (q: string) => setSectionState(category, { query: q });
   const setSortBy = (s: 'newest' | 'oldest' | 'title') => setSectionState(category, { sortBy: s });
   const setShowFilters = (f: boolean) => setSectionState(category, { showFilters: f });
   const toggleTopic = (t: string) => setSectionState(category, { selectedTopics: selectedTopics.includes(t) ? selectedTopics.filter(x => x !== t) : [...selectedTopics, t] });
   const toggleTech = (t: string) => setSectionState(category, { selectedTechs: selectedTechs.includes(t) ? selectedTechs.filter(x => x !== t) : [...selectedTechs, t] });
+  const toggleStatus = (s: string) => setSectionState(category, { selectedStatuses: selectedStatuses.includes(s) ? selectedStatuses.filter(x => x !== s) : [...selectedStatuses, s] });
+
+  const { theme } = useTheme();
 
   const sectionPosts = useMemo(() => posts.filter(p => p.category === category), [category]);
 
   const allTopics = useMemo(() => [...new Set(sectionPosts.flatMap(p => p.topics || []))].sort(), [sectionPosts]);
   const allTechs = useMemo(() => [...new Set(sectionPosts.flatMap(p => p.technologies || []))].sort(), [sectionPosts]);
+  const allStatuses = useMemo(() => {
+    const statuses = [...new Set(sectionPosts.map(p => p.status).filter(Boolean))] as string[];
+    const order = ['active', 'in-progress', 'completed', 'archived'];
+    return statuses.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  }, [sectionPosts]);
 
   const filteredPosts = useMemo(() => {
     let result = sectionPosts;
@@ -68,6 +84,10 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
       result = result.filter(p => selectedTechs.some(t => (p.technologies || []).includes(t)));
     }
 
+    if (selectedStatuses.length > 0) {
+      result = result.filter(p => p.status && selectedStatuses.includes(p.status));
+    }
+
     // Pinned posts first
     const pinned = result.filter(p => p.featured);
     const rest = result.filter(p => !p.featured);
@@ -80,7 +100,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
     });
 
     return [...pinned, ...rest];
-  }, [sectionPosts, query, sortBy, selectedTopics, selectedTechs]);
+  }, [sectionPosts, query, sortBy, selectedTopics, selectedTechs, selectedStatuses]);
 
   // Infinite scroll
   const config = PAGE_CONFIG[category] || { initial: 6, page: 3 };
@@ -189,17 +209,43 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
 
         {showFilters && (
           <div className="p-4 bg-th-surface-alt border border-th-border rounded-sm animate-fade-in space-y-4">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-th-tertiary uppercase">Sort by:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest' | 'title')}
-                className="text-xs border border-th-border rounded-sm px-2 py-1.5 bg-th-elevated text-th-secondary focus:outline-none focus:border-th-border-active"
-              >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="title">Alphabetical</option>
-              </select>
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-th-tertiary uppercase">Sort by:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest' | 'title')}
+                  className="text-xs border border-th-border rounded-sm px-2 py-1.5 bg-th-elevated text-th-secondary focus:outline-none focus:border-th-border-active"
+                  style={{ colorScheme: theme }}
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="title">Alphabetical</option>
+                </select>
+              </div>
+              {allStatuses.length > 0 && (
+                <>
+                  <div className="w-px h-4 bg-th-border" />
+                  <span className="text-xs text-th-tertiary uppercase">Status:</span>
+                  {allStatuses.map(s => {
+                    const cfg = STATUS_FILTER_CONFIG[s] || { label: s, color: 'gray-400' };
+                    const active = selectedStatuses.includes(s);
+                    return (
+                      <button
+                        key={s}
+                        onClick={() => toggleStatus(s)}
+                        className={`text-xs px-2.5 py-0.5 border rounded-sm transition-colors ${
+                          active
+                            ? `bg-${cfg.color}/20 border-${cfg.color}/50 text-${cfg.color}`
+                            : `border-${cfg.color}/20 text-${cfg.color}/60 hover:border-${cfg.color}/40`
+                        }`}
+                      >
+                        {cfg.label}
+                      </button>
+                    );
+                  })}
+                </>
+              )}
             </div>
 
             {allTopics.length > 0 && (

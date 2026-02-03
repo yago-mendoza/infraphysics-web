@@ -6,10 +6,11 @@ type SectionState = {
   showFilters: boolean;
   selectedTopics: string[];
   selectedTechs: string[];
+  selectedStatuses: string[];
   visibleCount: number;
 };
 
-const DEFAULT_STATE: SectionState = { query: '', sortBy: 'newest', showFilters: true, selectedTopics: [], selectedTechs: [], visibleCount: 0 };
+const DEFAULT_STATE: SectionState = { query: '', sortBy: 'newest', showFilters: true, selectedTopics: [], selectedTechs: [], selectedStatuses: [], visibleCount: 0 };
 
 type SectionStateContextType = {
   getState: (category: string) => SectionState;
