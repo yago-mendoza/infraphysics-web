@@ -1,6 +1,6 @@
 // Project post view — terminal/cyberpunk theme for category === 'projects'
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { formatDate, calculateReadingTime } from '../lib';
 import { allFieldNotes } from '../lib/brainIndex';
@@ -62,6 +62,72 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
     if (Array.isArray(post.notes)) return post.notes;
     return String(post.notes).split('\n').map(l => l.trim()).filter(Boolean);
   })();
+
+  // Extract headings, inject anchor IDs + back-to-index buttons, compute hierarchical numbering
+  const { headings, contentWithIds } = useMemo(() => {
+    const raw: { level: number; text: string; id: string }[] = [];
+    const seen = new Map<string, number>();
+
+    const backBtn = '<a href="#project-toc" class="project-toc-back" aria-label="Back to index">'
+      + '<svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
+      + '<path d="M9 10H3V4"/><path d="M1 6L3 4L5 6"/>'
+      + '</svg></a>';
+
+    const processed = post.content.replace(
+      /<(h[1-4])(\s[^>]*)?>(.+?)<\/\1>/gi,
+      (_match, tag, attrs, inner) => {
+        const level = parseInt(tag[1]);
+        const text = inner.replace(/<[^>]*>/g, '').trim();
+        let slug = text
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/(^-|-$)/g, '');
+        if (!slug) slug = 'section';
+
+        const count = seen.get(slug) || 0;
+        seen.set(slug, count + 1);
+        if (count > 0) slug += `-${count}`;
+
+        const id = `toc-${slug}`;
+        raw.push({ level, text, id });
+        return `<${tag}${attrs || ''} id="${id}">${inner}${backBtn}</${tag}>`;
+      }
+    );
+
+    if (raw.length === 0) {
+      return { headings: [] as { level: number; text: string; id: string; number: string; depth: number }[], contentWithIds: processed };
+    }
+
+    // Hierarchical numbering (1, 1.1, 1.2, 2, 2.1, …)
+    const minLevel = Math.min(...raw.map(h => h.level));
+    const maxDepth = Math.max(...raw.map(h => h.level)) - minLevel + 1;
+    const counters = new Array(maxDepth).fill(0);
+
+    const headings = raw.map(h => {
+      const depth = h.level - minLevel;
+      counters[depth]++;
+      for (let i = depth + 1; i < maxDepth; i++) counters[i] = 0;
+      const parts: number[] = [];
+      for (let i = 0; i <= depth; i++) parts.push(counters[i]);
+      return { ...h, number: parts.join('.'), depth };
+    });
+
+    return { headings, contentWithIds: processed };
+  }, [post.content]);
+
+  // Event delegation for back-to-index buttons injected into headings
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest('.project-toc-back');
+      if (target) {
+        e.preventDefault();
+        document.getElementById('project-toc')?.scrollIntoView({ behavior: 'smooth' });
+      }
+    };
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, []);
 
   // Related posts
   const recommendedPosts = useMemo(() => {
@@ -183,9 +249,36 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
           {/* Thick white line before article */}
           <div className="project-divider-thick" />
 
+          {/* Table of Contents */}
+          {headings.length > 1 && (
+            <nav className="project-toc" id="project-toc">
+              <div className="project-toc-label">// CONTENTS</div>
+              <ol className="project-toc-list">
+                {headings.map((h) => (
+                  <li
+                    key={h.id}
+                    className={`project-toc-item project-toc-depth-${h.depth}`}
+                  >
+                    <a
+                      href={`#${h.id}`}
+                      className="project-toc-link"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        document.getElementById(h.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                    >
+                      <span className="project-toc-num">{h.number}</span>
+                      {h.text}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          )}
+
           {/* Article content */}
           <WikiContent
-            html={post.content}
+            html={contentWithIds}
             allFieldNotes={allFieldNotes}
             className="project-article"
           />

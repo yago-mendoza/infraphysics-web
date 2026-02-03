@@ -26,33 +26,33 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       {posts.map((post, index) => {
         const contentExcerpt = getExcerpt(post.content, query);
         const techs = post.technologies || [];
         const statusLabel = post.status ? STATUS_LABELS[post.status] || post.status.toUpperCase() : null;
 
         return (
-          <div key={post.id} className="relative flex gap-5">
+          <div key={post.id} className="relative flex gap-6">
             {/* Timeline rail */}
-            <div className="hidden sm:flex flex-col items-center flex-shrink-0 w-6">
+            <div className="hidden sm:flex flex-col items-center flex-shrink-0 w-7">
               {/* Line above node */}
               {index > 0 && <div className="w-px flex-grow bg-th-border" />}
               {index === 0 && <div className="flex-grow" />}
               {/* Node */}
-              <div className={`w-3 h-3 rounded-full border-2 border-${color} bg-th-base flex-shrink-0`} />
+              <div className={`w-3.5 h-3.5 rounded-full border-2 border-${color} bg-th-base flex-shrink-0`} />
               {/* Line below node */}
               {index < posts.length - 1 && <div className="w-px flex-grow bg-th-border" />}
               {index === posts.length - 1 && <div className="flex-grow" />}
             </div>
 
             {/* Card content */}
-            <div className={`flex-grow pb-8 ${index === posts.length - 1 ? 'pb-0' : ''}`}>
-              <div className="flex flex-col md:flex-row gap-5">
+            <div className={`flex-grow pb-10 ${index === posts.length - 1 ? 'pb-0' : ''}`}>
+              <div className="flex flex-col md:flex-row gap-6">
                 {/* Photo */}
                 {post.thumbnail && (
                   <Link to={postPath(post.category, post.id)} className="flex-shrink-0">
-                    <div className="w-full md:w-56 h-56 overflow-hidden">
+                    <div className="w-full md:w-72 h-64 overflow-hidden">
                       <img
                         src={post.thumbnail}
                         alt=""
@@ -65,28 +65,28 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                 {/* Text */}
                 <div className="flex-grow min-w-0">
                   {/* Status + date */}
-                  <div className="flex flex-wrap items-center gap-3 mb-2">
+                  <div className="flex flex-wrap items-center gap-3 mb-3">
                     {post.status && <StatusBadge status={post.status} label={statusLabel || undefined} />}
-                    <span className="text-[11px] text-th-tertiary font-mono">{formatDateTimeline(post.date)}</span>
+                    <span className="text-xs text-th-tertiary font-mono">{formatDateTimeline(post.date)}</span>
                   </div>
 
                   {/* Title */}
                   <Link to={postPath(post.category, post.id)} className="group">
-                    <h3 className={`text-xl font-bold uppercase tracking-wide text-th-primary group-hover:text-${color} transition-colors leading-tight mb-2`}>
+                    <h3 className={`text-2xl font-bold uppercase tracking-wide text-th-primary group-hover:text-${color} transition-colors leading-tight mb-3`}>
                       <Highlight text={post.displayTitle || post.title} query={query} />
                     </h3>
                   </Link>
 
                   {/* Description */}
-                  <p className="text-sm text-th-secondary font-sans leading-relaxed mb-3 line-clamp-3">
+                  <p className="text-base text-th-secondary font-sans leading-relaxed mb-4 line-clamp-3">
                     <Highlight text={post.description} query={query} />
                   </p>
 
                   {/* Tech pills */}
                   {techs.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-3">
+                    <div className="flex flex-wrap gap-2 mb-4">
                       {techs.map(tech => (
-                        <span key={tech} className={`text-[11px] px-2 py-0.5 border border-${color}/30 text-${color} rounded-sm`}>
+                        <span key={tech} className={`text-xs px-2.5 py-0.5 border border-${color}/30 text-${color} rounded-sm`}>
                           {tech}
                         </span>
                       ))}
@@ -95,13 +95,13 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
 
                   {/* Search excerpt */}
                   {contentExcerpt && (
-                    <div className="mb-3 text-xs text-th-secondary p-2 border-l-2" style={{ backgroundColor: 'var(--highlight-bg)', borderColor: 'var(--highlight-text)' }}>
+                    <div className="mb-4 text-sm text-th-secondary p-2.5 border-l-2" style={{ backgroundColor: 'var(--highlight-bg)', borderColor: 'var(--highlight-text)' }}>
                       <Highlight text={contentExcerpt} query={query} />
                     </div>
                   )}
 
                   {/* Divider + links */}
-                  <div className="border-t border-th-border pt-3 flex items-center gap-4 text-xs">
+                  <div className="border-t border-th-border pt-3.5 flex items-center gap-5 text-sm">
                     {post.github && (
                       <a
                         href={post.github}
