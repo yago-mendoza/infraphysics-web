@@ -36,10 +36,9 @@ const PAGE_CONFIG: Record<string, { initial: number; page: number }> = {
 };
 
 const STATUS_FILTER_CONFIG: Record<string, { label: string; color: string }> = {
-  'active': { label: 'Active', color: 'emerald-400' },
-  'in-progress': { label: 'In Progress', color: 'amber-400' },
-  'completed': { label: 'Completed', color: 'blue-400' },
-  'archived': { label: 'Archived', color: 'gray-400' },
+  'ongoing': { label: 'Ongoing', color: 'blue-400' },
+  'implemented': { label: 'Implemented', color: 'amber-400' },
+  'completed': { label: 'Completed', color: 'emerald-400' },
 };
 
 export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
@@ -60,7 +59,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
   const allTechs = useMemo(() => [...new Set(sectionPosts.flatMap(p => p.technologies || []))].sort(), [sectionPosts]);
   const allStatuses = useMemo(() => {
     const statuses = [...new Set(sectionPosts.map(p => p.status).filter(Boolean))] as string[];
-    const order = ['active', 'in-progress', 'completed', 'archived'];
+    const order = ['ongoing', 'implemented', 'completed'];
     return statuses.sort((a, b) => order.indexOf(a) - order.indexOf(b));
   }, [sectionPosts]);
 
@@ -212,6 +211,8 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={`Search ${category}...`}
+              spellCheck={false}
+              autoComplete="off"
               className="w-full bg-transparent border-none ml-2.5 text-sm focus:outline-none placeholder-th-tertiary text-th-primary"
             />
           </div>

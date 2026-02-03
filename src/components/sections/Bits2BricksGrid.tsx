@@ -1,4 +1,4 @@
-// Bits2Bricks section — square image card grid
+// Bits2Bricks section — grid cards (default) / compact search rows (when query active)
 
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -17,10 +17,63 @@ export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, 
     );
   }
 
+  /* ── Search mode: compact horizontal rows ── */
+  if (query) {
+    return (
+      <div className="max-w-3xl mx-auto divide-y divide-th-border">
+        {posts.map(post => {
+          const count = getMatchCount(post.content, query);
+          const tags = post.tags || [];
+          const lq = query.toLowerCase();
+          const visibleMatch = (post.displayTitle || post.title).toLowerCase().includes(lq) || post.description.toLowerCase().includes(lq);
+
+          return (
+            <Link
+              key={post.id}
+              to={postPath(post.category, post.id)}
+              className={`group flex items-center gap-4 py-3 px-2 hover:bg-th-surface-alt transition-colors`}
+            >
+              {/* Date */}
+              <span className="text-[11px] text-th-tertiary font-mono w-14 flex-shrink-0">{formatDateCompact(post.date)}</span>
+
+              {/* Title + Description */}
+              <div className="flex-grow min-w-0">
+                <span className={`text-sm text-th-primary group-hover:text-${color} transition-colors truncate block`}>
+                  <Highlight text={post.displayTitle || post.title} query={query} />
+                </span>
+                <span className="text-[11px] text-th-tertiary truncate block">
+                  <Highlight text={post.description} query={query} />
+                </span>
+              </div>
+
+              {/* Tags */}
+              {tags.length > 0 && (
+                <div className="hidden sm:flex gap-1.5 flex-shrink-0">
+                  {tags.slice(0, 3).map(tag => (
+                    <span key={tag} className="text-[11px] px-2 py-0.5 border border-blue-400/30 text-blue-400 rounded-sm">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Match count */}
+              {count > 0 && (
+                <span className="text-[11px] text-th-tertiary flex-shrink-0 font-mono" style={{ color: 'var(--highlight-text)', opacity: 0.7 }}>
+                  {visibleMatch ? '+' : ''}{count} {count === 1 ? 'match' : 'matches'}
+                </span>
+              )}
+            </Link>
+          );
+        })}
+      </div>
+    );
+  }
+
+  /* ── Default: image card grid ── */
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {posts.map(post => {
-        const contentExcerpt = getExcerpt(post.content, query);
         const tags = post.tags || [];
 
         return (
@@ -40,47 +93,25 @@ export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, 
 
             {/* Content */}
             <div className="p-4 space-y-2.5">
-              {/* Date */}
               <span className="text-[11px] text-th-tertiary font-mono">{formatDateCompact(post.date)}</span>
 
               <h3 className={`font-bold text-base text-th-primary group-hover:text-${color} transition-colors leading-tight line-clamp-2`}>
-                <Highlight text={post.displayTitle || post.title} query={query} />
+                {post.displayTitle || post.title}
               </h3>
 
               <p className="text-sm text-th-secondary font-sans leading-relaxed line-clamp-2">
-                <Highlight text={post.description} query={query} />
+                {post.description}
               </p>
 
-              {/* Tag pills */}
               {tags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {tags.slice(0, 4).map(tag => (
-                    <span key={tag} className="text-[11px] px-2 py-0.5 border border-slate-400/30 text-slate-400 rounded-sm">
+                    <span key={tag} className="text-[11px] px-2 py-0.5 border border-blue-400/30 text-blue-400 rounded-sm">
                       {tag}
                     </span>
                   ))}
                 </div>
               )}
-
-              {/* Search excerpt + match count */}
-              {query && (() => {
-                const count = getMatchCount(post.content, query);
-                if (!contentExcerpt && count === 0) return null;
-                return (
-                  <div className="text-xs p-2 animate-fade-in" style={{ backgroundColor: 'var(--highlight-bg)' }}>
-                    {contentExcerpt && (
-                      <div className="text-th-secondary">
-                        <Highlight text={contentExcerpt} query={query} />
-                      </div>
-                    )}
-                    {count > 0 && (
-                      <span className={`text-[11px] text-th-tertiary ${contentExcerpt ? 'mt-1' : ''} block`} style={{ color: 'var(--highlight-text)', opacity: 0.7 }}>
-                        {count} {count === 1 ? 'match' : 'matches'} in document
-                      </span>
-                    )}
-                  </div>
-                );
-              })()}
             </div>
           </Link>
         );

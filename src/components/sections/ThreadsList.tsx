@@ -3,6 +3,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { formatDateTimeline } from '../../lib/date';
+import { formatDateCompact } from '../../lib/date';
 import { calculateReadingTime } from '../../lib/content';
 import { Highlight } from '../ui';
 import { ClockIcon } from '../icons';
@@ -19,10 +20,59 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
     );
   }
 
+  /* ── Search mode: compact horizontal rows ── */
+  if (query) {
+    return (
+      <div className="max-w-3xl mx-auto divide-y divide-th-border">
+        {posts.map(post => {
+          const count = getMatchCount(post.content, query);
+          const tags = post.tags || [];
+          const lq = query.toLowerCase();
+          const visibleMatch = (post.displayTitle || post.title).toLowerCase().includes(lq) || post.description.toLowerCase().includes(lq);
+
+          return (
+            <Link
+              key={post.id}
+              to={postPath(post.category, post.id)}
+              className={`group flex items-center gap-4 py-3 px-2 hover:bg-th-surface-alt transition-colors`}
+            >
+              <span className="text-[11px] text-th-tertiary font-mono w-14 flex-shrink-0">{formatDateCompact(post.date)}</span>
+
+              <div className="flex-grow min-w-0">
+                <span className={`text-sm text-th-primary group-hover:text-${color} transition-colors truncate block`}>
+                  <Highlight text={post.displayTitle || post.title} query={query} />
+                </span>
+                <span className="text-[11px] text-th-tertiary truncate block">
+                  <Highlight text={post.description} query={query} />
+                </span>
+              </div>
+
+              {tags.length > 0 && (
+                <div className="hidden sm:flex gap-1.5 flex-shrink-0">
+                  {tags.slice(0, 3).map(tag => (
+                    <span key={tag} className="text-[11px] px-2 py-0.5 border border-slate-400/30 text-slate-400 rounded-sm">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {count > 0 && (
+                <span className="text-[11px] text-th-tertiary flex-shrink-0 font-mono" style={{ color: 'var(--highlight-text)', opacity: 0.7 }}>
+                  {visibleMatch ? '+' : ''}{count} {count === 1 ? 'match' : 'matches'}
+                </span>
+              )}
+            </Link>
+          );
+        })}
+      </div>
+    );
+  }
+
+  /* ── Default: editorial card layout ── */
   return (
     <div className="max-w-3xl mx-auto">
       {posts.map((post, index) => {
-        const contentExcerpt = getExcerpt(post.content, query);
         const readTime = calculateReadingTime(post.content);
         const tags = post.tags || [];
 
@@ -42,14 +92,14 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
                 {/* Title + Description — both clickable */}
                 <Link to={postPath(post.category, post.id)} className="thread-title-link group block mb-3">
                   <h3 className="thread-card-title text-xl font-bold text-th-primary transition-colors leading-tight mb-2">
-                    <Highlight text={post.displayTitle || post.title} query={query} />
+                    {post.displayTitle || post.title}
                   </h3>
                   <p className="text-sm text-th-secondary font-sans leading-relaxed">
-                    <Highlight text={post.description} query={query} />
+                    {post.description}
                   </p>
                 </Link>
 
-                {/* Topic pills (rose) */}
+                {/* Tag pills */}
                 {tags.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-4">
                     {tags.map(tag => (
@@ -62,27 +112,6 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
                     ))}
                   </div>
                 )}
-
-                {/* Search excerpt + match count */}
-                {query && (() => {
-                  const count = getMatchCount(post.content, query);
-                  if (!contentExcerpt && count === 0) return null;
-                  return (
-                    <div className="mb-4 text-sm p-2.5 animate-fade-in" style={{ backgroundColor: 'var(--highlight-bg)' }}>
-                      {contentExcerpt && (
-                        <div className="text-th-secondary">
-                          <Highlight text={contentExcerpt} query={query} />
-                        </div>
-                      )}
-                      {count > 0 && (
-                        <span className={`text-[11px] text-th-tertiary ${contentExcerpt ? 'mt-1.5' : ''} block`} style={{ color: 'var(--highlight-text)', opacity: 0.7 }}>
-                          {count} {count === 1 ? 'match' : 'matches'} in document
-                        </span>
-                      )}
-                    </div>
-                  );
-                })()}
-
               </div>
 
               {/* Photo — right, rose-tinted */}

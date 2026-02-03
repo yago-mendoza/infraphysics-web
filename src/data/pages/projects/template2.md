@@ -7,7 +7,7 @@ category: projects
 date: 2025-06-01
 thumbnail: https://images.unsplash.com/photo-1555949963-aa79dcee981c?q=80&w=400&auto=format&fit=crop
 description: "Built a local auto-scaling load balancer that spins instances, health-checks, and routes traffic based on load — shipped in ~4 hours."
-status: in-progress
+status: ongoing
 tags: [Load Balancing, Networking, DevOps]
 technologies: [Bun, Express, TypeScript, DevInfra]
 github: https://github.com/user/repo

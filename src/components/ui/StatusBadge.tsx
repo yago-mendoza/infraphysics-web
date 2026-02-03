@@ -10,14 +10,13 @@ interface StatusBadgeProps {
 }
 
 const statusConfig: Record<ProjectStatus, { color: string; text: string; icon: React.ReactNode }> = {
-  'active': { color: 'bg-emerald-500', text: 'Active', icon: <CircleIcon /> },
-  'completed': { color: 'bg-blue-500', text: 'Completed', icon: <CheckCircleIcon /> },
-  'archived': { color: 'bg-gray-400', text: 'Archived', icon: <CircleIcon /> },
-  'in-progress': { color: 'bg-amber-500', text: 'In Progress', icon: <CircleIcon /> },
+  'ongoing': { color: 'bg-blue-500', text: 'Ongoing', icon: <CircleIcon /> },
+  'implemented': { color: 'bg-amber-500', text: 'Implemented', icon: <CheckCircleIcon /> },
+  'completed': { color: 'bg-emerald-500', text: 'Completed', icon: <CheckCircleIcon /> },
 };
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label }) => {
-  const config = statusConfig[status] || statusConfig['active'];
+  const config = statusConfig[status] || statusConfig['ongoing'];
 
   return (
     <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] uppercase tracking-wider text-white rounded-sm ${config.color}`}>

@@ -9,10 +9,9 @@ import { postPath } from '../../config/categories';
 import type { SectionRendererProps } from './index';
 
 const STATUS_LABELS: Record<string, string> = {
-  'active': 'ONGOING',
-  'in-progress': 'ONGOING',
-  'completed': 'FINISHED',
-  'archived': 'ARCHIVED',
+  'ongoing': 'ONGOING',
+  'implemented': 'IMPLEMENTED',
+  'completed': 'COMPLETED',
 };
 
 export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, getMatchCount, color, accent }) => {
