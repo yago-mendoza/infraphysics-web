@@ -35,9 +35,6 @@ export default {
   preProcessors: [
     { name: 'text-color',       pattern: /\{#([a-fA-F0-9]{3,6}|[a-z]+):([^}]+)\}/g,  replace: '<span style="color:#$1">$2</span>' },
     { name: 'underline-solid',  pattern: /\{_:([^}]+)\}/g,                             replace: '<span style="text-decoration:underline">$1</span>' },
-    { name: 'underline-dashed', pattern: /\{-\.:([^}]+)\}/g,                           replace: '<span style="text-decoration:underline;text-decoration-style:dashed">$1</span>' },
-    { name: 'underline-dotted', pattern: /\{\.\.:([^}]+)\}/g,                          replace: '<span style="text-decoration:underline;text-decoration-style:dotted">$1</span>' },
-    { name: 'underline-wavy',   pattern: /\{~:([^}]+)\}/g,                             replace: '<span style="text-decoration:underline;text-decoration-style:wavy">$1</span>' },
     { name: 'highlight',        pattern: /\{==:([^}]+)\}/g,                             replace: '<mark>$1</mark>' },
     { name: 'small-caps',       pattern: /\{sc:([^}]+)\}/g,                             replace: '<span style="font-variant:small-caps">$1</span>' },
     { name: 'superscript',      pattern: /\{\^:([^}]+)\}/g,                             replace: '<sup>$1</sup>' },
@@ -46,7 +43,23 @@ export default {
   ],
 
   // Post-processors: applied AFTER marked.parse (on HTML output)
-  postProcessors: [],
+  postProcessors: [
+    {
+      name: 'code-terminal-wrapper',
+      pattern: /<pre><code class="language-(\w+)">([\s\S]*?)<\/code><\/pre>/g,
+      replace: (_match, lang, code) => {
+        const langLabel = lang.toUpperCase();
+        return `<div class="code-terminal"><div class="code-terminal-bar"><div class="code-terminal-dots"><span></span><span></span><span></span></div><span class="code-terminal-lang">${langLabel}</span></div><pre><code class="language-${lang}">${code}</code></pre></div>`;
+      },
+    },
+    {
+      name: 'code-terminal-wrapper-no-lang',
+      pattern: /<pre><code(?!\s+class="language-)>([\s\S]*?)<\/code><\/pre>/g,
+      replace: (_match, code) => {
+        return `<div class="code-terminal"><div class="code-terminal-bar"><div class="code-terminal-dots"><span></span><span></span><span></span></div><span class="code-terminal-lang"></span></div><pre><code>${code}</code></pre></div>`;
+      },
+    },
+  ],
 
   // Validation flags
   validation: {

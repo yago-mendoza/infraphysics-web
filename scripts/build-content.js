@@ -134,6 +134,10 @@ function processMarkdownFile(filePath) {
     demo: frontmatter.demo || null,
     duration: frontmatter.duration || null,
     featured: frontmatter.featured || null,
+    author: frontmatter.author || null,
+    subtitle: frontmatter.subtitle || null,
+    notes: frontmatter.notes || null,
+    topics: frontmatter.topics || null,
   };
 }
 

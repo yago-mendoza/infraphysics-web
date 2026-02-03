@@ -1,0 +1,807 @@
+/* ═══════════════════════════════════════════════════════════════
+   PROJECT POST VIEW — Terminal/Cyberpunk Theme
+   Aplica SOLO a category === 'projects'
+
+   ESTRUCTURA:
+   Section A — Layout shell (ProjectPostView)
+   Section B — Article content (HTML compilado desde markdown)
+   Section C — Bottom sections (actions, related)
+   Section D — Responsive
+
+   PARA CREAR OTRO TEMPLATE:
+   1. Copiar este archivo → <category>-article.css
+   2. Renombrar .project-* → .<category>-*
+   3. Ajustar colores/tipografía/layout
+   4. Crear <Category>PostView.tsx
+   5. Añadir al router en PostView.tsx
+   ═══════════════════════════════════════════════════════════════ */
+
+
+/* ─────────────────────────────────────────────────
+   A. LAYOUT SHELL
+   ───────────────────────────────────────────────── */
+
+/* A0. Page wrapper (contains box + related outside) */
+
+.project-page-wrapper {
+  max-width: 52rem;
+}
+
+/* A1. Container box */
+
+.project-container {
+  background: #111111;
+  border: 1px solid #2a2a2a;
+  border-radius: 2px;
+  overflow: hidden;
+  color-scheme: dark;
+}
+
+/* A2. Header bar */
+
+.project-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 0.7rem;
+  color: #555;
+  border-bottom: 1px solid #2a2a2a;
+  background: #0d0d0d;
+}
+
+.project-header-log {
+  letter-spacing: 0.05em;
+}
+
+.project-header-status {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #a3e635;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.project-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #a3e635;
+  display: inline-block;
+}
+
+/* A3. Hero image */
+
+.project-hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  overflow: hidden;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.project-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(80%) brightness(0.6) contrast(1.1);
+}
+
+.project-hero-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(to top, #111111, transparent);
+  pointer-events: none;
+}
+
+/* A4. Body */
+
+.project-body {
+  padding: 1.5rem 2rem 2rem;
+}
+
+/* A5. Nav row */
+
+.project-nav-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.project-back-link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: #a3e635;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.project-back-link:hover {
+  opacity: 0.7;
+}
+
+/* A6. Social icon buttons */
+
+.project-social-icons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.project-social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #2a2a2a;
+  background: #111111;
+  color: #555;
+  transition: all 0.2s ease;
+  border-radius: 2px;
+  text-decoration: none;
+}
+
+.project-social-github:hover {
+  color: #a3e635;
+  border-color: rgba(163, 230, 53, 0.4);
+  background: rgba(163, 230, 53, 0.05);
+}
+
+.project-social-linkedin:hover {
+  color: #0A66C2;
+  border-color: rgba(10, 102, 194, 0.4);
+  background: rgba(10, 102, 194, 0.05);
+}
+
+/* A7. Tag pills — two rows: topics (purple) + technologies (lime) */
+
+.project-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.project-pills-topics {
+  margin-bottom: 0.4rem;
+}
+
+.project-pills-tech {
+  margin-bottom: 1.25rem;
+}
+
+.project-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  padding: 0.25rem 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Topics → purple */
+.project-pill-topic {
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  color: #a855f7;
+  background: rgba(168, 85, 247, 0.05);
+}
+
+/* Technologies → lime */
+.project-pill-tech {
+  border: 1px solid rgba(163, 230, 53, 0.3);
+  color: #a3e635;
+  background: rgba(163, 230, 53, 0.05);
+}
+
+/* A8. Title block */
+
+.project-title-block {
+  margin-bottom: 1.25rem;
+}
+
+.project-title {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 2.75rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #f0f0f0;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+/* Subtitle — slightly smaller, gray */
+.project-subtitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+}
+
+@media (min-width: 768px) {
+  .project-title {
+    font-size: 3.5rem;
+  }
+  .project-subtitle {
+    font-size: 1.25rem;
+  }
+}
+
+/* A9. Meta — date + author on same line */
+
+.project-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.project-meta-date {
+  color: #a3e635;
+}
+
+.project-meta-author {
+  color: #888;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.project-meta-author:hover {
+  color: #a3e635;
+}
+
+/* A10. Dividers */
+
+/* Thin gray line (between meta and notes) */
+.project-divider-thin {
+  border-top: 1px solid #2a2a2a;
+  margin-top: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Thick white line (between notes and article) */
+.project-divider-thick {
+  border-top: 2px solid #555;
+  margin-top: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+/* A11. Author notes */
+
+.project-notes {
+  margin-bottom: 0.5rem;
+}
+
+.project-notes-line {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 0.15rem;
+}
+
+
+/* ─────────────────────────────────────────────────
+   B. ARTICLE CONTENT (.project-article)
+   HTML compilado desde markdown
+   ───────────────────────────────────────────────── */
+
+/* B1. Headings */
+
+.project-article h1,
+.project-article h2,
+.project-article h3,
+.project-article h4 {
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+
+.project-article h1 {
+  font-size: 1.75rem;
+  color: #a3e635;
+  margin: 2.5rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #222;
+}
+
+.project-article h2 {
+  font-size: 1.35rem;
+  color: #e8e8e8;
+  margin: 2rem 0 0.75rem;
+}
+
+.project-article h3 {
+  font-size: 1.05rem;
+  color: #d0d0d0;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.project-article h4 {
+  font-size: 0.9rem;
+  color: #c0c0c0;
+  margin: 1.25rem 0 0.4rem;
+}
+
+/* B2. Paragraphs */
+
+.project-article p {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  color: #b0b0b0;
+  line-height: 1.8;
+  margin-bottom: 1rem;
+}
+
+/* B3. Blockquotes */
+
+.project-article blockquote {
+  border-left: 3px solid #a3e635;
+  background: rgba(163, 230, 53, 0.04);
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+  border-radius: 0 4px 4px 0;
+}
+
+.project-article blockquote p {
+  color: #ccc;
+  margin-bottom: 0;
+}
+
+/* B4. Unordered lists */
+
+.project-article ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 1rem 0;
+}
+
+.project-article ul li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  color: #b0b0b0;
+  line-height: 1.7;
+}
+
+.project-article ul li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #a3e635;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+/* B5. Ordered lists */
+
+.project-article ol {
+  padding-left: 1.5rem;
+  margin: 1rem 0;
+}
+
+.project-article ol li {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  color: #b0b0b0;
+  line-height: 1.7;
+  margin-bottom: 0.5rem;
+}
+
+.project-article ol li::marker {
+  color: #a3e635;
+  font-weight: bold;
+}
+
+/* B6. Code blocks — terminal macOS */
+
+.project-article .code-terminal {
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  margin: 1.5rem 0;
+  overflow: hidden;
+}
+
+.project-article .code-terminal-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: #1a1a1a;
+  border-bottom: 1px solid #222;
+}
+
+.project-article .code-terminal-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.project-article .code-terminal-dots span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.project-article .code-terminal-dots span:nth-child(1) { background: #ff5f57; }
+.project-article .code-terminal-dots span:nth-child(2) { background: #febc2e; }
+.project-article .code-terminal-dots span:nth-child(3) { background: #28c840; }
+
+.project-article .code-terminal-lang {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.project-article .code-terminal pre {
+  margin: 0;
+  padding: 1rem;
+  overflow-x: auto;
+  background: transparent;
+  border: none;
+}
+
+.project-article .code-terminal code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: #ccc;
+  line-height: 1.6;
+  background: transparent;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+}
+
+/* Fallback: pre>code without wrapper */
+.project-article pre:not(.code-terminal pre) {
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+}
+
+.project-article pre:not(.code-terminal pre) code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: #ccc;
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+
+/* B7. Inline code */
+
+.project-article code:not(pre code) {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8em;
+  color: #a3e635;
+  background: rgba(163, 230, 53, 0.08);
+  border: 1px solid rgba(163, 230, 53, 0.15);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+}
+
+/* B8. Horizontal rules */
+
+.project-article hr {
+  border: none;
+  border-top: 1px solid #2a2a2a;
+  margin: 2rem 0;
+}
+
+/* B9. Links */
+
+.project-article a:not(.wiki-ref):not(.wiki-ref-resolved) {
+  color: #a3e635;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(163, 230, 53, 0.3);
+  transition: border-color 0.2s;
+}
+
+.project-article a:not(.wiki-ref):not(.wiki-ref-resolved):hover {
+  border-bottom-color: #a3e635;
+}
+
+/* B10. Images */
+
+.project-article img {
+  border-radius: 4px;
+  border: 1px solid #2a2a2a;
+  margin: 1.5rem 0;
+}
+
+/* B11. Tables */
+
+.project-article table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+}
+
+.project-article th {
+  background: #1a1a1a;
+  color: #a3e635;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #333;
+  text-align: left;
+}
+
+.project-article td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #1a1a1a;
+  color: #b0b0b0;
+}
+
+/* B12. Strong / Em */
+
+.project-article strong {
+  color: #e0e0e0;
+  font-weight: 700;
+}
+
+.project-article em {
+  color: #ccc;
+  font-style: italic;
+}
+
+/* B13. <mark> highlight */
+
+.project-article mark {
+  background: rgba(163, 230, 53, 0.15);
+  color: #a3e635;
+  padding: 0.1em 0.3em;
+  border-radius: 2px;
+}
+
+/* B14. <kbd> keyboard */
+
+.project-article kbd {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75em;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-bottom: 2px solid #333;
+  color: #ccc;
+  padding: 0.1em 0.4em;
+  border-radius: 3px;
+}
+
+/* B15. Wiki refs */
+
+.project-article .wiki-ref,
+.project-article .wiki-ref-resolved {
+  color: #a3e635;
+  border-bottom: 1px dashed rgba(163, 230, 53, 0.4);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.project-article .wiki-ref:hover,
+.project-article .wiki-ref-resolved:hover {
+  border-bottom-style: solid;
+}
+
+/* B16. Side image layouts */
+
+.project-article .img-side-layout {
+  margin: 1.5rem 0;
+}
+
+.project-article .img-side-layout .img-side-img {
+  border-radius: 4px;
+  border: 1px solid #2a2a2a;
+}
+
+.project-article .img-side-layout .img-side-content p {
+  color: #b0b0b0;
+}
+
+
+/* ─────────────────────────────────────────────────
+   C. BOTTOM SECTIONS
+   ───────────────────────────────────────────────── */
+
+/* C1. Actions bar (inside box) */
+
+.project-actions {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #2a2a2a;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.project-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.project-actions-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: #555;
+  text-transform: uppercase;
+}
+
+.project-actions-link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: #666;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.project-actions-link:hover {
+  color: #a3e635;
+}
+
+.project-actions-github {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: #888;
+  border: 1px solid #2a2a2a;
+  background: #111;
+  text-decoration: none;
+  transition: all 0.2s;
+  border-radius: 2px;
+}
+
+.project-actions-github:hover {
+  color: #a3e635;
+  border-color: rgba(163, 230, 53, 0.3);
+}
+
+/* C2. Related posts (OUTSIDE box) */
+
+.project-related {
+  margin-top: 2.5rem;
+}
+
+.project-related-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.project-related-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.project-related-viewall {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: #a3e635;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: opacity 0.2s;
+}
+
+.project-related-viewall:hover {
+  opacity: 0.7;
+}
+
+.project-related-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .project-related-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.project-related-card {
+  display: block;
+  border: 1px solid #1a1a1a;
+  overflow: hidden;
+  background: #0d0d0d;
+  transition: border-color 0.2s;
+  text-decoration: none;
+}
+
+.project-related-card:hover {
+  border-color: #2a2a2a;
+}
+
+.project-related-thumb {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #0a0a0a;
+}
+
+.project-related-thumb img {
+  border: none;
+  border-radius: 0;
+  margin: 0;
+}
+
+.project-related-info {
+  padding: 0.75rem;
+}
+
+.project-related-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.project-related-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ccc;
+  text-transform: lowercase;
+  line-height: 1.3;
+  transition: color 0.2s;
+}
+
+.project-related-card:hover .project-related-name {
+  color: #a3e635;
+}
+
+
+/* ─────────────────────────────────────────────────
+   D. RESPONSIVE
+   ───────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .project-body {
+    padding: 1rem 1.25rem 1.5rem;
+  }
+  .project-title {
+    font-size: 2rem;
+  }
+  .project-subtitle {
+    font-size: 0.95rem;
+  }
+  .project-hero {
+    aspect-ratio: 16 / 9;
+  }
+  .project-nav-row {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+}
