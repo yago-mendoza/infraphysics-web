@@ -36,9 +36,9 @@ const PAGE_CONFIG: Record<string, { initial: number; page: number }> = {
 };
 
 const STATUS_FILTER_CONFIG: Record<string, { label: string; color: string }> = {
-  'ongoing': { label: 'Ongoing', color: 'blue-400' },
-  'implemented': { label: 'Implemented', color: 'amber-400' },
-  'completed': { label: 'Completed', color: 'emerald-400' },
+  'ongoing': { label: 'Ongoing', color: 'amber-400' },
+  'implemented': { label: 'Implemented', color: 'violet-400' },
+  'completed': { label: 'Completed', color: 'blue-400' },
 };
 
 export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
