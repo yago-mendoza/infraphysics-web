@@ -4,6 +4,7 @@ import matter from 'gray-matter';
 import { marked, Renderer } from 'marked';
 import { load as loadYaml } from 'js-yaml';
 import { fileURLToPath } from 'url';
+import { createHighlighter, bundledLanguages } from 'shiki';
 import { validateFieldnotes } from './validate-fieldnotes.js';
 import compilerConfig from './compiler.config.js';
 
@@ -13,6 +14,12 @@ const __dirname = path.dirname(__filename);
 // Custom renderer for images with positioning (center/full only - left/right handled by preprocessor)
 const customRenderer = new Renderer();
 const { titlePattern, classMap } = compilerConfig.imagePositions;
+
+// Override blockquote renderer — > produces small text, not blockquotes
+customRenderer.blockquote = function(token) {
+  const body = this.parser.parse(token.tokens);
+  return `<div class="small-text">${body}</div>\n`;
+};
 
 customRenderer.image = function({ href, title, text }) {
   let className = '';
@@ -50,6 +57,118 @@ function applyPreProcessors(markdown) {
     result = result.replace(rule.pattern, rule.replace);
   }
   return result;
+}
+
+// ── Backtick protection ──
+// Shields inline code and fenced code blocks from pre-processors
+
+function protectBackticks(markdown) {
+  const placeholders = [];
+
+  // 1. Fenced code blocks (``` ... ```)
+  let result = markdown.replace(/```[\s\S]*?```/g, (match) => {
+    placeholders.push(match);
+    return `%%CBLK_${placeholders.length - 1}%%`;
+  });
+
+  // 2. Inline code — double backticks then single
+  result = result.replace(/``[^`]+``|`[^`\n]+`/g, (match) => {
+    placeholders.push(match);
+    return `%%CBLK_${placeholders.length - 1}%%`;
+  });
+
+  return { text: result, placeholders };
+}
+
+function restoreBackticks(text, placeholders) {
+  return text.replace(/%%CBLK_(\d+)%%/g, (_, idx) => placeholders[parseInt(idx)]);
+}
+
+// ── Copy button icon ──
+
+const COPY_ICON = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+const COPY_BTN = `<button class="copy-btn" aria-label="Copiar">${COPY_ICON} Copiar</button>`;
+
+// ── Typed blockquotes {bkqt:type:text} ──
+
+const BKQT_TYPES = {
+  note:       { label: 'Note' },
+  tip:        { label: 'Tip' },
+  warning:    { label: 'Warning' },
+  danger:     { label: 'Danger' },
+  deepdive:   { label: 'Deep dive' },
+  keyconcept: { label: 'Key concept' },
+};
+
+function processCustomBlockquotes(markdown, placeholders) {
+  return markdown.replace(
+    /\{bkqt:(note|tip|warning|danger|deepdive|keyconcept):([\s\S]*?)\}/g,
+    (_, type, text) => {
+      const config = BKQT_TYPES[type];
+      const withNewlines = text.trim()
+        .replace(/\/n(?=\s*(?:- |\d+\. ))/g, '\n')
+        .replace(/\/n/g, '\n\n');
+      const restored = restoreBackticks(withNewlines, placeholders);
+      const body = marked.parse(restored);
+      return `<div class="bkqt bkqt-${type}"><div class="bkqt-header"><span class="bkqt-label">${config.label}/</span>${COPY_BTN}</div><div class="bkqt-body">${body}</div></div>`;
+    }
+  );
+}
+
+// ── HTML code-segment protection ──
+// Wraps a processing function so it skips <pre> and <code> content
+
+function processOutsideCode(html, fn) {
+  const segments = [];
+  let safe = html.replace(/<pre[\s\S]*?<\/pre>|<code[\s\S]*?<\/code>/g, (match) => {
+    segments.push(match);
+    return `%%CSEG_${segments.length - 1}%%`;
+  });
+  safe = fn(safe);
+  return safe.replace(/%%CSEG_(\d+)%%/g, (_, idx) => segments[parseInt(idx)]);
+}
+
+// ── Unified [[link]] processing ──
+// All [[...]] links are processed in a single pass.
+// Address pattern determines the type:
+//   projects/slug, threads/slug, bits2bricks/slug → cross-doc link (display text required)
+//   anything else (word, parent//child)           → second-brain wiki-ref
+
+const buildErrors = [];
+
+const CROSS_DOC_CATEGORIES = {
+  projects:    { path: '/lab/projects' },
+  threads:     { path: '/blog/threads' },
+  bits2bricks: { path: '/blog/bits2bricks' },
+};
+
+function processAllLinks(html) {
+  if (!compilerConfig.wikiLinks.enabled) return html;
+
+  return html.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (match, address, displayText) => {
+    const crossDocMatch = address.match(/^(projects|threads|bits2bricks)\/(.*)/);
+
+    if (crossDocMatch) {
+      const [, category, slug] = crossDocMatch;
+      const config = CROSS_DOC_CATEGORIES[category];
+      if (!config) return match;
+
+      if (!displayText) {
+        const msg = `cross-doc link [[${address.trim()}]] missing display text — use [[${address.trim()}|Display Text]]`;
+        console.error(`  \x1b[31mERROR: ${msg}\x1b[0m`);
+        buildErrors.push(msg);
+        return match;
+      }
+
+      const href = `${config.path}/${slug.trim()}`;
+      return `<a class="doc-ref doc-ref-${category}" href="${href}">${displayText.trim()}</a>`;
+    }
+
+    // Second-brain wiki-ref
+    const segments = address.split('//');
+    const display = displayText ? displayText.trim() : segments[segments.length - 1].trim();
+    return `<a class="wiki-ref" data-address="${address}">${display}</a>`;
+  });
 }
 
 // Apply post-processors (after marked.parse, on HTML)
@@ -104,6 +223,78 @@ ${paragraphs}
   return result.join('\n\n');
 }
 
+// ── Shiki syntax highlighting ──
+
+// Per-language theme pairs (dark key → --shiki-dark, light key → --shiki-light)
+const LANG_THEMES = {
+  typescript: { dark: 'one-dark-pro',      light: 'one-light'        },
+  javascript: { dark: 'one-dark-pro',      light: 'one-light'        },
+  python:     { dark: 'catppuccin-mocha',  light: 'catppuccin-latte' },
+  rust:       { dark: 'rose-pine',         light: 'rose-pine-dawn'   },
+  go:         { dark: 'min-dark',          light: 'min-light'        },
+  yaml:       { dark: 'github-dark',       light: 'github-light'     },
+  json:       { dark: 'github-dark',       light: 'github-light'     },
+};
+const DEFAULT_THEMES = { dark: 'vitesse-dark', light: 'vitesse-light' };
+
+function decodeHtmlEntities(str) {
+  return str
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+}
+
+function highlightCodeBlocks(html, highlighter) {
+  // Code blocks with language tag
+  html = html.replace(
+    /<pre><code class="language-(\w+)">([\s\S]*?)<\/code><\/pre>/g,
+    (_match, lang, escapedCode) => {
+      const rawCode = decodeHtmlEntities(escapedCode).replace(/\n$/, '');
+      const langLabel = lang.toUpperCase();
+      const themes = LANG_THEMES[lang] || DEFAULT_THEMES;
+
+      let codeContent;
+      try {
+        const highlighted = highlighter.codeToHtml(rawCode, {
+          lang,
+          themes,
+          defaultColor: false,
+        });
+        const inner = highlighted.match(/<code>([\s\S]*?)<\/code>/);
+        codeContent = inner ? inner[1] : escapedCode;
+      } catch {
+        codeContent = escapedCode;
+      }
+
+      return `<div class="code-terminal"><div class="code-terminal-bar"><div class="code-terminal-dots"><span></span><span></span><span></span></div><div class="code-terminal-right"><span class="code-terminal-lang">${langLabel}</span>${COPY_BTN}</div></div><pre><code class="language-${lang}">${codeContent}</code></pre></div>`;
+    }
+  );
+
+  // Code blocks without language tag
+  html = html.replace(
+    /<pre><code(?!\s+class="language-)>([\s\S]*?)<\/code><\/pre>/g,
+    (_match, code) => {
+      return `<div class="code-terminal"><div class="code-terminal-bar"><div class="code-terminal-dots"><span></span><span></span><span></span></div><div class="code-terminal-right"><span class="code-terminal-lang"></span>${COPY_BTN}</div></div><pre><code>${code}</code></pre></div>`;
+    }
+  );
+
+  return html;
+}
+
+// Collect all themes needed and create highlighter
+const allThemes = new Set([DEFAULT_THEMES.dark, DEFAULT_THEMES.light]);
+for (const t of Object.values(LANG_THEMES)) {
+  allThemes.add(t.dark);
+  allThemes.add(t.light);
+}
+
+const highlighter = await createHighlighter({
+  themes: [...allThemes],
+  langs: Object.keys(bundledLanguages),
+});
+
 const PAGES_DIR = path.join(__dirname, '../src/data/pages');
 const OUTPUT_FILE = path.join(__dirname, '../src/data/posts.generated.json');
 const CATEGORIES_OUTPUT = path.join(__dirname, '../src/data/categories.generated.json');
@@ -113,10 +304,15 @@ function processMarkdownFile(filePath) {
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   const { data: frontmatter, content } = matter(fileContent);
 
-  // Pipeline: preProcessors → sideImages → marked → postProcessors
-  const withCustomSyntax = applyPreProcessors(content);
-  const withSideImages = preprocessSideImages(withCustomSyntax);
-  const htmlContent = applyPostProcessors(marked.parse(withSideImages));
+  // Pipeline: protect → preProcessors → bkqt (with placeholders) → restore → sideImages → marked → shiki → postProcessors
+  const { text: safeContent, placeholders } = protectBackticks(content);
+  const withCustomSyntax = applyPreProcessors(safeContent);
+  const withBkqt = processCustomBlockquotes(withCustomSyntax, placeholders);
+  const restored = restoreBackticks(withBkqt, placeholders);
+  const withSideImages = preprocessSideImages(restored);
+  const parsed = marked.parse(withSideImages);
+  const highlighted = highlightCodeBlocks(parsed, highlighter);
+  const htmlContent = applyPostProcessors(highlighted);
 
   return {
     id: frontmatter.id,
@@ -247,10 +443,15 @@ function processFieldnotesFile() {
       }
     }
 
-    // Pipeline: preProcessors → sideImages → marked → postProcessors
-    const withCustomSyntax = applyPreProcessors(bodyMd);
-    const withSideImages = preprocessSideImages(withCustomSyntax);
-    const htmlContent = applyPostProcessors(marked.parse(withSideImages));
+    // Pipeline: protect → preProcessors → bkqt (with placeholders) → restore → sideImages → marked → shiki → postProcessors
+    const { text: safeBody, placeholders } = protectBackticks(bodyMd);
+    const withCustomSyntax = applyPreProcessors(safeBody);
+    const withBkqt = processCustomBlockquotes(withCustomSyntax, placeholders);
+    const restoredBody = restoreBackticks(withBkqt, placeholders);
+    const withSideImages = preprocessSideImages(restoredBody);
+    const parsed = marked.parse(withSideImages);
+    const highlighted = highlightCodeBlocks(parsed, highlighter);
+    const htmlContent = applyPostProcessors(highlighted);
 
     return {
       id,
@@ -269,15 +470,6 @@ function processFieldnotesFile() {
   });
 }
 
-// --- Wiki-link build-time processing for ALL posts ---
-
-function processWikiLinks(html) {
-  if (!compilerConfig.wikiLinks.enabled) return html;
-  return html.replace(compilerConfig.wikiLinks.pattern, (_match, address) => {
-    return compilerConfig.wikiLinks.toHtml(address);
-  });
-}
-
 // Main
 console.log('Building content...');
 
@@ -285,16 +477,22 @@ const markdownFiles = getAllMarkdownFiles(PAGES_DIR);
 const regularPosts = markdownFiles.map(processMarkdownFile);
 const fieldnotePosts = processFieldnotesFile();
 
-// Apply wiki-link processing to all posts
+// Apply unified [[link]] processing to all posts (skipping <code> content)
 const allPosts = [...regularPosts, ...fieldnotePosts].map(post => ({
   ...post,
-  content: processWikiLinks(post.content),
+  content: processOutsideCode(post.content, processAllLinks),
 }));
 
 const categories = getAllCategoryConfigs(PAGES_DIR);
 
-// Validate fieldnotes
-validateFieldnotes(fieldnotePosts, allPosts, compilerConfig.validation);
+// Validate fieldnotes + wiki-links
+const validation = validateFieldnotes(fieldnotePosts, allPosts, compilerConfig.validation);
+
+const totalErrors = buildErrors.length + validation.errors;
+if (totalErrors > 0) {
+  console.error(`\x1b[31mBuild failed with ${totalErrors} error(s)\x1b[0m`);
+  process.exit(1);
+}
 
 // --- Home featured posts ---
 

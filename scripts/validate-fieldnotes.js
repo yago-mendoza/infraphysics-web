@@ -53,12 +53,13 @@ export function validateFieldnotes(fieldnotePosts, allPosts, validationConfig) {
       while ((match = addressRegex.exec(post.content)) !== null) {
         const address = match[1];
         if (!knownAddresses.has(address)) {
-          console.log(`  \x1b[33mWARN:  [[${address}]] in post "${post.id}" has no fieldnote block\x1b[0m`);
-          warnings++;
+          console.log(`  \x1b[31mERROR: [[${address}]] in post "${post.id}" has no fieldnote block\x1b[0m`);
+          errors++;
         }
       }
     }
   }
 
   console.log(`[FIELDNOTES] ${errors} error${errors !== 1 ? 's' : ''}, ${warnings} warning${warnings !== 1 ? 's' : ''}\n`);
+  return { errors, warnings };
 }

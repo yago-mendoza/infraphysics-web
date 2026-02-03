@@ -120,11 +120,31 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
     };
 
     const onClick = (e: MouseEvent) => {
+      // Copy button (shared class for code blocks + blockquotes)
+      const copyBtn = (e.target as HTMLElement).closest('.copy-btn') as HTMLButtonElement | null;
+      if (copyBtn) {
+        const svgIcon = copyBtn.querySelector('svg')?.outerHTML || '';
+        let text = '';
+        const terminal = copyBtn.closest('.code-terminal');
+        const bkqt = copyBtn.closest('.bkqt');
+        if (terminal) {
+          text = terminal.querySelector('code')?.textContent || '';
+        } else if (bkqt) {
+          text = bkqt.querySelector('.bkqt-body')?.textContent || '';
+        }
+        navigator.clipboard.writeText(text).then(() => {
+          copyBtn.innerHTML = `${svgIcon} Copiado`;
+          copyBtn.classList.add('copied');
+          setTimeout(() => { copyBtn.innerHTML = `${svgIcon} Copiar`; copyBtn.classList.remove('copied'); }, 1500);
+        });
+        return;
+      }
+
+      // Wiki links
       const link = (e.target as HTMLElement).closest('a.wiki-ref-resolved') as HTMLAnchorElement | null;
       if (link) {
         e.preventDefault();
         hoveredLinkRef.current = null;
-        // Preview clears via useEffect on location.pathname change
         const href = link.getAttribute('href');
         if (href) {
           const match = href.match(/^\/lab\/second-brain\/(.+)$/);

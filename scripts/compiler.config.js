@@ -43,23 +43,8 @@ export default {
   ],
 
   // Post-processors: applied AFTER marked.parse (on HTML output)
-  postProcessors: [
-    {
-      name: 'code-terminal-wrapper',
-      pattern: /<pre><code class="language-(\w+)">([\s\S]*?)<\/code><\/pre>/g,
-      replace: (_match, lang, code) => {
-        const langLabel = lang.toUpperCase();
-        return `<div class="code-terminal"><div class="code-terminal-bar"><div class="code-terminal-dots"><span></span><span></span><span></span></div><span class="code-terminal-lang">${langLabel}</span></div><pre><code class="language-${lang}">${code}</code></pre></div>`;
-      },
-    },
-    {
-      name: 'code-terminal-wrapper-no-lang',
-      pattern: /<pre><code(?!\s+class="language-)>([\s\S]*?)<\/code><\/pre>/g,
-      replace: (_match, code) => {
-        return `<div class="code-terminal"><div class="code-terminal-bar"><div class="code-terminal-dots"><span></span><span></span><span></span></div><span class="code-terminal-lang"></span></div><pre><code>${code}</code></pre></div>`;
-      },
-    },
-  ],
+  // Note: code-terminal wrapping + Shiki highlighting is handled in build-content.js
+  postProcessors: [],
 
   // Validation flags
   validation: {

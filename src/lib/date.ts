@@ -41,6 +41,15 @@ export const formatRelativeTime = (dateStr: string): string => {
 };
 
 /**
+ * Format date for terminal display (YYYY/MM/DD)
+ */
+export const formatDateTerminal = (dateStr: string): string => {
+  if (!dateStr) return '';
+  const cleaned = String(dateStr).split('T')[0];
+  return cleaned.replace(/-/g, '/');
+};
+
+/**
  * Format date for timeline display (// DATE 2025.05.22)
  */
 export const formatDateTimeline = (dateStr: string): string => {

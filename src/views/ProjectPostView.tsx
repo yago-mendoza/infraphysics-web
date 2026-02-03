@@ -1,29 +1,15 @@
 // Project post view — terminal/cyberpunk theme for category === 'projects'
 
-import React, { useMemo, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { formatDate, calculateReadingTime } from '../lib';
+import React, { useMemo, useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { formatDate, formatDateTerminal } from '../lib';
 import { allFieldNotes } from '../lib/brainIndex';
 import { WikiContent } from '../components/WikiContent';
 import { CATEGORY_CONFIG, sectionPath as getSectionPath, postPath } from '../config/categories';
-import { ArrowRightIcon } from '../components/icons';
+import { ArrowRightIcon, GitHubIcon, LinkedInIcon } from '../components/icons';
 import { posts } from '../data/data';
 import { Post } from '../types';
 import '../styles/project-article.css';
-
-// ── SVG Icons (inline for full hover control) ──
-
-const GitHubSvg: React.FC<{ className?: string }> = ({ className }) => (
-  <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-  </svg>
-);
-
-const LinkedInSvg: React.FC<{ className?: string }> = ({ className }) => (
-  <svg className={className} viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-  </svg>
-);
 
 interface ProjectPostViewProps {
   post: Post;
@@ -31,47 +17,48 @@ interface ProjectPostViewProps {
 
 export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
   const sectionPathUrl = getSectionPath(post.category);
+  const location = useLocation();
 
   // Status label — real project status
   const statusLabel = (() => {
     switch (post.status) {
       case 'completed': return 'FINISHED';
-      case 'active': return 'IN PROGRESS';
+      case 'active':
       case 'in-progress': return 'IN PROGRESS';
       case 'archived': return 'ARCHIVED';
       default: return 'LOGGED';
     }
   })();
 
-  // Date: extract YYYY/MM/DD only (handle ISO strings like "2025-06-01T00:00:00.000Z")
-  const formattedDate = (() => {
-    if (!post.date) return '';
-    const dateStr = String(post.date);
-    const cleaned = dateStr.split('T')[0];
-    return cleaned.replace(/-/g, '/');
-  })();
+  const formattedDate = formatDateTerminal(post.date);
 
-  // Author display
   const authorDisplay = post.author
     ? post.author.toUpperCase()
     : 'UNKNOWN';
 
-  // Notes: normalize to array
-  const notesArray: string[] = (() => {
-    if (!post.notes) return [];
-    if (Array.isArray(post.notes)) return post.notes;
-    return String(post.notes).split('\n').map(l => l.trim()).filter(Boolean);
-  })();
+  const notesArray: string[] = !post.notes
+    ? []
+    : Array.isArray(post.notes)
+      ? post.notes
+      : String(post.notes).split('\n').map(l => l.trim()).filter(Boolean);
 
-  // Extract headings, inject anchor IDs + back-to-index buttons, compute hierarchical numbering
+  /*
+   * Heading extraction + content enrichment
+   *
+   * 1. Regex scans post.content for <h1>–<h4> tags.
+   * 2. For each heading it generates a URL-safe slug (deduped with a suffix counter),
+   *    injects an `id` attribute for anchor linking, and appends a small "back to
+   *    index" SVG button (visible on hover via CSS).
+   * 3. Headings are collected into a flat array with hierarchical numbering
+   *    (1, 1.1, 1.2, 2, …) derived from depth relative to the shallowest heading level.
+   *
+   * Returns:
+   * - headings: ordered list with { level, text, id, number, depth }
+   * - contentWithIds: the enriched HTML string ready for WikiContent
+   */
   const { headings, contentWithIds } = useMemo(() => {
     const raw: { level: number; text: string; id: string }[] = [];
     const seen = new Map<string, number>();
-
-    const backBtn = '<a href="#project-toc" class="project-toc-back" aria-label="Back to index">'
-      + '<svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
-      + '<path d="M9 10H3V4"/><path d="M1 6L3 4L5 6"/>'
-      + '</svg></a>';
 
     const processed = post.content.replace(
       /<(h[1-4])(\s[^>]*)?>(.+?)<\/\1>/gi,
@@ -91,7 +78,7 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
 
         const id = `toc-${slug}`;
         raw.push({ level, text, id });
-        return `<${tag}${attrs || ''} id="${id}">${inner}${backBtn}</${tag}>`;
+        return `<${tag}${attrs || ''} id="${id}">${inner}</${tag}>`;
       }
     );
 
@@ -116,25 +103,97 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
     return { headings, contentWithIds: processed };
   }, [post.content]);
 
-  // Event delegation for back-to-index buttons injected into headings
+  const [tocOpen, setTocOpen] = useState(false);
+
+  // Scroll-based active heading tracking for inline TOC highlight.
+  // Kept as a scroll listener (rather than IntersectionObserver) because the TOC
+  // needs to highlight the *last* heading that scrolled past a fixed offset (120px),
+  // which is simpler with getBoundingClientRect than with IO threshold math.
+  const [activeId, setActiveId] = useState<string>('');
+
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      const target = (e.target as HTMLElement).closest('.project-toc-back');
-      if (target) {
-        e.preventDefault();
-        document.getElementById('project-toc')?.scrollIntoView({ behavior: 'smooth' });
+    if (headings.length < 2) return;
+
+    let currentActiveId = '';
+
+    const handleScroll = () => {
+      let newActiveId = '';
+      for (const h of headings) {
+        const el = document.getElementById(h.id);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= 120) {
+            newActiveId = h.id;
+          }
+        }
+      }
+      if (newActiveId !== currentActiveId) {
+        currentActiveId = newActiveId;
+        setActiveId(newActiveId);
       }
     };
-    document.addEventListener('click', handler);
-    return () => document.removeEventListener('click', handler);
-  }, []);
 
-  // Related posts
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [headings]);
+
+  // Compute active heading + its ancestor chain (parent sections)
+  const activeIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (!activeId || headings.length < 2) return ids;
+
+    const activeIndex = headings.findIndex(h => h.id === activeId);
+    if (activeIndex === -1) return ids;
+
+    ids.add(activeId);
+
+    // Walk backwards to find ancestor headings at each shallower depth
+    let currentDepth = headings[activeIndex].depth;
+    for (let i = activeIndex - 1; i >= 0; i--) {
+      if (headings[i].depth < currentDepth) {
+        ids.add(headings[i].id);
+        currentDepth = headings[i].depth;
+        if (currentDepth === 0) break;
+      }
+    }
+
+    return ids;
+  }, [activeId, headings]);
+
+  // Related posts — Fisher-Yates shuffle (unbiased, unlike sort+Math.random)
   const recommendedPosts = useMemo(() => {
     const others = posts.filter(p => p.id !== post.id && p.category !== 'fieldnotes');
-    const shuffled = others.sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 3);
+    for (let i = others.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [others[i], others[j]] = [others[j], others[i]];
+    }
+    return others.slice(0, 3);
   }, [post]);
+
+  // TOC list rendering
+  const tocList = headings.length > 1 ? (
+    <ol className="project-toc-list">
+      {headings.map((h) => (
+        <li
+          key={h.id}
+          className={`project-toc-item project-toc-depth-${h.depth}`}
+        >
+          <a
+            href={`#${h.id}`}
+            className={`project-toc-link${activeIds.has(h.id) ? ' project-toc-link--active' : ''}`}
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById(h.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
+          >
+            <span className="project-toc-num">{h.number}</span>
+            {h.text}
+          </a>
+        </li>
+      ))}
+    </ol>
+  ) : null;
 
   return (
     <div className="project-page-wrapper animate-fade-in">
@@ -185,17 +244,17 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
                   className="project-social-btn project-social-github"
                   title="GitHub"
                 >
-                  <GitHubSvg />
+                  <GitHubIcon size={18} />
                 </a>
               )}
               <a
-                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`}
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="project-social-btn project-social-linkedin"
                 title="Share on LinkedIn"
               >
-                <LinkedInSvg />
+                <LinkedInIcon size={18} />
               </a>
             </div>
           </div>
@@ -249,30 +308,31 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
           {/* Thick white line before article */}
           <div className="project-divider-thick" />
 
-          {/* Table of Contents */}
+          {/* Table of Contents — collapsible */}
           {headings.length > 1 && (
             <nav className="project-toc" id="project-toc">
-              <div className="project-toc-label">// CONTENTS</div>
-              <ol className="project-toc-list">
-                {headings.map((h) => (
-                  <li
-                    key={h.id}
-                    className={`project-toc-item project-toc-depth-${h.depth}`}
-                  >
-                    <a
-                      href={`#${h.id}`}
-                      className="project-toc-link"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        document.getElementById(h.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }}
-                    >
-                      <span className="project-toc-num">{h.number}</span>
-                      {h.text}
-                    </a>
-                  </li>
-                ))}
-              </ol>
+              <button
+                type="button"
+                className="project-toc-toggle"
+                onClick={() => setTocOpen(o => !o)}
+                aria-expanded={tocOpen}
+              >
+                <span className="project-toc-label">// CONTENTS</span>
+                <svg
+                  className={`project-toc-chevron${tocOpen ? ' project-toc-chevron--open' : ''}`}
+                  viewBox="0 0 12 12"
+                  width="12"
+                  height="12"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 4.5L6 7.5L9 4.5" />
+                </svg>
+              </button>
+              {tocOpen && tocList}
             </nav>
           )}
 
@@ -288,7 +348,7 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
             <div className="project-actions-left">
               <span className="project-actions-label">Share:</span>
               <a
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out this project: ${post.displayTitle || post.title}`)}&url=${encodeURIComponent(window.location.href)}`}
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out this project: ${post.displayTitle || post.title}`)}&url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="project-actions-link"
@@ -296,7 +356,7 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
                 Twitter
               </a>
               <a
-                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`}
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="project-actions-link"
@@ -311,7 +371,7 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
                 rel="noopener noreferrer"
                 className="project-actions-github"
               >
-                <GitHubSvg />
+                <GitHubIcon size={18} />
                 View on GitHub
               </a>
             )}

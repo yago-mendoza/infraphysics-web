@@ -397,31 +397,45 @@
 }
 
 
-/* A12. Table of Contents */
+/* A12. Table of Contents (collapsible) */
 
-.project-toc {
-  padding-bottom: 1.5rem;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid var(--prj-border-subtle);
-  scroll-margin-top: 1rem;
+.project-toc-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 .project-toc-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.65rem;
-  color: var(--prj-text-muted);
+  font-size: 0.75rem;
+  color: var(--prj-accent);
   letter-spacing: 0.1em;
-  margin-bottom: 0.75rem;
+}
+
+.project-toc-chevron {
+  color: var(--prj-accent);
+  width: 16px;
+  height: 16px;
+  transition: transform 0.25s ease;
+}
+
+.project-toc-chevron--open {
+  transform: rotate(180deg);
 }
 
 .project-toc-list {
   list-style: none;
-  padding: 0 0 0 1rem;
+  padding: 0.5rem 1rem 0.75rem;
   margin: 0;
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
-  border-left: 1px solid var(--prj-accent-dim);
+  border-top: 1px solid var(--prj-accent-dim);
 }
 
 .project-toc-item {
@@ -452,10 +466,24 @@
   min-width: 2rem;
 }
 
-/* Top-level entries stand out */
+/* Top-level entries — bolder, with a thin lime line between number and title */
 .project-toc-depth-0 > .project-toc-link {
-  color: var(--prj-text-bright);
   font-weight: 600;
+  align-items: center;
+}
+
+.project-toc-depth-0 > .project-toc-link > .project-toc-num::after {
+  content: '';
+  display: inline-block;
+  width: 1.25rem;
+  border-top: 1px solid var(--prj-accent-dim);
+  vertical-align: middle;
+  margin-left: 0.35rem;
+}
+
+/* Active heading highlight (current section + its ancestor chain) */
+.project-toc-link--active {
+  color: var(--prj-text-title) !important;
 }
 
 /* Indentation by depth */
@@ -464,28 +492,12 @@
 .project-toc-depth-2 { padding-left: 2.5rem; }
 .project-toc-depth-3 { padding-left: 3.75rem; }
 
-/* A13. Back-to-index button on headings */
+/* A12a. Inline TOC (always visible, between thick divider and content) */
 
-.project-toc-back {
-  display: inline-flex;
-  align-items: center;
-  margin-left: 0.5rem;
-  color: var(--prj-text-muted);
-  text-decoration: none;
-  opacity: 0;
-  transition: opacity 0.2s, color 0.2s;
-  vertical-align: middle;
-}
-
-.project-article h1:hover .project-toc-back,
-.project-article h2:hover .project-toc-back,
-.project-article h3:hover .project-toc-back,
-.project-article h4:hover .project-toc-back {
-  opacity: 1;
-}
-
-.project-toc-back:hover {
-  color: var(--prj-accent) !important;
+.project-toc {
+  border: 1px solid var(--prj-accent-dim);
+  margin-bottom: 1.5rem;
+  scroll-margin-top: 1rem;
 }
 
 /* Scroll target offset for anchored headings */
@@ -550,19 +562,140 @@
   margin-bottom: 1rem;
 }
 
-/* B3. Blockquotes */
+/* B3. Typed blockquotes {bkqt:type:text} */
 
-.project-article blockquote {
-  border-left: 3px solid var(--prj-accent);
-  background: var(--prj-accent-quote-bg);
-  padding: 1rem 1.25rem;
+.project-article .bkqt {
   margin: 1.5rem 0;
-  border-radius: 0 4px 4px 0;
+  border-radius: 6px;
+  overflow: hidden;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--prj-text-bright);
+  line-height: 1.8;
 }
 
-.project-article blockquote p {
-  color: var(--prj-text-bright);
+.project-article .bkqt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.2rem 0.75rem;
+  background: var(--bkqt-bg-header);
+}
+
+.project-article .bkqt-body {
+  padding: 0.75rem 1rem;
+  background: var(--bkqt-bg);
+}
+
+.project-article .bkqt-body > *:first-child {
+  margin-top: 0;
+}
+
+.project-article .bkqt-body > *:last-child {
   margin-bottom: 0;
+}
+
+.project-article .bkqt p {
+  font-size: inherit;
+  margin: 0.5rem 0 0 0;
+}
+
+.project-article .bkqt ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.5rem 0 0 0;
+}
+
+.project-article .bkqt ul li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.25rem;
+  font-size: inherit;
+}
+
+.project-article .bkqt ul li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--bkqt-color);
+  font-weight: bold;
+  font-size: inherit;
+  line-height: 1.8;
+}
+
+.project-article .bkqt ol {
+  padding-left: 1.5rem;
+  margin: 0.5rem 0 0 0;
+}
+
+.project-article .bkqt ol li {
+  margin-bottom: 0.25rem;
+  font-size: inherit;
+}
+
+.project-article .bkqt ol li::marker {
+  color: var(--bkqt-color);
+  font-weight: bold;
+}
+
+.project-article .bkqt-label {
+  font-weight: 400;
+  color: var(--bkqt-color);
+}
+
+.project-article .copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--prj-text-mid);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.project-article .copy-btn:hover {
+  color: var(--prj-text-bright);
+  background: rgba(255,255,255,0.06);
+}
+
+.project-article .copy-btn.copied {
+  color: var(--bkqt-color, #a3e635);
+}
+
+/* bkqt type variants — dark */
+.project-article .bkqt-note       { --bkqt-color: #a3e635; --bkqt-bg-header: rgba(163,230,53,0.10); --bkqt-bg: rgba(163,230,53,0.04); }
+.project-article .bkqt-tip        { --bkqt-color: #22c55e; --bkqt-bg-header: rgba(34,197,94,0.10);  --bkqt-bg: rgba(34,197,94,0.04); }
+.project-article .bkqt-warning    { --bkqt-color: #d97706; --bkqt-bg-header: rgba(217,119,6,0.10);  --bkqt-bg: rgba(217,119,6,0.04); }
+.project-article .bkqt-danger     { --bkqt-color: #dc2626; --bkqt-bg-header: rgba(220,38,38,0.10);  --bkqt-bg: rgba(220,38,38,0.04); }
+.project-article .bkqt-deepdive   { --bkqt-color: #3b82f6; --bkqt-bg-header: rgba(59,130,246,0.10); --bkqt-bg: rgba(59,130,246,0.04); }
+.project-article .bkqt-keyconcept { --bkqt-color: #a855f7; --bkqt-bg-header: rgba(168,85,247,0.10); --bkqt-bg: rgba(168,85,247,0.04); }
+
+/* bkqt type variants — light */
+[data-theme="light"] .project-article .bkqt-note       { --bkqt-color: #4d7c0f; --bkqt-bg-header: rgba(77,124,15,0.12);  --bkqt-bg: rgba(77,124,15,0.05); }
+[data-theme="light"] .project-article .bkqt-tip        { --bkqt-color: #15803d; --bkqt-bg-header: rgba(21,128,61,0.12);  --bkqt-bg: rgba(21,128,61,0.05); }
+[data-theme="light"] .project-article .bkqt-warning    { --bkqt-color: #b45309; --bkqt-bg-header: rgba(180,83,9,0.12);   --bkqt-bg: rgba(180,83,9,0.05); }
+[data-theme="light"] .project-article .bkqt-danger     { --bkqt-color: #b91c1c; --bkqt-bg-header: rgba(185,28,28,0.12);  --bkqt-bg: rgba(185,28,28,0.05); }
+[data-theme="light"] .project-article .bkqt-deepdive   { --bkqt-color: #2563eb; --bkqt-bg-header: rgba(37,99,235,0.12);  --bkqt-bg: rgba(37,99,235,0.05); }
+[data-theme="light"] .project-article .bkqt-keyconcept { --bkqt-color: #7c3aed; --bkqt-bg-header: rgba(124,58,237,0.12); --bkqt-bg: rgba(124,58,237,0.05); }
+
+/* B3b. Small text (> markdown blocks) */
+
+.project-article .small-text {
+  margin: 1rem 0;
+}
+
+.project-article .small-text p {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--prj-text-mid);
+  line-height: 1.6;
+  margin-bottom: 0.4rem;
 }
 
 /* B4. Unordered lists */
@@ -595,6 +728,7 @@
 /* B5. Ordered lists */
 
 .project-article ol {
+  list-style: decimal;
   padding-left: 1.5rem;
   margin: 1rem 0;
 }
@@ -626,25 +760,31 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 0.75rem;
+  padding: 0.35rem 0.75rem;
   background: var(--prj-surface-bar);
   border-bottom: 1px solid var(--prj-border-subtle);
 }
 
 .project-article .code-terminal-dots {
   display: flex;
-  gap: 6px;
+  gap: 5px;
 }
 
 .project-article .code-terminal-dots span {
-  width: 12px;
-  height: 12px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
 }
 
-.project-article .code-terminal-dots span:nth-child(1) { background: #ff5f57; }
-.project-article .code-terminal-dots span:nth-child(2) { background: #febc2e; }
-.project-article .code-terminal-dots span:nth-child(3) { background: #28c840; }
+.project-article .code-terminal-dots span:nth-child(1) { background: #c74b47; }
+.project-article .code-terminal-dots span:nth-child(2) { background: #c9a22a; }
+.project-article .code-terminal-dots span:nth-child(3) { background: #2ea043; }
+
+.project-article .code-terminal-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 
 .project-article .code-terminal-lang {
   font-family: 'JetBrains Mono', monospace;
@@ -714,14 +854,14 @@
 
 /* B9. Links */
 
-.project-article a:not(.wiki-ref):not(.wiki-ref-resolved) {
+.project-article a:not(.wiki-ref):not(.wiki-ref-resolved):not(.doc-ref) {
   color: var(--prj-accent);
   text-decoration: none;
   border-bottom: 1px solid var(--prj-accent-dim);
   transition: border-color 0.2s;
 }
 
-.project-article a:not(.wiki-ref):not(.wiki-ref-resolved):hover {
+.project-article a:not(.wiki-ref):not(.wiki-ref-resolved):not(.doc-ref):hover {
   border-bottom-color: var(--prj-accent);
 }
 
@@ -809,7 +949,36 @@
   border-bottom-style: solid;
 }
 
-/* B16. Side image layouts */
+/* B16. Inline code inside colored spans adapts bg/border to parent color */
+
+.project-article [style*="color"] > code:not(pre code) {
+  color: inherit;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  border-color: color-mix(in srgb, currentColor 20%, transparent);
+}
+
+/* B17. Cross-document links */
+
+.project-article .doc-ref {
+  text-decoration: none;
+  border-bottom: 1px dashed;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.project-article .doc-ref:hover {
+  border-bottom-style: solid;
+}
+
+.project-article .doc-ref-projects { color: #a3e635; border-bottom-color: rgba(163,230,53,0.4); }
+.project-article .doc-ref-threads  { color: #fb7185; border-bottom-color: rgba(251,113,133,0.4); }
+.project-article .doc-ref-bits2bricks { color: #3B82F6; border-bottom-color: rgba(59,130,246,0.4); }
+
+[data-theme="light"] .project-article .doc-ref-projects { color: #4d7c0f; border-bottom-color: rgba(77,124,15,0.4); }
+[data-theme="light"] .project-article .doc-ref-threads  { color: #e11d48; border-bottom-color: rgba(225,29,72,0.4); }
+[data-theme="light"] .project-article .doc-ref-bits2bricks { color: #2563eb; border-bottom-color: rgba(37,99,235,0.4); }
+
+/* B18. Side image layouts */
 
 .project-article .img-side-layout {
   margin: 1.5rem 0;

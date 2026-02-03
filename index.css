@@ -381,6 +381,18 @@ html.theme-transitioning *::after {
 }
 
 /* ============================================================
+   Shiki syntax highlighting — dual theme (dark default)
+   ============================================================ */
+
+.code-terminal pre code span {
+  color: var(--shiki-dark);
+}
+
+[data-theme="light"] .code-terminal pre code span {
+  color: var(--shiki-light);
+}
+
+/* ============================================================
    Animations
    ============================================================ */
 
