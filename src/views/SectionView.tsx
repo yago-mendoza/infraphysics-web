@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { posts } from '../data/data';
 import { Category } from '../types';
-import { calculateReadingTime } from '../lib';
+import { calculateReadingTime, stripHtml } from '../lib';
 import { CATEGORY_CONFIG } from '../config/categories';
 import { useSectionState } from '../contexts/SectionStateContext';
 import {
@@ -50,7 +50,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
       result = result.filter(p =>
         (p.displayTitle || p.title).toLowerCase().includes(lowerQuery) ||
         p.description.toLowerCase().includes(lowerQuery) ||
-        p.content.toLowerCase().includes(lowerQuery)
+        stripHtml(p.content).toLowerCase().includes(lowerQuery)
       );
     }
 
@@ -78,11 +78,12 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
 
   const getExcerpt = (content: string, query: string) => {
     if (!query) return null;
-    const index = content.toLowerCase().indexOf(query.toLowerCase());
+    const plain = stripHtml(content);
+    const index = plain.toLowerCase().indexOf(query.toLowerCase());
     if (index === -1) return null;
     const start = Math.max(0, index - 50);
-    const end = Math.min(content.length, index + 100);
-    return "..." + content.substring(start, end) + "...";
+    const end = Math.min(plain.length, index + 100);
+    return "..." + plain.substring(start, end) + "...";
   };
 
   const categoryInfo = CATEGORY_CONFIG[category] || { title: category, description: '', icon: null, color: 'gray-400', colorClass: 'text-gray-400' };
