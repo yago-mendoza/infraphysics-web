@@ -36,9 +36,8 @@ const PAGE_CONFIG: Record<string, { initial: number; page: number }> = {
 };
 
 const STATUS_FILTER_CONFIG: Record<string, { label: string; color: string }> = {
-  'ongoing': { label: 'Ongoing', color: 'amber-400' },
-  'implemented': { label: 'Implemented', color: 'violet-400' },
-  'completed': { label: 'Completed', color: 'blue-400' },
+  'ongoing': { label: 'Ongoing', color: 'violet-400' },
+  'implemented': { label: 'Implemented', color: 'amber-600' },
 };
 
 export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
@@ -59,7 +58,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
   const allTechs = useMemo(() => [...new Set(sectionPosts.flatMap(p => p.technologies || []))].sort(), [sectionPosts]);
   const allStatuses = useMemo(() => {
     const statuses = [...new Set(sectionPosts.map(p => p.status).filter(Boolean))] as string[];
-    const order = ['ongoing', 'implemented', 'completed'];
+    const order = ['ongoing', 'implemented'];
     return statuses.sort((a, b) => order.indexOf(a) - order.indexOf(b));
   }, [sectionPosts]);
 

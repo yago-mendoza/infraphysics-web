@@ -10,9 +10,8 @@ interface StatusBadgeProps {
 }
 
 const statusConfig: Record<ProjectStatus, { color: string; text: string; icon: React.ReactNode }> = {
-  'ongoing': { color: 'bg-amber-500', text: 'Ongoing', icon: <CircleIcon /> },
-  'implemented': { color: 'bg-violet-500', text: 'Implemented', icon: <CheckCircleIcon /> },
-  'completed': { color: 'bg-blue-500', text: 'Completed', icon: <CheckCircleIcon /> },
+  'ongoing': { color: 'bg-violet-500', text: 'Ongoing', icon: <CircleIcon /> },
+  'implemented': { color: 'bg-amber-700', text: 'Implemented', icon: <CheckCircleIcon /> },
 };
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label }) => {

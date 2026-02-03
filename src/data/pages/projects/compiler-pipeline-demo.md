@@ -6,7 +6,7 @@ category: projects
 date: 2025-01-30
 thumbnail: https://images.unsplash.com/photo-1555949963-aa79dcee981c?q=80&w=400&auto=format&fit=crop
 description: showcasing the custom compiler pipeline.
-status: completed
+status: implemented
 technologies: [TypeScript, Marked, Vite]
 ---
 

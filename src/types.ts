@@ -1,6 +1,6 @@
 export type Category = 'main' | 'projects' | 'threads' | 'bits2bricks' | 'fieldnotes';
 
-export type ProjectStatus = 'ongoing' | 'implemented' | 'completed';
+export type ProjectStatus = 'ongoing' | 'implemented';
 
 export interface Post {
   id: string;

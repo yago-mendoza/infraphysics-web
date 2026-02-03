@@ -6,7 +6,7 @@ category: projects
 date: 2023-10-15
 thumbnail: https://images.unsplash.com/photo-1555949963-aa79dcee981c?q=80&w=400&auto=format&fit=crop
 description: visualizing wave functions in webgl.
-status: completed
+status: implemented
 technologies: [WebGL, GLSL, JavaScript]
 ---
 

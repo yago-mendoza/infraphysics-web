@@ -11,7 +11,6 @@ import type { SectionRendererProps } from './index';
 const STATUS_LABELS: Record<string, string> = {
   'ongoing': 'ONGOING',
   'implemented': 'IMPLEMENTED',
-  'completed': 'COMPLETED',
 };
 
 export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, getMatchCount, color, accent }) => {
@@ -107,6 +106,8 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                   {query && (() => {
                     const count = getMatchCount(post.content, query);
                     if (!contentExcerpt && count === 0) return null;
+                    const lq = query.toLowerCase();
+                    const visibleMatch = (post.displayTitle || post.title).toLowerCase().includes(lq) || post.description.toLowerCase().includes(lq);
                     return (
                       <div className="mb-4 text-sm p-2.5 animate-fade-in" style={{ backgroundColor: 'var(--highlight-bg)' }}>
                         {contentExcerpt && (
@@ -116,7 +117,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                         )}
                         {count > 0 && (
                           <span className={`text-[11px] text-th-tertiary ${contentExcerpt ? 'mt-1.5' : ''} block`} style={{ color: 'var(--highlight-text)', opacity: 0.7 }}>
-                            {count} {count === 1 ? 'match' : 'matches'} in document
+                            {visibleMatch ? '+' : ''}{count} {count === 1 ? 'match' : 'matches'} in document
                           </span>
                         )}
                       </div>
