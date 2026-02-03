@@ -333,7 +333,6 @@ function processMarkdownFile(filePath) {
     author: frontmatter.author || null,
     subtitle: frontmatter.subtitle || null,
     notes: frontmatter.notes || null,
-    topics: frontmatter.topics || null,
   };
 }
 

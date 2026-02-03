@@ -8,7 +8,6 @@ thumbnail: https://images.unsplash.com/photo-1555949963-aa79dcee981c?q=80&w=400&
 description: One-liner that appears in the meta line after AUTHOR.
 status: completed
 technologies: [Bun, Express, TypeScript, DevInfra]
-tags: [load-balancer, auto-scaling]
 github: https://github.com/user/repo
 demo: https://demo-url.com
 author: Yago Mendoza

@@ -432,7 +432,7 @@ input:focus,
 select:focus,
 button:focus {
   outline: none;
-  box-shadow: 0 0 0 2px var(--focus-ring);
+  box-shadow: none;
 }
 
 ::selection {
@@ -687,6 +687,30 @@ button:focus {
   border: none;
   outline: none;
   color: transparent;
+}
+
+/* ============================================================
+   Thread thumbnail — rose-tinted desaturation + hover cascade
+   ============================================================ */
+
+.thread-thumb img {
+  filter: saturate(0.3) brightness(0.9);
+  transition: filter 0.5s ease, transform 0.5s ease;
+}
+
+.thread-card:has(.thread-title-link:hover) .thread-thumb img {
+  filter: saturate(1) brightness(1);
+  transform: scale(1.05);
+}
+
+.thread-card:has(.thread-title-link:hover) .thread-card-title {
+  color: var(--card-accent);
+}
+
+.thread-excerpt {
+  border-left: 2px solid var(--card-accent);
+  padding-left: 0.75rem;
+  font-style: italic;
 }
 
 /* ============================================================

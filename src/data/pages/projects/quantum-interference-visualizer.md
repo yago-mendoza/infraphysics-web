@@ -8,7 +8,6 @@ thumbnail: https://images.unsplash.com/photo-1555949963-aa79dcee981c?q=80&w=400&
 description: visualizing wave functions in webgl.
 status: completed
 technologies: [WebGL, GLSL, JavaScript]
-tags: [physics, visualization, shaders]
 ---
 
 # quantum interference visualizer

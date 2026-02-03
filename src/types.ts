@@ -18,11 +18,10 @@ export interface Post {
   technologies?: string[]; // Tech stack used
   duration?: string; // Project duration
   featured?: boolean; // Whether to feature this post
-  tags?: string[]; // Content tags for filtering
+  tags?: string[] | null; // Concept/topic tags (rendered as pills)
   author?: string | null; // Post author name
   subtitle?: string | null; // Subtitle shown below displayTitle
   notes?: string[] | string | null; // Author notes / commentary (array of lines or single string)
-  topics?: string[] | null; // Topic/concept tags (rendered as purple pills)
   // Fieldnotes-specific (only present for category === 'fieldnotes')
   address?: string;
   addressParts?: string[];

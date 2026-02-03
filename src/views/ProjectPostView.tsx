@@ -259,11 +259,11 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
             </div>
           </div>
 
-          {/* Topic pills (PURPLE) — above technologies */}
-          {post.topics && post.topics.length > 0 && (
+          {/* Tag pills — above technologies */}
+          {post.tags && post.tags.length > 0 && (
             <div className="project-pills project-pills-topics">
-              {post.topics.map(topic => (
-                <span key={topic} className="project-pill project-pill-topic">{topic}</span>
+              {post.tags.map(tag => (
+                <span key={tag} className="project-pill project-pill-topic">{tag}</span>
               ))}
             </div>
           )}

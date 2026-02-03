@@ -6,6 +6,7 @@ category: bits2bricks
 date: 2024-03-20
 thumbnail: https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=400&auto=format&fit=crop
 description: inverse kinematics on an arduino.
+tags: [robotics, arduino, 3d-printing]
 ---
 
 # 3d printed robot arm

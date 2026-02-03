@@ -82,7 +82,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
 
                   {/* Pills — topics (purple) + technologies (lime), sorted alphabetically */}
                   {(() => {
-                    const topics = (post.topics || []).map(t => ({ label: t, type: 'topic' as const }));
+                    const topics = (post.tags || []).map(t => ({ label: t, type: 'topic' as const }));
                     const technologies = techs.map(t => ({ label: t, type: 'tech' as const }));
                     const pills = [...topics, ...technologies].sort((a, b) => a.label.localeCompare(b.label));
                     if (pills.length === 0) return null;
@@ -93,7 +93,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                             key={`${pill.type}-${pill.label}`}
                             className={`text-xs px-2.5 py-0.5 border rounded-sm ${
                               pill.type === 'topic'
-                                ? 'border-violet-400/30 text-violet-400'
+                                ? 'border-slate-400/30 text-slate-400'
                                 : `border-${color}/30 text-${color}`
                             }`}
                           >

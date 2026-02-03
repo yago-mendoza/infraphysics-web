@@ -56,12 +56,30 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
 
   const sectionPosts = useMemo(() => posts.filter(p => p.category === category), [category]);
 
-  const allTopics = useMemo(() => [...new Set(sectionPosts.flatMap(p => p.topics || []))].sort(), [sectionPosts]);
+  const allTopics = useMemo(() => [...new Set(sectionPosts.flatMap(p => p.tags || []))].sort(), [sectionPosts]);
   const allTechs = useMemo(() => [...new Set(sectionPosts.flatMap(p => p.technologies || []))].sort(), [sectionPosts]);
   const allStatuses = useMemo(() => {
     const statuses = [...new Set(sectionPosts.map(p => p.status).filter(Boolean))] as string[];
     const order = ['active', 'in-progress', 'completed', 'archived'];
     return statuses.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  }, [sectionPosts]);
+
+  const topicCounts = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const p of sectionPosts) for (const t of p.tags || []) map[t] = (map[t] || 0) + 1;
+    return map;
+  }, [sectionPosts]);
+
+  const techCounts = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const p of sectionPosts) for (const t of p.technologies || []) map[t] = (map[t] || 0) + 1;
+    return map;
+  }, [sectionPosts]);
+
+  const statusCounts = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const p of sectionPosts) if (p.status) map[p.status] = (map[p.status] || 0) + 1;
+    return map;
   }, [sectionPosts]);
 
   const filteredPosts = useMemo(() => {
@@ -77,7 +95,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
     }
 
     if (selectedTopics.length > 0) {
-      result = result.filter(p => selectedTopics.some(t => (p.topics || []).includes(t)));
+      result = result.filter(p => selectedTopics.some(t => (p.tags || []).includes(t)));
     }
 
     if (selectedTechs.length > 0) {
@@ -218,9 +236,9 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
                   className="text-xs border border-th-border rounded-sm px-2 py-1.5 bg-th-elevated text-th-secondary focus:outline-none focus:border-th-border-active"
                   style={{ colorScheme: theme }}
                 >
-                  <option value="newest">Newest First</option>
-                  <option value="oldest">Oldest First</option>
-                  <option value="title">Alphabetical</option>
+                  <option value="newest" className="bg-th-base text-th-secondary">Newest First</option>
+                  <option value="oldest" className="bg-th-base text-th-secondary">Oldest First</option>
+                  <option value="title" className="bg-th-base text-th-secondary">Alphabetical</option>
                 </select>
               </div>
               {allStatuses.length > 0 && (
@@ -240,7 +258,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
                             : `border-${cfg.color}/20 text-${cfg.color}/60 hover:border-${cfg.color}/40`
                         }`}
                       >
-                        {cfg.label}
+                        {cfg.label} ({statusCounts[s] || 0})
                       </button>
                     );
                   })}
@@ -250,7 +268,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
 
             {allTopics.length > 0 && (
               <div>
-                <span className="text-xs text-th-tertiary uppercase block mb-2">Topics</span>
+                <span className="text-xs text-th-tertiary uppercase block mb-2">Tags</span>
                 <div className="flex flex-wrap gap-2">
                   {allTopics.map(t => (
                     <button
@@ -258,11 +276,11 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
                       onClick={() => toggleTopic(t)}
                       className={`text-xs px-2.5 py-0.5 border rounded-sm transition-colors ${
                         selectedTopics.includes(t)
-                          ? 'bg-violet-400/20 border-violet-400/50 text-violet-400'
-                          : 'border-violet-400/20 text-violet-400/60 hover:border-violet-400/40'
+                          ? 'bg-slate-400/20 border-slate-400/50 text-slate-400'
+                          : 'border-slate-400/20 text-slate-400/60 hover:border-slate-400/40'
                       }`}
                     >
-                      {t}
+                      {t} ({topicCounts[t] || 0})
                     </button>
                   ))}
                 </div>
@@ -283,7 +301,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
                           : `border-${categoryInfo.color}/20 text-${categoryInfo.color}/60 hover:border-${categoryInfo.color}/40`
                       }`}
                     >
-                      {t}
+                      {t} ({techCounts[t] || 0})
                     </button>
                   ))}
                 </div>

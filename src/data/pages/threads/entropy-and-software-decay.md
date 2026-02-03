@@ -6,6 +6,7 @@ category: threads
 date: 2024-01-10
 thumbnail: https://images.unsplash.com/photo-1481277542470-605612bd2d61?q=80&w=400&auto=format&fit=crop
 description: why code rots without maintenance.
+tags: [physics, systems, maintenance]
 ---
 
 # entropy and software decay
