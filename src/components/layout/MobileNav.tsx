@@ -18,12 +18,14 @@ import {
   MoonIcon,
 } from '../icons';
 import { CATEGORY_CONFIG } from '../../config/categories';
+import { useSectionState } from '../../contexts/SectionStateContext';
 
 export const MobileNav: React.FC = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const { getLastPath } = useSectionState();
 
   const handleRandom = () => {
     const validPosts = posts.filter(p => p.category !== 'fieldnotes');
@@ -36,18 +38,21 @@ export const MobileNav: React.FC = () => {
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
-  const NavLink = ({ to, colorClass, icon, children }: { to: string, colorClass: string, icon: React.ReactNode, children: React.ReactNode }) => (
-    <Link
-      to={to}
-      onClick={() => setIsOpen(false)}
-      className={`flex items-center gap-3 py-3 px-4 rounded-sm transition-all ${
-        isActive(to) ? colorClass + ' bg-th-elevated font-medium' : 'text-th-secondary hover:bg-th-surface-alt'
-      }`}
-    >
-      <span className={isActive(to) ? colorClass : 'text-th-tertiary'}>{icon}</span>
-      <span>{children}</span>
-    </Link>
-  );
+  const NavLink = ({ to, basePath, colorClass, icon, children }: { to: string, basePath?: string, colorClass: string, icon: React.ReactNode, children: React.ReactNode }) => {
+    const active = isActive(basePath ?? to);
+    return (
+      <Link
+        to={active && basePath ? basePath : to}
+        onClick={() => setIsOpen(false)}
+        className={`flex items-center gap-3 py-3 px-4 rounded-sm transition-all ${
+          active ? colorClass + ' bg-th-elevated font-medium' : 'text-th-secondary hover:bg-th-surface-alt'
+        }`}
+      >
+        <span className={active ? colorClass : 'text-th-tertiary'}>{icon}</span>
+        <span>{children}</span>
+      </Link>
+    );
+  };
 
   const SectionLabel = ({ children }: { children: React.ReactNode }) => (
     <div className="text-[9px] uppercase tracking-[0.2em] text-th-tertiary px-4 pt-4 pb-1 select-none">
@@ -94,13 +99,13 @@ export const MobileNav: React.FC = () => {
             <nav className="flex flex-col p-4 gap-1">
               {/* LAB */}
               <SectionLabel>lab</SectionLabel>
-              <NavLink to="/lab/projects" colorClass={CATEGORY_CONFIG.projects.colorClass} icon={<GearIcon />}>Projects</NavLink>
+              <NavLink to={getLastPath('/lab/projects')} basePath="/lab/projects" colorClass={CATEGORY_CONFIG.projects.colorClass} icon={<GearIcon />}>Projects</NavLink>
               <NavLink to="/lab/second-brain" colorClass="text-violet-400" icon={<DiamondIcon />}>2<sup>nd</sup> brain</NavLink>
 
               {/* BLOG */}
               <SectionLabel>blog</SectionLabel>
-              <NavLink to="/blog/threads" colorClass={CATEGORY_CONFIG.threads.colorClass} icon={<ThreadIcon />}>Threads</NavLink>
-              <NavLink to="/blog/bits2bricks" colorClass={CATEGORY_CONFIG.bits2bricks.colorClass} icon={<GradCapIcon />}>Bits2Bricks</NavLink>
+              <NavLink to={getLastPath('/blog/threads')} basePath="/blog/threads" colorClass={CATEGORY_CONFIG.threads.colorClass} icon={<ThreadIcon />}>Threads</NavLink>
+              <NavLink to={getLastPath('/blog/bits2bricks')} basePath="/blog/bits2bricks" colorClass={CATEGORY_CONFIG.bits2bricks.colorClass} icon={<GradCapIcon />}>Bits2Bricks</NavLink>
 
               {/* META */}
               <SectionLabel>meta</SectionLabel>

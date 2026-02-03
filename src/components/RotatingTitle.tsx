@@ -64,14 +64,21 @@ export const RotatingTitle: React.FC = () => {
 
     const loop = async () => {
       let ci = 0;
+      let first = true;
       try {
         while (!cancel.current) {
           // Official: fade in, hold, fade out
           el.textContent = OFFICIAL;
-          setFade(0, 8, false);
-          await wait(30);
-          setFade(1, 0, true);
-          await wait(FADE_MS);
+          if (first) {
+            // Already visible on mount — skip entrance animation
+            setFade(1, 0, false);
+            first = false;
+          } else {
+            setFade(0, 8, false);
+            await wait(30);
+            setFade(1, 0, true);
+            await wait(FADE_MS);
+          }
           await wait(OFFICIAL_HOLD);
           setFade(0, -8, true);
           await wait(FADE_MS);

@@ -8,17 +8,20 @@ type SectionState = {
   selectedTechs: string[];
 };
 
-const DEFAULT_STATE: SectionState = { query: '', sortBy: 'newest', showFilters: false, selectedTopics: [], selectedTechs: [] };
+const DEFAULT_STATE: SectionState = { query: '', sortBy: 'newest', showFilters: true, selectedTopics: [], selectedTechs: [] };
 
 type SectionStateContextType = {
   getState: (category: string) => SectionState;
   setState: (category: string, patch: Partial<SectionState>) => void;
+  getLastPath: (sectionBase: string) => string;
+  setLastPath: (sectionBase: string, path: string) => void;
 };
 
 const SectionStateContext = createContext<SectionStateContextType | null>(null);
 
 export const SectionStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [store, setStore] = useState<Record<string, SectionState>>({});
+  const [pathStore, setPathStore] = useState<Record<string, string>>({});
 
   const getState = useCallback(
     (category: string): SectionState => store[category] ?? DEFAULT_STATE,
@@ -34,8 +37,19 @@ export const SectionStateProvider: React.FC<{ children: React.ReactNode }> = ({ 
     [],
   );
 
+  const getLastPath = useCallback(
+    (sectionBase: string): string => pathStore[sectionBase] ?? sectionBase,
+    [pathStore],
+  );
+
+  const setLastPath = useCallback(
+    (sectionBase: string, path: string) =>
+      setPathStore(prev => prev[sectionBase] === path ? prev : { ...prev, [sectionBase]: path }),
+    [],
+  );
+
   return (
-    <SectionStateContext.Provider value={{ getState, setState }}>
+    <SectionStateContext.Provider value={{ getState, setState, getLastPath, setLastPath }}>
       {children}
     </SectionStateContext.Provider>
   );

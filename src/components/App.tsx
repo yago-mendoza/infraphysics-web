@@ -1,10 +1,10 @@
 // App shell: provides layout structure and top-level routing
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { SecondBrainHubProvider } from '../contexts/SecondBrainHubContext';
-import { SectionStateProvider } from '../contexts/SectionStateContext';
+import { SectionStateProvider, useSectionState } from '../contexts/SectionStateContext';
 import { categoryGroup } from '../config/categories';
 import { Sidebar, MobileNav, Footer, DualGrid, Starfield, SecondBrainSidebar } from './layout';
 import { HomeView, AboutView, ContactView, ThanksView, SectionView, PostView, SecondBrainView } from '../views';
@@ -19,13 +19,61 @@ const LegacyPostRedirect: React.FC = () => {
 
 const STARFIELD_PAGES = ['/', '/home', '/about', '/contact', '/thanks'];
 
+const TRACKED_SECTIONS = ['/lab/projects', '/blog/threads', '/blog/bits2bricks'];
+
 const AppLayout: React.FC = () => {
   const location = useLocation();
   const { theme } = useTheme();
+  const { setLastPath } = useSectionState();
+  const scrollStore = useRef<Record<string, number>>({});
+  const pathRef = useRef(location.pathname);
+  const restoringRef = useRef(false);
+
+  // Update ref synchronously during render so the scroll handler
+  // always writes to the CURRENT pathname. This prevents transitional
+  // scroll events (fired when old DOM unmounts and the browser clamps
+  // scroll) from overwriting the saved position of the page we left.
+  pathRef.current = location.pathname;
+
+  // Persistent scroll listener — saves position for the current page
+  useEffect(() => {
+    const handler = () => {
+      if (!restoringRef.current) {
+        scrollStore.current[pathRef.current] = window.scrollY;
+      }
+    };
+    window.addEventListener('scroll', handler, { passive: true });
+    return () => window.removeEventListener('scroll', handler);
+  }, []);
+
+  // On navigation: restore saved scroll or go to top
+  useEffect(() => {
+    const saved = scrollStore.current[location.pathname];
+    if (saved != null && saved > 0) {
+      restoringRef.current = true;
+      let frame: number;
+      let count = 0;
+      const restore = () => {
+        window.scrollTo(0, saved);
+        if (++count < 12) {
+          frame = requestAnimationFrame(restore);
+        } else {
+          restoringRef.current = false;
+        }
+      };
+      frame = requestAnimationFrame(restore);
+      return () => { cancelAnimationFrame(frame); restoringRef.current = false; };
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location.pathname]);
+    const matched = TRACKED_SECTIONS.find(base =>
+      location.pathname === base || location.pathname.startsWith(base + '/')
+    );
+    if (matched) setLastPath(matched, location.pathname);
+  }, [location.pathname, setLastPath]);
   const isStarfieldPage = STARFIELD_PAGES.includes(location.pathname);
   const showGrid = location.pathname.startsWith('/lab');
   const isBlog = location.pathname.startsWith('/blog');

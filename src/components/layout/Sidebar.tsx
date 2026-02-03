@@ -3,6 +3,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useSectionState } from '../../contexts/SectionStateContext';
 import {
   Logo,
   UserIcon,
@@ -19,18 +20,20 @@ import { CATEGORY_ACCENTS } from '../../constants/theme';
 export const Sidebar: React.FC = () => {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const { getLastPath } = useSectionState();
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
   const navLink = (
-    to: string,
+    basePath: string,
     icon: React.ReactNode,
     label: React.ReactNode,
     accent: string,
+    to?: string,
   ) => {
-    const active = isActive(to);
+    const active = isActive(basePath);
     return (
       <Link
-        to={to}
+        to={active ? basePath : (to ?? basePath)}
         className={`flex flex-col items-center gap-1.5 py-3 rounded-sm transition-all ${
           active ? 'font-medium' : 'opacity-80 hover:opacity-100'
         }`}
@@ -80,15 +83,15 @@ export const Sidebar: React.FC = () => {
         {/* LAB */}
         {sectionLabel('lab')}
         <nav className="flex flex-col gap-1">
-          {navLink('/lab/projects', <GearIcon />, 'projects', CATEGORY_ACCENTS.projects)}
+          {navLink('/lab/projects', <GearIcon />, 'projects', CATEGORY_ACCENTS.projects, getLastPath('/lab/projects'))}
           {navLink('/lab/second-brain', <DiamondIcon />, <span>2<sup>nd</sup> brain</span>, CATEGORY_ACCENTS.secondBrain)}
         </nav>
 
         {/* BLOG */}
         {sectionLabel('blog')}
         <nav className="flex flex-col gap-1">
-          {navLink('/blog/threads', <ThreadIcon />, 'threads', CATEGORY_ACCENTS.threads)}
-          {navLink('/blog/bits2bricks', <GradCapIcon />, 'bits2bricks', CATEGORY_ACCENTS.bits2bricks)}
+          {navLink('/blog/threads', <ThreadIcon />, 'threads', CATEGORY_ACCENTS.threads, getLastPath('/blog/threads'))}
+          {navLink('/blog/bits2bricks', <GradCapIcon />, 'bits2bricks', CATEGORY_ACCENTS.bits2bricks, getLastPath('/blog/bits2bricks'))}
         </nav>
 
         {/* META */}
