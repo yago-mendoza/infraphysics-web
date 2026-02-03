@@ -30,26 +30,41 @@ const SECTION_RENDERERS: Record<string, React.FC<SectionRendererProps>> = {
 
 export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
   const { getState, setState: setSectionState } = useSectionState();
-  const { query, sortBy, showFilters } = getState(category);
+  const { query, sortBy, showFilters, selectedTopics, selectedTechs } = getState(category);
   const setQuery = (q: string) => setSectionState(category, { query: q });
   const setSortBy = (s: 'newest' | 'oldest' | 'title') => setSectionState(category, { sortBy: s });
   const setShowFilters = (f: boolean) => setSectionState(category, { showFilters: f });
+  const toggleTopic = (t: string) => setSectionState(category, { selectedTopics: selectedTopics.includes(t) ? selectedTopics.filter(x => x !== t) : [...selectedTopics, t] });
+  const toggleTech = (t: string) => setSectionState(category, { selectedTechs: selectedTechs.includes(t) ? selectedTechs.filter(x => x !== t) : [...selectedTechs, t] });
+
+  const sectionPosts = useMemo(() => posts.filter(p => p.category === category), [category]);
+
+  const allTopics = useMemo(() => [...new Set(sectionPosts.flatMap(p => p.topics || []))].sort(), [sectionPosts]);
+  const allTechs = useMemo(() => [...new Set(sectionPosts.flatMap(p => p.technologies || []))].sort(), [sectionPosts]);
 
   const filteredPosts = useMemo(() => {
-    let sectionPosts = posts.filter(p => p.category === category);
+    let result = sectionPosts;
 
     if (query) {
       const lowerQuery = query.toLowerCase();
-      sectionPosts = sectionPosts.filter(p =>
+      result = result.filter(p =>
         (p.displayTitle || p.title).toLowerCase().includes(lowerQuery) ||
         p.description.toLowerCase().includes(lowerQuery) ||
         p.content.toLowerCase().includes(lowerQuery)
       );
     }
 
+    if (selectedTopics.length > 0) {
+      result = result.filter(p => selectedTopics.some(t => (p.topics || []).includes(t)));
+    }
+
+    if (selectedTechs.length > 0) {
+      result = result.filter(p => selectedTechs.some(t => (p.technologies || []).includes(t)));
+    }
+
     // Pinned posts first
-    const pinned = sectionPosts.filter(p => p.featured);
-    const rest = sectionPosts.filter(p => !p.featured);
+    const pinned = result.filter(p => p.featured);
+    const rest = result.filter(p => !p.featured);
 
     rest.sort((a, b) => {
       if (sortBy === 'newest') return new Date(b.date).getTime() - new Date(a.date).getTime();
@@ -59,7 +74,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
     });
 
     return [...pinned, ...rest];
-  }, [category, query, sortBy]);
+  }, [sectionPosts, query, sortBy, selectedTopics, selectedTechs]);
 
   const getExcerpt = (content: string, query: string) => {
     if (!query) return null;
@@ -125,7 +140,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
         </div>
 
         {showFilters && (
-          <div className="flex flex-wrap gap-4 p-4 bg-th-surface-alt border border-th-border rounded-sm animate-fade-in">
+          <div className="p-4 bg-th-surface-alt border border-th-border rounded-sm animate-fade-in space-y-4">
             <div className="flex items-center gap-2">
               <span className="text-xs text-th-tertiary uppercase">Sort by:</span>
               <select
@@ -138,6 +153,48 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
                 <option value="title">Alphabetical</option>
               </select>
             </div>
+
+            {allTopics.length > 0 && (
+              <div>
+                <span className="text-xs text-th-tertiary uppercase block mb-2">Topics</span>
+                <div className="flex flex-wrap gap-2">
+                  {allTopics.map(t => (
+                    <button
+                      key={t}
+                      onClick={() => toggleTopic(t)}
+                      className={`text-xs px-2.5 py-0.5 border rounded-sm transition-colors ${
+                        selectedTopics.includes(t)
+                          ? 'bg-violet-400/20 border-violet-400/50 text-violet-400'
+                          : 'border-violet-400/20 text-violet-400/60 hover:border-violet-400/40'
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {allTechs.length > 0 && (
+              <div>
+                <span className="text-xs text-th-tertiary uppercase block mb-2">Technologies</span>
+                <div className="flex flex-wrap gap-2">
+                  {allTechs.map(t => (
+                    <button
+                      key={t}
+                      onClick={() => toggleTech(t)}
+                      className={`text-xs px-2.5 py-0.5 border rounded-sm transition-colors ${
+                        selectedTechs.includes(t)
+                          ? `bg-${categoryInfo.color}/20 border-${categoryInfo.color}/50 text-${categoryInfo.color}`
+                          : `border-${categoryInfo.color}/20 text-${categoryInfo.color}/60 hover:border-${categoryInfo.color}/40`
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

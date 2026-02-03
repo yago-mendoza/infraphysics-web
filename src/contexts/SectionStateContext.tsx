@@ -4,9 +4,11 @@ type SectionState = {
   query: string;
   sortBy: 'newest' | 'oldest' | 'title';
   showFilters: boolean;
+  selectedTopics: string[];
+  selectedTechs: string[];
 };
 
-const DEFAULT_STATE: SectionState = { query: '', sortBy: 'newest', showFilters: false };
+const DEFAULT_STATE: SectionState = { query: '', sortBy: 'newest', showFilters: false, selectedTopics: [], selectedTechs: [] };
 
 type SectionStateContextType = {
   getState: (category: string) => SectionState;

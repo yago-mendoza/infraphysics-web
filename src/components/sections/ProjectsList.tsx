@@ -76,20 +76,33 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                   </Link>
 
                   {/* Description */}
-                  <p className="text-base text-th-secondary font-sans leading-relaxed mb-4 line-clamp-3">
+                  <p className="text-sm text-th-secondary font-sans leading-relaxed mb-4 line-clamp-3">
                     <Highlight text={post.description} query={query} />
                   </p>
 
-                  {/* Tech pills */}
-                  {techs.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {techs.map(tech => (
-                        <span key={tech} className={`text-xs px-2.5 py-0.5 border border-${color}/30 text-${color} rounded-sm`}>
-                          {tech}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  {/* Pills — topics (purple) + technologies (lime), sorted alphabetically */}
+                  {(() => {
+                    const topics = (post.topics || []).map(t => ({ label: t, type: 'topic' as const }));
+                    const technologies = techs.map(t => ({ label: t, type: 'tech' as const }));
+                    const pills = [...topics, ...technologies].sort((a, b) => a.label.localeCompare(b.label));
+                    if (pills.length === 0) return null;
+                    return (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {pills.map(pill => (
+                          <span
+                            key={`${pill.type}-${pill.label}`}
+                            className={`text-xs px-2.5 py-0.5 border rounded-sm ${
+                              pill.type === 'topic'
+                                ? 'border-violet-400/30 text-violet-400'
+                                : `border-${color}/30 text-${color}`
+                            }`}
+                          >
+                            {pill.label}
+                          </span>
+                        ))}
+                      </div>
+                    );
+                  })()}
 
                   {/* Search excerpt */}
                   {contentExcerpt && (
