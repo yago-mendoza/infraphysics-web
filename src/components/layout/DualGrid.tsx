@@ -7,16 +7,23 @@ interface DualGridProps {
 }
 
 export const DualGrid: React.FC<DualGridProps> = ({ sidebarWidth }) => {
-  const [gridSize, setGridSize] = useState({ largeCellSize: 80, smallCellSize: 8 });
+  const [gridSize, setGridSize] = useState({ largeCellW: 80, smallCellW: 8, largeCellH: 80, smallCellH: 8 });
 
   useEffect(() => {
     const calculateGrid = () => {
-      const availableWidth = window.innerWidth - sidebarWidth;
       const targetCellSize = 80;
+
+      const availableWidth = window.innerWidth - sidebarWidth;
       const cellsInWidth = Math.round(availableWidth / targetCellSize);
-      const largeCellSize = availableWidth / cellsInWidth;
-      const smallCellSize = largeCellSize / 10;
-      setGridSize({ largeCellSize, smallCellSize });
+      const largeCellW = availableWidth / cellsInWidth;
+      const smallCellW = largeCellW / 10;
+
+      const availableHeight = window.innerHeight;
+      const cellsInHeight = Math.round(availableHeight / targetCellSize);
+      const largeCellH = availableHeight / cellsInHeight;
+      const smallCellH = largeCellH / 10;
+
+      setGridSize({ largeCellW, smallCellW, largeCellH, smallCellH });
     };
 
     calculateGrid();
@@ -37,7 +44,7 @@ export const DualGrid: React.FC<DualGridProps> = ({ sidebarWidth }) => {
             linear-gradient(to right, var(--grid-small) 1px, transparent 1px),
             linear-gradient(to bottom, var(--grid-small) 1px, transparent 1px)
           `,
-          backgroundSize: `${gridSize.smallCellSize}px ${gridSize.smallCellSize}px`,
+          backgroundSize: `${gridSize.smallCellW}px ${gridSize.smallCellH}px`,
           backgroundPosition: '0 0',
         }}
       />
@@ -49,7 +56,7 @@ export const DualGrid: React.FC<DualGridProps> = ({ sidebarWidth }) => {
             linear-gradient(to right, var(--grid-large) 1px, transparent 1px),
             linear-gradient(to bottom, var(--grid-large) 1px, transparent 1px)
           `,
-          backgroundSize: `${gridSize.largeCellSize}px ${gridSize.largeCellSize}px`,
+          backgroundSize: `${gridSize.largeCellW}px ${gridSize.largeCellH}px`,
           backgroundPosition: '0 0',
         }}
       />

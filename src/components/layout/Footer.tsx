@@ -1,13 +1,16 @@
 // Site footer component — theme-aware
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Logo, GitHubIcon, ExternalLinkIcon } from '../icons';
 import { CATEGORY_CONFIG } from '../../config/categories';
 
 export const Footer: React.FC = () => {
+  const { pathname } = useLocation();
+  const isBlog = pathname.startsWith('/blog');
+
   return (
-    <footer className="w-full py-12 mt-16 border-t border-th-border relative z-20 bg-th-surface">
+    <footer className={`w-full py-14 mt-18 border-t border-th-border relative z-20 ${isBlog ? 'bg-th-blog' : 'bg-th-base'}`}>
       <div className="max-w-4xl mx-auto px-6">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">

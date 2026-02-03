@@ -1,6 +1,6 @@
 // Category listing view component (projects, threads, bits2bricks) — theme-aware
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { posts } from '../data/data';
 import { Category } from '../types';
@@ -28,9 +28,15 @@ const SECTION_RENDERERS: Record<string, React.FC<SectionRendererProps>> = {
   bits2bricks: Bits2BricksGrid,
 };
 
+const PAGE_CONFIG: Record<string, { initial: number; page: number }> = {
+  projects: { initial: 3, page: 3 },
+  threads: { initial: 3, page: 3 },
+  bits2bricks: { initial: 6, page: 3 },
+};
+
 export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
   const { getState, setState: setSectionState } = useSectionState();
-  const { query, sortBy, showFilters, selectedTopics, selectedTechs } = getState(category);
+  const { query, sortBy, showFilters, selectedTopics, selectedTechs, visibleCount } = getState(category);
   const setQuery = (q: string) => setSectionState(category, { query: q });
   const setSortBy = (s: 'newest' | 'oldest' | 'title') => setSectionState(category, { sortBy: s });
   const setShowFilters = (f: boolean) => setSectionState(category, { showFilters: f });
@@ -75,6 +81,34 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
 
     return [...pinned, ...rest];
   }, [sectionPosts, query, sortBy, selectedTopics, selectedTechs]);
+
+  // Infinite scroll
+  const config = PAGE_CONFIG[category] || { initial: 6, page: 3 };
+  const effectiveVisible = visibleCount || config.initial;
+  const visiblePosts = filteredPosts.slice(0, effectiveVisible);
+  const hasMore = effectiveVisible < filteredPosts.length;
+
+  const [loading, setLoading] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!hasMore || loading) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setLoading(true);
+        setTimeout(() => {
+          setSectionState(category, { visibleCount: effectiveVisible + config.page });
+          setLoading(false);
+        }, 800);
+      }
+    }, { rootMargin: '200px' });
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, loading, effectiveVisible, category, config.page, setSectionState]);
 
   const getExcerpt = (content: string, query: string) => {
     if (!query) return null;
@@ -214,7 +248,19 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
       </div>
 
       {/* Delegated renderer */}
-      <Renderer posts={filteredPosts} query={query} getExcerpt={getExcerpt} getMatchCount={getMatchCount} color={categoryInfo.color || 'gray-400'} accent={categoryInfo.accent || '#9ca3af'} />
+      <Renderer posts={visiblePosts} query={query} getExcerpt={getExcerpt} getMatchCount={getMatchCount} color={categoryInfo.color || 'gray-400'} accent={categoryInfo.accent || '#9ca3af'} />
+
+      {/* Infinite scroll sentinel */}
+      {hasMore && (
+        <div ref={sentinelRef} className="flex justify-center py-10">
+          {loading && (
+            <svg className="animate-spin h-5 w-5 text-th-tertiary" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.5" className="opacity-20" />
+              <path d="M12 2a10 10 0 019.95 9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
+          )}
+        </div>
+      )}
     </div>
   );
 };
