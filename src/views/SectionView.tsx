@@ -1,11 +1,12 @@
 // Category listing view component (projects, threads, bits2bricks) — theme-aware
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { posts } from '../data/data';
 import { Category } from '../types';
 import { calculateReadingTime } from '../lib';
 import { CATEGORY_CONFIG } from '../config/categories';
+import { useSectionState } from '../contexts/SectionStateContext';
 import {
   SearchIcon,
   FilterIcon,
@@ -28,9 +29,11 @@ const SECTION_RENDERERS: Record<string, React.FC<SectionRendererProps>> = {
 };
 
 export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
-  const [query, setQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title'>('newest');
-  const [showFilters, setShowFilters] = useState(false);
+  const { getState, setState: setSectionState } = useSectionState();
+  const { query, sortBy, showFilters } = getState(category);
+  const setQuery = (q: string) => setSectionState(category, { query: q });
+  const setSortBy = (s: 'newest' | 'oldest' | 'title') => setSectionState(category, { sortBy: s });
+  const setShowFilters = (f: boolean) => setSectionState(category, { showFilters: f });
 
   const filteredPosts = useMemo(() => {
     let sectionPosts = posts.filter(p => p.category === category);
@@ -105,6 +108,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
             <span className="text-th-tertiary"><SearchIcon /></span>
             <input
               type="text"
+              value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={`Search ${category}...`}
               className="w-full bg-transparent border-none ml-2.5 text-sm focus:outline-none placeholder-th-tertiary text-th-primary"

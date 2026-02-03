@@ -52,6 +52,20 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
   },
 };
 
+const BLOG_CATEGORIES = new Set(['threads', 'bits2bricks']);
+
+/** Route group for a category — 'blog' or 'lab' */
+export const categoryGroup = (category: string): 'lab' | 'blog' =>
+  BLOG_CATEGORIES.has(category) ? 'blog' : 'lab';
+
+/** Full path to a post detail page, e.g. /lab/projects/my-id */
+export const postPath = (category: string, id: string): string =>
+  `/${categoryGroup(category)}/${category}/${id}`;
+
+/** Full path to a section listing, e.g. /blog/threads */
+export const sectionPath = (category: string): string =>
+  `/${categoryGroup(category)}/${category}`;
+
 /**
  * Get category color class (text color)
  */

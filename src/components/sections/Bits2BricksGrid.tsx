@@ -4,6 +4,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Highlight } from '../ui';
 import { ArrowRightIcon } from '../icons';
+import { postPath } from '../../config/categories';
 import type { SectionRendererProps } from './index';
 
 export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, color }) => {
@@ -25,7 +26,7 @@ export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, 
         return (
           <Link
             key={post.id}
-            to={`/${post.category}/${post.id}`}
+            to={postPath(post.category, post.id)}
             className="group block border border-th-border rounded-sm bg-th-surface overflow-hidden hover:border-th-border-hover hover:bg-th-surface-alt transition-all"
           >
             {/* Square thumbnail */}

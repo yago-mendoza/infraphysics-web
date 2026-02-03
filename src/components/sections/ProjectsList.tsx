@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { formatDateTimeline } from '../../lib/date';
 import { Highlight, StatusBadge } from '../ui';
 import { GitHubIcon, ExternalLinkIcon } from '../icons';
+import { postPath } from '../../config/categories';
 import type { SectionRendererProps } from './index';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -50,7 +51,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
               <div className="flex flex-col md:flex-row gap-5">
                 {/* Photo */}
                 {post.thumbnail && (
-                  <Link to={`/${post.category}/${post.id}`} className="flex-shrink-0">
+                  <Link to={postPath(post.category, post.id)} className="flex-shrink-0">
                     <div className="w-full md:w-56 h-56 overflow-hidden">
                       <img
                         src={post.thumbnail}
@@ -70,7 +71,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                   </div>
 
                   {/* Title */}
-                  <Link to={`/${post.category}/${post.id}`} className="group">
+                  <Link to={postPath(post.category, post.id)} className="group">
                     <h3 className={`text-xl font-bold uppercase tracking-wide text-th-primary group-hover:text-${color} transition-colors leading-tight mb-2`}>
                       <Highlight text={post.displayTitle || post.title} query={query} />
                     </h3>
@@ -113,7 +114,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                       </a>
                     )}
                     <Link
-                      to={`/${post.category}/${post.id}`}
+                      to={postPath(post.category, post.id)}
                       className={`inline-flex items-center gap-1.5 text-th-tertiary hover:text-${color} transition-colors`}
                     >
                       <ExternalLinkIcon /> Case Study

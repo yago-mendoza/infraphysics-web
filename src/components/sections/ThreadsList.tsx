@@ -4,6 +4,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { formatDate } from '../../lib';
 import { Highlight } from '../ui';
+import { postPath } from '../../config/categories';
 import type { SectionRendererProps } from './index';
 
 export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, color }) => {
@@ -25,7 +26,7 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
         return (
           <Link
             key={post.id}
-            to={`/${post.category}/${post.id}`}
+            to={postPath(post.category, post.id)}
             className={`group block py-6 ${index < posts.length - 1 ? 'border-b border-th-border' : ''}`}
           >
             <div className="flex gap-5">

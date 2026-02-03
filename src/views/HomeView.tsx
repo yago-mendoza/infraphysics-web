@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { posts } from '../data/data';
 import { Post } from '../types';
 import { ArrowRightIcon } from '../components/icons';
-import { CATEGORY_CONFIG } from '../config/categories';
+import { CATEGORY_CONFIG, postPath, sectionPath } from '../config/categories';
 import homeFeaturedData from '../data/home-featured.generated.json';
 
 // Resolve featured post refs ("category/id") to actual Post objects
@@ -105,7 +105,7 @@ export const HomeView: React.FC = () => {
             return (
               <Link
                 key={key}
-                to={`/lab/${key}`}
+                to={sectionPath(key)}
                 className="group p-5 border border-th-border rounded-sm bg-th-surface hover:border-th-border-active hover:bg-th-surface-alt transition-all"
               >
                 <div className="flex items-center gap-3 mb-3">
@@ -132,7 +132,7 @@ export const HomeView: React.FC = () => {
           {displayPosts.map(post => (
             <Link
               key={`${post.category}-${post.id}`}
-              to={`/${post.category}/${post.id}`}
+              to={postPath(post.category, post.id)}
               className="group p-5 border border-th-border rounded-sm bg-th-surface hover:border-th-border-active hover:bg-th-surface-alt transition-all flex flex-col"
             >
               {post.thumbnail && (

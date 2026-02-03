@@ -1,12 +1,21 @@
 // App shell: provides layout structure and top-level routing
 
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { SecondBrainHubProvider } from '../contexts/SecondBrainHubContext';
+import { SectionStateProvider } from '../contexts/SectionStateContext';
+import { categoryGroup } from '../config/categories';
 import { Sidebar, MobileNav, Footer, DualGrid, Starfield, SecondBrainSidebar } from './layout';
 import { HomeView, AboutView, ContactView, ThanksView, SectionView, PostView, SecondBrainView } from '../views';
 import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../constants/layout';
+
+/** Redirect old /:category/:id URLs to grouped /lab|blog/:category/:id */
+const LegacyPostRedirect: React.FC = () => {
+  const { category, id } = useParams();
+  if (!category || !id) return <Navigate to="/home" replace />;
+  return <Navigate to={`/${categoryGroup(category)}/${category}/${id}`} replace />;
+};
 
 const STARFIELD_PAGES = ['/', '/home', '/about', '/contact', '/thanks'];
 
@@ -60,21 +69,20 @@ const AppLayout: React.FC = () => {
 
             {/* Legacy redirects */}
             <Route path="/projects" element={<Navigate to="/lab/projects" replace />} />
+            <Route path="/second-brain" element={<Navigate to="/lab/second-brain" replace />} />
             <Route path="/threads" element={<Navigate to="/blog/threads" replace />} />
             <Route path="/bits2bricks" element={<Navigate to="/blog/bits2bricks" replace />} />
-            <Route path="/lab/threads" element={<Navigate to="/blog/threads" replace />} />
-            <Route path="/lab/bits2bricks" element={<Navigate to="/blog/bits2bricks" replace />} />
-            <Route path="/second-brain" element={<Navigate to="/lab/second-brain" replace />} />
-            <Route path="/second-brain/:id" element={<Navigate to="/lab/second-brain" replace />} />
 
             {/* Second Brain */}
             <Route path="/lab/second-brain" element={<SecondBrainView />} />
             <Route path="/lab/second-brain/:id" element={<SecondBrainView />} />
-            <Route path="/fieldnotes" element={<Navigate to="/lab/second-brain" replace />} />
-            <Route path="/fieldnotes/:id" element={<Navigate to="/lab/second-brain" replace />} />
 
             {/* Post detail views */}
-            <Route path="/:category/:id" element={<PostView />} />
+            <Route path="/lab/:category/:id" element={<PostView />} />
+            <Route path="/blog/:category/:id" element={<PostView />} />
+
+            {/* Legacy: old flat /:category/:id → grouped path */}
+            <Route path="/:category/:id" element={<LegacyPostRedirect />} />
           </Routes>
         </main>
 
@@ -83,20 +91,17 @@ const AppLayout: React.FC = () => {
     </div>
   );
 
-  // Wrap second-brain routes in HubProvider
-  if (isSecondBrain) {
-    return <SecondBrainHubProvider>{content}</SecondBrainHubProvider>;
-  }
-
-  return content;
+  return <SecondBrainHubProvider>{content}</SecondBrainHubProvider>;
 };
 
 const App: React.FC = () => {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <AppLayout />
-      </BrowserRouter>
+      <SectionStateProvider>
+        <BrowserRouter>
+          <AppLayout />
+        </BrowserRouter>
+      </SectionStateProvider>
     </ThemeProvider>
   );
 };

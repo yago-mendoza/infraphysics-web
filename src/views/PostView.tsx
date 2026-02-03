@@ -12,7 +12,7 @@ import {
   ExternalLinkIcon,
   ArrowRightIcon
 } from '../components/icons';
-import { CATEGORY_CONFIG } from '../config/categories';
+import { CATEGORY_CONFIG, sectionPath as getSectionPath, postPath } from '../config/categories';
 
 export const PostView: React.FC = () => {
   const { category, id } = useParams();
@@ -39,9 +39,8 @@ export const PostView: React.FC = () => {
   const accentClass = catCfg?.colorClass || "text-th-secondary";
   const accentBadge = catCfg?.darkBadge || "text-th-secondary border-th-border bg-th-surface";
 
-  const isBlog = post.category === 'threads' || post.category === 'bits2bricks';
-  const sectionPath = isBlog ? `/blog/${post.category}` : `/lab/${post.category}`;
-  const sectionGroup = isBlog ? 'blog' : 'lab';
+  const sectionPathUrl = getSectionPath(post.category);
+  const sectionGroup = post.category === 'threads' || post.category === 'bits2bricks' ? 'blog' : 'lab';
 
   return (
     <article className="animate-fade-in max-w-3xl">
@@ -51,7 +50,7 @@ export const PostView: React.FC = () => {
         <span className="text-th-muted">/</span>
         <span className="text-th-muted">{sectionGroup}</span>
         <span className="text-th-muted">/</span>
-        <Link to={sectionPath} className="hover:text-th-secondary transition-colors">{post.category}</Link>
+        <Link to={sectionPathUrl} className="hover:text-th-secondary transition-colors">{post.category}</Link>
         <span className="text-th-muted">/</span>
         <span className="text-th-secondary">{post.id}</span>
       </nav>
@@ -61,7 +60,7 @@ export const PostView: React.FC = () => {
         {/* Category & Meta Line */}
         <div className="flex flex-wrap items-center gap-3 mb-4">
           <Link
-            to={labPath}
+            to={sectionPathUrl}
             className={`inline-flex items-center gap-1.5 px-3 py-1 text-[10px] uppercase tracking-wider border rounded-sm hover:opacity-80 transition-opacity ${accentBadge}`}
           >
             {post.category}
@@ -184,7 +183,7 @@ export const PostView: React.FC = () => {
       <div className="mt-16 pt-8 border-t border-th-border">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xs text-th-tertiary uppercase tracking-wider">Related Case Studies</h3>
-          <Link to={labPath} className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors">
+          <Link to={sectionPathUrl} className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors">
             View all <ArrowRightIcon />
           </Link>
         </div>
@@ -193,7 +192,7 @@ export const PostView: React.FC = () => {
             const recAccent = CATEGORY_CONFIG[rec.category]?.colorClass || "text-th-secondary";
 
             return (
-              <Link key={rec.id} to={`/${rec.category}/${rec.id}`} className="group block border border-th-border rounded-sm overflow-hidden bg-th-surface hover:border-th-border-hover transition-all">
+              <Link key={rec.id} to={postPath(rec.category, rec.id)} className="group block border border-th-border rounded-sm overflow-hidden bg-th-surface hover:border-th-border-hover transition-all">
                 <div className="aspect-video bg-th-surface-alt overflow-hidden">
                   <img src={rec.thumbnail || 'https://via.placeholder.com/150'} alt="" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
                 </div>
