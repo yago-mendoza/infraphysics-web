@@ -7,7 +7,7 @@ import { Highlight } from '../ui';
 import { postPath } from '../../config/categories';
 import type { SectionRendererProps } from './index';
 
-export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, color }) => {
+export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, getMatchCount, color }) => {
   if (posts.length === 0) {
     return (
       <div className="py-16 text-center">
@@ -53,12 +53,25 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
                   </div>
                 )}
 
-                {/* Search excerpt */}
-                {contentExcerpt && (
-                  <div className="mt-3 text-xs text-th-secondary p-2 border-l-2" style={{ backgroundColor: 'var(--highlight-bg)', borderColor: 'var(--highlight-text)' }}>
-                    <Highlight text={contentExcerpt} query={query} />
-                  </div>
-                )}
+                {/* Search excerpt + match count */}
+                {query && (() => {
+                  const count = getMatchCount(post.content, query);
+                  if (!contentExcerpt && count === 0) return null;
+                  return (
+                    <div className="mt-3 text-xs p-2 animate-fade-in" style={{ backgroundColor: 'var(--highlight-bg)' }}>
+                      {contentExcerpt && (
+                        <div className="text-th-secondary">
+                          <Highlight text={contentExcerpt} query={query} />
+                        </div>
+                      )}
+                      {count > 0 && (
+                        <span className={`text-[11px] text-th-tertiary ${contentExcerpt ? 'mt-1' : ''} block`} style={{ color: 'var(--highlight-text)', opacity: 0.7 }}>
+                          {count} {count === 1 ? 'match' : 'matches'} in document
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Thumbnail */}

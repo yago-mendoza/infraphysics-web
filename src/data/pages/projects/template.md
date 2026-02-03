@@ -4,7 +4,7 @@ title: my-project-slug
 displayTitle: My Project Title — Subtitle Here
 category: projects
 date: 2025-06-01
-thumbnail: https://images.unsplash.com/photo-XXXXX?q=80&w=800&auto=format&fit=crop
+thumbnail: https://images.unsplash.com/photo-1555949963-aa79dcee981c?q=80&w=400&auto=format&fit=crop
 description: One-liner that appears in the meta line after AUTHOR.
 status: completed
 technologies: [Bun, Express, TypeScript, DevInfra]

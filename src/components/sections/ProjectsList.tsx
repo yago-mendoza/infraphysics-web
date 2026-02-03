@@ -15,7 +15,7 @@ const STATUS_LABELS: Record<string, string> = {
   'archived': 'ARCHIVED',
 };
 
-export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, color, accent }) => {
+export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, getMatchCount, color, accent }) => {
   if (posts.length === 0) {
     return (
       <div className="py-16 text-center">
@@ -104,12 +104,25 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                     );
                   })()}
 
-                  {/* Search excerpt */}
-                  {contentExcerpt && (
-                    <div className="mb-4 text-sm text-th-secondary p-2.5 border-l-2" style={{ backgroundColor: 'var(--highlight-bg)', borderColor: 'var(--highlight-text)' }}>
-                      <Highlight text={contentExcerpt} query={query} />
-                    </div>
-                  )}
+                  {/* Search excerpt + match count */}
+                  {query && (() => {
+                    const count = getMatchCount(post.content, query);
+                    if (!contentExcerpt && count === 0) return null;
+                    return (
+                      <div className="mb-4 text-sm p-2.5 animate-fade-in" style={{ backgroundColor: 'var(--highlight-bg)' }}>
+                        {contentExcerpt && (
+                          <div className="text-th-secondary">
+                            <Highlight text={contentExcerpt} query={query} />
+                          </div>
+                        )}
+                        {count > 0 && (
+                          <span className={`text-[11px] text-th-tertiary ${contentExcerpt ? 'mt-1.5' : ''} block`} style={{ color: 'var(--highlight-text)', opacity: 0.7 }}>
+                            {count} {count === 1 ? 'match' : 'matches'} in document
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* Divider + links */}
                   <div className="border-t border-th-border pt-3.5 flex items-center gap-5 text-sm">

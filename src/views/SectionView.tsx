@@ -86,6 +86,19 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
     return "..." + plain.substring(start, end) + "...";
   };
 
+  const getMatchCount = (content: string, query: string): number => {
+    if (!query) return 0;
+    const q = query.toLowerCase();
+    const plain = stripHtml(content).toLowerCase();
+    let count = 0;
+    let pos = 0;
+    while ((pos = plain.indexOf(q, pos)) !== -1) {
+      count++;
+      pos += q.length;
+    }
+    return count;
+  };
+
   const categoryInfo = CATEGORY_CONFIG[category] || { title: category, description: '', icon: null, color: 'gray-400', colorClass: 'text-gray-400' };
   const Renderer = SECTION_RENDERERS[category] || ProjectsList;
 
@@ -201,7 +214,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
       </div>
 
       {/* Delegated renderer */}
-      <Renderer posts={filteredPosts} query={query} getExcerpt={getExcerpt} color={categoryInfo.color || 'gray-400'} accent={categoryInfo.accent || '#9ca3af'} />
+      <Renderer posts={filteredPosts} query={query} getExcerpt={getExcerpt} getMatchCount={getMatchCount} color={categoryInfo.color || 'gray-400'} accent={categoryInfo.accent || '#9ca3af'} />
     </div>
   );
 };

@@ -5,7 +5,7 @@ displayTitle: "Dynamic Load Balancer with Auto-Scaling — Bun + Express"
 subtitle: "a weekend deep-dive into OS-level request routing"
 category: projects
 date: 2025-06-01
-thumbnail: https://images.unsplash.com/photo-XXXXX?q=80&w=800&auto=format&fit=crop
+thumbnail: https://images.unsplash.com/photo-1555949963-aa79dcee981c?q=80&w=400&auto=format&fit=crop
 description: "Built a local auto-scaling load balancer that spins instances, health-checks, and routes traffic based on load — shipped in ~4 hours."
 status: in-progress
 topics: [Load Balancing, Networking, DevOps]

@@ -6,6 +6,7 @@ export interface SectionRendererProps {
   posts: Post[];
   query: string;
   getExcerpt: (content: string, query: string) => string | null;
+  getMatchCount: (content: string, query: string) => number;
   color: string;
   accent?: string;
 }

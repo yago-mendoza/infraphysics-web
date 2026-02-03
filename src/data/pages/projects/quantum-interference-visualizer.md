@@ -4,7 +4,7 @@ title: quantum-interference-visualizer
 displayTitle: quantum interference visualizer
 category: projects
 date: 2023-10-15
-thumbnail: https://images.unsplash.com/photo-1506318137071-a8bcbf90d177?q=80&w=400&auto=format&fit=crop
+thumbnail: https://images.unsplash.com/photo-1555949963-aa79dcee981c?q=80&w=400&auto=format&fit=crop
 description: visualizing wave functions in webgl.
 status: completed
 technologies: [WebGL, GLSL, JavaScript]
