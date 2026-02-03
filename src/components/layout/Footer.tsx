@@ -3,6 +3,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Logo, GitHubIcon, ExternalLinkIcon } from '../icons';
+import { CATEGORY_CONFIG } from '../../config/categories';
 
 export const Footer: React.FC = () => {
   return (
@@ -55,9 +56,9 @@ export const Footer: React.FC = () => {
           <div>
             <h4 className="text-[10px] uppercase tracking-wider text-th-tertiary mb-4">Explore</h4>
             <nav className="flex flex-col gap-2">
-              <Link to="/lab/projects" className="text-xs text-th-secondary hover:text-lime-400 transition-colors">Projects</Link>
-              <Link to="/blog/threads" className="text-xs text-th-secondary hover:text-rose-400 transition-colors">Threads</Link>
-              <Link to="/blog/bits2bricks" className="text-xs text-th-secondary hover:text-blue-400 transition-colors">Bits2Bricks</Link>
+              <Link to="/lab/projects" className={`text-xs text-th-secondary hover:${CATEGORY_CONFIG.projects.colorClass} transition-colors`}>Projects</Link>
+              <Link to="/blog/threads" className={`text-xs text-th-secondary hover:${CATEGORY_CONFIG.threads.colorClass} transition-colors`}>Threads</Link>
+              <Link to="/blog/bits2bricks" className={`text-xs text-th-secondary hover:${CATEGORY_CONFIG.bits2bricks.colorClass} transition-colors`}>Bits2Bricks</Link>
               <Link to="/lab/second-brain" className="text-xs text-th-secondary hover:text-violet-400 transition-colors">Second Brain</Link>
               <Link to="/contact" className="text-xs text-th-secondary hover:text-th-heading transition-colors">Contact</Link>
             </nav>

@@ -6,7 +6,7 @@ import { Highlight } from '../ui';
 import { ArrowRightIcon } from '../icons';
 import type { SectionRendererProps } from './index';
 
-export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt }) => {
+export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, color }) => {
   if (posts.length === 0) {
     return (
       <div className="py-16 text-center">
@@ -39,7 +39,7 @@ export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, 
 
             {/* Content */}
             <div className="p-4 space-y-3">
-              <h3 className="font-bold text-base text-th-primary group-hover:text-blue-400 transition-colors leading-tight line-clamp-2">
+              <h3 className={`font-bold text-base text-th-primary group-hover:text-${color} transition-colors leading-tight line-clamp-2`}>
                 <Highlight text={post.displayTitle || post.title} query={query} />
               </h3>
 
@@ -51,7 +51,7 @@ export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, 
               {pills.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {pills.slice(0, 4).map(tag => (
-                    <span key={tag} className="text-[11px] text-blue-400">
+                    <span key={tag} className={`text-[11px] text-${color}`}>
                       #{tag}
                     </span>
                   ))}
@@ -66,7 +66,7 @@ export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, 
               )}
 
               {/* CTA */}
-              <span className="inline-flex items-center gap-1.5 text-xs text-blue-400 font-medium">
+              <span className={`inline-flex items-center gap-1.5 text-xs text-${color} font-medium`}>
                 Start Learning <ArrowRightIcon />
               </span>
             </div>

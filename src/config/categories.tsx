@@ -8,6 +8,7 @@ export interface CategoryDisplayConfig {
   title: string;
   description: string;
   icon: React.ReactNode;
+  color: string;
   colorClass: string;
   bgClass: string;
   borderClass: string;
@@ -15,36 +16,39 @@ export interface CategoryDisplayConfig {
   darkBadge: string;
 }
 
+function categoryColors(color: string) {
+  return {
+    colorClass: `text-${color}`,
+    bgClass: `bg-${color}/10`,
+    borderClass: `border-${color}/20`,
+    darkBadge: `text-${color} border-${color}/30 bg-${color}/10`,
+  };
+}
+
 export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
   projects: {
     title: 'Projects',
     description: "What I've built, why, and what broke along the way.",
     icon: <GearIcon />,
-    colorClass: 'text-lime-400',
-    bgClass: 'bg-lime-400/10',
-    borderClass: 'border-lime-400/20',
+    color: 'lime-400',
     accent: '#a3e635',
-    darkBadge: 'text-lime-400 border-lime-400/30 bg-lime-400/10',
+    ...categoryColors('lime-400'),
   },
   threads: {
     title: 'Threads',
     description: 'Long-form thinking on engineering, systems, and how things work.',
     icon: <ThreadIcon />,
-    colorClass: 'text-amber-200',
-    bgClass: 'bg-amber-200/10',
-    borderClass: 'border-amber-200/20',
+    color: 'rose-400',
     accent: '#fb7185',
-    darkBadge: 'text-amber-200 border-amber-200/30 bg-amber-200/10',
+    ...categoryColors('rose-400'),
   },
   bits2bricks: {
     title: 'Bits2Bricks',
     description: 'Where code meets atoms. Hardware, fabrication, physical computing.',
     icon: <GradCapIcon />,
-    colorClass: 'text-blue-400',
-    bgClass: 'bg-blue-400/10',
-    borderClass: 'border-blue-400/20',
+    color: 'blue-400',
     accent: '#3B82F6',
-    darkBadge: 'text-blue-400 border-blue-400/30 bg-blue-400/10',
+    ...categoryColors('blue-400'),
   },
 };
 

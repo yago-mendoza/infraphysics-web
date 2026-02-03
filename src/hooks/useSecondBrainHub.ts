@@ -71,7 +71,7 @@ export const useSecondBrainHub = () => {
 
   // Parse ID from pathname since this hook runs outside <Routes>
   const id = useMemo(() => {
-    const match = location.pathname.match(/^\/second-brain\/(.+)$/);
+    const match = location.pathname.match(/^\/lab\/second-brain\/(.+)$/);
     return match ? match[1] : undefined;
   }, [location.pathname]);
   const [searchMode, setSearchMode] = useState<SearchMode>('name');

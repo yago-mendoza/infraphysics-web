@@ -6,6 +6,7 @@ export interface SectionRendererProps {
   posts: Post[];
   query: string;
   getExcerpt: (content: string, query: string) => string | null;
+  color: string;
 }
 
 export { Bits2BricksGrid } from './Bits2BricksGrid';

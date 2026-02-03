@@ -17,6 +17,7 @@ import {
   SunIcon,
   MoonIcon,
 } from '../icons';
+import { CATEGORY_CONFIG } from '../../config/categories';
 
 export const MobileNav: React.FC = () => {
   const location = useLocation();
@@ -93,13 +94,13 @@ export const MobileNav: React.FC = () => {
             <nav className="flex flex-col p-4 gap-1">
               {/* LAB */}
               <SectionLabel>lab</SectionLabel>
-              <NavLink to="/lab/projects" colorClass="text-lime-400" icon={<GearIcon />}>Projects</NavLink>
+              <NavLink to="/lab/projects" colorClass={CATEGORY_CONFIG.projects.colorClass} icon={<GearIcon />}>Projects</NavLink>
               <NavLink to="/lab/second-brain" colorClass="text-violet-400" icon={<DiamondIcon />}>2<sup>nd</sup> brain</NavLink>
 
               {/* BLOG */}
               <SectionLabel>blog</SectionLabel>
-              <NavLink to="/blog/threads" colorClass="text-rose-400" icon={<ThreadIcon />}>Threads</NavLink>
-              <NavLink to="/blog/bits2bricks" colorClass="text-blue-400" icon={<GradCapIcon />}>Bits2Bricks</NavLink>
+              <NavLink to="/blog/threads" colorClass={CATEGORY_CONFIG.threads.colorClass} icon={<ThreadIcon />}>Threads</NavLink>
+              <NavLink to="/blog/bits2bricks" colorClass={CATEGORY_CONFIG.bits2bricks.colorClass} icon={<GradCapIcon />}>Bits2Bricks</NavLink>
 
               {/* META */}
               <SectionLabel>meta</SectionLabel>

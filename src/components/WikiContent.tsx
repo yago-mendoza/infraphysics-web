@@ -119,7 +119,7 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
         const href = link.getAttribute('href');
         if (href) {
           // Extract concept ID from /lab/second-brain/{id} and notify parent
-          const match = href.match(/^\/second-brain\/(.+)$/);
+          const match = href.match(/^\/lab\/second-brain\/(.+)$/);
           if (match && onWikiLinkClickRef.current) {
             onWikiLinkClickRef.current(match[1]);
           }
@@ -161,7 +161,7 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
         hoveredLinkRef.current = null;
         setPreview(INITIAL_PREVIEW);
         const { href } = info;
-        const match = href.match(/^\/second-brain\/(.+)$/);
+        const match = href.match(/^\/lab\/second-brain\/(.+)$/);
         if (match && onWikiLinkClickRef.current) {
           onWikiLinkClickRef.current(match[1]);
         }

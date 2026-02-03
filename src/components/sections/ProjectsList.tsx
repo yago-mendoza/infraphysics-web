@@ -14,7 +14,7 @@ const STATUS_LABELS: Record<string, string> = {
   'archived': 'ARCHIVED',
 };
 
-export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt }) => {
+export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, color }) => {
   if (posts.length === 0) {
     return (
       <div className="py-16 text-center">
@@ -39,7 +39,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
               {index > 0 && <div className="w-px flex-grow bg-th-border" />}
               {index === 0 && <div className="flex-grow" />}
               {/* Node */}
-              <div className="w-3 h-3 rounded-full border-2 border-lime-400 bg-th-base flex-shrink-0" />
+              <div className={`w-3 h-3 rounded-full border-2 border-${color} bg-th-base flex-shrink-0`} />
               {/* Line below node */}
               {index < posts.length - 1 && <div className="w-px flex-grow bg-th-border" />}
               {index === posts.length - 1 && <div className="flex-grow" />}
@@ -71,7 +71,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
 
                   {/* Title */}
                   <Link to={`/${post.category}/${post.id}`} className="group">
-                    <h3 className="text-xl font-bold uppercase tracking-wide text-th-primary group-hover:text-lime-400 transition-colors leading-tight mb-2">
+                    <h3 className={`text-xl font-bold uppercase tracking-wide text-th-primary group-hover:text-${color} transition-colors leading-tight mb-2`}>
                       <Highlight text={post.displayTitle || post.title} query={query} />
                     </h3>
                   </Link>
@@ -85,7 +85,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                   {techs.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mb-3">
                       {techs.map(tech => (
-                        <span key={tech} className="text-[11px] px-2 py-0.5 border border-lime-400/30 text-lime-400 rounded-sm">
+                        <span key={tech} className={`text-[11px] px-2 py-0.5 border border-${color}/30 text-${color} rounded-sm`}>
                           {tech}
                         </span>
                       ))}
@@ -114,7 +114,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                     )}
                     <Link
                       to={`/${post.category}/${post.id}`}
-                      className="inline-flex items-center gap-1.5 text-th-tertiary hover:text-lime-400 transition-colors"
+                      className={`inline-flex items-center gap-1.5 text-th-tertiary hover:text-${color} transition-colors`}
                     >
                       <ExternalLinkIcon /> Case Study
                     </Link>

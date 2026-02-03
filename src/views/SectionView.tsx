@@ -19,7 +19,6 @@ import type { SectionRendererProps } from '../components/sections';
 
 interface SectionViewProps {
   category: Category;
-  colorClass: string;
 }
 
 const SECTION_RENDERERS: Record<string, React.FC<SectionRendererProps>> = {
@@ -28,7 +27,7 @@ const SECTION_RENDERERS: Record<string, React.FC<SectionRendererProps>> = {
   bits2bricks: Bits2BricksGrid,
 };
 
-export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }) => {
+export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
   const [query, setQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title'>('newest');
   const [showFilters, setShowFilters] = useState(false);
@@ -68,7 +67,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
     return "..." + content.substring(start, end) + "...";
   };
 
-  const categoryInfo = CATEGORY_CONFIG[category] || { title: category, description: '', icon: null };
+  const categoryInfo = CATEGORY_CONFIG[category] || { title: category, description: '', icon: null, color: 'gray-400', colorClass: 'text-gray-400' };
   const Renderer = SECTION_RENDERERS[category] || ProjectsList;
 
   return (
@@ -85,8 +84,8 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
       {/* Header */}
       <header className="mb-8 pb-6 border-b border-th-border">
         <div className="flex items-baseline justify-between gap-4 mb-3">
-          <h1 className={`text-4xl font-bold tracking-tight title-l-frame uppercase ${colorClass}`}>
-            {categoryInfo.title}
+          <h1 className={`text-4xl font-bold tracking-tight title-l-frame uppercase ${categoryInfo.colorClass}`}>
+            <span className="text-th-heading">{categoryInfo.title}</span>
           </h1>
           <div className="flex items-center gap-4 text-xs text-th-tertiary">
             <span>{filteredPosts.length} {filteredPosts.length === 1 ? 'entry' : 'entries'}</span>
@@ -140,7 +139,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, colorClass }
       </div>
 
       {/* Delegated renderer */}
-      <Renderer posts={filteredPosts} query={query} getExcerpt={getExcerpt} />
+      <Renderer posts={filteredPosts} query={query} getExcerpt={getExcerpt} color={categoryInfo.color || 'gray-400'} />
     </div>
   );
 };
