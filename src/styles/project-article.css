@@ -368,21 +368,25 @@
 /* Thin gray line (between meta and notes) */
 .project-divider-thin {
   border-top: 1px solid var(--prj-border);
-  margin-top: 0.25rem;
+  margin-top: 0.75rem;
   margin-bottom: 0.75rem;
 }
 
 /* Thick line (between notes and article) */
 .project-divider-thick {
   border-top: 2px solid var(--prj-divider-thick);
-  margin-top: 0.5rem;
+  margin-top: 1rem;
   margin-bottom: 2rem;
 }
 
 /* A11. Author notes */
 
 .project-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
   margin-bottom: 0.5rem;
+  padding-top: 0.25rem;
 }
 
 .project-notes-line {
@@ -390,7 +394,6 @@
   font-size: 0.7rem;
   color: var(--prj-text-muted);
   line-height: 1.6;
-  margin-bottom: 0.15rem;
 }
 
 

@@ -175,7 +175,7 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
           {notesArray.length > 0 && (
             <div className="project-notes">
               {notesArray.map((note, i) => (
-                <p key={i} className="project-notes-line">{note}</p>
+                <p key={i} className="project-notes-line">— {note}</p>
               ))}
             </div>
           )}
