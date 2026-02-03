@@ -44,7 +44,7 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
     return processed;
   }, [html, allFieldNotes]);
 
-  // Kill preview on route change, content change, or scroll
+  // Kill preview on route change or content change
   useEffect(() => {
     setPreview(INITIAL_PREVIEW);
   }, [location.pathname, html]);
@@ -65,14 +65,12 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
   const onWikiLinkClickRef = useRef(onWikiLinkClick);
   onWikiLinkClickRef.current = onWikiLinkClick;
 
-  // Track the currently hovered wiki link element + href so the document-level
-  // mousedown handler can navigate even when the preview portal intercepts clicks.
+  // Track the currently hovered wiki link href + element for click navigation.
   const hoveredLinkRef = useRef<{ el: HTMLElement; href: string } | null>(null);
 
   // -----------------------------------------------------------------
-  // Hover preview + click navigation. Shares a single useEffect so
-  // both listeners have identical lifecycle on the same container ref.
-  //   mouseover on a wiki-link  → show preview
+  // Hover preview + click navigation.
+  //   mouseover on a wiki-link  → show preview (once per distinct link)
   //   mouseover on anything else → schedule hide (80 ms debounce)
   //   mouseleave container       → instant hide
   //   click on a wiki-link       → navigate via React Router
@@ -86,13 +84,23 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
       const link = target.closest('a.wiki-ref-resolved') as HTMLElement | null;
 
       if (link) {
-        // Mouse entered a wiki-link — show / update preview
         clearHide();
-        const title = decodeURIComponent(link.getAttribute('data-title') || '');
-        const address = link.getAttribute('data-address') || '';
-        const description = decodeURIComponent(link.getAttribute('data-description') || '');
-        hoveredLinkRef.current = { el: link, href: link.getAttribute('href') || '' };
-        setPreview({ visible: true, title, address, description, x: e.clientX, y: e.clientY });
+        const href = link.getAttribute('href') || '';
+        // Use string comparison — DOM element identity (?.el !== link) fails here
+        // because setPreview triggers re-render → dangerouslySetInnerHTML recreates
+        // DOM nodes → stored element reference goes stale → guard always passes →
+        // infinite render loop (~150 renders/sec during hover, delays proportional
+        // to hover duration). String href is stable across DOM recreations.
+        const isNewLink = hoveredLinkRef.current?.href !== href;
+        // Always refresh el reference — DOM nodes may be recreated on re-render
+        hoveredLinkRef.current = { el: link, href };
+
+        if (isNewLink) {
+          const title = decodeURIComponent(link.getAttribute('data-title') || '');
+          const address = link.getAttribute('data-address') || '';
+          const description = decodeURIComponent(link.getAttribute('data-description') || '');
+          setPreview({ visible: true, title, address, description, x: e.clientX, y: e.clientY });
+        }
       } else {
         // Mouse is on non-link content — schedule hide
         if (!hideTimer.current) {
@@ -115,10 +123,10 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
       const link = (e.target as HTMLElement).closest('a.wiki-ref-resolved') as HTMLAnchorElement | null;
       if (link) {
         e.preventDefault();
-        setPreview(INITIAL_PREVIEW);
+        hoveredLinkRef.current = null;
+        // Preview clears via useEffect on location.pathname change
         const href = link.getAttribute('href');
         if (href) {
-          // Extract concept ID from /lab/second-brain/{id} and notify parent
           const match = href.match(/^\/lab\/second-brain\/(.+)$/);
           if (match && onWikiLinkClickRef.current) {
             onWikiLinkClickRef.current(match[1]);
@@ -138,40 +146,6 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
       clearHide();
     };
   }, [clearHide]);
-
-  // -----------------------------------------------------------------
-  // Document-level mousedown (capture) — the preview portal at document.body
-  // can visually cover the wiki link even with pointer-events:none, preventing
-  // clicks from reaching the container's click handler. This listener bypasses
-  // that by checking if the cursor falls within the hovered link's bounding
-  // rect, regardless of which DOM element the browser considers the target.
-  // -----------------------------------------------------------------
-  useEffect(() => {
-    const onDocMouseDown = (e: MouseEvent) => {
-      const info = hoveredLinkRef.current;
-      if (!info) return;
-
-      const rect = info.el.getBoundingClientRect();
-      if (
-        e.clientX >= rect.left && e.clientX <= rect.right &&
-        e.clientY >= rect.top && e.clientY <= rect.bottom
-      ) {
-        e.preventDefault();
-        e.stopPropagation();
-        hoveredLinkRef.current = null;
-        setPreview(INITIAL_PREVIEW);
-        const { href } = info;
-        const match = href.match(/^\/lab\/second-brain\/(.+)$/);
-        if (match && onWikiLinkClickRef.current) {
-          onWikiLinkClickRef.current(match[1]);
-        }
-        navigateRef.current(href);
-      }
-    };
-
-    document.addEventListener('mousedown', onDocMouseDown, true);
-    return () => document.removeEventListener('mousedown', onDocMouseDown, true);
-  }, []);
 
   return (
     <>
