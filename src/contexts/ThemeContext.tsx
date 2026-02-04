@@ -29,10 +29,18 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const toggleTheme = () => {
     document.documentElement.classList.add('theme-transitioning');
-    setTheme(t => t === 'dark' ? 'light' : 'dark');
+
+    // Force the browser to compute styles (with transition props active)
+    // before any value change occurs — without this, the browser can batch
+    // the class addition and the data-theme change into a single paint,
+    // skipping the transition entirely.
+    requestAnimationFrame(() => {
+      setTheme(t => t === 'dark' ? 'light' : 'dark');
+    });
+
     setTimeout(() => {
       document.documentElement.classList.remove('theme-transitioning');
-    }, 400);
+    }, 1000);
   };
 
   return (

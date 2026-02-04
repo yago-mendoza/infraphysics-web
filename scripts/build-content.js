@@ -37,12 +37,26 @@ customRenderer.image = function({ href, title, text }) {
     }
   }
 
+  // Figcaption support: ![alt|Caption text](url "position")
+  let alt = text || '';
+  let caption = '';
+  if (alt.includes('|')) {
+    const pipeIndex = alt.indexOf('|');
+    caption = alt.slice(pipeIndex + 1).trim();
+    alt = alt.slice(0, pipeIndex).trim();
+  }
+
   const classAttr = className ? ` class="${className}"` : '';
   const styleAttr = style ? ` style="${style}"` : '';
   const titleAttr = finalTitle ? ` title="${finalTitle}"` : '';
-  const alt = text || '';
 
-  return `<img src="${href}" alt="${alt}"${classAttr}${styleAttr}${titleAttr} />`;
+  const imgTag = `<img src="${href}" alt="${alt}"${classAttr}${styleAttr}${titleAttr} />`;
+
+  if (caption) {
+    return `<figure>${imgTag}<figcaption>${caption}</figcaption></figure>`;
+  }
+
+  return imgTag;
 };
 
 marked.setOptions({
@@ -102,15 +116,16 @@ const BKQT_TYPES = {
 
 function processCustomBlockquotes(markdown, placeholders) {
   return markdown.replace(
-    /\{bkqt\/(note|tip|warning|danger|deepdive|keyconcept):([\s\S]*?)\}/g,
-    (_, type, text) => {
+    /\{bkqt\/(note|tip|warning|danger|deepdive|keyconcept)(?:\|([^:]*))?\:([\s\S]*?)\}/g,
+    (_, type, customLabel, text) => {
       const config = BKQT_TYPES[type];
+      const label = customLabel ? customLabel.trim() : config.label;
       const withNewlines = text.trim()
         .replace(/\/n(?=\s*(?:- |\d+\. ))/g, '\n')
         .replace(/\/n/g, '\n\n');
       const restored = restoreBackticks(withNewlines, placeholders);
       const body = marked.parse(restored);
-      return `<div class="bkqt bkqt-${type}"><div class="bkqt-header"><span class="bkqt-label">${config.label}/</span>${COPY_BTN}</div><div class="bkqt-body">${body}</div></div>`;
+      return `<div class="bkqt bkqt-${type}"><div class="bkqt-header"><span class="bkqt-label">${label}/</span>${COPY_BTN}</div><div class="bkqt-body">${body}</div></div>`;
     }
   );
 }
@@ -126,6 +141,17 @@ function processOutsideCode(html, fn) {
   });
   safe = fn(safe);
   return safe.replace(/%%CSEG_(\d+)%%/g, (_, idx) => segments[parseInt(idx)]);
+}
+
+// ── External URL links [[https://...|text]] ──
+// Processed BEFORE marked.parse to prevent URL auto-linking corruption
+
+function processExternalUrls(markdown) {
+  return markdown.replace(/\[\[(https?:\/\/[^\]|]+)(?:\|([^\]]+))?\]\]/g, (_, url, displayText) => {
+    const href = url.trim();
+    const display = displayText ? displayText.trim() : href;
+    return `<a class="doc-ref doc-ref-external" href="${href}" target="_blank" rel="noopener noreferrer">${display}</a>`;
+  });
 }
 
 // ── Unified [[link]] processing ──
@@ -304,12 +330,13 @@ function processMarkdownFile(filePath) {
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   const { data: frontmatter, content } = matter(fileContent);
 
-  // Pipeline: protect → preProcessors → bkqt (with placeholders) → restore → sideImages → marked → shiki → postProcessors
+  // Pipeline: protect → preProcessors → bkqt (with placeholders) → restore → externalUrls → sideImages → marked → shiki → postProcessors
   const { text: safeContent, placeholders } = protectBackticks(content);
   const withCustomSyntax = applyPreProcessors(safeContent);
   const withBkqt = processCustomBlockquotes(withCustomSyntax, placeholders);
   const restored = restoreBackticks(withBkqt, placeholders);
-  const withSideImages = preprocessSideImages(restored);
+  const withExternalUrls = processExternalUrls(restored);
+  const withSideImages = preprocessSideImages(withExternalUrls);
   const parsed = marked.parse(withSideImages);
   const highlighted = highlightCodeBlocks(parsed, highlighter);
   const htmlContent = applyPostProcessors(highlighted);
@@ -442,12 +469,13 @@ function processFieldnotesFile() {
       }
     }
 
-    // Pipeline: protect → preProcessors → bkqt (with placeholders) → restore → sideImages → marked → shiki → postProcessors
+    // Pipeline: protect → preProcessors → bkqt (with placeholders) → restore → externalUrls → sideImages → marked → shiki → postProcessors
     const { text: safeBody, placeholders } = protectBackticks(bodyMd);
     const withCustomSyntax = applyPreProcessors(safeBody);
     const withBkqt = processCustomBlockquotes(withCustomSyntax, placeholders);
     const restoredBody = restoreBackticks(withBkqt, placeholders);
-    const withSideImages = preprocessSideImages(restoredBody);
+    const withExternalUrls = processExternalUrls(restoredBody);
+    const withSideImages = preprocessSideImages(withExternalUrls);
     const parsed = marked.parse(withSideImages);
     const highlighted = highlightCodeBlocks(parsed, highlighter);
     const htmlContent = applyPostProcessors(highlighted);

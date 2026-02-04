@@ -181,6 +181,7 @@
   overflow-x: auto;
   margin: 1rem 0;
   border: 1px solid var(--content-pre-border);
+  transition: background-color 0.95s ease, color 0.95s ease, border-color 0.95s ease;
 }
 
 .content-html pre code {
@@ -327,7 +328,8 @@ html.theme-transitioning *::after {
   min-width: 220px;
   background: var(--wiki-preview-bg);
   border: 1px solid var(--wiki-preview-border);
-  border-left: 3px solid var(--wiki-link);
+  border-left: 1.5px solid var(--wiki-link);
+  border-bottom: 1.5px solid var(--wiki-link);
   border-radius: 4px;
   padding: 12px 14px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
@@ -386,6 +388,7 @@ html.theme-transitioning *::after {
 
 .code-terminal pre code span {
   color: var(--shiki-dark);
+  transition: color 0.95s ease;
 }
 
 [data-theme="light"] .code-terminal pre code span {
@@ -659,6 +662,16 @@ button:focus {
   height: 20px;
   border-bottom: 2px solid #a3e635;
   border-right: 2px solid #a3e635;
+}
+
+/* Light mode — darken lime brackets for readability */
+[data-theme="light"] .photo-l-frame::before {
+  border-top-color: #3f6212;
+  border-left-color: #3f6212;
+}
+[data-theme="light"] .photo-l-frame::after {
+  border-bottom-color: #3f6212;
+  border-right-color: #3f6212;
 }
 
 /* ============================================================

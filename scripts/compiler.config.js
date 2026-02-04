@@ -32,14 +32,16 @@ export default {
   },
 
   // Pre-processors: applied BEFORE marked.parse (on raw markdown)
+  // Order matters: curly-brace patterns first (unambiguous), then bare-delimiter patterns
   preProcessors: [
     { name: 'text-color',       pattern: /\{#([a-fA-F0-9]{3,6}|[a-z]+):([^}]+)\}/g,  replace: '<span style="color:#$1">$2</span>' },
-    { name: 'underline-solid',  pattern: /\{_:([^}]+)\}/g,                             replace: '<span style="text-decoration:underline">$1</span>' },
-    { name: 'highlight',        pattern: /\{==:([^}]+)\}/g,                             replace: '<mark>$1</mark>' },
     { name: 'small-caps',       pattern: /\{sc:([^}]+)\}/g,                             replace: '<span style="font-variant:small-caps">$1</span>' },
     { name: 'superscript',      pattern: /\{\^:([^}]+)\}/g,                             replace: '<sup>$1</sup>' },
     { name: 'subscript',        pattern: /\{v:([^}]+)\}/g,                              replace: '<sub>$1</sub>' },
     { name: 'keyboard',         pattern: /\{kbd:([^}]+)\}/g,                            replace: '<kbd>$1</kbd>' },
+    { name: 'underline',        pattern: /(?<!\w)_([^_\n]+?)_(?!\w)/g,                  replace: '<span style="text-decoration:underline">$1</span>' },
+    { name: 'highlight',        pattern: /(?<!=)==([^=\n]+?)==(?!=)/g,                   replace: '<mark>$1</mark>' },
+    { name: 'accent-text',      pattern: /(?<!-)--([^-\n]+?)--(?!-)/g,                  replace: '<span class="accent-text">$1</span>' },
   ],
 
   // Post-processors: applied AFTER marked.parse (on HTML output)

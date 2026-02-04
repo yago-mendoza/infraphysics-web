@@ -1,10 +1,9 @@
-// Post view router — delegates to ProjectPostView or DefaultPostView based on category
+// Post view router — delegates to ArticlePostView for all categories
 
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { posts } from '../data/data';
-import { ProjectPostView } from './ProjectPostView';
-import { DefaultPostView } from './DefaultPostView';
+import { ArticlePostView } from './ArticlePostView';
 
 export const PostView: React.FC = () => {
   const { category, id } = useParams();
@@ -20,9 +19,5 @@ export const PostView: React.FC = () => {
     </div>
   );
 
-  if (post.category === 'projects') {
-    return <ProjectPostView post={post} />;
-  }
-
-  return <DefaultPostView post={post} />;
+  return <ArticlePostView post={post} />;
 };

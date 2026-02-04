@@ -14,8 +14,10 @@ import {
   MailIcon,
   SunIcon,
   MoonIcon,
+  SearchIcon,
 } from '../icons';
 import { CATEGORY_ACCENTS } from '../../constants/theme';
+import { CATEGORY_CONFIG } from '../../config/categories';
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
@@ -83,7 +85,7 @@ export const Sidebar: React.FC = () => {
         {/* LAB */}
         {sectionLabel('lab')}
         <nav className="flex flex-col gap-1">
-          {navLink('/lab/projects', <GearIcon />, 'projects', CATEGORY_ACCENTS.projects, getLastPath('/lab/projects'))}
+          {navLink('/lab/projects', <GearIcon />, 'projects', theme === 'light' && CATEGORY_CONFIG.projects.lightAccent ? CATEGORY_CONFIG.projects.lightAccent : CATEGORY_ACCENTS.projects, getLastPath('/lab/projects'))}
           {navLink('/lab/second-brain', <DiamondIcon />, <span>2<sup>nd</sup> brain</span>, CATEGORY_ACCENTS.secondBrain)}
         </nav>
 
@@ -101,8 +103,15 @@ export const Sidebar: React.FC = () => {
           {navLink('/contact', <MailIcon />, 'contact', CATEGORY_ACCENTS.meta)}
         </nav>
 
-        {/* Theme Toggle */}
-        <div className="mt-6 flex justify-center">
+        {/* Theme Toggle + Search */}
+        <div className="mt-6 flex justify-center gap-1">
+          <button
+            className="flex items-center justify-center p-2 rounded-sm transition-all opacity-60 hover:opacity-100 cursor-default"
+            style={{ color: 'var(--sidebar-icon)' }}
+            aria-label="Search"
+          >
+            <SearchIcon />
+          </button>
           <button
             onClick={toggleTheme}
             className="flex items-center justify-center p-2 rounded-sm transition-all"

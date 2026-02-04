@@ -5,7 +5,8 @@ import { Link } from 'react-router-dom';
 import { posts } from '../data/data';
 import { Post } from '../types';
 import { ArrowRightIcon } from '../components/icons';
-import { CATEGORY_CONFIG, postPath, sectionPath } from '../config/categories';
+import { CATEGORY_CONFIG, getThemedColor, postPath, sectionPath } from '../config/categories';
+import { useTheme } from '../contexts/ThemeContext';
 import homeFeaturedData from '../data/home-featured.generated.json';
 
 // Resolve featured post refs ("category/id") to actual Post objects
@@ -26,6 +27,7 @@ function resolveFeatured(refs: { ref: string; highlight?: string }[]): DisplayPo
 const categoryKeys = ['projects', 'threads', 'bits2bricks'] as const;
 
 export const HomeView: React.FC = () => {
+  const { theme } = useTheme();
   const featuredPosts = useMemo(() => resolveFeatured(homeFeaturedData.featured), []);
 
   // Post counts per category
@@ -136,22 +138,27 @@ export const HomeView: React.FC = () => {
               className="group p-5 border border-th-border rounded-sm bg-th-surface hover:border-th-border-active hover:bg-th-surface-alt transition-all flex flex-col"
             >
               {post.thumbnail && (
-                <img
-                  src={post.thumbnail}
-                  alt=""
-                  className="w-full h-32 object-cover rounded mb-4"
-                />
+                <div className="relative mb-4">
+                  <img
+                    src={post.thumbnail}
+                    alt=""
+                    className="w-full h-32 object-cover rounded"
+                  />
+                  {post.id === latestNewId && (
+                    <span className="absolute -top-3 -left-3 z-10 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-violet-300 bg-violet-500/90 backdrop-blur-sm rounded-sm shadow-lg">
+                      New
+                    </span>
+                  )}
+                </div>
               )}
 
               <div className="flex items-center gap-2 mb-3">
-                <span className={`inline-block px-2 py-0.5 text-[10px] uppercase border rounded-sm ${CATEGORY_CONFIG[post.category]?.darkBadge || 'text-th-secondary border-th-border'}`}>
+                <span className={`inline-block px-2 py-0.5 text-[10px] uppercase border rounded-sm ${(() => {
+                  const tc = getThemedColor(post.category, theme as 'dark' | 'light');
+                  return `text-${tc.color} border-${tc.color}/30 bg-${tc.color}/10`;
+                })()}`}>
                   {post.category}
                 </span>
-                {post.id === latestNewId && (
-                  <span className="px-2 py-0.5 text-[10px] uppercase text-violet-400 border border-violet-400/30 bg-violet-400/10 rounded-sm">
-                    New
-                  </span>
-                )}
               </div>
 
               <h3 className="text-th-heading font-semibold leading-snug mb-2 group-hover:text-blue-400 transition-colors lowercase">

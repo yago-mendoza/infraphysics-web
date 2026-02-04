@@ -12,13 +12,13 @@ technologies: [TypeScript, Marked, Vite]
 
 # compiler pipeline demo
 
-this project documents and tests the {==:entire compilation pipeline} of infraphysics — from raw markdown to rendered HTML.
+this project documents and tests the ==entire compilation pipeline== of infraphysics — from raw markdown to rendered HTML.
 
 ## custom syntax in action
 
 the compiler supports {#7C3AED:colored text} inline. this is {#e74c3c:red}, this is {#2ecc71:green}, and this is {#3498db:blue}.
 
-text can be {_:underlined solid}, {-.:underlined dashed}, {..:underlined dotted}, or {~:underlined wavy} — each with its own semantic intent.
+text can be _underlined_, ==highlighted==, or --accented-- — each with its own semantic intent.
 
 chemical formulas: H{v:2}O, CO{v:2}, C{v:6}H{v:12}O{v:6}
 
@@ -36,8 +36,8 @@ the output is ultimately rendered through a [[UI//GUI]], but the compilation its
 
 ## mixed markdown + custom syntax
 
-> {==:key insight}: the pre-processors run {_:before} marked parses the markdown, so **bold {#e74c3c:red text}** works because the color span is already HTML when marked sees it.
+> ==key insight==: the pre-processors run _before_ marked parses the markdown, so **bold {#e74c3c:red text}** works because the color span is already HTML when marked sees it.
 
 - item with {#7C3AED:violet color}
-- item with {~:wavy underline}
+- item with _underline_
 - item with H{v:2}O formula

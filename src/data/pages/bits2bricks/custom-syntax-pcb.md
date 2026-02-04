@@ -17,13 +17,13 @@ hardware documentation benefits from rich inline formatting. a PCB design log is
 
 the bypass cap is {sc:mlcc} type, rated at 100{sc:nf}. supply voltage: V{v:cc} = 3.3V, max current I{v:max} = 500mA.
 
-power dissipation: P = I{^:2} x R = (0.5){^:2} x 10 = {#e74c3c:2.5W} — {==:too hot without a heatsink}.
+power dissipation: P = I{^:2} x R = (0.5){^:2} x 10 = {#e74c3c:2.5W} — ==too hot without a heatsink==.
 
 ## status annotations
 
 - {#2ecc71:PASS} — uart tx verified at 115200 baud
-- {#e74c3c:FAIL} — rx oversampling glitch at {~:edge cases}
-- {#f39c12:PENDING} — {-.:thermal testing incomplete}
+- {#e74c3c:FAIL} — rx oversampling glitch at _edge cases_
+- {#f39c12:PENDING} — _thermal testing incomplete_
 
 ## cross-references
 

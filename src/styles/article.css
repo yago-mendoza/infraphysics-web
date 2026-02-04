@@ -1,0 +1,1283 @@
+/* ═══════════════════════════════════════════════════════════════
+   ARTICLE POST VIEW — Terminal/Cyberpunk Theme
+   Unified template for all article categories (projects, threads, bits2bricks)
+   Responds to light/dark via CSS custom properties (--art-*)
+
+   ESTRUCTURA:
+   Theme tokens — CSS variables for dark (default) and light
+   Category accents — per-category color overrides via wrapper class
+   Section A — Layout shell (ArticlePostView)
+   Section B — Article content (HTML compilado desde markdown)
+   Section C — Bottom sections (actions, related)
+   Section D — Responsive
+   ═══════════════════════════════════════════════════════════════ */
+
+
+/* ─────────────────────────────────────────────────
+   THEME TOKENS
+   ───────────────────────────────────────────────── */
+
+:root {
+  /* Surfaces */
+  --art-surface:      #111111;
+  --art-surface-alt:  #0d0d0d;
+  --art-surface-code: #0a0a0a;
+  --art-surface-bar:  #1a1a1a;
+  --art-surface-card: #0d0d0d;
+
+  /* Borders */
+  --art-border:       #2a2a2a;
+  --art-border-subtle:#222;
+  --art-border-strong:#333;
+  --art-border-card:  #1a1a1a;
+
+  /* Accent (lime — default / projects) */
+  --art-accent:             #a3e635;
+  --art-accent-dim:         rgba(163,230,53,0.3);
+  --art-accent-bg:          rgba(163,230,53,0.05);
+  --art-accent-code-bg:     rgba(163,230,53,0.08);
+  --art-accent-code-border: rgba(163,230,53,0.15);
+  --art-accent-mark-bg:     rgba(163,230,53,0.15);
+  --art-accent-quote-bg:    rgba(163,230,53,0.04);
+  --art-accent-hover-border:rgba(163,230,53,0.4);
+  --art-accent-hover-bg:    rgba(163,230,53,0.05);
+
+  /* Purple (topics) */
+  --art-purple:      #a855f7;
+  --art-purple-dim:  rgba(168,85,247,0.3);
+  --art-purple-bg:   rgba(168,85,247,0.05);
+
+  /* Text hierarchy */
+  --art-text-title:    #f0f0f0;
+  --art-text-strong:   #e0e0e0;
+  --art-text-h2:       #e8e8e8;
+  --art-text-h3:       #d0d0d0;
+  --art-text-h4:       #c0c0c0;
+  --art-text-bright:   #ccc;
+  --art-text-body:     #b0b0b0;
+  --art-text-mid:      #888;
+  --art-text-subtitle: #777;
+  --art-text-dim:      #666;
+  --art-text-muted:    #555;
+  --art-text-card:     #ccc;
+
+  /* Dividers */
+  --art-divider-thick: #555;
+}
+
+[data-theme="light"] {
+  --art-surface:      #ffffff;
+  --art-surface-alt:  #f7f7f7;
+  --art-surface-code: #f5f5f5;
+  --art-surface-bar:  #eeeeee;
+  --art-surface-card: #fafafa;
+
+  --art-border:       #e0e0e0;
+  --art-border-subtle:#eaeaea;
+  --art-border-strong:#ccc;
+  --art-border-card:  #e8e8e8;
+
+  --art-accent:             #4d7c0f;
+  --art-accent-dim:         rgba(77,124,15,0.3);
+  --art-accent-bg:          rgba(77,124,15,0.06);
+  --art-accent-code-bg:     rgba(77,124,15,0.08);
+  --art-accent-code-border: rgba(77,124,15,0.2);
+  --art-accent-mark-bg:     rgba(77,124,15,0.12);
+  --art-accent-quote-bg:    rgba(77,124,15,0.06);
+  --art-accent-hover-border:rgba(77,124,15,0.4);
+  --art-accent-hover-bg:    rgba(77,124,15,0.05);
+
+  --art-purple:      #7c3aed;
+  --art-purple-dim:  rgba(124,58,237,0.3);
+  --art-purple-bg:   rgba(124,58,237,0.06);
+
+  --art-text-title:    #1a1a1a;
+  --art-text-strong:   #1a1a1a;
+  --art-text-h2:       #222;
+  --art-text-h3:       #333;
+  --art-text-h4:       #444;
+  --art-text-bright:   #555;
+  --art-text-body:     #444;
+  --art-text-mid:      #666;
+  --art-text-subtitle: #666;
+  --art-text-dim:      #888;
+  --art-text-muted:    #999;
+  --art-text-card:     #333;
+
+  --art-divider-thick: #bbb;
+}
+
+
+/* ─────────────────────────────────────────────────
+   CATEGORY ACCENT OVERRIDES
+   Projects = lime (default in :root, no overrides needed)
+   ───────────────────────────────────────────────── */
+
+/* Threads — rose */
+.article-threads {
+  --art-accent:             #fb7185;
+  --art-accent-dim:         rgba(251,113,133,0.3);
+  --art-accent-bg:          rgba(251,113,133,0.05);
+  --art-accent-code-bg:     rgba(251,113,133,0.08);
+  --art-accent-code-border: rgba(251,113,133,0.15);
+  --art-accent-mark-bg:     rgba(251,113,133,0.15);
+  --art-accent-quote-bg:    rgba(251,113,133,0.04);
+  --art-accent-hover-border:rgba(251,113,133,0.4);
+  --art-accent-hover-bg:    rgba(251,113,133,0.05);
+}
+
+[data-theme="light"] .article-threads {
+  --art-accent:             #e11d48;
+  --art-accent-dim:         rgba(225,29,72,0.3);
+  --art-accent-bg:          rgba(225,29,72,0.06);
+  --art-accent-code-bg:     rgba(225,29,72,0.08);
+  --art-accent-code-border: rgba(225,29,72,0.2);
+  --art-accent-mark-bg:     rgba(225,29,72,0.12);
+  --art-accent-quote-bg:    rgba(225,29,72,0.06);
+  --art-accent-hover-border:rgba(225,29,72,0.4);
+  --art-accent-hover-bg:    rgba(225,29,72,0.05);
+}
+
+/* Bits2Bricks — blue */
+.article-bits2bricks {
+  --art-accent:             #3B82F6;
+  --art-accent-dim:         rgba(59,130,246,0.3);
+  --art-accent-bg:          rgba(59,130,246,0.05);
+  --art-accent-code-bg:     rgba(59,130,246,0.08);
+  --art-accent-code-border: rgba(59,130,246,0.15);
+  --art-accent-mark-bg:     rgba(59,130,246,0.15);
+  --art-accent-quote-bg:    rgba(59,130,246,0.04);
+  --art-accent-hover-border:rgba(59,130,246,0.4);
+  --art-accent-hover-bg:    rgba(59,130,246,0.05);
+}
+
+[data-theme="light"] .article-bits2bricks {
+  --art-accent:             #2563eb;
+  --art-accent-dim:         rgba(37,99,235,0.3);
+  --art-accent-bg:          rgba(37,99,235,0.06);
+  --art-accent-code-bg:     rgba(37,99,235,0.08);
+  --art-accent-code-border: rgba(37,99,235,0.2);
+  --art-accent-mark-bg:     rgba(37,99,235,0.12);
+  --art-accent-quote-bg:    rgba(37,99,235,0.06);
+  --art-accent-hover-border:rgba(37,99,235,0.4);
+  --art-accent-hover-bg:    rgba(37,99,235,0.05);
+}
+
+
+/* ─────────────────────────────────────────────────
+   A. LAYOUT SHELL
+   ───────────────────────────────────────────────── */
+
+/* A0. Page wrapper (contains box + related outside) */
+
+.article-page-wrapper {
+  max-width: 52rem;
+}
+
+/* A1. Container box */
+
+.article-container {
+  background: var(--art-surface);
+  border: 1px solid var(--art-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+/* A2. Header bar */
+
+.article-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 0.7rem;
+  color: var(--art-text-muted);
+  border-bottom: 1px solid var(--art-border);
+  background: var(--art-surface-alt);
+}
+
+.article-header-log {
+  letter-spacing: 0.05em;
+}
+
+.article-header-status {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--art-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.article-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--art-accent);
+  display: inline-block;
+}
+
+/* A3. Hero image */
+
+.article-hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  overflow: hidden;
+  border-bottom: 1px solid var(--art-border);
+}
+
+.article-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(80%) brightness(0.6) contrast(1.1);
+}
+
+[data-theme="light"] .article-hero-img {
+  filter: grayscale(50%) brightness(0.8) contrast(1.05);
+}
+
+.article-hero-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(to top, var(--art-surface), transparent);
+  pointer-events: none;
+}
+
+[data-theme="light"] .article-hero-gradient {
+  background: linear-gradient(to top, #111111, transparent);
+}
+
+/* A4. Body */
+
+.article-body {
+  padding: 1.5rem 2rem 2rem;
+}
+
+/* A5. Nav row */
+
+.article-nav-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.article-back-link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--art-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.article-back-link:hover {
+  opacity: 0.7;
+}
+
+/* A6. Social icon buttons */
+
+.article-social-icons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.article-social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--art-border);
+  background: var(--art-surface);
+  color: var(--art-text-muted);
+  transition: all 0.2s ease;
+  border-radius: 2px;
+  text-decoration: none;
+}
+
+.article-social-github:hover {
+  color: var(--art-accent);
+  border-color: var(--art-accent-hover-border);
+  background: var(--art-accent-hover-bg);
+}
+
+.article-social-linkedin:hover {
+  color: #0A66C2;
+  border-color: rgba(10, 102, 194, 0.4);
+  background: rgba(10, 102, 194, 0.05);
+}
+
+/* A7. Tag pills — two rows: topics (purple) + technologies (accent) */
+
+.article-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.article-pills-topics {
+  margin-bottom: 0.4rem;
+}
+
+.article-pills-tech {
+  margin-bottom: 1.25rem;
+}
+
+.article-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  padding: 0.25rem 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Topics → purple */
+.article-pill-topic {
+  border: 1px solid var(--art-purple-dim);
+  color: var(--art-purple);
+  background: var(--art-purple-bg);
+}
+
+/* Technologies → accent */
+.article-pill-tech {
+  border: 1px solid var(--art-accent-dim);
+  color: var(--art-accent);
+  background: var(--art-accent-bg);
+}
+
+/* A8. Title block */
+
+.article-title-block {
+  margin-bottom: 1.25rem;
+}
+
+.article-title {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 2.75rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--art-text-title);
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+/* Subtitle — slightly smaller, gray */
+.article-subtitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--art-text-subtitle);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+}
+
+@media (min-width: 768px) {
+  .article-title {
+    font-size: 3.5rem;
+  }
+  .article-subtitle {
+    font-size: 1.25rem;
+  }
+}
+
+/* A9. Meta — date + reading time + author on same line */
+
+.article-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.article-meta-date {
+  color: var(--art-accent);
+}
+
+.article-meta-reading-time {
+  color: var(--art-text-mid);
+}
+
+.article-meta-author {
+  color: var(--art-text-mid);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.article-meta-author:hover {
+  color: var(--art-text-title);
+}
+
+/* A10. Dividers */
+
+/* Thin gray line (between meta and notes) */
+.article-divider-thin {
+  border-top: 1px solid var(--art-border);
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Thick line (between notes and article) */
+.article-divider-thick {
+  border-top: 2px solid var(--art-divider-thick);
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+}
+
+/* A11. Author notes */
+
+.article-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.article-notes-line {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--art-text-muted);
+  line-height: 1.6;
+}
+
+
+/* A12. Table of Contents (collapsible) */
+
+.article-toc-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.article-toc-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--art-accent);
+  letter-spacing: 0.1em;
+}
+
+.article-toc-chevron {
+  color: var(--art-accent);
+  width: 16px;
+  height: 16px;
+  transition: transform 0.25s ease;
+}
+
+.article-toc-chevron--open {
+  transform: rotate(180deg);
+}
+
+.article-toc-list {
+  list-style: none;
+  padding: 0.5rem 1rem 0.75rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  border-top: 1px solid var(--art-accent-dim);
+}
+
+.article-toc-item {
+  display: flex;
+}
+
+.article-toc-link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--art-text-dim);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  transition: color 0.2s;
+  line-height: 1.8;
+}
+
+.article-toc-link:hover {
+  color: var(--art-accent);
+}
+
+.article-toc-num {
+  color: var(--art-accent);
+  font-size: 0.65rem;
+  min-width: 2rem;
+}
+
+/* Top-level entries — bolder, with a thin accent line between number and title */
+.article-toc-depth-0 > .article-toc-link {
+  font-weight: 600;
+  align-items: center;
+}
+
+.article-toc-depth-0 > .article-toc-link > .article-toc-num::after {
+  content: '';
+  display: inline-block;
+  width: 1.25rem;
+  border-top: 1px solid var(--art-accent-dim);
+  vertical-align: middle;
+  margin-left: 0.35rem;
+}
+
+/* Active heading highlight (current section + its ancestor chain) */
+.article-toc-link--active {
+  color: var(--art-text-title) !important;
+}
+
+/* Indentation by depth */
+.article-toc-depth-0 { padding-left: 0; }
+.article-toc-depth-1 { padding-left: 1.25rem; }
+.article-toc-depth-2 { padding-left: 2.5rem; }
+.article-toc-depth-3 { padding-left: 3.75rem; }
+
+/* A12a. Inline TOC (always visible, between thick divider and content) */
+
+.article-toc {
+  border: 1px solid var(--art-accent-dim);
+  margin-bottom: 1.5rem;
+  scroll-margin-top: 1rem;
+}
+
+/* Scroll target offset for anchored headings */
+.article-content h1[id],
+.article-content h2[id],
+.article-content h3[id],
+.article-content h4[id] {
+  scroll-margin-top: 1.5rem;
+}
+
+
+/* ─────────────────────────────────────────────────
+   B. ARTICLE CONTENT (.article-content)
+   HTML compilado desde markdown
+   ───────────────────────────────────────────────── */
+
+/* B1. Headings */
+
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4 {
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+
+.article-content h1 {
+  font-size: 1.75rem;
+  color: var(--art-accent);
+  margin: 2.5rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--art-border-subtle);
+}
+
+.article-content h2 {
+  font-size: 1.35rem;
+  color: var(--art-text-h2);
+  margin: 2rem 0 0.75rem;
+}
+
+.article-content h3 {
+  font-size: 1.05rem;
+  color: var(--art-text-h3);
+  margin: 1.5rem 0 0.5rem;
+}
+
+.article-content h4 {
+  font-size: 0.9rem;
+  color: var(--art-text-h4);
+  margin: 1.25rem 0 0.4rem;
+}
+
+/* B2. Paragraphs */
+
+.article-content p {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  color: var(--art-text-body);
+  line-height: 1.8;
+  margin-bottom: 1rem;
+}
+
+/* B3. Typed blockquotes {bkqt:type:text} */
+
+.article-content .bkqt {
+  margin: 1.5rem 0;
+  border-radius: 6px;
+  overflow: hidden;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--art-text-bright);
+  line-height: 1.8;
+}
+
+.article-content .bkqt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.2rem 0.75rem;
+  background: var(--bkqt-bg-header);
+}
+
+.article-content .bkqt-body {
+  padding: 0.75rem 1rem;
+  background: var(--bkqt-bg);
+}
+
+.article-content .bkqt-body > *:first-child {
+  margin-top: 0;
+}
+
+.article-content .bkqt-body > *:last-child {
+  margin-bottom: 0;
+}
+
+.article-content .bkqt p {
+  font-size: inherit;
+  margin: 0.75rem 0 0 0;
+}
+
+.article-content .bkqt ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.5rem 0 0 0;
+}
+
+.article-content .bkqt ul li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.25rem;
+  font-size: inherit;
+}
+
+.article-content .bkqt ul li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--bkqt-color);
+  font-weight: bold;
+  font-size: inherit;
+  line-height: 1.8;
+}
+
+.article-content .bkqt ol {
+  padding-left: 1.5rem;
+  margin: 0.5rem 0 0 0;
+}
+
+.article-content .bkqt ol li {
+  margin-bottom: 0.25rem;
+  font-size: inherit;
+}
+
+.article-content .bkqt ol li::marker {
+  color: var(--bkqt-color);
+  font-weight: bold;
+}
+
+.article-content .bkqt code:not(pre code) {
+  color: var(--bkqt-color) !important;
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.06);
+}
+
+.article-content .bkqt-label {
+  font-weight: 400;
+  color: var(--bkqt-color);
+}
+
+.article-content .copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--art-text-mid);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.article-content .copy-btn:hover {
+  color: var(--art-text-bright);
+  background: rgba(255,255,255,0.06);
+}
+
+.article-content .copy-btn.copied {
+  color: var(--bkqt-color, var(--art-accent));
+}
+
+/* bkqt type variants — dark */
+.article-content .bkqt-note       { --bkqt-color: #a3e635; --bkqt-bg-header: rgba(163,230,53,0.10); --bkqt-bg: rgba(163,230,53,0.04); }
+.article-content .bkqt-tip        { --bkqt-color: #22c55e; --bkqt-bg-header: rgba(34,197,94,0.10);  --bkqt-bg: rgba(34,197,94,0.04); }
+.article-content .bkqt-warning    { --bkqt-color: #d97706; --bkqt-bg-header: rgba(217,119,6,0.10);  --bkqt-bg: rgba(217,119,6,0.04); }
+.article-content .bkqt-danger     { --bkqt-color: #dc2626; --bkqt-bg-header: rgba(220,38,38,0.10);  --bkqt-bg: rgba(220,38,38,0.04); }
+.article-content .bkqt-deepdive   { --bkqt-color: #3b82f6; --bkqt-bg-header: rgba(59,130,246,0.10); --bkqt-bg: rgba(59,130,246,0.04); }
+.article-content .bkqt-keyconcept { --bkqt-color: #a855f7; --bkqt-bg-header: rgba(168,85,247,0.10); --bkqt-bg: rgba(168,85,247,0.04); }
+
+/* bkqt type variants — light */
+[data-theme="light"] .article-content .bkqt-note       { --bkqt-color: #4d7c0f; --bkqt-bg-header: rgba(77,124,15,0.12);  --bkqt-bg: rgba(77,124,15,0.05); }
+[data-theme="light"] .article-content .bkqt-tip        { --bkqt-color: #15803d; --bkqt-bg-header: rgba(21,128,61,0.12);  --bkqt-bg: rgba(21,128,61,0.05); }
+[data-theme="light"] .article-content .bkqt-warning    { --bkqt-color: #b45309; --bkqt-bg-header: rgba(180,83,9,0.12);   --bkqt-bg: rgba(180,83,9,0.05); }
+[data-theme="light"] .article-content .bkqt-danger     { --bkqt-color: #b91c1c; --bkqt-bg-header: rgba(185,28,28,0.12);  --bkqt-bg: rgba(185,28,28,0.05); }
+[data-theme="light"] .article-content .bkqt-deepdive   { --bkqt-color: #2563eb; --bkqt-bg-header: rgba(37,99,235,0.12);  --bkqt-bg: rgba(37,99,235,0.05); }
+[data-theme="light"] .article-content .bkqt-keyconcept { --bkqt-color: #7c3aed; --bkqt-bg-header: rgba(124,58,237,0.12); --bkqt-bg: rgba(124,58,237,0.05); }
+
+/* B3b. Small text (> markdown blocks) */
+
+.article-content .small-text {
+  margin: 1rem 0;
+}
+
+.article-content .small-text p {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--art-text-mid);
+  line-height: 1.6;
+  margin-bottom: 0.4rem;
+}
+
+/* B4. Unordered lists */
+
+.article-content ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 1rem 0;
+}
+
+.article-content ul li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  color: var(--art-text-body);
+  line-height: 1.7;
+}
+
+.article-content ul li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--art-accent);
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+/* B5. Ordered lists */
+
+.article-content ol {
+  list-style: decimal;
+  padding-left: 1.5rem;
+  margin: 1rem 0;
+}
+
+.article-content ol li {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  color: var(--art-text-body);
+  line-height: 1.7;
+  margin-bottom: 0.5rem;
+}
+
+.article-content ol li::marker {
+  color: var(--art-accent);
+  font-weight: bold;
+}
+
+/* B6. Code blocks — terminal macOS */
+
+.article-content .code-terminal {
+  background-color: var(--art-surface-code);
+  border: 1px solid var(--art-border);
+  border-radius: 8px;
+  margin: 1.5rem 0;
+  overflow: hidden;
+  transition: background-color 0.95s ease, border-color 0.95s ease;
+}
+
+.article-content .code-terminal-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  background-color: var(--art-surface-bar);
+  border-bottom: 1px solid var(--art-border-subtle);
+  transition: background-color 0.95s ease, border-color 0.95s ease;
+}
+
+.article-content .code-terminal-dots {
+  display: flex;
+  gap: 5px;
+}
+
+.article-content .code-terminal-dots span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.article-content .code-terminal-dots span:nth-child(1) { background: #c74b47; }
+.article-content .code-terminal-dots span:nth-child(2) { background: #c9a22a; }
+.article-content .code-terminal-dots span:nth-child(3) { background: #2ea043; }
+
+.article-content .code-terminal-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.article-content .code-terminal-lang {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--art-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.article-content .code-terminal pre {
+  margin: 0;
+  padding: 1rem;
+  overflow-x: auto;
+  background: transparent;
+  border: none;
+}
+
+.article-content .code-terminal code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--art-text-bright);
+  line-height: 1.6;
+  background: transparent;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+}
+
+/* Fallback: pre>code without wrapper */
+.article-content pre:not(.code-terminal pre) {
+  background-color: var(--art-surface-code);
+  border: 1px solid var(--art-border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  transition: background-color 0.95s ease, border-color 0.95s ease;
+}
+
+.article-content pre:not(.code-terminal pre) code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--art-text-bright);
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+
+/* B7. Inline code */
+
+.article-content code:not(pre code) {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8em;
+  color: var(--art-accent);
+  background: var(--art-accent-code-bg);
+  border: 1px solid var(--art-accent-code-border);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+}
+
+/* B8. Horizontal rules */
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--art-border);
+  margin: 2rem 0;
+}
+
+/* B9. Links */
+
+.article-content a:not(.wiki-ref):not(.wiki-ref-resolved):not(.doc-ref) {
+  color: var(--art-accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--art-accent-dim);
+  transition: border-color 0.2s;
+}
+
+.article-content a:not(.wiki-ref):not(.wiki-ref-resolved):not(.doc-ref):hover {
+  border-bottom-color: var(--art-accent);
+}
+
+/* B10. Images */
+
+.article-content img {
+  border-radius: 4px;
+  border: 1px solid var(--art-border);
+  margin: 1.5rem 0;
+}
+
+/* B10b. Figcaptions */
+
+.article-content figure {
+  margin: 1.5rem 0;
+}
+
+.article-content figure img {
+  margin-bottom: 0;
+}
+
+.article-content figcaption {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--art-text-dim);
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+/* B11. Tables */
+
+.article-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+}
+
+.article-content th {
+  background: var(--art-surface-bar);
+  color: var(--art-accent);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--art-border-strong);
+  text-align: left;
+}
+
+.article-content td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--art-border-subtle);
+  color: var(--art-text-body);
+}
+
+/* B12. Strong / Em */
+
+.article-content strong {
+  color: var(--art-text-strong);
+  font-weight: 700;
+}
+
+.article-content em {
+  color: var(--art-text-bright);
+  font-style: italic;
+}
+
+/* B13. <mark> highlight */
+
+.article-content mark {
+  background: var(--art-accent-mark-bg);
+  color: var(--art-accent);
+  padding: 0.1em 0.3em;
+  border-radius: 2px;
+}
+
+/* B13b. Accent-colored text (--text--) */
+
+.article-content .accent-text {
+  color: var(--art-accent);
+}
+
+/* B13c. Mark + accent-text adapt color inside blockquotes */
+
+.article-content .bkqt mark {
+  color: var(--bkqt-color);
+  background: color-mix(in srgb, var(--bkqt-color) 15%, transparent);
+}
+
+.article-content .bkqt .accent-text {
+  color: var(--bkqt-color);
+}
+
+/* B14. <kbd> keyboard */
+
+.article-content kbd {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75em;
+  background: var(--art-surface-bar);
+  border: 1px solid var(--art-border-strong);
+  border-bottom: 2px solid var(--art-border-strong);
+  color: var(--art-text-bright);
+  padding: 0.1em 0.4em;
+  border-radius: 3px;
+}
+
+/* B15. Wiki refs */
+
+.article-content .wiki-ref,
+.article-content .wiki-ref-resolved {
+  color: var(--art-accent);
+  border-bottom: 1px dashed var(--art-accent-hover-border);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.article-content .wiki-ref:hover,
+.article-content .wiki-ref-resolved:hover {
+  border-bottom-style: solid;
+}
+
+/* B16. Inline code inside colored spans adapts bg/border to parent color */
+
+.article-content [style*="color"] > code:not(pre code) {
+  color: inherit;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  border-color: color-mix(in srgb, currentColor 20%, transparent);
+}
+
+/* B17. Cross-document links */
+
+.article-content .doc-ref {
+  text-decoration: none;
+  border-bottom: 1px dashed;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.article-content .doc-ref:hover {
+  border-bottom-style: solid;
+}
+
+.article-content .doc-ref-projects { color: #a3e635; border-bottom-color: rgba(163,230,53,0.4); }
+.article-content .doc-ref-threads  { color: #fb7185; border-bottom-color: rgba(251,113,133,0.4); }
+.article-content .doc-ref-bits2bricks { color: #3B82F6; border-bottom-color: rgba(59,130,246,0.4); }
+.article-content .doc-ref-external { color: #9ca3af; border-bottom-color: rgba(156,163,175,0.4); }
+
+[data-theme="light"] .article-content .doc-ref-projects { color: #4d7c0f; border-bottom-color: rgba(77,124,15,0.4); }
+[data-theme="light"] .article-content .doc-ref-threads  { color: #e11d48; border-bottom-color: rgba(225,29,72,0.4); }
+[data-theme="light"] .article-content .doc-ref-bits2bricks { color: #2563eb; border-bottom-color: rgba(37,99,235,0.4); }
+[data-theme="light"] .article-content .doc-ref-external { color: #6b7280; border-bottom-color: rgba(107,114,128,0.4); }
+
+/* B18. Side image layouts */
+
+.article-content .img-side-layout {
+  margin: 1.5rem 0;
+}
+
+.article-content .img-side-layout .img-side-img {
+  border-radius: 4px;
+  border: 1px solid var(--art-border);
+}
+
+.article-content .img-side-layout .img-side-content p {
+  color: var(--art-text-body);
+}
+
+
+/* ─────────────────────────────────────────────────
+   C. BOTTOM SECTIONS
+   ───────────────────────────────────────────────── */
+
+/* C1. Actions bar (inside box) */
+
+.article-actions {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--art-border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.article-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.article-actions-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--art-text-muted);
+  text-transform: uppercase;
+}
+
+.article-actions-link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--art-text-dim);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.article-actions-link:hover {
+  color: var(--art-accent);
+}
+
+.article-actions-github {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--art-text-mid);
+  border: 1px solid var(--art-border);
+  background: var(--art-surface);
+  text-decoration: none;
+  transition: all 0.2s;
+  border-radius: 2px;
+}
+
+.article-actions-github:hover {
+  color: var(--art-accent);
+  border-color: var(--art-accent-dim);
+}
+
+/* C2. Related posts (OUTSIDE box) */
+
+.article-related {
+  margin-top: 2.5rem;
+}
+
+.article-related-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.article-related-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--art-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.article-related-viewall {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--art-accent);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: opacity 0.2s;
+}
+
+.article-related-viewall:hover {
+  opacity: 0.7;
+}
+
+.article-related-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .article-related-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.article-related-card {
+  display: block;
+  border: 1px solid var(--art-border-card);
+  overflow: hidden;
+  background: var(--art-surface-card);
+  transition: border-color 0.2s;
+  text-decoration: none;
+}
+
+.article-related-card:hover {
+  border-color: var(--art-border);
+}
+
+.article-related-thumb {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--art-surface-code);
+}
+
+.article-related-thumb img {
+  border: none;
+  border-radius: 0;
+  margin: 0;
+}
+
+.article-related-info {
+  padding: 0.75rem;
+}
+
+.article-related-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.article-related-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--art-text-card);
+  text-transform: lowercase;
+  line-height: 1.3;
+  transition: color 0.2s;
+}
+
+.article-related-card:hover .article-related-name {
+  color: var(--art-accent);
+}
+
+
+/* ─────────────────────────────────────────────────
+   D. RESPONSIVE
+   ───────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .article-body {
+    padding: 1rem 1.25rem 1.5rem;
+  }
+  .article-title {
+    font-size: 2rem;
+  }
+  .article-subtitle {
+    font-size: 0.95rem;
+  }
+  .article-hero {
+    aspect-ratio: 16 / 9;
+  }
+  .article-nav-row {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+}

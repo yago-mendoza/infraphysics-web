@@ -9,11 +9,15 @@ export interface CategoryDisplayConfig {
   description: string;
   icon: React.ReactNode;
   color: string;
+  lightColor?: string;
   colorClass: string;
   bgClass: string;
   borderClass: string;
   accent: string;
+  lightAccent?: string;
   darkBadge: string;
+  backLabel: string;
+  relatedLabel: string;
 }
 
 function categoryColors(color: string) {
@@ -31,7 +35,11 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
     description: "What I've built, why, and what broke along the way.",
     icon: <GearIcon />,
     color: 'lime-400',
+    lightColor: 'lime-800',
     accent: '#a3e635',
+    lightAccent: '#3f6212',
+    backLabel: 'RETURN_TO_ARCHIVES',
+    relatedLabel: 'Related Case Studies',
     ...categoryColors('lime-400'),
   },
   threads: {
@@ -40,6 +48,8 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
     icon: <ThreadIcon />,
     color: 'rose-400',
     accent: '#fb7185',
+    backLabel: 'RETURN_TO_THREADS',
+    relatedLabel: 'Related Threads',
     ...categoryColors('rose-400'),
   },
   bits2bricks: {
@@ -48,6 +58,8 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
     icon: <GradCapIcon />,
     color: 'blue-400',
     accent: '#3B82F6',
+    backLabel: 'RETURN_TO_BITS2BRICKS',
+    relatedLabel: 'Related Articles',
     ...categoryColors('blue-400'),
   },
 };
@@ -65,6 +77,19 @@ export const postPath = (category: string, id: string): string =>
 /** Full path to a section listing, e.g. /blog/threads */
 export const sectionPath = (category: string): string =>
   `/${categoryGroup(category)}/${category}`;
+
+/**
+ * Get theme-aware color/accent for a category.
+ * Falls back to dark values when no light override exists.
+ */
+export const getThemedColor = (cat: string, theme: 'dark' | 'light'): { color: string; accent: string } => {
+  const cfg = CATEGORY_CONFIG[cat];
+  if (!cfg) return { color: 'gray-400', accent: '#9ca3af' };
+  if (theme === 'light' && (cfg.lightColor || cfg.lightAccent)) {
+    return { color: cfg.lightColor || cfg.color, accent: cfg.lightAccent || cfg.accent };
+  }
+  return { color: cfg.color, accent: cfg.accent };
+};
 
 /**
  * Get category color class (text color)

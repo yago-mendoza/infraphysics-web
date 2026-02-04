@@ -1,36 +1,40 @@
-// Project post view — terminal/cyberpunk theme for category === 'projects'
+// Article post view — unified terminal/cyberpunk theme for all article categories
 
 import React, { useMemo, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { formatDate, formatDateTerminal } from '../lib';
+import { formatDate, formatDateTerminal, calculateReadingTime } from '../lib';
 import { allFieldNotes } from '../lib/brainIndex';
 import { WikiContent } from '../components/WikiContent';
 import { CATEGORY_CONFIG, sectionPath as getSectionPath, postPath } from '../config/categories';
 import { ArrowRightIcon, GitHubIcon, LinkedInIcon } from '../components/icons';
 import { posts } from '../data/data';
 import { Post } from '../types';
-import '../styles/project-article.css';
+import '../styles/article.css';
 
-interface ProjectPostViewProps {
+interface ArticlePostViewProps {
   post: Post;
 }
 
-export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
+export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const sectionPathUrl = getSectionPath(post.category);
   const location = useLocation();
+  const catCfg = CATEGORY_CONFIG[post.category];
 
-  // Status label — real project status
-  const statusLabel = (() => {
+  // Status label + dot color — derived from PostStatus
+  const statusConfig = (() => {
     switch (post.status) {
-      case 'completed': return 'FINISHED';
-      case 'active':
-      case 'in-progress': return 'IN PROGRESS';
-      case 'archived': return 'ARCHIVED';
-      default: return 'LOGGED';
+      case 'ongoing':      return { label: 'ONGOING',      dotColor: '#a78bfa' }; // violet-400
+      case 'implemented':  return { label: 'IMPLEMENTED',  dotColor: '#34d399' }; // emerald-400
+      case 'active':       return { label: 'ACTIVE',       dotColor: '#34d399' }; // emerald-400
+      case 'in-progress':  return { label: 'IN PROGRESS',  dotColor: '#fbbf24' }; // amber-400
+      case 'completed':    return { label: 'COMPLETED',    dotColor: '#60a5fa' }; // blue-400
+      case 'archived':     return { label: 'ARCHIVED',     dotColor: '#9ca3af' }; // gray-400
+      default:             return null;
     }
   })();
 
   const formattedDate = formatDateTerminal(post.date);
+  const readingTime = calculateReadingTime(post.content);
 
   const authorDisplay = post.author
     ? post.author.toUpperCase()
@@ -44,17 +48,6 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
 
   /*
    * Heading extraction + content enrichment
-   *
-   * 1. Regex scans post.content for <h1>–<h4> tags.
-   * 2. For each heading it generates a URL-safe slug (deduped with a suffix counter),
-   *    injects an `id` attribute for anchor linking, and appends a small "back to
-   *    index" SVG button (visible on hover via CSS).
-   * 3. Headings are collected into a flat array with hierarchical numbering
-   *    (1, 1.1, 1.2, 2, …) derived from depth relative to the shallowest heading level.
-   *
-   * Returns:
-   * - headings: ordered list with { level, text, id, number, depth }
-   * - contentWithIds: the enriched HTML string ready for WikiContent
    */
   const { headings, contentWithIds } = useMemo(() => {
     const raw: { level: number; text: string; id: string }[] = [];
@@ -106,9 +99,6 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
   const [tocOpen, setTocOpen] = useState(false);
 
   // Scroll-based active heading tracking for inline TOC highlight.
-  // Kept as a scroll listener (rather than IntersectionObserver) because the TOC
-  // needs to highlight the *last* heading that scrolled past a fixed offset (120px),
-  // which is simpler with getBoundingClientRect than with IO threshold math.
   const [activeId, setActiveId] = useState<string>('');
 
   useEffect(() => {
@@ -173,21 +163,21 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
 
   // TOC list rendering
   const tocList = headings.length > 1 ? (
-    <ol className="project-toc-list">
+    <ol className="article-toc-list">
       {headings.map((h) => (
         <li
           key={h.id}
-          className={`project-toc-item project-toc-depth-${h.depth}`}
+          className={`article-toc-item article-toc-depth-${h.depth}`}
         >
           <a
             href={`#${h.id}`}
-            className={`project-toc-link${activeIds.has(h.id) ? ' project-toc-link--active' : ''}`}
+            className={`article-toc-link${activeIds.has(h.id) ? ' article-toc-link--active' : ''}`}
             onClick={(e) => {
               e.preventDefault();
               document.getElementById(h.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }}
           >
-            <span className="project-toc-num">{h.number}</span>
+            <span className="article-toc-num">{h.number}</span>
             {h.text}
           </a>
         </li>
@@ -195,53 +185,58 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
     </ol>
   ) : null;
 
+  const backLabel = catCfg?.backLabel || 'RETURN_TO_ARCHIVES';
+  const relatedLabel = catCfg?.relatedLabel || 'Related Articles';
+
   return (
-    <div className="project-page-wrapper animate-fade-in">
+    <div className={`article-page-wrapper article-${post.category} animate-fade-in`}>
 
       {/* ════════════════════════════════════════════
-          THE BOX — .project-container
+          THE BOX — .article-container
           Everything except Related Posts lives here
           ════════════════════════════════════════════ */}
-      <article className="project-container">
+      <article className="article-container">
 
         {/* ── HEADER BAR ── */}
-        <div className="project-header-bar">
-          <span className="project-header-log">
+        <div className="article-header-bar">
+          <span className="article-header-log">
             // {formattedDate}
           </span>
-          <span className="project-header-status">
-            <span className="project-status-dot" />
-            {statusLabel}
-          </span>
+          {statusConfig && (
+            <span className="article-header-status" style={{ color: statusConfig.dotColor }}>
+              <span className="article-status-dot" style={{ background: statusConfig.dotColor }} />
+              {statusConfig.label}
+            </span>
+          )}
         </div>
 
         {/* ── HERO IMAGE ── */}
         {post.thumbnail && (
-          <div className="project-hero">
+          <div className="article-hero">
             <img
               src={post.thumbnail}
               alt={post.displayTitle || post.title}
-              className="project-hero-img"
+              className="article-hero-img"
             />
-            <div className="project-hero-gradient" />
+            <div className="article-hero-gradient" />
           </div>
         )}
 
         {/* ── BODY ── */}
-        <div className="project-body">
+        <div className="article-body">
 
           {/* Nav row: return link + social icons */}
-          <div className="project-nav-row">
-            <Link to={sectionPathUrl} className="project-back-link">
-              &lt; RETURN_TO_ARCHIVES
+          <div className="article-nav-row">
+            <Link to={sectionPathUrl} className="article-back-link">
+              &lt; {backLabel}
             </Link>
-            <div className="project-social-icons">
+            <div className="article-social-icons">
               {post.github && (
                 <a
                   href={post.github}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="project-social-btn project-social-github"
+                  className="article-social-btn article-social-github"
                   title="GitHub"
                 >
                   <GitHubIcon size={18} />
@@ -251,7 +246,7 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
                 href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="project-social-btn project-social-linkedin"
+                className="article-social-btn article-social-linkedin"
                 title="Share on LinkedIn"
               >
                 <LinkedInIcon size={18} />
@@ -261,65 +256,66 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
 
           {/* Tag pills — above technologies */}
           {post.tags && post.tags.length > 0 && (
-            <div className="project-pills project-pills-topics">
+            <div className="article-pills article-pills-topics">
               {post.tags.map(tag => (
-                <span key={tag} className="project-pill project-pill-topic">{tag}</span>
+                <span key={tag} className="article-pill article-pill-topic">{tag}</span>
               ))}
             </div>
           )}
 
-          {/* Technology pills (LIME) — below topics */}
+          {/* Technology pills — below topics */}
           {post.technologies && post.technologies.length > 0 && (
-            <div className="project-pills project-pills-tech">
+            <div className="article-pills article-pills-tech">
               {post.technologies.map(tech => (
-                <span key={tech} className="project-pill project-pill-tech">{tech}</span>
+                <span key={tech} className="article-pill article-pill-tech">{tech}</span>
               ))}
             </div>
           )}
 
           {/* TITLE — displayTitle large + subtitle below smaller/gray */}
-          <div className="project-title-block">
-            <h1 className="project-title">
+          <div className="article-title-block">
+            <h1 className="article-title">
               {post.displayTitle || post.title}
             </h1>
             {post.subtitle && (
-              <p className="project-subtitle">{post.subtitle}</p>
+              <p className="article-subtitle">{post.subtitle}</p>
             )}
           </div>
 
-          {/* META — date + author on same line */}
-          <div className="project-meta">
-            <span className="project-meta-date">{formattedDate}</span>
-            <Link to="/contact" className="project-meta-author">{authorDisplay}</Link>
+          {/* META — date + reading time + author on same line */}
+          <div className="article-meta">
+            <span className="article-meta-date">{formattedDate}</span>
+            <span className="article-meta-reading-time">{readingTime} min read</span>
+            <Link to="/contact" className="article-meta-author">{authorDisplay}</Link>
           </div>
 
           {/* Thin gray line between meta and notes */}
-          <div className="project-divider-thin" />
+          <div className="article-divider-thin" />
 
           {/* Author notes */}
           {notesArray.length > 0 && (
-            <div className="project-notes">
+            <div className="article-notes">
               {notesArray.map((note, i) => (
-                <p key={i} className="project-notes-line">— {note}</p>
+                <p key={i} className="article-notes-line">— {note}</p>
               ))}
             </div>
           )}
 
           {/* Thick white line before article */}
-          <div className="project-divider-thick" />
+          <div className="article-divider-thick" />
 
           {/* Table of Contents — collapsible */}
           {headings.length > 1 && (
-            <nav className="project-toc" id="project-toc">
+            <nav className="article-toc" id="article-toc">
               <button
                 type="button"
-                className="project-toc-toggle"
+                className="article-toc-toggle"
                 onClick={() => setTocOpen(o => !o)}
                 aria-expanded={tocOpen}
               >
-                <span className="project-toc-label">// CONTENTS</span>
+                <span className="article-toc-label">// CONTENTS</span>
                 <svg
-                  className={`project-toc-chevron${tocOpen ? ' project-toc-chevron--open' : ''}`}
+                  className={`article-toc-chevron${tocOpen ? ' article-toc-chevron--open' : ''}`}
                   viewBox="0 0 12 12"
                   width="12"
                   height="12"
@@ -340,18 +336,18 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
           <WikiContent
             html={contentWithIds}
             allFieldNotes={allFieldNotes}
-            className="project-article"
+            className="article-content"
           />
 
           {/* Share bar — reader perspective */}
-          <div className="project-actions">
-            <div className="project-actions-left">
-              <span className="project-actions-label">Share:</span>
+          <div className="article-actions">
+            <div className="article-actions-left">
+              <span className="article-actions-label">Share:</span>
               <a
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out this project: ${post.displayTitle || post.title}`)}&url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out: ${post.displayTitle || post.title}`)}&url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="project-actions-link"
+                className="article-actions-link"
               >
                 Twitter
               </a>
@@ -359,7 +355,7 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
                 href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="project-actions-link"
+                className="article-actions-link"
               >
                 LinkedIn
               </a>
@@ -369,7 +365,7 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
                 href={post.github}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="project-actions-github"
+                className="article-actions-github"
               >
                 <GitHubIcon size={18} />
                 View on GitHub
@@ -383,14 +379,14 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
       {/* ════════════════════════════════════════════
           RELATED POSTS — OUTSIDE the box
           ════════════════════════════════════════════ */}
-      <div className="project-related">
-        <div className="project-related-header">
-          <h3 className="project-related-title">Related Case Studies</h3>
-          <Link to={sectionPathUrl} className="project-related-viewall">
+      <div className="article-related">
+        <div className="article-related-header">
+          <h3 className="article-related-title">{relatedLabel}</h3>
+          <Link to={sectionPathUrl} className="article-related-viewall">
             View all <ArrowRightIcon />
           </Link>
         </div>
-        <div className="project-related-grid">
+        <div className="article-related-grid">
           {recommendedPosts.map(rec => {
             const recCfg = CATEGORY_CONFIG[rec.category];
             const recColor = recCfg?.colorClass || 'text-gray-400';
@@ -399,21 +395,21 @@ export const ProjectPostView: React.FC<ProjectPostViewProps> = ({ post }) => {
               <Link
                 key={rec.id}
                 to={postPath(rec.category, rec.id)}
-                className="project-related-card group"
+                className="article-related-card group"
               >
-                <div className="project-related-thumb">
+                <div className="article-related-thumb">
                   <img
                     src={rec.thumbnail || ''}
                     alt=""
                     className="w-full h-full object-cover transition-transform group-hover:scale-105"
                   />
                 </div>
-                <div className="project-related-info">
-                  <div className="project-related-meta">
+                <div className="article-related-info">
+                  <div className="article-related-meta">
                     <span className={`text-[10px] uppercase ${recColor}`}>{rec.category}</span>
                     <span className="text-[10px] text-gray-500">{formatDate(rec.date)}</span>
                   </div>
-                  <h4 className="project-related-name">
+                  <h4 className="article-related-name">
                     {rec.displayTitle || rec.title}
                   </h4>
                 </div>

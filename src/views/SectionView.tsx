@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { posts } from '../data/data';
 import { Category } from '../types';
 import { calculateReadingTime, stripHtml } from '../lib';
-import { CATEGORY_CONFIG } from '../config/categories';
+import { CATEGORY_CONFIG, getThemedColor } from '../config/categories';
 import { useSectionState } from '../contexts/SectionStateContext';
 import { useTheme } from '../contexts/ThemeContext';
 import {
@@ -169,7 +169,8 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
     return count;
   };
 
-  const categoryInfo = CATEGORY_CONFIG[category] || { title: category, description: '', icon: null, color: 'gray-400', colorClass: 'text-gray-400' };
+  const categoryInfo = CATEGORY_CONFIG[category] || { title: category, description: '', icon: null, color: 'gray-400', colorClass: 'text-gray-400', accent: '#9ca3af' } as any;
+  const themed = getThemedColor(category, theme as 'dark' | 'light');
   const Renderer = SECTION_RENDERERS[category] || ProjectsList;
 
   return (
@@ -297,8 +298,8 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
                       onClick={() => toggleTech(t)}
                       className={`text-xs px-2.5 py-0.5 border rounded-sm transition-colors ${
                         selectedTechs.includes(t)
-                          ? `bg-${categoryInfo.color}/20 border-${categoryInfo.color}/50 text-${categoryInfo.color}`
-                          : `border-${categoryInfo.color}/20 text-${categoryInfo.color}/60 hover:border-${categoryInfo.color}/40`
+                          ? `bg-${themed.color}/20 border-${themed.color}/50 text-${themed.color}`
+                          : `border-${themed.color}/20 text-${themed.color}/60 hover:border-${themed.color}/40`
                       }`}
                     >
                       {t} ({techCounts[t] || 0})
@@ -312,7 +313,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
       </div>
 
       {/* Delegated renderer */}
-      <Renderer posts={visiblePosts} query={query} getExcerpt={getExcerpt} getMatchCount={getMatchCount} color={categoryInfo.color || 'gray-400'} accent={categoryInfo.accent || '#9ca3af'} />
+      <Renderer posts={visiblePosts} query={query} getExcerpt={getExcerpt} getMatchCount={getMatchCount} color={themed.color} accent={themed.accent} />
 
       {/* Infinite scroll sentinel */}
       {hasMore && (

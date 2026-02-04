@@ -6,6 +6,5 @@ export * from './ContactView';
 export * from './ThanksView';
 export * from './SectionView';
 export * from './PostView';
-export * from './DefaultPostView';
-export * from './ProjectPostView';
+export * from './ArticlePostView';
 export * from './SecondBrainView';

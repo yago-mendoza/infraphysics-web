@@ -1,6 +1,6 @@
 export type Category = 'main' | 'projects' | 'threads' | 'bits2bricks' | 'fieldnotes';
 
-export type ProjectStatus = 'ongoing' | 'implemented';
+export type PostStatus = 'ongoing' | 'implemented' | 'active' | 'in-progress' | 'completed' | 'archived';
 
 export interface Post {
   id: string;
@@ -12,7 +12,7 @@ export interface Post {
   description: string;
   thumbnail?: string; // Optional image URL for list view
   // Extended metadata for case studies
-  status?: ProjectStatus;
+  status?: PostStatus;
   github?: string; // GitHub repository URL
   demo?: string; // Live demo URL
   technologies?: string[]; // Tech stack used

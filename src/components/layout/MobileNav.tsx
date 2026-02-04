@@ -16,8 +16,9 @@ import {
   CloseIcon,
   SunIcon,
   MoonIcon,
+  SearchIcon,
 } from '../icons';
-import { CATEGORY_CONFIG } from '../../config/categories';
+import { CATEGORY_CONFIG, getThemedColor } from '../../config/categories';
 import { useSectionState } from '../../contexts/SectionStateContext';
 
 export const MobileNav: React.FC = () => {
@@ -72,6 +73,12 @@ export const MobileNav: React.FC = () => {
         </Link>
         <div className="flex items-center gap-2">
           <button
+            className="p-2 hover:bg-th-active rounded-sm transition-colors text-th-secondary opacity-60"
+            aria-label="Search"
+          >
+            <SearchIcon />
+          </button>
+          <button
             onClick={toggleTheme}
             className="p-2 hover:bg-th-active rounded-sm transition-colors text-th-secondary"
             aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
@@ -99,7 +106,7 @@ export const MobileNav: React.FC = () => {
             <nav className="flex flex-col p-4 gap-1">
               {/* LAB */}
               <SectionLabel>lab</SectionLabel>
-              <NavLink to={getLastPath('/lab/projects')} basePath="/lab/projects" colorClass={CATEGORY_CONFIG.projects.colorClass} icon={<GearIcon />}>Projects</NavLink>
+              <NavLink to={getLastPath('/lab/projects')} basePath="/lab/projects" colorClass={`text-${getThemedColor('projects', theme as 'dark' | 'light').color}`} icon={<GearIcon />}>Projects</NavLink>
               <NavLink to="/lab/second-brain" colorClass="text-violet-400" icon={<DiamondIcon />}>2<sup>nd</sup> brain</NavLink>
 
               {/* BLOG */}

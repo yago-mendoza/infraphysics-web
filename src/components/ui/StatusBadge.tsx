@@ -2,16 +2,20 @@
 
 import React from 'react';
 import { CircleIcon, CheckCircleIcon } from '../icons';
-import { ProjectStatus } from '../../types';
+import { PostStatus } from '../../types';
 
 interface StatusBadgeProps {
-  status: ProjectStatus;
+  status: PostStatus;
   label?: string;
 }
 
-const statusConfig: Record<ProjectStatus, { color: string; text: string; icon: React.ReactNode }> = {
-  'ongoing': { color: 'bg-violet-500', text: 'Ongoing', icon: <CircleIcon /> },
+const statusConfig: Record<PostStatus, { color: string; text: string; icon: React.ReactNode }> = {
+  'ongoing':     { color: 'bg-violet-500', text: 'Ongoing', icon: <CircleIcon /> },
   'implemented': { color: 'bg-amber-700', text: 'Implemented', icon: <CheckCircleIcon /> },
+  'active':      { color: 'bg-emerald-600', text: 'Active', icon: <CircleIcon /> },
+  'in-progress': { color: 'bg-amber-500', text: 'In Progress', icon: <CircleIcon /> },
+  'completed':   { color: 'bg-blue-600', text: 'Completed', icon: <CheckCircleIcon /> },
+  'archived':    { color: 'bg-gray-500', text: 'Archived', icon: <CheckCircleIcon /> },
 };
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label }) => {
