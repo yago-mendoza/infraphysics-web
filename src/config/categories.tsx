@@ -2,9 +2,8 @@
 
 import React from 'react';
 import { GearIcon, ThreadIcon, GradCapIcon } from '../components/icons';
-import { Category } from '../types';
 
-export interface CategoryDisplayConfig {
+interface CategoryDisplayConfig {
   title: string;
   description: string;
   icon: React.ReactNode;
@@ -105,16 +104,3 @@ export const getThemedColor = (cat: string, theme: 'dark' | 'light'): { color: s
   return { color: cfg.color, accent: cfg.accent };
 };
 
-/**
- * Get category color class (text color)
- */
-export const getCategoryColor = (cat: Category): string =>
-  CATEGORY_CONFIG[cat]?.colorClass || 'text-gray-400';
-
-/**
- * Get category background classes (bg + border)
- */
-export const getCategoryBg = (cat: Category): string => {
-  const cfg = CATEGORY_CONFIG[cat];
-  return cfg ? `${cfg.bgClass} ${cfg.borderClass}` : 'bg-th-surface-alt border-th-border';
-};

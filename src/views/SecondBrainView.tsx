@@ -3,11 +3,9 @@
 import React, { useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useHub } from '../contexts/SecondBrainHubContext';
-import { useSecondBrain } from '../hooks/useSecondBrain';
 import { useNavigationTrail } from '../hooks/useNavigationTrail';
 import { WikiContent } from '../components/WikiContent';
 import { NavigationTrail } from '../components/NavigationTrail';
-import { SearchIcon } from '../components/icons';
 import { addressToId } from '../lib/addressToId';
 import { noteById } from '../lib/brainIndex';
 import type { SortMode } from '../hooks/useSecondBrainHub';
@@ -33,36 +31,32 @@ type TrailAction =
   | { type: 'extend'; post: Post };
 
 export const SecondBrainView: React.FC = () => {
-  const hub = useHub();
-  // Always call useSecondBrain (hooks must be unconditional).
-  // Used as fallback on mobile where hub sidebar context is absent.
-  const brain = useSecondBrain();
+  // Hub context is always available — SecondBrainHubProvider wraps all app content.
+  // The hub supersedes the old useSecondBrain hook (which was a strict subset).
+  const hub = useHub()!;
   const { trail, resetTrail, extendTrail, truncateTrail, clearTrail, initTrail } = useNavigationTrail();
 
-  const hasHub = hub !== null;
-
-  const allFieldNotes = hasHub ? hub.allFieldNotes : brain.allFieldNotes;
-  const sortedResults = hasHub ? hub.sortedResults : brain.filteredNotes;
-  const activePost = hasHub ? hub.activePost : brain.activePost;
-  const backlinks = hasHub ? hub.backlinks : brain.backlinks;
-  const relatedConcepts = hasHub ? hub.relatedConcepts : brain.relatedConcepts;
-  const outgoingRefCount = hasHub ? hub.outgoingRefCount : brain.outgoingRefCount;
-  const resolvedHtml = hasHub ? hub.resolvedHtml : brain.resolvedHtml;
-  const query = hasHub ? hub.query : brain.query;
-  const setQuery = hasHub ? hub.setQuery : brain.setQuery;
-  const searchActive = hasHub ? hub.searchActive : (brain.query.length > 0);
-  const clearSearch = hasHub ? hub.clearSearch : () => brain.setQuery('');
-  const directoryScope = hasHub ? hub.directoryScope : null;
-  const setDirectoryScope = hasHub ? hub.setDirectoryScope : null;
-  const sortMode = hasHub ? hub.sortMode : 'a-z';
-  const setSortMode = hasHub ? hub.setSortMode : null;
+  const {
+    sortedResults,
+    activePost,
+    backlinks,
+    relatedConcepts,
+    outgoingRefCount,
+    resolvedHtml,
+    query,
+    setQuery,
+    searchActive,
+    clearSearch,
+    directoryScope,
+    setDirectoryScope,
+    sortMode,
+    setSortMode,
+    directoryNavRef,
+  } = hub;
 
   // Pending trail action — set synchronously in click handlers, consumed by
   // the useEffect below so the breadcrumb updates in the same render as content.
   const pendingTrailAction = useRef<TrailAction | null>(null);
-
-  // Directory nav signal from sidebar — treat as trail reset
-  const directoryNavRef = hasHub ? hub.directoryNavRef : null;
 
   // Trail sync: when activePost changes, apply any pending trail action.
   // Falls back to initTrail for page-refresh / direct-URL landing.
@@ -72,8 +66,8 @@ export const SecondBrainView: React.FC = () => {
     pendingTrailAction.current = null;
 
     // Check sidebar directory signal
-    const fromDirectory = directoryNavRef?.current ?? false;
-    if (directoryNavRef) directoryNavRef.current = false;
+    const fromDirectory = directoryNavRef.current;
+    directoryNavRef.current = false;
 
     if (action) {
       if (action.type === 'reset') {
@@ -116,46 +110,6 @@ export const SecondBrainView: React.FC = () => {
 
   return (
     <div className="animate-fade-in">
-      {/* Header — only shown when hub sidebar is NOT available (mobile) */}
-      {!hasHub && (
-        <header className="mb-8 pb-6 border-b border-th-border">
-          <h1 className="text-3xl font-bold tracking-tight lowercase text-violet-400 mb-2">
-            second brain
-          </h1>
-          <p className="text-xs text-th-secondary font-light leading-relaxed mt-2 mb-3 max-w-lg">
-            Everything I know, linked together. A growing knowledge graph.
-          </p>
-          <div className="flex items-center gap-4 mb-4">
-            <span className="text-xs text-th-tertiary">
-              {brain.allFieldNotes.length} concepts &middot; {brain.totalLinks} links &middot; {brain.orphanCount} orphans
-            </span>
-          </div>
-
-          {/* Search */}
-          <div className="w-full">
-            <div className="flex items-center border border-th-border px-3 py-2 bg-th-surface-alt focus-within:border-th-border-active transition-colors">
-              <span className="text-th-tertiary"><SearchIcon /></span>
-              <input
-                type="text"
-                placeholder="Search concepts..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Escape') { setQuery(''); (e.target as HTMLInputElement).blur(); } }}
-                className="w-full text-xs ml-2 focus:outline-none placeholder-th-tertiary bg-transparent text-th-primary"
-              />
-              {query && (
-                <button
-                  onClick={() => setQuery('')}
-                  className="text-th-tertiary hover:text-th-secondary text-xs ml-2"
-                >
-                  clear
-                </button>
-              )}
-            </div>
-          </div>
-        </header>
-      )}
-
       {/* Main Content */}
       {showDetail ? (
         /* --- Concept Detail View --- */
@@ -278,14 +232,12 @@ export const SecondBrainView: React.FC = () => {
                 <div className="flex items-center gap-1 text-xs text-th-tertiary">
                   <span className="text-th-muted">scope:</span>
                   <span className="text-violet-400">{directoryScope.replace(/\/\//g, ' / ')}</span>
-                  {setDirectoryScope && (
-                    <button
-                      onClick={() => setDirectoryScope(null)}
-                      className="text-th-muted hover:text-th-secondary ml-0.5"
-                    >
-                      &times;
-                    </button>
-                  )}
+                  <button
+                    onClick={() => setDirectoryScope(null)}
+                    className="text-th-muted hover:text-th-secondary ml-0.5"
+                  >
+                    &times;
+                  </button>
                 </div>
               )}
               {query && (
@@ -294,23 +246,21 @@ export const SecondBrainView: React.FC = () => {
                 </div>
               )}
             </div>
-            {setSortMode && (
-              <div className="flex items-center gap-1.5">
-                {SORT_OPTIONS.map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setSortMode(opt.value)}
-                    className={`text-[10px] px-2 py-0.5 rounded-sm transition-colors ${
-                      sortMode === opt.value
-                        ? 'text-violet-400 bg-violet-400/10'
-                        : 'text-th-muted hover:text-th-secondary'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="flex items-center gap-1.5">
+              {SORT_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setSortMode(opt.value)}
+                  className={`text-[10px] px-2 py-0.5 rounded-sm transition-colors ${
+                    sortMode === opt.value
+                      ? 'text-violet-400 bg-violet-400/10'
+                      : 'text-th-muted hover:text-th-secondary'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">

@@ -29,11 +29,7 @@ const SECTION_RENDERERS: Record<string, React.FC<SectionRendererProps>> = {
   bits2bricks: Bits2BricksGrid,
 };
 
-const PAGE_CONFIG: Record<string, { initial: number; page: number }> = {
-  projects: { initial: 3, page: 3 },
-  threads: { initial: 3, page: 3 },
-  bits2bricks: { initial: 3, page: 3 },
-};
+const PAGE_SIZE = 3;
 
 const STATUS_FILTER_CONFIG: Record<string, { label: string; accent: string }> = {
   'ongoing': { label: 'Ongoing', accent: '#a78bfa' },
@@ -115,8 +111,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
   }, [sectionPosts, query, sortBy, selectedTopics, selectedTechs, selectedStatuses]);
 
   // Infinite scroll
-  const config = PAGE_CONFIG[category] || { initial: 6, page: 3 };
-  const effectiveVisible = visibleCount || config.initial;
+  const effectiveVisible = visibleCount || PAGE_SIZE;
   const visiblePosts = filteredPosts.slice(0, effectiveVisible);
   const hasMore = effectiveVisible < filteredPosts.length;
 
@@ -132,7 +127,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
       if (entry.isIntersecting) {
         setLoading(true);
         setTimeout(() => {
-          setSectionState(category, { visibleCount: effectiveVisible + config.page });
+          setSectionState(category, { visibleCount: effectiveVisible + PAGE_SIZE });
           setLoading(false);
         }, 800);
       }
@@ -140,7 +135,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [hasMore, loading, effectiveVisible, category, config.page, setSectionState]);
+  }, [hasMore, loading, effectiveVisible, category, setSectionState]);
 
   const getExcerpt = (content: string, query: string) => {
     if (!query) return null;

@@ -322,7 +322,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
             filtered.map((action, i) => {
               // Show group header when group changes
               let header: React.ReactNode = null;
-              if (action.group && action.group !== lastGroup && !query.trim()) {
+              if (action.group && action.group !== lastGroup && (!query.trim() || action.group === 'concept')) {
                 const label = groupLabel(action.group);
                 if (label) {
                   header = (

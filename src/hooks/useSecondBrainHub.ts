@@ -39,7 +39,7 @@ export interface TreeNode {
   childCount: number;     // total descendants (concepts only)
 }
 
-export interface HubStats {
+interface HubStats {
   totalConcepts: number;
   totalLinks: number;
   orphanCount: number;
@@ -394,11 +394,6 @@ export const useSecondBrainHub = () => {
     return orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity;
   }, [filterState]);
 
-  // Navigation
-  const navigateToNote = useCallback((noteId: string) => {
-    navigate(`/lab/second-brain/${noteId}`);
-  }, [navigate]);
-
   // Signal from sidebar directory: "this click should reset the trail"
   const directoryNavRef = useRef(false);
   const signalDirectoryNav = useCallback(() => {
@@ -416,7 +411,6 @@ export const useSecondBrainHub = () => {
 
   return {
     // URL state
-    id,
     activePost,
 
     // Search
@@ -447,7 +441,6 @@ export const useSecondBrainHub = () => {
     // Data
     allFieldNotes,
     sortedResults,
-    tree,
     stats,
 
     // Detail view data
@@ -455,10 +448,6 @@ export const useSecondBrainHub = () => {
     relatedConcepts,
     outgoingRefCount,
     resolvedHtml,
-    backlinksMap,
-
-    // Navigation
-    navigateToNote,
 
     // Directory nav signal (sidebar → view trail reset)
     directoryNavRef,

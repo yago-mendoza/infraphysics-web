@@ -12,11 +12,11 @@
   "dependencies": {
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "react-router-dom": "^7.12.0",
-    "shiki": "^3.22.0"
+    "react-router-dom": "^7.12.0"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
+    "shiki": "^3.22.0",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "gray-matter": "^4.0.3",

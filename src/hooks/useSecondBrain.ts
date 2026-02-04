@@ -1,7 +1,7 @@
 // Second Brain logic hook - concept wiki with address-based navigation
 
-import { useState, useMemo, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import { Post } from '../types';
 import {
   allFieldNotes,
@@ -14,7 +14,6 @@ import {
 
 export const useSecondBrain = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [query, setQuery] = useState('');
 
   // Active Post from URL — O(1) lookup
@@ -68,11 +67,6 @@ export const useSecondBrain = () => {
     return [...addressMatches, ...contentMatches];
   }, [query]);
 
-  // Navigation
-  const navigateToNote = useCallback((noteId: string) => {
-    navigate(`/lab/second-brain/${noteId}`);
-  }, [navigate]);
-
   return {
     id,
     query,
@@ -86,6 +80,5 @@ export const useSecondBrain = () => {
     resolvedHtml,
     totalLinks: globalStats.totalLinks,
     orphanCount: globalStats.orphanCount,
-    navigateToNote,
   };
 };

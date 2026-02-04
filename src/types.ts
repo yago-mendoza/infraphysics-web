@@ -33,27 +33,3 @@ export interface Post {
   references?: string[];      // outgoing [[...]] addresses
   trailingRefs?: string[];    // trailing [[...]] for "Related" section
 }
-
-export interface NavigationItem {
-  label: string;
-  path: string;
-  colorClass: string;
-}
-
-// Author/Profile information
-export interface AuthorProfile {
-  name: string;
-  role: string;
-  bio: string;
-  shortBio: string;
-  avatar?: string;
-  social: {
-    github?: string;
-    linkedin?: string;
-    twitter?: string;
-    email?: string;
-    website?: string;
-  };
-  skills: string[];
-  location?: string;
-}
