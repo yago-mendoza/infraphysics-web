@@ -8,6 +8,7 @@ thumbnail: https://images.unsplash.com/photo-1555949963-aa79dcee981c?q=80&w=400&
 description: growing textures with local rules.
 status: completed
 technologies: [Python, PyTorch, WebGL]
+featured: true
 ---
 
 # neural cellular automata

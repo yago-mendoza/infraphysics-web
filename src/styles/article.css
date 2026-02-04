@@ -293,6 +293,16 @@
   margin-bottom: 1.5rem;
 }
 
+.article-blog .article-body {
+  padding-top: 0;
+}
+
+.article-blog .article-nav-row {
+  margin: 0 -2rem;
+  padding: 0.55rem 2rem;
+  border-bottom: 1px solid var(--art-border);
+}
+
 .article-back-link {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
@@ -659,7 +669,7 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.875rem;
   color: var(--art-text-body);
-  line-height: 1.8;
+  line-height: 1.6;
   margin-bottom: 1rem;
 }
 
@@ -672,7 +682,7 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.78rem;
   color: var(--art-text-bright);
-  line-height: 1.8;
+  line-height: 1.6;
 }
 
 .article-content .bkqt-header {
@@ -722,7 +732,7 @@
   color: var(--bkqt-color);
   font-weight: bold;
   font-size: inherit;
-  line-height: 1.8;
+  line-height: 1.45;
 }
 
 .article-content .bkqt ol {
@@ -819,7 +829,7 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.875rem;
   color: var(--art-text-body);
-  line-height: 1.7;
+  line-height: 1.45;
 }
 
 .article-content ul li::before {
@@ -843,7 +853,7 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.875rem;
   color: var(--art-text-body);
-  line-height: 1.7;
+  line-height: 1.45;
   margin-bottom: 0.5rem;
 }
 
@@ -1333,6 +1343,12 @@
     flex-wrap: wrap;
     gap: 0.75rem;
   }
+  .article-blog .article-nav-row {
+    margin-left: -1.25rem;
+    margin-right: -1.25rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
   .article-context-bar {
     margin-left: -1.25rem;
     margin-right: -1.25rem;
@@ -1354,7 +1370,7 @@
 .article-blog .article-content .small-text p {
   font-family: 'Inter', var(--font-sans);
   font-size: 0.9rem;
-  line-height: 1.85;
+  line-height: 1.45;
 }
 
 /* E2. Blog title — Inter, no uppercase */
@@ -1372,6 +1388,7 @@
 
 /* E2b. Blog subtitle — Inter, not uppercased */
 .article-blog .article-subtitle {
+  font-family: 'Inter', var(--font-sans);
   text-transform: none;
   letter-spacing: normal;
 }
@@ -1410,24 +1427,34 @@
   max-width: 20rem;
 }
 
-/* E4. Hashtag tags */
+/* E4. Hashtag tag pills — below meta, above title (blog) */
 .article-hashtags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-top: 1.25rem;
-  margin-bottom: 1.25rem;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
 }
 
 .article-hashtag {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: var(--art-purple);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
+  border: 1px solid color-mix(in srgb, var(--art-purple) 30%, transparent);
+  padding: 0.15rem 0.5rem;
+  border-radius: 2px;
 }
 
 .article-hashtag-tech {
   color: var(--art-accent);
+  border-color: color-mix(in srgb, var(--art-accent) 30%, transparent);
+}
+
+/* Threads: topic hashtags match accent (rose) instead of purple */
+.article-threads .article-hashtag {
+  color: var(--art-accent);
+  border-color: color-mix(in srgb, var(--art-accent) 30%, transparent);
 }
 
 /* E4b. Blog separator — neutral line between subtitle and image */
@@ -1454,11 +1481,14 @@
 
 /* E6. Context bar — full-width sub-header below breadcrumbs */
 .article-context-bar {
-  margin: -0.25rem -2rem 1.25rem;
+  margin: 0 -2rem;
   padding: 0.65rem 2rem;
   background: var(--art-surface-context);
-  border-top: 1px solid var(--art-border);
   border-bottom: 1px solid var(--art-border);
+}
+
+.article-blog .article-meta {
+  margin-top: 1.25rem;
 }
 
 .article-context {

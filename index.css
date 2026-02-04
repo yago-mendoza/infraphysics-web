@@ -1,3 +1,18 @@
+/* Register custom properties as <color> so Chrome can interpolate
+   them during transitions instead of treating them as opaque strings. */
+
+@property --section-accent {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #a3e635;
+}
+
+@property --card-accent {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #a3e635;
+}
+
 /* Dual-range slider - make thumbs clickable while track doesn't interfere */
 .dual-range-input {
   pointer-events: none;
@@ -259,6 +274,29 @@
 }
 
 /* ============================================================
+   Section accent — CSS-driven category accent for listing views
+   Values aligned 1:1 with --art-accent in article.css
+   ============================================================ */
+
+.section-projects  { --section-accent: #a3e635; }
+.section-threads   { --section-accent: #fb7185; }
+.section-bits2bricks { --section-accent: #3B82F6; }
+
+[data-theme="light"] .section-projects    { --section-accent: #4d7c0f; }
+[data-theme="light"] .section-threads     { --section-accent: #e11d48; }
+[data-theme="light"] .section-bits2bricks { --section-accent: #2563eb; }
+
+/* card-accent inherits from section-accent — no inline styles needed */
+.section-projects .project-card { --card-accent: var(--section-accent); }
+.section-threads  .thread-card  { --card-accent: var(--section-accent); }
+
+/* Tech pills in project cards — CSS-driven accent color */
+.section-projects .pill-tech {
+  color: var(--section-accent);
+  border-color: color-mix(in srgb, var(--section-accent) 35%, transparent);
+}
+
+/* ============================================================
    Theme transition — smooth pulse on toggle, no interference otherwise
    ============================================================ */
 
@@ -269,7 +307,9 @@ html.theme-transitioning *::after {
   transition: background-color 0.95s ease, color 0.95s ease,
               border-color 0.95s ease, box-shadow 0.95s ease,
               fill 0.95s ease, stroke 0.95s ease,
-              opacity 0.95s ease !important;
+              opacity 0.95s ease,
+              --section-accent 0.95s ease,
+              --card-accent 0.95s ease !important;
 }
 
 /* ============================================================

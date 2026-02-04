@@ -1,9 +1,12 @@
 // Command palette triggered by search button or Ctrl+K / Cmd+K
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { posts } from '../data/data';
 import { postPath } from '../config/categories';
+import { allFieldNotes } from '../lib/brainIndex';
+import { useArticleContext } from '../contexts/ArticleContext';
+import { useTheme } from '../contexts/ThemeContext';
 import {
   HomeIcon,
   GearIcon,
@@ -11,6 +14,9 @@ import {
   DiamondIcon,
   MailIcon,
   SearchIcon,
+  ExternalLinkIcon,
+  SunIcon,
+  MoonIcon,
 } from './icons';
 
 interface SearchPaletteProps {
@@ -22,6 +28,8 @@ interface QuickAction {
   label: string;
   icon: React.ReactNode;
   action: () => void;
+  shortcut?: string;
+  group?: 'contextual' | 'global' | 'nav' | 'concept';
 }
 
 export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose }) => {
@@ -30,57 +38,177 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { article } = useArticleContext();
+  const { theme, toggleTheme } = useTheme();
 
   const executeAndClose = useCallback((fn: () => void) => {
     fn();
     onClose();
   }, [onClose]);
 
-  const actions: QuickAction[] = [
-    {
-      label: 'Go to Home',
-      icon: <HomeIcon />,
-      action: () => executeAndClose(() => navigate('/home')),
-    },
-    {
-      label: 'View Projects',
-      icon: <GearIcon />,
-      action: () => executeAndClose(() => navigate('/lab/projects')),
-    },
-    {
-      label: 'Open Source / GitHub',
-      icon: <GitHubIcon size={22} />,
-      action: () => executeAndClose(() => window.open('https://github.com/infraphysics', '_blank')),
-    },
-    {
-      label: 'Second Brain',
-      icon: <DiamondIcon />,
-      action: () => executeAndClose(() => navigate('/lab/second-brain')),
-    },
-    {
-      label: 'Contact',
-      icon: <MailIcon />,
-      action: () => executeAndClose(() => navigate('/contact')),
-    },
-    {
-      label: 'Random Article',
-      icon: (
-        <span className="w-[22px] h-[22px] flex items-center justify-center bg-th-elevated rounded-sm text-[11px] text-th-secondary">
-          ?
-        </span>
-      ),
-      action: () => {
-        const validPosts = posts.filter(p => p.category !== 'fieldnotes');
-        if (validPosts.length === 0) return;
-        const randomPost = validPosts[Math.floor(Math.random() * validPosts.length)];
-        executeAndClose(() => navigate(postPath(randomPost.category, randomPost.id)));
-      },
-    },
-  ];
+  // Build all actions: contextual (article) → global shortcuts → navigation
+  const actions = useMemo<QuickAction[]>(() => {
+    const result: QuickAction[] = [];
 
-  const filtered = query.trim()
-    ? actions.filter(a => a.label.toLowerCase().includes(query.toLowerCase()))
-    : actions;
+    // ── Contextual actions (only when viewing an article) ──
+    if (article) {
+      const { post, nextPost, prevPost } = article;
+      if (post.github) {
+        result.push({
+          label: 'Open GitHub Repo',
+          icon: <GitHubIcon size={22} />,
+          action: () => executeAndClose(() => window.open(post.github!, '_blank')),
+          shortcut: 'G',
+          group: 'contextual',
+        });
+      }
+      if (post.demo) {
+        result.push({
+          label: 'View Live Demo',
+          icon: <ExternalLinkIcon />,
+          action: () => executeAndClose(() => window.open(post.demo!, '_blank')),
+          shortcut: 'D',
+          group: 'contextual',
+        });
+      }
+      result.push({
+        label: 'Scroll to Top',
+        icon: <span className="w-[22px] h-[22px] flex items-center justify-center text-[13px] text-th-secondary">↑</span>,
+        action: () => executeAndClose(() => window.scrollTo({ top: 0, behavior: 'smooth' })),
+        shortcut: 'T',
+        group: 'contextual',
+      });
+      result.push({
+        label: 'Scroll to Bottom',
+        icon: <span className="w-[22px] h-[22px] flex items-center justify-center text-[13px] text-th-secondary">↓</span>,
+        action: () => executeAndClose(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })),
+        shortcut: 'B',
+        group: 'contextual',
+      });
+      if (nextPost) {
+        result.push({
+          label: `Newer: ${nextPost.displayTitle || nextPost.title}`,
+          icon: <span className="w-[22px] h-[22px] flex items-center justify-center text-[13px] text-th-secondary">→</span>,
+          action: () => executeAndClose(() => navigate(postPath(nextPost.category, nextPost.id))),
+          shortcut: 'N',
+          group: 'contextual',
+        });
+      }
+      if (prevPost) {
+        result.push({
+          label: `Older: ${prevPost.displayTitle || prevPost.title}`,
+          icon: <span className="w-[22px] h-[22px] flex items-center justify-center text-[13px] text-th-secondary">←</span>,
+          action: () => executeAndClose(() => navigate(postPath(prevPost.category, prevPost.id))),
+          shortcut: 'P',
+          group: 'contextual',
+        });
+      }
+    }
+
+    // ── Global shortcut actions ──
+    const mostRecent = [...posts]
+      .filter(p => p.category !== 'fieldnotes')
+      .sort((a, b) => b.date.localeCompare(a.date))[0];
+
+    if (mostRecent) {
+      result.push({
+        label: `Most Recent: ${mostRecent.displayTitle || mostRecent.title}`,
+        icon: <span className="w-[22px] h-[22px] flex items-center justify-center text-[13px] text-th-secondary">⏎</span>,
+        action: () => executeAndClose(() => navigate(postPath(mostRecent.category, mostRecent.id))),
+        shortcut: '.',
+        group: 'global',
+      });
+    }
+
+    result.push({
+      label: `Toggle Theme (${theme === 'dark' ? 'Light' : 'Dark'})`,
+      icon: theme === 'dark' ? <SunIcon /> : <MoonIcon />,
+      action: () => executeAndClose(toggleTheme),
+      shortcut: '⇧T',
+      group: 'global',
+    });
+
+    // ── Navigation actions ──
+    result.push(
+      {
+        label: 'Go to Home',
+        icon: <HomeIcon />,
+        action: () => executeAndClose(() => navigate('/home')),
+        group: 'nav',
+      },
+      {
+        label: 'View Projects',
+        icon: <GearIcon />,
+        action: () => executeAndClose(() => navigate('/lab/projects')),
+        group: 'nav',
+      },
+      {
+        label: 'Open Source / GitHub',
+        icon: <GitHubIcon size={22} />,
+        action: () => executeAndClose(() => window.open('https://github.com/infraphysics', '_blank')),
+        group: 'nav',
+      },
+      {
+        label: 'Second Brain',
+        icon: <DiamondIcon />,
+        action: () => executeAndClose(() => navigate('/lab/second-brain')),
+        group: 'nav',
+      },
+      {
+        label: 'Contact',
+        icon: <MailIcon />,
+        action: () => executeAndClose(() => navigate('/contact')),
+        group: 'nav',
+      },
+      {
+        label: 'Random Article',
+        icon: (
+          <span className="w-[22px] h-[22px] flex items-center justify-center bg-th-elevated rounded-sm text-[11px] text-th-secondary">
+            ?
+          </span>
+        ),
+        action: () => {
+          const validPosts = posts.filter(p => p.category !== 'fieldnotes');
+          if (validPosts.length === 0) return;
+          const randomPost = validPosts[Math.floor(Math.random() * validPosts.length)];
+          executeAndClose(() => navigate(postPath(randomPost.category, randomPost.id)));
+        },
+        group: 'nav',
+      },
+    );
+
+    return result;
+  }, [article, theme, navigate, executeAndClose, toggleTheme]);
+
+  // Second Brain concept matches — only exact final-segment matches
+  const conceptMatches = useMemo<QuickAction[]>(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+
+    return allFieldNotes
+      .filter(note => {
+        // Match against the last segment of the address (after final /)
+        const addr = note.address || '';
+        const lastSeg = addr.includes('/') ? addr.split('/').pop()! : addr;
+        return lastSeg.toLowerCase() === q;
+      })
+      .slice(0, 5)
+      .map(note => ({
+        label: note.displayTitle || note.title,
+        icon: <DiamondIcon />,
+        action: () => executeAndClose(() => navigate(`/lab/second-brain/${note.id}`)),
+        group: 'concept' as const,
+      }));
+  }, [query, navigate, executeAndClose]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim();
+    if (!q) return actions;
+    const lower = q.toLowerCase();
+    const matchedActions = actions.filter(a => a.label.toLowerCase().includes(lower));
+    // Append concept matches after action matches
+    return [...matchedActions, ...conceptMatches];
+  }, [query, actions, conceptMatches]);
 
   // Reset state on open/close
   useEffect(() => {
@@ -137,6 +265,19 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
 
   if (!isOpen) return null;
 
+  // Group labels for visual separation
+  const groupLabel = (group?: string) => {
+    switch (group) {
+      case 'contextual': return 'Article';
+      case 'global': return 'Shortcuts';
+      case 'concept': return 'Second Brain';
+      default: return null;
+    }
+  };
+
+  // Track which groups we've already rendered headers for
+  let lastGroup: string | undefined;
+
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[20vh]">
       {/* Backdrop */}
@@ -178,23 +319,46 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
               No results found
             </div>
           ) : (
-            filtered.map((action, i) => (
-              <button
-                key={action.label}
-                data-action-item
-                onClick={action.action}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
-                  i === selectedIndex
-                    ? 'bg-th-elevated text-th-heading'
-                    : 'text-th-secondary hover:bg-th-surface-alt'
-                }`}
-              >
-                <span className={i === selectedIndex ? 'text-th-primary' : 'text-th-tertiary'}>
-                  {action.icon}
-                </span>
-                <span>{action.label}</span>
-              </button>
-            ))
+            filtered.map((action, i) => {
+              // Show group header when group changes
+              let header: React.ReactNode = null;
+              if (action.group && action.group !== lastGroup && !query.trim()) {
+                const label = groupLabel(action.group);
+                if (label) {
+                  header = (
+                    <div className="px-4 pt-2 pb-1 text-[10px] font-mono uppercase tracking-wider text-th-muted">
+                      {label}
+                    </div>
+                  );
+                }
+              }
+              lastGroup = action.group;
+
+              return (
+                <React.Fragment key={`${action.group}-${action.label}`}>
+                  {header}
+                  <button
+                    data-action-item
+                    onClick={action.action}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                      i === selectedIndex
+                        ? 'bg-th-elevated text-th-heading'
+                        : 'text-th-secondary hover:bg-th-surface-alt'
+                    }`}
+                  >
+                    <span className={i === selectedIndex ? 'text-th-primary' : 'text-th-tertiary'}>
+                      {action.icon}
+                    </span>
+                    <span className="flex-1 text-left truncate">{action.label}</span>
+                    {action.shortcut && (
+                      <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] text-th-tertiary bg-th-surface-alt border border-th-border rounded font-mono ml-auto flex-shrink-0">
+                        {action.shortcut}
+                      </kbd>
+                    )}
+                  </button>
+                </React.Fragment>
+              );
+            })
           )}
         </div>
       </div>

@@ -3,7 +3,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useSectionState } from '../../contexts/SectionStateContext';
 import {
   Logo,
   UserIcon,
@@ -22,7 +21,6 @@ import { getThemedColor } from '../../config/categories';
 export const Sidebar: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch }) => {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const { getLastPath } = useSectionState();
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
   const navLink = (
@@ -85,15 +83,15 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch 
         {/* LAB */}
         {sectionLabel('lab')}
         <nav className="flex flex-col gap-1">
-          {navLink('/lab/projects', <GearIcon />, 'projects', getThemedColor('projects', theme as 'dark' | 'light').accent, getLastPath('/lab/projects'))}
+          {navLink('/lab/projects', <GearIcon />, 'projects', getThemedColor('projects', theme as 'dark' | 'light').accent)}
           {navLink('/lab/second-brain', <DiamondIcon />, <span>2<sup>nd</sup> brain</span>, CATEGORY_ACCENTS.secondBrain)}
         </nav>
 
         {/* BLOG */}
         {sectionLabel('blog')}
         <nav className="flex flex-col gap-1">
-          {navLink('/blog/threads', <ThreadIcon />, 'threads', getThemedColor('threads', theme as 'dark' | 'light').accent, getLastPath('/blog/threads'))}
-          {navLink('/blog/bits2bricks', <GradCapIcon />, 'bits2bricks', getThemedColor('bits2bricks', theme as 'dark' | 'light').accent, getLastPath('/blog/bits2bricks'))}
+          {navLink('/blog/threads', <ThreadIcon />, 'threads', getThemedColor('threads', theme as 'dark' | 'light').accent)}
+          {navLink('/blog/bits2bricks', <GradCapIcon />, 'bits2bricks', getThemedColor('bits2bricks', theme as 'dark' | 'light').accent)}
         </nav>
 
         {/* META */}

@@ -28,19 +28,28 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [theme]);
 
   const toggleTheme = () => {
+    const next: Theme = theme === 'dark' ? 'light' : 'dark';
+
+    // 1. Declare transitions on every element
     document.documentElement.classList.add('theme-transitioning');
 
-    // Force the browser to compute styles (with transition props active)
-    // before any value change occurs — without this, the browser can batch
-    // the class addition and the data-theme change into a single paint,
-    // skipping the transition entirely.
+    // 2. Force reflow so the browser registers the transition properties
+    //    BEFORE any values change.
+    void document.documentElement.offsetHeight;
+
+    // 3. Flip data-theme synchronously — CSS vars update in the same frame,
+    //    transitions kick in immediately for all elements.
+    document.documentElement.setAttribute('data-theme', next);
+
+    // 4. Delay React re-render to next frame so Chrome commits to the
+    //    CSS transition before React touches any DOM attributes/styles.
     requestAnimationFrame(() => {
-      setTheme(t => t === 'dark' ? 'light' : 'dark');
+      setTheme(next);
     });
 
     setTimeout(() => {
       document.documentElement.classList.remove('theme-transitioning');
-    }, 1000);
+    }, 1100);
   };
 
   return (

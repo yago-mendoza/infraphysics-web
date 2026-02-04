@@ -1,34 +1,23 @@
 // Home page view — minimalist cosmic landing
 
-import React, { useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { posts } from '../data/data';
 import { Post } from '../types';
-import { ArrowRightIcon } from '../components/icons';
+import { ArrowRightIcon, SearchIcon } from '../components/icons';
 import { CATEGORY_CONFIG, getThemedColor, postPath, sectionPath } from '../config/categories';
 import { useTheme } from '../contexts/ThemeContext';
-import homeFeaturedData from '../data/home-featured.generated.json';
-
-// Resolve featured post refs ("category/id") to actual Post objects
-type DisplayPost = Post & { highlight?: string };
-
-function resolveFeatured(refs: { ref: string; highlight?: string }[]): DisplayPost[] {
-  const resolved: DisplayPost[] = [];
-  for (const entry of refs) {
-    const [category, id] = entry.ref.split('/');
-    const post = posts.find(p => p.category === category && p.id === id);
-    if (post) {
-      resolved.push({ ...post, highlight: entry.highlight });
-    }
-  }
-  return resolved;
-}
+import { stripHtml } from '../lib';
 
 const categoryKeys = ['projects', 'threads', 'bits2bricks'] as const;
 
 export const HomeView: React.FC = () => {
   const { theme } = useTheme();
-  const featuredPosts = useMemo(() => resolveFeatured(homeFeaturedData.featured), []);
+  const featuredPosts = useMemo(() =>
+    posts
+      .filter(p => p.featured && p.category !== 'fieldnotes')
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+  []);
 
   // Post counts per category
   const categoryCounts = useMemo(() => {
@@ -39,28 +28,78 @@ export const HomeView: React.FC = () => {
     return counts;
   }, []);
 
-  // Inject latest non-fieldnotes post if not already featured
-  const { displayPosts, latestNewId } = useMemo(() => {
-    const nonFieldnotes = posts.filter(p => p.category !== 'fieldnotes');
-    const sorted = [...nonFieldnotes].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-    const latest = sorted[0];
-    if (latest && !featuredPosts.some(fp => fp.id === latest.id && fp.category === latest.category)) {
-      return {
-        displayPosts: [{ ...latest } as DisplayPost, ...featuredPosts],
-        latestNewId: latest.id,
-      };
-    }
-    return { displayPosts: featuredPosts, latestNewId: null as string | null };
-  }, [featuredPosts]);
-
   // Second Brain stats
   const brainStats = useMemo(() => {
     const fieldnotes = posts.filter(p => p.category === 'fieldnotes');
     const totalRefs = fieldnotes.reduce((sum, fn) => sum + (fn.references?.length || 0), 0);
     return { notes: fieldnotes.length, connections: totalRefs };
   }, []);
+
+  // Unified search
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Recent article history from localStorage
+  const recentPosts = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('infraphysics:article-history');
+      if (!raw) return [];
+      const history: { category: string; id: string }[] = JSON.parse(raw);
+      const resolved: Post[] = [];
+      for (const h of history) {
+        const post = posts.find(p => p.category === h.category && p.id === h.id);
+        if (post) resolved.push(post);
+      }
+      return resolved;
+    } catch { return []; }
+  }, []);
+
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return null;
+
+    const getMatchCount = (text: string): number => {
+      const plain = stripHtml(text).toLowerCase();
+      let count = 0;
+      let pos = 0;
+      while ((pos = plain.indexOf(q, pos)) !== -1) {
+        count++;
+        pos += q.length;
+      }
+      return count;
+    };
+
+    const getExcerpt = (content: string): string | null => {
+      const plain = stripHtml(content);
+      const index = plain.toLowerCase().indexOf(q);
+      if (index === -1) return null;
+      const start = Math.max(0, index - 50);
+      const end = Math.min(plain.length, index + 100);
+      return '\u2026' + plain.substring(start, end) + '\u2026';
+    };
+
+    const allPosts = posts.filter(p => p.category !== 'fieldnotes');
+    const matches: { post: Post; matchCount: number; excerpt: string | null }[] = [];
+    const counts: Record<string, number> = { projects: 0, threads: 0, bits2bricks: 0 };
+
+    for (const post of allPosts) {
+      const title = (post.displayTitle || post.title || '').toLowerCase();
+      const desc = (post.description || '').toLowerCase();
+      const content = stripHtml(post.content || '').toLowerCase();
+
+      if (title.includes(q) || desc.includes(q) || content.includes(q)) {
+        const mc = getMatchCount(post.displayTitle || post.title || '')
+          + getMatchCount(post.description || '')
+          + getMatchCount(post.content || '');
+        const excerpt = getExcerpt(post.content || '') || getExcerpt(post.description || '');
+        matches.push({ post, matchCount: mc, excerpt });
+        counts[post.category] = (counts[post.category] || 0) + 1;
+      }
+    }
+
+    matches.sort((a, b) => b.matchCount - a.matchCount);
+    return { matches, counts };
+  }, [searchQuery]);
 
   return (
     <div className="flex flex-col animate-fade-in font-sans">
@@ -101,29 +140,124 @@ export const HomeView: React.FC = () => {
       <section className="pb-16 border-t border-th-border pt-12">
         <h2 className="text-xs text-th-tertiary uppercase tracking-wider mb-8">Explore</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {categoryKeys.map(key => {
-            const config = CATEGORY_CONFIG[key];
-            return (
-              <Link
-                key={key}
-                to={sectionPath(key)}
-                className="group p-5 border border-th-border rounded-sm bg-th-surface hover:border-th-border-active hover:bg-th-surface-alt transition-all"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-th-secondary group-hover:text-th-primary transition-colors">{config.icon}</span>
-                  <h3 className="text-th-heading font-semibold">{config.title}</h3>
-                </div>
-                <p className="text-th-secondary text-sm leading-relaxed line-clamp-2 mb-3 font-sans">
-                  {config.description}
-                </p>
-                <span className="text-xs text-th-tertiary">
-                  {categoryCounts[key]} {categoryCounts[key] === 1 ? 'post' : 'posts'}
-                </span>
-              </Link>
-            );
-          })}
+        {/* Search input */}
+        <div className="flex-1 group flex items-center border border-th-border px-3 py-2.5 focus-within:border-th-border-active transition-colors bg-th-surface-alt mb-6">
+          <span className="text-th-tertiary"><SearchIcon /></span>
+          <input
+            ref={searchRef}
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape') { setSearchQuery(''); searchRef.current?.blur(); } }}
+            placeholder="Search across all categories..."
+            spellCheck={false}
+            autoComplete="off"
+            className="w-full bg-transparent border-none ml-2.5 text-sm focus:outline-none placeholder-th-tertiary text-th-primary"
+          />
         </div>
+
+        {searchResults ? (
+          <div>
+            {/* Category count bar */}
+            <div className="flex flex-wrap gap-x-6 gap-y-1 mb-6 text-xs text-th-tertiary">
+              {categoryKeys.map(key => {
+                const config = CATEGORY_CONFIG[key];
+                const tc = getThemedColor(key, theme as 'dark' | 'light');
+                const count = searchResults.counts[key] || 0;
+                return (
+                  <span key={key} className="flex items-center gap-1.5">
+                    <span className={`inline-block w-2 h-2 rounded-full bg-${tc.color}`} />
+                    <span className="text-th-secondary">{config.title}</span>
+                    <span className="text-th-tertiary">&mdash; {count}</span>
+                  </span>
+                );
+              })}
+            </div>
+
+            {/* Results list */}
+            {searchResults.matches.length > 0 ? (
+              <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                {searchResults.matches.map(({ post, matchCount, excerpt }) => {
+                  const tc = getThemedColor(post.category, theme as 'dark' | 'light');
+                  return (
+                    <Link
+                      key={`${post.category}-${post.id}`}
+                      to={postPath(post.category, post.id)}
+                      className="group flex items-start gap-3 p-3 border border-th-border rounded-sm bg-th-surface hover:border-th-border-active hover:bg-th-surface-alt transition-all"
+                    >
+                      <span className={`mt-1.5 inline-block w-2 h-2 rounded-full shrink-0 bg-${tc.color}`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-th-heading font-medium group-hover:text-blue-400 transition-colors truncate">
+                            {post.displayTitle || post.title}
+                          </span>
+                          <span className={`shrink-0 text-[10px] px-1.5 py-0.5 rounded text-${tc.color} bg-${tc.color}/10`}>
+                            &times;{matchCount}
+                          </span>
+                        </div>
+                        {excerpt && (
+                          <p className="text-xs text-th-tertiary mt-1 line-clamp-1 font-sans">{excerpt}</p>
+                        )}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-th-tertiary py-8 text-center">No results found.</p>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Recent articles from history */}
+            {recentPosts.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-[10px] text-th-tertiary uppercase tracking-wider mb-3">Previous</h3>
+                <div className="space-y-1">
+                  {recentPosts.map(post => {
+                    const tc = getThemedColor(post.category, theme as 'dark' | 'light');
+                    return (
+                      <Link
+                        key={`${post.category}-${post.id}`}
+                        to={postPath(post.category, post.id)}
+                        className="group flex items-center gap-2.5 px-3 py-2 rounded-sm hover:bg-th-surface-alt transition-all"
+                      >
+                        <span className={`inline-block w-1.5 h-1.5 rounded-full shrink-0 bg-${tc.color}`} />
+                        <span className="text-sm text-th-secondary group-hover:text-th-heading transition-colors truncate">
+                          {post.displayTitle || post.title}
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {categoryKeys.map(key => {
+                const config = CATEGORY_CONFIG[key];
+                return (
+                  <Link
+                    key={key}
+                    to={sectionPath(key)}
+                    className="group p-5 border border-th-border rounded-sm bg-th-surface hover:border-th-border-active hover:bg-th-surface-alt transition-all"
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-th-secondary group-hover:text-th-primary transition-colors">{config.icon}</span>
+                      <h3 className="text-th-heading font-semibold">{config.title}</h3>
+                    </div>
+                    <p className="text-th-secondary text-sm leading-relaxed line-clamp-2 mb-3 font-sans">
+                      {config.description}
+                    </p>
+                    <span className="text-xs text-th-tertiary">
+                      {categoryCounts[key]} {categoryCounts[key] === 1 ? 'post' : 'posts'}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </>
+        )}
       </section>
 
       {/* Latest Work */}
@@ -131,24 +265,19 @@ export const HomeView: React.FC = () => {
         <h2 className="text-xs text-th-tertiary uppercase tracking-wider mb-8">Latest Work</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {displayPosts.map(post => (
+          {featuredPosts.map(post => (
             <Link
               key={`${post.category}-${post.id}`}
               to={postPath(post.category, post.id)}
               className="group p-5 border border-th-border rounded-sm bg-th-surface hover:border-th-border-active hover:bg-th-surface-alt transition-all flex flex-col"
             >
               {post.thumbnail && (
-                <div className="relative mb-4">
+                <div className="mb-4">
                   <img
                     src={post.thumbnail}
                     alt=""
                     className="w-full h-32 object-cover rounded"
                   />
-                  {post.id === latestNewId && (
-                    <span className="absolute -top-3 -left-3 z-10 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-black bg-white rounded-sm shadow-lg">
-                      New
-                    </span>
-                  )}
                 </div>
               )}
 
@@ -166,7 +295,7 @@ export const HomeView: React.FC = () => {
               </h3>
 
               <p className="text-th-secondary text-sm leading-relaxed line-clamp-2 font-sans">
-                {post.highlight || post.description}
+                {post.description}
               </p>
 
               <span className="inline-flex items-center gap-1 mt-auto pt-4 text-xs text-th-tertiary group-hover:text-blue-400 transition-colors">

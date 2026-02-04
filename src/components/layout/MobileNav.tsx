@@ -19,14 +19,14 @@ import {
   SearchIcon,
 } from '../icons';
 import { getThemedColor } from '../../config/categories';
-import { useSectionState } from '../../contexts/SectionStateContext';
+
 
 export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch }) => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
-  const { getLastPath } = useSectionState();
+
 
   const handleRandom = () => {
     const validPosts = posts.filter(p => p.category !== 'fieldnotes');
@@ -107,13 +107,13 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearc
             <nav className="flex flex-col p-4 gap-1">
               {/* LAB */}
               <SectionLabel>lab</SectionLabel>
-              <NavLink to={getLastPath('/lab/projects')} basePath="/lab/projects" colorClass={`text-${getThemedColor('projects', theme as 'dark' | 'light').color}`} icon={<GearIcon />}>Projects</NavLink>
+              <NavLink to="/lab/projects" basePath="/lab/projects" colorClass={`text-${getThemedColor('projects', theme as 'dark' | 'light').color}`} icon={<GearIcon />}>Projects</NavLink>
               <NavLink to="/lab/second-brain" colorClass="text-violet-400" icon={<DiamondIcon />}>2<sup>nd</sup> brain</NavLink>
 
               {/* BLOG */}
               <SectionLabel>blog</SectionLabel>
-              <NavLink to={getLastPath('/blog/threads')} basePath="/blog/threads" colorClass={`text-${getThemedColor('threads', theme as 'dark' | 'light').color}`} icon={<ThreadIcon />}>Threads</NavLink>
-              <NavLink to={getLastPath('/blog/bits2bricks')} basePath="/blog/bits2bricks" colorClass={`text-${getThemedColor('bits2bricks', theme as 'dark' | 'light').color}`} icon={<GradCapIcon />}>Bits2Bricks</NavLink>
+              <NavLink to="/blog/threads" basePath="/blog/threads" colorClass={`text-${getThemedColor('threads', theme as 'dark' | 'light').color}`} icon={<ThreadIcon />}>Threads</NavLink>
+              <NavLink to="/blog/bits2bricks" basePath="/blog/bits2bricks" colorClass={`text-${getThemedColor('bits2bricks', theme as 'dark' | 'light').color}`} icon={<GradCapIcon />}>Bits2Bricks</NavLink>
 
               {/* META */}
               <SectionLabel>meta</SectionLabel>

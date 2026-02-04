@@ -1,9 +1,0 @@
-featured:
-  - ref: projects/neural-cellular-automata
-    highlight: self-organizing textures that heal — exploring emergent computation through neural update rules.
-  - ref: threads/entropy-and-software-decay
-    highlight: why code rots without maintenance, and what physics tells us about building lasting systems.
-  - ref: bits2bricks/fpga-uart-controller
-    highlight: bridging bits and bricks — a verilog uart from first principles on a cyclone iv.
-  - ref: threads/minimalism-is-hard
-    highlight: the discipline of subtraction in engineering and design.

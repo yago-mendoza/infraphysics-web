@@ -76,7 +76,7 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
         const tags = post.tags || [];
 
         return (
-          <div key={post.id} className={`thread-card ${index < posts.length - 1 ? 'border-b border-th-border pb-8 mb-8' : ''}`} style={{ '--card-accent': accent } as React.CSSProperties}>
+          <div key={post.id} className={`thread-card ${index < posts.length - 1 ? 'border-b border-th-border pb-8 mb-8' : ''}`}>
             <div className="flex flex-col md:flex-row gap-6">
               {/* Text — left */}
               <div className="flex-grow min-w-0">

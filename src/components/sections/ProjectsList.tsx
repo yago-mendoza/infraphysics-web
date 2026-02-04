@@ -31,7 +31,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
         const statusLabel = post.status ? STATUS_LABELS[post.status] || post.status.toUpperCase() : null;
 
         return (
-          <div key={post.id} className="project-card relative flex gap-6" style={{ '--card-accent': accent } as React.CSSProperties}>
+          <div key={post.id} className="project-card relative flex gap-6">
             {/* Timeline rail */}
             <div className="hidden sm:flex flex-col items-center flex-shrink-0 w-7">
               {/* Line above node */}
@@ -89,10 +89,10 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                         {pills.map(pill => (
                           <span
                             key={`${pill.type}-${pill.label}`}
-                            className="text-xs px-2.5 py-0.5 border rounded-sm"
+                            className={`text-xs px-2.5 py-0.5 border rounded-sm ${pill.type === 'tech' ? 'pill-tech' : ''}`}
                             style={pill.type === 'topic'
                               ? { borderColor: 'var(--pill-topic-border)', color: 'var(--pill-topic-text)' }
-                              : { borderColor: `color-mix(in srgb, ${accent} 35%, transparent)`, color: accent }
+                              : undefined
                             }
                           >
                             {pill.label}

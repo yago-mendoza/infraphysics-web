@@ -325,7 +325,6 @@ const highlighter = await createHighlighter({
 const PAGES_DIR = path.join(__dirname, '../src/data/pages');
 const OUTPUT_FILE = path.join(__dirname, '../src/data/posts.generated.json');
 const CATEGORIES_OUTPUT = path.join(__dirname, '../src/data/categories.generated.json');
-const HOME_FEATURED_OUTPUT = path.join(__dirname, '../src/data/home-featured.generated.json');
 
 function processMarkdownFile(filePath) {
   const fileContent = fs.readFileSync(filePath, 'utf-8');
@@ -527,20 +526,8 @@ if (totalErrors > 0) {
   process.exit(1);
 }
 
-// --- Home featured posts ---
-
-const homeFeaturedPath = path.join(PAGES_DIR, 'home', '_home-featured.yaml');
-let homeFeatured = { featured: [] };
-
-if (fs.existsSync(homeFeaturedPath)) {
-  const raw = loadYaml(fs.readFileSync(homeFeaturedPath, 'utf-8'));
-  homeFeatured = raw;
-}
-
 fs.writeFileSync(OUTPUT_FILE, JSON.stringify(allPosts, null, 2));
 fs.writeFileSync(CATEGORIES_OUTPUT, JSON.stringify(categories, null, 2));
-fs.writeFileSync(HOME_FEATURED_OUTPUT, JSON.stringify(homeFeatured, null, 2));
 
 console.log(`Generated ${allPosts.length} posts → ${OUTPUT_FILE}`);
 console.log(`Generated ${Object.keys(categories).length} categories → ${CATEGORIES_OUTPUT}`);
-console.log(`Generated home featured config → ${HOME_FEATURED_OUTPUT}`);

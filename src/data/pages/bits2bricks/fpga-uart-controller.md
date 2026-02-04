@@ -7,6 +7,7 @@ date: 2023-12-05
 thumbnail: https://images.unsplash.com/photo-1555664424-778a69631025?q=80&w=400&auto=format&fit=crop
 description: verilog implementation of serial comms.
 tags: [fpga, verilog, serial]
+featured: true
 ---
 
 # fpga uart controller

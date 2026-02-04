@@ -1,7 +1,7 @@
 // Article post view — unified terminal/cyberpunk theme for all article categories
 
-import React, { useMemo, useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useMemo, useEffect, useState, useCallback } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { formatDate, formatDateTerminal, calculateReadingTime } from '../lib';
 import { allFieldNotes } from '../lib/brainIndex';
 import { WikiContent } from '../components/WikiContent';
@@ -9,6 +9,8 @@ import { CATEGORY_CONFIG, sectionPath as getSectionPath, postPath, isBlogCategor
 import { ArrowRightIcon, GitHubIcon, LinkedInIcon, TwitterIcon, RedditIcon, HackerNewsIcon, ClipboardIcon, CheckIcon } from '../components/icons';
 import { posts } from '../data/data';
 import { Post } from '../types';
+import { useArticleContext } from '../contexts/ArticleContext';
+import { useKeyboardShortcuts, ShortcutDef } from '../hooks/useKeyboardShortcuts';
 import '../styles/article.css';
 
 interface ArticlePostViewProps {
@@ -18,9 +20,23 @@ interface ArticlePostViewProps {
 export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const sectionPathUrl = getSectionPath(post.category);
   const location = useLocation();
+  const navigate = useNavigate();
   const catCfg = CATEGORY_CONFIG[post.category];
   const isBlog = isBlogCategory(post.category);
   const [copied, setCopied] = useState(false);
+  const { setArticleState, clearArticleState, updateActiveHeading } = useArticleContext();
+
+  // Compute next/prev posts within same category sorted by date
+  const { nextPost, prevPost } = useMemo(() => {
+    const sameCat = posts
+      .filter(p => p.category === post.category)
+      .sort((a, b) => a.date.localeCompare(b.date));
+    const idx = sameCat.findIndex(p => p.id === post.id);
+    return {
+      nextPost: idx < sameCat.length - 1 ? sameCat[idx + 1] : null,
+      prevPost: idx > 0 ? sameCat[idx - 1] : null,
+    };
+  }, [post.id, post.category]);
 
   // Status label + dot color — derived from PostStatus
   const statusConfig = (() => {
@@ -107,7 +123,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
     return { headings, contentWithIds: finalProcessed };
   }, [post.content, isBlog]);
 
-  const [tocOpen, setTocOpen] = useState(false);
+  const [tocOpen, setTocOpen] = useState(isBlog);
 
   // Scroll-based active heading tracking for inline TOC highlight.
   const [activeId, setActiveId] = useState<string>('');
@@ -161,6 +177,52 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
     return ids;
   }, [activeId, headings]);
+
+  // Push article state to ArticleContext (consumed by SearchPalette)
+  useEffect(() => {
+    setArticleState({
+      post,
+      headings: headings as any,
+      activeHeadingId: activeId,
+      nextPost,
+      prevPost,
+    });
+    return () => clearArticleState();
+  }, [post, headings, nextPost, prevPost]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync active heading ID to context
+  useEffect(() => {
+    updateActiveHeading(activeId);
+  }, [activeId, updateActiveHeading]);
+
+  // Contextual keyboard shortcuts
+  const scrollToHeading = useCallback((direction: 'next' | 'prev') => {
+    if (headings.length < 2) return;
+    const activeIndex = headings.findIndex(h => h.id === activeId);
+    let targetIdx: number;
+    if (direction === 'next') {
+      targetIdx = activeIndex < headings.length - 1 ? activeIndex + 1 : headings.length - 1;
+      // If no active, go to first
+      if (activeIndex === -1) targetIdx = 0;
+    } else {
+      targetIdx = activeIndex > 0 ? activeIndex - 1 : 0;
+      if (activeIndex === -1) targetIdx = 0;
+    }
+    document.getElementById(headings[targetIdx].id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [headings, activeId]);
+
+  const articleShortcuts = useMemo<ShortcutDef[]>(() => [
+    { key: 'g', label: 'GitHub', action: () => { if (post.github) window.open(post.github, '_blank'); }, enabled: !!post.github },
+    { key: 'd', label: 'Demo', action: () => { if (post.demo) window.open(post.demo, '_blank'); }, enabled: !!post.demo },
+    { key: 'j', label: 'Next section', action: () => scrollToHeading('next'), enabled: headings.length > 1 },
+    { key: 'k', label: 'Prev section', action: () => scrollToHeading('prev'), enabled: headings.length > 1 },
+    { key: 't', label: 'Top', action: () => window.scrollTo({ top: 0, behavior: 'smooth' }) },
+    { key: 'b', label: 'Bottom', action: () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }) },
+    { key: 'n', label: 'Newer', action: () => { if (nextPost) navigate(postPath(nextPost.category, nextPost.id)); }, enabled: !!nextPost },
+    { key: 'p', label: 'Older', action: () => { if (prevPost) navigate(postPath(prevPost.category, prevPost.id)); }, enabled: !!prevPost },
+  ], [post.github, post.demo, headings.length, nextPost, prevPost, scrollToHeading, navigate]);
+
+  useKeyboardShortcuts(articleShortcuts);
 
   // Related posts — from target category, explicit frontmatter IDs or random fallback
   const targetCategory = catCfg?.relatedCategory || post.category;
@@ -270,34 +332,34 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                 </span>
               </nav>
             ) : (
-              <Link to={sectionPathUrl} className="article-back-link">
-                &lt; {backLabel}
-              </Link>
+              <>
+                <Link to={sectionPathUrl} className="article-back-link">
+                  &lt; {backLabel}
+                </Link>
+                <div className="article-social-icons">
+                  {post.github && (
+                    <a
+                      href={post.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="article-social-btn article-social-github"
+                      title="GitHub"
+                    >
+                      <GitHubIcon size={18} />
+                    </a>
+                  )}
+                  <a
+                    href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="article-social-btn article-social-linkedin"
+                    title="Share on LinkedIn"
+                  >
+                    <LinkedInIcon size={18} />
+                  </a>
+                </div>
+              </>
             )}
-            <div className="article-social-icons">
-              {!isBlog && post.github && (
-                <a
-                  href={post.github}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="article-social-btn article-social-github"
-                  title="GitHub"
-                >
-                  <GitHubIcon size={18} />
-                </a>
-              )}
-              {!isBlog && (
-                <a
-                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="article-social-btn article-social-linkedin"
-                  title="Share on LinkedIn"
-                >
-                  <LinkedInIcon size={18} />
-                </a>
-              )}
-            </div>
           </div>
 
           {/* Context bar — full-width sub-header below breadcrumbs (blog only) */}
@@ -307,21 +369,8 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
             </div>
           )}
 
-          {/* Tags — hashtags for blog, pills for projects */}
-          {isBlog ? (
-            (post.tags?.length || post.technologies?.length) ? (
-              <div className="article-hashtags">
-                {[
-                  ...(post.tags || []).map(t => ({ label: t, tech: false })),
-                  ...(post.technologies || []).map(t => ({ label: t, tech: true })),
-                ]
-                  .sort((a, b) => a.label.localeCompare(b.label))
-                  .map(({ label, tech }) => (
-                    <span key={label} className={`article-hashtag${tech ? ' article-hashtag-tech' : ''}`}>#{label}</span>
-                  ))}
-              </div>
-            ) : null
-          ) : (
+          {/* Tags — pills for projects */}
+          {!isBlog && (
             <>
               {post.tags && post.tags.length > 0 && (
                 <div className="article-pills article-pills-topics">
@@ -348,6 +397,20 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               <Link to={authorPath} className="article-meta-author">{authorDisplay}</Link>
             </div>
           )}
+
+          {/* Tag pills — below meta, above title (blog only) */}
+          {isBlog && (post.tags?.length || post.technologies?.length) ? (
+            <div className="article-hashtags">
+              {[
+                ...(post.tags || []).map(t => ({ label: t, tech: false })),
+                ...(post.technologies || []).map(t => ({ label: t, tech: true })),
+              ]
+                .sort((a, b) => a.label.localeCompare(b.label))
+                .map(({ label, tech }) => (
+                  <span key={label} className={`article-hashtag${tech ? ' article-hashtag-tech' : ''}`}>#{label}</span>
+                ))}
+            </div>
+          ) : null}
 
           {/* TITLE — displayTitle large + subtitle below smaller/gray */}
           <div className="article-title-block">

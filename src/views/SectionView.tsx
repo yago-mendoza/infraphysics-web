@@ -32,7 +32,7 @@ const SECTION_RENDERERS: Record<string, React.FC<SectionRendererProps>> = {
 const PAGE_CONFIG: Record<string, { initial: number; page: number }> = {
   projects: { initial: 3, page: 3 },
   threads: { initial: 3, page: 3 },
-  bits2bricks: { initial: 6, page: 3 },
+  bits2bricks: { initial: 3, page: 3 },
 };
 
 const STATUS_FILTER_CONFIG: Record<string, { label: string; color: string }> = {
@@ -104,18 +104,14 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
       result = result.filter(p => p.status && selectedStatuses.includes(p.status));
     }
 
-    // Pinned posts first
-    const pinned = result.filter(p => p.featured);
-    const rest = result.filter(p => !p.featured);
-
-    rest.sort((a, b) => {
+    result.sort((a, b) => {
       if (sortBy === 'newest') return new Date(b.date).getTime() - new Date(a.date).getTime();
       if (sortBy === 'oldest') return new Date(a.date).getTime() - new Date(b.date).getTime();
       if (sortBy === 'title') return (a.displayTitle || a.title).localeCompare(b.displayTitle || b.title);
       return 0;
     });
 
-    return [...pinned, ...rest];
+    return result;
   }, [sectionPosts, query, sortBy, selectedTopics, selectedTechs, selectedStatuses]);
 
   // Infinite scroll
@@ -174,7 +170,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
   const Renderer = SECTION_RENDERERS[category] || ProjectsList;
 
   return (
-    <div className="animate-fade-in">
+    <div className={`animate-fade-in section-${category}`}>
       {/* Breadcrumb */}
       <nav className="mb-6 text-xs text-th-tertiary flex items-center gap-2">
         <Link to="/home" className="hover:text-th-secondary transition-colors">home</Link>
