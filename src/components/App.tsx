@@ -8,6 +8,7 @@ import { SecondBrainHubProvider } from '../contexts/SecondBrainHubContext';
 import { SectionStateProvider } from '../contexts/SectionStateContext';
 import { categoryGroup, postPath } from '../config/categories';
 import { Sidebar, MobileNav, Footer, DualGrid, Starfield, SecondBrainSidebar } from './layout';
+import { ErrorBoundary } from './ErrorBoundary';
 import { SearchPalette } from './SearchPalette';
 import { HomeView, AboutView, ContactView, ThanksView, SectionView, PostView, SecondBrainView } from '../views';
 import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../constants/layout';
@@ -110,6 +111,7 @@ const AppLayout: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-h-screen">
         <main className={`flex-grow w-full mx-auto relative z-10 ${isSecondBrain ? 'max-w-6xl px-10 py-10 md:py-12' : 'max-w-4xl px-6 py-10 md:py-16'}`}>
+          <ErrorBoundary>
           <Routes>
             <Route path="/" element={<Navigate to="/home" replace />} />
             <Route path="/home" element={<HomeView />} />
@@ -139,6 +141,7 @@ const AppLayout: React.FC = () => {
             {/* Legacy: old flat /:category/:id → grouped path */}
             <Route path="/:category/:id" element={<LegacyPostRedirect />} />
           </Routes>
+          </ErrorBoundary>
         </main>
 
         {!isSecondBrain && location.pathname !== '/contact' && <Footer />}

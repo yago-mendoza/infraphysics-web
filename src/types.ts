@@ -1,4 +1,4 @@
-export type Category = 'main' | 'projects' | 'threads' | 'bits2bricks' | 'fieldnotes';
+export type Category = 'projects' | 'threads' | 'bits2bricks' | 'fieldnotes';
 
 export type PostStatus = 'ongoing' | 'implemented' | 'active' | 'in-progress' | 'completed' | 'archived';
 

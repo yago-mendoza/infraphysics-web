@@ -4,8 +4,8 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { posts } from '../data/data';
 import { Category } from '../types';
-import { calculateReadingTime, stripHtml } from '../lib';
-import { CATEGORY_CONFIG, getThemedColor } from '../config/categories';
+import { calculateReadingTime, stripHtml, hexAlpha } from '../lib';
+import { CATEGORY_CONFIG, getThemedColor, type CategoryDisplayConfig } from '../config/categories';
 import { useSectionState } from '../contexts/SectionStateContext';
 import { useTheme } from '../contexts/ThemeContext';
 import {
@@ -35,9 +35,9 @@ const PAGE_CONFIG: Record<string, { initial: number; page: number }> = {
   bits2bricks: { initial: 3, page: 3 },
 };
 
-const STATUS_FILTER_CONFIG: Record<string, { label: string; color: string }> = {
-  'ongoing': { label: 'Ongoing', color: 'violet-400' },
-  'implemented': { label: 'Implemented', color: 'amber-600' },
+const STATUS_FILTER_CONFIG: Record<string, { label: string; accent: string }> = {
+  'ongoing': { label: 'Ongoing', accent: '#a78bfa' },
+  'implemented': { label: 'Implemented', accent: '#d97706' },
 };
 
 export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
@@ -165,7 +165,13 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
     return count;
   };
 
-  const categoryInfo = CATEGORY_CONFIG[category] || { title: category, description: '', icon: null, color: 'gray-400', colorClass: 'text-gray-400', accent: '#9ca3af' } as any;
+  const categoryInfo = CATEGORY_CONFIG[category] ?? {
+    title: category, description: '', icon: null,
+    color: 'gray-400', colorClass: 'text-gray-400', bgClass: 'bg-gray-400/10',
+    borderClass: 'border-gray-400/20', accent: '#9ca3af',
+    darkBadge: 'text-gray-400 border-gray-400/30 bg-gray-400/10',
+    backLabel: 'RETURN', relatedLabel: 'Related', relatedCategory: '',
+  } satisfies CategoryDisplayConfig;
   const themed = getThemedColor(category, theme as 'dark' | 'light');
   const Renderer = SECTION_RENDERERS[category] || ProjectsList;
 
@@ -244,17 +250,19 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
                   <div className="w-px h-4 bg-th-border" />
                   <span className="text-xs text-th-tertiary uppercase">Status:</span>
                   {allStatuses.map(s => {
-                    const cfg = STATUS_FILTER_CONFIG[s] || { label: s, color: 'gray-400' };
+                    const cfg = STATUS_FILTER_CONFIG[s] || { label: s, accent: '#9ca3af' };
                     const active = selectedStatuses.includes(s);
                     return (
                       <button
                         key={s}
                         onClick={() => toggleStatus(s)}
-                        className={`text-xs px-2.5 py-0.5 border rounded-sm transition-colors ${
-                          active
-                            ? `bg-${cfg.color}/20 border-${cfg.color}/50 text-${cfg.color}`
-                            : `border-${cfg.color}/20 text-${cfg.color}/60 hover:border-${cfg.color}/40`
-                        }`}
+                        className="text-xs px-2.5 py-0.5 border rounded-sm transition-colors accent-chip"
+                        style={{
+                          '--ac-border': active ? hexAlpha(cfg.accent, 0.5) : hexAlpha(cfg.accent, 0.2),
+                          '--ac-color': active ? cfg.accent : hexAlpha(cfg.accent, 0.6),
+                          '--ac-bg': active ? hexAlpha(cfg.accent, 0.2) : undefined,
+                          '--ac-border-hover': active ? undefined : hexAlpha(cfg.accent, 0.4),
+                        } as React.CSSProperties}
                       >
                         {cfg.label} ({statusCounts[s] || 0})
                       </button>
@@ -289,19 +297,24 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
               <div>
                 <span className="text-xs text-th-tertiary uppercase block mb-2">Technologies</span>
                 <div className="flex flex-wrap gap-2">
-                  {allTechs.map(t => (
-                    <button
-                      key={t}
-                      onClick={() => toggleTech(t)}
-                      className={`text-xs px-2.5 py-0.5 border rounded-sm transition-colors ${
-                        selectedTechs.includes(t)
-                          ? `bg-${themed.color}/20 border-${themed.color}/50 text-${themed.color}`
-                          : `border-${themed.color}/20 text-${themed.color}/60 hover:border-${themed.color}/40`
-                      }`}
-                    >
-                      {t} ({techCounts[t] || 0})
-                    </button>
-                  ))}
+                  {allTechs.map(t => {
+                    const isActive = selectedTechs.includes(t);
+                    return (
+                      <button
+                        key={t}
+                        onClick={() => toggleTech(t)}
+                        className="text-xs px-2.5 py-0.5 border rounded-sm transition-colors accent-chip"
+                        style={{
+                          '--ac-border': isActive ? hexAlpha(themed.accent, 0.5) : hexAlpha(themed.accent, 0.2),
+                          '--ac-color': isActive ? themed.accent : hexAlpha(themed.accent, 0.6),
+                          '--ac-bg': isActive ? hexAlpha(themed.accent, 0.2) : undefined,
+                          '--ac-border-hover': isActive ? undefined : hexAlpha(themed.accent, 0.4),
+                        } as React.CSSProperties}
+                      >
+                        {t} ({techCounts[t] || 0})
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

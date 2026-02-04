@@ -30,6 +30,7 @@ infraphysics-web/
   src/
     components/
       App.tsx                 # Router + layout shell
+      ErrorBoundary.tsx       # React error boundary (prevents white-screen crashes)
       WikiContent.tsx         # HTML renderer with wiki-link resolution + hover preview
       WikiLinkPreview.tsx     # Floating preview card (portal)
       RotatingTitle.tsx       # Animated header widget
@@ -57,6 +58,7 @@ infraphysics-web/
     lib/
       wikilinks.ts            # Runtime wiki-link resolver
       content.ts              # Content utilities
+      color.ts                # Color utilities (hexAlpha)
       date.ts                 # Date formatting
     config/                   # Navigation, categories config
     constants/                # Layout, theme constants
@@ -160,6 +162,8 @@ To add new syntax: add an entry to `preProcessors` in `compiler.config.js` with 
 - **`preProcessors`** — Array of `{name, pattern, replace}` rules applied before markdown parsing
 - **`postProcessors`** — Array of rules applied after markdown parsing (extensible)
 - **`validation`** — Flags to toggle fieldnote ref validation, parent segment checks, and regular post wiki-link validation
+
+para descargar contexto en batch claude.md tiene isntrucciones de usar un script ya preparado y edita rintelgietmetne qué archivos descargarpo
 
 ---
 

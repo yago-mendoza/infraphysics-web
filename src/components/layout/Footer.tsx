@@ -61,9 +61,9 @@ export const Footer: React.FC = () => {
           <div>
             <h4 className="text-[10px] uppercase tracking-wider text-th-tertiary mb-4">Explore</h4>
             <nav className="flex flex-col gap-2">
-              <Link to="/lab/projects" className={`text-xs text-th-secondary hover:text-${getThemedColor('projects', theme as 'dark' | 'light').color} transition-colors`}>Projects</Link>
-              <Link to="/blog/threads" className={`text-xs text-th-secondary hover:text-${getThemedColor('threads', theme as 'dark' | 'light').color} transition-colors`}>Threads</Link>
-              <Link to="/blog/bits2bricks" className={`text-xs text-th-secondary hover:text-${getThemedColor('bits2bricks', theme as 'dark' | 'light').color} transition-colors`}>Bits2Bricks</Link>
+              <Link to="/lab/projects" className="text-xs text-th-secondary transition-colors accent-link" style={{ '--ac-color': getThemedColor('projects', theme as 'dark' | 'light').accent } as React.CSSProperties}>Projects</Link>
+              <Link to="/blog/threads" className="text-xs text-th-secondary transition-colors accent-link" style={{ '--ac-color': getThemedColor('threads', theme as 'dark' | 'light').accent } as React.CSSProperties}>Threads</Link>
+              <Link to="/blog/bits2bricks" className="text-xs text-th-secondary transition-colors accent-link" style={{ '--ac-color': getThemedColor('bits2bricks', theme as 'dark' | 'light').accent } as React.CSSProperties}>Bits2Bricks</Link>
               <Link to="/lab/second-brain" className="text-xs text-th-secondary hover:text-violet-400 transition-colors">Second Brain</Link>
               <Link to="/contact" className="text-xs text-th-secondary hover:text-th-heading transition-colors">Contact</Link>
             </nav>
@@ -88,11 +88,8 @@ export const Footer: React.FC = () => {
           <div className="text-[10px] text-th-tertiary">
             &copy; {new Date().getFullYear()} InfraPhysics. Built for the bricks.
           </div>
-          <div className="flex items-center gap-4 text-[10px] text-th-tertiary">
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              React, Typescript & Vite
-            </span>
+          <div className="text-[10px] text-th-tertiary">
+            Stack: React, TypeScript & Vite
           </div>
         </div>
       </div>

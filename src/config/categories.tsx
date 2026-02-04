@@ -116,5 +116,5 @@ export const getCategoryColor = (cat: Category): string =>
  */
 export const getCategoryBg = (cat: Category): string => {
   const cfg = CATEGORY_CONFIG[cat];
-  return cfg ? `${cfg.bgClass} ${cfg.borderClass}` : 'bg-white/5 border-white/10';
+  return cfg ? `${cfg.bgClass} ${cfg.borderClass}` : 'bg-th-surface-alt border-th-border';
 };

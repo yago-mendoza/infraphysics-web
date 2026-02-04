@@ -61,6 +61,7 @@ FILES=(
   "src/lib/addressToId.ts"
   "src/lib/brainIndex.ts"
   "src/lib/wikilinks.ts"
+  "src/lib/color.ts"
 
   # --- Data ---
   "src/data/data.ts"
@@ -77,7 +78,6 @@ FILES=(
 
   # --- Components: UI ---
   "src/components/ui/index.ts"
-  "src/components/ui/SearchBar.tsx"
   "src/components/ui/Highlight.tsx"
   "src/components/ui/StatusBadge.tsx"
 
@@ -88,6 +88,7 @@ FILES=(
   "src/components/sections/Bits2BricksGrid.tsx"
 
   # --- Components: Standalone ---
+  "src/components/ErrorBoundary.tsx"
   "src/components/App.tsx"
   "src/components/SearchPalette.tsx"
   "src/components/NavigationTrail.tsx"

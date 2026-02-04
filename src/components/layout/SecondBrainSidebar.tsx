@@ -435,7 +435,7 @@ export const SecondBrainSidebar: React.FC = () => {
       {/* Mobile toggle button */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="md:hidden fixed bottom-4 right-4 z-40 w-10 h-10 rounded-full bg-violet-500/90 text-white shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+        className="md:hidden fixed bottom-4 right-4 z-40 w-10 h-10 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
         aria-label="Open manager sidebar"
       >
         <SlidersIcon />

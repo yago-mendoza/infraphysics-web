@@ -365,6 +365,13 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
           {/* Context bar — full-width sub-header below breadcrumbs (blog only) */}
           {isBlog && post.context && (
             <div className="article-context-bar">
+              <Link to="/about" className="article-context-avatar-link">
+                <img
+                  src="https://avatars.githubusercontent.com/yago-mendoza"
+                  alt="Yago Mendoza"
+                  className="article-context-avatar"
+                />
+              </Link>
               <p className="article-context">{post.context}</p>
             </div>
           )}

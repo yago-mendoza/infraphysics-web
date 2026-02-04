@@ -5,3 +5,4 @@ export * from './content';
 export * from './wikilinks';
 export * from './addressToId';
 export * from './brainIndex';
+export * from './color';

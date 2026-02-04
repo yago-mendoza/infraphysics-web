@@ -7,7 +7,7 @@ import { Post } from '../types';
 import { ArrowRightIcon, SearchIcon } from '../components/icons';
 import { CATEGORY_CONFIG, getThemedColor, postPath, sectionPath } from '../config/categories';
 import { useTheme } from '../contexts/ThemeContext';
-import { stripHtml } from '../lib';
+import { stripHtml, hexAlpha } from '../lib';
 
 const categoryKeys = ['projects', 'threads', 'bits2bricks'] as const;
 
@@ -50,7 +50,7 @@ export const HomeView: React.FC = () => {
         const post = posts.find(p => p.category === h.category && p.id === h.id);
         if (post) resolved.push(post);
       }
-      return resolved;
+      return resolved.slice(0, 7);
     } catch { return []; }
   }, []);
 
@@ -166,7 +166,7 @@ export const HomeView: React.FC = () => {
                 const count = searchResults.counts[key] || 0;
                 return (
                   <span key={key} className="flex items-center gap-1.5">
-                    <span className={`inline-block w-2 h-2 rounded-full bg-${tc.color}`} />
+                    <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: tc.accent }} />
                     <span className="text-th-secondary">{config.title}</span>
                     <span className="text-th-tertiary">&mdash; {count}</span>
                   </span>
@@ -185,13 +185,13 @@ export const HomeView: React.FC = () => {
                       to={postPath(post.category, post.id)}
                       className="group flex items-start gap-3 p-3 border border-th-border rounded-sm bg-th-surface hover:border-th-border-active hover:bg-th-surface-alt transition-all"
                     >
-                      <span className={`mt-1.5 inline-block w-2 h-2 rounded-full shrink-0 bg-${tc.color}`} />
+                      <span className="mt-1.5 inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: tc.accent }} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-th-heading font-medium group-hover:text-blue-400 transition-colors truncate">
                             {post.displayTitle || post.title}
                           </span>
-                          <span className={`shrink-0 text-[10px] px-1.5 py-0.5 rounded text-${tc.color} bg-${tc.color}/10`}>
+                          <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded" style={{ color: tc.accent, backgroundColor: hexAlpha(tc.accent, 0.1) }}>
                             &times;{matchCount}
                           </span>
                         </div>
@@ -222,7 +222,7 @@ export const HomeView: React.FC = () => {
                         to={postPath(post.category, post.id)}
                         className="group flex items-center gap-2.5 px-3 py-2 rounded-sm hover:bg-th-surface-alt transition-all"
                       >
-                        <span className={`inline-block w-1.5 h-1.5 rounded-full shrink-0 bg-${tc.color}`} />
+                        <span className="inline-block w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tc.accent }} />
                         <span className="text-sm text-th-secondary group-hover:text-th-heading transition-colors truncate">
                           {post.displayTitle || post.title}
                         </span>
@@ -282,10 +282,12 @@ export const HomeView: React.FC = () => {
               )}
 
               <div className="flex items-center gap-2 mb-3">
-                <span className={`inline-block px-2 py-0.5 text-[10px] uppercase border rounded-sm ${(() => {
-                  const tc = getThemedColor(post.category, theme as 'dark' | 'light');
-                  return `text-${tc.color} border-${tc.color}/30 bg-${tc.color}/10`;
-                })()}`}>
+                <span
+                  className="inline-block px-2 py-0.5 text-[10px] uppercase border rounded-sm"
+                  style={(() => {
+                    const tc = getThemedColor(post.category, theme as 'dark' | 'light');
+                    return { color: tc.accent, borderColor: hexAlpha(tc.accent, 0.3), backgroundColor: hexAlpha(tc.accent, 0.1) };
+                  })()}>
                   {post.category}
                 </span>
               </div>

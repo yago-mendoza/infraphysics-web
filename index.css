@@ -576,6 +576,23 @@ button:focus {
   border: 1px solid var(--border-hover);
 }
 
+/* Accent chip — build-safe dynamic colors via CSS custom properties.
+   Set --ac-border, --ac-color, --ac-bg, --ac-border-hover on the element. */
+.accent-chip {
+  border-color: var(--ac-border);
+  color: var(--ac-color);
+  background-color: var(--ac-bg, transparent);
+}
+.accent-chip:hover {
+  border-color: var(--ac-border-hover, var(--ac-border));
+}
+
+/* Accent link — hover color from CSS var (footer nav, etc.).
+   Set --ac-color on the element. */
+.accent-link:hover {
+  color: var(--ac-color);
+}
+
 /* ============================================================
    Smooth Scrollbar for Content Areas
    ============================================================ */
