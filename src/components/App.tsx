@@ -5,7 +5,6 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams, useNavi
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { ArticleContextProvider } from '../contexts/ArticleContext';
 import { SecondBrainHubProvider } from '../contexts/SecondBrainHubContext';
-import { SectionStateProvider } from '../contexts/SectionStateContext';
 import { categoryGroup, postPath } from '../config/categories';
 import { Sidebar, MobileNav, Footer, DualGrid, Starfield, SecondBrainSidebar } from './layout';
 import { ErrorBoundary } from './ErrorBoundary';
@@ -155,11 +154,9 @@ const AppLayout: React.FC = () => {
 const App: React.FC = () => {
   return (
     <ThemeProvider>
-      <SectionStateProvider>
-        <BrowserRouter>
-          <AppLayout />
-        </BrowserRouter>
-      </SectionStateProvider>
+      <BrowserRouter>
+        <AppLayout />
+      </BrowserRouter>
     </ThemeProvider>
   );
 };

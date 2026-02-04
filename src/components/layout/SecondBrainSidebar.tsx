@@ -336,7 +336,7 @@ export const SecondBrainSidebar: React.FC = () => {
           </div>
         )}
 
-        <div className="space-y-0.5 max-h-60 overflow-y-auto hub-scrollbar">
+        <div className="space-y-0.5 max-h-60 overflow-y-auto thin-scrollbar hub-scrollbar">
           {filteredTree.map(node => (
             <TreeNodeItem
               key={node.label}
@@ -472,7 +472,7 @@ export const SecondBrainSidebar: React.FC = () => {
               </button>
             </div>
             {/* Scrollable sections */}
-            <div className="flex-1 overflow-y-auto hub-scrollbar">
+            <div className="flex-1 overflow-y-auto thin-scrollbar hub-scrollbar">
               {sections}
             </div>
           </aside>
@@ -499,7 +499,7 @@ export const SecondBrainSidebar: React.FC = () => {
           </div>
         </div>
         {/* Scrollable sections */}
-        <div className="flex-1 overflow-y-auto hub-scrollbar">
+        <div className="flex-1 overflow-y-auto thin-scrollbar hub-scrollbar">
           {sections}
         </div>
       </aside>

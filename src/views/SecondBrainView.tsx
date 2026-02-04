@@ -1,6 +1,6 @@
 // Second Brain / Concept Wiki view component — theme-aware
 
-import React, { useEffect, useCallback, useRef } from 'react';
+import React, { useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useHub } from '../contexts/SecondBrainHubContext';
 import { useNavigationTrail } from '../hooks/useNavigationTrail';
@@ -10,6 +10,7 @@ import { addressToId } from '../lib/addressToId';
 import { noteById } from '../lib/brainIndex';
 import type { SortMode } from '../hooks/useSecondBrainHub';
 import type { Post } from '../types';
+import '../styles/wiki-content.css';
 
 const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: 'a-z', label: 'A\u2013Z' },
@@ -19,22 +20,8 @@ const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: 'shuffle', label: 'shuffle' },
 ];
 
-const MAX_TRAIL = 25;
-
-const toTrailItem = (post: Post) => ({
-  id: post.id,
-  label: post.displayTitle || post.title,
-});
-
-type TrailAction =
-  | { type: 'reset'; post: Post }
-  | { type: 'extend'; post: Post };
-
 export const SecondBrainView: React.FC = () => {
-  // Hub context is always available — SecondBrainHubProvider wraps all app content.
-  // The hub supersedes the old useSecondBrain hook (which was a strict subset).
-  const hub = useHub()!;
-  const { trail, resetTrail, extendTrail, truncateTrail, clearTrail, initTrail } = useNavigationTrail();
+  const hub = useHub();
 
   const {
     sortedResults,
@@ -54,59 +41,28 @@ export const SecondBrainView: React.FC = () => {
     directoryNavRef,
   } = hub;
 
-  // Pending trail action — set synchronously in click handlers, consumed by
-  // the useEffect below so the breadcrumb updates in the same render as content.
-  const pendingTrailAction = useRef<TrailAction | null>(null);
-
-  // Trail sync: when activePost changes, apply any pending trail action.
-  // Falls back to initTrail for page-refresh / direct-URL landing.
-  useEffect(() => {
-    if (!activePost) return;
-    const action = pendingTrailAction.current;
-    pendingTrailAction.current = null;
-
-    // Check sidebar directory signal
-    const fromDirectory = directoryNavRef.current;
-    directoryNavRef.current = false;
-
-    if (action) {
-      if (action.type === 'reset') {
-        resetTrail(toTrailItem(action.post));
-      } else {
-        extendTrail(toTrailItem(action.post));
-      }
-    } else if (fromDirectory) {
-      // Sidebar directory click — reset trail (new context)
-      resetTrail(toTrailItem(activePost));
-    } else {
-      // No pending action — page refresh or browser back/forward
-      initTrail(toTrailItem(activePost));
-    }
-  }, [activePost, resetTrail, extendTrail, initTrail, directoryNavRef]);
+  const { trail, scheduleReset, scheduleExtend, truncateTrail, clearTrail, isOverflowing } =
+    useNavigationTrail({ activePost, directoryNavRef });
 
   // Wiki-link click handler — extend trail with the clicked concept
   const handleWikiLinkClick = useCallback((conceptId: string) => {
     const concept = noteById.get(conceptId);
-    if (concept) {
-      pendingTrailAction.current = { type: 'extend', post: concept };
-    }
-  }, []);
+    if (concept) scheduleExtend(concept);
+  }, [scheduleExtend]);
 
   // Grid card click — reset trail to single item & clear search so detail view shows
   const handleGridCardClick = useCallback((post: Post) => {
-    pendingTrailAction.current = { type: 'reset', post };
+    scheduleReset(post);
     clearSearch();
-  }, [clearSearch]);
+  }, [scheduleReset, clearSearch]);
 
   // Related / backlink click — extend trail
   const handleConnectionClick = useCallback((post: Post) => {
-    pendingTrailAction.current = { type: 'extend', post };
-  }, []);
+    scheduleExtend(post);
+  }, [scheduleExtend]);
 
   // When search is active, force list view even if we're on a detail URL
   const showDetail = activePost && !searchActive;
-
-  const isOverflowing = trail.length >= MAX_TRAIL;
 
   return (
     <div className="animate-fade-in">
@@ -141,7 +97,7 @@ export const SecondBrainView: React.FC = () => {
                           ? <span>{part}</span>
                           : <Link to={`/lab/second-brain/${id}`} className="hover:text-violet-400 transition-colors" onClick={() => {
                               const target = noteById.get(id);
-                              if (target) pendingTrailAction.current = { type: 'reset', post: target };
+                              if (target) scheduleReset(target);
                             }}>{part}</Link>
                         }
                       </React.Fragment>
@@ -177,7 +133,7 @@ export const SecondBrainView: React.FC = () => {
                       key={concept.id}
                       to={`/lab/second-brain/${concept.id}`}
                       onClick={() => handleConnectionClick(concept)}
-                      className="block p-3 border border-th-border rounded-sm bg-th-surface hover:border-violet-400/30 transition-all group"
+                      className="card-link group p-3 hover:border-violet-400/30"
                     >
                       <div className="text-xs font-medium text-th-secondary group-hover:text-violet-400 transition-colors">
                         {concept.displayTitle || concept.title}
@@ -205,7 +161,7 @@ export const SecondBrainView: React.FC = () => {
                       key={bl.id}
                       to={`/lab/second-brain/${bl.id}`}
                       onClick={() => handleConnectionClick(bl)}
-                      className="block p-3 border border-th-border rounded-sm bg-th-surface hover:border-violet-400/30 transition-all group"
+                      className="card-link group p-3 hover:border-violet-400/30"
                     >
                       <div className="text-xs font-medium text-th-secondary group-hover:text-violet-400 transition-colors">
                         {bl.displayTitle || bl.title}
@@ -270,7 +226,7 @@ export const SecondBrainView: React.FC = () => {
                   key={note.id}
                   to={`/lab/second-brain/${note.id}`}
                   onClick={() => handleGridCardClick(note)}
-                  className="block p-4 border border-th-border rounded-sm bg-th-surface hover:border-th-border-hover transition-all group"
+                  className="card-link group p-4"
                 >
                   <div className="mb-0.5">
                     <span className="text-sm font-medium text-violet-400 group-hover:text-th-primary transition-colors">

@@ -5,7 +5,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { formatDate, formatDateTerminal, calculateReadingTime } from '../lib';
 import { allFieldNotes } from '../lib/brainIndex';
 import { WikiContent } from '../components/WikiContent';
-import { CATEGORY_CONFIG, sectionPath as getSectionPath, postPath, isBlogCategory } from '../config/categories';
+import { CATEGORY_CONFIG, STATUS_CONFIG, sectionPath as getSectionPath, postPath, isBlogCategory } from '../config/categories';
 import { ArrowRightIcon, GitHubIcon, LinkedInIcon, TwitterIcon, RedditIcon, HackerNewsIcon, ClipboardIcon, CheckIcon } from '../components/icons';
 import { posts } from '../data/data';
 import { Post } from '../types';
@@ -38,24 +38,13 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
     };
   }, [post.id, post.category]);
 
-  // Status label + dot color — derived from PostStatus
-  const statusConfig = (() => {
-    switch (post.status) {
-      case 'ongoing':      return { label: 'ONGOING',      dotColor: '#a78bfa' }; // violet-400
-      case 'implemented':  return { label: 'IMPLEMENTED',  dotColor: '#34d399' }; // emerald-400
-      case 'active':       return { label: 'ACTIVE',       dotColor: '#34d399' }; // emerald-400
-      case 'in-progress':  return { label: 'IN PROGRESS',  dotColor: '#fbbf24' }; // amber-400
-      case 'completed':    return { label: 'COMPLETED',    dotColor: '#60a5fa' }; // blue-400
-      case 'archived':     return { label: 'ARCHIVED',     dotColor: '#9ca3af' }; // gray-400
-      default:             return null;
-    }
-  })();
+  // Status label + dot color
+  const statusConfig = post.status ? (STATUS_CONFIG[post.status] || null) : null;
 
   const formattedDate = formatDateTerminal(post.date);
   const readingTime = calculateReadingTime(post.content);
 
   const authorName = post.author || 'Yago Mendoza';
-  const authorDisplay = authorName.toUpperCase();
   const authorPath = authorName.toLowerCase() === 'yago mendoza' ? '/about' : '/contact';
 
   const notesArray: string[] = !post.notes
@@ -401,7 +390,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
             <div className="article-meta">
               <span className="article-meta-date">{formatDate(post.date)}</span>
               <span className="article-meta-reading-time">{readingTime} min read</span>
-              <Link to={authorPath} className="article-meta-author">{authorDisplay}</Link>
+              <Link to={authorPath} className="article-meta-author">{authorName}</Link>
             </div>
           )}
 
@@ -434,7 +423,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
             <div className="article-meta">
               <span className="article-meta-date">{formattedDate}</span>
               <span className="article-meta-reading-time">{readingTime} min read</span>
-              <Link to={authorPath} className="article-meta-author">{authorDisplay}</Link>
+              <Link to={authorPath} className="article-meta-author">{authorName}</Link>
             </div>
           )}
 

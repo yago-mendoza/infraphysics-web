@@ -86,142 +86,6 @@
   margin-bottom: 0;
 }
 
-/* ============================================================
-   Markdown content styling — theme-aware
-   ============================================================ */
-.content-html {
-  font-family: var(--font-sans);
-  color: var(--content-text);
-}
-
-.content-html h1,
-.content-html h2,
-.content-html h3,
-.content-html h4 {
-  font-family: var(--font-mono);
-  color: var(--content-heading);
-}
-
-.content-html h1 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin-top: 2rem;
-  margin-bottom: 1rem;
-  letter-spacing: -0.025em;
-}
-
-.content-html h1:first-child {
-  margin-top: 0;
-}
-
-.content-html h2 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin-top: 1.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.content-html p {
-  margin-bottom: 0.5rem;
-  text-align: justify;
-  line-height: 1.625;
-  font-size: 0.875rem;
-  color: var(--content-text);
-}
-
-.content-html ul,
-.content-html ol {
-  margin-left: 1rem;
-  margin-bottom: 1rem;
-}
-
-.content-html li {
-  margin-left: 1rem;
-  list-style-type: disc;
-  font-size: 0.875rem;
-  color: var(--content-text);
-  line-height: 1.625;
-  padding-left: 0.25rem;
-}
-
-.content-html img {
-  border-radius: 0.125rem;
-  border: 1px solid var(--content-img-border);
-  background-color: var(--content-img-bg);
-}
-
-.content-html img:not([class]) {
-  width: 100%;
-  max-height: 450px;
-  object-fit: contain;
-  margin-top: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.content-html code {
-  background-color: var(--content-code-bg);
-  color: var(--content-code-text);
-  padding: 0.125rem 0.25rem;
-  border-radius: 0.25rem;
-  font-family: var(--font-mono);
-  font-size: 0.875em;
-}
-
-.content-html pre {
-  background-color: var(--content-pre-bg);
-  color: var(--content-code-text);
-  padding: 1rem;
-  border-radius: 0.25rem;
-  overflow-x: auto;
-  margin: 1rem 0;
-  border: 1px solid var(--content-pre-border);
-  transition: background-color 0.95s ease, color 0.95s ease, border-color 0.95s ease;
-}
-
-.content-html pre code {
-  background-color: transparent;
-  padding: 0;
-  color: inherit;
-}
-
-.content-html a {
-  color: var(--content-link);
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.2s ease;
-}
-
-.content-html a:hover {
-  border-bottom-color: var(--content-link);
-  color: var(--content-link-hover);
-}
-
-.content-html table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1rem 0;
-}
-
-.content-html th,
-.content-html td {
-  border: 1px solid var(--content-table-border);
-  padding: 0.5rem;
-  text-align: left;
-}
-
-.content-html th {
-  background-color: var(--content-table-header);
-  font-weight: 600;
-  color: var(--content-heading);
-}
-
-/* Clear floats after content */
-.content-html::after {
-  content: "";
-  display: table;
-  clear: both;
-}
-
 /* Responsive adjustments */
 @media (max-width: 640px) {
   .img-float-right,
@@ -241,17 +105,6 @@
   }
 }
 
-@media (min-width: 768px) {
-  .content-html h1 {
-    font-size: 1.5rem;
-  }
-
-  .content-html p,
-  .content-html li {
-    font-size: 1rem;
-  }
-}
-
 /* ============================================================
    Section accent — CSS-driven category accent for listing views
    Values aligned 1:1 with --art-accent in article.css
@@ -266,8 +119,8 @@
 [data-theme="light"] .section-bits2bricks { --section-accent: #2563eb; }
 
 /* card-accent inherits from section-accent — no inline styles needed */
-.section-projects .project-card { --card-accent: var(--section-accent); }
-.section-threads  .thread-card  { --card-accent: var(--section-accent); }
+.section-projects .listing-card { --card-accent: var(--section-accent); }
+.section-threads  .listing-card { --card-accent: var(--section-accent); }
 
 /* Tech pills in project cards — CSS-driven accent color */
 .section-projects .pill-tech {
@@ -449,19 +302,30 @@ button:focus {
   color: inherit;
 }
 
-/* Line clamp utilities */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+/* Pill — reusable tag/chip base (normal + compact variant) */
+.pill {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.625rem;
+  border: 1px solid;
+  border-radius: 0.125rem;
+}
+.pill-sm {
+  font-size: 0.6875rem;
+  padding: 0.125rem 0.5rem;
 }
 
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+/* Card link — reusable bordered card with hover lift.
+   Override hover border/bg with Tailwind utilities when needed (e.g. violet accent). */
+.card-link {
+  display: block;
+  border: 1px solid var(--border-default);
+  border-radius: 0.125rem;
+  background-color: var(--bg-surface);
+  transition: all 0.15s ease;
+}
+.card-link:hover {
+  border-color: var(--border-active);
+  background-color: var(--bg-surface-alt);
 }
 
 /* Accent chip — build-safe dynamic colors via CSS custom properties.
@@ -481,87 +345,51 @@ button:focus {
   color: var(--ac-color);
 }
 
-/* Hub sidebar scrollbar */
-.hub-scrollbar::-webkit-scrollbar {
-  width: 3px;
+/* Group-hover variant — parent .group triggers child color change */
+.group:hover .group-hover-accent {
+  color: var(--ac-color);
 }
 
-.hub-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
+/* Thin sidebar scrollbar — shared base */
+.thin-scrollbar::-webkit-scrollbar { width: 3px; }
+.thin-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.thin-scrollbar::-webkit-scrollbar-thumb { background: var(--_sb-thumb); border-radius: 2px; }
+.thin-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--_sb-hover); }
 
-.hub-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--hub-sidebar-border);
-  border-radius: 2px;
-}
-
-.hub-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--text-tertiary);
-}
-
-/* Main sidebar scrollbar — only visible when zoomed in */
-.sidebar-scrollbar::-webkit-scrollbar {
-  width: 3px;
-}
-
-.sidebar-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.sidebar-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--sidebar-section);
-  border-radius: 2px;
-}
-
-.sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--sidebar-text);
-}
+.hub-scrollbar     { --_sb-thumb: var(--hub-sidebar-border); --_sb-hover: var(--text-tertiary); }
+.sidebar-scrollbar { --_sb-thumb: var(--sidebar-section);    --_sb-hover: var(--sidebar-text); }
 
 /* ============================================================
-   Project thumbnail — grayscale + L-corner expand on hover
+   Listing card thumbnails — shared hover cascade
+   Per-category filter values override the base.
    ============================================================ */
 
-.project-thumb {
+.listing-thumb {
   position: relative;
 }
 
-.project-thumb img {
-  filter: grayscale(100%);
+.listing-thumb img {
   transition: filter 0.5s ease, transform 0.5s ease;
-}
-
-.project-card:has(.project-title-link:hover) .project-thumb img {
-  filter: grayscale(0%);
-  transform: scale(1.05);
-}
-
-.project-card:has(.project-title-link:hover) .project-card-title {
-  color: var(--card-accent);
-}
-
-.project-thumb img {
   border: none;
   outline: none;
   color: transparent;
 }
 
-/* ============================================================
-   Thread thumbnail — rose-tinted desaturation + hover cascade
-   ============================================================ */
-
-.thread-thumb img {
-  filter: saturate(0.3) brightness(0.9);
-  transition: filter 0.5s ease, transform 0.5s ease;
-}
-
-.thread-card:has(.thread-title-link:hover, .thread-thumb:hover) .thread-thumb img {
-  filter: saturate(1) brightness(1);
+.listing-card:has(.listing-title-link:hover, .listing-thumb:hover) .listing-thumb img {
   transform: scale(1.05);
 }
 
-.thread-card:has(.thread-title-link:hover, .thread-thumb:hover) .thread-card-title {
+.listing-card:has(.listing-title-link:hover, .listing-thumb:hover) .listing-card-title {
   color: var(--card-accent);
 }
+
+/* Project — full grayscale → color on hover */
+.project-thumb img { filter: grayscale(100%); }
+.listing-card:has(.listing-title-link:hover, .listing-thumb:hover) .project-thumb img { filter: grayscale(0%); }
+
+/* Thread — desaturated → full color on hover */
+.thread-thumb img { filter: saturate(0.3) brightness(0.9); }
+.listing-card:has(.listing-title-link:hover, .listing-thumb:hover) .thread-thumb img { filter: saturate(1) brightness(1); }
 
 .thread-excerpt {
   border-left: 2px solid var(--card-accent);
@@ -569,38 +397,3 @@ button:focus {
   font-style: italic;
 }
 
-/* ============================================================
-   Title L-corner frame — brackets framing a text heading
-   Padding keeps text clear of the bracket arms.
-   ============================================================ */
-
-.title-l-frame {
-  position: relative;
-  display: inline-block;
-  padding: 10px 20px 12px;
-}
-
-.title-l-frame::before,
-.title-l-frame::after {
-  content: '';
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  pointer-events: none;
-}
-
-/* Top-left L bracket */
-.title-l-frame::before {
-  top: 0;
-  left: 0;
-  border-top: 2px solid currentColor;
-  border-left: 2px solid currentColor;
-}
-
-/* Bottom-right L bracket */
-.title-l-frame::after {
-  bottom: 0;
-  right: 0;
-  border-bottom: 2px solid currentColor;
-  border-right: 2px solid currentColor;
-}

@@ -4,9 +4,9 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { posts } from '../data/data';
 import { Category } from '../types';
-import { calculateReadingTime, stripHtml, hexAlpha } from '../lib';
-import { CATEGORY_CONFIG, getThemedColor, type CategoryDisplayConfig } from '../config/categories';
-import { useSectionState } from '../contexts/SectionStateContext';
+import { calculateReadingTime, stripHtml, hexAlpha, accentChipStyle } from '../lib';
+import { getSearchExcerpt, countMatches } from '../lib/search';
+import { CATEGORY_CONFIG, STATUS_CONFIG, getThemedColor, type CategoryDisplayConfig } from '../config/categories';
 import { useTheme } from '../contexts/ThemeContext';
 import {
   SearchIcon,
@@ -31,20 +31,18 @@ const SECTION_RENDERERS: Record<string, React.FC<SectionRendererProps>> = {
 
 const PAGE_SIZE = 3;
 
-const STATUS_FILTER_CONFIG: Record<string, { label: string; accent: string }> = {
-  'ongoing': { label: 'Ongoing', accent: '#a78bfa' },
-  'implemented': { label: 'Implemented', accent: '#d97706' },
-};
 
 export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
-  const { getState, setState: setSectionState } = useSectionState();
-  const { query, sortBy, showFilters, selectedTopics, selectedTechs, selectedStatuses, visibleCount } = getState(category);
-  const setQuery = (q: string) => setSectionState(category, { query: q });
-  const setSortBy = (s: 'newest' | 'oldest' | 'title') => setSectionState(category, { sortBy: s });
-  const setShowFilters = (f: boolean) => setSectionState(category, { showFilters: f });
-  const toggleTopic = (t: string) => setSectionState(category, { selectedTopics: selectedTopics.includes(t) ? selectedTopics.filter(x => x !== t) : [...selectedTopics, t] });
-  const toggleTech = (t: string) => setSectionState(category, { selectedTechs: selectedTechs.includes(t) ? selectedTechs.filter(x => x !== t) : [...selectedTechs, t] });
-  const toggleStatus = (s: string) => setSectionState(category, { selectedStatuses: selectedStatuses.includes(s) ? selectedStatuses.filter(x => x !== s) : [...selectedStatuses, s] });
+  const [query, setQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title'>('newest');
+  const [showFilters, setShowFilters] = useState(true);
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [selectedTechs, setSelectedTechs] = useState<string[]>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const toggleTopic = (t: string) => setSelectedTopics(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
+  const toggleTech = (t: string) => setSelectedTechs(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
+  const toggleStatus = (s: string) => setSelectedStatuses(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
 
   const { theme } = useTheme();
 
@@ -111,9 +109,8 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
   }, [sectionPosts, query, sortBy, selectedTopics, selectedTechs, selectedStatuses]);
 
   // Infinite scroll
-  const effectiveVisible = visibleCount || PAGE_SIZE;
-  const visiblePosts = filteredPosts.slice(0, effectiveVisible);
-  const hasMore = effectiveVisible < filteredPosts.length;
+  const visiblePosts = filteredPosts.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredPosts.length;
 
   const [loading, setLoading] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -127,7 +124,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
       if (entry.isIntersecting) {
         setLoading(true);
         setTimeout(() => {
-          setSectionState(category, { visibleCount: effectiveVisible + PAGE_SIZE });
+          setVisibleCount(prev => prev + PAGE_SIZE);
           setLoading(false);
         }, 800);
       }
@@ -135,30 +132,10 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [hasMore, loading, effectiveVisible, category, setSectionState]);
+  }, [hasMore, loading, visibleCount]);
 
-  const getExcerpt = (content: string, query: string) => {
-    if (!query) return null;
-    const plain = stripHtml(content);
-    const index = plain.toLowerCase().indexOf(query.toLowerCase());
-    if (index === -1) return null;
-    const start = Math.max(0, index - 50);
-    const end = Math.min(plain.length, index + 100);
-    return "..." + plain.substring(start, end) + "...";
-  };
-
-  const getMatchCount = (content: string, query: string): number => {
-    if (!query) return 0;
-    const q = query.toLowerCase();
-    const plain = stripHtml(content).toLowerCase();
-    let count = 0;
-    let pos = 0;
-    while ((pos = plain.indexOf(q, pos)) !== -1) {
-      count++;
-      pos += q.length;
-    }
-    return count;
-  };
+  const getExcerpt = getSearchExcerpt;
+  const getMatchCount = countMatches;
 
   const categoryInfo = CATEGORY_CONFIG[category] ?? {
     title: category, description: '', icon: null,
@@ -245,19 +222,14 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
                   <div className="w-px h-4 bg-th-border" />
                   <span className="text-xs text-th-tertiary uppercase">Status:</span>
                   {allStatuses.map(s => {
-                    const cfg = STATUS_FILTER_CONFIG[s] || { label: s, accent: '#9ca3af' };
+                    const cfg = STATUS_CONFIG[s] || { label: s, accent: '#9ca3af', dotColor: '#9ca3af' };
                     const active = selectedStatuses.includes(s);
                     return (
                       <button
                         key={s}
                         onClick={() => toggleStatus(s)}
                         className="text-xs px-2.5 py-0.5 border rounded-sm transition-colors accent-chip"
-                        style={{
-                          '--ac-border': active ? hexAlpha(cfg.accent, 0.5) : hexAlpha(cfg.accent, 0.2),
-                          '--ac-color': active ? cfg.accent : hexAlpha(cfg.accent, 0.6),
-                          '--ac-bg': active ? hexAlpha(cfg.accent, 0.2) : undefined,
-                          '--ac-border-hover': active ? undefined : hexAlpha(cfg.accent, 0.4),
-                        } as React.CSSProperties}
+                        style={accentChipStyle(cfg.accent, active)}
                       >
                         {cfg.label} ({statusCounts[s] || 0})
                       </button>
@@ -299,12 +271,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
                         key={t}
                         onClick={() => toggleTech(t)}
                         className="text-xs px-2.5 py-0.5 border rounded-sm transition-colors accent-chip"
-                        style={{
-                          '--ac-border': isActive ? hexAlpha(themed.accent, 0.5) : hexAlpha(themed.accent, 0.2),
-                          '--ac-color': isActive ? themed.accent : hexAlpha(themed.accent, 0.6),
-                          '--ac-bg': isActive ? hexAlpha(themed.accent, 0.2) : undefined,
-                          '--ac-border-hover': isActive ? undefined : hexAlpha(themed.accent, 0.4),
-                        } as React.CSSProperties}
+                        style={accentChipStyle(themed.accent, isActive)}
                       >
                         {t} ({techCounts[t] || 0})
                       </button>

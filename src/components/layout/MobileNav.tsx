@@ -19,6 +19,7 @@ import {
   SearchIcon,
 } from '../icons';
 import { getThemedColor } from '../../config/categories';
+import { CATEGORY_ACCENTS } from '../../constants/theme';
 
 
 export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch }) => {
@@ -39,17 +40,18 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearc
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
-  const NavLink = ({ to, basePath, colorClass, icon, children }: { to: string, basePath?: string, colorClass: string, icon: React.ReactNode, children: React.ReactNode }) => {
+  const NavLink = ({ to, basePath, accent: linkAccent, icon, children }: { to: string, basePath?: string, accent: string, icon: React.ReactNode, children: React.ReactNode }) => {
     const active = isActive(basePath ?? to);
     return (
       <Link
         to={active && basePath ? basePath : to}
         onClick={() => setIsOpen(false)}
         className={`flex items-center gap-3 py-3 px-4 rounded-sm transition-all ${
-          active ? colorClass + ' bg-th-elevated font-medium' : 'text-th-secondary hover:bg-th-surface-alt'
+          active ? 'bg-th-elevated font-medium' : 'text-th-secondary hover:bg-th-surface-alt'
         }`}
+        style={active ? { color: linkAccent } : undefined}
       >
-        <span className={active ? colorClass : 'text-th-tertiary'}>{icon}</span>
+        <span className={active ? undefined : 'text-th-tertiary'} style={active ? { color: linkAccent } : undefined}>{icon}</span>
         <span>{children}</span>
       </Link>
     );
@@ -107,18 +109,18 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearc
             <nav className="flex flex-col p-4 gap-1">
               {/* LAB */}
               <SectionLabel>lab</SectionLabel>
-              <NavLink to="/lab/projects" basePath="/lab/projects" colorClass={`text-${getThemedColor('projects', theme as 'dark' | 'light').color}`} icon={<GearIcon />}>Projects</NavLink>
-              <NavLink to="/lab/second-brain" colorClass="text-violet-400" icon={<DiamondIcon />}>2<sup>nd</sup> brain</NavLink>
+              <NavLink to="/lab/projects" basePath="/lab/projects" accent={getThemedColor('projects', theme as 'dark' | 'light').accent} icon={<GearIcon />}>Projects</NavLink>
+              <NavLink to="/lab/second-brain" accent={CATEGORY_ACCENTS.secondBrain} icon={<DiamondIcon />}>2<sup>nd</sup> brain</NavLink>
 
               {/* BLOG */}
               <SectionLabel>blog</SectionLabel>
-              <NavLink to="/blog/threads" basePath="/blog/threads" colorClass={`text-${getThemedColor('threads', theme as 'dark' | 'light').color}`} icon={<ThreadIcon />}>Threads</NavLink>
-              <NavLink to="/blog/bits2bricks" basePath="/blog/bits2bricks" colorClass={`text-${getThemedColor('bits2bricks', theme as 'dark' | 'light').color}`} icon={<GradCapIcon />}>Bits2Bricks</NavLink>
+              <NavLink to="/blog/threads" basePath="/blog/threads" accent={getThemedColor('threads', theme as 'dark' | 'light').accent} icon={<ThreadIcon />}>Threads</NavLink>
+              <NavLink to="/blog/bits2bricks" basePath="/blog/bits2bricks" accent={getThemedColor('bits2bricks', theme as 'dark' | 'light').accent} icon={<GradCapIcon />}>Bits2Bricks</NavLink>
 
               {/* META */}
               <SectionLabel>meta</SectionLabel>
-              <NavLink to="/about" colorClass="text-th-primary" icon={<UserIcon />}>About</NavLink>
-              <NavLink to="/contact" colorClass="text-th-primary" icon={<MailIcon />}>Contact</NavLink>
+              <NavLink to="/about" accent={CATEGORY_ACCENTS.meta} icon={<UserIcon />}>About</NavLink>
+              <NavLink to="/contact" accent={CATEGORY_ACCENTS.meta} icon={<MailIcon />}>Contact</NavLink>
 
               {/* Divider */}
               <div className="my-3 border-t border-th-border"></div>

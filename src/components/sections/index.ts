@@ -8,9 +8,10 @@ export interface SectionRendererProps {
   getExcerpt: (content: string, query: string) => string | null;
   getMatchCount: (content: string, query: string) => number;
   color: string;
-  accent?: string;
+  accent: string;
 }
 
 export { Bits2BricksGrid } from './Bits2BricksGrid';
 export { ProjectsList } from './ProjectsList';
 export { ThreadsList } from './ThreadsList';
+export { EmptyState, SearchResultsList } from './SearchResultsList';

@@ -16,6 +16,8 @@ export const SecondBrainHubProvider: React.FC<{ children: React.ReactNode }> = (
   );
 };
 
-export const useHub = (): HubContextType | null => {
-  return useContext(SecondBrainHubContext);
+export const useHub = (): HubContextType => {
+  const ctx = useContext(SecondBrainHubContext);
+  if (!ctx) throw new Error('useHub() called outside SecondBrainHubProvider');
+  return ctx;
 };

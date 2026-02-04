@@ -34,6 +34,7 @@ infraphysics-web/
       WikiContent.tsx         # HTML renderer with wiki-link resolution + hover preview
       WikiLinkPreview.tsx     # Floating preview card (portal)
       RotatingTitle.tsx       # Animated header widget
+      sections/               # SearchResultsList, ProjectsList, ThreadsList, Bits2BricksGrid
       layout/                 # Sidebar, MobileNav, Footer, Starfield, DualGrid
       ui/                     # SearchBar, StatusBadge, Highlight
       icons/                  # SVG icon components
@@ -60,10 +61,16 @@ infraphysics-web/
       content.ts              # Content utilities
       color.ts                # Color utilities (hexAlpha)
       date.ts                 # Date formatting
-    config/                   # Navigation, categories config
+      search.ts               # Search utilities
+      brainIndex.ts           # Fieldnotes index helpers
+      addressToId.ts          # Address → slug conversion
+    styles/
+      article.css             # Article post view styles (terminal/cyberpunk theme)
+      wiki-content.css        # Wiki/second-brain content rendering (.content-html)
+    config/                   # Categories config
     constants/                # Layout, theme constants
     types.ts                  # TypeScript interfaces (Post, Category, etc.)
-  index.css                   # Global styles (content, images, wiki-links, animations)
+  index.css                   # Global styles (images, wiki-links, animations, components)
   package.json
 ```
 

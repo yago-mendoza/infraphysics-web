@@ -1,6 +1,9 @@
-// Navigation trail hook — tracks the user's click path through Second Brain concepts
+// Navigation trail hook — tracks the user's click path through Second Brain concepts.
+// Internalises the pending-action / activePost sync so the consumer only calls
+// scheduleReset / scheduleExtend in click handlers.
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect, type MutableRefObject } from 'react';
+import type { Post } from '../types';
 
 export interface TrailItem {
   id: string;
@@ -9,15 +12,28 @@ export interface TrailItem {
 
 const MAX_TRAIL = 25;
 
-export const useNavigationTrail = () => {
-  const [trail, setTrail] = useState<TrailItem[]>([]);
+const toTrailItem = (post: Post): TrailItem => ({
+  id: post.id,
+  label: post.displayTitle || post.title,
+});
 
-  /** Clear trail and set to a single item. Grid/search card clicks. */
+type TrailAction =
+  | { type: 'reset'; post: Post }
+  | { type: 'extend'; post: Post };
+
+interface UseNavigationTrailOptions {
+  activePost: Post | null;
+  directoryNavRef: MutableRefObject<boolean>;
+}
+
+export const useNavigationTrail = ({ activePost, directoryNavRef }: UseNavigationTrailOptions) => {
+  const [trail, setTrail] = useState<TrailItem[]>([]);
+  const pendingAction = useRef<TrailAction | null>(null);
+
   const resetTrail = useCallback((item: TrailItem) => {
     setTrail([item]);
   }, []);
 
-  /** Remove existing duplicate if any, append to end. Trim from front if > MAX. Wiki-link/backlink/related clicks. */
   const extendTrail = useCallback((item: TrailItem) => {
     setTrail(prev => {
       const filtered = prev.filter(t => t.id !== item.id);
@@ -26,20 +42,51 @@ export const useNavigationTrail = () => {
     });
   }, []);
 
-  /** Keep items 0..index inclusive. Breadcrumb clicks. */
   const truncateTrail = useCallback((index: number) => {
     setTrail(prev => prev.slice(0, index + 1));
   }, []);
 
-  /** Set trail to []. "All Concepts" click. */
   const clearTrail = useCallback(() => {
     setTrail([]);
   }, []);
 
-  /** Set to [item] ONLY if trail is empty. Page refresh seed. */
   const initTrail = useCallback((item: TrailItem) => {
     setTrail(prev => (prev.length === 0 ? [item] : prev));
   }, []);
 
-  return { trail, resetTrail, extendTrail, truncateTrail, clearTrail, initTrail };
+  /** Queue a trail reset for the next activePost sync (grid/search clicks). */
+  const scheduleReset = useCallback((post: Post) => {
+    pendingAction.current = { type: 'reset', post };
+  }, []);
+
+  /** Queue a trail extend for the next activePost sync (wiki-link/backlink clicks). */
+  const scheduleExtend = useCallback((post: Post) => {
+    pendingAction.current = { type: 'extend', post };
+  }, []);
+
+  // Sync trail when activePost changes — apply pending action, directory signal, or init.
+  useEffect(() => {
+    if (!activePost) return;
+    const action = pendingAction.current;
+    pendingAction.current = null;
+
+    const fromDirectory = directoryNavRef.current;
+    directoryNavRef.current = false;
+
+    if (action) {
+      if (action.type === 'reset') {
+        resetTrail(toTrailItem(action.post));
+      } else {
+        extendTrail(toTrailItem(action.post));
+      }
+    } else if (fromDirectory) {
+      resetTrail(toTrailItem(activePost));
+    } else {
+      initTrail(toTrailItem(activePost));
+    }
+  }, [activePost, resetTrail, extendTrail, initTrail, directoryNavRef]);
+
+  const isOverflowing = trail.length >= MAX_TRAIL;
+
+  return { trail, scheduleReset, scheduleExtend, truncateTrail, clearTrail, isOverflowing };
 };

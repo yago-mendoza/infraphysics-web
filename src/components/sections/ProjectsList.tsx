@@ -5,40 +5,29 @@ import { Link } from 'react-router-dom';
 import { formatDateTimeline } from '../../lib/date';
 import { Highlight, StatusBadge } from '../ui';
 import { GitHubIcon, FileTextIcon, PlayCircleIcon } from '../icons';
-import { postPath } from '../../config/categories';
+import { postPath, STATUS_CONFIG } from '../../config/categories';
+import { EmptyState } from './SearchResultsList';
 import type { SectionRendererProps } from './index';
 
-const STATUS_LABELS: Record<string, string> = {
-  'ongoing': 'ONGOING',
-  'implemented': 'IMPLEMENTED',
-};
-
 export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, getMatchCount, color, accent }) => {
-  if (posts.length === 0) {
-    return (
-      <div className="py-16 text-center">
-        <div className="text-th-muted text-4xl mb-4">&empty;</div>
-        <p className="text-th-tertiary text-sm">No entries found{query ? ` matching "${query}"` : ''}</p>
-      </div>
-    );
-  }
+  if (posts.length === 0) return <EmptyState query={query} />;
 
   return (
     <div className="max-w-3xl mx-auto">
       {posts.map((post, index) => {
         const contentExcerpt = getExcerpt(post.content, query);
         const techs = post.technologies || [];
-        const statusLabel = post.status ? STATUS_LABELS[post.status] || post.status.toUpperCase() : null;
+        const statusLabel = post.status ? (STATUS_CONFIG[post.status]?.label || post.status.toUpperCase()) : null;
 
         return (
-          <div key={post.id} className="project-card relative flex gap-6">
+          <div key={post.id} className="listing-card project-card relative flex gap-6">
             {/* Timeline rail */}
             <div className="hidden sm:flex flex-col items-center flex-shrink-0 w-7">
               {/* Line above node */}
               {index > 0 && <div className="w-px flex-grow bg-th-border" />}
               {index === 0 && <div className="flex-grow" />}
               {/* Node */}
-              <div className={`w-3.5 h-3.5 rounded-full border-2 border-${color} bg-th-base flex-shrink-0`} />
+              <div className="w-3.5 h-3.5 rounded-full border-2 bg-th-base flex-shrink-0" style={{ borderColor: accent }} />
               {/* Line below node */}
               {index < posts.length - 1 && <div className="w-px flex-grow bg-th-border" />}
               {index === posts.length - 1 && <div className="flex-grow" />}
@@ -49,7 +38,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
               <div className="flex flex-col md:flex-row gap-6">
                 {/* Photo */}
                 {post.thumbnail && (
-                  <Link to={postPath(post.category, post.id)} className="project-thumb project-title-link relative w-full md:w-72 h-64 overflow-hidden flex-shrink-0 self-start block">
+                  <Link to={postPath(post.category, post.id)} className="listing-thumb listing-title-link project-thumb relative w-full md:w-72 h-64 overflow-hidden flex-shrink-0 self-start block">
                     <img
                       src={post.thumbnail}
                       alt=""
@@ -67,8 +56,8 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                   </div>
 
                   {/* Title */}
-                  <Link to={postPath(post.category, post.id)} className="group project-title-link">
-                    <h3 className="project-card-title text-xl font-bold uppercase tracking-wide text-th-primary transition-colors leading-tight mb-3">
+                  <Link to={postPath(post.category, post.id)} className="group listing-title-link">
+                    <h3 className="listing-card-title text-xl font-bold uppercase tracking-wide text-th-primary transition-colors leading-tight mb-3">
                       <Highlight text={post.displayTitle || post.title} query={query} />
                     </h3>
                   </Link>
@@ -89,7 +78,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                         {pills.map(pill => (
                           <span
                             key={`${pill.type}-${pill.label}`}
-                            className={`text-xs px-2.5 py-0.5 border rounded-sm ${pill.type === 'tech' ? 'pill-tech' : ''}`}
+                            className={`pill ${pill.type === 'tech' ? 'pill-tech' : ''}`}
                             style={pill.type === 'topic'
                               ? { borderColor: 'var(--pill-topic-border)', color: 'var(--pill-topic-text)' }
                               : undefined
@@ -143,7 +132,8 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                           href={post.caseStudy}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={`inline-flex items-center gap-1.5 text-th-tertiary hover:text-${color} transition-colors`}
+                          className="inline-flex items-center gap-1.5 text-th-tertiary accent-link transition-colors"
+                          style={{ '--ac-color': accent } as React.CSSProperties}
                           onClick={e => e.stopPropagation()}
                         >
                           <FileTextIcon /> Case Study
@@ -154,7 +144,8 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                           href={post.demo}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={`inline-flex items-center gap-1.5 text-th-tertiary hover:text-${color} transition-colors`}
+                          className="inline-flex items-center gap-1.5 text-th-tertiary accent-link transition-colors"
+                          style={{ '--ac-color': accent } as React.CSSProperties}
                           onClick={e => e.stopPropagation()}
                         >
                           <PlayCircleIcon /> Demo

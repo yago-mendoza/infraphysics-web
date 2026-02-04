@@ -7,7 +7,7 @@ import { Post } from '../types';
 import { ArrowRightIcon, SearchIcon } from '../components/icons';
 import { CATEGORY_CONFIG, getThemedColor, postPath, sectionPath } from '../config/categories';
 import { useTheme } from '../contexts/ThemeContext';
-import { stripHtml, hexAlpha } from '../lib';
+import { hexAlpha, getSearchExcerpt, countMatches } from '../lib';
 
 const categoryKeys = ['projects', 'threads', 'bits2bricks'] as const;
 
@@ -55,46 +55,21 @@ export const HomeView: React.FC = () => {
   }, []);
 
   const searchResults = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
+    const q = searchQuery.trim();
     if (!q) return null;
-
-    const getMatchCount = (text: string): number => {
-      const plain = stripHtml(text).toLowerCase();
-      let count = 0;
-      let pos = 0;
-      while ((pos = plain.indexOf(q, pos)) !== -1) {
-        count++;
-        pos += q.length;
-      }
-      return count;
-    };
-
-    const getExcerpt = (content: string): string | null => {
-      const plain = stripHtml(content);
-      const index = plain.toLowerCase().indexOf(q);
-      if (index === -1) return null;
-      const start = Math.max(0, index - 50);
-      const end = Math.min(plain.length, index + 100);
-      return '\u2026' + plain.substring(start, end) + '\u2026';
-    };
 
     const allPosts = posts.filter(p => p.category !== 'fieldnotes');
     const matches: { post: Post; matchCount: number; excerpt: string | null }[] = [];
     const counts: Record<string, number> = { projects: 0, threads: 0, bits2bricks: 0 };
 
     for (const post of allPosts) {
-      const title = (post.displayTitle || post.title || '').toLowerCase();
-      const desc = (post.description || '').toLowerCase();
-      const content = stripHtml(post.content || '').toLowerCase();
-
-      if (title.includes(q) || desc.includes(q) || content.includes(q)) {
-        const mc = getMatchCount(post.displayTitle || post.title || '')
-          + getMatchCount(post.description || '')
-          + getMatchCount(post.content || '');
-        const excerpt = getExcerpt(post.content || '') || getExcerpt(post.description || '');
-        matches.push({ post, matchCount: mc, excerpt });
-        counts[post.category] = (counts[post.category] || 0) + 1;
-      }
+      const mc = countMatches(post.displayTitle || post.title || '', q)
+        + countMatches(post.description || '', q)
+        + countMatches(post.content || '', q);
+      if (mc === 0) continue;
+      const excerpt = getSearchExcerpt(post.content || '', q) || getSearchExcerpt(post.description || '', q);
+      matches.push({ post, matchCount: mc, excerpt });
+      counts[post.category] = (counts[post.category] || 0) + 1;
     }
 
     matches.sort((a, b) => b.matchCount - a.matchCount);
@@ -183,7 +158,7 @@ export const HomeView: React.FC = () => {
                     <Link
                       key={`${post.category}-${post.id}`}
                       to={postPath(post.category, post.id)}
-                      className="group flex items-start gap-3 p-3 border border-th-border rounded-sm bg-th-surface hover:border-th-border-active hover:bg-th-surface-alt transition-all"
+                      className="card-link group flex items-start gap-3 p-3"
                     >
                       <span className="mt-1.5 inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: tc.accent }} />
                       <div className="flex-1 min-w-0">
@@ -240,7 +215,7 @@ export const HomeView: React.FC = () => {
                   <Link
                     key={key}
                     to={sectionPath(key)}
-                    className="group p-5 border border-th-border rounded-sm bg-th-surface hover:border-th-border-active hover:bg-th-surface-alt transition-all"
+                    className="card-link group p-5"
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <span className="text-th-secondary group-hover:text-th-primary transition-colors">{config.icon}</span>
@@ -269,7 +244,7 @@ export const HomeView: React.FC = () => {
             <Link
               key={`${post.category}-${post.id}`}
               to={postPath(post.category, post.id)}
-              className="group p-5 border border-th-border rounded-sm bg-th-surface hover:border-th-border-active hover:bg-th-surface-alt transition-all flex flex-col"
+              className="card-link group p-5 flex flex-col"
             >
               {post.thumbnail && (
                 <div className="mb-4">

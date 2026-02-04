@@ -2,15 +2,16 @@
 
 import { useState, useMemo, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Post } from '../types';
+import { FieldNote } from '../types';
 import {
   allFieldNotes,
   noteById,
   backlinksMap,
   relatedConceptsMap,
   resolvedHtmlMap,
+  globalStats,
+  parentIds,
 } from '../lib/brainIndex';
-import { addressToId } from '../lib/addressToId';
 
 export type SearchMode = 'name' | 'content' | 'backlinks';
 export type SortMode = 'a-z' | 'most-links' | 'fewest-links' | 'depth' | 'shuffle';
@@ -34,19 +35,9 @@ const DEFAULT_FILTER_STATE: FilterState = {
 export interface TreeNode {
   label: string;
   path: string;           // full path e.g. "LAPTOP//UI//SCROLLING"
-  concept: Post | null;
+  concept: FieldNote | null;
   children: TreeNode[];
   childCount: number;     // total descendants (concepts only)
-}
-
-interface HubStats {
-  totalConcepts: number;
-  totalLinks: number;
-  orphanCount: number;
-  avgRefs: number;
-  maxDepth: number;
-  density: number;        // links as % of possible connections
-  mostConnectedHub: Post | null;
 }
 
 // Seeded Fisher-Yates shuffle for stable random ordering
@@ -125,56 +116,6 @@ export const useSecondBrainHub = () => {
     if (!activePost) return '';
     return resolvedHtmlMap.get(activePost.id) || activePost.content;
   }, [activePost]);
-
-  // --- Stats ---
-  const stats: HubStats = useMemo(() => {
-    const totalLinks = allFieldNotes.reduce((sum, n) => sum + (n.references?.length || 0), 0);
-
-    const linkedToSet = new Set<string>();
-    allFieldNotes.forEach(n => {
-      (n.references || []).forEach(ref => {
-        linkedToSet.add(addressToId(ref));
-      });
-    });
-
-    const orphanCount = allFieldNotes.filter(n => {
-      const hasOutgoing = (n.references?.length || 0) > 0;
-      const hasIncoming = linkedToSet.has(n.id);
-      return !hasOutgoing && !hasIncoming;
-    }).length;
-
-    const avgRefs = allFieldNotes.length > 0
-      ? Math.round((totalLinks / allFieldNotes.length) * 10) / 10
-      : 0;
-
-    // Max depth
-    const maxDepth = allFieldNotes.reduce((max, n) => {
-      const d = (n.addressParts || [n.title]).length;
-      return d > max ? d : max;
-    }, 0);
-
-    // Density: links / possible connections (n*(n-1))
-    const n = allFieldNotes.length;
-    const possibleConnections = n * (n - 1);
-    const density = possibleConnections > 0
-      ? Math.round((totalLinks / possibleConnections) * 1000) / 10 // percentage with 1 decimal
-      : 0;
-
-    // Most connected = most total connections (outgoing + incoming)
-    let mostConnected: Post | null = null;
-    let maxConnections = 0;
-    allFieldNotes.forEach(n => {
-      const outgoing = n.references?.length || 0;
-      const incoming = (backlinksMap.get(n.id) || []).length;
-      const total = outgoing + incoming;
-      if (total > maxConnections) {
-        maxConnections = total;
-        mostConnected = n;
-      }
-    });
-
-    return { totalConcepts: allFieldNotes.length, totalLinks, orphanCount, avgRefs, maxDepth, density, mostConnectedHub: mostConnected };
-  }, []);
 
   // --- Directory Tree ---
   const tree = useMemo(() => {
@@ -313,17 +254,7 @@ export const useSecondBrainHub = () => {
 
       if (orphans && (outgoing > 0 || incoming > 0)) return false;
 
-      if (leaf) {
-        // leaf = no children in the tree (no concepts with this address as prefix)
-        const hasChild = allFieldNotes.some(other =>
-          other.id !== note.id &&
-          other.addressParts &&
-          note.addressParts &&
-          other.addressParts.length > note.addressParts.length &&
-          (other.address || '').startsWith(note.address || '\0')
-        );
-        if (hasChild) return false;
-      }
+      if (leaf && parentIds.has(note.id)) return false;
 
       if (hubThreshold > 0 && totalConnections < hubThreshold) return false;
       if (depth < depthMin) return false;
@@ -441,7 +372,7 @@ export const useSecondBrainHub = () => {
     // Data
     allFieldNotes,
     sortedResults,
-    stats,
+    stats: globalStats,
 
     // Detail view data
     backlinks,

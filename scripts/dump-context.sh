@@ -39,11 +39,9 @@ FILES=(
   # --- Config ---
   "src/config/index.ts"
   "src/config/categories.tsx"
-  "src/config/navigation.ts"
 
   # --- Contexts ---
   "src/contexts/ThemeContext.tsx"
-  "src/contexts/SectionStateContext.tsx"
   "src/contexts/ArticleContext.tsx"
   "src/contexts/SecondBrainHubContext.tsx"
 
@@ -51,7 +49,6 @@ FILES=(
   "src/hooks/index.ts"
   "src/hooks/useKeyboardShortcuts.ts"
   "src/hooks/useNavigationTrail.ts"
-  "src/hooks/useSecondBrain.ts"
   "src/hooks/useSecondBrainHub.ts"
 
   # --- Lib / Utilities ---
@@ -62,6 +59,7 @@ FILES=(
   "src/lib/brainIndex.ts"
   "src/lib/wikilinks.ts"
   "src/lib/color.ts"
+  "src/lib/search.ts"
 
   # --- Data ---
   "src/data/data.ts"
@@ -73,7 +71,6 @@ FILES=(
   "src/components/layout/Footer.tsx"
   "src/components/layout/DualGrid.tsx"
   "src/components/layout/Starfield.tsx"
-  "src/components/layout/TopoBackground.tsx"
   "src/components/layout/SecondBrainSidebar.tsx"
 
   # --- Components: UI ---
@@ -83,6 +80,7 @@ FILES=(
 
   # --- Components: Sections ---
   "src/components/sections/index.ts"
+  "src/components/sections/SearchResultsList.tsx"
   "src/components/sections/ProjectsList.tsx"
   "src/components/sections/ThreadsList.tsx"
   "src/components/sections/Bits2BricksGrid.tsx"
@@ -110,6 +108,7 @@ FILES=(
 
   # --- Styles ---
   "src/styles/article.css"
+  "src/styles/wiki-content.css"
 
   # --- Build scripts ---
   "scripts/build-content.js"

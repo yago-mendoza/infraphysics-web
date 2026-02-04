@@ -3,7 +3,7 @@
 import React from 'react';
 import { GearIcon, ThreadIcon, GradCapIcon } from '../components/icons';
 
-interface CategoryDisplayConfig {
+export interface CategoryDisplayConfig {
   title: string;
   description: string;
   icon: React.ReactNode;
@@ -95,6 +95,17 @@ export const sectionPath = (category: string): string =>
  * Get theme-aware color/accent for a category.
  * Falls back to dark values when no light override exists.
  */
+/* ── Status metadata (shared across SectionView filters + ArticlePostView header) ── */
+
+export const STATUS_CONFIG: Record<string, { label: string; accent: string; dotColor: string }> = {
+  'ongoing':      { label: 'ONGOING',      accent: '#a78bfa', dotColor: '#a78bfa' },
+  'implemented':  { label: 'IMPLEMENTED',  accent: '#d97706', dotColor: '#34d399' },
+  'active':       { label: 'ACTIVE',       accent: '#34d399', dotColor: '#34d399' },
+  'in-progress':  { label: 'IN PROGRESS',  accent: '#fbbf24', dotColor: '#fbbf24' },
+  'completed':    { label: 'COMPLETED',    accent: '#60a5fa', dotColor: '#60a5fa' },
+  'archived':     { label: 'ARCHIVED',     accent: '#9ca3af', dotColor: '#9ca3af' },
+};
+
 export const getThemedColor = (cat: string, theme: 'dark' | 'light'): { color: string; accent: string } => {
   const cfg = CATEGORY_CONFIG[cat];
   if (!cfg) return { color: 'gray-400', accent: '#9ca3af' };
