@@ -1,12 +1,13 @@
 // App shell: provides layout structure and top-level routing
 
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { SecondBrainHubProvider } from '../contexts/SecondBrainHubContext';
 import { SectionStateProvider, useSectionState } from '../contexts/SectionStateContext';
 import { categoryGroup } from '../config/categories';
 import { Sidebar, MobileNav, Footer, DualGrid, Starfield, SecondBrainSidebar } from './layout';
+import { SearchPalette } from './SearchPalette';
 import { HomeView, AboutView, ContactView, ThanksView, SectionView, PostView, SecondBrainView } from '../views';
 import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../constants/layout';
 
@@ -25,47 +26,29 @@ const AppLayout: React.FC = () => {
   const location = useLocation();
   const { theme } = useTheme();
   const { setLastPath } = useSectionState();
-  const scrollStore = useRef<Record<string, number>>({});
-  const pathRef = useRef(location.pathname);
-  const restoringRef = useRef(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
-  // Update ref synchronously during render so the scroll handler
-  // always writes to the CURRENT pathname. This prevents transitional
-  // scroll events (fired when old DOM unmounts and the browser clamps
-  // scroll) from overwriting the saved position of the page we left.
-  pathRef.current = location.pathname;
+  const openSearch = useCallback(() => setSearchOpen(true), []);
 
-  // Persistent scroll listener — saves position for the current page
+  // Global Ctrl+K / Cmd+K  +  Ctrl+Shift+F (outside Second Brain)
   useEffect(() => {
-    const handler = () => {
-      if (!restoringRef.current) {
-        scrollStore.current[pathRef.current] = window.scrollY;
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(prev => !prev);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        setSearchOpen(prev => !prev);
       }
     };
-    window.addEventListener('scroll', handler, { passive: true });
-    return () => window.removeEventListener('scroll', handler);
-  }, []);
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [location.pathname]);
 
-  // On navigation: restore saved scroll or go to top
+  // Scroll to top on every route change (standard SPA behavior)
   useEffect(() => {
-    const saved = scrollStore.current[location.pathname];
-    if (saved != null && saved > 0) {
-      restoringRef.current = true;
-      let frame: number;
-      let count = 0;
-      const restore = () => {
-        window.scrollTo(0, saved);
-        if (++count < 12) {
-          frame = requestAnimationFrame(restore);
-        } else {
-          restoringRef.current = false;
-        }
-      };
-      frame = requestAnimationFrame(restore);
-      return () => { cancelAnimationFrame(frame); restoringRef.current = false; };
-    } else {
-      window.scrollTo(0, 0);
-    }
+    window.scrollTo(0, 0);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -92,10 +75,13 @@ const AppLayout: React.FC = () => {
       </div>
 
       {/* Mobile Navigation */}
-      <MobileNav />
+      <MobileNav onOpenSearch={openSearch} />
 
       {/* Desktop Sidebar */}
-      <Sidebar />
+      <Sidebar onOpenSearch={openSearch} />
+
+      {/* Search Palette */}
+      <SearchPalette isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
 
       {/* Hub Sidebar (second-brain only, desktop only) */}
       {isSecondBrain && <SecondBrainSidebar />}

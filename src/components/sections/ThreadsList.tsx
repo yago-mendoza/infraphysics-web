@@ -2,8 +2,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { formatDateTimeline } from '../../lib/date';
-import { formatDateCompact } from '../../lib/date';
+import { formatDate } from '../../lib/date';
 import { calculateReadingTime } from '../../lib/content';
 import { Highlight } from '../ui';
 import { ClockIcon } from '../icons';
@@ -36,7 +35,7 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
               to={postPath(post.category, post.id)}
               className={`group flex items-center gap-4 py-3 px-2 hover:bg-th-surface-alt transition-colors`}
             >
-              <span className="text-[11px] text-th-tertiary font-mono w-14 flex-shrink-0">{formatDateCompact(post.date)}</span>
+              <span className="text-[11px] text-th-tertiary font-mono w-14 flex-shrink-0">{formatDate(post.date)}</span>
 
               <div className="flex-grow min-w-0">
                 <span className={`text-sm text-th-primary group-hover:text-${color} transition-colors truncate block`}>
@@ -86,7 +85,7 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
                   <span className={`inline-flex items-center gap-1.5 text-xs font-mono px-2 py-0.5 border border-${color}/30 text-${color} rounded-sm`}>
                     <ClockIcon /> {readTime} MIN READ
                   </span>
-                  <span className="text-xs text-th-tertiary font-mono">{formatDateTimeline(post.date)}</span>
+                  <span className="text-xs text-th-tertiary font-mono">{formatDate(post.date)}</span>
                 </div>
 
                 {/* Title + Description — both clickable */}

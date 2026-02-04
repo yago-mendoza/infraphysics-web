@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { formatDateCompact } from '../../lib/date';
+import { formatDate } from '../../lib/date';
 import { Highlight } from '../ui';
 import { postPath } from '../../config/categories';
 import type { SectionRendererProps } from './index';
@@ -34,7 +34,7 @@ export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, 
               className={`group flex items-center gap-4 py-3 px-2 hover:bg-th-surface-alt transition-colors`}
             >
               {/* Date */}
-              <span className="text-[11px] text-th-tertiary font-mono w-14 flex-shrink-0">{formatDateCompact(post.date)}</span>
+              <span className="text-[11px] text-th-tertiary font-mono w-14 flex-shrink-0">{formatDate(post.date)}</span>
 
               {/* Title + Description */}
               <div className="flex-grow min-w-0">
@@ -93,7 +93,7 @@ export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, 
 
             {/* Content */}
             <div className="p-4 space-y-2.5">
-              <span className="text-[11px] text-th-tertiary font-mono">{formatDateCompact(post.date)}</span>
+              <span className="text-[11px] text-th-tertiary font-mono">{formatDate(post.date)}</span>
 
               <h3 className={`font-bold text-base text-th-primary group-hover:text-${color} transition-colors leading-tight line-clamp-2`}>
                 {post.displayTitle || post.title}

@@ -1,6 +1,6 @@
 // Second Brain Manager Sidebar — data exploration dashboard for /second-brain* routes
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useHub } from '../../contexts/SecondBrainHubContext';
 import {
@@ -16,7 +16,7 @@ import type { TreeNode, SearchMode, FilterState } from '../../hooks/useSecondBra
 
 // --- Collapsible Section ---
 const Section: React.FC<{
-  title: string;
+  title: React.ReactNode;
   icon: React.ReactNode;
   defaultOpen?: boolean;
   children: React.ReactNode;
@@ -192,6 +192,19 @@ const SEARCH_MODES: { value: SearchMode; label: string }[] = [
 export const SecondBrainSidebar: React.FC = () => {
   const hub = useHub();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'H') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   if (!hub) return null;
 
   const {
@@ -220,13 +233,15 @@ export const SecondBrainSidebar: React.FC = () => {
   const sections = (
     <>
       {/* Search */}
-      <Section title="search" icon={<SearchIcon />} defaultOpen={true}>
+      <Section title={<>search <kbd className="normal-case tracking-normal text-th-muted text-[8px] opacity-60">Ctrl+Shift+H</kbd></>} icon={<SearchIcon />} defaultOpen={true}>
         <div className="flex items-center border border-th-hub-border px-2 py-1.5 bg-th-surface focus-within:border-th-border-active transition-colors mb-2">
           <input
+            ref={searchInputRef}
             type="text"
             placeholder="Search..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape') { setQuery(''); searchInputRef.current?.blur(); } }}
             className="w-full text-[11px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
           />
           {query && (
@@ -294,6 +309,7 @@ export const SecondBrainSidebar: React.FC = () => {
             placeholder="Filter tree..."
             value={directoryQuery}
             onChange={(e) => setDirectoryQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape') { setDirectoryQuery(''); (e.target as HTMLInputElement).blur(); } }}
             className="w-full text-[10px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
           />
           {directoryQuery && (

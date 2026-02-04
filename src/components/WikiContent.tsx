@@ -147,11 +147,15 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
         hoveredLinkRef.current = null;
         const href = link.getAttribute('href');
         if (href) {
-          const match = href.match(/^\/lab\/second-brain\/(.+)$/);
-          if (match && onWikiLinkClickRef.current) {
-            onWikiLinkClickRef.current(match[1]);
+          if (onWikiLinkClickRef.current) {
+            // Second Brain context — trail management + same-tab navigation
+            const match = href.match(/^\/lab\/second-brain\/(.+)$/);
+            if (match) onWikiLinkClickRef.current(match[1]);
+            navigateRef.current(href);
+          } else {
+            // Article context — open in new tab
+            window.open(href, '_blank');
           }
-          navigateRef.current(href);
         }
       }
     };

@@ -61,6 +61,10 @@
   --art-text-muted:    #555;
   --art-text-card:     #ccc;
 
+  /* Context bar */
+  --art-surface-context: #171717;
+  --art-text-context:    #999;
+
   /* Dividers */
   --art-divider-thick: #555;
 }
@@ -103,6 +107,9 @@
   --art-text-dim:      #888;
   --art-text-muted:    #999;
   --art-text-card:     #333;
+
+  --art-surface-context: #f7f7f7;
+  --art-text-context:    #777;
 
   --art-divider-thick: #bbb;
 }
@@ -223,7 +230,6 @@
 .article-hero {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 7;
   overflow: hidden;
   border-bottom: 1px solid var(--art-border);
 }
@@ -238,6 +244,25 @@
 [data-theme="light"] .article-hero-img {
   filter: grayscale(50%) brightness(0.8) contrast(1.05);
 }
+
+/* A3b. Thumbnail shading presets */
+/* heavy = default (defined above on .article-hero-img) */
+/* light = milder filter, softer gradient */
+.shade-light .article-hero-img        { filter: grayscale(30%) brightness(0.8) contrast(1.05); }
+[data-theme="light"] .shade-light .article-hero-img { filter: grayscale(20%) brightness(0.9) contrast(1.02); }
+.shade-light .article-hero-gradient    { height: 25%; opacity: 0.6; }
+
+/* none = no filter, no gradient */
+.shade-none .article-hero-img         { filter: none; }
+[data-theme="light"] .shade-none .article-hero-img  { filter: none; }
+.shade-none .article-hero-gradient     { display: none; }
+
+/* A3c. Thumbnail aspect presets (hero + blog image) */
+.thumb-full                    { aspect-ratio: auto; }
+.thumb-full img                { height: auto; object-fit: contain; }
+.thumb-wide                    { aspect-ratio: 16 / 7; }
+.thumb-banner                  { aspect-ratio: 16 / 4; }
+.thumb-strip                   { aspect-ratio: 16 / 2; }
 
 .article-hero-gradient {
   position: absolute;
@@ -313,6 +338,22 @@
   color: #0A66C2;
   border-color: rgba(10, 102, 194, 0.4);
   background: rgba(10, 102, 194, 0.05);
+}
+
+.article-social-twitter:hover {
+  color: var(--art-text-title);
+}
+
+.article-social-reddit:hover {
+  color: #FF4500;
+}
+
+.article-social-hn:hover {
+  color: #FF6600;
+}
+
+.article-social-copy:hover {
+  color: var(--art-accent);
 }
 
 /* A7. Tag pills — two rows: topics (purple) + technologies (accent) */
@@ -413,7 +454,9 @@
 
 .article-meta-author {
   color: var(--art-text-mid);
-  text-decoration: none;
+  font-family: 'Inter', var(--font-sans);
+  text-decoration: underline;
+  text-underline-offset: 2px;
   transition: color 0.2s;
 }
 
@@ -624,7 +667,7 @@
 
 .article-content .bkqt {
   margin: 1.5rem 0;
-  border-radius: 6px;
+  border-radius: 0;
   overflow: hidden;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.78rem;
@@ -733,7 +776,7 @@
 }
 
 /* bkqt type variants — dark */
-.article-content .bkqt-note       { --bkqt-color: #a3e635; --bkqt-bg-header: rgba(163,230,53,0.10); --bkqt-bg: rgba(163,230,53,0.04); }
+.article-content .bkqt-note       { --bkqt-color: var(--art-accent); --bkqt-bg-header: color-mix(in srgb, var(--art-accent) 10%, transparent); --bkqt-bg: color-mix(in srgb, var(--art-accent) 4%, transparent); }
 .article-content .bkqt-tip        { --bkqt-color: #22c55e; --bkqt-bg-header: rgba(34,197,94,0.10);  --bkqt-bg: rgba(34,197,94,0.04); }
 .article-content .bkqt-warning    { --bkqt-color: #d97706; --bkqt-bg-header: rgba(217,119,6,0.10);  --bkqt-bg: rgba(217,119,6,0.04); }
 .article-content .bkqt-danger     { --bkqt-color: #dc2626; --bkqt-bg-header: rgba(220,38,38,0.10);  --bkqt-bg: rgba(220,38,38,0.04); }
@@ -741,7 +784,6 @@
 .article-content .bkqt-keyconcept { --bkqt-color: #a855f7; --bkqt-bg-header: rgba(168,85,247,0.10); --bkqt-bg: rgba(168,85,247,0.04); }
 
 /* bkqt type variants — light */
-[data-theme="light"] .article-content .bkqt-note       { --bkqt-color: #4d7c0f; --bkqt-bg-header: rgba(77,124,15,0.12);  --bkqt-bg: rgba(77,124,15,0.05); }
 [data-theme="light"] .article-content .bkqt-tip        { --bkqt-color: #15803d; --bkqt-bg-header: rgba(21,128,61,0.12);  --bkqt-bg: rgba(21,128,61,0.05); }
 [data-theme="light"] .article-content .bkqt-warning    { --bkqt-color: #b45309; --bkqt-bg-header: rgba(180,83,9,0.12);   --bkqt-bg: rgba(180,83,9,0.05); }
 [data-theme="light"] .article-content .bkqt-danger     { --bkqt-color: #b91c1c; --bkqt-bg-header: rgba(185,28,28,0.12);  --bkqt-bg: rgba(185,28,28,0.05); }
@@ -815,7 +857,7 @@
 .article-content .code-terminal {
   background-color: var(--art-surface-code);
   border: 1px solid var(--art-border);
-  border-radius: 8px;
+  border-radius: 0;
   margin: 1.5rem 0;
   overflow: hidden;
   transition: background-color 0.95s ease, border-color 0.95s ease;
@@ -883,7 +925,7 @@
 .article-content pre:not(.code-terminal pre) {
   background-color: var(--art-surface-code);
   border: 1px solid var(--art-border);
-  border-radius: 8px;
+  border-radius: 0;
   padding: 1rem;
   margin: 1.5rem 0;
   overflow-x: auto;
@@ -944,6 +986,27 @@
 
 .article-content figure {
   margin: 1.5rem 0;
+}
+
+.article-content figure.img-center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 100%;
+  width: fit-content;
+}
+
+.article-content figure.img-center img {
+  margin: 0;
+}
+
+.article-content figure.img-full {
+  width: 100%;
+}
+
+.article-content figure.img-full img {
+  width: 100%;
+  margin: 0;
 }
 
 .article-content figure img {
@@ -1109,35 +1172,28 @@
   padding-top: 1.5rem;
   border-top: 1px solid var(--art-border);
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
 }
 
-.article-actions-left {
+.article-share-icons {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
-.article-actions-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
+.article-share-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--art-text-muted);
-  text-transform: uppercase;
-}
-
-.article-actions-link {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75rem;
-  color: var(--art-text-dim);
+  transition: color 0.2s ease;
   text-decoration: none;
-  transition: color 0.2s;
-}
-
-.article-actions-link:hover {
-  color: var(--art-accent);
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
 }
 
 .article-actions-github {
@@ -1273,11 +1329,166 @@
   .article-subtitle {
     font-size: 0.95rem;
   }
-  .article-hero {
-    aspect-ratio: 16 / 9;
-  }
   .article-nav-row {
     flex-wrap: wrap;
     gap: 0.75rem;
   }
+  .article-context-bar {
+    margin-left: -1.25rem;
+    margin-right: -1.25rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+}
+
+
+/* ─────────────────────────────────────────────────
+   E. BLOG LAYOUT (.article-blog)
+   Scoped overrides for threads + bits2bricks
+   ───────────────────────────────────────────────── */
+
+/* E1. Body font override — Inter for prose */
+.article-blog .article-content p,
+.article-blog .article-content li,
+.article-blog .article-content td,
+.article-blog .article-content .small-text p {
+  font-family: 'Inter', var(--font-sans);
+  font-size: 0.9rem;
+  line-height: 1.85;
+}
+
+/* E2. Blog title — Inter, no uppercase */
+.article-blog .article-title {
+  font-family: 'Inter', var(--font-sans);
+  text-transform: none;
+}
+
+.article-blog .article-content h1,
+.article-blog .article-content h2,
+.article-blog .article-content h3,
+.article-blog .article-content h4 {
+  text-transform: none;
+}
+
+/* E2b. Blog subtitle — Inter, not uppercased */
+.article-blog .article-subtitle {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* E3. Breadcrumbs */
+.article-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+}
+
+.article-breadcrumb-link {
+  color: var(--art-text-dim);
+  text-decoration: none;
+}
+
+.article-breadcrumb-link:hover {
+  color: var(--art-accent);
+}
+
+.article-breadcrumb-static {
+  color: var(--art-text-muted);
+}
+
+.article-breadcrumb-sep {
+  color: var(--art-text-muted);
+}
+
+.article-breadcrumb-current {
+  color: var(--art-text-mid);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 20rem;
+}
+
+/* E4. Hashtag tags */
+.article-hashtags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.article-hashtag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--art-purple);
+  letter-spacing: 0.05em;
+}
+
+.article-hashtag-tech {
+  color: var(--art-accent);
+}
+
+/* E4b. Blog separator — neutral line between subtitle and image */
+.article-blog-sep {
+  border: none;
+  border-top: 1px solid var(--art-border);
+  margin: 1.25rem 0 0;
+}
+
+/* E5. Blog image (natural color, below title) */
+.article-blog-image {
+  margin: 1.5rem 0 2rem;
+  overflow: hidden;
+  border-radius: 4px;
+  border: 1px solid var(--art-border);
+}
+
+.article-blog-image-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+/* E6. Context bar — full-width sub-header below breadcrumbs */
+.article-context-bar {
+  margin: -0.25rem -2rem 1.25rem;
+  padding: 0.65rem 2rem;
+  background: var(--art-surface-context);
+  border-top: 1px solid var(--art-border);
+  border-bottom: 1px solid var(--art-border);
+}
+
+.article-context {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', var(--font-sans);
+  font-size: 0.65rem;
+  color: var(--art-text-context);
+  line-height: 1.6;
+  font-style: italic;
+}
+
+/* E7. Simplified TOC — bottom line only, accent color */
+.article-toc--blog {
+  border: none;
+  border-bottom: 1px solid var(--art-accent-dim);
+}
+
+.article-toc--blog .article-toc-toggle {
+  padding: 0.5rem 0;
+}
+
+.article-toc--blog .article-toc-label {
+  text-transform: none;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+}
+
+.article-toc--blog .article-toc-link {
+  text-transform: none;
+  font-family: 'Inter', var(--font-sans);
+  font-size: 0.75rem;
 }

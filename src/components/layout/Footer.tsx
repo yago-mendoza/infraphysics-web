@@ -3,7 +3,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Logo, GitHubIcon, ExternalLinkIcon } from '../icons';
-import { CATEGORY_CONFIG, getThemedColor } from '../../config/categories';
+import { getThemedColor } from '../../config/categories';
 import { useTheme } from '../../contexts/ThemeContext';
 
 export const Footer: React.FC = () => {
@@ -62,8 +62,8 @@ export const Footer: React.FC = () => {
             <h4 className="text-[10px] uppercase tracking-wider text-th-tertiary mb-4">Explore</h4>
             <nav className="flex flex-col gap-2">
               <Link to="/lab/projects" className={`text-xs text-th-secondary hover:text-${getThemedColor('projects', theme as 'dark' | 'light').color} transition-colors`}>Projects</Link>
-              <Link to="/blog/threads" className={`text-xs text-th-secondary hover:${CATEGORY_CONFIG.threads.colorClass} transition-colors`}>Threads</Link>
-              <Link to="/blog/bits2bricks" className={`text-xs text-th-secondary hover:${CATEGORY_CONFIG.bits2bricks.colorClass} transition-colors`}>Bits2Bricks</Link>
+              <Link to="/blog/threads" className={`text-xs text-th-secondary hover:text-${getThemedColor('threads', theme as 'dark' | 'light').color} transition-colors`}>Threads</Link>
+              <Link to="/blog/bits2bricks" className={`text-xs text-th-secondary hover:text-${getThemedColor('bits2bricks', theme as 'dark' | 'light').color} transition-colors`}>Bits2Bricks</Link>
               <Link to="/lab/second-brain" className="text-xs text-th-secondary hover:text-violet-400 transition-colors">Second Brain</Link>
               <Link to="/contact" className="text-xs text-th-secondary hover:text-th-heading transition-colors">Contact</Link>
             </nav>

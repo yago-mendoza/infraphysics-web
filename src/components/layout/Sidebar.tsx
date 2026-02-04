@@ -17,9 +17,9 @@ import {
   SearchIcon,
 } from '../icons';
 import { CATEGORY_ACCENTS } from '../../constants/theme';
-import { CATEGORY_CONFIG } from '../../config/categories';
+import { getThemedColor } from '../../config/categories';
 
-export const Sidebar: React.FC = () => {
+export const Sidebar: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch }) => {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { getLastPath } = useSectionState();
@@ -85,15 +85,15 @@ export const Sidebar: React.FC = () => {
         {/* LAB */}
         {sectionLabel('lab')}
         <nav className="flex flex-col gap-1">
-          {navLink('/lab/projects', <GearIcon />, 'projects', theme === 'light' && CATEGORY_CONFIG.projects.lightAccent ? CATEGORY_CONFIG.projects.lightAccent : CATEGORY_ACCENTS.projects, getLastPath('/lab/projects'))}
+          {navLink('/lab/projects', <GearIcon />, 'projects', getThemedColor('projects', theme as 'dark' | 'light').accent, getLastPath('/lab/projects'))}
           {navLink('/lab/second-brain', <DiamondIcon />, <span>2<sup>nd</sup> brain</span>, CATEGORY_ACCENTS.secondBrain)}
         </nav>
 
         {/* BLOG */}
         {sectionLabel('blog')}
         <nav className="flex flex-col gap-1">
-          {navLink('/blog/threads', <ThreadIcon />, 'threads', CATEGORY_ACCENTS.threads, getLastPath('/blog/threads'))}
-          {navLink('/blog/bits2bricks', <GradCapIcon />, 'bits2bricks', CATEGORY_ACCENTS.bits2bricks, getLastPath('/blog/bits2bricks'))}
+          {navLink('/blog/threads', <ThreadIcon />, 'threads', getThemedColor('threads', theme as 'dark' | 'light').accent, getLastPath('/blog/threads'))}
+          {navLink('/blog/bits2bricks', <GradCapIcon />, 'bits2bricks', getThemedColor('bits2bricks', theme as 'dark' | 'light').accent, getLastPath('/blog/bits2bricks'))}
         </nav>
 
         {/* META */}
@@ -106,7 +106,8 @@ export const Sidebar: React.FC = () => {
         {/* Theme Toggle + Search */}
         <div className="mt-6 flex justify-center gap-1">
           <button
-            className="flex items-center justify-center p-2 rounded-sm transition-all opacity-60 hover:opacity-100 cursor-default"
+            onClick={onOpenSearch}
+            className="flex items-center justify-center p-2 rounded-sm transition-all"
             style={{ color: 'var(--sidebar-icon)' }}
             aria-label="Search"
           >

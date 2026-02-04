@@ -7,7 +7,6 @@ category: bits2bricks
 date: 2025-07-15
 thumbnail: https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=400&auto=format&fit=crop
 description: "a technical showcase of every markdown extension — text formatting, typed blockquotes, code blocks, tables, images, and links. the accent color here is blue."
-status: completed
 tags: [syntax, reference, showcase]
 technologies: [Python, PyTorch, NumPy]
 github: https://github.com/example/syntax-reference
@@ -15,6 +14,7 @@ author: Yago Mendoza
 notes:
   - "companion to the threads syntax reference"
   - "same features, different accent color (blue instead of rose)"
+context: "technical companion to the threads syntax reference — same features, different accent color"
 featured: true
 ---
 

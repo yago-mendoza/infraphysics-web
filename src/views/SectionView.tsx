@@ -210,6 +210,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Escape') { setQuery(''); (e.target as HTMLInputElement).blur(); } }}
               placeholder={`Search ${category}...`}
               spellCheck={false}
               autoComplete="off"

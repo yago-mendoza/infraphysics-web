@@ -46,16 +46,17 @@ customRenderer.image = function({ href, title, text }) {
     alt = alt.slice(0, pipeIndex).trim();
   }
 
-  const classAttr = className ? ` class="${className}"` : '';
   const styleAttr = style ? ` style="${style}"` : '';
   const titleAttr = finalTitle ? ` title="${finalTitle}"` : '';
 
-  const imgTag = `<img src="${href}" alt="${alt}"${classAttr}${styleAttr}${titleAttr} />`;
-
   if (caption) {
-    return `<figure>${imgTag}<figcaption>${caption}</figcaption></figure>`;
+    const figClass = className ? ` class="${className}"` : '';
+    const imgTag = `<img src="${href}" alt="${alt}"${styleAttr}${titleAttr} />`;
+    return `<figure${figClass}>${imgTag}<figcaption>${caption}</figcaption></figure>`;
   }
 
+  const classAttr = className ? ` class="${className}"` : '';
+  const imgTag = `<img src="${href}" alt="${alt}"${classAttr}${styleAttr}${titleAttr} />`;
   return imgTag;
 };
 
@@ -125,7 +126,7 @@ function processCustomBlockquotes(markdown, placeholders) {
         .replace(/\/n/g, '\n\n');
       const restored = restoreBackticks(withNewlines, placeholders);
       const body = marked.parse(restored);
-      return `<div class="bkqt bkqt-${type}"><div class="bkqt-header"><span class="bkqt-label">${label}/</span>${COPY_BTN}</div><div class="bkqt-body">${body}</div></div>`;
+      return `<div class="bkqt bkqt-${type}"><div class="bkqt-header"><span class="bkqt-label">${label}</span>${COPY_BTN}</div><div class="bkqt-body">${body}</div></div>`;
     }
   );
 }
@@ -187,7 +188,7 @@ function processAllLinks(html) {
       }
 
       const href = `${config.path}/${slug.trim()}`;
-      return `<a class="doc-ref doc-ref-${category}" href="${href}">${displayText.trim()}</a>`;
+      return `<a class="doc-ref doc-ref-${category}" href="${href}" target="_blank" rel="noopener noreferrer">${displayText.trim()}</a>`;
     }
 
     // Second-brain wiki-ref
@@ -348,6 +349,8 @@ function processMarkdownFile(filePath) {
     category: frontmatter.category,
     date: frontmatter.date,
     thumbnail: frontmatter.thumbnail || null,
+    thumbnailAspect: frontmatter.thumbnailAspect || null,
+    thumbnailShading: frontmatter.thumbnailShading || null,
     description: frontmatter.description,
     content: htmlContent,
     status: frontmatter.status || null,
@@ -355,11 +358,14 @@ function processMarkdownFile(filePath) {
     tags: frontmatter.tags || null,
     github: frontmatter.github || null,
     demo: frontmatter.demo || null,
+    caseStudy: frontmatter.caseStudy || null,
     duration: frontmatter.duration || null,
     featured: frontmatter.featured || null,
     author: frontmatter.author || null,
     subtitle: frontmatter.subtitle || null,
     notes: frontmatter.notes || null,
+    context: frontmatter.context || null,
+    related: frontmatter.related || null,
   };
 }
 

@@ -17,4 +17,5 @@ it is easy to add. it is hard to subtract.
 
 when designing infraphysics, i wanted zero distractions. no popups, no complex navigations. just text.
 
+
 this paradoxically takes more effort. every pixel must justify its existence.

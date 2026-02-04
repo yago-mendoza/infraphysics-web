@@ -6,7 +6,7 @@ category: projects
 date: 2023-11-02
 thumbnail: https://images.unsplash.com/photo-1555949963-aa79dcee981c?q=80&w=400&auto=format&fit=crop
 description: growing textures with local rules.
-status: implemented
+status: completed
 technologies: [Python, PyTorch, WebGL]
 ---
 

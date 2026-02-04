@@ -140,6 +140,7 @@ export const SecondBrainView: React.FC = () => {
                 placeholder="Search concepts..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Escape') { setQuery(''); (e.target as HTMLInputElement).blur(); } }}
                 className="w-full text-xs ml-2 focus:outline-none placeholder-th-tertiary bg-transparent text-th-primary"
               />
               {query && (

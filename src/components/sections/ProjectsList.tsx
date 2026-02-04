@@ -4,7 +4,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { formatDateTimeline } from '../../lib/date';
 import { Highlight, StatusBadge } from '../ui';
-import { GitHubIcon, ExternalLinkIcon } from '../icons';
+import { GitHubIcon, FileTextIcon, PlayCircleIcon } from '../icons';
 import { postPath } from '../../config/categories';
 import type { SectionRendererProps } from './index';
 
@@ -89,11 +89,11 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                         {pills.map(pill => (
                           <span
                             key={`${pill.type}-${pill.label}`}
-                            className={`text-xs px-2.5 py-0.5 border rounded-sm ${
-                              pill.type === 'topic'
-                                ? 'border-slate-400/30 text-slate-400'
-                                : `border-${color}/30 text-${color}`
-                            }`}
+                            className="text-xs px-2.5 py-0.5 border rounded-sm"
+                            style={pill.type === 'topic'
+                              ? { borderColor: 'var(--pill-topic-border)', color: 'var(--pill-topic-text)' }
+                              : { borderColor: `color-mix(in srgb, ${accent} 35%, transparent)`, color: accent }
+                            }
                           >
                             {pill.label}
                           </span>
@@ -125,25 +125,43 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                   })()}
 
                   {/* Divider + links */}
-                  <div className="border-t border-th-border pt-3.5 flex items-center gap-5 text-sm">
-                    {post.github && (
-                      <a
-                        href={post.github}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-th-tertiary hover:text-th-heading transition-colors"
-                        onClick={e => e.stopPropagation()}
-                      >
-                        <GitHubIcon /> GitHub
-                      </a>
-                    )}
-                    <Link
-                      to={postPath(post.category, post.id)}
-                      className={`inline-flex items-center gap-1.5 text-th-tertiary hover:text-${color} transition-colors`}
-                    >
-                      <ExternalLinkIcon /> Case Study
-                    </Link>
-                  </div>
+                  {(post.github || post.caseStudy || post.demo) && (
+                    <div className="border-t border-th-border pt-3.5 flex items-center gap-5 text-sm">
+                      {post.github && (
+                        <a
+                          href={post.github}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-th-tertiary hover:text-th-heading transition-colors"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          <GitHubIcon /> GitHub
+                        </a>
+                      )}
+                      {post.caseStudy && (
+                        <a
+                          href={post.caseStudy}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`inline-flex items-center gap-1.5 text-th-tertiary hover:text-${color} transition-colors`}
+                          onClick={e => e.stopPropagation()}
+                        >
+                          <FileTextIcon /> Case Study
+                        </a>
+                      )}
+                      {post.demo && (
+                        <a
+                          href={post.demo}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`inline-flex items-center gap-1.5 text-th-tertiary hover:text-${color} transition-colors`}
+                          onClick={e => e.stopPropagation()}
+                        >
+                          <PlayCircleIcon /> Demo
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

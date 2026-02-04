@@ -18,6 +18,8 @@ export interface CategoryDisplayConfig {
   darkBadge: string;
   backLabel: string;
   relatedLabel: string;
+  relatedCategory: string; // Target category for "Related" section
+  breadcrumbLabel?: string;
 }
 
 function categoryColors(color: string) {
@@ -39,7 +41,8 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
     accent: '#a3e635',
     lightAccent: '#3f6212',
     backLabel: 'RETURN_TO_ARCHIVES',
-    relatedLabel: 'Related Case Studies',
+    relatedLabel: 'Related Lessons',
+    relatedCategory: 'bits2bricks',
     ...categoryColors('lime-400'),
   },
   threads: {
@@ -47,9 +50,13 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
     description: 'Long-form thinking on engineering, systems, and how things work.',
     icon: <ThreadIcon />,
     color: 'rose-400',
+    lightColor: 'rose-700',
     accent: '#fb7185',
+    lightAccent: '#be123c',
     backLabel: 'RETURN_TO_THREADS',
     relatedLabel: 'Related Threads',
+    relatedCategory: 'threads',
+    breadcrumbLabel: 'threads',
     ...categoryColors('rose-400'),
   },
   bits2bricks: {
@@ -57,14 +64,21 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
     description: 'Where code meets atoms. Hardware, fabrication, physical computing.',
     icon: <GradCapIcon />,
     color: 'blue-400',
+    lightColor: 'blue-700',
     accent: '#3B82F6',
+    lightAccent: '#1d4ed8',
     backLabel: 'RETURN_TO_BITS2BRICKS',
-    relatedLabel: 'Related Articles',
+    relatedLabel: 'Related Projects',
+    relatedCategory: 'projects',
+    breadcrumbLabel: 'bits2bricks',
     ...categoryColors('blue-400'),
   },
 };
 
-const BLOG_CATEGORIES = new Set(['threads', 'bits2bricks']);
+export const BLOG_CATEGORIES = new Set(['threads', 'bits2bricks']);
+
+/** Whether a category uses the blog layout (threads, bits2bricks) */
+export const isBlogCategory = (cat: string): boolean => BLOG_CATEGORIES.has(cat);
 
 /** Route group for a category — 'blog' or 'lab' */
 export const categoryGroup = (category: string): 'lab' | 'blog' =>

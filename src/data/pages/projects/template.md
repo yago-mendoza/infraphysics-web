@@ -6,7 +6,7 @@ category: projects
 date: 2025-06-01
 thumbnail: https://images.unsplash.com/photo-1555949963-aa79dcee981c?q=80&w=400&auto=format&fit=crop
 description: One-liner that appears in the meta line after AUTHOR.
-status: implemented
+status: completed
 technologies: [Bun, Express, TypeScript, DevInfra]
 github: https://github.com/user/repo
 demo: https://demo-url.com

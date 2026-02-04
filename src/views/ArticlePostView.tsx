@@ -5,8 +5,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { formatDate, formatDateTerminal, calculateReadingTime } from '../lib';
 import { allFieldNotes } from '../lib/brainIndex';
 import { WikiContent } from '../components/WikiContent';
-import { CATEGORY_CONFIG, sectionPath as getSectionPath, postPath } from '../config/categories';
-import { ArrowRightIcon, GitHubIcon, LinkedInIcon } from '../components/icons';
+import { CATEGORY_CONFIG, sectionPath as getSectionPath, postPath, isBlogCategory } from '../config/categories';
+import { ArrowRightIcon, GitHubIcon, LinkedInIcon, TwitterIcon, RedditIcon, HackerNewsIcon, ClipboardIcon, CheckIcon } from '../components/icons';
 import { posts } from '../data/data';
 import { Post } from '../types';
 import '../styles/article.css';
@@ -19,6 +19,8 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const sectionPathUrl = getSectionPath(post.category);
   const location = useLocation();
   const catCfg = CATEGORY_CONFIG[post.category];
+  const isBlog = isBlogCategory(post.category);
+  const [copied, setCopied] = useState(false);
 
   // Status label + dot color — derived from PostStatus
   const statusConfig = (() => {
@@ -36,9 +38,9 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const formattedDate = formatDateTerminal(post.date);
   const readingTime = calculateReadingTime(post.content);
 
-  const authorDisplay = post.author
-    ? post.author.toUpperCase()
-    : 'UNKNOWN';
+  const authorName = post.author || 'Yago Mendoza';
+  const authorDisplay = authorName.toUpperCase();
+  const authorPath = authorName.toLowerCase() === 'yago mendoza' ? '/about' : '/contact';
 
   const notesArray: string[] = !post.notes
     ? []
@@ -75,8 +77,17 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
       }
     );
 
+    // Blog posts: strip the first h1 (duplicates the displayTitle rendered above)
+    let finalProcessed = processed;
+    if (isBlog) {
+      finalProcessed = finalProcessed.replace(/<h1[\s][^>]*>.*?<\/h1>/i, '');
+      // Also remove it from TOC entries
+      const firstH1Idx = raw.findIndex(h => h.level === 1);
+      if (firstH1Idx !== -1) raw.splice(firstH1Idx, 1);
+    }
+
     if (raw.length === 0) {
-      return { headings: [] as { level: number; text: string; id: string; number: string; depth: number }[], contentWithIds: processed };
+      return { headings: [] as { level: number; text: string; id: string; number: string; depth: number }[], contentWithIds: finalProcessed };
     }
 
     // Hierarchical numbering (1, 1.1, 1.2, 2, 2.1, …)
@@ -93,8 +104,8 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
       return { ...h, number: parts.join('.'), depth };
     });
 
-    return { headings, contentWithIds: processed };
-  }, [post.content]);
+    return { headings, contentWithIds: finalProcessed };
+  }, [post.content, isBlog]);
 
   const [tocOpen, setTocOpen] = useState(false);
 
@@ -151,15 +162,30 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
     return ids;
   }, [activeId, headings]);
 
-  // Related posts — Fisher-Yates shuffle (unbiased, unlike sort+Math.random)
+  // Related posts — from target category, explicit frontmatter IDs or random fallback
+  const targetCategory = catCfg?.relatedCategory || post.category;
+  const targetCatCfg = CATEGORY_CONFIG[targetCategory];
+  const relatedSectionPath = getSectionPath(targetCategory);
+  const relatedHoverColor = targetCatCfg?.colorClass || 'text-gray-400';
+
   const recommendedPosts = useMemo(() => {
-    const others = posts.filter(p => p.id !== post.id && p.category !== 'fieldnotes');
-    for (let i = others.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [others[i], others[j]] = [others[j], others[i]];
+    const pool = posts.filter(p => p.category === targetCategory && p.id !== post.id);
+
+    // If frontmatter specifies explicit IDs, resolve them (preserving order)
+    if (post.related?.length) {
+      const explicit = post.related
+        .map(id => pool.find(p => p.id === id))
+        .filter((p): p is Post => p !== undefined);
+      if (explicit.length > 0) return explicit.slice(0, 3);
     }
-    return others.slice(0, 3);
-  }, [post]);
+
+    // Fallback: Fisher-Yates shuffle for unbiased random pick
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    return pool.slice(0, 3);
+  }, [post, targetCategory]);
 
   // TOC list rendering
   const tocList = headings.length > 1 ? (
@@ -189,7 +215,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const relatedLabel = catCfg?.relatedLabel || 'Related Articles';
 
   return (
-    <div className={`article-page-wrapper article-${post.category} animate-fade-in`}>
+    <div className={`article-page-wrapper article-${post.category}${isBlog ? ' article-blog' : ''} animate-fade-in`}>
 
       {/* ════════════════════════════════════════════
           THE BOX — .article-container
@@ -197,22 +223,24 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
           ════════════════════════════════════════════ */}
       <article className="article-container">
 
-        {/* ── HEADER BAR ── */}
-        <div className="article-header-bar">
-          <span className="article-header-log">
-            // {formattedDate}
-          </span>
-          {statusConfig && (
-            <span className="article-header-status" style={{ color: statusConfig.dotColor }}>
-              <span className="article-status-dot" style={{ background: statusConfig.dotColor }} />
-              {statusConfig.label}
+        {/* ── HEADER BAR (projects only) ── */}
+        {!isBlog && (
+          <div className="article-header-bar">
+            <span className="article-header-log">
+              // {formattedDate}
             </span>
-          )}
-        </div>
+            {statusConfig && (
+              <span className="article-header-status" style={{ color: statusConfig.dotColor }}>
+                <span className="article-status-dot" style={{ background: statusConfig.dotColor }} />
+                {statusConfig.label}
+              </span>
+            )}
+          </div>
+        )}
 
-        {/* ── HERO IMAGE ── */}
-        {post.thumbnail && (
-          <div className="article-hero">
+        {/* ── HERO IMAGE (projects only — grayscale) ── */}
+        {!isBlog && post.thumbnail && (
+          <div className={`article-hero thumb-${post.thumbnailAspect || 'full'} shade-${post.thumbnailShading || 'heavy'}`}>
             <img
               src={post.thumbnail}
               alt={post.displayTitle || post.title}
@@ -225,13 +253,29 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
         {/* ── BODY ── */}
         <div className="article-body">
 
-          {/* Nav row: return link + social icons */}
+          {/* Nav row: return link / breadcrumbs + social icons */}
           <div className="article-nav-row">
-            <Link to={sectionPathUrl} className="article-back-link">
-              &lt; {backLabel}
-            </Link>
+            {isBlog ? (
+              <nav className="article-breadcrumbs">
+                <Link to="/home" className="article-breadcrumb-link">home</Link>
+                <span className="article-breadcrumb-sep">/</span>
+                <span className="article-breadcrumb-static">blog</span>
+                <span className="article-breadcrumb-sep">/</span>
+                <Link to={sectionPathUrl} className="article-breadcrumb-link">
+                  {catCfg?.breadcrumbLabel || post.category}
+                </Link>
+                <span className="article-breadcrumb-sep">/</span>
+                <span className="article-breadcrumb-current">
+                  {(post.displayTitle || post.title).toLowerCase()}
+                </span>
+              </nav>
+            ) : (
+              <Link to={sectionPathUrl} className="article-back-link">
+                &lt; {backLabel}
+              </Link>
+            )}
             <div className="article-social-icons">
-              {post.github && (
+              {!isBlog && post.github && (
                 <a
                   href={post.github}
                   target="_blank"
@@ -242,33 +286,66 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                   <GitHubIcon size={18} />
                 </a>
               )}
-              <a
-                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="article-social-btn article-social-linkedin"
-                title="Share on LinkedIn"
-              >
-                <LinkedInIcon size={18} />
-              </a>
+              {!isBlog && (
+                <a
+                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="article-social-btn article-social-linkedin"
+                  title="Share on LinkedIn"
+                >
+                  <LinkedInIcon size={18} />
+                </a>
+              )}
             </div>
           </div>
 
-          {/* Tag pills — above technologies */}
-          {post.tags && post.tags.length > 0 && (
-            <div className="article-pills article-pills-topics">
-              {post.tags.map(tag => (
-                <span key={tag} className="article-pill article-pill-topic">{tag}</span>
-              ))}
+          {/* Context bar — full-width sub-header below breadcrumbs (blog only) */}
+          {isBlog && post.context && (
+            <div className="article-context-bar">
+              <p className="article-context">{post.context}</p>
             </div>
           )}
 
-          {/* Technology pills — below topics */}
-          {post.technologies && post.technologies.length > 0 && (
-            <div className="article-pills article-pills-tech">
-              {post.technologies.map(tech => (
-                <span key={tech} className="article-pill article-pill-tech">{tech}</span>
-              ))}
+          {/* Tags — hashtags for blog, pills for projects */}
+          {isBlog ? (
+            (post.tags?.length || post.technologies?.length) ? (
+              <div className="article-hashtags">
+                {[
+                  ...(post.tags || []).map(t => ({ label: t, tech: false })),
+                  ...(post.technologies || []).map(t => ({ label: t, tech: true })),
+                ]
+                  .sort((a, b) => a.label.localeCompare(b.label))
+                  .map(({ label, tech }) => (
+                    <span key={label} className={`article-hashtag${tech ? ' article-hashtag-tech' : ''}`}>#{label}</span>
+                  ))}
+              </div>
+            ) : null
+          ) : (
+            <>
+              {post.tags && post.tags.length > 0 && (
+                <div className="article-pills article-pills-topics">
+                  {post.tags.map(tag => (
+                    <span key={tag} className="article-pill article-pill-topic">{tag}</span>
+                  ))}
+                </div>
+              )}
+              {post.technologies && post.technologies.length > 0 && (
+                <div className="article-pills article-pills-tech">
+                  {post.technologies.map(tech => (
+                    <span key={tech} className="article-pill article-pill-tech">{tech}</span>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* META — above title for blog, below for projects */}
+          {isBlog && (
+            <div className="article-meta">
+              <span className="article-meta-date">{formatDate(post.date)}</span>
+              <span className="article-meta-reading-time">{readingTime} min read</span>
+              <Link to={authorPath} className="article-meta-author">{authorDisplay}</Link>
             </div>
           )}
 
@@ -282,38 +359,59 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
             )}
           </div>
 
-          {/* META — date + reading time + author on same line */}
-          <div className="article-meta">
-            <span className="article-meta-date">{formattedDate}</span>
-            <span className="article-meta-reading-time">{readingTime} min read</span>
-            <Link to="/contact" className="article-meta-author">{authorDisplay}</Link>
-          </div>
-
-          {/* Thin gray line between meta and notes */}
-          <div className="article-divider-thin" />
-
-          {/* Author notes */}
-          {notesArray.length > 0 && (
-            <div className="article-notes">
-              {notesArray.map((note, i) => (
-                <p key={i} className="article-notes-line">— {note}</p>
-              ))}
+          {/* META — below title for projects */}
+          {!isBlog && (
+            <div className="article-meta">
+              <span className="article-meta-date">{formattedDate}</span>
+              <span className="article-meta-reading-time">{readingTime} min read</span>
+              <Link to={authorPath} className="article-meta-author">{authorDisplay}</Link>
             </div>
           )}
 
-          {/* Thick white line before article */}
-          <div className="article-divider-thick" />
+          {/* Separator between subtitle and image (blog only) */}
+          {isBlog && <hr className="article-blog-sep" />}
+
+          {/* Blog image — natural color, below meta (blog only) */}
+          {isBlog && post.thumbnail && (
+            <div className={`article-blog-image thumb-${post.thumbnailAspect || 'full'}`}>
+              <img
+                src={post.thumbnail}
+                alt={post.displayTitle || post.title}
+                className="article-blog-image-img"
+              />
+            </div>
+          )}
+
+          {/* NOTES + DIVIDERS (projects only) */}
+          {!isBlog && (
+            <>
+              {/* Thin gray line between meta and notes */}
+              <div className="article-divider-thin" />
+
+              {/* Author notes */}
+              {notesArray.length > 0 && (
+                <div className="article-notes">
+                  {notesArray.map((note, i) => (
+                    <p key={i} className="article-notes-line">— {note}</p>
+                  ))}
+                </div>
+              )}
+
+              {/* Thick white line before article */}
+              <div className="article-divider-thick" />
+            </>
+          )}
 
           {/* Table of Contents — collapsible */}
           {headings.length > 1 && (
-            <nav className="article-toc" id="article-toc">
+            <nav className={`article-toc${isBlog ? ' article-toc--blog' : ''}`} id="article-toc">
               <button
                 type="button"
                 className="article-toc-toggle"
                 onClick={() => setTocOpen(o => !o)}
                 aria-expanded={tocOpen}
               >
-                <span className="article-toc-label">// CONTENTS</span>
+                <span className="article-toc-label">{isBlog ? 'Contents' : '// CONTENTS'}</span>
                 <svg
                   className={`article-toc-chevron${tocOpen ? ' article-toc-chevron--open' : ''}`}
                   viewBox="0 0 12 12"
@@ -341,36 +439,55 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
           {/* Share bar — reader perspective */}
           <div className="article-actions">
-            <div className="article-actions-left">
-              <span className="article-actions-label">Share:</span>
+            <div className="article-share-icons">
               <a
                 href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out: ${post.displayTitle || post.title}`)}&url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="article-actions-link"
+                className="article-share-icon article-social-twitter"
+                title="Share on X"
               >
-                Twitter
+                <TwitterIcon size={18} />
               </a>
               <a
                 href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="article-actions-link"
+                className="article-share-icon article-social-linkedin"
+                title="Share on LinkedIn"
               >
-                LinkedIn
+                <LinkedInIcon size={18} />
               </a>
-            </div>
-            {post.github && (
               <a
-                href={post.github}
+                href={`https://reddit.com/submit?url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}&title=${encodeURIComponent(post.displayTitle || post.title)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="article-actions-github"
+                className="article-share-icon article-social-reddit"
+                title="Share on Reddit"
               >
-                <GitHubIcon size={18} />
-                View on GitHub
+                <RedditIcon size={18} />
               </a>
-            )}
+              <a
+                href={`https://news.ycombinator.com/submitlink?u=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}&t=${encodeURIComponent(post.displayTitle || post.title)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="article-share-icon article-social-hn"
+                title="Share on Hacker News"
+              >
+                <HackerNewsIcon size={18} />
+              </a>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}${location.pathname}`);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                className="article-share-icon article-social-copy"
+                title={copied ? 'Copied!' : 'Copy link'}
+              >
+                {copied ? <CheckIcon size={18} /> : <ClipboardIcon size={18} />}
+              </button>
+            </div>
           </div>
 
         </div>
@@ -379,43 +496,38 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
       {/* ════════════════════════════════════════════
           RELATED POSTS — OUTSIDE the box
           ════════════════════════════════════════════ */}
-      <div className="article-related">
+      <div className={`article-related article-${targetCategory}`}>
         <div className="article-related-header">
           <h3 className="article-related-title">{relatedLabel}</h3>
-          <Link to={sectionPathUrl} className="article-related-viewall">
+          <Link to={relatedSectionPath} className="article-related-viewall">
             View all <ArrowRightIcon />
           </Link>
         </div>
         <div className="article-related-grid">
-          {recommendedPosts.map(rec => {
-            const recCfg = CATEGORY_CONFIG[rec.category];
-            const recColor = recCfg?.colorClass || 'text-gray-400';
-
-            return (
-              <Link
-                key={rec.id}
-                to={postPath(rec.category, rec.id)}
-                className="article-related-card group"
-              >
-                <div className="article-related-thumb">
-                  <img
-                    src={rec.thumbnail || ''}
-                    alt=""
-                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                  />
+          {recommendedPosts.map(rec => (
+            <Link
+              key={rec.id}
+              to={postPath(rec.category, rec.id)}
+              className="article-related-card group"
+            >
+              <div className="article-related-thumb">
+                <img
+                  src={rec.thumbnail || ''}
+                  alt=""
+                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                />
+              </div>
+              <div className="article-related-info">
+                <div className="article-related-meta">
+                  <span className={`text-[10px] uppercase ${relatedHoverColor}`}>{rec.category}</span>
+                  <span className="text-[10px] text-th-tertiary">{formatDate(rec.date)}</span>
                 </div>
-                <div className="article-related-info">
-                  <div className="article-related-meta">
-                    <span className={`text-[10px] uppercase ${recColor}`}>{rec.category}</span>
-                    <span className="text-[10px] text-gray-500">{formatDate(rec.date)}</span>
-                  </div>
-                  <h4 className="article-related-name">
-                    {rec.displayTitle || rec.title}
-                  </h4>
-                </div>
-              </Link>
-            );
-          })}
+                <h4 className="article-related-name">
+                  {rec.displayTitle || rec.title}
+                </h4>
+              </div>
+            </Link>
+          ))}
         </div>
       </div>
 

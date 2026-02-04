@@ -1,26 +1,22 @@
 ---
 id: TEST_THREAD
 title: TEST_THREAD
-displayTitle: "syntax reference"
-subtitle: "every formatting feature in one page"
+displayTitle: "Syntax reference"
+subtitle: "Every formatting feature in one page"
 category: threads
 date: 2025-07-12
 thumbnail: https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=400&auto=format&fit=crop
+thumbnailAspect: strip # full (auto) / wide (16/7) / banner (16/4) / strip (16/2)
+thumbnailShading: heavy # heavy (grayscale+gradient) / light (subtle) / none (crisp natural image)
 description: "a complete showcase of every markdown extension available in this system — text formatting, blockquotes, code blocks, images, links, and more."
-status: active
 tags: [syntax, reference, showcase]
 author: Yago Mendoza
 github: https://github.com/example/syntax-reference
 notes:
   - "this file exists to test and document every syntactic feature"
   - "if it renders correctly, the whole pipeline works"
+context: "this file exists to test and document every formatting feature in the pipeline this page demonstrates every formatting feature available in the markdown pipeline. each section shows the syntax you write and the result it produces. the accent color on this page is ==rose== because it belongs to the threads category"
 featured: true
----
-
-# syntax reference
-
-this page demonstrates every formatting feature available in the markdown pipeline. each section shows the syntax you write and the result it produces. the accent color on this page is ==rose== because it belongs to the threads category.
-
 ---
 
 ## text formatting
@@ -230,7 +226,7 @@ add a position keyword as the image title: `![alt](url "center")`, `![alt](url "
 
 use pipe syntax in the alt text: `![alt|Caption text](url "center")`
 
-![abstract pattern|This caption was produced with pipe syntax in the alt text](https://images.unsplash.com/photo-1558618666-fcd25c85f82e?q=80&w=600&auto=format&fit=crop "center")
+![mountain landscape|This caption was produced with pipe syntax in the alt text](https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=600&auto=format&fit=crop "center")
 
 ---
 

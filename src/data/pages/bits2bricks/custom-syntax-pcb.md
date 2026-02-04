@@ -5,6 +5,7 @@ displayTitle: custom syntax pcb
 category: bits2bricks
 date: 2025-01-30
 thumbnail: https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&auto=format&fit=crop
+thumbnailAspect: banner # full (auto) / wide (16/7) / banner (16/4) / strip (16/2)
 description: bridging markup syntax and hardware notation.
 tags: [pcb, hardware, syntax]
 ---

@@ -18,10 +18,10 @@ import {
   MoonIcon,
   SearchIcon,
 } from '../icons';
-import { CATEGORY_CONFIG, getThemedColor } from '../../config/categories';
+import { getThemedColor } from '../../config/categories';
 import { useSectionState } from '../../contexts/SectionStateContext';
 
-export const MobileNav: React.FC = () => {
+export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch }) => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
@@ -73,7 +73,8 @@ export const MobileNav: React.FC = () => {
         </Link>
         <div className="flex items-center gap-2">
           <button
-            className="p-2 hover:bg-th-active rounded-sm transition-colors text-th-secondary opacity-60"
+            onClick={onOpenSearch}
+            className="p-2 hover:bg-th-active rounded-sm transition-colors text-th-secondary"
             aria-label="Search"
           >
             <SearchIcon />
@@ -111,8 +112,8 @@ export const MobileNav: React.FC = () => {
 
               {/* BLOG */}
               <SectionLabel>blog</SectionLabel>
-              <NavLink to={getLastPath('/blog/threads')} basePath="/blog/threads" colorClass={CATEGORY_CONFIG.threads.colorClass} icon={<ThreadIcon />}>Threads</NavLink>
-              <NavLink to={getLastPath('/blog/bits2bricks')} basePath="/blog/bits2bricks" colorClass={CATEGORY_CONFIG.bits2bricks.colorClass} icon={<GradCapIcon />}>Bits2Bricks</NavLink>
+              <NavLink to={getLastPath('/blog/threads')} basePath="/blog/threads" colorClass={`text-${getThemedColor('threads', theme as 'dark' | 'light').color}`} icon={<ThreadIcon />}>Threads</NavLink>
+              <NavLink to={getLastPath('/blog/bits2bricks')} basePath="/blog/bits2bricks" colorClass={`text-${getThemedColor('bits2bricks', theme as 'dark' | 'light').color}`} icon={<GradCapIcon />}>Bits2Bricks</NavLink>
 
               {/* META */}
               <SectionLabel>meta</SectionLabel>

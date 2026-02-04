@@ -145,7 +145,7 @@ export const HomeView: React.FC = () => {
                     className="w-full h-32 object-cover rounded"
                   />
                   {post.id === latestNewId && (
-                    <span className="absolute -top-3 -left-3 z-10 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-violet-300 bg-violet-500/90 backdrop-blur-sm rounded-sm shadow-lg">
+                    <span className="absolute -top-3 -left-3 z-10 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-black bg-white rounded-sm shadow-lg">
                       New
                     </span>
                   )}

@@ -1,12 +1,8 @@
-// Category accent colors — constant across dark/light themes
-// Derived from CATEGORY_CONFIG; only secondBrain and meta are standalone.
-
-import { CATEGORY_CONFIG } from '../config/categories';
+// Accent colors for non-category navigation items (constant across themes).
+// Category accents (projects, threads, bits2bricks) are now fully theme-aware
+// via getThemedColor() in config/categories.tsx.
 
 export const CATEGORY_ACCENTS = {
-  projects: CATEGORY_CONFIG.projects.accent,
-  threads: CATEGORY_CONFIG.threads.accent,
-  bits2bricks: CATEGORY_CONFIG.bits2bricks.accent,
   secondBrain: '#8B5CF6',
-  meta: '#3B82F6',
+  meta: '#9AA0A6',
 } as const;
