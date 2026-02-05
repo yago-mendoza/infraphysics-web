@@ -1,150 +1,57 @@
-/* ============================================================
-   Wiki content styling (.content-html) — theme-aware
-   Scoped to SecondBrainView markdown rendering.
-   CSS vars (--content-*) defined in index.html.
-   ============================================================ */
+/* ═══════════════════════════════════════════════════════════════
+   WIKI CONTENT — Delta overrides on top of article.css base
+   Scoped to SecondBrainView via .article-wiki wrapper class.
+   article.css provides all base .article-content rules;
+   this file only overrides what differs for fieldnotes.
+   ═══════════════════════════════════════════════════════════════ */
 
-.content-html {
-  font-family: var(--font-sans);
-  color: var(--content-text);
+/* Accent + layout — purple, no max-width cap (grid layout) */
+.article-wiki {
+  --art-accent: var(--cat-fieldnotes-accent);
+  max-width: none;
 }
 
-.content-html h1,
-.content-html h2,
-.content-html h3,
-.content-html h4 {
-  font-family: var(--font-mono);
-  color: var(--content-heading);
+/* Font — Inter for prose, no uppercase on headings */
+.article-wiki .article-content p,
+.article-wiki .article-content li,
+.article-wiki .article-content td {
+  font-family: 'Inter', var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.6;
 }
 
-.content-html h1 {
+.article-wiki .article-content h1,
+.article-wiki .article-content h2,
+.article-wiki .article-content h3,
+.article-wiki .article-content h4 {
+  font-family: 'Inter', var(--font-sans);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Wiki headings — slightly smaller than article defaults */
+.article-wiki .article-content h1 {
   font-size: 1.25rem;
-  font-weight: 700;
-  margin-top: 2rem;
-  margin-bottom: 1rem;
-  letter-spacing: -0.025em;
+  margin: 2rem 0 0.75rem;
 }
 
-.content-html h1:first-child {
-  margin-top: 0;
+.article-wiki .article-content h2 {
+  font-size: 1.1rem;
+  margin: 1.5rem 0 0.6rem;
 }
 
-.content-html h2 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin-top: 1.5rem;
-  margin-bottom: 0.75rem;
+/* Code blocks — Linux terminal style (no macOS dots, slim bar, purple tint) */
+.article-wiki .article-content .code-terminal-dots {
+  display: none;
 }
 
-.content-html p {
-  margin-bottom: 0.5rem;
-  text-align: justify;
-  line-height: 1.625;
-  font-size: 0.875rem;
-  color: var(--content-text);
+.article-wiki .article-content .code-terminal-bar {
+  padding: 0.2rem 0.75rem;
+  background-color: color-mix(in srgb, var(--art-accent) 6%, var(--art-surface-bar));
 }
 
-.content-html ul,
-.content-html ol {
-  margin-left: 1rem;
-  margin-bottom: 1rem;
-}
-
-.content-html li {
-  margin-left: 1rem;
-  list-style-type: disc;
-  font-size: 0.875rem;
-  color: var(--content-text);
-  line-height: 1.625;
-  padding-left: 0.25rem;
-}
-
-.content-html img {
-  border-radius: 0.125rem;
-  border: 1px solid var(--content-img-border);
-  background-color: var(--content-img-bg);
-}
-
-.content-html img:not([class]) {
-  width: 100%;
-  max-height: 450px;
-  object-fit: contain;
-  margin-top: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.content-html code {
-  background-color: var(--content-code-bg);
-  color: var(--content-code-text);
-  padding: 0.125rem 0.25rem;
-  border-radius: 0.25rem;
-  font-family: var(--font-mono);
-  font-size: 0.875em;
-}
-
-.content-html pre {
-  background-color: var(--content-pre-bg);
-  color: var(--content-code-text);
-  padding: 1rem;
-  border-radius: 0.25rem;
-  overflow-x: auto;
-  margin: 1rem 0;
-  border: 1px solid var(--content-pre-border);
-  transition: background-color 0.95s ease, color 0.95s ease, border-color 0.95s ease;
-}
-
-.content-html pre code {
-  background-color: transparent;
-  padding: 0;
-  color: inherit;
-}
-
-.content-html a {
-  color: var(--content-link);
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.2s ease;
-}
-
-.content-html a:hover {
-  border-bottom-color: var(--content-link);
-  color: var(--content-link-hover);
-}
-
-.content-html table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1rem 0;
-}
-
-.content-html th,
-.content-html td {
-  border: 1px solid var(--content-table-border);
-  padding: 0.5rem;
-  text-align: left;
-}
-
-.content-html th {
-  background-color: var(--content-table-header);
-  font-weight: 600;
-  color: var(--content-heading);
-}
-
-/* Clear floats after content */
-.content-html::after {
-  content: "";
-  display: table;
-  clear: both;
-}
-
-/* Responsive */
-@media (min-width: 768px) {
-  .content-html h1 {
-    font-size: 1.5rem;
-  }
-
-  .content-html p,
-  .content-html li {
-    font-size: 1rem;
-  }
+.article-wiki .article-content .code-terminal-lang {
+  text-transform: lowercase;
+  color: var(--art-accent);
+  opacity: 0.7;
 }

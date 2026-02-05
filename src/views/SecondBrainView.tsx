@@ -10,6 +10,7 @@ import { addressToId } from '../lib/addressToId';
 import { noteById } from '../lib/brainIndex';
 import type { SortMode } from '../hooks/useSecondBrainHub';
 import type { Post } from '../types';
+import '../styles/article.css';
 import '../styles/wiki-content.css';
 
 const SORT_OPTIONS: { value: SortMode; label: string }[] = [
@@ -111,12 +112,14 @@ export const SecondBrainView: React.FC = () => {
               links to {outgoingRefCount} &middot; linked from {backlinks.length}
             </div>
 
-            {/* Content — pre-resolved HTML, no allFieldNotes needed */}
-            <WikiContent
-              html={resolvedHtml}
-              className="text-sm leading-relaxed text-th-secondary font-light content-html"
-              onWikiLinkClick={handleWikiLinkClick}
-            />
+            {/* Content — pre-resolved HTML, styled via article.css base + wiki-content.css overrides */}
+            <div className="article-page-wrapper article-wiki">
+              <WikiContent
+                html={resolvedHtml}
+                className="article-content"
+                onWikiLinkClick={handleWikiLinkClick}
+              />
+            </div>
           </div>
 
           {/* Right: Connections panel */}
