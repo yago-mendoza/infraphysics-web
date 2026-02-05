@@ -57,21 +57,17 @@ const AppLayout: React.FC = () => {
 
   useKeyboardShortcuts(globalShortcuts, searchOpen);
 
-  // Global Ctrl+K / Cmd+K  +  Ctrl+Shift+F (outside Second Brain)
+  // Global Ctrl+K / Cmd+K  +  Ctrl+Shift+K
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setSearchOpen(prev => !prev);
-      }
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'f') {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setSearchOpen(prev => !prev);
       }
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [location.pathname]);
+  }, []);
 
   // Scroll to top on every route change (standard SPA behavior)
   useEffect(() => {

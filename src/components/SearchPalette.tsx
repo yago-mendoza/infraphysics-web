@@ -304,7 +304,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
               setQuery(e.target.value);
               setSelectedIndex(0);
             }}
-            placeholder="Type to search..."
+            placeholder="Type to search... | Ctrl+K to toggle"
             className="flex-1 bg-transparent text-th-primary placeholder:text-th-muted outline-none text-sm"
           />
           <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-th-tertiary bg-th-surface-alt border border-th-border rounded font-mono">

@@ -196,7 +196,7 @@ export const SecondBrainSidebar: React.FC = () => {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'H') {
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'f') {
         e.preventDefault();
         searchInputRef.current?.focus();
       }
@@ -233,7 +233,7 @@ export const SecondBrainSidebar: React.FC = () => {
   const sections = (
     <>
       {/* Search */}
-      <Section title={<>search <kbd className="normal-case tracking-normal text-th-muted text-[8px] opacity-60">Ctrl+Shift+H</kbd></>} icon={<SearchIcon />} defaultOpen={true}>
+      <Section title={<>search <kbd className="normal-case tracking-normal text-th-muted text-[8px] opacity-60">Ctrl+Shift+F</kbd></>} icon={<SearchIcon />} defaultOpen={true}>
         <div className="flex items-center border border-th-hub-border px-2 py-1.5 bg-th-surface focus-within:border-th-border-active transition-colors mb-2">
           <input
             ref={searchInputRef}
