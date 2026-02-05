@@ -358,8 +358,6 @@ Llaves con v: H{v:2}O, CO{v:2}, log{v:10}.
 Llaves con kbd: {kbd:Ctrl+C} copiar, {kbd:Shift+Enter} nueva línea, {kbd:Alt+Tab} cambiar ventana. Renderiza como tecla con borde inferior.
 ## Subrayado
 Guiones bajos en límites de palabra: _texto subrayado_. Solo se activa cuando los guiones no están pegados a otra palabra (para no interferir con nombres como `mi_variable`).
-## Resaltado
-Doble signo igual: ==texto resaltado==. Se convierte en `<mark>` con fondo amarillo del navegador.
 ## Texto acentuado
 Doble guión: --texto con acento--. Aplica la clase `.accent-text` que toma el color de acento de la sección. Nota: el contenido no puede llevar guiones internos.
 # Wiki-links

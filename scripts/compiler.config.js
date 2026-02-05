@@ -39,8 +39,8 @@ export default {
     { name: 'superscript',      pattern: /\{\^:([^}]+)\}/g,                             replace: '<sup>$1</sup>' },
     { name: 'subscript',        pattern: /\{v:([^}]+)\}/g,                              replace: '<sub>$1</sub>' },
     { name: 'keyboard',         pattern: /\{kbd:([^}]+)\}/g,                            replace: '<kbd>$1</kbd>' },
+    { name: 'shout',            pattern: /\{shout:([^}]+)\}/g,                          replace: '<p class="shout">$1</p>' },
     { name: 'underline',        pattern: /(?<!\w)_([^_\n]+?)_(?!\w)/g,                  replace: '<span style="text-decoration:underline">$1</span>' },
-    { name: 'highlight',        pattern: /(?<!=)==([^=\n]+?)==(?!=)/g,                   replace: '<mark>$1</mark>' },
     { name: 'accent-text',      pattern: /(?<!-)--((?:(?!--)[^\n])+?)--(?!-)/g,                  replace: '<span class="accent-text">$1</span>' },
   ],
 

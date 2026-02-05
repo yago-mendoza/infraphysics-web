@@ -17,7 +17,7 @@ hardware documentation benefits from rich inline formatting. a PCB design log is
 
 the bypass cap is {sc:mlcc} type, rated at 100{sc:nf}. supply voltage: V{v:cc} = 3.3V, max current I{v:max} = 500mA.
 
-power dissipation: P = I{^:2} x R = (0.5){^:2} x 10 = {#e74c3c:2.5W} — ==too hot without a heatsink==.
+power dissipation: P = I{^:2} x R = (0.5){^:2} x 10 = {#e74c3c:2.5W} — too hot without a heatsink.
 
 ## status annotations
 
