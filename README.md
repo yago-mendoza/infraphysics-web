@@ -47,6 +47,7 @@ infraphysics-web/
       ContactView.tsx         # Contact form (Formspree)
     data/
       pages/
+        README.md               # Authoring guide (frontmatter, syntax, pipeline, edge cases)
         projects/             # .md posts + _category.yaml
         threads/              # .md posts + _category.yaml
         bits2bricks/          # .md posts + _category.yaml
@@ -140,6 +141,8 @@ Wiki-links work in **all posts** (projects, threads, bits2bricks, fieldnotes):
 
 ### Custom syntax
 
+> Full authoring guide with frontmatter schemas, edge cases, and syntax rationale: **[src/data/pages/README.md](src/data/pages/README.md)**
+
 The compiler supports custom inline syntax via pre-processors. All rules are defined in `scripts/compiler.config.js`:
 
 | Syntax | Result | Example |
@@ -186,6 +189,12 @@ Use markdown image titles to control layout:
 ```
 
 For side-by-side layouts, write text lines immediately after a positioned image (no blank line). The compiler wraps them in a flexbox container. Leave a blank line to end the side layout.
+
+---
+
+### Writing content
+
+All article and fieldnote markdown lives in `src/data/pages/`. The full writing reference — frontmatter fields per section, custom syntax, compilation pipeline, second brain format, and edge cases — is documented in **[src/data/pages/README.md](src/data/pages/README.md)**.
 
 ---
 

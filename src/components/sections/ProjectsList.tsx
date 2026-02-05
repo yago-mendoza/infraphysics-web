@@ -9,7 +9,7 @@ import { postPath, STATUS_CONFIG } from '../../config/categories';
 import { EmptyState } from './SearchResultsList';
 import type { SectionRendererProps } from './index';
 
-export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, getMatchCount, color, accent }) => {
+export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, getMatchCount, accent }) => {
   if (posts.length === 0) return <EmptyState query={query} />;
 
   return (

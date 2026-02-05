@@ -7,7 +7,7 @@ import { postPath } from '../../config/categories';
 import { EmptyState, SearchResultsList } from './SearchResultsList';
 import type { SectionRendererProps } from './index';
 
-export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, getMatchCount, color, accent }) => {
+export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, getMatchCount, accent }) => {
   if (posts.length === 0) return <EmptyState query={query} />;
   if (query) return <SearchResultsList posts={posts} query={query} getMatchCount={getMatchCount} accent={accent} tagAccent="#60a5fa" />;
 

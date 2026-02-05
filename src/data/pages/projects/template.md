@@ -1,6 +1,5 @@
 ---
 id: my-project-slug
-title: my-project-slug
 displayTitle: My Project Title — Subtitle Here
 category: projects
 date: 2025-06-01

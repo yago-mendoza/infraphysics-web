@@ -1,6 +1,5 @@
 ---
 id: minimalism-is-hard
-title: minimalism-is-hard
 displayTitle: minimalism is hard
 category: threads
 date: 2024-02-14

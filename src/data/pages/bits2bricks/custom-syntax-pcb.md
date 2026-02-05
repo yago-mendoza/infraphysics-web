@@ -1,6 +1,5 @@
 ---
 id: custom-syntax-pcb
-title: custom-syntax-pcb
 displayTitle: custom syntax pcb
 category: bits2bricks
 date: 2025-01-30

@@ -1,6 +1,5 @@
 ---
 id: anatomy-of-a-markdown-compiler
-title: anatomy-of-a-markdown-compiler
 displayTitle: anatomy of a markdown compiler
 category: threads
 date: 2025-01-30

@@ -18,7 +18,7 @@ import {
   MoonIcon,
   SearchIcon,
 } from '../icons';
-import { getThemedColor } from '../../config/categories';
+import { catAccentVar } from '../../config/categories';
 import { CATEGORY_ACCENTS } from '../../constants/theme';
 
 
@@ -109,13 +109,13 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearc
             <nav className="flex flex-col p-4 gap-1">
               {/* LAB */}
               <SectionLabel>lab</SectionLabel>
-              <NavLink to="/lab/projects" basePath="/lab/projects" accent={getThemedColor('projects', theme as 'dark' | 'light').accent} icon={<GearIcon />}>Projects</NavLink>
+              <NavLink to="/lab/projects" basePath="/lab/projects" accent={catAccentVar('projects')} icon={<GearIcon />}>Projects</NavLink>
               <NavLink to="/lab/second-brain" accent={CATEGORY_ACCENTS.secondBrain} icon={<DiamondIcon />}>2<sup>nd</sup> brain</NavLink>
 
               {/* BLOG */}
               <SectionLabel>blog</SectionLabel>
-              <NavLink to="/blog/threads" basePath="/blog/threads" accent={getThemedColor('threads', theme as 'dark' | 'light').accent} icon={<ThreadIcon />}>Threads</NavLink>
-              <NavLink to="/blog/bits2bricks" basePath="/blog/bits2bricks" accent={getThemedColor('bits2bricks', theme as 'dark' | 'light').accent} icon={<GradCapIcon />}>Bits2Bricks</NavLink>
+              <NavLink to="/blog/threads" basePath="/blog/threads" accent={catAccentVar('threads')} icon={<ThreadIcon />}>Threads</NavLink>
+              <NavLink to="/blog/bits2bricks" basePath="/blog/bits2bricks" accent={catAccentVar('bits2bricks')} icon={<GradCapIcon />}>Bits2Bricks</NavLink>
 
               {/* META */}
               <SectionLabel>meta</SectionLabel>

@@ -1,6 +1,5 @@
 ---
 id: entropy-and-software-decay
-title: entropy-and-software-decay
 displayTitle: entropy and software decay
 category: threads
 context: "seguro que alguan vez te has planteaseguro que alguan vez te hate textoseganteado que easdfa k j j ksdf asdfwfa aweffq qfqwfqwef qwfqwfqw dfasd fasdfasd fasdfwqegw eafa sdfqwref asdfasdgfa dga dfgasdfasdf aste textoseguro que alguan vez te has planteado que este textoseguro que alguan vez textoseguro que asdf asdf asdf te uro que alguanextoseguro que alguan vedo que este textouro que alguan vez te has planteado que este textoseguro que alguan vasdf asdf asdf asdf aswfijq 4g 4tg wtgj wiogw jj iwejg ijeigi weorgowo owejrikwoierngf wjiwej w er weirg werg weg wierjg ez te has planteado que este textoseguro que aro que alguan vez te ro que alguan vez te ro que alguan vez te ro que alguan vez te lguan vez te has planteado que este textodo que este texto no sea ni cierto"

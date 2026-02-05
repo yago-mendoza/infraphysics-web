@@ -66,11 +66,17 @@ marked.setOptions({
 });
 
 // Apply pre-processors (before marked.parse, on raw markdown)
+// Heading lines (# …) are protected so no inline effect touches them.
 function applyPreProcessors(markdown) {
-  let result = markdown;
+  const headings = [];
+  let result = markdown.replace(/^(#{1,4}\s+.*)$/gm, (line) => {
+    headings.push(line);
+    return `%%HEADING_${headings.length - 1}%%`;
+  });
   for (const rule of compilerConfig.preProcessors) {
     result = result.replace(rule.pattern, rule.replace);
   }
+  result = result.replace(/%%HEADING_(\d+)%%/g, (_, idx) => headings[parseInt(idx)]);
   return result;
 }
 
@@ -111,13 +117,12 @@ const BKQT_TYPES = {
   tip:        { label: 'Tip' },
   warning:    { label: 'Warning' },
   danger:     { label: 'Danger' },
-  deepdive:   { label: 'Deep dive' },
   keyconcept: { label: 'Key concept' },
 };
 
 function processCustomBlockquotes(markdown, placeholders) {
   return markdown.replace(
-    /\{bkqt\/(note|tip|warning|danger|deepdive|keyconcept)(?:\|([^:]*))?\:([\s\S]*?)\}/g,
+    /\{bkqt\/(note|tip|warning|danger|keyconcept)(?:\|([^:]*))?\:([\s\S]*?)\}/g,
     (_, type, customLabel, text) => {
       const config = BKQT_TYPES[type];
       const label = customLabel ? customLabel.trim() : config.label;
@@ -126,7 +131,7 @@ function processCustomBlockquotes(markdown, placeholders) {
         .replace(/\/n/g, '\n\n');
       const restored = restoreBackticks(withNewlines, placeholders);
       const body = marked.parse(restored);
-      return `<div class="bkqt bkqt-${type}"><div class="bkqt-header"><span class="bkqt-label">${label}</span>${COPY_BTN}</div><div class="bkqt-body">${body}</div></div>`;
+      return `<div class="bkqt bkqt-${type}"><div class="bkqt-body"><span class="bkqt-label">${label}:</span>${body}</div></div>`;
     }
   );
 }
@@ -196,6 +201,89 @@ function processAllLinks(html) {
     const display = displayText ? displayText.trim() : segments[segments.length - 1].trim();
     return `<a class="wiki-ref" data-address="${address}">${display}</a>`;
   });
+}
+
+// ── Inline annotations {{ref|explanation}} ──
+// Runs on final HTML. Uses balanced-bracket parsing to handle nesting.
+// First pass: <p> tags. Then loops over ann-note divs for sub-annotations.
+
+function extractAnnotations(content) {
+  const annotations = [];
+  let counter = 0;
+  let result = '';
+  let i = 0;
+
+  while (i < content.length) {
+    if (content[i] === '{' && i + 1 < content.length && content[i + 1] === '{') {
+      // Track depth to find the matching }}
+      let depth = 1;
+      let j = i + 2;
+      let pipePos = -1;
+      while (j < content.length && depth > 0) {
+        if (content[j] === '{' && j + 1 < content.length && content[j + 1] === '{') {
+          depth++;
+          j += 2;
+        } else if (content[j] === '}' && j + 1 < content.length && content[j + 1] === '}') {
+          depth--;
+          if (depth === 0) break;
+          j += 2;
+        } else {
+          if (content[j] === '|' && depth === 1 && pipePos === -1) pipePos = j;
+          j++;
+        }
+      }
+      if (depth === 0 && pipePos !== -1) {
+        counter++;
+        const ref = content.substring(i + 2, pipePos);
+        const explanation = content.substring(pipePos + 1, j);
+        annotations.push({ num: counter, text: explanation.trim() });
+        result += `<em class="ann-ref-text">${ref.trim()}</em><sup class="ann-ref">${counter}</sup>`;
+        i = j + 2;
+      } else {
+        result += content[i];
+        i++;
+      }
+    } else {
+      result += content[i];
+      i++;
+    }
+  }
+
+  return { processed: result, annotations };
+}
+
+function processAnnotations(html) {
+  // First pass: <p> tags (outermost annotations extracted, inner ones stay in explanation text)
+  let result = html.replace(/<p>([\s\S]*?)<\/p>/g, (match, inner) => {
+    if (!inner.includes('{{')) return match;
+    const { processed, annotations } = extractAnnotations(inner);
+    if (annotations.length === 0) return match;
+    const notesHtml = annotations.map(a =>
+      `<div class="ann-note"><sup>${a.num}</sup>${a.text}</div>`
+    ).join('');
+    return `<p>${processed}</p>\n<div class="annotations">${notesHtml}</div>`;
+  });
+
+  // Nested passes: peel annotations inside ann-note divs level by level
+  let changed = true;
+  while (changed) {
+    changed = false;
+    result = result.replace(
+      /<div class="ann-note">(<sup>\d+<\/sup>)((?:(?!<\/div>)[\s\S])*)<\/div>/g,
+      (match, sup, content) => {
+        if (!content.includes('{{')) return match;
+        const { processed, annotations } = extractAnnotations(content);
+        if (annotations.length === 0) return match;
+        changed = true;
+        const notesHtml = annotations.map(a =>
+          `<div class="ann-note"><sup>${a.num}</sup>${a.text}</div>`
+        ).join('');
+        return `<div class="ann-note">${sup}${processed}</div>\n<div class="annotations annotations-nested">${notesHtml}</div>`;
+      }
+    );
+  }
+
+  return result;
 }
 
 // Apply post-processors (after marked.parse, on HTML)
@@ -330,7 +418,7 @@ function processMarkdownFile(filePath) {
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   const { data: frontmatter, content } = matter(fileContent);
 
-  // Pipeline: protect → preProcessors → bkqt (with placeholders) → restore → externalUrls → sideImages → marked → shiki → postProcessors
+  // Pipeline: protect → preProcessors → bkqt (with placeholders) → restore → externalUrls → sideImages → marked → shiki → postProcessors → annotations
   const { text: safeContent, placeholders } = protectBackticks(content);
   const withCustomSyntax = applyPreProcessors(safeContent);
   const withBkqt = processCustomBlockquotes(withCustomSyntax, placeholders);
@@ -339,11 +427,12 @@ function processMarkdownFile(filePath) {
   const withSideImages = preprocessSideImages(withExternalUrls);
   const parsed = marked.parse(withSideImages);
   const highlighted = highlightCodeBlocks(parsed, highlighter);
-  const htmlContent = applyPostProcessors(highlighted);
+  const postProcessed = applyPostProcessors(highlighted);
+  const htmlContent = processOutsideCode(postProcessed, processAnnotations);
 
   return {
     id: frontmatter.id,
-    title: frontmatter.title,
+    title: frontmatter.title || frontmatter.id,
     displayTitle: frontmatter.displayTitle,
     category: frontmatter.category,
     date: frontmatter.date,
@@ -373,7 +462,7 @@ function loadCategoryConfig(filePath) {
   return loadYaml(content);
 }
 
-function getAllMarkdownFiles(dir) {
+function getAllMarkdownFiles(dir, isRoot = false) {
   const files = [];
   const items = fs.readdirSync(dir);
 
@@ -383,8 +472,8 @@ function getAllMarkdownFiles(dir) {
 
     if (stat.isDirectory()) {
       files.push(...getAllMarkdownFiles(fullPath));
-    } else if (item.endsWith('.md') && !item.startsWith('_')) {
-      // Skip _fieldnotes.md and other _*.md files
+    } else if (!isRoot && item.endsWith('.md') && !item.startsWith('_')) {
+      // Skip _fieldnotes.md, other _*.md files, and loose files in the root pages dir
       files.push(fullPath);
     }
   }
@@ -474,7 +563,7 @@ function processFieldnotesFile() {
       }
     }
 
-    // Pipeline: protect → preProcessors → bkqt (with placeholders) → restore → externalUrls → sideImages → marked → shiki → postProcessors
+    // Pipeline: protect → preProcessors → bkqt (with placeholders) → restore → externalUrls → sideImages → marked → shiki → postProcessors → annotations
     const { text: safeBody, placeholders } = protectBackticks(bodyMd);
     const withCustomSyntax = applyPreProcessors(safeBody);
     const withBkqt = processCustomBlockquotes(withCustomSyntax, placeholders);
@@ -483,7 +572,8 @@ function processFieldnotesFile() {
     const withSideImages = preprocessSideImages(withExternalUrls);
     const parsed = marked.parse(withSideImages);
     const highlighted = highlightCodeBlocks(parsed, highlighter);
-    const htmlContent = applyPostProcessors(highlighted);
+    const postProcessed = applyPostProcessors(highlighted);
+    const htmlContent = processOutsideCode(postProcessed, processAnnotations);
 
     return {
       id,
@@ -505,7 +595,7 @@ function processFieldnotesFile() {
 // Main
 console.log('Building content...');
 
-const markdownFiles = getAllMarkdownFiles(PAGES_DIR);
+const markdownFiles = getAllMarkdownFiles(PAGES_DIR, true);
 const regularPosts = markdownFiles.map(processMarkdownFile);
 const fieldnotePosts = processFieldnotesFile();
 

@@ -4,9 +4,9 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { posts } from '../data/data';
 import { Category } from '../types';
-import { calculateReadingTime, stripHtml, hexAlpha, accentChipStyle } from '../lib';
+import { calculateReadingTime, stripHtml, accentChipStyle } from '../lib';
 import { getSearchExcerpt, countMatches } from '../lib/search';
-import { CATEGORY_CONFIG, STATUS_CONFIG, getThemedColor, type CategoryDisplayConfig } from '../config/categories';
+import { CATEGORY_CONFIG, STATUS_CONFIG, catAccentVar, type CategoryDisplayConfig } from '../config/categories';
 import { useTheme } from '../contexts/ThemeContext';
 import {
   SearchIcon,
@@ -140,11 +140,11 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
   const categoryInfo = CATEGORY_CONFIG[category] ?? {
     title: category, description: '', icon: null,
     color: 'gray-400', colorClass: 'text-th-secondary', bgClass: 'bg-th-surface',
-    borderClass: 'border-th-border', accent: '#9ca3af',
+    borderClass: 'border-th-border', accent: '#9ca3af', accentVar: '#9ca3af',
     darkBadge: 'text-th-secondary border-th-border bg-th-surface',
     backLabel: 'RETURN', relatedLabel: 'Related', relatedCategory: '',
   } satisfies CategoryDisplayConfig;
-  const themed = getThemedColor(category, theme as 'dark' | 'light');
+  const accent = catAccentVar(category);
   const Renderer = SECTION_RENDERERS[category] || ProjectsList;
 
   return (
@@ -271,7 +271,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
                         key={t}
                         onClick={() => toggleTech(t)}
                         className="text-xs px-2.5 py-0.5 border rounded-sm transition-colors accent-chip"
-                        style={accentChipStyle(themed.accent, isActive)}
+                        style={accentChipStyle(accent, isActive)}
                       >
                         {t} ({techCounts[t] || 0})
                       </button>
@@ -285,7 +285,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
       </div>
 
       {/* Delegated renderer */}
-      <Renderer posts={visiblePosts} query={query} getExcerpt={getExcerpt} getMatchCount={getMatchCount} color={themed.color} accent={themed.accent} />
+      <Renderer posts={visiblePosts} query={query} getExcerpt={getExcerpt} getMatchCount={getMatchCount} accent={accent} />
 
       {/* Infinite scroll sentinel */}
       {hasMore && (

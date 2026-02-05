@@ -8,12 +8,11 @@ export interface CategoryDisplayConfig {
   description: string;
   icon: React.ReactNode;
   color: string;
-  lightColor?: string;
   colorClass: string;
   bgClass: string;
   borderClass: string;
   accent: string;
-  lightAccent?: string;
+  accentVar: string;          // CSS var reference, e.g. 'var(--cat-projects-accent)'
   darkBadge: string;
   backLabel: string;
   relatedLabel: string;
@@ -36,9 +35,8 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
     description: "What I've built, why, and what broke along the way.",
     icon: <GearIcon />,
     color: 'lime-400',
-    lightColor: 'lime-700',
     accent: '#a3e635',
-    lightAccent: '#4d7c0f',
+    accentVar: 'var(--cat-projects-accent)',
     backLabel: 'RETURN_TO_ARCHIVES',
     relatedLabel: 'Related Lessons',
     relatedCategory: 'bits2bricks',
@@ -49,9 +47,8 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
     description: 'Long-form thinking on engineering, systems, and how things work.',
     icon: <ThreadIcon />,
     color: 'rose-400',
-    lightColor: 'rose-600',
     accent: '#fb7185',
-    lightAccent: '#e11d48',
+    accentVar: 'var(--cat-threads-accent)',
     backLabel: 'RETURN_TO_THREADS',
     relatedLabel: 'Related Threads',
     relatedCategory: 'threads',
@@ -63,9 +60,8 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
     description: 'Where code meets atoms. Hardware, fabrication, physical computing.',
     icon: <GradCapIcon />,
     color: 'blue-400',
-    lightColor: 'blue-600',
     accent: '#3B82F6',
-    lightAccent: '#2563eb',
+    accentVar: 'var(--cat-bits2bricks-accent)',
     backLabel: 'RETURN_TO_BITS2BRICKS',
     relatedLabel: 'Related Projects',
     relatedCategory: 'projects',
@@ -91,10 +87,10 @@ export const postPath = (category: string, id: string): string =>
 export const sectionPath = (category: string): string =>
   `/${categoryGroup(category)}/${category}`;
 
-/**
- * Get theme-aware color/accent for a category.
- * Falls back to dark values when no light override exists.
- */
+/** CSS var reference for a category accent. Falls back to neutral gray. */
+export const catAccentVar = (cat: string): string =>
+  CATEGORY_CONFIG[cat]?.accentVar ?? '#9ca3af';
+
 /* ── Status metadata (shared across SectionView filters + ArticlePostView header) ── */
 
 export const STATUS_CONFIG: Record<string, { label: string; accent: string; dotColor: string }> = {
@@ -104,14 +100,5 @@ export const STATUS_CONFIG: Record<string, { label: string; accent: string; dotC
   'in-progress':  { label: 'IN PROGRESS',  accent: '#fbbf24', dotColor: '#fbbf24' },
   'completed':    { label: 'COMPLETED',    accent: '#60a5fa', dotColor: '#60a5fa' },
   'archived':     { label: 'ARCHIVED',     accent: '#9ca3af', dotColor: '#9ca3af' },
-};
-
-export const getThemedColor = (cat: string, theme: 'dark' | 'light'): { color: string; accent: string } => {
-  const cfg = CATEGORY_CONFIG[cat];
-  if (!cfg) return { color: 'gray-400', accent: '#9ca3af' };
-  if (theme === 'light' && (cfg.lightColor || cfg.lightAccent)) {
-    return { color: cfg.lightColor || cfg.color, accent: cfg.lightAccent || cfg.accent };
-  }
-  return { color: cfg.color, accent: cfg.accent };
 };
 

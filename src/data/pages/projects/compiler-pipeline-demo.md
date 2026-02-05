@@ -1,6 +1,5 @@
 ---
 id: compiler-pipeline-demo
-title: compiler-pipeline-demo
 displayTitle: compiler pipeline demo
 category: projects
 date: 2025-01-30

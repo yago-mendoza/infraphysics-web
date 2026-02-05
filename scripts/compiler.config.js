@@ -41,7 +41,7 @@ export default {
     { name: 'keyboard',         pattern: /\{kbd:([^}]+)\}/g,                            replace: '<kbd>$1</kbd>' },
     { name: 'underline',        pattern: /(?<!\w)_([^_\n]+?)_(?!\w)/g,                  replace: '<span style="text-decoration:underline">$1</span>' },
     { name: 'highlight',        pattern: /(?<!=)==([^=\n]+?)==(?!=)/g,                   replace: '<mark>$1</mark>' },
-    { name: 'accent-text',      pattern: /(?<!-)--([^-\n]+?)--(?!-)/g,                  replace: '<span class="accent-text">$1</span>' },
+    { name: 'accent-text',      pattern: /(?<!-)--((?:(?!--)[^\n])+?)--(?!-)/g,                  replace: '<span class="accent-text">$1</span>' },
   ],
 
   // Post-processors: applied AFTER marked.parse (on HTML output)

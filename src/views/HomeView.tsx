@@ -5,14 +5,12 @@ import { Link } from 'react-router-dom';
 import { posts } from '../data/data';
 import { Post } from '../types';
 import { ArrowRightIcon, SearchIcon } from '../components/icons';
-import { CATEGORY_CONFIG, getThemedColor, postPath, sectionPath } from '../config/categories';
-import { useTheme } from '../contexts/ThemeContext';
-import { hexAlpha, getSearchExcerpt, countMatches } from '../lib';
+import { CATEGORY_CONFIG, catAccentVar, postPath, sectionPath } from '../config/categories';
+import { getSearchExcerpt, countMatches } from '../lib';
 
 const categoryKeys = ['projects', 'threads', 'bits2bricks'] as const;
 
 export const HomeView: React.FC = () => {
-  const { theme } = useTheme();
   const featuredPosts = useMemo(() =>
     posts
       .filter(p => p.featured && p.category !== 'fieldnotes')
@@ -137,11 +135,11 @@ export const HomeView: React.FC = () => {
             <div className="flex flex-wrap gap-x-6 gap-y-1 mb-6 text-xs text-th-tertiary">
               {categoryKeys.map(key => {
                 const config = CATEGORY_CONFIG[key];
-                const tc = getThemedColor(key, theme as 'dark' | 'light');
+                const accent = catAccentVar(key);
                 const count = searchResults.counts[key] || 0;
                 return (
                   <span key={key} className="flex items-center gap-1.5">
-                    <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: tc.accent }} />
+                    <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: accent }} />
                     <span className="text-th-secondary">{config.title}</span>
                     <span className="text-th-tertiary">&mdash; {count}</span>
                   </span>
@@ -153,21 +151,21 @@ export const HomeView: React.FC = () => {
             {searchResults.matches.length > 0 ? (
               <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
                 {searchResults.matches.map(({ post, matchCount, excerpt }) => {
-                  const tc = getThemedColor(post.category, theme as 'dark' | 'light');
+                  const accent = catAccentVar(post.category);
                   return (
                     <Link
                       key={`${post.category}-${post.id}`}
                       to={postPath(post.category, post.id)}
                       className="card-link group flex items-start gap-3 p-3"
                     >
-                      <span className="mt-1.5 inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: tc.accent }} />
+                      <span className="mt-1.5 inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: accent }} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-th-heading font-medium group-hover-accent transition-colors truncate"
-                            style={{ '--ac-color': tc.accent } as React.CSSProperties}>
+                            style={{ '--ac-color': accent } as React.CSSProperties}>
                             {post.displayTitle || post.title}
                           </span>
-                          <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded" style={{ color: tc.accent, backgroundColor: hexAlpha(tc.accent, 0.1) }}>
+                          <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded" style={{ color: accent, backgroundColor: `color-mix(in srgb, ${accent} 10%, transparent)` }}>
                             &times;{matchCount}
                           </span>
                         </div>
@@ -191,14 +189,14 @@ export const HomeView: React.FC = () => {
                 <h3 className="text-[10px] text-th-tertiary uppercase tracking-wider mb-3">Previous</h3>
                 <div className="space-y-1">
                   {recentPosts.map(post => {
-                    const tc = getThemedColor(post.category, theme as 'dark' | 'light');
+                    const accent = catAccentVar(post.category);
                     return (
                       <Link
                         key={`${post.category}-${post.id}`}
                         to={postPath(post.category, post.id)}
                         className="group flex items-center gap-2.5 px-3 py-2 rounded-sm hover:bg-th-surface-alt transition-all"
                       >
-                        <span className="inline-block w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tc.accent }} />
+                        <span className="inline-block w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: accent }} />
                         <span className="text-sm text-th-secondary group-hover:text-th-heading transition-colors truncate">
                           {post.displayTitle || post.title}
                         </span>
@@ -242,7 +240,7 @@ export const HomeView: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {featuredPosts.map(post => {
-            const tc = getThemedColor(post.category, theme as 'dark' | 'light');
+            const accent = catAccentVar(post.category);
             return (
             <Link
               key={`${post.category}-${post.id}`}
@@ -262,13 +260,13 @@ export const HomeView: React.FC = () => {
               <div className="flex items-center gap-2 mb-3">
                 <span
                   className="inline-block px-2 py-0.5 text-[10px] uppercase border rounded-sm"
-                  style={{ color: tc.accent, borderColor: hexAlpha(tc.accent, 0.3), backgroundColor: hexAlpha(tc.accent, 0.1) }}>
+                  style={{ color: accent, borderColor: `color-mix(in srgb, ${accent} 30%, transparent)`, backgroundColor: `color-mix(in srgb, ${accent} 10%, transparent)` }}>
                   {post.category}
                 </span>
               </div>
 
               <h3 className="text-th-heading font-semibold leading-snug mb-2 group-hover-accent transition-colors lowercase"
-                style={{ '--ac-color': tc.accent } as React.CSSProperties}>
+                style={{ '--ac-color': accent } as React.CSSProperties}>
                 {post.displayTitle || post.title}
               </h3>
 
@@ -277,7 +275,7 @@ export const HomeView: React.FC = () => {
               </p>
 
               <span className="inline-flex items-center gap-1 mt-auto pt-4 text-xs text-th-tertiary group-hover-accent transition-colors"
-                style={{ '--ac-color': tc.accent } as React.CSSProperties}>
+                style={{ '--ac-color': accent } as React.CSSProperties}>
                 Read <ArrowRightIcon />
               </span>
             </Link>

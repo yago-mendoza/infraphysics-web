@@ -124,14 +124,8 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
       const copyBtn = (e.target as HTMLElement).closest('.copy-btn') as HTMLButtonElement | null;
       if (copyBtn) {
         const svgIcon = copyBtn.querySelector('svg')?.outerHTML || '';
-        let text = '';
         const terminal = copyBtn.closest('.code-terminal');
-        const bkqt = copyBtn.closest('.bkqt');
-        if (terminal) {
-          text = terminal.querySelector('code')?.textContent || '';
-        } else if (bkqt) {
-          text = bkqt.querySelector('.bkqt-body')?.textContent || '';
-        }
+        const text = terminal ? (terminal.querySelector('code')?.textContent || '') : '';
         navigator.clipboard.writeText(text).then(() => {
           copyBtn.innerHTML = `${svgIcon} Copiado`;
           copyBtn.classList.add('copied');

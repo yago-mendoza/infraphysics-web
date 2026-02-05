@@ -1,6 +1,5 @@
 ---
 id: TEST_BITS2BRICKS
-title: TEST_BITS2BRICKS
 displayTitle: "syntax reference — technical edition"
 subtitle: "the same features, demonstrated through code and math"
 category: bits2bricks
@@ -65,8 +64,6 @@ six types, each with its own color. syntax: `{bkqt/TYPE:content}`.
 
 {bkqt/danger:a danger block. red color, for things that will break if ignored.}
 
-{bkqt/deepdive:a deep dive. for optional technical detail that goes beyond the main narrative.}
-
 {bkqt/keyconcept:a key concept. for the core idea you should take away from a section.}
 
 ### custom labels
@@ -80,8 +77,6 @@ override the default label with pipe syntax: `{bkqt/TYPE|Your Label:content}`.
 {bkqt/keyconcept|The real lesson:custom labels let you give each blockquote a precise, descriptive title. the type controls the color, the label controls the meaning.}
 
 ### paragraph breaks with `/n`
-
-{bkqt/deepdive|Multi-paragraph example:this is the first paragraph. it introduces the concept./nthis is the second paragraph. the `/n` between them creates a visible gap — not just a line break, but a proper paragraph separation with spacing./nyou can also use `/n` before lists:- bullet one- bullet two- bullet three/nand then continue with more paragraphs after the list.}
 
 ### syntax adaptation inside blockquotes
 

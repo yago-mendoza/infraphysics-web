@@ -1,6 +1,5 @@
 ---
 id: 3d-printed-robot-arm
-title: 3d-printed-robot-arm
 displayTitle: 3d printed robot arm
 category: bits2bricks
 date: 2024-03-20

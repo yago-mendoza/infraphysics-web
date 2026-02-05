@@ -1,6 +1,5 @@
 ---
 id: TEST_THREAD
-title: TEST_THREAD
 displayTitle: "Syntax reference"
 subtitle: "Every formatting feature in one page"
 category: threads
@@ -89,10 +88,6 @@ there are six blockquote types. the syntax is `{bkqt/TYPE:content}` where TYPE i
 
 {bkqt/danger:this is a danger blockquote. danger blocks flag critical issues — things that will cause failures, data loss, or security vulnerabilities if ignored.}
 
-### deep dive
-
-{bkqt/deepdive:this is a deep dive blockquote. deep dives go into technical detail on a specific subtopic — the kind of information that's valuable for understanding but optional for the main narrative.}
-
 ### key concept
 
 {bkqt/keyconcept:this is a key concept blockquote. key concepts highlight the core ideas — the things you should remember after reading. they are the ==takeaways==.}
@@ -115,7 +110,7 @@ by default, each blockquote type shows its standard label ("Note/", "Tip/", etc)
 
 use `/n` inside blockquotes to create paragraph breaks. a single `/n` produces a visible gap between paragraphs.
 
-{bkqt/deepdive|Multiple paragraphs:this is the first paragraph of a multi-paragraph blockquote. it introduces the topic./nthis is the second paragraph. notice the visible spacing between them. this was produced by writing `/n` between the two paragraphs./nthis is a third paragraph. you can chain as many as you need. `/n` also works before list items:- item one- item two- item three}
+{bkqt/keyconcept|Multiple paragraphs:this is the first paragraph of a multi-paragraph blockquote. it introduces the topic./nthis is the second paragraph. notice the visible spacing between them. this was produced by writing `/n` between the two paragraphs./nthis is a third paragraph. you can chain as many as you need. `/n` also works before list items:- item one- item two- item three}
 
 ---
 

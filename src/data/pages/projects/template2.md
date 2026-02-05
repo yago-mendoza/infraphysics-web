@@ -1,6 +1,5 @@
 ---
 id: my-project-slug-2
-title: my-project-slug-2
 displayTitle: "Dynamic Load Balancer with Auto-Scaling — Bun + Express"
 subtitle: "a weekend deep-dive into OS-level request routing"
 category: projects
@@ -150,9 +149,16 @@ even if wrapped in `{#hex:...}` — the blockquote color wins.
 
 {bkqt/danger:things that go seriously wrong/n1. security vulnerabilities/n2. data loss/n3. undefined behavior/nin crypto and if I use this here like `is this red` topics this is critical}
 
-{bkqt/deepdive:for when you dig into the internal "why" — you don't need this to use it, but if you want to understand what's happening underneath, keep reading}
-
 {bkqt/keyconcept:fundamental ideas the reader must take away/n- a hash is a one-way function/n- Big-O describes growth not absolute time}
+
+
+# inline annotations
+
+Write `{{ref|explanation}}` to attach a footnote. The ref renders with a dotted underline and a superscript number, and the explanation appears below the paragraph. Explanations can themselves contain nested annotations.
+
+this algorithm runs in {{O(n log n)|where n is the number of elements in the input array.}} on average, but degrades to {{O(n{^:2})|this worst case occurs when the {{pivot|the element chosen as a reference point for partitioning the array.}} selection is consistently poor, e.g. already-sorted input with naive pivot.}} in the worst case.
+
+multiple annotations in the same paragraph get sequential numbers. numbering resets per paragraph. nested annotations indent further at the same size.
 
 
 # small text

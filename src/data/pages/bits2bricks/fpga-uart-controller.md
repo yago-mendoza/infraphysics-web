@@ -1,6 +1,5 @@
 ---
 id: fpga-uart-controller
-title: fpga-uart-controller
 displayTitle: fpga uart controller
 category: bits2bricks
 date: 2023-12-05

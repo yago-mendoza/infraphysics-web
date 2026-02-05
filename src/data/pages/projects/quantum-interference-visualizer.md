@@ -1,6 +1,5 @@
 ---
 id: quantum-interference-visualizer
-title: quantum-interference-visualizer
 displayTitle: quantum interference visualizer
 category: projects
 date: 2023-10-15

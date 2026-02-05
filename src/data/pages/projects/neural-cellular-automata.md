@@ -1,6 +1,5 @@
 ---
 id: neural-cellular-automata
-title: neural-cellular-automata
 displayTitle: neural cellular automata
 category: projects
 date: 2023-11-02

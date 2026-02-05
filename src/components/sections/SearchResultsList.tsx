@@ -58,7 +58,7 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({ posts, que
                   <span
                     key={tag}
                     className="pill pill-sm"
-                    style={{ borderColor: `${tagAccent}4d`, color: tagAccent }}
+                    style={{ borderColor: `color-mix(in srgb, ${tagAccent} 30%, transparent)`, color: tagAccent }}
                   >
                     {tag}
                   </span>

@@ -1,19 +1,12 @@
 import type { CSSProperties } from 'react';
 
-/** Convert a hex color (#RRGGBB) to an rgba string with the given alpha (0-1). */
-export function hexAlpha(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-/** CSS custom-property style object for an .accent-chip element. */
+/** CSS custom-property style object for an .accent-chip element.
+ *  Works with both CSS var references and raw hex values. */
 export function accentChipStyle(accent: string, active: boolean): CSSProperties {
   return {
-    '--ac-border': active ? hexAlpha(accent, 0.5) : hexAlpha(accent, 0.2),
-    '--ac-color': active ? accent : hexAlpha(accent, 0.6),
-    '--ac-bg': active ? hexAlpha(accent, 0.2) : undefined,
-    '--ac-border-hover': active ? undefined : hexAlpha(accent, 0.4),
+    '--ac-border': `color-mix(in srgb, ${accent} ${active ? 50 : 20}%, transparent)`,
+    '--ac-color': active ? accent : `color-mix(in srgb, ${accent} 60%, transparent)`,
+    '--ac-bg': active ? `color-mix(in srgb, ${accent} 20%, transparent)` : undefined,
+    '--ac-border-hover': active ? undefined : `color-mix(in srgb, ${accent} 40%, transparent)`,
   } as CSSProperties;
 }

@@ -16,7 +16,7 @@ import {
   SearchIcon,
 } from '../icons';
 import { CATEGORY_ACCENTS } from '../../constants/theme';
-import { getThemedColor } from '../../config/categories';
+import { catAccentVar } from '../../config/categories';
 
 export const Sidebar: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch }) => {
   const location = useLocation();
@@ -39,7 +39,7 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch 
         }`}
         style={{
           color: active ? 'var(--sidebar-text-active)' : 'var(--sidebar-text)',
-          backgroundColor: active ? `${accent}26` : 'transparent',
+          backgroundColor: active ? `color-mix(in srgb, ${accent} 15%, transparent)` : 'transparent',
         }}
       >
         <span style={{ color: active ? accent : 'var(--sidebar-icon)' }}>{icon}</span>
@@ -83,15 +83,15 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch 
         {/* LAB */}
         {sectionLabel('lab')}
         <nav className="flex flex-col gap-1">
-          {navLink('/lab/projects', <GearIcon />, 'projects', getThemedColor('projects', theme as 'dark' | 'light').accent)}
+          {navLink('/lab/projects', <GearIcon />, 'projects', catAccentVar('projects'))}
           {navLink('/lab/second-brain', <DiamondIcon />, <span>2<sup>nd</sup> brain</span>, CATEGORY_ACCENTS.secondBrain)}
         </nav>
 
         {/* BLOG */}
         {sectionLabel('blog')}
         <nav className="flex flex-col gap-1">
-          {navLink('/blog/threads', <ThreadIcon />, 'threads', getThemedColor('threads', theme as 'dark' | 'light').accent)}
-          {navLink('/blog/bits2bricks', <GradCapIcon />, 'bits2bricks', getThemedColor('bits2bricks', theme as 'dark' | 'light').accent)}
+          {navLink('/blog/threads', <ThreadIcon />, 'threads', catAccentVar('threads'))}
+          {navLink('/blog/bits2bricks', <GradCapIcon />, 'bits2bricks', catAccentVar('bits2bricks'))}
         </nav>
 
         {/* META */}

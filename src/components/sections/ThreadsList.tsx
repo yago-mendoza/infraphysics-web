@@ -6,11 +6,10 @@ import { formatDate } from '../../lib/date';
 import { calculateReadingTime } from '../../lib/content';
 import { ClockIcon } from '../icons';
 import { postPath } from '../../config/categories';
-import { hexAlpha } from '../../lib/color';
 import { EmptyState, SearchResultsList } from './SearchResultsList';
 import type { SectionRendererProps } from './index';
 
-export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, getMatchCount, color, accent }) => {
+export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, getMatchCount, accent }) => {
   if (posts.length === 0) return <EmptyState query={query} />;
   if (query) return <SearchResultsList posts={posts} query={query} getMatchCount={getMatchCount} accent={accent} tagAccent="#94a3b8" />;
 
@@ -28,7 +27,7 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
               <div className="flex-grow min-w-0">
                 {/* Reading time + date */}
                 <div className="flex flex-wrap items-center gap-3 mb-3">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-mono px-2 py-0.5 border rounded-sm" style={{ borderColor: hexAlpha(accent, 0.3), color: accent }}>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-mono px-2 py-0.5 border rounded-sm" style={{ borderColor: `color-mix(in srgb, ${accent} 30%, transparent)`, color: accent }}>
                     <ClockIcon /> {readTime} MIN READ
                   </span>
                   <span className="text-xs text-th-tertiary font-mono">{formatDate(post.date)}</span>

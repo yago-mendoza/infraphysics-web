@@ -1,6 +1,24 @@
 /* Register custom properties as <color> so Chrome can interpolate
    them during transitions instead of treating them as opaque strings. */
 
+@property --cat-projects-accent {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #a3e635;
+}
+
+@property --cat-threads-accent {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #fb7185;
+}
+
+@property --cat-bits2bricks-accent {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #3B82F6;
+}
+
 @property --section-accent {
   syntax: '<color>';
   inherits: true;
@@ -110,13 +128,9 @@
    Values aligned 1:1 with --art-accent in article.css
    ============================================================ */
 
-.section-projects  { --section-accent: #a3e635; }
-.section-threads   { --section-accent: #fb7185; }
-.section-bits2bricks { --section-accent: #3B82F6; }
-
-[data-theme="light"] .section-projects    { --section-accent: #4d7c0f; }
-[data-theme="light"] .section-threads     { --section-accent: #e11d48; }
-[data-theme="light"] .section-bits2bricks { --section-accent: #2563eb; }
+.section-projects    { --section-accent: var(--cat-projects-accent); }
+.section-threads     { --section-accent: var(--cat-threads-accent); }
+.section-bits2bricks { --section-accent: var(--cat-bits2bricks-accent); }
 
 /* card-accent inherits from section-accent — no inline styles needed */
 .section-projects .listing-card { --card-accent: var(--section-accent); }
@@ -157,9 +171,7 @@ html.theme-transitioning *::after {
   transition: background-color 0.95s ease, color 0.95s ease,
               border-color 0.95s ease, box-shadow 0.95s ease,
               fill 0.95s ease, stroke 0.95s ease,
-              opacity 0.95s ease,
-              --section-accent 0.95s ease,
-              --card-accent 0.95s ease !important;
+              opacity 0.95s ease !important;
 }
 
 /* ============================================================
