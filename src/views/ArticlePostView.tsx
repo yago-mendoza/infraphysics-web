@@ -64,7 +64,9 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
       /<(h[1-4])(\s[^>]*)?>(.+?)<\/\1>/gi,
       (_match, tag, attrs, inner) => {
         const level = parseInt(tag[1]);
-        const text = inner.replace(/<[^>]*>/g, '').trim();
+        const text = inner.replace(/<[^>]*>/g, '').trim()
+          .replace(/&#39;/g, "'").replace(/&quot;/g, '"')
+          .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
         let slug = text
           .toLowerCase()
           .replace(/[^a-z0-9\s-]/g, '')
@@ -78,7 +80,8 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
         const id = `toc-${slug}`;
         raw.push({ level, text, id });
-        return `<${tag}${attrs || ''} id="${id}">${inner}</${tag}>`;
+        const tocArrow = `<a class="heading-toc-arrow" data-toc-id="${id}" aria-label="Back to table of contents"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5L6 2.5L8 4.5"/><path d="M4 7.5L6 9.5L8 7.5"/></svg></a>`;
+        return `<${tag}${attrs || ''} id="${id}">${inner}${tocArrow}</${tag}>`;
       }
     );
 
@@ -143,6 +146,42 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, [headings]);
+
+  // Click handler for heading TOC arrows — opens TOC, scrolls to it, blinks entry
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const arrow = (e.target as HTMLElement).closest('.heading-toc-arrow') as HTMLElement | null;
+      if (!arrow) return;
+      e.preventDefault();
+      const tocId = arrow.dataset.tocId;
+      if (!tocId) return;
+
+      // Open TOC if collapsed
+      setTocOpen(true);
+
+      // Wait for React render, then scroll + blink
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const tocEl = document.getElementById('article-toc');
+          if (tocEl) {
+            tocEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+
+          // Delay for scroll to arrive, then blink the matching link
+          setTimeout(() => {
+            const link = document.querySelector(`.article-toc-link[href="#${tocId}"]`) as HTMLElement | null;
+            if (link) {
+              link.classList.add('toc-blink');
+              link.addEventListener('animationend', () => link.classList.remove('toc-blink'), { once: true });
+            }
+          }, 300);
+        });
+      });
+    };
+
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, []);
 
   // Compute active heading + its ancestor chain (parent sections)
   const activeIds = useMemo(() => {
@@ -350,20 +389,6 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               </>
             )}
           </div>
-
-          {/* Context bar — full-width sub-header below breadcrumbs (blog only) */}
-          {isBlog && post.context && (
-            <div className="article-context-bar">
-              <Link to="/about" className="article-context-avatar-link">
-                <img
-                  src="https://avatars.githubusercontent.com/yago-mendoza"
-                  alt="Yago Mendoza"
-                  className="article-context-avatar"
-                />
-              </Link>
-              <p className="article-context">{post.context}</p>
-            </div>
-          )}
 
           {/* Tags — pills for projects */}
           {!isBlog && (
