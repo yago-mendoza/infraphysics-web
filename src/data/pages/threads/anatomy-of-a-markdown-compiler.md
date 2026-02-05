@@ -10,7 +10,7 @@ tags: [compilers, syntax, markdown]
 
 # anatomy of a markdown compiler
 
-writing your own markup extensions on top of markdown is a _delicate_ balance. the trick is ==ordering== — knowing _when_ each transformation runs.
+writing your own markup extensions on top of markdown is a _delicate_ balance. the trick is ordering — knowing _when_ each transformation runs.
 
 ## the ordering problem
 
@@ -26,7 +26,7 @@ if the order were reversed, marked would see `{#e74c3c:...}` as plain text and l
 
 every transformation adds entropy to the pipeline. a [[Headless device]] analogy: each processing stage is a black box that transforms input without visual feedback. errors compound silently.
 
-the solution: ==validation at the end==. after the full pipeline runs, the validator checks every `data-address` attribute in the output HTML against the fieldnotes database. broken links are caught at _build time_, not runtime.
+the solution: validation at the end. after the full pipeline runs, the validator checks every `data-address` attribute in the output HTML against the fieldnotes database. broken links are caught at _build time_, not runtime.
 
 ## syntax cheat sheet
 
@@ -34,7 +34,7 @@ the solution: ==validation at the end==. after the full pipeline runs, the valid
 |---|---|
 | `{#FF0000:text}` | {#FF0000:colored} |
 | `_text_` | _underlined_ |
-| `==text==` | ==highlighted== |
+| `--text--` | --accented-- |
 | `--text--` | --accented-- |
 | `{sc:text}` | {sc:small caps} |
 | `{^:text}` | x{^:2} |

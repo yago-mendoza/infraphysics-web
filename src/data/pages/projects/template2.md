@@ -24,6 +24,9 @@ notes:
 
 # syntax reference
 
+>> 25.06.01 - initial implementation shipped. rough edges but the core routing loop works.
+>> 25.06.03 - added health-check probes and auto-scaling thresholds. wrote this doc while refactoring.
+
 Everything below documents every feature available in project
 markdown files. Compiled by `build-content.js` using
 `compiler.config.js` preprocessors.
@@ -68,12 +71,6 @@ Syntax: `{#HEX:text}` — content inside backticks stays literal.
 Syntax reference (preserved inside backticks): `{_:text}`
 
 
-# highlight
-
-{==:highlighted text} stands out with a lime background.
-
-Syntax reference (preserved): `{==:text}`
-
 
 # superscript and subscript
 
@@ -98,6 +95,15 @@ Press {kbd:Ctrl+C} to copy, {kbd:Ctrl+V} to paste, {kbd:Ctrl+Shift+I} to open de
 Syntax reference (preserved): `{kbd:text}`
 
 
+# shout
+
+Centered uppercase callout for dramatic emphasis:
+
+{shout:there is no cloud — it's just someone else's computer}
+
+Syntax reference (preserved inside backticks): `{shout:text}`
+
+
 # inline code
 
 Reference variables like `loadBalancer.route()` or config values like `MAX_INSTANCES`.
@@ -105,7 +111,7 @@ Reference variables like `loadBalancer.route()` or config values like `MAX_INSTA
 Custom syntax inside backticks is **never** processed:
 
 - `{_:text}` shows as literal text, not underlined
-- `{==:text}` shows as literal text, not highlighted
+- `--text--` shows as literal text, not accented
 - `{^:text}` shows as literal text, not superscript
 - `{#ff0000:text}` shows as literal text, not colored
 - `[[address]]` shows as literal text, not a wiki-link
@@ -135,21 +141,48 @@ def health_check(instance: Server) -> bool:
 
 # blockquotes
 
-Typed blockquotes with `{bkqt/type:text}`. Six predefined types,
-each with its own color and label. Use `/n` to separate paragraphs.
-Lists are supported — `/n` before `- ` or `1. ` starts a list.
+Typed blockquotes with `{bkqt/TYPE}...{/bkqt}` block syntax. Six predefined types,
+each with its own color and label. Use blank lines to separate paragraphs.
+Lists are supported — a blank line before `- ` or `1. ` starts a list.
 Inline code inside blockquotes always takes the blockquote color,
 even if wrapped in `{#hex:...}` — the blockquote color wins.
 
-{bkqt/note:this is a note blockquote for additional context or clarifications that complement the main explanation/ninline code like `variables` or `functions()` always matches the blockquote color/nuse `/n` anywhere inside a blockquote to start a new paragraph}
+{bkqt/note}
+this is a note blockquote for additional context or clarifications that complement the main explanation
 
-{bkqt/tip:practical advice, shortcuts, or best practices/n- keep them concise and actionable/n- use lists for multiple tips/n- the bullet color matches the blockquote type}
+inline code like `variables` or `functions()` always matches the blockquote color
 
-{bkqt/warning:common mistakes, traps, and gotchas — SHA-256 is **not** encryption, this algorithm looks O(n) but worst-case is O(n{^:2})}
+use `/n` anywhere inside a blockquote to start a new paragraph
+{/bkqt}
 
-{bkqt/danger:things that go seriously wrong/n1. security vulnerabilities/n2. data loss/n3. undefined behavior/nin crypto and if I use this here like `is this red` topics this is critical}
+{bkqt/tip}
+practical advice, shortcuts, or best practices
 
-{bkqt/keyconcept:fundamental ideas the reader must take away/n- a hash is a one-way function/n- Big-O describes growth not absolute time}
+- keep them concise and actionable
+- use lists for multiple tips
+- the bullet color matches the blockquote type
+{/bkqt}
+
+{bkqt/warning}
+common mistakes, traps, and gotchas — SHA-256 is **not** encryption, this algorithm looks O(n) but worst-case is O(n{^:2})
+{/bkqt}
+
+{bkqt/danger}
+things that go seriously wrong
+
+1. security vulnerabilities
+2. data loss
+3. undefined behavior
+
+in crypto and if I use this here like `is this red` topics this is critical
+{/bkqt}
+
+{bkqt/keyconcept}
+fundamental ideas the reader must take away
+
+- a hash is a one-way function
+- Big-O describes growth not absolute time
+{/bkqt}
 
 
 # inline annotations
@@ -177,13 +210,27 @@ Unordered lists use a custom lime bullet:
 
 - item with {#a855f7:purple color}
 - item with {_:underlined text}
+  - nested item at level 2
+  - another nested item
+    - deeply nested at level 3
+    - still level 3
+      - level 4 item
+        - level 5 — maximum depth
 - item with H{v:2}O formula
 
-Ordered lists use lima numbers:
+Ordered lists use lime numbers:
 
 1. first step
 2. second step
+   1. sub-step a
+   2. sub-step b
 3. third step
+
+Definition lists use `::` syntax — they're indented like regular lists:
+
+- UART:: universal asynchronous receiver-transmitter
+- SPI:: serial peripheral interface
+- I{^:2}C:: inter-integrated circuit
 
 
 # links
@@ -204,14 +251,26 @@ With explicit display text: [[compiler|the project compiler]].
 ## cross-document links
 
 Addresses starting with `projects/`, `threads/`, or `bits2bricks/`
-link to other posts, each in its category color. Display text is
-**required** (build error without it).
+link to other posts. Display text is **required** (build error without it).
+Text color is normal (inherited), with a solid underline in the target
+category's accent color and the category sidebar icon at the end.
 
-- [[projects/my-project-slug-2|Dynamic Load Balancer]] (lime)
-- [[threads/some-thread|el texto que quiera que te redirige seguro]] (rose)
-- [[bits2bricks/some-build|Arduino Motor Controller]] (blue)
+- [[projects/my-project-slug-2|Dynamic Load Balancer]] — lime underline, gear icon
+- [[threads/everything-is-a-pipe|everything is a pipe]] — rose underline, document icon
+- [[bits2bricks/custom-syntax-pcb|Custom Syntax PCB]] — blue underline, grad cap icon
 
 Syntax (preserved inside backticks): `[[address|text]]`
+
+## external links
+
+Write `[[https://url|Display Text]]` for external links. They render
+in muted grey with a solid underline and a diagonal-arrow icon at the
+end, signaling that the link leaves the site.
+
+- [[https://openai.com|OpenAI]] — grey text, arrow icon
+- [[https://github.com|GitHub]] — grey text, arrow icon
+
+Syntax (preserved inside backticks): `[[https://url|text]]`
 
 
 # images
@@ -233,7 +292,7 @@ Side layouts pair an image with text in a flexbox row:
 |---------|--------|--------|
 | Color | `{#hex:text}` | colored text |
 | Underline | `{_:text}` | underlined text |
-| Highlight | `{==:text}` | marked text |
+| Accent | `--text--` | accented text |
 | Superscript | `{^:text}` | raised text |
 | Subscript | `{v:text}` | lowered text |
 | Small caps | `{sc:text}` | small caps |
@@ -247,7 +306,6 @@ You can nest custom syntax inside markdown formatting:
 - **bold {#e74c3c:red text}** works
 - lists can have H{v:2}O and {sc:abbreviations}
 - {_:underlined with {#3498db:blue inside}}
-- {==:highlighted with **bold** inside}
 
 
 # edge cases
@@ -255,11 +313,12 @@ You can nest custom syntax inside markdown formatting:
 Backtick protection ensures these render as literal code:
 
 - `{_:not underlined}` — custom syntax preserved
-- `{==:not highlighted}` — highlighting preserved
+- `--not accented--` — accent preserved
 - `{^:not super}` — superscript preserved
 - `{v:not sub}` — subscript preserved
 - `{sc:not smallcaps}` — small caps preserved
 - `{kbd:not kbd}` — keyboard preserved
+- `{shout:not a shout}` — shout preserved
 - `{#ff0000:not red}` — color preserved
 - `[[not a link]]` — wiki-link preserved
 - `[[projects/slug|text]]` — cross-doc preserved
@@ -275,4 +334,4 @@ Multiple custom syntax on one line:
 
 {#e74c3c:red}, {#2ecc71:green}, and {#3498db:blue} in sequence.
 
-Custom syntax inside **bold {_:underlined}** and *italic {==:highlighted}* text.
+Custom syntax inside **bold {_:underlined}** and *italic --accented--* text.

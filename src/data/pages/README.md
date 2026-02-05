@@ -16,9 +16,13 @@ Nothing in this document uses the custom syntax it describes, because GitHub's r
 6. [Images](#images)
 7. [Tables](#tables)
 8. [Code Blocks](#code-blocks)
-9. [Standard Blockquotes (Small Text)](#standard-blockquotes-small-text)
-10. [Second Brain (Fieldnotes)](#second-brain-fieldnotes)
-11. [Edge Cases and Sacred Rules](#edge-cases-and-sacred-rules)
+9. [List Indentation and Nesting](#list-indentation-and-nesting)
+10. [Definition Lists](#definition-lists)
+11. [Alphabetical Lists](#alphabetical-lists)
+12. [Context Annotations](#context-annotations)
+13. [Standard Blockquotes (Small Text)](#standard-blockquotes-small-text)
+14. [Second Brain (Fieldnotes)](#second-brain-fieldnotes)
+15. [Edge Cases and Sacred Rules](#edge-cases-and-sacred-rules)
 
 ---
 
@@ -58,15 +62,13 @@ These fields only have an effect when `category: projects`.
 | `caseStudy` | string | URL to an external case study. |
 | `duration` | string | Free-form project duration string (e.g. `4 weeks`, `ongoing`). |
 
-### Threads-specific fields
+### Threads
 
-| Field | Type | What it does |
-|---|---|---|
-| `context` | string | An author-perspective introduction displayed in a special bar before the article body. Useful for setting personal context or motivation. Only threads use this field in practice. |
+Threads posts use the universal fields. No additional category-specific fields.
 
 ### Bits2Bricks
 
-Bits2Bricks posts use the universal fields. They can technically use `context` (the type allows it), but no current posts do.
+Bits2Bricks posts use the universal fields. No additional category-specific fields.
 
 ### Fieldnotes (Second Brain)
 
@@ -104,7 +106,6 @@ date: 2024-01-10
 thumbnail: https://images.unsplash.com/photo-xxx
 description: why code rots without maintenance.
 tags: [physics, systems, maintenance]
-context: "you've probably felt it before..."
 featured: true
 ---
 ```
@@ -145,7 +146,7 @@ raw markdown
 [3]  preProcessors         -- custom inline syntax (colors, kbd, superscript, etc.)
       |
       v
-[4]  processCustomBlockquotes -- {bkqt/TYPE:content} blocks
+[4]  processCustomBlockquotes -- {bkqt/TYPE}...{/bkqt} blocks
       |
       v
 [5]  restoreBackticks      -- put code back in place
@@ -154,10 +155,19 @@ raw markdown
 [6]  processExternalUrls   -- [[https://...]] links (before marked to avoid URL corruption)
       |
       v
-[7]  preprocessSideImages  -- side-by-side image+text layouts
+[7]  preprocessSideImages      -- side-by-side image+text layouts
       |
       v
-[8]  marked.parse          -- standard GFM markdown to HTML
+[7b] processDefinitionLists   -- - TERM:: desc → <p class="defn">
+      |
+      v
+[7c] processAlphabeticalLists -- a. text → <ol type="a">
+      |
+      v
+[7d] processContextAnnotations -- >> YY.MM.DD - text → <div class="ctx-note">
+      |
+      v
+[8]  marked.parse             -- standard GFM markdown to HTML
       |
       v
 [9]  highlightCodeBlocks   -- Shiki syntax highlighting per language
@@ -180,11 +190,11 @@ All configuration lives in `scripts/compiler.config.js`. The main orchestration 
 
 ## Inline Formatting
 
-Eight custom inline rules are applied as pre-processors (step 3). They are defined in `compiler.config.js` under `preProcessors`. The compiler processes them in order: curly-brace patterns first (unambiguous delimiters), then bare-delimiter patterns (underscores, equals, dashes).
+Seven custom inline rules are applied as pre-processors (step 3). They are defined in `compiler.config.js` under `preProcessors`. The compiler processes them in order: curly-brace patterns first (unambiguous delimiters), then bare-delimiter patterns (underscores, dashes).
 
 ### Headings are immune
 
-Section headings (`#`, `##`, `###`, `####`) are **never processed** by inline formatting rules. No highlight, accent text, colored text, small caps, or any other effect will be applied inside a heading line. Headings are plain text. Use standard capitalization and nothing else.
+Section headings (`#`, `##`, `###`, `####`) are **never processed** by any inline formatting rules. No accent text, colored text, small caps, inline code (backticks), or any other custom syntax will be applied inside a heading line. Headings are plain text only. Use standard capitalization and nothing else.
 
 ### Colored text
 
@@ -222,21 +232,24 @@ Write `{kbd:key}`. Produces a `<kbd>` element styled as a keyboard key.
 
 - `{kbd:Ctrl}`, `{kbd:Shift+Enter}`, `{kbd:Esc}`
 
+### Shout
+
+Write `{shout:text}`. Produces a centered, uppercase line in body text color. Use it sparingly for dramatic emphasis — a thesis statement, a punchline, or a one-liner that deserves its own breathing room.
+
+- `{shout:attention is all you need}`
+- `{shout:there is no cloud}`
+
+The text is centered on the page, rendered in uppercase with subtle letter-spacing and the same color as normal body text. It stands on its own as a block element with generous vertical margin.
+
 ### Underline
 
 Write `_text_` (single underscores). Produces an underlined span.
 
 - `_this is underlined_`
 
+**Legacy option.** Underline exists as a formatting tool but is rarely the best choice. In most cases, bold or accent text communicate emphasis more effectively. Underline is available if you need it, but prefer the alternatives above.
+
 **Boundary rule:** The underscores must be at word boundaries. `variable_name_here` will NOT trigger the rule because the underscores are surrounded by word characters. This is by design: the regex uses negative lookbehind/ahead for `\w`, so snake_case identifiers are safe.
-
-### Highlight
-
-Write `==text==` (double equals). Produces a `<mark>` element (yellow highlight by default, adapts inside blockquotes).
-
-- `==key insight==` highlights the text.
-
-**Boundary rule:** Must not be adjacent to another `=`. So `===` won't trigger.
 
 ### Accent text
 
@@ -244,9 +257,33 @@ Write `--text--` (double dashes). Produces a span with class `accent-text`, whic
 
 - `--important concept--` renders in the article's accent color (lime for projects, rose for threads, blue for bits2bricks).
 
+**When to use it:** Use accent text to highlight things that are surprising, impactful, or that the reader should notice — striking quantities, memorable phrases, key facts, counterintuitive claims. Accent is hot and emotional — it draws the eye to the parts that would make someone stop and re-read.
+
+**Quick rule:** If it's a phrase or revelation you want the reader to *feel* → accent. Examples: --if you make it bigger, it gets smarter--, --hundreds of millions to billions of dollars--, --language contains the structure of thought itself--.
+
 **Boundary rule:** Must not be adjacent to another `-`. So `---` (the horizontal rule) won't trigger.
 
 **Why `--` and not something else?** Double dashes were chosen because they are fast to type, visually distinct from markdown emphasis (`*` / `**`), and don't collide with any standard markdown syntax. The boundary rule prevents false positives with horizontal rules (`---`) and YAML frontmatter delimiters.
+
+### Bold text
+
+Standard markdown bold (`**text**`). No custom syntax — just the built-in `<strong>` element.
+
+**When to use it:** For giving visual weight to a term within a paragraph. The eye catches it when scanning. Use it for: definitions the first time they appear, key conclusions inside a block of text, or words the reader needs to find quickly when skimming. Bold is cold and informative — it marks authority, not novelty.
+
+**Quick rule:** If it's a name, a datum, or a term the reader should retain → bold. Examples: **OpenAI**, **175 billion parameters**, **Attention Is All You Need**, **Anthropic**.
+
+**Bold vs accent:** Bold says "remember this term." Accent says "this should surprise you." A company name is bold. A revelation about that company is accent.
+
+**Bold vs external link:** If the name matters as a term within the argument → bold. If you want the reader to be able to go there → external link. They can coexist in the same article: bold the first time you introduce a name, external link when you provide a concrete reference.
+
+### Italic text
+
+Standard markdown italic (`*text*`). No custom syntax — just the built-in `<em>` element.
+
+**When to use it:** For tonal emphasis — as if you were raising your voice slightly. Also for titles of works, terms in a foreign language, or when introducing a new concept without giving it as much weight as bold.
+
+**Quick rule:** If you would say it out loud with more weight → italic. If you would highlight it with a marker in a book → bold. Bold is visual (you see it scanning the page). Italic is tonal (you hear it while reading). Examples: "it was *genuinely* terrifying", "it doesn't *think* at all".
 
 ### Why curly braces for the structured syntax?
 
@@ -256,7 +293,15 @@ All the `{tag:content}` patterns use curly braces because standard markdown neve
 
 ## Typed Blockquotes
 
-Write `{bkqt/TYPE:content}` for a callout box. These replace the role that admonitions or callouts play in other systems.
+Typed blockquotes use block syntax with an opening tag and a closing tag:
+
+```
+{bkqt/TYPE}
+content here
+{/bkqt}
+```
+
+These replace the role that admonitions or callouts play in other systems. The opening `{bkqt/TYPE}` tag must be on its own line. The closing `{/bkqt}` tag must also be on its own line. Content goes on the lines between them.
 
 ### Types
 
@@ -270,19 +315,53 @@ Write `{bkqt/TYPE:content}` for a callout box. These replace the role that admon
 
 ### Custom labels
 
-Add a pipe before the colon to override the default label: `{bkqt/warning|Memory Trap:content here}`. The label "Memory Trap" replaces "Warning" in the header.
+Add a pipe and label inside the opening tag: `{bkqt/warning|Memory Trap}`. The label "Memory Trap" replaces "Warning" in the header.
 
-### Paragraph breaks
+```
+{bkqt/warning|Memory Trap}
+content here
+{/bkqt}
+```
 
-Use `/n` inside a blockquote to force a paragraph break. The compiler converts `/n` to a double newline before parsing.
+### Paragraphs and lists
 
-- `{bkqt/tip:First paragraph/nSecond paragraph}` produces two paragraphs inside the callout.
+Use **blank lines** inside blockquotes to separate paragraphs, just like normal markdown:
 
-To start a list after text, use `/n` before the list: `{bkqt/note:Intro text/n- item one/n- item two}`.
+```
+{bkqt/tip}
+First paragraph of the tip.
+
+Second paragraph with more detail.
+{/bkqt}
+```
+
+To include a list, put a blank line before the list items:
+
+```
+{bkqt/note}
+Intro text explaining what follows.
+
+- item one
+- item two
+- item three
+{/bkqt}
+```
+
+**Continuation paragraphs:** Consecutive lines (single newline, no blank line between) are treated as continuation paragraphs and rendered with a text indent. Use this for multi-line passages within a single logical paragraph:
+
+```
+{bkqt/keyconcept}
+the first line introduces the concept.
+this continuation line is indented automatically.
+and so is this one.
+
+A blank line starts a new normal paragraph.
+{/bkqt}
+```
 
 ### Inline formatting inside blockquotes
 
-All inline formatting works inside typed blockquotes: colored text, kbd, superscript, code, highlight, accent text. Highlight (`==`) and accent text (`--`) adapt their color to match the blockquote's type color.
+All inline formatting works inside typed blockquotes: colored text, kbd, superscript, code, accent text. Accent text (`--`) adapts its color to match the blockquote's type color.
 
 ---
 
@@ -326,7 +405,7 @@ There is no depth limit — you can nest annotations inside nested annotations.
 - The `ref` part renders with a dotted underline. The `explanation` renders in sans-serif at text-mid color.
 - Nested annotations indent further but keep the same font size.
 - Annotations are skipped inside code blocks.
-- Use annotations for brief clarifications or definitions. For longer tangential content, prefer a `{bkqt/note:...}` blockquote instead.
+- Use annotations for brief clarifications or definitions. For longer tangential content, prefer a `{bkqt/note}...{/bkqt}` blockquote instead.
 
 ---
 
@@ -360,7 +439,9 @@ Valid categories: `projects`, `threads`, `bits2bricks`.
 
 **Display text is required.** The build will fail with an error if you omit it. This is intentional: cross-doc links should always have human-readable anchor text, not raw slugs.
 
-The link opens in a new tab and gets a category-colored style (`doc-ref-projects`, `doc-ref-threads`, `doc-ref-bits2bricks`).
+The link opens in a new tab.
+
+**Visual rendering:** The link text uses the normal body text color (not colored). A solid underline in the target category's accent color marks it as a cross-doc link: lime for projects, rose for threads, blue for bits2bricks. At the end of the link, the target category's sidebar icon appears inline (gear for projects, document for threads, graduation cap for bits2bricks). On hover, the text takes the current article's accent color.
 
 ### External URL links
 
@@ -369,7 +450,9 @@ Write `[[https://url]]` or `[[https://url|Display Text]]` for external links.
 - `[[https://github.com/user/repo|GitHub repo]]`
 - `[[https://en.wikipedia.org/wiki/Entropy]]` (displays the full URL as text)
 
-These are processed before marked to prevent URL auto-linking corruption. They render as neutral grey links that open in a new tab.
+These are processed before marked to prevent URL auto-linking corruption. They open in a new tab.
+
+**Visual rendering:** External links use a muted grey text color (lighter in dark mode, darker in light mode) with a solid underline. A small diagonal-arrow icon appears at the end, signaling that the link leaves the site. On hover, the text brightens slightly.
 
 **Why double brackets for external URLs too?** Consistency. All "reference-style" links use `[[...]]`. Standard markdown links `[text](url)` still work for inline linking, but the double-bracket variant gives uniform styling across wiki-refs, cross-doc refs, and external refs.
 
@@ -418,9 +501,9 @@ Standard GFM (GitHub-Flavored Markdown) table syntax. No custom table syntax.
 
 Tables are styled differently depending on context:
 - **Article posts** (`article.css`): Terminal/cyberpunk aesthetic. Headers use the category accent color, uppercase, small font. Cells have subtle bottom borders.
-- **Wiki content** (`wiki-content.css`): Clean, neutral. Headers have a light background, cells have full borders.
+- **Wiki content** (`article.css` base + `wiki-content.css` delta overrides): Same `article.css` base rules apply (via `.article-content` class), but with Inter font and purple accent from `.article-wiki` scope. Headers use violet accent, no uppercase on headings.
 
-**Inline formatting works inside table cells.** You can use colored text, kbd, superscript, subscript, accent text, highlight, inline code, and underline inside cells. The pre-processors run on the raw markdown before marked parses the table structure.
+**Inline formatting works inside table cells.** You can use colored text, kbd, superscript, subscript, accent text, inline code, and underline inside cells. The pre-processors run on the raw markdown before marked parses the table structure.
 
 ---
 
@@ -443,7 +526,185 @@ Supported languages with optimized theme pairs:
 
 ### Inline code
 
-Single backticks for inline code. Double backticks for inline code that contains a single backtick. Both are fully protected from all pre-processors (see [Edge Cases](#edge-cases-and-sacred-rules)).
+Single backticks for inline code. Double backticks for inline code that contains a single backtick. Both are fully protected from all pre-processors (see [Edge Cases](#edge-cases-and-sacred-rules)). **Never put quotes (single or double) inside inline code** — they can break the placeholder extraction and restoration pipeline.
+
+---
+
+## List Indentation and Nesting
+
+All list types (bullets, numbers, alphabetical letters, definition lists) render with a base left indentation from the text margin.
+
+### Nesting with 2-space indentation
+
+Standard markdown lists (`- ` and `1. `) support nesting. Indent by **2 spaces** to create a child list:
+
+```
+- top-level item
+  - nested item (2 spaces)
+    - deeply nested (4 spaces)
+- another top-level item
+```
+
+Ordered lists nest the same way:
+
+```
+1. first step
+2. second step
+   1. sub-step a
+   2. sub-step b
+3. third step
+```
+
+Each nesting level is visually indented further. The `marked` parser handles nesting natively — no custom compiler logic is needed. **Maximum depth: 5 levels.** Deeper nesting is technically possible but won't receive additional visual indentation or distinct bullet styling.
+
+### What doesn't nest
+
+Definition lists (`::` syntax) and alphabetical lists (`a. b. c.`) do **not** support nesting. They are processed by custom preprocessors that match from the start of a line. They still receive the base indentation.
+
+---
+
+## Definition Lists
+
+Use `- TERM:: description` syntax to create definition lists. Every line in a contiguous block of `- ` lines must contain `:: ` for the block to be treated as a definition list. If any line lacks `:: `, the entire block is left as a regular bullet list.
+
+```
+- latency:: the time between a request and its response
+- throughput:: the number of operations per unit of time
+- jitter:: the variation in latency over time
+```
+
+This produces a `<div class="defn-list">` wrapper containing `<p class="defn"><strong>TERM</strong> — description</p>` for each entry. The wrapper provides the base left indentation. The `:: ` separator is non-greedy — the term is everything before the first `:: `.
+
+### Inline formatting inside definitions
+
+Both the term and description support inline formatting: bold, italic, colored text, inline code, accent text, etc.
+
+```
+- `mutex`:: a --mutual exclusion-- lock
+- **RAII**:: {#3B82F6:Resource Acquisition Is Initialization} — a C++ pattern
+```
+
+### Definition lists inside blockquotes
+
+Definition lists work inside typed blockquotes. The term color adapts to the blockquote's type color (like accent text does).
+
+```
+{bkqt/keyconcept|Core terms}
+key definitions:
+
+- epoch:: one complete pass through the training dataset
+- batch size:: number of samples before a weight update
+{/bkqt}
+```
+
+---
+
+## Alphabetical Lists
+
+Use `a. text` (lowercase) or `A. text` (uppercase) to create alphabetical ordered lists. Items must start at `a`/`A` and be sequential (`a`, `b`, `c`, ...).
+
+### Lowercase
+
+```
+a. first step
+b. second step
+c. third step
+```
+
+Produces `<ol type="a"><li>...</li>...</ol>`.
+
+### Uppercase
+
+```
+A. First item
+B. Second item
+C. Third item
+```
+
+Produces `<ol type="A"><li>...</li>...</ol>`.
+
+### Validation
+
+The compiler validates that:
+- The first line starts with `a. ` or `A. `
+- Each subsequent line follows the expected sequence (`b`, `c`, `d`, ...)
+- If the sequence is broken, the block is left as-is for marked to handle
+
+### Inline formatting inside alphabetical lists
+
+Each item supports inline formatting: bold, italic, colored text, inline code, accent text, etc.
+
+```
+a. **tokenization** — split raw text into tokens
+b. **parsing** — build a tree from the token stream
+c. **type checking** — verify --consistent types--
+```
+
+### Alphabetical lists inside blockquotes
+
+Alphabetical lists work inside typed blockquotes. Marker colors adapt to the blockquote type color.
+
+```
+{bkqt/tip|Steps}
+follow these steps:
+
+a. clone the repository
+b. install dependencies
+c. run the test suite
+{/bkqt}
+```
+
+---
+
+## Context Annotations
+
+Context annotations are timestamped inline author notes. They appear inside the article body as compact cards with an avatar, date badges, and short comments. Use them to document when and why you made changes, or to add personal context to specific sections.
+
+### Syntax
+
+Write `>> YY.MM.DD - text` on its own line. **Consecutive lines group into a single card:**
+
+```
+>> 26.01.15 - initial draft. rough but the structure is there.
+>> 26.02.05 - rewrote the scaling section after reading the Chinchilla paper.
+```
+
+This produces **one** card with two date+text entries stacked vertically.
+
+**Blank lines between `>>` lines produce separate cards:**
+
+```
+>> 26.01.15 - initial draft. rough but the structure is there.
+
+some body text between them.
+
+>> 26.02.05 - rewrote after reading the Chinchilla paper.
+```
+
+This produces **two** separate cards.
+
+### Rules
+
+- **Consecutive `>>` lines group.** Lines with no blank line between them merge into a single card with multiple entries. A blank line breaks the group into separate cards.
+- **Date format:** `YY.MM.DD` — two-digit year, month (01-12), day (01-31). Displayed as `YY · mon DD` (e.g. `26 · feb 05`).
+- **Text supports inline markdown:** bold, italic, code, accent text, colored text — anything that works in a paragraph works in the annotation text.
+- **Placement:** Anywhere in the article body. They can appear at the top (for article-level notes), between sections, or inline within content flow.
+- **Author avatar:** Currently hardcoded to the site author's GitHub avatar. Future versions may support multi-author annotations.
+
+### Output
+
+Each group of consecutive annotations renders as a single `.ctx-note` div with:
+- A bookmark ribbon decoration (accent-colored)
+- The author's avatar (26px rounded)
+- A `.ctx-note-body` column containing one `.ctx-note-entry` per annotation line, each with:
+  - A monospace date badge in the accent color
+  - The annotation text in monospace at muted color
+
+### When to use
+
+- **Article changelog:** "rewrote this section", "added examples", "corrected a factual error"
+- **Personal timestamps:** "first draft", "published", "updated after reader feedback"
+- **Section-level context:** Place before a heading to explain why that section exists or was changed
 
 ---
 
@@ -518,6 +779,7 @@ This is the single most important rule. **Anything inside backticks is never tou
 
 This means:
 - `{^:2}` in running text becomes a superscript. Inside backticks, it stays literal.
+- `{shout:text}` in running text becomes a centered callout. Inside backticks, it stays literal.
 - `_text_` in running text becomes underlined. Inside backticks, it stays literal.
 - `[[address]]` in running text becomes a wiki-link. Inside `<pre>` or `<code>` blocks in the final HTML, it is also skipped by the link processor.
 
@@ -526,7 +788,6 @@ If you ever need to show custom syntax literally without it being processed, put
 ### Word-boundary rules prevent false positives
 
 - **Underscores** (`_text_`): The regex requires non-word characters around the underscores. `snake_case_name` will not be underlined. Only `_standalone words_` with space or punctuation boundaries trigger.
-- **Double equals** (`==text==`): Must not be adjacent to another `=`. `===` is safe.
 - **Double dashes** (`--text--`): Must not be adjacent to another `-`. `---` (horizontal rule) and YAML `---` delimiters are safe.
 
 ### First h1 is stripped in posts
@@ -537,17 +798,17 @@ The compiler removes the first `<h1>` from article post content because the `dis
 
 `[[threads/some-post]]` without a pipe and display text will cause a build error. Always write `[[threads/some-post|Some Post]]`. This is enforced to ensure human-readable anchor text.
 
-### Blockquote `/n` vs real newlines
+### Blockquote paragraph behavior
 
-Inside typed blockquotes, you cannot use real newlines because the regex captures everything between `{bkqt/TYPE:` and the closing `}` greedily. Use `/n` for paragraph breaks. Before list items specifically (`- ` or `1. `), `/n` becomes a single newline (so the list syntax is valid markdown). Everywhere else, `/n` becomes a double newline (paragraph break).
+Typed blockquotes use block syntax (`{bkqt/TYPE}...{/bkqt}`) with real newlines. A **blank line** between content creates separate paragraphs. **Consecutive lines** (single newline, no blank line) are treated as continuation paragraphs and rendered with a text indent. Lists need a blank line before the first list item.
 
 ### External URLs must use double brackets
 
 If you write a bare URL like `https://example.com` in text, marked's GFM mode may auto-link it. For consistent styling and behavior, wrap external URLs in `[[https://example.com|text]]`. This ensures they get the `doc-ref-external` class and open in a new tab.
 
-### Highlight and accent text adapt inside blockquotes
+### Accent text adapts inside blockquotes
 
-When `==highlight==` or `--accent--` appears inside a typed blockquote, their color adapts to match the blockquote's type color (green for tip, red for danger, etc.) rather than using their default styling. This is handled by CSS rules in `article.css`.
+When `--accent--` appears inside a typed blockquote, its color adapts to match the blockquote's type color (green for tip, red for danger, etc.) rather than using the default category accent. This is handled by CSS rules in `article.css`.
 
 ---
 
@@ -556,7 +817,7 @@ When `==highlight==` or `--accent--` appears inside a typed blockquote, their co
 For clarity, these common markdown extensions are **not** part of this system:
 
 - **Footnotes** (`[^1]`): Not supported. Use standard blockquotes (`> text`) for asides.
-- **Callouts / Admonitions** (`> [!NOTE]`): Use typed blockquotes (`{bkqt/note:...}`) instead.
+- **Callouts / Admonitions** (`> [!NOTE]`): Use typed blockquotes (`{bkqt/note}...{/bkqt}`) instead.
 - **Task lists** (`- [ ]`): Not supported.
 - **Emoji shortcodes** (`:emoji:`): Not supported. Use actual Unicode emoji if needed.
 - **Sidenotes / Margin notes**: Not supported. Use side-by-side image layouts for visual asides.
@@ -573,11 +834,11 @@ For clarity, these common markdown extensions are **not** part of this system:
 | Superscript | `{^:text}` |
 | Subscript | `{v:text}` |
 | Keyboard key | `{kbd:Ctrl+C}` |
+| Shout callout | `{shout:text}` |
 | Underline | `_text_` |
-| Highlight | `==text==` |
 | Accent color | `--text--` |
-| Note callout | `{bkqt/note:content}` |
-| Warning with label | `{bkqt/warning\|Custom:content}` |
+| Note callout | `{bkqt/note}` ... `{/bkqt}` |
+| Warning with label | `{bkqt/warning\|Custom}` ... `{/bkqt}` |
 | Wiki-link | `[[concept]]` or `[[parent//child]]` |
 | Wiki-link (custom text) | `[[address\|display text]]` |
 | Cross-doc link | `[[threads/slug\|Display Text]]` |
@@ -585,3 +846,9 @@ For clarity, these common markdown extensions are **not** part of this system:
 | Centered image | `![alt](url "center")` |
 | Image with caption | `![alt\|caption](url "center")` |
 | Side image + text | `![alt](url "left:300px")` followed by text (no blank line) |
+| Definition list | `- TERM:: description` (all lines must have `::`) |
+| Alpha list (lower) | `a. first` / `b. second` / `c. third` |
+| Alpha list (upper) | `A. First` / `B. Second` / `C. Third` |
+| Nested list (1 level) | 2-space indent before `- ` or `1. ` |
+| Horizontal rule | `---` on its own line |
+| Context annotation | `>> 26.02.05 - annotation text` |

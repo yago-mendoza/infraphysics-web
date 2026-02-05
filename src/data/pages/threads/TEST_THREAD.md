@@ -14,9 +14,15 @@ github: https://github.com/example/syntax-reference
 notes:
   - "this file exists to test and document every syntactic feature"
   - "if it renders correctly, the whole pipeline works"
-context: "this file exists to test and document every formatting feature in the pipeline this page demonstrates every formatting feature available in the markdown pipeline. each section shows the syntax you write and the result it produces. the accent color on this page is ==rose== because it belongs to the threads category"
 featured: true
 ---
+
+>> 25.07.12 - first version of this syntax reference.
+>> 25.07.15 - added definition lists and alphabetical list sections.
+
+some body text between them.
+
+>> 26.02.05 - updated after adding context annotation support.
 
 ## text formatting
 
@@ -36,12 +42,6 @@ you can also use named colors: {#tomato:tomato}, {#coral:coral}, {#gold:gold}.
 wrap text in single underscores: `_underlined text_`
 
 here is some _underlined text_ in a sentence. it works at word boundaries only, so variable_names_like_this won't break. double underscores `__bold__` are unaffected: __this stays bold__.
-
-### highlight
-
-wrap text in double equals: `==highlighted text==`
-
-this is ==highlighted text== in a sentence. inside blockquotes, the highlight color adapts to match the blockquote type (see the blockquotes section below).
 
 ### accent text
 
@@ -64,67 +64,99 @@ write `{kbd:key}` for keyboard styling: press {kbd:Ctrl} + {kbd:Shift} + {kbd:P}
 
 ### combining formats
 
-these can be combined freely. here is ==highlighted _underlined_ text== and {#fb7185:colored --accent mixed-- text} and {sc:Small Caps} with a {^:superscript}.
+these can be combined freely. here is _underlined_ text and {#fb7185:colored --accent mixed-- text} and {sc:Small Caps} with a {^:superscript}.
 
 ---
 
 ## blockquotes — typed
 
-there are six blockquote types. the syntax is `{bkqt/TYPE:content}` where TYPE is one of: `note`, `tip`, `warning`, `danger`, `deepdive`, `keyconcept`.
+there are five blockquote types. the syntax is `{bkqt/TYPE}...{/bkqt}` where TYPE is one of: `note`, `tip`, `warning`, `danger`, `keyconcept`.
 
 ### note
 
-{bkqt/note:this is a note blockquote. notes are for supplementary information — things that are good to know but not critical to the main argument.}
+{bkqt/note}
+this is a note blockquote. notes are for supplementary information — things that are good to know but not critical to the main argument.
+{/bkqt}
 
 ### tip
 
-{bkqt/tip:this is a tip blockquote. tips suggest practical actions or useful shortcuts that improve workflow.}
+{bkqt/tip}
+this is a tip blockquote. tips suggest practical actions or useful shortcuts that improve workflow.
+{/bkqt}
 
 ### warning
 
-{bkqt/warning:this is a warning blockquote. warnings flag potential pitfalls, common mistakes, or things that could go wrong if you're not careful.}
+{bkqt/warning}
+this is a warning blockquote. warnings flag potential pitfalls, common mistakes, or things that could go wrong if you're not careful.
+{/bkqt}
 
 ### danger
 
-{bkqt/danger:this is a danger blockquote. danger blocks flag critical issues — things that will cause failures, data loss, or security vulnerabilities if ignored.}
+{bkqt/danger}
+this is a danger blockquote. danger blocks flag critical issues — things that will cause failures, data loss, or security vulnerabilities if ignored.
+{/bkqt}
 
 ### key concept
 
-{bkqt/keyconcept:this is a key concept blockquote. key concepts highlight the core ideas — the things you should remember after reading. they are the ==takeaways==.}
+{bkqt/keyconcept}
+this is a key concept blockquote. key concepts highlight the core ideas — the things you should remember after reading. they are the takeaways.
+{/bkqt}
 
 ---
 
 ## blockquotes — custom labels
 
-by default, each blockquote type shows its standard label ("Note/", "Tip/", etc). you can override it with a custom label using pipe syntax: `{bkqt/TYPE|Custom Label:content}`.
+by default, each blockquote type shows its standard label ("Note/", "Tip/", etc). you can override it with a custom label using pipe syntax: `{bkqt/TYPE|Custom Label}`.
 
-{bkqt/note|Syntax:the default label for this type is "Note/" but this one says "Syntax/" because it was written as `{bkqt/note|Syntax:content}`.}
+{bkqt/note|Syntax}
+the default label for this type is "Note/" but this one says "Syntax/" because it was written as `{bkqt/note|Syntax}`.
+{/bkqt}
 
-{bkqt/warning|Common mistake:the pipe goes between the type and the colon. `{bkqt/warning|Common mistake:content}` — not `{bkqt/warning:Common mistake:content}`.}
+{bkqt/warning|Common mistake}
+the pipe goes between the type and the closing brace. `{bkqt/warning|Common mistake}` — not `{bkqt/warning}Common mistake:`.
+{/bkqt}
 
-{bkqt/keyconcept|Remember this:custom labels let you give each blockquote a specific, descriptive title while keeping the color and styling of its type.}
+{bkqt/keyconcept|Remember this}
+custom labels let you give each blockquote a specific, descriptive title while keeping the color and styling of its type.
+{/bkqt}
 
 ---
 
 ## blockquotes — paragraph breaks
 
-use `/n` inside blockquotes to create paragraph breaks. a single `/n` produces a visible gap between paragraphs.
+use blank lines inside blockquotes to create paragraph breaks. a blank line produces a visible gap between paragraphs.
 
-{bkqt/keyconcept|Multiple paragraphs:this is the first paragraph of a multi-paragraph blockquote. it introduces the topic./nthis is the second paragraph. notice the visible spacing between them. this was produced by writing `/n` between the two paragraphs./nthis is a third paragraph. you can chain as many as you need. `/n` also works before list items:- item one- item two- item three}
+{bkqt/keyconcept|Multiple paragraphs}
+this is the first paragraph of a multi-paragraph blockquote. it introduces the topic.
+
+this is the second paragraph. notice the visible spacing between them. this was produced by writing a blank line between the two paragraphs.
+
+this is a third paragraph. you can chain as many as you need. blank lines also work before list items:
+
+- item one
+- item two
+- item three
+{/bkqt}
 
 ---
 
 ## blockquotes — syntax adaptation
 
-==highlights== and --accent text-- change color inside blockquotes to match the blockquote type. compare these:
+--accent text-- changes color inside blockquotes to match the blockquote type. compare these:
 
-outside a blockquote: ==this highlight is rose== and --this accent is rose--.
+outside a blockquote: --this accent is rose--.
 
-{bkqt/note|Highlight adaptation:==this highlight adapts to the note color== and --this accent text also adapts--. both inherit the blockquote's color instead of the category accent.}
+{bkqt/note|Accent adaptation}
+--this accent text adapts to the note color--. it inherits the blockquote's color instead of the category accent.
+{/bkqt}
 
-{bkqt/danger|Danger colors:==highlight inside danger== and --accent inside danger-- both use the danger red.}
+{bkqt/danger|Danger colors}
+--accent inside danger-- uses the danger red.
+{/bkqt}
 
-{bkqt/tip|Tip colors:==highlight inside tip== and --accent inside tip-- both use the tip green.}
+{bkqt/tip|Tip colors}
+--accent inside tip-- uses the tip green.
+{/bkqt}
 
 ---
 
@@ -174,7 +206,7 @@ npm install
 npm run dev
 ```
 
-inline code is unaffected by preprocessors: `_this stays literal_`, `==this too==`, `--and this--`. the backtick protection ensures code content is never transformed.
+inline code is unaffected by preprocessors: `_this stays literal_`, `--and this--`. the backtick protection ensures code content is never transformed.
 
 ---
 
@@ -237,7 +269,6 @@ standard {sc:GFM} tables:
 | subscript | `{v:text}` | H{v:2}O |
 | keyboard | `{kbd:key}` | {kbd:Enter} |
 | underline | `_text_` | _underlined_ |
-| highlight | `==text==` | ==highlighted== |
 | accent text | `--text--` | --accented-- |
 
 ---
@@ -247,7 +278,7 @@ standard {sc:GFM} tables:
 ### unordered
 
 - first item
-- second item with _underline_ and ==highlight==
+- second item with _underline_ and --accent--
 - third item
   - nested item one
   - nested item two
@@ -298,3 +329,76 @@ this post's frontmatter demonstrates all available fields:
 - `featured` — whether to show on the home page
 
 > for the full list of status values: `ongoing`, `implemented`, `active`, `in-progress`, `completed`, `archived`. each renders with a different color dot in the header.
+
+---
+
+## definition lists
+
+definition lists use `- TERM:: description` syntax. all lines in a contiguous block must use the `::` separator, otherwise they are treated as regular bullet lists.
+
+- latency:: the time between a request and its response, measured in milliseconds
+- throughput:: the number of operations a system can handle per unit of time
+- jitter:: the variation in latency over time — low jitter means consistent response times
+- bandwidth:: the maximum rate of data transfer across a given path
+
+mixed blocks remain untouched — if any line lacks `::`, the whole block stays as bullets:
+
+- this is a normal bullet
+- this is also a normal bullet
+- and this one too
+
+### definition lists with inline formatting
+
+- `mutex`:: a --mutual exclusion-- lock that prevents concurrent access to shared state
+- **RAII**:: {#3B82F6:Resource Acquisition Is Initialization} — a C++ pattern where resource lifetime is tied to object scope
+- _deadlock_:: when two or more threads each hold a lock the other needs, and neither can proceed
+
+### definition lists inside blockquotes
+
+{bkqt/keyconcept|Core terms}
+key definitions for this section:
+
+- epoch:: one complete pass through the training dataset
+- batch size:: the number of samples processed before the model updates its weights
+- learning rate:: how much the model adjusts its weights on each update step
+{/bkqt}
+
+---
+
+## alphabetical lists
+
+alphabetical lists use `a. text` (lowercase) or `A. text` (uppercase) syntax. items must start at a/A and be sequential.
+
+### lowercase
+
+a. parse the input tokens into an abstract syntax tree
+b. run semantic analysis to resolve types and scopes
+c. apply optimization passes to the intermediate representation
+d. emit target-specific machine code
+e. link against external libraries and produce the final binary
+
+### uppercase
+
+A. Requirements gathering and stakeholder interviews
+B. System architecture and component design
+C. Implementation and unit testing
+D. Integration testing and QA review
+E. Deployment and post-launch monitoring
+
+### alphabetical lists with inline formatting
+
+a. **tokenization** — split raw text into a sequence of tokens
+b. **parsing** — build a tree structure from the token stream using {#3B82F6:recursive descent}
+c. **type checking** — verify that every expression has a --consistent type--
+d. **code generation** — emit bytecode or machine instructions from the typed {sc:AST}
+
+### alphabetical lists inside blockquotes
+
+{bkqt/tip|Steps}
+follow these steps in order:
+
+a. clone the repository and install dependencies
+b. create a `.env` file with the required configuration
+c. run the test suite to verify the setup
+d. start the development server
+{/bkqt}
