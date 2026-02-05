@@ -65,6 +65,15 @@ marked.setOptions({
   ...compilerConfig.marked,
 });
 
+// Strip all inline formatting from headings in parsed HTML.
+// Headings must be plain text — no <code>, <em>, <strong>, <span>, etc.
+function stripHeadingFormatting(html) {
+  return html.replace(/<(h[1-4])(\s[^>]*)?>(.+?)<\/\1>/gi, (match, tag, attrs, inner) => {
+    const plain = inner.replace(/<[^>]*>/g, '');
+    return `<${tag}${attrs || ''}>${plain}</${tag}>`;
+  });
+}
+
 // Apply pre-processors (before marked.parse, on raw markdown)
 // Heading lines (# …) are protected so no inline effect touches them.
 function applyPreProcessors(markdown) {
@@ -110,7 +119,7 @@ function restoreBackticks(text, placeholders) {
 const COPY_ICON = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
 const COPY_BTN = `<button class="copy-btn" aria-label="Copiar">${COPY_ICON} Copiar</button>`;
 
-// ── Typed blockquotes {bkqt:type:text} ──
+// ── Typed blockquotes {bkqt/TYPE}...{/bkqt} ──
 
 const BKQT_TYPES = {
   note:       { label: 'Note' },
@@ -120,17 +129,80 @@ const BKQT_TYPES = {
   keyconcept: { label: 'Key concept' },
 };
 
+function processBlockquoteContent(content, placeholders) {
+  const paragraphs = content.split(/\n\n+/);
+  const htmlParts = [];
+
+  for (const para of paragraphs) {
+    const trimmed = para.trim();
+    if (!trimmed) continue;
+
+    const restored = restoreBackticks(trimmed, placeholders);
+
+    // Definition list: all "- " lines with ":: "
+    if (/^- /.test(restored)) {
+      const listLines = restored.split('\n').filter(l => l.trim());
+      const allDefs = listLines.every(l => /^- .+?:: /.test(l));
+      if (allDefs) {
+        htmlParts.push('<div class="defn-list">' + listLines.map(line => {
+          const m = line.match(/^- (.+?):: (.+)$/);
+          if (!m) return `<p>${marked.parseInline(line)}</p>`;
+          return `<p class="defn"><strong>${marked.parseInline(m[1].trim())}</strong> — ${marked.parseInline(m[2].trim())}</p>`;
+        }).join('\n') + '</div>');
+        continue;
+      }
+      htmlParts.push(marked.parse(restored));
+      continue;
+    }
+
+    // Alphabetical list
+    const alphaMatch = restored.match(/^([aA])\. /);
+    if (alphaMatch) {
+      const alphaLines = restored.split('\n').filter(l => l.trim());
+      const isUpper = alphaMatch[1] === 'A';
+      const startCode = (isUpper ? 'A' : 'a').charCodeAt(0);
+      let sequential = true;
+      for (let i = 0; i < alphaLines.length; i++) {
+        if (!alphaLines[i].startsWith(String.fromCharCode(startCode + i) + '. ')) { sequential = false; break; }
+      }
+      if (sequential) {
+        const type = isUpper ? 'A' : 'a';
+        const items = alphaLines.map(l => `<li>${marked.parseInline(l.replace(/^[a-zA-Z]\. /, ''))}</li>`).join('');
+        htmlParts.push(`<ol type="${type}">${items}</ol>`);
+        continue;
+      }
+    }
+
+    // Regular numbered list
+    if (/^\d+\. /.test(restored)) {
+      htmlParts.push(marked.parse(restored));
+      continue;
+    }
+
+    const lines = restored.split('\n');
+
+    if (lines.length === 1) {
+      // Single line → normal paragraph
+      htmlParts.push(marked.parse(restored));
+    } else {
+      // Multiple lines (single \n between them) → first line <p>, rest <p class="bkqt-cont">
+      htmlParts.push(`<p>${marked.parseInline(lines[0])}</p>`);
+      for (let i = 1; i < lines.length; i++) {
+        htmlParts.push(`<p class="bkqt-cont">${marked.parseInline(lines[i])}</p>`);
+      }
+    }
+  }
+
+  return htmlParts.join('\n');
+}
+
 function processCustomBlockquotes(markdown, placeholders) {
   return markdown.replace(
-    /\{bkqt\/(note|tip|warning|danger|keyconcept)(?:\|([^:]*))?\:([\s\S]*?)\}/g,
-    (_, type, customLabel, text) => {
+    /^\{bkqt\/(note|tip|warning|danger|keyconcept)(?:\|([^}]*))?\}\s*\n([\s\S]*?)\n\s*\{\/bkqt\}/gm,
+    (_, type, customLabel, content) => {
       const config = BKQT_TYPES[type];
       const label = customLabel ? customLabel.trim() : config.label;
-      const withNewlines = text.trim()
-        .replace(/\/n(?=\s*(?:- |\d+\. ))/g, '\n')
-        .replace(/\/n/g, '\n\n');
-      const restored = restoreBackticks(withNewlines, placeholders);
-      const body = marked.parse(restored);
+      const body = processBlockquoteContent(content, placeholders);
       return `<div class="bkqt bkqt-${type}"><div class="bkqt-body"><span class="bkqt-label">${label}:</span>${body}</div></div>`;
     }
   );
@@ -152,11 +224,13 @@ function processOutsideCode(html, fn) {
 // ── External URL links [[https://...|text]] ──
 // Processed BEFORE marked.parse to prevent URL auto-linking corruption
 
+const EXTERNAL_LINK_ICON = `<svg class="doc-ref-icon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
+
 function processExternalUrls(markdown) {
   return markdown.replace(/\[\[(https?:\/\/[^\]|]+)(?:\|([^\]]+))?\]\]/g, (_, url, displayText) => {
     const href = url.trim();
     const display = displayText ? displayText.trim() : href;
-    return `<a class="doc-ref doc-ref-external" href="${href}" target="_blank" rel="noopener noreferrer">${display}</a>`;
+    return `<a class="doc-ref doc-ref-external" href="${href}" target="_blank" rel="noopener noreferrer">${display} ${EXTERNAL_LINK_ICON}</a>`;
   });
 }
 
@@ -172,6 +246,12 @@ const CROSS_DOC_CATEGORIES = {
   projects:    { path: '/lab/projects' },
   threads:     { path: '/blog/threads' },
   bits2bricks: { path: '/blog/bits2bricks' },
+};
+
+const CROSS_DOC_ICONS = {
+  projects: `<svg class="doc-ref-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+  threads: `<svg class="doc-ref-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
+  bits2bricks: `<svg class="doc-ref-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5"/></svg>`,
 };
 
 function processAllLinks(html) {
@@ -193,7 +273,7 @@ function processAllLinks(html) {
       }
 
       const href = `${config.path}/${slug.trim()}`;
-      return `<a class="doc-ref doc-ref-${category}" href="${href}" target="_blank" rel="noopener noreferrer">${displayText.trim()}</a>`;
+      return `<a class="doc-ref doc-ref-${category}" href="${href}" target="_blank" rel="noopener noreferrer">${category}/${displayText.trim()}</a>`;
     }
 
     // Second-brain wiki-ref
@@ -338,6 +418,79 @@ ${paragraphs}
   return result.join('\n\n');
 }
 
+// ── Definition lists (- TERM:: description) ──
+
+function processDefinitionLists(markdown) {
+  return markdown.replace(
+    /^(- .+(?:\n- .+)*)/gm,
+    (block) => {
+      const lines = block.split('\n');
+      const allDefs = lines.every(line => /^- .+?:: /.test(line));
+      if (!allDefs) return block;
+
+      return '<div class="defn-list">' + lines.map(line => {
+        const match = line.match(/^- (.+?):: (.+)$/);
+        if (!match) return line;
+        const term = marked.parseInline(match[1].trim());
+        const desc = marked.parseInline(match[2].trim());
+        return `<p class="defn"><strong>${term}</strong> — ${desc}</p>`;
+      }).join('\n') + '</div>';
+    }
+  );
+}
+
+// ── Alphabetical lists (a. / A.) ──
+
+function processAlphabeticalLists(markdown) {
+  return markdown.replace(
+    /^([a-zA-Z])\. .+(?:\n[a-zA-Z]\. .+)*/gm,
+    (block) => {
+      const lines = block.split('\n');
+      const firstChar = lines[0][0];
+      const isUpper = firstChar >= 'A' && firstChar <= 'Z';
+      const startCode = (isUpper ? 'A' : 'a').charCodeAt(0);
+
+      if (firstChar !== 'a' && firstChar !== 'A') return block;
+      for (let i = 0; i < lines.length; i++) {
+        const expected = String.fromCharCode(startCode + i);
+        if (!lines[i].startsWith(expected + '. ')) return block;
+      }
+
+      const type = isUpper ? 'A' : 'a';
+      const items = lines.map(l => {
+        const content = l.replace(/^[a-zA-Z]\. /, '');
+        return `<li>${marked.parseInline(content)}</li>`;
+      }).join('');
+      return `<ol type="${type}">${items}</ol>`;
+    }
+  );
+}
+
+// ── Context annotations (>> YY.MM.DD - text) ──
+
+const MONTH_NAMES = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+
+function processContextAnnotations(markdown) {
+  return markdown.replace(
+    /^(>> \d{2}\.\d{2}\.\d{2} - .+(?:\n>> \d{2}\.\d{2}\.\d{2} - .+)*)/gm,
+    (block) => {
+      const lines = block.split('\n');
+      const entries = lines.map(line => {
+        const m = line.match(/^>> (\d{2})\.(\d{2})\.(\d{2}) - (.+)$/);
+        if (!m) return '';
+        const [, yy, mm, dd, text] = m;
+        const monthIdx = parseInt(mm, 10) - 1;
+        const monthName = MONTH_NAMES[monthIdx] || mm;
+        const dayNum = parseInt(dd, 10);
+        const dateDisplay = `${yy} · ${monthName} ${dayNum}`;
+        const parsedText = marked.parseInline(text.trim());
+        return `<div class="ctx-note-entry"><span class="ctx-note-date">${dateDisplay}</span><span class="ctx-note-text">${parsedText}</span></div>`;
+      }).join('');
+      return `<div class="ctx-note"><img src="https://avatars.githubusercontent.com/yago-mendoza" alt="" class="ctx-note-avatar" /><div class="ctx-note-body">${entries}</div></div>`;
+    }
+  );
+}
+
 // ── Shiki syntax highlighting ──
 
 // Per-language theme pairs (dark key → --shiki-dark, light key → --shiki-light)
@@ -418,15 +571,19 @@ function processMarkdownFile(filePath) {
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   const { data: frontmatter, content } = matter(fileContent);
 
-  // Pipeline: protect → preProcessors → bkqt (with placeholders) → restore → externalUrls → sideImages → marked → shiki → postProcessors → annotations
+  // Pipeline: protect → preProcessors → bkqt (with placeholders) → restore → externalUrls → sideImages → defLists → alphaLists → marked → shiki → postProcessors → annotations
   const { text: safeContent, placeholders } = protectBackticks(content);
   const withCustomSyntax = applyPreProcessors(safeContent);
   const withBkqt = processCustomBlockquotes(withCustomSyntax, placeholders);
   const restored = restoreBackticks(withBkqt, placeholders);
   const withExternalUrls = processExternalUrls(restored);
   const withSideImages = preprocessSideImages(withExternalUrls);
-  const parsed = marked.parse(withSideImages);
-  const highlighted = highlightCodeBlocks(parsed, highlighter);
+  const withDefLists = processDefinitionLists(withSideImages);
+  const withAlphaLists = processAlphabeticalLists(withDefLists);
+  const withCtxNotes = processContextAnnotations(withAlphaLists);
+  const parsed = marked.parse(withCtxNotes);
+  const cleanHeadings = stripHeadingFormatting(parsed);
+  const highlighted = highlightCodeBlocks(cleanHeadings, highlighter);
   const postProcessed = applyPostProcessors(highlighted);
   const htmlContent = processOutsideCode(postProcessed, processAnnotations);
 
@@ -452,7 +609,6 @@ function processMarkdownFile(filePath) {
     author: frontmatter.author || null,
     subtitle: frontmatter.subtitle || null,
     notes: frontmatter.notes || null,
-    context: frontmatter.context || null,
     related: frontmatter.related || null,
   };
 }
@@ -563,15 +719,19 @@ function processFieldnotesFile() {
       }
     }
 
-    // Pipeline: protect → preProcessors → bkqt (with placeholders) → restore → externalUrls → sideImages → marked → shiki → postProcessors → annotations
+    // Pipeline: protect → preProcessors → bkqt (with placeholders) → restore → externalUrls → sideImages → defLists → alphaLists → marked → shiki → postProcessors → annotations
     const { text: safeBody, placeholders } = protectBackticks(bodyMd);
     const withCustomSyntax = applyPreProcessors(safeBody);
     const withBkqt = processCustomBlockquotes(withCustomSyntax, placeholders);
     const restoredBody = restoreBackticks(withBkqt, placeholders);
     const withExternalUrls = processExternalUrls(restoredBody);
     const withSideImages = preprocessSideImages(withExternalUrls);
-    const parsed = marked.parse(withSideImages);
-    const highlighted = highlightCodeBlocks(parsed, highlighter);
+    const withDefLists = processDefinitionLists(withSideImages);
+    const withAlphaLists = processAlphabeticalLists(withDefLists);
+    const withCtxNotes = processContextAnnotations(withAlphaLists);
+    const parsed = marked.parse(withCtxNotes);
+    const cleanHeadings2 = stripHeadingFormatting(parsed);
+    const highlighted = highlightCodeBlocks(cleanHeadings2, highlighter);
     const postProcessed = applyPostProcessors(highlighted);
     const htmlContent = processOutsideCode(postProcessed, processAnnotations);
 

@@ -36,7 +36,6 @@ export interface ProjectPost extends BasePost {
 
 export interface ArticlePost extends BasePost {
   category: 'threads' | 'bits2bricks';
-  context?: string | null;
 }
 
 export interface FieldNote extends BasePost {
