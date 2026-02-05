@@ -128,6 +128,24 @@
   border-color: color-mix(in srgb, var(--section-accent) 35%, transparent);
 }
 
+/* Title L-corner frame — decorative brackets on section headings */
+.title-l-frame {
+  position: relative;
+  display: inline-block;
+  padding: 10px 20px 12px;
+}
+.title-l-frame::before,
+.title-l-frame::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-color: var(--section-accent);
+  pointer-events: none;
+}
+.title-l-frame::before { top: 0; left: 0; border-top: 2px solid; border-left: 2px solid; }
+.title-l-frame::after  { bottom: 0; right: 0; border-bottom: 2px solid; border-right: 2px solid; }
+
 /* ============================================================
    Theme transition — smooth pulse on toggle, no interference otherwise
    ============================================================ */
@@ -358,6 +376,8 @@ button:focus {
 
 .hub-scrollbar     { --_sb-thumb: var(--hub-sidebar-border); --_sb-hover: var(--text-tertiary); }
 .sidebar-scrollbar { --_sb-thumb: var(--sidebar-section);    --_sb-hover: var(--sidebar-text); }
+.palette-scrollbar { --_sb-thumb: var(--text-muted);         --_sb-hover: var(--text-secondary); }
+.palette-scrollbar::-webkit-scrollbar { width: 5px; }
 
 /* ============================================================
    Listing card thumbnails — shared hover cascade

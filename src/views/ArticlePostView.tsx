@@ -217,7 +217,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const targetCategory = catCfg?.relatedCategory || post.category;
   const targetCatCfg = CATEGORY_CONFIG[targetCategory];
   const relatedSectionPath = getSectionPath(targetCategory);
-  const relatedHoverColor = targetCatCfg?.colorClass || 'text-gray-400';
+  const relatedHoverColor = targetCatCfg?.colorClass || 'text-th-secondary';
 
   const recommendedPosts = useMemo(() => {
     const pool = posts.filter(p => p.category === targetCategory && p.id !== post.id);

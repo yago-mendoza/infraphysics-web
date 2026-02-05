@@ -313,7 +313,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
         </div>
 
         {/* Action list */}
-        <div ref={listRef} className="py-2 max-h-[40vh] overflow-y-auto">
+        <div ref={listRef} className="py-2 max-h-[40vh] overflow-y-auto thin-scrollbar palette-scrollbar">
           {filtered.length === 0 ? (
             <div className="px-4 py-6 text-sm text-th-tertiary text-center">
               No results found

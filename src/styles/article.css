@@ -49,10 +49,7 @@
   --art-text-muted:    #555;
   --art-text-card:     #ccc;
 
-  /* Context bar */
-  --art-surface-context:     #171717;
-  --art-surface-context-msg: #0f0f0f;
-  --art-text-context:        #999;
+  /* Context bar — now derived from accent in .article-page-wrapper */
 
   /* Dividers */
   --art-divider-thick: #555;
@@ -60,13 +57,13 @@
 
 [data-theme="light"] {
   --art-surface:      #ffffff;
-  --art-surface-alt:  #f7f7f7;
+  --art-surface-alt:  #f0f0f0;
   --art-surface-code: #f5f5f5;
   --art-surface-bar:  #eeeeee;
   --art-surface-card: #fafafa;
 
-  --art-border:       #e0e0e0;
-  --art-border-subtle:#eaeaea;
+  --art-border:       #d0d0d0;
+  --art-border-subtle:#dcdcdc;
   --art-border-strong:#ccc;
   --art-border-card:  #e8e8e8;
 
@@ -84,9 +81,7 @@
   --art-text-muted:    #999;
   --art-text-card:     #333;
 
-  --art-surface-context:     #f7f7f7;
-  --art-surface-context-msg: #ededed;
-  --art-text-context:        #777;
+  /* Context bar — derived from accent in .article-page-wrapper */
 
   --art-divider-thick: #bbb;
 }
@@ -104,6 +99,14 @@
 /* Bits2Bricks — blue */
 .article-bits2bricks { --art-accent: #3B82F6; }
 [data-theme="light"] .article-bits2bricks { --art-accent: #2563eb; }
+
+/* Related section — re-scope accent so it follows targetCategory, not page category */
+.article-related.article-projects    { --art-accent: #a3e635; }
+.article-related.article-threads     { --art-accent: #fb7185; }
+.article-related.article-bits2bricks { --art-accent: #3B82F6; }
+[data-theme="light"] .article-related.article-projects    { --art-accent: #4d7c0f; }
+[data-theme="light"] .article-related.article-threads     { --art-accent: #e11d48; }
+[data-theme="light"] .article-related.article-bits2bricks { --art-accent: #2563eb; }
 
 
 /* ─────────────────────────────────────────────────
@@ -129,6 +132,11 @@
   --art-accent-hover-border:color-mix(in srgb, var(--art-accent) 40%, transparent);
   --art-accent-hover-bg:    color-mix(in srgb, var(--art-accent) 5%, transparent);
 
+  /* Context bar */
+  --art-surface-context:     color-mix(in srgb, var(--art-accent) 6%, transparent);
+  --art-surface-context-msg: color-mix(in srgb, var(--art-accent) 10%, transparent);
+  --art-text-context:        color-mix(in srgb, var(--art-accent) 70%, #999);
+
   /* Purple derivations */
   --art-purple-dim:  color-mix(in srgb, var(--art-purple) 30%, transparent);
   --art-purple-bg:   color-mix(in srgb, var(--art-purple) 5%, transparent);
@@ -136,11 +144,21 @@
 
 /* Light-mode derivation overrides (different percentages) */
 [data-theme="light"] .article-page-wrapper {
-  --art-accent-bg:          color-mix(in srgb, var(--art-accent) 6%, transparent);
-  --art-accent-code-border: color-mix(in srgb, var(--art-accent) 20%, transparent);
-  --art-accent-mark-bg:     color-mix(in srgb, var(--art-accent) 12%, transparent);
-  --art-accent-quote-bg:    color-mix(in srgb, var(--art-accent) 6%, transparent);
-  --art-purple-bg:          color-mix(in srgb, var(--art-purple) 6%, transparent);
+  --art-accent-bg:           color-mix(in srgb, var(--art-accent) 8%, transparent);
+  --art-accent-dim:          color-mix(in srgb, var(--art-accent) 40%, transparent);
+  --art-accent-code-bg:      color-mix(in srgb, var(--art-accent) 12%, transparent);
+  --art-accent-code-border:  color-mix(in srgb, var(--art-accent) 30%, transparent);
+  --art-accent-mark-bg:      color-mix(in srgb, var(--art-accent) 18%, transparent);
+  --art-accent-quote-bg:     color-mix(in srgb, var(--art-accent) 10%, transparent);
+  --art-accent-hover-border: color-mix(in srgb, var(--art-accent) 55%, transparent);
+
+  /* Context bar */
+  --art-surface-context:     color-mix(in srgb, var(--art-accent) 8%, transparent);
+  --art-surface-context-msg: color-mix(in srgb, var(--art-accent) 14%, transparent);
+  --art-text-context:        color-mix(in srgb, var(--art-accent) 60%, #555);
+
+  --art-purple-bg:           color-mix(in srgb, var(--art-purple) 8%, transparent);
+  --art-purple-dim:          color-mix(in srgb, var(--art-purple) 40%, transparent);
 }
 
 /* A1. Container box */
@@ -212,6 +230,10 @@
 .shade-light .article-hero-img        { filter: grayscale(30%) brightness(0.8) contrast(1.05); }
 [data-theme="light"] .shade-light .article-hero-img { filter: grayscale(20%) brightness(0.9) contrast(1.02); }
 .shade-light .article-hero-gradient    { height: 25%; opacity: 0.6; }
+
+/* Light mode: kill the white-fog gradient — border-bottom on .article-hero
+   gives a clean separation that actually works on light backgrounds */
+[data-theme="light"] .article-hero-gradient { opacity: 0; }
 
 /* none = no filter, no gradient */
 .shade-none .article-hero-img         { filter: none; }
@@ -730,8 +752,8 @@
 }
 
 [data-theme="light"] .article-content .bkqt {
-  --bkqt-bg-header: color-mix(in srgb, var(--bkqt-color) 12%, transparent);
-  --bkqt-bg:        color-mix(in srgb, var(--bkqt-color) 5%, transparent);
+  --bkqt-bg-header: color-mix(in srgb, var(--bkqt-color) 18%, transparent);
+  --bkqt-bg:        color-mix(in srgb, var(--bkqt-color) 10%, transparent);
 }
 
 /* bkqt type colors — dark */
@@ -1089,10 +1111,10 @@
 .article-content .doc-ref-bits2bricks { color: #3B82F6; border-bottom-color: rgba(59,130,246,0.4); }
 .article-content .doc-ref-external { color: #9ca3af; border-bottom-color: rgba(156,163,175,0.4); }
 
-[data-theme="light"] .article-content .doc-ref-projects { color: #4d7c0f; border-bottom-color: rgba(77,124,15,0.4); }
-[data-theme="light"] .article-content .doc-ref-threads  { color: #e11d48; border-bottom-color: rgba(225,29,72,0.4); }
-[data-theme="light"] .article-content .doc-ref-bits2bricks { color: #2563eb; border-bottom-color: rgba(37,99,235,0.4); }
-[data-theme="light"] .article-content .doc-ref-external { color: #6b7280; border-bottom-color: rgba(107,114,128,0.4); }
+[data-theme="light"] .article-content .doc-ref-projects { color: #4d7c0f; border-bottom-color: rgba(77,124,15,0.6); }
+[data-theme="light"] .article-content .doc-ref-threads  { color: #e11d48; border-bottom-color: rgba(225,29,72,0.6); }
+[data-theme="light"] .article-content .doc-ref-bits2bricks { color: #2563eb; border-bottom-color: rgba(37,99,235,0.6); }
+[data-theme="light"] .article-content .doc-ref-external { color: #6b7280; border-bottom-color: rgba(107,114,128,0.6); }
 
 /* B18. Side image layouts */
 

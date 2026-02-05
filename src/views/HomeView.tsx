@@ -163,7 +163,8 @@ export const HomeView: React.FC = () => {
                       <span className="mt-1.5 inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: tc.accent }} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-th-heading font-medium group-hover:text-blue-400 transition-colors truncate">
+                          <span className="text-sm text-th-heading font-medium group-hover-accent transition-colors truncate"
+                            style={{ '--ac-color': tc.accent } as React.CSSProperties}>
                             {post.displayTitle || post.title}
                           </span>
                           <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded" style={{ color: tc.accent, backgroundColor: hexAlpha(tc.accent, 0.1) }}>
@@ -240,7 +241,9 @@ export const HomeView: React.FC = () => {
         <h2 className="text-xs text-th-tertiary uppercase tracking-wider mb-8">Latest Work</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {featuredPosts.map(post => (
+          {featuredPosts.map(post => {
+            const tc = getThemedColor(post.category, theme as 'dark' | 'light');
+            return (
             <Link
               key={`${post.category}-${post.id}`}
               to={postPath(post.category, post.id)}
@@ -259,15 +262,13 @@ export const HomeView: React.FC = () => {
               <div className="flex items-center gap-2 mb-3">
                 <span
                   className="inline-block px-2 py-0.5 text-[10px] uppercase border rounded-sm"
-                  style={(() => {
-                    const tc = getThemedColor(post.category, theme as 'dark' | 'light');
-                    return { color: tc.accent, borderColor: hexAlpha(tc.accent, 0.3), backgroundColor: hexAlpha(tc.accent, 0.1) };
-                  })()}>
+                  style={{ color: tc.accent, borderColor: hexAlpha(tc.accent, 0.3), backgroundColor: hexAlpha(tc.accent, 0.1) }}>
                   {post.category}
                 </span>
               </div>
 
-              <h3 className="text-th-heading font-semibold leading-snug mb-2 group-hover:text-blue-400 transition-colors lowercase">
+              <h3 className="text-th-heading font-semibold leading-snug mb-2 group-hover-accent transition-colors lowercase"
+                style={{ '--ac-color': tc.accent } as React.CSSProperties}>
                 {post.displayTitle || post.title}
               </h3>
 
@@ -275,11 +276,13 @@ export const HomeView: React.FC = () => {
                 {post.description}
               </p>
 
-              <span className="inline-flex items-center gap-1 mt-auto pt-4 text-xs text-th-tertiary group-hover:text-blue-400 transition-colors">
+              <span className="inline-flex items-center gap-1 mt-auto pt-4 text-xs text-th-tertiary group-hover-accent transition-colors"
+                style={{ '--ac-color': tc.accent } as React.CSSProperties}>
                 Read <ArrowRightIcon />
               </span>
             </Link>
-          ))}
+            );
+          })}
         </div>
       </section>
 

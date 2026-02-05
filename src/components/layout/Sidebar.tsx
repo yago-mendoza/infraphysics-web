@@ -52,14 +52,14 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch 
     <div
       className="flex items-center gap-2 mt-4 mb-1 select-none px-2"
     >
-      <span className="flex-1 h-px opacity-20" style={{ backgroundColor: 'var(--sidebar-section)' }} />
+      <span className="flex-1 h-px opacity-40" style={{ backgroundColor: 'var(--sidebar-section)' }} />
       <span
         className="text-[9px] uppercase tracking-[0.2em]"
         style={{ color: 'var(--sidebar-section)' }}
       >
         {text}
       </span>
-      <span className="flex-1 h-px opacity-20" style={{ backgroundColor: 'var(--sidebar-section)' }} />
+      <span className="flex-1 h-px opacity-40" style={{ backgroundColor: 'var(--sidebar-section)' }} />
     </div>
   );
 

@@ -139,9 +139,9 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
 
   const categoryInfo = CATEGORY_CONFIG[category] ?? {
     title: category, description: '', icon: null,
-    color: 'gray-400', colorClass: 'text-gray-400', bgClass: 'bg-gray-400/10',
-    borderClass: 'border-gray-400/20', accent: '#9ca3af',
-    darkBadge: 'text-gray-400 border-gray-400/30 bg-gray-400/10',
+    color: 'gray-400', colorClass: 'text-th-secondary', bgClass: 'bg-th-surface',
+    borderClass: 'border-th-border', accent: '#9ca3af',
+    darkBadge: 'text-th-secondary border-th-border bg-th-surface',
     backLabel: 'RETURN', relatedLabel: 'Related', relatedCategory: '',
   } satisfies CategoryDisplayConfig;
   const themed = getThemedColor(category, theme as 'dark' | 'light');
@@ -250,7 +250,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
                       className={`text-xs px-2.5 py-0.5 border rounded-sm transition-colors ${
                         selectedTopics.includes(t)
                           ? 'bg-slate-400/20 border-slate-400/50 text-slate-400'
-                          : 'border-slate-400/20 text-slate-400/60 hover:border-slate-400/40'
+                          : 'border-slate-400/40 text-slate-400/80 hover:border-slate-400/60'
                       }`}
                     >
                       {t} ({topicCounts[t] || 0})
