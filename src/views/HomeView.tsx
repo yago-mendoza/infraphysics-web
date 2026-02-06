@@ -8,6 +8,7 @@ import { initBrainIndex, type BrainIndex } from '../lib/brainIndex';
 import { ArrowRightIcon, SearchIcon } from '../components/icons';
 import { CATEGORY_CONFIG, catAccentVar, postPath, sectionPath } from '../config/categories';
 import { getSearchExcerpt, countMatches } from '../lib';
+import { HomeTour } from '../components/HomeTour';
 
 const categoryKeys = ['projects', 'threads', 'bits2bricks'] as const;
 
@@ -80,6 +81,8 @@ export const HomeView: React.FC = () => {
   }, [searchQuery]);
 
   return (
+    <>
+    <HomeTour />
     <div className="flex flex-col animate-fade-in font-sans">
 
       {/* Hero */}
@@ -326,5 +329,6 @@ export const HomeView: React.FC = () => {
         </p>
       </section>
     </div>
+    </>
   );
 };
