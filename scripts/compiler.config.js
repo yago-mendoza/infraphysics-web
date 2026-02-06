@@ -53,5 +53,15 @@ export default {
     validateRegularPostWikiLinks: true,
     validateFieldnoteRefs: true,
     validateParentSegments: true,
+    detectCircularRefs: false,  // off by default — knowledge graphs naturally have cycles
+    detectSegmentCollisions: true,
+    detectOrphans: true,
+    // Segment names too generic to flag as collisions (organizational terms)
+    segmentCollisionExclusions: [
+      'overview', 'intro', 'basics', 'summary', 'notes',
+      'example', 'examples', 'reference', 'references',
+      'config', 'configuration', 'settings', 'setup',
+      'types', 'glossary', 'faq', 'history',
+    ],
   },
 };
