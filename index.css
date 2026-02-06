@@ -181,13 +181,14 @@ html.theme-transitioning *::after {
 .wiki-ref-resolved {
   color: var(--wiki-link) !important;
   text-decoration: none !important;
-  border-bottom: 1px dashed var(--wiki-link) !important;
-  transition: border-bottom-style 0.15s ease, color 0.15s ease;
+  border-bottom: none !important;
+  font-style: italic;
+  transition: border-bottom 0.15s ease, color 0.15s ease;
   cursor: pointer;
 }
 
 .wiki-ref-resolved:hover {
-  border-bottom-style: solid !important;
+  border-bottom: 1px solid var(--wiki-link) !important;
   color: var(--wiki-link-hover) !important;
 }
 
