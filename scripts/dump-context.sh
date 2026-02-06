@@ -113,12 +113,13 @@ FILES=(
   # --- Build scripts ---
   "scripts/build-content.js"
   "scripts/compiler.config.js"
+  "scripts/validate-fieldnotes.js"
+  "scripts/README.md"
 
-  # --- Contenido representativo (1 por categoría, para mostrar frontmatter) ---
-  "src/data/pages/projects/compiler-pipeline-demo.md"
+  # --- Contenido representativo (1 por categoría + 1 fieldnote, para mostrar frontmatter) ---
   "src/data/pages/threads/anatomy-of-a-markdown-compiler.md"
   "src/data/pages/bits2bricks/custom-syntax-pcb.md"
-  "src/data/pages/home/_home-featured.yaml"
+  "src/data/pages/fieldnotes/CPU_ALU.md"
 )
 
 # ── Recopilar stats ───────────────────────────────────────────────────

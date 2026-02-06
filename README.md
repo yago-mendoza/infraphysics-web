@@ -11,9 +11,9 @@ Personal website and knowledge system. Articles, projects, field notes, and a se
 - **React 19** + **React Router 7** (SPA)
 - **Vite 6** (dev server + build)
 - **TypeScript**
-- **marked** (markdown to HTML, build-time)
+- **marked** + **Shiki** (markdown compilation + syntax highlighting, build-time)
 - **gray-matter** (frontmatter parsing)
-- **Tailwind CSS** (utility styles) + vanilla CSS (content styling)
+- **Tailwind CSS via CDN** (utility styles, runtime-generated) + vanilla CSS (content styling)
 - **Formspree** (contact form)
 - **Cloudflare R2** (image hosting)
 
@@ -25,8 +25,10 @@ Personal website and knowledge system. Articles, projects, field notes, and a se
 infraphysics-web/
   scripts/
     compiler.config.js        # Centralized compiler configuration
-    build-content.js          # Markdown → JSON pipeline
+    build-content.js          # Markdown → JSON pipeline (triple output)
     validate-fieldnotes.js    # Reference integrity checks
+    migrate-fieldnotes.js     # One-time migration (already executed)
+    README.md                 # Build pipeline docs, cache format
   src/
     components/
       App.tsx                 # Router + layout shell
@@ -51,23 +53,25 @@ infraphysics-web/
         projects/             # .md posts + _category.yaml
         threads/              # .md posts + _category.yaml
         bits2bricks/          # .md posts + _category.yaml
-        fieldnotes/           # _fieldnotes.md (all concepts in one file)
+        fieldnotes/           # Individual .md files (1 per concept)
         home/                 # _home-featured.yaml
-      posts.generated.json    # Build output (all posts as JSON)
+      posts.generated.json    # Regular posts only (no fieldnotes)
+      fieldnotes-index.generated.json  # Fieldnote metadata (no content)
       categories.generated.json
-      home-featured.generated.json
       data.ts                 # Runtime data loader
+    public/
+      fieldnotes/             # {id}.json content files (served as static assets)
     lib/
       wikilinks.ts            # Runtime wiki-link resolver
       content.ts              # Content utilities
-      color.ts                # Color utilities (hexAlpha)
+      color.ts                # Color utilities (accentChipStyle)
       date.ts                 # Date formatting
       search.ts               # Search utilities
       brainIndex.ts           # Fieldnotes index helpers
       addressToId.ts          # Address → slug conversion
     styles/
       article.css             # Article post view styles (terminal/cyberpunk theme)
-      wiki-content.css        # Wiki/second-brain content rendering (.content-html)
+      wiki-content.css        # Wiki/second-brain content delta overrides
     config/                   # Categories config
     constants/                # Layout, theme constants
     types.ts                  # TypeScript interfaces (Post, Category, etc.)
@@ -77,124 +81,41 @@ infraphysics-web/
 
 ---
 
-### Build pipeline
+### Scripts
 
-> Deep dive on ordering, collision avoidance, and extension points: **[scripts/COMPILER.md](scripts/COMPILER.md)**
+| Command | What it does |
+|---|---|
+| `npm run content` | Compile all markdown into JSON (incremental — only recompiles changed files) |
+| `npm run content -- --force` | Force full rebuild (ignore cache) |
+| `npm run dev` | Build content + start Vite dev server |
+| `npm run build` | Build content + production build |
+| `npm run preview` | Preview production build locally |
 
-```
-.md files
-  │
-  ├── gray-matter ─── frontmatter + raw markdown
-  │
-  ├── preProcessors ── custom syntax ({#color:text}, {_:underline}, {kbd:key}, etc.)
-  │
-  ├── preprocessSideImages ── left/right image layouts → flexbox HTML
-  │
-  ├── marked.parse ── standard markdown → HTML
-  │
-  ├── postProcessors ── (extensible, currently empty)
-  │
-  ├── processWikiLinks ── [[address]] → <a class="wiki-ref" data-address="...">
-  │
-  └── JSON output ── posts.generated.json
-```
-
-Run: `npm run content` (or automatically via `npm run dev` / `npm run build`).
-
----
-
-### Second Brain
-
-The fieldnotes system is a flat knowledge graph stored in `_fieldnotes.md`. Each concept is a block separated by `---`:
-
-```markdown
-physics // thermodynamics // entropy
-Content about entropy...
-[[physics // information theory]]
-
----
-
-physics // information theory
-Content about information theory...
-```
-
-- **Addresses** use `//` as hierarchy separator: `domain // subdomain // concept`
-- **References** are `[[address]]` links between concepts
-- **Backlinks** are computed at runtime in `SecondBrainView.tsx`
-- **Validation** checks reference integrity and parent segment existence at build time
-
----
-
-### Wiki-links
-
-Wiki-links work in **all posts** (projects, threads, bits2bricks, fieldnotes):
-
-**Build-time:** `[[physics // entropy]]` is converted to `<a class="wiki-ref" data-address="physics // entropy">entropy</a>` by the compiler.
-
-**Runtime:** `WikiContent.tsx` resolves each `wiki-ref` against the fieldnotes dataset:
-- **Resolved** links get violet styling, a `◇` icon, and `data-title`/`data-description` attributes for the hover preview
-- **Unresolved** links get grey styling with a `?` icon and `cursor: not-allowed`
-
-**Hover preview:** Hovering a resolved wiki-link shows a floating card with the concept title, address path, description snippet, and a hint to click. Uses React portal + event delegation.
-
----
-
-### Custom syntax
-
-> Full authoring guide with frontmatter schemas, edge cases, and syntax rationale: **[src/data/pages/README.md](src/data/pages/README.md)**
-
-The compiler supports custom inline syntax via pre-processors. All rules are defined in `scripts/compiler.config.js`:
-
-| Syntax | Result | Example |
-|---|---|---|
-| `{#FF0000:text}` | Colored text | `{#e74c3c:danger}` |
-| `{_:text}` | Solid underline | `{_:important}` |
-| `{-.:text}` | Dashed underline | `{-.:tentative}` |
-| `{..:text}` | Dotted underline | `{..:pending}` |
-| `{~:text}` | Wavy underline | `{~:disputed}` |
-| `{==:text}` | Highlight/mark | `{==:key insight}` |
-| `{sc:text}` | Small caps | `{sc:abbreviation}` |
-| `{^:text}` | Superscript | `x{^:2}` |
-| `{v:text}` | Subscript | `H{v:2}O` |
-| `{kbd:text}` | Keyboard key | `{kbd:Ctrl+C}` |
-
-To add new syntax: add an entry to `preProcessors` in `compiler.config.js` with `name`, `pattern`, `replace`.
-
----
-
-### Compiler config
-
-`scripts/compiler.config.js` controls all build-time processing:
-
-- **`marked`** — Options passed to marked.js (gfm, breaks)
-- **`wikiLinks`** — Toggle, regex pattern, and HTML generator for `[[...]]` links
-- **`imagePositions`** — Regex and class map for positioned images (`left`, `right`, `center`, `full`)
-- **`preProcessors`** — Array of `{name, pattern, replace}` rules applied before markdown parsing
-- **`postProcessors`** — Array of rules applied after markdown parsing (extensible)
-- **`validation`** — Flags to toggle fieldnote ref validation, parent segment checks, and regular post wiki-link validation
-
-para descargar contexto en batch claude.md tiene isntrucciones de usar un script ya preparado y edita rintelgietmetne qué archivos descargarpo
-
----
-
-### Image positioning
-
-Use markdown image titles to control layout:
-
-```markdown
-![alt](url "center")       → centered block
-![alt](url "full")         → full-width block
-![alt](url "left:300px")   → floated left, 300px wide
-![alt](url "right:250px")  → floated right, 250px wide
-```
-
-For side-by-side layouts, write text lines immediately after a positioned image (no blank line). The compiler wraps them in a flexbox container. Leave a blank line to end the side layout.
+The build pipeline compiles posts and fieldnotes through a shared 14-step transformation (backtick protection, custom syntax preprocessors, blockquotes, marked, Shiki highlighting, link resolution). Results are cached in `.content-cache.json` by file mtime — subsequent builds only recompile files that changed. Full pipeline and cache details: **[scripts/README.md](scripts/README.md)**
 
 ---
 
 ### Writing content
 
-All article and fieldnote markdown lives in `src/data/pages/`. The full writing reference — frontmatter fields per section, custom syntax, compilation pipeline, second brain format, and edge cases — is documented in **[src/data/pages/README.md](src/data/pages/README.md)**.
+All article and fieldnote markdown lives in `src/data/pages/`. The compiler supports a **custom syntax superset** on top of standard GFM: colored text, accent text, typed blockquotes, definition lists, alphabetical lists, context annotations, wiki-links, cross-document links, image positioning, and inline footnotes. Full authoring reference with frontmatter schemas per category, syntax examples, and edge cases: **[src/data/pages/README.md](src/data/pages/README.md)**
+
+---
+
+### Theme system
+
+All colors flow through a three-layer cascade: CSS custom properties in `index.html` (`:root` for dark, `[data-theme="light"]` for light) → Tailwind semantic tokens (`th-*`) in the inline config → `th-*` classes in components. Article styling adds a fourth layer: `--art-accent` per category with `color-mix()` derivations on `.article-page-wrapper`. Never use hardcoded color classes (`text-white`, `bg-gray-900`) — they bypass the cascade and break theme transitions.
+
+---
+
+### Second Brain
+
+A flat knowledge graph of individual `.md` files in `fieldnotes/`. Each note has an `address` (hierarchical, `//`-separated) and links to other notes via `[[wiki-links]]`. Build produces three outputs: a posts JSON (no fieldnotes), a metadata index (no content), and individual content files served as static assets. At runtime, the index loads eagerly while content is fetched on demand per note. Wiki-links are resolved at fetch time against the loaded index.
+
+---
+
+### AI development guide
+
+**[CLAUDE.md](CLAUDE.md)** contains instructions for AI coding assistants working on this codebase: automation rules (what to update when files/syntax change), architecture patterns, theme system rules, and active gotchas. AI tools that read this file will automatically maintain documentation, suggest relevant updates, and follow project conventions.
 
 ---
 
@@ -204,7 +125,6 @@ All article and fieldnote markdown lives in `src/data/pages/`. The full writing 
 npm install          # install dependencies
 npm run dev          # build content + start vite dev server
 npm run build        # build content + production build
-npm run content      # rebuild content JSON only
 ```
 
 Media goes to Cloudflare R2, not the repo.

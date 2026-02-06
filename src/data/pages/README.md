@@ -9,32 +9,34 @@ Nothing in this document uses the custom syntax it describes, because GitHub's r
 ## Table of Contents
 
 1. [Frontmatter](#frontmatter)
-2. [Compilation Pipeline](#compilation-pipeline)
-3. [Inline Formatting](#inline-formatting)
-4. [Typed Blockquotes](#typed-blockquotes)
-5. [Links](#links)
-6. [Images](#images)
-7. [Tables](#tables)
-8. [Code Blocks](#code-blocks)
-9. [List Indentation and Nesting](#list-indentation-and-nesting)
-10. [Definition Lists](#definition-lists)
-11. [Alphabetical Lists](#alphabetical-lists)
-12. [Context Annotations](#context-annotations)
-13. [Standard Blockquotes (Small Text)](#standard-blockquotes-small-text)
-14. [Second Brain (Fieldnotes)](#second-brain-fieldnotes)
-15. [Edge Cases and Sacred Rules](#edge-cases-and-sacred-rules)
+2. [Content Types and Writing Guidance](#content-types-and-writing-guidance)
+3. [Compilation Pipeline](#compilation-pipeline)
+4. [Inline Formatting](#inline-formatting)
+5. [Typed Blockquotes](#typed-blockquotes)
+6. [Inline Footnotes](#inline-footnotes)
+7. [Links](#links)
+8. [Images](#images)
+9. [Tables](#tables)
+10. [Code Blocks](#code-blocks)
+11. [List Indentation and Nesting](#list-indentation-and-nesting)
+12. [Definition Lists](#definition-lists)
+13. [Alphabetical Lists](#alphabetical-lists)
+14. [Context Annotations](#context-annotations)
+15. [Standard Blockquotes (Small Text)](#standard-blockquotes-small-text)
+16. [Second Brain (Fieldnotes)](#second-brain-fieldnotes)
+17. [Edge Cases and Sacred Rules](#edge-cases-and-sacred-rules)
 
 ---
 
 ## Frontmatter
 
-Every markdown file (except `_fieldnotes.md`) starts with a YAML frontmatter block delimited by `---`. The build script uses **gray-matter** to extract it. Fields that are absent default to `null` in the generated JSON.
+Every markdown file starts with a YAML frontmatter block delimited by `---`. The build script uses **gray-matter** to extract it. Fields that are absent default to `null` in the generated JSON.
 
 ### Universal fields (all categories)
 
 | Field | Required | Type | What it does |
 |---|---|---|---|
-| `id` | yes | string | Unique slug. Must match the filename without `.md`. Used in URLs, as the primary key, and as the fallback display name when `displayTitle` is absent. |
+| `id` | yes | string | Unique slug used in URLs, as the primary key, and as the fallback display name when `displayTitle` is absent. The build reads this field directly — it is **not** derived from the filename. |
 | `displayTitle` | no | string | Human-readable title shown in the UI (headings, cards, browser tab). Falls back to `id` if missing. |
 | `category` | yes | string | One of `projects`, `threads`, `bits2bricks`. Determines which section lists the post and which accent color it gets. |
 | `date` | yes | string | ISO 8601 date (`YYYY-MM-DD`). Shown in post headers and used for default sort order (newest first). |
@@ -48,6 +50,18 @@ Every markdown file (except `_fieldnotes.md`) starts with a YAML frontmatter blo
 | `related` | no | string[] | Array of post IDs. The "Related" section at the bottom of a post will show these. If empty, the system picks random posts from the same category. |
 | `featured` | no | boolean | Flag for potential featured/pinned treatment in listings. |
 | `notes` | no | string or string[] | Author notes displayed in the project header area. Can be a single string or a YAML array. |
+
+### Filename convention (posts)
+
+Prefix post filenames with the date in `YYMMDD-` format so they sort chronologically in the directory:
+
+```
+260206-alignment-is-not-a-vibe-check.md
+260205-everything-is-a-pipe.md
+250130-anatomy-of-a-markdown-compiler.md
+```
+
+The build uses the frontmatter `id` field for URLs and routing — the filename is only for directory organization. The `id` does **not** need to match the filename.
 
 ### Projects-specific fields
 
@@ -70,9 +84,16 @@ Threads posts use the universal fields. No additional category-specific fields.
 
 Bits2Bricks posts use the universal fields. No additional category-specific fields.
 
+### Blog TOC behavior (Threads & Bits2Bricks)
+
+Blog categories (threads, bits2bricks) share the same bordered TOC box as projects. Differences:
+- **Max 10 entries** — only the first 10 headings appear in the TOC (projects show all).
+- **Font**: Inter instead of monospace. Uppercase labels.
+- **Depth-scaled sizing**: depth-0 at `0.75rem`, depth-1 at `0.7rem`, depth-2 at `0.65rem`, depth-3 at `0.6rem`.
+
 ### Fieldnotes (Second Brain)
 
-Fieldnotes do **not** use YAML frontmatter. They live in a single file (`fieldnotes/_fieldnotes.md`) with a completely different structure. See the [Second Brain](#second-brain-fieldnotes) section.
+Each fieldnote is an individual `.md` file in `fieldnotes/` with `address` and `date` frontmatter. See the [Second Brain](#second-brain-fieldnotes) section.
 
 ### Example frontmatters
 
@@ -127,62 +148,88 @@ tags: [fpga, verilog, hardware]
 
 ---
 
+## Content Types and Writing Guidance
+
+### Article intro text
+
+Any text that appears **after the frontmatter but before the first heading** is rendered as an intro paragraph (styled with `.article-intro`). Use it for:
+- What this post is about and what to expect
+- Who the intended audience is
+- Motivation, backstory, or a personal anecdote
+
+The intro is **not** the same as the `description` frontmatter (which is a one-liner for cards and meta tags). The intro is the first thing a reader sees in the article body — it sets the tone.
+
+### When to use `notes`, `>>` context annotations, or intro text
+
+| Tool | Purpose | Where it appears | When to use |
+|---|---|---|---|
+| **`notes` frontmatter** | Global notices about the post | Header area, above the content | "WIP", "requires X", "updated timeline", disclaimers |
+| **Intro text** | Motivation, audience, what to expect | Between TOC and first heading | First time reading the post — sets expectations |
+| **`>> annotations`** | Timestamped post-publication edits | Anywhere in the article body | "Rewrote this section", "corrected after feedback", changelogs |
+| **`{bkqt/note}`** | In-flow supplementary information | Wherever placed in body | "See also...", tangential context, clarifications |
+
+`notes` is metadata. Intro text is narrative. `>>` annotations are a changelog. `{bkqt/note}` is a callout. They serve different purposes and can coexist in the same post.
+
+### Writing conventions per content type
+
+All types share the same compiler and the same 16 custom syntax features. The difference is in tone, structure, and which features you'll use most.
+
+**Projects** — Technical case studies. Structure: intro (what/why), implementation sections, results/learnings. Heavy use of code blocks, definition lists, `technologies` and `status` frontmatter. The `>>` annotations are useful for logging progress over time. The `github` and `demo` fields link to live resources.
+
+**Threads** — Essays and analysis. Structure: intro (thesis), argument sections, conclusion. Heavy use of accent text (`--key claims--`), inline footnotes (`{{ref|explanation}}`), typed blockquotes for key concepts, and `>>` annotations for post-publication corrections. Threads tend to be longer and more prose-heavy.
+
+**Bits2Bricks** — Tutorials and hardware/software build logs. Structure: intro (what we're building), step-by-step sections, results. Heavy use of code blocks, alphabetical lists for ordered steps, definition lists for terminology, images with side-by-side layouts. More instructional tone than threads.
+
+**Fieldnotes (Second Brain)** — Reference-style concept notes. Short, factual, link-heavy. Body is typically 1-5 paragraphs defining a concept. Heavy use of `[[wiki-links]]` to connect concepts. Trailing `[[refs]]` populate the "Related concepts" section. No intro text convention — just start with the definition. See [Second Brain](#second-brain-fieldnotes) for full format.
+
+---
+
 ## Compilation Pipeline
 
-The pipeline runs at build time (`npm run content`). No markdown is parsed in the browser. The output is a JSON array of posts with pre-rendered HTML in the `content` field.
+The pipeline runs at build time (`npm run content`). No markdown is parsed in the browser. Use `npm run content -- --force` to ignore the cache and recompile everything.
 
-Processing order:
+**Important:** Single newlines do NOT create line breaks. The parser uses `breaks: false` (GFM mode). You must use a blank line to start a new paragraph. This is standard GFM behavior.
+
+### Per-file compilation (`compileMarkdown`)
+
+Each markdown file passes through this 14-step pipeline:
 
 ```
 raw markdown
       |
-      v
-[1]  gray-matter           -- extract frontmatter YAML
-      |
-      v
-[2]  protectBackticks      -- replace code blocks/inline code with %%CBLK_N%% placeholders
-      |
-      v
-[3]  preProcessors         -- custom inline syntax (colors, kbd, superscript, etc.)
-      |
-      v
-[4]  processCustomBlockquotes -- {bkqt/TYPE}...{/bkqt} blocks
-      |
-      v
-[5]  restoreBackticks      -- put code back in place
-      |
-      v
-[6]  processExternalUrls   -- [[https://...]] links (before marked to avoid URL corruption)
-      |
-      v
-[7]  preprocessSideImages      -- side-by-side image+text layouts
-      |
-      v
-[7b] processDefinitionLists   -- - TERM:: desc → <p class="defn">
-      |
-      v
-[7c] processAlphabeticalLists -- a. text → <ol type="a">
-      |
-      v
-[7d] processContextAnnotations -- >> YY.MM.DD - text → <div class="ctx-note">
-      |
-      v
-[8]  marked.parse             -- standard GFM markdown to HTML
-      |
-      v
-[9]  highlightCodeBlocks   -- Shiki syntax highlighting per language
-      |
-      v
-[10] postProcessors        -- extensible HTML transforms (currently empty)
-      |
-      v
-[11] processAllLinks       -- [[wiki-refs]], [[category/slug|text]], unresolved markers
-      |
-      v
-posts.generated.json
+[1]  gray-matter               -- extract frontmatter YAML
+[2]  protectBackticks           -- replace code blocks/inline code with %%CBLK_N%% placeholders
+[3]  preProcessors              -- custom inline syntax (colors, kbd, superscript, etc.)
+[4]  processCustomBlockquotes   -- {bkqt/TYPE}...{/bkqt} blocks
+[5]  restoreBackticks           -- put code back in place
+[6]  processExternalUrls        -- [[https://...]] links (before marked to avoid URL corruption)
+[7]  preprocessSideImages       -- side-by-side image+text layouts
+[8]  processDefinitionLists     -- - TERM:: desc → <div class="defn-list">
+[9]  processAlphabeticalLists   -- a. text → <ol type="a">
+[10] processContextAnnotations  -- >> YY.MM.DD - text → <div class="ctx-note">
+[11] marked.parse               -- standard GFM markdown → HTML
+[12] stripHeadingFormatting      -- remove inline tags (<code>, <em>, etc.) from h1-h4
+[13] highlightCodeBlocks         -- Shiki syntax highlighting per language
+[14] applyPostProcessors         -- extensible HTML transforms (currently empty)
 ```
 
-Step 2 is the reason backticks are sacred (see [Edge Cases](#edge-cases-and-sacred-rules)). Steps 3-4 happen on "safe" markdown where all code has been removed. Step 6 must run before step 8 because marked would auto-link bare URLs inside double brackets and corrupt them.
+### After all files are compiled
+
+Two additional passes run on the combined output of ALL files (not per-file):
+
+- **`processAllLinks`** — resolves `[[wiki-refs]]`, `[[category/slug|text]]` cross-doc links, and unresolved markers. Runs on every post every build because link targets change when notes are added/removed. Protected by `processOutsideCode` which shields `<pre>` and `<code>` segments.
+- **`processAnnotations`** — converts `{{ref|explanation}}` inline footnotes into numbered markers + annotation blocks. Also protected by `processOutsideCode`.
+
+### Build outputs
+
+| Output | Location |
+|---|---|
+| Regular posts | `src/data/posts.generated.json` (projects, threads, bits2bricks — no fieldnotes) |
+| Fieldnotes index | `src/data/fieldnotes-index.generated.json` (metadata + searchText, no content) |
+| Fieldnote content | `public/fieldnotes/{id}.json` (per-note `{ "content": "<html>" }`) |
+| Categories | `src/data/categories.generated.json` (from `_category.yaml` files in each section directory) |
+
+Step 2 is the reason backticks are sacred (see [Edge Cases](#edge-cases-and-sacred-rules)). Steps 3-4 happen on "safe" markdown where all code has been removed. Step 6 must run before step 11 because marked would auto-link bare URLs inside double brackets and corrupt them.
 
 All configuration lives in `scripts/compiler.config.js`. The main orchestration lives in `scripts/build-content.js`.
 
@@ -312,6 +359,32 @@ These replace the role that admonitions or callouts play in other systems. The o
 | `warning` | Warning | Amber | Potential pitfalls |
 | `danger` | Danger | Red | Critical issues, data loss risks |
 | `keyconcept` | Key concept | Purple | Core ideas to retain |
+| `quote` | *(none)* | Category accent | Styled quotation with left bar and quotation mark icon |
+| `pullquote` | *(none)* | Category accent | Same as `quote` but half-width (stops mid-screen) |
+
+### Quote and pullquote blockquotes
+
+The `quote` and `pullquote` types have a different visual treatment than the other blockquotes: a vertical bar on the left, a large decorative quotation mark, and italic text. They do not show a label header.
+
+Use a pipe to add attribution: `{bkqt/quote|Richard Feynman}`. The attribution appears below the quoted text with an em dash prefix.
+
+**Full-width quote:**
+
+```
+{bkqt/quote|Richard Feynman}
+What I cannot create, I do not understand.
+{/bkqt}
+```
+
+**Half-width pullquote** (max-width ~55%, useful for side emphasis):
+
+```
+{bkqt/pullquote}
+The mask is not the face.
+{/bkqt}
+```
+
+Both types support all inline formatting inside the quoted text (bold, accent, colored text, etc.).
 
 ### Custom labels
 
@@ -365,9 +438,9 @@ All inline formatting works inside typed blockquotes: colored text, kbd, supersc
 
 ---
 
-## Inline annotations
+## Inline Footnotes
 
-Use `{{ref|explanation}}` to attach a paragraph-scoped footnote. The `ref` is the word or phrase being annotated — it renders inline with a dotted underline and a superscript number. The `explanation` appears as a numbered note below the paragraph.
+Use `{{ref|explanation}}` to attach a paragraph-scoped footnote. (Not to be confused with [Context Annotations](#context-annotations), which are timestamped author notes using `>>` syntax.) The `ref` is the word or phrase being annotated — it renders inline with a dotted underline and a superscript number. The `explanation` appears as a numbered note below the paragraph.
 
 ### Syntax
 
@@ -439,9 +512,9 @@ Valid categories: `projects`, `threads`, `bits2bricks`.
 
 **Display text is required.** The build will fail with an error if you omit it. This is intentional: cross-doc links should always have human-readable anchor text, not raw slugs.
 
-The link opens in a new tab.
+**Rendered output:** The display text is prefixed with the target category name (e.g. `[[threads/some-post|Some Post]]` renders as "threads/Some Post"). The link uses a solid underline in the target category's accent color (lime for projects, rose for threads, blue for bits2bricks). On hover, the text takes the current article's accent color. The link opens in a new tab.
 
-**Visual rendering:** The link text uses the normal body text color (not colored). A solid underline in the target category's accent color marks it as a cross-doc link: lime for projects, rose for threads, blue for bits2bricks. At the end of the link, the target category's sidebar icon appears inline (gear for projects, document for threads, graduation cap for bits2bricks). On hover, the text takes the current article's accent color.
+**URL mapping:** `projects` → `/lab/projects/`, `threads` → `/blog/threads/`, `bits2bricks` → `/blog/bits2bricks/`.
 
 ### External URL links
 
@@ -522,7 +595,10 @@ Supported languages with optimized theme pairs:
 | Rust | rose-pine | rose-pine-dawn |
 | Go | min-dark | min-light |
 | YAML / JSON | github-dark | github-light |
+| HTML / CSS / Bash | vitesse-dark | vitesse-light |
 | Everything else | vitesse-dark | vitesse-light |
+
+**Code blocks without a language identifier** still get the terminal-style chrome (border, copy button), but no syntax highlighting and no language label. Always specify a language when possible for better readability.
 
 ### Inline code
 
@@ -685,8 +761,10 @@ This produces **two** separate cards.
 
 ### Rules
 
-- **Consecutive `>>` lines group.** Lines with no blank line between them merge into a single card with multiple entries. A blank line breaks the group into separate cards.
+- **Consecutive `>>` lines group.** Lines with no blank line between them merge into a single card with multiple entries separated by a thin divider. A blank line breaks the group into separate cards.
 - **Date format:** `YY.MM.DD` — two-digit year, month (01-12), day (01-31). Displayed as `YY · mon DD` (e.g. `26 · feb 05`).
+- **Relative time:** Annotations are post-publication edits. The compiler computes time elapsed since the article's `date` frontmatter and shows it in parentheses (e.g. `(3d later)`, `(6m 24d later)`). Omitted when the annotation date is on or before the publication date.
+- **Annotation dates must be ≥ article date.** They represent edits made after publishing. Same-day annotations show no relative time.
 - **Text supports inline markdown:** bold, italic, code, accent text, colored text — anything that works in a paragraph works in the annotation text.
 - **Placement:** Anywhere in the article body. They can appear at the top (for article-level notes), between sections, or inline within content flow.
 - **Author avatar:** Currently hardcoded to the site author's GitHub avatar. Future versions may support multi-author annotations.
@@ -694,11 +772,11 @@ This produces **two** separate cards.
 ### Output
 
 Each group of consecutive annotations renders as a single `.ctx-note` div with:
-- A bookmark ribbon decoration (accent-colored)
 - The author's avatar (26px rounded)
 - A `.ctx-note-body` column containing one `.ctx-note-entry` per annotation line, each with:
-  - A monospace date badge in the accent color
+  - A `.ctx-note-date-row` containing the monospace date badge and optional relative time
   - The annotation text in monospace at muted color
+- Entries within a group are separated by a `.ctx-note-divider` (thin accent-tinted line)
 
 ### When to use
 
@@ -718,29 +796,34 @@ For callout-style blocks with color coding and labels, use [typed blockquotes](#
 
 ## Second Brain (Fieldnotes)
 
-Fieldnotes live in a single file: `fieldnotes/_fieldnotes.md`. They do not use YAML frontmatter. Instead, they use a block-based format separated by `---` (three dashes on their own line).
+Each fieldnote is an individual `.md` file inside `fieldnotes/`. Every file uses YAML frontmatter with `address` (required) and `date` (required) fields, followed by the body markdown.
+
+### File format
+
+```yaml
+---
+address: "CPU//ALU"
+date: "2026-02-05"
+---
+The arithmetic logic unit — the circuit inside a [[CPU//core]] that performs...
+[[CPU//core]]
+[[CPU//register]]
+[[CPU]]
+```
+
+### Filename convention
+
+The filename is derived from the address: `//` → `_`, `/` → `-`, spaces → `-`, casing preserved. Examples:
+- `CPU//ALU` → `CPU_ALU.md`
+- `I/O//MMIO` → `I-O_MMIO.md`
+- `MEDIA//IMAGE ALIGNMENT` → `MEDIA_IMAGE-ALIGNMENT.md`
 
 ### Block structure
 
-```
-address
-# Optional Heading
-Body markdown with [[wiki-refs]] to other concepts.
-More text...
-
-[[trailing-ref-1]]
-[[trailing-ref-2]]
----
-next-address
-Body of next concept...
----
-```
-
-Each block contains:
-1. **Line 1: Address** -- the concept's hierarchical path. This is the unique identifier.
-2. **Optional heading** -- a `# Heading` line. If present, it becomes the display title.
-3. **Body** -- standard markdown plus all custom inline syntax. Wiki-links in the body are extracted as references.
-4. **Trailing references** -- standalone `[[address]]` lines at the end of the block (after the last body text). These are collected separately and used to populate the "Related concepts" section.
+Each file contains:
+1. **Frontmatter:** `address` (hierarchical path) and `date` (ISO 8601).
+2. **Body** -- standard markdown plus all custom inline syntax. Wiki-links in the body are extracted as references.
+3. **Trailing references** -- standalone `[[address]]` lines at the end (after the last body text). These populate the "Related concepts" section.
 
 ### Address format
 
@@ -763,11 +846,13 @@ Trailing refs (the `[[...]]` lines at the end of a block) go into a separate `tr
 ### Validation
 
 The build script validates:
-1. Every `[[ref]]` inside fieldnotes points to an existing block.
-2. Parent address segments have their own blocks.
-3. Every wiki-link in regular posts (threads, bits2bricks, projects) points to an existing fieldnote.
+1. Every `[[ref]]` inside fieldnotes points to an existing block. **Error** (build fails).
+2. Parent address segments have their own blocks. **Warning** (build continues, but the hierarchy will be incomplete).
+3. Every wiki-link in regular posts (threads, bits2bricks, projects) points to an existing fieldnote. **Error** (build fails).
 
-Validation failures produce build errors (exit code 1).
+Errors produce exit code 1. Warnings are logged but do not block the build.
+
+**Auto-generated description:** If a fieldnote has no explicit `description` in frontmatter, the build script extracts the first body line that is not a heading or image as the description. Wiki-link syntax in the description is stripped to plain text.
 
 ---
 
@@ -785,22 +870,13 @@ This means:
 
 If you ever need to show custom syntax literally without it being processed, put it in backticks.
 
-### Word-boundary rules prevent false positives
+### Headings are never stripped
 
-- **Underscores** (`_text_`): The regex requires non-word characters around the underscores. `snake_case_name` will not be underlined. Only `_standalone words_` with space or punctuation boundaries trigger.
-- **Double dashes** (`--text--`): Must not be adjacent to another `-`. `---` (horizontal rule) and YAML `---` delimiters are safe.
-
-### First h1 is stripped in posts
-
-The compiler removes the first `<h1>` from article post content because the `displayTitle` field already renders as the page heading. If you start your markdown with `# Title`, it won't appear twice.
+The `displayTitle` frontmatter renders as the page heading in the UI. If you also put a `# Title` in the markdown body, both will appear. This is intentional — you have full control over what headings appear in the content. Most posts start with intro text (no heading) directly after the frontmatter, then use `## Section` headings for the body.
 
 ### Cross-doc links require display text
 
 `[[threads/some-post]]` without a pipe and display text will cause a build error. Always write `[[threads/some-post|Some Post]]`. This is enforced to ensure human-readable anchor text.
-
-### Blockquote paragraph behavior
-
-Typed blockquotes use block syntax (`{bkqt/TYPE}...{/bkqt}`) with real newlines. A **blank line** between content creates separate paragraphs. **Consecutive lines** (single newline, no blank line) are treated as continuation paragraphs and rendered with a text indent. Lists need a blank line before the first list item.
 
 ### External URLs must use double brackets
 
@@ -839,6 +915,8 @@ For clarity, these common markdown extensions are **not** part of this system:
 | Accent color | `--text--` |
 | Note callout | `{bkqt/note}` ... `{/bkqt}` |
 | Warning with label | `{bkqt/warning\|Custom}` ... `{/bkqt}` |
+| Quote (full-width) | `{bkqt/quote\|Author}` ... `{/bkqt}` |
+| Pullquote (half-width) | `{bkqt/pullquote}` ... `{/bkqt}` |
 | Wiki-link | `[[concept]]` or `[[parent//child]]` |
 | Wiki-link (custom text) | `[[address\|display text]]` |
 | Cross-doc link | `[[threads/slug\|Display Text]]` |
@@ -852,3 +930,5 @@ For clarity, these common markdown extensions are **not** part of this system:
 | Nested list (1 level) | 2-space indent before `- ` or `1. ` |
 | Horizontal rule | `---` on its own line |
 | Context annotation | `>> 26.02.05 - annotation text` |
+| Inline footnote | `{{ref\|explanation}}` |
+| Nested footnote | `{{ref\|text with {{inner\|nested explanation}}}}` |
