@@ -238,11 +238,11 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg) {
       const parentSet = new Set(entries.map(e => (e.parentPath || '__root__').toLowerCase()));
       if (parentSet.size < 2) continue;
 
-      // Remove hierarchical containment (A is prefix of B or vice versa)
+      // Remove hierarchical children (keep top-most representative per tree)
       const addrs = entries.map(e => e.fullAddress);
       const filtered = entries.filter(e =>
         !addrs.some(a => a !== e.fullAddress &&
-          (e.fullAddress.startsWith(a + '//') || a.startsWith(e.fullAddress + '//')))
+          e.fullAddress.startsWith(a + '//'))
       );
 
       const filteredParents = new Set(filtered.map(e => (e.parentPath || '__root__').toLowerCase()));
