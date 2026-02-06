@@ -13,6 +13,8 @@ These are **mandatory triggers** — when X happens, do Y.
 ### On writing or editing article content
 **Before generating or editing any markdown**, read **[src/data/pages/README.md](src/data/pages/README.md)**. It documents every available syntax feature, frontmatter schema per content type (projects, threads, bits2bricks, fieldnotes), edge cases, and recommendations. Never guess syntax from memory — always consult that file.
 
+**After editing any `.md` file in `src/data/pages/`**, run `npm run build` to recompile content. Markdown is compiled at build time — changes are invisible until the build runs.
+
 ### On syntax/pipeline/frontmatter change
 Update `src/data/pages/README.md` — it's the **single source of truth** for content authors. Covers: custom syntax rules (`compiler.config.js`), frontmatter fields, typed blockquotes, wiki-link/cross-doc link processing, image positioning, fieldnotes format, validation rules, Shiki language themes, pipeline ordering.
 

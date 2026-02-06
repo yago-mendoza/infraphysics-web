@@ -27,12 +27,8 @@ let's get this out of the way.
 
 there's a very popular, very reasonable-sounding take on alignment research that goes something like this:
 
-{bkqt/note|The Skeptic's Position}
-are these "labs" conducting "research" by just... chatting to the model?
-
-"are you going to try to build a Skynet? be honest?"
-
-there must be more to it, surely.
+{bkqt/quote|@doomposting_realist, mass-upvoted HN comment}
+are these "labs" conducting "research" by just... chatting to the model? "are you going to try to build a Skynet? be honest?" there must be more to it, surely.
 {/bkqt}
 
 and look — i get it. if your only exposure to AI safety is Twitter threads and op-eds, it genuinely *does* look like a bunch of overfunded philosophy majors having an existential crisis about autocomplete. the models are just predicting the next word, right? how dangerous can a text generator be?
