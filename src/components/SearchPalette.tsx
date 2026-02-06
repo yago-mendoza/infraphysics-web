@@ -261,7 +261,12 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
         break;
       case 'Escape':
         e.preventDefault();
-        onClose();
+        if (query) {
+          setQuery('');
+          setSelectedIndex(0);
+        } else {
+          onClose();
+        }
         break;
     }
   }, [filtered, selectedIndex, onClose]);
@@ -283,7 +288,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
   let lastGroup: string | undefined;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[20vh]">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-th-overlay"
