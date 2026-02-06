@@ -31,6 +31,75 @@ Everything below documents every feature available in project
 markdown files. Compiled by `build-content.js` using
 `compiler.config.js` preprocessors.
 
+## Full-Width Quote (no attribution)
+
+```
+{bkqt/quote}
+The most dangerous phrase in the language is: we've always done it this way.
+{/bkqt}
+```
+
+Renders as: left vertical bar, large decorative `"` mark, italic text spanning the full content width.
+
+---
+
+## Full-Width Quote with Attribution
+
+```
+{bkqt/quote|Grace Hopper}
+The most dangerous phrase in the language is: we've always done it this way.
+{/bkqt}
+```
+
+Same as above, plus an `— Grace Hopper` attribution line below the text.
+
+---
+
+## Half-Width Pullquote (stops mid-screen)
+
+```
+{bkqt/pullquote}
+The mask is not the face.
+{/bkqt}
+```
+
+Max-width ~55%. Useful for emphasis that shouldn't dominate the full line — a thesis statement, a recurring motif, or a one-liner pulled from the surrounding text.
+
+---
+
+## Half-Width Pullquote with Attribution
+
+
+{bkqt/pullquote|Evan Hubinger, Anthropic}
+Deceptive alignment is the central unsolved problem.
+{/bkqt}
+
+
+---
+
+## Inline Formatting Inside Quotes
+
+All inline formatting works inside quote blockquotes:
+
+{bkqt/quote|Apollo Research, 2026}
+The intervention as-studied is --not sufficient-- for future models, and **more work** needs to be done.
+{/bkqt}
+
+Bold, accent text, colored text, code, etc. all render normally inside the quoted text.
+
+---
+
+## Comparison: Quote vs Pullquote vs Keyconcept
+
+| Type | Visual | Use case |
+|---|---|---|
+| `quote` | Left bar + `"` icon, italic, full width | Attributed quotations, citations |
+| `pullquote` | Left bar + `"` icon, italic, half width | Emphasis, thesis statements, pull-outs |
+| `keyconcept` | Colored background band, label header | Core ideas the reader should retain |
+| `note` | Colored background band, label header | Supplementary information |
+
+`quote` and `pullquote` are for *someone else's words* (or a distilled version of your own). `keyconcept` and `note` are for *your own explanations*.
+
 
 # headings
 

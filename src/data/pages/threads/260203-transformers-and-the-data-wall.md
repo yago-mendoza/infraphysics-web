@@ -4,7 +4,7 @@ title: transformers-and-the-data-wall
 displayTitle: transformers and the data wall
 subtitle: some stuff has been going on for long
 category: threads
-date: 2026-02-05
+date: 2026-02-03
 thumbnail: https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=400&auto=format&fit=crop
 thumbnailAspect: banner
 description: why the transformer architecture refuses to stop getting smarter — and what stands in its way.
@@ -16,7 +16,6 @@ notes:
   - Written with zero external dependencies beyond Express.
 ---
 
->> 26.01.10 - first draft. rough but the structure is there.
 >> 26.02.05 - rewrote from scratch after reading the Chinchilla paper. the first draft was embarrassingly wrong about scaling laws.
 
 i've been trying to understand AI for a while now. not the "robots are coming" Hollywood version — the actual, technical, *what is happening inside the machine* version. and for the longest time, i kind of... didn't.
