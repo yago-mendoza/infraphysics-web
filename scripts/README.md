@@ -185,30 +185,105 @@ Boolean flags controlling which validation checks run:
 
 ## `validate-fieldnotes.js`
 
-Three-phase reference integrity checker. Called automatically at the end of every build. Errors fail the build; warnings are logged but allowed.
+Six-phase content integrity checker. Called automatically at the end of every build. Errors fail the build; warnings and info are logged but allowed. Output uses colored severity labels:
 
-### Phase 1: Fieldnote internal references (`validateFieldnoteRefs`)
+- `ERROR` (red) — fails the build
+- `WARN` (yellow) — logged, build continues
+- `HIGH` / `MED` / `LOW` (red/yellow/dim) — segment collision tiers, treated as warnings
+- `INFO` (cyan) — informational, build continues
 
-For each fieldnote, checks that every `[[address]]` in its `references` array points to an address that exists in the fieldnotes set.
+### Phase 1: Reference integrity (`validateFieldnoteRefs`, `validateRegularPostWikiLinks`)
 
-- **Scope**: fieldnote → fieldnote references only
+Checks that every `[[address]]` reference resolves to an existing fieldnote.
+
+- **Fieldnote → fieldnote**: inline `[[refs]]` and trailing `[[refs]]` must point to existing addresses
+- **Regular post → fieldnote**: `data-address="..."` attributes in compiled HTML must point to existing addresses
 - **Severity**: ERROR (fails build)
-- **Example**: `CPU.md` contains `[[GPU//VRAM]]` but no fieldnote has address `GPU//VRAM`
 
-### Phase 2: Parent segment existence (`validateParentSegments`)
+### Phase 2: Self-references
 
-For hierarchical addresses (containing `//`), checks that every parent segment has its own dedicated fieldnote.
+Detects fieldnotes that reference themselves in trailing refs.
 
-- **Scope**: address hierarchy integrity
-- **Severity**: WARNING (logged, does not fail build)
-- **Example**: `CPU//ALU.md` exists but `CPU.md` does not → warns that `CPU` has no dedicated block
-- **Logic**: splits `addressParts` and checks all segments except the last
+- **Severity**: WARN
 
-### Phase 3: Regular post wiki-link targets (`validateRegularPostWikiLinks`)
+### Phase 3: Parent hierarchy (`validateParentSegments`)
 
-Scans compiled HTML of all non-fieldnote posts for `data-address="..."` attributes and checks each target exists in the fieldnotes address set.
+For hierarchical addresses (containing `//`), checks that every **full parent path** has its own dedicated fieldnote. Deduplicated — each missing parent is reported once with a child count.
 
-- **Scope**: regular posts (projects, threads, bits2bricks) → fieldnote references
-- **Severity**: ERROR (fails build)
-- **Example**: a thread article contains `[[chip//SoC]]` but no fieldnote has address `chip//SoC`
-- **Implementation**: regex scan on compiled HTML (`data-address="([^"]+)"`), not on raw markdown
+- `CPU//mutex//GIL` → checks `CPU` exists, then `CPU//mutex` exists
+- **Severity**: WARN
+- **Example**: `LAPTOP//UI.md` exists but no `LAPTOP.md` → warns once
+
+### Phase 4: Circular references (`detectCircularRefs`)
+
+DFS-based cycle detection on the reference graph. Cycles are deduplicated by node-set so each unique cycle is reported once.
+
+- **Severity**: WARN
+- **Default**: OFF — knowledge graphs naturally have bidirectional references. Enable in `compiler.config.js` for structural analysis.
+
+### Phase 5: Segment collisions (`detectSegmentCollisions`)
+
+Detects when the same segment name appears in different address hierarchies, which may indicate accidental duplication of a concept.
+
+**How it works:**
+1. Builds a registry of all non-root segments (lowercased) with their parent paths
+2. Flags segments that appear under different parents (excluding hierarchical containment)
+3. Also checks segment names against aliases and alias-vs-alias conflicts
+4. Classifies each collision into severity tiers:
+
+| Tier | Condition | Example |
+|---|---|---|
+| **HIGH** | Segment is a leaf in 2+ addresses | `CPU//cache` and `networking//cache` — both notes are "about" cache |
+| **MED** | Segment is leaf in one, middle/root in another | `UI//GUI` (root) and `LAPTOP//UI` (leaf) |
+| **LOW** | Segment is a middle segment in all addresses | `x//core//a` and `y//core//b` — organizational overlap |
+
+**Suppression with `distinct`:** To mark two notes as intentionally different despite sharing a segment, add `distinct: ["other//address"]` to either note's frontmatter. Bilateral — only one note needs the annotation. Stale `distinct` entries (pointing to deleted notes) are flagged as warnings.
+
+**Alias integration:** If a segment name matches an alias on a different note, it's flagged as HIGH. If two notes share the same alias, also HIGH.
+
+**Exclusion list:** Generic organizational segment names (`overview`, `intro`, `basics`, `config`, etc.) are excluded from collision detection. Configurable in `compiler.config.js` via `segmentCollisionExclusions`.
+
+**Superseded addresses** are excluded from collision analysis.
+
+### Phase 6: Orphan notes (`detectOrphans`)
+
+Detects notes with no incoming and no outgoing references — completely disconnected from the graph.
+
+- **Severity**: INFO
+
+### Configuration
+
+All validation flags live in `compiler.config.js` under `validation`:
+
+| Flag | Default | Effect |
+|---|---|---|
+| `validateRegularPostWikiLinks` | `true` | Check wiki-refs in posts → fieldnotes |
+| `validateFieldnoteRefs` | `true` | Check refs inside fieldnotes → fieldnotes |
+| `validateParentSegments` | `true` | Warn if parent address prefixes lack blocks |
+| `detectCircularRefs` | `false` | DFS cycle detection (noisy in knowledge graphs) |
+| `detectSegmentCollisions` | `true` | Shared segments across different hierarchies |
+| `detectOrphans` | `true` | Notes with no connections |
+| `segmentCollisionExclusions` | `[...]` | Segment names too generic to flag |
+
+---
+
+## `check-references.js`
+
+Optional deep audit script (not part of `npm run build`). Run manually:
+
+```bash
+node scripts/check-references.js
+```
+
+### Checks
+
+| # | Check | What it finds |
+|---|---|---|
+| 1 | **Orphans** | Notes with no incoming or outgoing references |
+| 2 | **Weak parents** | Address segments without dedicated notes |
+| 3 | **One-way trailing refs** | A→B but B doesn't trail-ref back |
+| 4 | **Redundant trailing refs** | `[[ref]]` in both body and trailing section |
+| 5 | **Potential duplicates** | Addresses with >80% Levenshtein similarity |
+| 6 | **Segment collisions** | Same segment name at different hierarchy paths (same algorithm as Phase 5 of the build validator) |
+
+Checks 1-5 are informational. Check 6 uses the same collision detection and tier classification as the build validator, including `distinct` suppression and supersedes exclusion.

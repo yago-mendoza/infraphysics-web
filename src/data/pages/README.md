@@ -93,7 +93,7 @@ Blog categories (threads, bits2bricks) share the same bordered TOC box as projec
 
 ### Fieldnotes (Second Brain)
 
-Each fieldnote is an individual `.md` file in `fieldnotes/` with `address` and `date` frontmatter. See the [Second Brain](#second-brain-fieldnotes) section.
+Each fieldnote is an individual `.md` file in `fieldnotes/` with `address` (required), `date` (required), and optional `aliases`, `status`, `tags`, `supersedes`, `distinct` frontmatter. See the [Second Brain](#second-brain-fieldnotes) section.
 
 ### Example frontmatters
 
@@ -180,7 +180,7 @@ All types share the same compiler and the same 16 custom syntax features. The di
 
 **Bits2Bricks** — Tutorials and hardware/software build logs. Structure: intro (what we're building), step-by-step sections, results. Heavy use of code blocks, alphabetical lists for ordered steps, definition lists for terminology, images with side-by-side layouts. More instructional tone than threads.
 
-**Fieldnotes (Second Brain)** — Reference-style concept notes. Short, factual, link-heavy. Body is typically 1-5 paragraphs defining a concept. Heavy use of `[[wiki-links]]` to connect concepts. Trailing `[[refs]]` populate the "Related concepts" section. No intro text convention — just start with the definition. See [Second Brain](#second-brain-fieldnotes) for full format.
+**Fieldnotes (Second Brain)** — Reference-style concept notes. Short, factual, link-heavy. Body is typically 1-5 paragraphs defining a concept. Heavy use of `[[wiki-links]]` to connect concepts. Trailing `[[refs]]` create bilateral interactions (optionally annotated: `[[addr]] :: why`). No intro text convention — just start with the definition. See [Second Brain](#second-brain-fieldnotes) for full format.
 
 ---
 
@@ -796,7 +796,7 @@ For callout-style blocks with color coding and labels, use [typed blockquotes](#
 
 ## Second Brain (Fieldnotes)
 
-Each fieldnote is an individual `.md` file inside `fieldnotes/`. Every file uses YAML frontmatter with `address` (required) and `date` (required) fields, followed by the body markdown.
+Each fieldnote is an individual `.md` file inside `fieldnotes/`. Every file uses YAML frontmatter followed by the body markdown.
 
 ### File format
 
@@ -804,12 +804,27 @@ Each fieldnote is an individual `.md` file inside `fieldnotes/`. Every file uses
 ---
 address: "CPU//ALU"
 date: "2026-02-05"
+aliases: [ALU, arithmetic logic unit]
+status: stable
+tags: [hardware, computation]
 ---
 The arithmetic logic unit — the circuit inside a [[CPU//core]] that performs...
-[[CPU//core]]
+[[CPU//core]] :: shares execution resources
 [[CPU//register]]
 [[CPU]]
 ```
+
+### Frontmatter fields
+
+| Field | Required | Type | What it does |
+|---|---|---|---|
+| `address` | yes | string | Hierarchical identifier using `//` as separator. Primary identity. |
+| `date` | yes | string | ISO 8601 date (`YYYY-MM-DD`). |
+| `aliases` | no | string[] | Alternative names for the concept. Matched during name search. |
+| `status` | no | string | One of `stub`, `draft`, `stable`. Shown as a badge. Defaults to `stable` if absent. |
+| `tags` | no | string[] | Topic tags for filtering. |
+| `supersedes` | no | string | Old address this note replaced. The build creates a redirect so old `[[refs]]` resolve to the new address. |
+| `distinct` | no | string[] | Addresses that share a segment name with this note but are intentionally different concepts. Suppresses segment collision warnings. Bilateral — only one note needs the annotation. |
 
 ### Filename convention
 
@@ -821,36 +836,83 @@ The filename is derived from the address: `//` → `_`, `/` → `-`, spaces → 
 ### Block structure
 
 Each file contains:
-1. **Frontmatter:** `address` (hierarchical path) and `date` (ISO 8601).
-2. **Body** -- standard markdown plus all custom inline syntax. Wiki-links in the body are extracted as references.
-3. **Trailing references** -- standalone `[[address]]` lines at the end (after the last body text). These populate the "Related concepts" section.
+1. **Frontmatter:** See table above.
+2. **Body** — standard markdown plus all custom inline syntax. Wiki-links in the body are extracted as references.
+3. **Trailing references** — standalone `[[address]]` lines at the end (after the last body text). These create intentional **connections** between concepts.
+
+### Trailing refs: annotated connections
+
+Trailing refs support an optional annotation using `::` syntax:
+
+```
+[[CPU//core]] :: shares execution resources
+[[CPU//register]]
+[[CPU//mutex]] :: coordinates shared-state access
+```
+
+The annotation (everything after `::`) explains **why** the connection exists. It appears in the UI next to the linked concept as an "Interaction."
+
+**Important:** Do not use `|` for annotations in trailing refs. The pipe `|` is reserved for display text in inline wiki-links (`[[address|display text]]`). Use `::` exclusively for trailing ref annotations.
+
+**Bilateral behavior:** If note A has a trailing ref to B, the runtime shows the interaction on **both** A and B's pages. If B also has a trailing ref back to A (with its own annotation), both annotations are displayed. You do not need to add refs on both sides — one is sufficient for bilateral display.
 
 ### Address format
 
 Addresses use `//` as a hierarchy separator.
 
-- `entropy` -- single-level concept.
-- `CPU//ALU` -- ALU is a child of CPU.
-- `CPU//ALU//barrel shifter` -- three-level nesting.
+- `entropy` — single-level concept.
+- `CPU//ALU` — ALU is a child of CPU.
+- `CPU//ALU//barrel shifter` — three-level nesting.
 
 **ID generation:** The address is normalized to a URL-safe slug: lowercase, `//` becomes `--`, `/` becomes `-`, spaces become `-`. So `CPU//ALU` becomes `cpu--alu`.
 
 **Parent requirement:** If you create `CPU//ALU`, the build validator expects a block for `CPU` to exist as well (it issues a warning if missing). This keeps the hierarchy navigable.
 
-### References and backlinks
+### References, connections, and mentions
 
-Every `[[address]]` in a fieldnote's body is extracted into a `references` array. The system uses these to compute backlinks at runtime: if concept A references concept B, then B's page shows a backlink to A.
+The runtime distinguishes three relationship types:
 
-Trailing refs (the `[[...]]` lines at the end of a block) go into a separate `trailingRefs` array. They populate the "Related concepts" sidebar.
+1. **Connections** — Trailing refs create intentional, bilateral relationships. If A trail-refs B, both A and B show each other in their "Connections" section. Annotations are preserved.
+2. **Mentions** — Body-text wiki-links (excluding trailing refs) create one-way "mentioned in" backlinks. If A mentions B in its body text, B shows A in a collapsible "Mentioned in" section.
+3. **Neighborhood** — Structural context (parent, siblings, children) derived from the address hierarchy. Shown in the right panel on concept pages.
+
+### Supersedes (address rename)
+
+When renaming a note, add `supersedes: "old address"` to the new note's frontmatter. The build creates a redirect map so all `[[old address]]` references resolve to the new address automatically. This is a soft migration — old references keep working without editing every file that used the old address.
+
+For a full rename (updating all source files), use the rename script: `node scripts/rename-address.js "old" "new"`.
 
 ### Validation
 
-The build script validates:
-1. Every `[[ref]]` inside fieldnotes points to an existing block. **Error** (build fails).
-2. Parent address segments have their own blocks. **Warning** (build continues, but the hierarchy will be incomplete).
-3. Every wiki-link in regular posts (threads, bits2bricks, projects) points to an existing fieldnote. **Error** (build fails).
+The build runs a 6-phase integrity check (see [scripts/README.md](../../scripts/README.md) for full details):
 
-Errors produce exit code 1. Warnings are logged but do not block the build.
+| # | Check | Severity |
+|---|---|---|
+| 1 | `[[refs]]` and trailing refs resolve to existing blocks; wiki-links in posts resolve to fieldnotes | ERROR |
+| 2 | Notes don't reference themselves | WARN |
+| 3 | Full parent paths exist (`CPU//mutex` not just `mutex`) | WARN |
+| 4 | Circular reference detection (opt-in, off by default) | WARN |
+| 5 | **Segment collisions** — same segment at different paths, with tier classification (HIGH/MED/LOW) and `distinct` suppression | WARN |
+| 6 | Orphan notes (no connections) | INFO |
+
+Additionally: duplicate address IDs (two notes normalizing to the same slug) are caught as errors.
+
+For deeper audit (one-way trailing refs, redundant refs, fuzzy duplicates, segment collisions), run `node scripts/check-references.js`.
+
+Errors produce exit code 1. Warnings and info are logged but do not block the build.
+
+### Distinct (segment disambiguation)
+
+When the build flags a segment collision (e.g., `CPU//cache` and `networking//cache` both have leaf segment "cache"), you can suppress it by declaring the notes are intentionally different:
+
+```yaml
+---
+address: "networking//cache"
+distinct: ["CPU//cache"]
+---
+```
+
+Bilateral — only one note needs the annotation. Stale `distinct` entries (pointing to deleted notes) produce their own warning.
 
 **Auto-generated description:** If a fieldnote has no explicit `description` in frontmatter, the build script extracts the first body line that is not a heading or image as the description. Wiki-link syntax in the description is stripped to plain text.
 

@@ -114,6 +114,23 @@ A flat knowledge graph of individual `.md` files in `fieldnotes/`. Each note has
 
 ---
 
+### Build-time content validation
+
+The build pipeline includes a 6-phase integrity checker that catches reference errors, structural inconsistencies, and potential concept duplication before they reach production. This is the repo's own safety net — the kind of link validation and address consistency checks that tools like Obsidian provide via plugins, but implemented directly in the build pipeline so nothing slips through to the deployed site.
+
+| Phase | What it catches | Severity |
+|---|---|---|
+| Reference integrity | Broken `[[wiki-links]]` in fieldnotes and posts | ERROR (fails build) |
+| Self-references | Notes linking to themselves | WARN |
+| Parent hierarchy | Missing parent nodes in the address tree | WARN |
+| Circular references | Cycles in the reference graph (opt-in) | WARN |
+| **Segment collisions** | Same concept name appearing at different hierarchy paths — flags potential duplication with severity tiers (HIGH/MED/LOW) and supports `distinct` frontmatter for intentional disambiguation | WARN |
+| Orphan detection | Notes with no connections to the graph | INFO |
+
+There is also an optional deep audit script (`node scripts/check-references.js`) that adds one-way trailing ref analysis, redundant ref detection, and fuzzy duplicate detection. Full validation details: **[scripts/README.md](scripts/README.md)**
+
+---
+
 ### AI development guide
 
 **[CLAUDE.md](CLAUDE.md)** contains instructions for AI coding assistants working on this codebase: automation rules (what to update when files/syntax change), architecture patterns, theme system rules, and active gotchas. AI tools that read this file will automatically maintain documentation, suggest relevant updates, and follow project conventions.
