@@ -391,6 +391,10 @@ button:focus {
 .palette-scrollbar { --_sb-thumb: var(--text-muted);         --_sb-hover: var(--text-secondary); }
 .palette-scrollbar::-webkit-scrollbar { width: 5px; }
 
+/* Hidden scrollbar — keeps scroll functionality, hides track and thumb */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+
 /* ============================================================
    Listing card thumbnails — shared hover cascade
    Per-category filter values override the base.
