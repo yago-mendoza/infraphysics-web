@@ -263,6 +263,9 @@ const CROSS_DOC_ICONS = {
   bits2bricks: `<svg class="doc-ref-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5"/></svg>`,
 };
 
+// redirectMap is set in main() before link processing runs
+let _redirectMap = new Map();
+
 function processAllLinks(html) {
   if (!compilerConfig.wikiLinks.enabled) return html;
 
@@ -285,10 +288,16 @@ function processAllLinks(html) {
       return `<a class="doc-ref doc-ref-${category}" href="${href}" target="_blank" rel="noopener noreferrer">${category}/${displayText.trim()}</a>`;
     }
 
+    // Apply supersedes redirect if available
+    let resolvedAddress = address;
+    if (_redirectMap.has(address)) {
+      resolvedAddress = _redirectMap.get(address);
+    }
+
     // Second-brain wiki-ref
-    const segments = address.split('//');
+    const segments = resolvedAddress.split('//');
     const display = displayText ? displayText.trim() : segments[segments.length - 1].trim();
-    return `<a class="wiki-ref" data-address="${address}">${display}</a>`;
+    return `<a class="wiki-ref" data-address="${resolvedAddress}">${display}</a>`;
   });
 }
 
@@ -712,6 +721,13 @@ function extractFieldnoteMeta(filename, filePath) {
   const addressParts = address.split('//').map(s => s.trim());
   const displayTitle = addressParts[addressParts.length - 1];
 
+  // Optional frontmatter fields
+  const aliases = frontmatter.aliases || null;
+  const status = frontmatter.status || null;  // stub | draft | stable
+  const tags = frontmatter.tags || null;
+  const supersedes = frontmatter.supersedes || null;
+  const distinct = frontmatter.distinct || null;
+
   const bodyLines = bodyMd.split('\n');
   const firstTextLine = bodyLines.find(l => {
     const trimmed = l.trim();
@@ -725,19 +741,27 @@ function extractFieldnoteMeta(filename, filePath) {
   const references = [];
   let match;
   while ((match = refRegex.exec(bodyMd)) !== null) {
-    references.push(match[1]);
+    // Strip pipe display text (e.g. [[CPU//core|the core]] → CPU//core)
+    const raw = match[1];
+    const pipeIdx = raw.indexOf('|');
+    references.push(pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw);
   }
 
+  // Trailing refs — support annotated form: [[address]] :: annotation
   const trailingRefs = [];
-  const trailingRefPattern = /^\s*(\[\[[^\]]+\]\]\s*)+$/;
+  const singleRefAnnotated = /^\s*\[\[([^\]]+)\]\]\s*::\s*(.+)\s*$/;
+  const multiRefLine = /^\s*(\[\[[^\]]+\]\]\s*)+$/;
   for (let i = bodyLines.length - 1; i >= 0; i--) {
     const line = bodyLines[i].trim();
     if (!line) continue;
-    if (trailingRefPattern.test(line)) {
+    const annotatedMatch = singleRefAnnotated.exec(line);
+    if (annotatedMatch) {
+      trailingRefs.push({ address: annotatedMatch[1].trim(), annotation: annotatedMatch[2].trim() });
+    } else if (multiRefLine.test(line)) {
       const lineRefRegex = /\[\[([^\]]+)\]\]/g;
       let lineMatch;
       while ((lineMatch = lineRefRegex.exec(line)) !== null) {
-        trailingRefs.push(lineMatch[1]);
+        trailingRefs.push({ address: lineMatch[1].trim(), annotation: null });
       }
     } else {
       break;
@@ -748,7 +772,7 @@ function extractFieldnoteMeta(filename, filePath) {
   const searchText = preLinkHtml.replace(/<[^>]*>/g, '').toLowerCase();
 
   return {
-    metadata: { id, title: address, displayTitle, category: 'fieldnotes', date, description, address, addressParts, references, trailingRefs, searchText },
+    metadata: { id, title: address, displayTitle, category: 'fieldnotes', date, description, address, addressParts, references, trailingRefs, searchText, aliases, status, tags, supersedes, distinct },
     preLinkHtml,
   };
 }
@@ -852,8 +876,32 @@ const cache = loadCache();
 const { results: regularPosts, cachePosts } = processRegularPosts(cache, configHash, forceRebuild);
 const { results: fieldnotePosts, cacheFieldnotes } = processFieldnotesDir(cache, configHash, forceRebuild);
 
+// Duplicate address detection
+const seenIds = new Map();
+for (const post of fieldnotePosts) {
+  if (seenIds.has(post.id)) {
+    const msg = `duplicate fieldnote ID "${post.id}" — addresses "${seenIds.get(post.id)}" and "${post.address}" normalize to the same slug`;
+    console.error(`  \x1b[31mERROR: ${msg}\x1b[0m`);
+    buildErrors.push(msg);
+  } else {
+    seenIds.set(post.id, post.address);
+  }
+}
+
 // Save unified cache
 saveCache({ version: 1, configHash, posts: cachePosts, fieldnotes: cacheFieldnotes });
+
+// Build supersedes redirect map (old address → new address)
+const redirectMap = new Map();
+for (const post of fieldnotePosts) {
+  if (post.supersedes) {
+    redirectMap.set(post.supersedes, post.address);
+    console.log(`  Redirect: "${post.supersedes}" → "${post.address}"`);
+  }
+}
+
+// Set redirect map for processAllLinks
+_redirectMap = redirectMap;
 
 // Apply unified [[link]] processing to all content (skipping <code> blocks)
 // This always runs on all content — link targets may change when notes are added/removed
