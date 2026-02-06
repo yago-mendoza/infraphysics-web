@@ -6,6 +6,7 @@ Microcontroller unit — a self-contained [[chip]] integrating a [[CPU//core]] (
 [[chip]]
 [[CPU//core]]
 [[ARM//cortex-M]]
+[[chip//SoC]] :: SoCs integrate GPU, NPU, and modem — MCUs focus on real-time control with minimal overhead
 [[peripheral//STM32]]
 [[peripheral//ESP32]]
 [[manufacturing//firmware]]

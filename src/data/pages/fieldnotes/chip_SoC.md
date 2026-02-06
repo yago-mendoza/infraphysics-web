@@ -7,5 +7,6 @@ System-on-chip — a [[chip]] integrating [[CPU//core]] clusters, [[GPU]], [[ML/
 [[CPU//core]]
 [[GPU]]
 [[ML//NPU]]
+[[chip//MCU]] :: MCUs trade integration breadth for determinism and cost — SoCs pack more IP but need an OS
 [[chip//MPU]]
 [[GPU//discrete]]
