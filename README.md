@@ -27,8 +27,9 @@ infraphysics-web/
     compiler.config.js        # Centralized compiler configuration
     build-content.js          # Markdown → JSON pipeline (triple output)
     validate-fieldnotes.js    # Reference integrity checks
-    migrate-fieldnotes.js     # One-time migration (already executed)
     README.md                 # Build pipeline docs, cache format
+  dev-scripts/
+    dump-context.sh           # Dev tool: export codebase to a single TXT for LLM context
   src/
     components/
       App.tsx                 # Router + layout shell
@@ -119,6 +120,12 @@ A flat knowledge graph of individual `.md` files in `fieldnotes/`. Each note has
 
 ---
 
+### Media
+
+All images and media assets are hosted on **Cloudflare R2** — never commit binary assets to the repo. Reference them via their R2 URL in markdown.
+
+---
+
 ### Development
 
 ```bash
@@ -126,5 +133,3 @@ npm install          # install dependencies
 npm run dev          # build content + start vite dev server
 npm run build        # build content + production build
 ```
-
-Media goes to Cloudflare R2, not the repo.
