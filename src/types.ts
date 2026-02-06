@@ -40,6 +40,11 @@ export interface ArticlePost extends BasePost {
 
 /* ── Fieldnote: lightweight metadata (no content) + full type ── */
 
+export interface ConnectionRef {
+  address: string;
+  annotation: string | null;
+}
+
 export interface FieldNoteMeta {
   id: string;
   title: string;
@@ -50,13 +55,21 @@ export interface FieldNoteMeta {
   address: string;
   addressParts?: string[];
   references?: string[];
-  trailingRefs?: string[];
+  trailingRefs?: ConnectionRef[];
   searchText?: string;
+  aliases?: string[];
+  status?: 'stub' | 'draft' | 'stable';
+  tags?: string[];
+  supersedes?: string;
 }
 
 export interface FieldNote extends FieldNoteMeta {
   content: string;
 }
+
+/** Display label: prefers displayTitle over title */
+export const noteLabel = (note: { title: string; displayTitle?: string }) =>
+  note.displayTitle || note.title;
 
 /* ── Discriminated union (fieldnotes excluded — loaded via brainIndex) ── */
 
