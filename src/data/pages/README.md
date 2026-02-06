@@ -93,7 +93,7 @@ Blog categories (threads, bits2bricks) share the same bordered TOC box as projec
 
 ### Fieldnotes (Second Brain)
 
-Each fieldnote is an individual `.md` file in `fieldnotes/` with `address` (required), `date` (required), and optional `aliases`, `status`, `tags`, `supersedes`, `distinct` frontmatter. See the [Second Brain](#second-brain-fieldnotes) section.
+Each fieldnote is an individual `.md` file in `fieldnotes/` with `address` (required), `date` (required), and optional `aliases`, `supersedes`, `distinct` frontmatter. See the [Second Brain](#second-brain-fieldnotes) section.
 
 ### Example frontmatters
 
@@ -805,8 +805,6 @@ Each fieldnote is an individual `.md` file inside `fieldnotes/`. Every file uses
 address: "CPU//ALU"
 date: "2026-02-05"
 aliases: [ALU, arithmetic logic unit]
-status: stable
-tags: [hardware, computation]
 ---
 The arithmetic logic unit — the circuit inside a [[CPU//core]] that performs...
 [[CPU//core]] :: shares execution resources
@@ -821,8 +819,6 @@ The arithmetic logic unit — the circuit inside a [[CPU//core]] that performs..
 | `address` | yes | string | Hierarchical identifier using `//` as separator. Primary identity. |
 | `date` | yes | string | ISO 8601 date (`YYYY-MM-DD`). |
 | `aliases` | no | string[] | Alternative names for the concept. Matched during name search. |
-| `status` | no | string | One of `stub`, `draft`, `stable`. Shown as a badge. Defaults to `stable` if absent. |
-| `tags` | no | string[] | Topic tags for filtering. |
 | `supersedes` | no | string | Old address this note replaced. The build creates a redirect so old `[[refs]]` resolve to the new address. |
 | `distinct` | no | string[] | Addresses that share a segment name with this note but are intentionally different concepts. Suppresses segment collision warnings. Bilateral — only one note needs the annotation. |
 

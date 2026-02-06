@@ -28,6 +28,8 @@ infraphysics-web/
     build-content.js          # Markdown → JSON pipeline (triple output)
     validate-fieldnotes.js    # Reference integrity checks
     README.md                 # Build pipeline docs, cache format
+  docs/
+    validate-fieldnotes-term-err-view.jpg  # Validation output screenshot
   dev-scripts/
     dump-context.sh           # Dev tool: export codebase to a single TXT for LLM context
   src/

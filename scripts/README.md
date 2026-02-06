@@ -187,6 +187,8 @@ Boolean flags controlling which validation checks run:
 
 Six-phase content integrity checker. Called automatically at the end of every build. Errors fail the build; warnings and info are logged but allowed. Output uses colored severity labels:
 
+![Validation output in terminal](../docs/validate-fieldnotes-term-err-view.jpg)
+
 - `ERROR` (red) — fails the build
 - `WARN` (yellow) — logged, build continues
 - `HIGH` / `MED` / `LOW` (red/yellow/dim) — segment collision tiers, treated as warnings
