@@ -345,80 +345,91 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
         </svg>
       </div>
 
-      {/* Detail section below graph — outer div handles collapse, inner div scrolls */}
+      {/* Detail section below graph — outer div handles collapse */}
       <div
-        className="overflow-hidden transition-all duration-300 ease-in-out"
+        className="overflow-hidden transition-all duration-300 ease-in-out relative"
         style={{
-          maxHeight: activeZone ? '300px' : '0px',
+          maxHeight: activeZone ? 'calc(100dvh - 20rem)' : '0px',
           opacity: activeZone ? 1 : 0,
         }}
       >
-        <div className="overflow-y-auto max-h-[260px] thin-scrollbar hub-scrollbar">
+        {/* Zone title — pinned above scroll */}
+        {activeZone === 'parent' && parent && (
+          <div className="pt-4 pb-2">
+            <div className="text-[9px] text-blue-400/60 uppercase tracking-wider">Parent</div>
+          </div>
+        )}
+        {activeZone === 'siblings' && siblings.length > 0 && (
+          <div className="pt-4 pb-2">
+            <div className="text-[9px] text-violet-400/60 uppercase tracking-wider">Siblings ({siblings.length})</div>
+          </div>
+        )}
+        {activeZone === 'children' && children.length > 0 && (
+          <div className="pt-4 pb-2">
+            <div className="text-[9px] text-violet-400/60 uppercase tracking-wider">Children ({children.length})</div>
+          </div>
+        )}
+
+        {/* Scrollable items only */}
+        <div className="overflow-y-auto no-scrollbar scroll-smooth pb-10" style={{ maxHeight: 'calc(100dvh - 22rem)' }}>
           {activeZone === 'parent' && parent && (
-            <div className="pt-3">
-              <div className="text-[9px] text-blue-400/60 uppercase tracking-wider mb-1.5">Parent</div>
-              <Link
-                ref={focusedDetailIdx === 0 ? focusedDetailRef : undefined}
-                to={`/lab/second-brain/${parent.id}`}
-                onClick={() => onNoteClick(parent)}
-                className={`card-link group p-2.5 hover:border-blue-400/30${focusedDetailIdx === 0 ? ' border-blue-400/40 bg-blue-400/5' : ''}`}
-              >
-                <div className={`text-xs font-medium transition-colors ${isVisited?.(parent.id) ? 'text-blue-400/70 group-hover:text-blue-400' : 'text-th-secondary group-hover:text-blue-400'}`}>
-                  {noteLabel(parent)}
-                </div>
-                {parent.address && (
-                  <div className="text-[10px] text-th-muted">{parent.address}</div>
-                )}
-              </Link>
-            </div>
+            <Link
+              ref={focusedDetailIdx === 0 ? focusedDetailRef : undefined}
+              to={`/lab/second-brain/${parent.id}`}
+              onClick={() => onNoteClick(parent)}
+              className={`card-link group p-2.5 hover:border-blue-400/30${focusedDetailIdx === 0 ? ' border-blue-400/40 bg-blue-400/5' : ''}`}
+            >
+              <div className={`text-xs font-medium transition-colors ${isVisited?.(parent.id) ? 'text-blue-400/70 group-hover:text-blue-400' : 'text-th-secondary group-hover:text-blue-400'}`}>
+                {noteLabel(parent)}
+              </div>
+              {parent.address && (
+                <div className="text-[10px] text-th-muted">{parent.address}</div>
+              )}
+            </Link>
           )}
 
           {activeZone === 'siblings' && siblings.length > 0 && (
-            <div className="pt-3">
-              <div className="text-[9px] text-violet-400/60 uppercase tracking-wider mb-1.5">
-                Siblings ({siblings.length})
-              </div>
-              <div className="space-y-1.5">
-                {siblings.map((sib, idx) => (
-                  <Link
-                    key={sib.id}
-                    ref={idx === focusedDetailIdx ? focusedDetailRef : undefined}
-                    to={`/lab/second-brain/${sib.id}`}
-                    onClick={() => onNoteClick(sib)}
-                    className={`card-link group p-2.5 hover:border-violet-400/30${idx === focusedDetailIdx ? ' border-violet-400/40 bg-violet-400/5' : ''}`}
-                  >
-                    <div className={`text-xs font-medium transition-colors ${isVisited?.(sib.id) ? 'text-blue-400/70 group-hover:text-blue-400' : 'text-th-secondary group-hover:text-violet-400'}`}>
-                      {noteLabel(sib)}
-                    </div>
-                  </Link>
-                ))}
-              </div>
+            <div className="space-y-1.5">
+              {siblings.map((sib, idx) => (
+                <Link
+                  key={sib.id}
+                  ref={idx === focusedDetailIdx ? focusedDetailRef : undefined}
+                  to={`/lab/second-brain/${sib.id}`}
+                  onClick={() => onNoteClick(sib)}
+                  className={`card-link group p-2.5 hover:border-violet-400/30${idx === focusedDetailIdx ? ' border-violet-400/40 bg-violet-400/5' : ''}`}
+                >
+                  <div className={`text-xs font-medium transition-colors ${isVisited?.(sib.id) ? 'text-blue-400/70 group-hover:text-blue-400' : 'text-th-secondary group-hover:text-violet-400'}`}>
+                    {noteLabel(sib)}
+                  </div>
+                </Link>
+              ))}
             </div>
           )}
 
           {activeZone === 'children' && children.length > 0 && (
-            <div className="pt-3">
-              <div className="text-[9px] text-violet-400/60 uppercase tracking-wider mb-1.5">
-                Children ({children.length})
-              </div>
-              <div className="space-y-1.5">
-                {children.map((child, idx) => (
-                  <Link
-                    key={child.id}
-                    ref={idx === focusedDetailIdx ? focusedDetailRef : undefined}
-                    to={`/lab/second-brain/${child.id}`}
-                    onClick={() => onNoteClick(child)}
-                    className={`card-link group p-2.5 hover:border-violet-400/30${idx === focusedDetailIdx ? ' border-violet-400/40 bg-violet-400/5' : ''}`}
-                  >
-                    <div className={`text-xs font-medium transition-colors ${isVisited?.(child.id) ? 'text-blue-400/70 group-hover:text-blue-400' : 'text-th-secondary group-hover:text-violet-400'}`}>
-                      {noteLabel(child)}
-                    </div>
-                  </Link>
-                ))}
-              </div>
+            <div className="space-y-1.5">
+              {children.map((child, idx) => (
+                <Link
+                  key={child.id}
+                  ref={idx === focusedDetailIdx ? focusedDetailRef : undefined}
+                  to={`/lab/second-brain/${child.id}`}
+                  onClick={() => onNoteClick(child)}
+                  className={`card-link group p-2.5 hover:border-violet-400/30${idx === focusedDetailIdx ? ' border-violet-400/40 bg-violet-400/5' : ''}`}
+                >
+                  <div className={`text-xs font-medium transition-colors ${isVisited?.(child.id) ? 'text-blue-400/70 group-hover:text-blue-400' : 'text-th-secondary group-hover:text-violet-400'}`}>
+                    {noteLabel(child)}
+                  </div>
+                </Link>
+              ))}
             </div>
           )}
         </div>
+
+        {/* Bottom fade overlay */}
+        <div
+          className="pointer-events-none absolute bottom-0 left-0 right-0 h-10"
+          style={{ background: 'linear-gradient(to top, var(--bg-base), transparent)' }}
+        />
       </div>
     </div>
   );
