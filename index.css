@@ -179,17 +179,16 @@ html.theme-transitioning *::after {
    ============================================================ */
 
 .wiki-ref-resolved {
-  color: var(--wiki-link) !important;
+  color: color-mix(in srgb, var(--wiki-link) 85%, transparent) !important;
   text-decoration: none !important;
-  border-bottom: none !important;
-  font-style: italic;
-  transition: border-bottom 0.15s ease, color 0.15s ease;
+  border-bottom: 1px dashed color-mix(in srgb, var(--wiki-link) 65%, transparent) !important;
+  transition: border-color 0.15s ease, color 0.15s ease;
   cursor: pointer;
 }
 
 .wiki-ref-resolved:hover {
-  border-bottom: 1px solid var(--wiki-link) !important;
-  color: var(--wiki-link-hover) !important;
+  color: var(--wiki-link) !important;
+  border-bottom-color: var(--wiki-link) !important;
 }
 
 .wiki-ref-icon {

@@ -637,7 +637,7 @@
   width: 20px;
   height: 20px;
   padding: 2px;
-  margin-left: 0.2em;
+  margin-left: 0.05em;
   color: var(--art-text-mid);
   opacity: 0.6;
   transition: opacity 0.2s, color 0.2s;
@@ -1299,19 +1299,8 @@
 
 /* B15. Wiki refs */
 
-.article-content .wiki-ref,
-.article-content .wiki-ref-resolved {
-  color: var(--art-accent);
-  border-bottom: none;
-  cursor: pointer;
-  text-decoration: none;
-  font-style: italic;
-}
-
-.article-content .wiki-ref:hover,
-.article-content .wiki-ref-resolved:hover {
-  border-bottom: 1px solid var(--art-accent-hover-border);
-}
+/* Wiki-ref styling lives in index.css (with !important for theme-awareness).
+   article.css does not override it — the wiki-link vars handle both themes. */
 
 /* B16. Inline code inside colored spans adapts bg/border to parent color */
 

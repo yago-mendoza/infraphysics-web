@@ -56,3 +56,14 @@
   color: var(--art-accent);
   opacity: 0.7;
 }
+
+/* Wiki refs — solid underline, full brightness (not dimmed like in articles) */
+.article-wiki .wiki-ref-resolved {
+  color: var(--wiki-link) !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--wiki-link) 50%, transparent) !important;
+}
+
+.article-wiki .wiki-ref-resolved:hover {
+  color: var(--wiki-link-hover) !important;
+  border-bottom-color: var(--wiki-link-hover) !important;
+}
