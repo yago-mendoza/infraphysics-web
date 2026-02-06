@@ -633,14 +633,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  vertical-align: super;
-  width: 0.7em;
-  height: 0.7em;
-  padding: 0.35em;
-  box-sizing: content-box;
-  margin-left: -0.1em;
-  color: var(--art-text-muted);
-  opacity: 0.45;
+  vertical-align: text-top;
+  width: 20px;
+  height: 20px;
+  padding: 2px;
+  margin-left: 0.2em;
+  color: var(--art-text-mid);
+  opacity: 0.6;
   transition: opacity 0.2s, color 0.2s;
   cursor: pointer;
   text-decoration: none;
@@ -839,6 +838,66 @@
 [data-theme="light"] .article-content .bkqt-danger     { --bkqt-color: #b91c1c; }
 [data-theme="light"] .article-content .bkqt-keyconcept { --bkqt-color: #7c3aed; }
 
+/* B3a. Quote / pullquote blockquotes */
+
+.article-content .bkqt-quote,
+.article-content .bkqt-pullquote {
+  --bkqt-color: var(--art-accent);
+  background: none;
+  border-left: 3px solid var(--art-accent);
+  position: relative;
+}
+
+.article-content .bkqt-quote .bkqt-body,
+.article-content .bkqt-pullquote .bkqt-body {
+  background: none;
+  padding-left: 2.5rem;
+  position: relative;
+}
+
+.article-content .bkqt-quote .bkqt-body::before,
+.article-content .bkqt-pullquote .bkqt-body::before {
+  content: '\201C';
+  position: absolute;
+  left: 0.6rem;
+  top: 0.15rem;
+  font-size: 2.2rem;
+  color: var(--art-accent);
+  opacity: 0.35;
+  line-height: 1;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.article-content .bkqt-quote p,
+.article-content .bkqt-pullquote p {
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--art-text-bright);
+}
+
+.article-content .bkqt-pullquote {
+  max-width: 55%;
+}
+
+.article-content .bkqt-attrib {
+  display: block;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 500;
+  color: var(--art-text-mid);
+  margin-top: 0.5rem;
+  letter-spacing: 0.03em;
+}
+
+.article-content .bkqt-attrib::before {
+  content: '— ';
+}
+
+[data-theme="light"] .article-content .bkqt-quote .bkqt-body::before,
+[data-theme="light"] .article-content .bkqt-pullquote .bkqt-body::before {
+  opacity: 0.25;
+}
+
 /* B3b. Small text (> markdown blocks) */
 
 .article-content .small-text {
@@ -855,14 +914,13 @@
 /* B3c. Inline annotations (WORD{{explanation}} → superscript + notes) */
 
 .article-content .ann-ref-text {
-  font-style: normal;
-  text-decoration: underline dotted var(--art-text-body);
-  text-underline-offset: 0.2em;
+  font-style: italic;
+  text-decoration: none;
 }
 
 .article-content .ann-ref {
   color: var(--art-accent);
-  font-size: 0.7em;
+  font-size: 0.75em;
   font-weight: 600;
   cursor: default;
   margin-left: 0.1em;
@@ -875,7 +933,6 @@
 }
 
 .article-content .ann-note {
-  font-family: 'Inter', var(--font-sans);
   font-size: 0.8rem;
   color: var(--art-text-mid);
   line-height: 1.5;
@@ -884,8 +941,10 @@
 
 .article-content .ann-note sup {
   color: var(--art-accent);
+  font-size: 0.75em;
   font-weight: 600;
   margin-right: 0.4em;
+  vertical-align: super;
 }
 
 .article-content .annotations-nested {
@@ -1243,14 +1302,15 @@
 .article-content .wiki-ref,
 .article-content .wiki-ref-resolved {
   color: var(--art-accent);
-  border-bottom: 1px dashed var(--art-accent-hover-border);
+  border-bottom: none;
   cursor: pointer;
   text-decoration: none;
+  font-style: italic;
 }
 
 .article-content .wiki-ref:hover,
 .article-content .wiki-ref-resolved:hover {
-  border-bottom-style: solid;
+  border-bottom: 1px solid var(--art-accent-hover-border);
 }
 
 /* B16. Inline code inside colored spans adapts bg/border to parent color */
@@ -1484,7 +1544,8 @@
 .article-blog .article-content p,
 .article-blog .article-content li,
 .article-blog .article-content td,
-.article-blog .article-content .small-text p {
+.article-blog .article-content .small-text p,
+.article-blog .article-content .ann-note {
   font-family: 'Inter', var(--font-sans);
   font-size: 0.9rem;
   line-height: 1.45;
@@ -1598,20 +1659,8 @@
   background: var(--ctx-note-bg);
   border: 1px solid var(--ctx-note-border);
   border-radius: 2px;
-  padding: 0.5rem 0.75rem 0.5rem calc(0.75rem + 18px);
+  padding: 0.65rem 0.75rem;
   margin: 1.25rem 0;
-}
-
-.article-content .ctx-note::before {
-  content: '';
-  position: absolute;
-  left: 0.75rem;
-  top: 0;
-  width: 12px;
-  height: 22px;
-  background: var(--art-accent);
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
 .article-content .ctx-note-avatar {
@@ -1621,19 +1670,34 @@
   object-fit: cover;
   flex-shrink: 0;
   border: 0.5px solid var(--art-border);
-  margin-top: -2px;
+  margin: 1px 0 0 0;
 }
 
 .article-content .ctx-note-body {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0;
   min-width: 0;
+  flex: 1;
 }
 
 .article-content .ctx-note-entry {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.45rem 0;
+}
+
+.article-content .ctx-note-entry:first-child {
+  padding-top: 0;
+}
+
+.article-content .ctx-note-entry:last-child {
+  padding-bottom: 0;
+}
+
+.article-content .ctx-note-date-row {
+  display: flex;
   align-items: baseline;
   gap: 0.4rem;
 }
@@ -1649,6 +1713,14 @@
   letter-spacing: 0.02em;
 }
 
+.article-content .ctx-note-relative {
+  font-family: 'JetBrains Mono', var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--art-text-dim);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
 .article-content .ctx-note-text {
   font-family: 'JetBrains Mono', var(--font-mono);
   font-size: 0.65rem;
@@ -1656,24 +1728,22 @@
   line-height: 1.5;
 }
 
-/* E7. Simplified TOC — bottom line only, accent color */
-.article-toc--blog {
+.article-content .ctx-note-divider {
   border: none;
-  border-bottom: 1px solid var(--art-accent-dim);
+  border-top: 1px solid var(--ctx-note-border);
+  margin: 0;
 }
 
-.article-toc--blog .article-toc-toggle {
-  padding: 0.5rem 0;
-}
-
+/* E7. Blog TOC — same box as projects, depth-scaled sizing */
 .article-toc--blog .article-toc-label {
-  text-transform: none;
-  font-size: 0.7rem;
-  letter-spacing: 0.05em;
+  font-family: 'Inter', var(--font-sans);
 }
 
 .article-toc--blog .article-toc-link {
-  text-transform: none;
   font-family: 'Inter', var(--font-sans);
-  font-size: 0.75rem;
 }
+
+.article-toc--blog .article-toc-depth-0 > .article-toc-link { font-size: 0.75rem; }
+.article-toc--blog .article-toc-depth-1 > .article-toc-link { font-size: 0.7rem; }
+.article-toc--blog .article-toc-depth-2 > .article-toc-link { font-size: 0.65rem; }
+.article-toc--blog .article-toc-depth-3 > .article-toc-link { font-size: 0.6rem; }

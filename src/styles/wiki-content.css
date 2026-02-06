@@ -14,7 +14,8 @@
 /* Font — Inter for prose, no uppercase on headings */
 .article-wiki .article-content p,
 .article-wiki .article-content li,
-.article-wiki .article-content td {
+.article-wiki .article-content td,
+.article-wiki .article-content .ann-note {
   font-family: 'Inter', var(--font-sans);
   font-size: 0.875rem;
   line-height: 1.6;
