@@ -20,7 +20,7 @@ Analyze all uncommitted changes against HEAD and propose independent atomic comm
 6. Wait for user approval (they may reorder, merge, split, or reject)
 7. Execute approved commits sequentially:
    - `git add <specific files>` (never `git add .` or `-A`)
-   - `git commit -m "message"` with Co-Authored-By trailer
+   - `git commit -m "message"` — NEVER include a Co-Authored-By trailer
 8. Show `git log --oneline -n <count>` when done
 
 ## Rules
