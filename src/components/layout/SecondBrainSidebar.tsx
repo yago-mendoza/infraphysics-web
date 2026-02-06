@@ -10,6 +10,7 @@ import {
   BarChartIcon,
   SlidersIcon,
   CloseIcon,
+  InfoIcon,
 } from '../icons';
 import { SECOND_BRAIN_SIDEBAR_WIDTH } from '../../constants/layout';
 import type { TreeNode, SearchMode, FilterState } from '../../hooks/useSecondBrainHub';
@@ -188,10 +189,60 @@ const SEARCH_MODES: { value: SearchMode; label: string }[] = [
 ];
 
 
+// --- Guide Popup ---
+const GuidePopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div
+        className="relative max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto thin-scrollbar hub-scrollbar border border-th-hub-border rounded-sm p-5"
+        style={{ backgroundColor: 'var(--hub-sidebar-bg)' }}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-th-muted hover:text-th-secondary transition-colors"
+        >
+          <CloseIcon />
+        </button>
+
+        <h2 className="text-sm font-semibold text-violet-400 mb-4">Tips</h2>
+
+        <div className="space-y-3 text-[11px] text-th-secondary leading-relaxed">
+          <p><strong className="text-th-primary">Just start typing</strong> — any key focuses the search bar. Backspace too. No need to click it.</p>
+
+          <p><strong className="text-th-primary">Arrow keys</strong> work everywhere: navigate the grid, jump from search results with <span className="text-violet-400">&darr;</span>, confirm with Enter.</p>
+
+          <p><span className="text-blue-400">Blue</span> = visited this session. Purple = not yet. Tracked across the grid, detail links, and the graph. Closes with the tab.</p>
+
+          <p>The <strong className="text-th-primary">graph</strong> is clickable — each zone (parent, siblings, children) reveals its list below. Sibling-to-sibling navigation animates the white bar.</p>
+
+          <p>Addresses use <code className="text-violet-400/80">//</code> as hierarchy — <code className="text-violet-400/80">chip//MCU</code> is a child of <code className="text-violet-400/80">chip</code>. Parent, siblings, and children are derived from this automatically.</p>
+
+          <p><strong className="text-th-primary">Scoping</strong> — click any folder in the directory tree to filter the entire grid to that subtree.</p>
+
+          <p>The <strong className="text-th-primary">breadcrumb trail</strong> tracks your navigation path. Click any crumb to jump back; it collapses when it gets long.</p>
+
+          <p><strong className="text-th-primary">Content search</strong> scans the full body text of every note, not just the title.</p>
+
+          <p>Use <strong className="text-th-primary">unvisited</strong> in the grid toolbar to hide what you've already seen.</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // --- Main Sidebar ---
 export const SecondBrainSidebar: React.FC = () => {
   const hub = useHub();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Type-to-search: any printable key focuses the search bar and starts typing
@@ -208,8 +259,8 @@ export const SecondBrainSidebar: React.FC = () => {
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-      // Printable character — single char, not a control key
-      if (e.key.length === 1) {
+      // Printable character or Backspace — focus search bar
+      if (e.key.length === 1 || e.key === 'Backspace') {
         searchInputRef.current?.focus();
       }
     };
@@ -227,6 +278,7 @@ export const SecondBrainSidebar: React.FC = () => {
     directoryQuery, setDirectoryQuery,
     filteredTree,
     stats,
+    allTags,
     signalDirectoryNav,
   } = hub;
 
@@ -250,7 +302,7 @@ export const SecondBrainSidebar: React.FC = () => {
           <input
             ref={searchInputRef}
             type="text"
-            placeholder="Search..."
+            placeholder={directoryScope ? `Search in ${directoryScope.replace(/\/\//g, '/')}...` : 'Search...'}
             value={query}
             onChange={(e) => {
               const val = e.target.value;
@@ -432,6 +484,56 @@ export const SecondBrainSidebar: React.FC = () => {
             )}
           </div>
 
+          {/* Status filter */}
+          <div className="flex items-center gap-1.5 text-[10px] text-th-muted">
+            <span>status</span>
+            <div className="flex gap-1">
+              {(['all', 'stub', 'draft', 'stable'] as const).map(s => (
+                <button
+                  key={s}
+                  onClick={() => updateFilter('status', s)}
+                  className={`text-[9px] px-1.5 py-0.5 transition-colors ${
+                    filterState.status === s
+                      ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
+                      : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tag filter */}
+          {allTags.length > 0 && (
+            <div>
+              <div className="text-[10px] text-th-muted mb-1">tags</div>
+              <div className="flex gap-1 flex-wrap max-h-24 overflow-y-auto thin-scrollbar hub-scrollbar">
+                {allTags.map(({ tag, count }) => {
+                  const active = filterState.tags.includes(tag);
+                  return (
+                    <button
+                      key={tag}
+                      onClick={() => {
+                        const next = active
+                          ? filterState.tags.filter(t => t !== tag)
+                          : [...filterState.tags, tag];
+                        updateFilter('tags', next);
+                      }}
+                      className={`text-[9px] px-1.5 py-0.5 transition-colors ${
+                        active
+                          ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
+                          : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
+                      }`}
+                    >
+                      {tag} <span className="opacity-50">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Reset */}
           {hasActiveFilters && (
             <button
@@ -470,14 +572,23 @@ export const SecondBrainSidebar: React.FC = () => {
           >
             {/* Header with close */}
             <div className="px-3 py-3 border-b border-th-hub-border flex-shrink-0 flex items-center justify-between">
-              <div>
-                <div className="text-[11px] lowercase tracking-wide">
-                  <span className="font-semibold text-violet-400">second brain</span>{' '}
-                  <span className="text-th-muted font-normal">manager</span>
+              <div className="flex items-center gap-2">
+                <div>
+                  <div className="text-[11px] lowercase tracking-wide">
+                    <span className="font-semibold text-violet-400">second brain</span>{' '}
+                    <span className="text-th-muted font-normal">manager</span>
+                  </div>
+                  <div className="text-[9px] text-th-muted mt-0.5">
+                    {stats.totalConcepts} concepts
+                  </div>
                 </div>
-                <div className="text-[9px] text-th-muted mt-0.5">
-                  {stats.totalConcepts} concepts
-                </div>
+                <button
+                  onClick={() => setGuideOpen(true)}
+                  className="text-th-muted hover:text-violet-400 transition-colors"
+                  title="How Second Brain works"
+                >
+                  <InfoIcon />
+                </button>
               </div>
               <button
                 onClick={() => setMobileOpen(false)}
@@ -495,6 +606,9 @@ export const SecondBrainSidebar: React.FC = () => {
         </div>
       )}
 
+      {/* Guide popup */}
+      {guideOpen && <GuidePopup onClose={() => setGuideOpen(false)} />}
+
       {/* Desktop sidebar */}
       <aside
         className="hidden md:flex flex-col sticky top-0 h-screen border-r border-th-hub-border overflow-hidden"
@@ -505,14 +619,23 @@ export const SecondBrainSidebar: React.FC = () => {
         }}
       >
         {/* Header */}
-        <div className="px-3 py-3 border-b border-th-hub-border flex-shrink-0">
-          <div className="text-[11px] lowercase tracking-wide">
-            <span className="font-semibold text-violet-400">second brain</span>{' '}
-            <span className="text-th-muted font-normal">manager</span>
+        <div className="px-3 py-3 border-b border-th-hub-border flex-shrink-0 flex items-start justify-between">
+          <div>
+            <div className="text-[11px] lowercase tracking-wide">
+              <span className="font-semibold text-violet-400">second brain</span>{' '}
+              <span className="text-th-muted font-normal">manager</span>
+            </div>
+            <div className="text-[9px] text-th-muted mt-0.5">
+              {stats.totalConcepts} concepts
+            </div>
           </div>
-          <div className="text-[9px] text-th-muted mt-0.5">
-            {stats.totalConcepts} concepts
-          </div>
+          <button
+            onClick={() => setGuideOpen(true)}
+            className="text-th-muted hover:text-violet-400 transition-colors mt-0.5"
+            title="How Second Brain works"
+          >
+            <InfoIcon size={18} />
+          </button>
         </div>
         {/* Scrollable sections */}
         <div className="flex-1 overflow-y-auto thin-scrollbar hub-scrollbar">
