@@ -82,9 +82,6 @@ export const SecondBrainView: React.FC = () => {
   // When search is active, force list view even if we're on a detail URL
   const showDetail = activePost && !searchActive;
 
-  // Mentioned in — collapsible
-  const [mentionsExpanded, setMentionsExpanded] = useState(false);
-
   // "Unvisited only" filter for grid view
   const [unvisitedOnly, setUnvisitedOnly] = useState(false);
 
@@ -92,11 +89,6 @@ export const SecondBrainView: React.FC = () => {
   const [activeZone, setActiveZone] = useState<Zone>(null);
   const [focusedDetailIdx, setFocusedDetailIdx] = useState(0);
   const [showDetailFocus, setShowDetailFocus] = useState(false);
-
-  // Reset mentions state when active post changes
-  useEffect(() => {
-    setMentionsExpanded(false);
-  }, [activePost?.id]);
 
   // Set default zone when note changes: siblings > children > parent
   useEffect(() => {
@@ -334,9 +326,9 @@ export const SecondBrainView: React.FC = () => {
       {/* Main Content */}
       {showDetail ? (
         /* --- Concept Detail View --- */
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:h-[calc(100dvh-6rem)]">
-          {/* Left: Content + Connections + Mentions — scrolls independently */}
-          <div className="lg:col-span-3 lg:overflow-y-auto lg:pr-2 thin-scrollbar hub-scrollbar">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
+          {/* Left: Content + Connections + Mentions — page scrolls naturally */}
+          <div className="lg:col-span-3">
             {/* Navigation Trail */}
             <NavigationTrail
               trail={trail}
@@ -371,11 +363,27 @@ export const SecondBrainView: React.FC = () => {
                 : <span>Root node</span>}
             </div>
 
+            {/* ─── Mentioned in (below address) ─── */}
+            {mentions.length > 0 && (
+              <div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-1 font-sans">
+                {mentions.map((m) => (
+                  <Link
+                    key={m.id}
+                    to={`/lab/second-brain/${m.id}`}
+                    onClick={() => handleConnectionClick(m)}
+                    className={`text-sm font-medium transition-colors no-underline ${isVisited(m.id) ? 'text-blue-400/70 hover:text-blue-400' : 'text-violet-400/70 hover:text-violet-400'}`}
+                  >
+                    <sup className="text-[0.6em] opacity-60 mr-0.5">{'\u25C7'}</sup>{noteLabel(m)}
+                  </Link>
+                ))}
+              </div>
+            )}
+
             {/* Metadata line */}
-            <div className="text-xs text-th-tertiary mb-6 flex items-center gap-2">
-              <span>links to {outgoingRefCount}</span>
+            <div className="text-xs text-th-tertiary mb-2 flex items-center gap-2">
+              <span>links {'\u2193'} {outgoingRefCount}</span>
               <span>&middot;</span>
-              <span>mentioned in {mentions.length}</span>
+              <span>mentioned {'\u2191'} {mentions.length}</span>
             </div>
 
             {/* Content — fetched on demand, styled via article.css base + wiki-content.css overrides */}
@@ -393,7 +401,7 @@ export const SecondBrainView: React.FC = () => {
 
             {/* ─── Interactions (bilateral, annotated) ─── */}
             {connections.length > 0 && (
-              <div className="mt-8 pt-6 border-t border-th-hub-border">
+              <div className="mt-8">
                 <h3 className="text-[11px] text-th-tertiary uppercase tracking-wider mb-4">
                   Interactions
                 </h3>
@@ -405,7 +413,10 @@ export const SecondBrainView: React.FC = () => {
                       onClick={() => handleConnectionClick(conn.note)}
                       className="block group"
                     >
-                      <div className="flex items-baseline gap-2">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-3.5 h-3.5 flex-shrink-0 text-th-muted" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 7h12M4 4L1 7l3 3M10 4l3 3-3 3" />
+                        </svg>
                         <span className={`text-sm font-medium transition-colors whitespace-nowrap ${isVisited(conn.note.id) ? 'text-blue-400/70 group-hover:text-blue-400' : 'text-violet-400/70 group-hover:text-violet-400'}`}>
                           {noteLabel(conn.note)}
                         </span>
@@ -416,7 +427,7 @@ export const SecondBrainView: React.FC = () => {
                         )}
                       </div>
                       {(conn.annotation || conn.reverseAnnotation) && (
-                        <div className="text-xs text-th-tertiary mt-0.5 italic font-sans">
+                        <div className="text-xs text-th-tertiary mt-0.5 italic font-sans pl-[22px]">
                           {conn.annotation || conn.reverseAnnotation}
                         </div>
                       )}
@@ -425,40 +436,10 @@ export const SecondBrainView: React.FC = () => {
                 </div>
               </div>
             )}
-
-            {/* ─── Mentioned in (collapsible) ─── */}
-            {mentions.length > 0 && (
-              <div className="mt-6 pt-4 border-t border-th-hub-border/50">
-                <button
-                  onClick={() => setMentionsExpanded(!mentionsExpanded)}
-                  className="text-[10px] text-th-muted uppercase tracking-wider hover:text-th-secondary transition-colors flex items-center gap-1"
-                >
-                  <span className="text-[8px]">{mentionsExpanded ? '\u25BE' : '\u25B8'}</span>
-                  Mentioned in ({mentions.length})
-                </button>
-                {mentionsExpanded && (
-                  <div className="space-y-1.5 mt-2">
-                    {mentions.map(m => (
-                      <Link
-                        key={m.id}
-                        to={`/lab/second-brain/${m.id}`}
-                        onClick={() => handleConnectionClick(m)}
-                        className="flex items-center gap-2 group"
-                      >
-                        <span className="text-th-muted text-[10px] flex-shrink-0">&rsaquo;</span>
-                        <span className={`text-[11px] transition-colors ${isVisited(m.id) ? 'text-blue-400/60 group-hover:text-blue-400' : 'text-th-tertiary group-hover:text-violet-400'}`}>
-                          {noteLabel(m)}
-                        </span>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
-          {/* Right: Context panel (parent/siblings/children) — fixed in viewport */}
-          <div className="lg:col-span-2">
+          {/* Right: Context panel (parent/siblings/children) — sticky in viewport */}
+          <div className="lg:col-span-2 lg:sticky lg:top-12 lg:self-start">
             <NeighborhoodGraph
               neighborhood={neighborhood}
               currentNote={activePost!}
