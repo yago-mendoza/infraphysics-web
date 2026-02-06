@@ -3,6 +3,7 @@
 // scheduleReset / scheduleExtend in click handlers.
 
 import { useState, useCallback, useRef, useEffect, type MutableRefObject } from 'react';
+import { noteLabel } from '../types';
 // Minimal type — works with both Post and FieldNoteMeta
 interface TrailSource { id: string; title: string; displayTitle?: string; }
 
@@ -15,7 +16,7 @@ const MAX_TRAIL = 25;
 
 const toTrailItem = (post: TrailSource): TrailItem => ({
   id: post.id,
-  label: post.displayTitle || post.title,
+  label: noteLabel(post),
 });
 
 type TrailAction =

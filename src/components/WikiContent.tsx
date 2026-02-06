@@ -38,6 +38,9 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
   const [preview, setPreview] = useState<PreviewState>(INITIAL_PREVIEW);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Two resolution modes:
+  //   1. Article context: allFieldNotes provided → resolves wiki-links client-side
+  //   2. Second Brain context: allFieldNotes omitted → html already pre-resolved by fetchNoteContent()
   const resolvedHtml = useMemo(() => {
     if (!allFieldNotes) return html;
     const { html: processed } = resolveWikiLinks(html, allFieldNotes);

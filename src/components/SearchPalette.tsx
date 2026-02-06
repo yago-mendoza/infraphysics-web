@@ -297,7 +297,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
 
       {/* Panel */}
       <div
-        className="relative w-full max-w-lg mx-4 max-h-[70vh] flex flex-col rounded-xl bg-th-sidebar border border-th-border shadow-2xl animate-fade-in overflow-hidden"
+        className="relative w-full max-w-lg mx-4 max-h-[70vh] flex flex-col rounded-xl bg-th-sidebar border border-th-border shadow-2xl overflow-hidden"
         onKeyDown={handleKeyDown}
       >
         {/* Search input row */}

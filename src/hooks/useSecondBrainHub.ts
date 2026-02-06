@@ -3,10 +3,10 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FieldNoteMeta } from '../types';
-import { initBrainIndex, fetchNoteContent, type BrainIndex } from '../lib/brainIndex';
+import { initBrainIndex, fetchNoteContent, type BrainIndex, type Connection, type Neighborhood } from '../lib/brainIndex';
 
 export type SearchMode = 'name' | 'content' | 'backlinks';
-export type SortMode = 'a-z' | 'most-links' | 'fewest-links' | 'depth' | 'shuffle';
+export type SortMode = 'a-z' | 'most-links' | 'fewest-links' | 'depth' | 'shuffle' | 'newest' | 'oldest';
 
 export interface FilterState {
   orphans: boolean;
@@ -14,6 +14,8 @@ export interface FilterState {
   hubThreshold: number;  // 0 = off
   depthMin: number;      // 1-based
   depthMax: number;      // Infinity = no upper bound
+  status: 'all' | 'stub' | 'draft' | 'stable';
+  tags: string[];        // empty = no tag filter
 }
 
 const DEFAULT_FILTER_STATE: FilterState = {
@@ -22,6 +24,8 @@ const DEFAULT_FILTER_STATE: FilterState = {
   hubThreshold: 0,
   depthMin: 1,
   depthMax: Infinity,
+  status: 'all',
+  tags: [],
 };
 
 export interface TreeNode {
@@ -65,7 +69,9 @@ export const useSecondBrainHub = () => {
   const allFieldNotes = index?.allFieldNotes ?? [];
   const noteById = index?.noteById ?? new Map();
   const backlinksMap = index?.backlinksMap ?? new Map();
-  const relatedConceptsMap = index?.relatedConceptsMap ?? new Map();
+  const connectionsMap = index?.connectionsMap ?? new Map();
+  const mentionsMap = index?.mentionsMap ?? new Map();
+  const neighborhoodMap = index?.neighborhoodMap ?? new Map();
   const parentIds = index?.parentIds ?? new Set();
   const globalStats = index?.globalStats ?? { totalConcepts: 0, totalLinks: 0, orphanCount: 0, avgRefs: 0, maxDepth: 0, density: 0, mostConnectedHub: null };
 
@@ -81,11 +87,36 @@ export const useSecondBrainHub = () => {
   const [directoryQuery, setDirectoryQuery] = useState('');
   const [shuffleSeed, setShuffleSeed] = useState(() => Math.floor(Math.random() * 0xffffffff));
 
+  // Session-scoped visited set (survives navigation, cleared on tab close)
+  const visitedRef = useRef<Set<string>>(() => {
+    try {
+      const raw = sessionStorage.getItem('sb-visited');
+      return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch { return new Set(); }
+  });
+  // Lazy-init: resolve the initializer on first access
+  if (typeof visitedRef.current === 'function') {
+    visitedRef.current = (visitedRef.current as unknown as () => Set<string>)();
+  }
+  const [, forceVisitedUpdate] = useState(0);
+  // forceVisitedUpdate in deps forces a new function reference when the visited set
+  // changes, triggering re-renders in consumers despite the ref-based closure.
+  const isVisited = useCallback((noteId: string) => visitedRef.current.has(noteId), [forceVisitedUpdate]);
+
   // Active post from URL — O(1) lookup
   const activePost = useMemo(() => {
     if (id) return noteById.get(id) || null;
     return null;
   }, [id, noteById]);
+
+  // Track visited notes
+  useEffect(() => {
+    if (activePost && !visitedRef.current.has(activePost.id)) {
+      visitedRef.current.add(activePost.id);
+      try { sessionStorage.setItem('sb-visited', JSON.stringify([...visitedRef.current])); } catch {}
+      forceVisitedUpdate(n => n + 1);
+    }
+  }, [activePost]);
 
   // Fetch content when activePost changes
   useEffect(() => {
@@ -125,11 +156,23 @@ export const useSecondBrainHub = () => {
     return (backlinksMap.get(activePost.id) || []).filter(n => n.id !== activePost.id);
   }, [activePost, backlinksMap]);
 
-  // Related concepts — O(1) lookup
-  const relatedConcepts = useMemo(() => {
+  // Bilateral connections — O(1) lookup
+  const connections = useMemo((): Connection[] => {
     if (!activePost) return [];
-    return relatedConceptsMap.get(activePost.id) || [];
-  }, [activePost, relatedConceptsMap]);
+    return connectionsMap.get(activePost.id) || [];
+  }, [activePost, connectionsMap]);
+
+  // Mentions (body-text backlinks, excluding trailing refs) — O(1) lookup
+  const mentions = useMemo(() => {
+    if (!activePost) return [];
+    return (mentionsMap.get(activePost.id) || []).filter(n => n.id !== activePost.id);
+  }, [activePost, mentionsMap]);
+
+  // Neighborhood (parent/siblings/children) — O(1) lookup
+  const neighborhood = useMemo((): Neighborhood => {
+    if (!activePost) return { parent: null, siblings: [], children: [] };
+    return neighborhoodMap.get(activePost.id) || { parent: null, siblings: [], children: [] };
+  }, [activePost, neighborhoodMap]);
 
   // Outgoing ref count
   const outgoingRefCount = useMemo(() => activePost?.references?.length || 0, [activePost]);
@@ -221,7 +264,12 @@ export const useSecondBrainHub = () => {
       return allFieldNotes.filter(note => {
         const address = (note.address || note.title).toLowerCase();
         const displayTitle = (note.displayTitle || note.title).toLowerCase();
-        return address.includes(q) || displayTitle.includes(q);
+        if (address.includes(q) || displayTitle.includes(q)) return true;
+        // Also match against aliases
+        if (note.aliases) {
+          return note.aliases.some(alias => alias.toLowerCase().includes(q));
+        }
+        return false;
       });
     }
 
@@ -260,8 +308,8 @@ export const useSecondBrainHub = () => {
 
   // --- Filters ---
   const filteredNotes = useMemo(() => {
-    const { orphans, leaf, hubThreshold, depthMin, depthMax } = filterState;
-    const hasAnyFilter = orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity;
+    const { orphans, leaf, hubThreshold, depthMin, depthMax, status, tags } = filterState;
+    const hasAnyFilter = orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || status !== 'all' || tags.length > 0;
     if (!hasAnyFilter) return scopedResults;
 
     return scopedResults.filter(note => {
@@ -271,12 +319,22 @@ export const useSecondBrainHub = () => {
       const totalConnections = outgoing + incoming;
 
       if (orphans && (outgoing > 0 || incoming > 0)) return false;
-
       if (leaf && parentIds.has(note.id)) return false;
-
       if (hubThreshold > 0 && totalConnections < hubThreshold) return false;
       if (depth < depthMin) return false;
       if (depthMax < Infinity && depth > depthMax) return false;
+
+      // Status filter
+      if (status !== 'all') {
+        const noteStatus = note.status || 'stable';
+        if (noteStatus !== status) return false;
+      }
+
+      // Tag filter (intersection: note must have ALL selected tags)
+      if (tags.length > 0) {
+        const noteTags = note.tags || [];
+        if (!tags.every(t => noteTags.includes(t))) return false;
+      }
 
       return true;
     });
@@ -314,6 +372,12 @@ export const useSecondBrainHub = () => {
           return aDepth - bDepth;
         });
         break;
+      case 'newest':
+        sorted.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+        break;
+      case 'oldest':
+        sorted.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+        break;
     }
     return sorted;
   }, [filteredNotes, sortMode, shuffleSeed, backlinksMap]);
@@ -339,9 +403,22 @@ export const useSecondBrainHub = () => {
 
   // Check if any filter is active
   const hasActiveFilters = useMemo(() => {
-    const { orphans, leaf, hubThreshold, depthMin, depthMax } = filterState;
-    return orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity;
+    const { orphans, leaf, hubThreshold, depthMin, depthMax, status, tags } = filterState;
+    return orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || status !== 'all' || tags.length > 0;
   }, [filterState]);
+
+  // All unique tags across fieldnotes (for sidebar tag filter)
+  const allTags = useMemo(() => {
+    const tagCounts = new Map<string, number>();
+    allFieldNotes.forEach(note => {
+      (note.tags || []).forEach(tag => {
+        tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+      });
+    });
+    return [...tagCounts.entries()]
+      .sort((a, b) => b[1] - a[1]) // most-used first
+      .map(([tag, count]) => ({ tag, count }));
+  }, [allFieldNotes]);
 
   // Signal from sidebar directory: "this click should reset the trail"
   const directoryNavRef = useRef(false);
@@ -396,12 +473,18 @@ export const useSecondBrainHub = () => {
     noteById,
     sortedResults,
     stats: globalStats,
+    allTags,
 
     // Detail view data
     backlinks,
-    relatedConcepts,
+    connections,
+    mentions,
+    neighborhood,
     outgoingRefCount,
     resolvedHtml,
+
+    // Visited tracking (session-scoped)
+    isVisited,
 
     // Directory nav signal (sidebar → view trail reset)
     directoryNavRef,
