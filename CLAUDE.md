@@ -35,6 +35,21 @@ User may say "dump context", "dame un TXT", etc. Before running `dev-scripts/dum
 3. Verify files exist
 4. Run and report output path
 
+### On address rename (fieldnotes)
+1. Run `node scripts/rename-address.js "old" "new"` first (dry-run by default)
+2. Review the output
+3. Run with `--apply`
+4. Run `npm run build` to verify
+5. Commit all changed files together
+
+### On creating fieldnotes in bulk
+1. After creating, run `npm run build` to validate all references
+2. Run `node scripts/check-references.js` to check for orphans and weak parents
+3. Create stub notes for any missing parents
+
+### On Second Brain UX change
+If a change affects non-obvious behavior or interaction patterns in the Second Brain (keyboard shortcuts, navigation, visual indicators, filters, etc.), update the **GuidePopup** tips in `src/components/layout/SecondBrainSidebar.tsx` so users can discover the feature via the info icon.
+
 ### On any code change
 Do **only** what was requested. Do not refactor adjacent code, add extra styling, or make unsolicited improvements. If something else should change, mention it — don't do it.
 
