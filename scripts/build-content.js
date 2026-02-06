@@ -4,7 +4,8 @@ import matter from 'gray-matter';
 import { marked, Renderer } from 'marked';
 import { load as loadYaml } from 'js-yaml';
 import { fileURLToPath } from 'url';
-import { createHighlighter, bundledLanguages } from 'shiki';
+import { createHash } from 'crypto';
+import { createHighlighter } from 'shiki';
 import { validateFieldnotes } from './validate-fieldnotes.js';
 import compilerConfig from './compiler.config.js';
 
@@ -127,6 +128,8 @@ const BKQT_TYPES = {
   warning:    { label: 'Warning' },
   danger:     { label: 'Danger' },
   keyconcept: { label: 'Key concept' },
+  quote:      { label: null, isQuote: true },
+  pullquote:  { label: null, isQuote: true },
 };
 
 function processBlockquoteContent(content, placeholders) {
@@ -197,15 +200,21 @@ function processBlockquoteContent(content, placeholders) {
 }
 
 function processCustomBlockquotes(markdown, placeholders) {
-  return markdown.replace(
-    /^\{bkqt\/(note|tip|warning|danger|keyconcept)(?:\|([^}]*))?\}\s*\n([\s\S]*?)\n\s*\{\/bkqt\}/gm,
-    (_, type, customLabel, content) => {
-      const config = BKQT_TYPES[type];
-      const label = customLabel ? customLabel.trim() : config.label;
-      const body = processBlockquoteContent(content, placeholders);
-      return `<div class="bkqt bkqt-${type}"><div class="bkqt-body"><span class="bkqt-label">${label}:</span>${body}</div></div>`;
-    }
+  const typePattern = Object.keys(BKQT_TYPES).join('|');
+  const regex = new RegExp(
+    `^\\{bkqt\\/(${typePattern})(?:\\|([^}]*))?\\}\\s*\\n([\\s\\S]*?)\\n\\s*\\{\\/bkqt\\}`,
+    'gm'
   );
+  return markdown.replace(regex, (_, type, customLabel, content) => {
+    const config = BKQT_TYPES[type];
+    const body = processBlockquoteContent(content, placeholders);
+    if (config.isQuote) {
+      const attrib = customLabel ? `<span class="bkqt-attrib">${customLabel.trim()}</span>` : '';
+      return `<div class="bkqt bkqt-${type}"><div class="bkqt-body">${body}${attrib}</div></div>`;
+    }
+    const label = customLabel ? customLabel.trim() : config.label;
+    return `<div class="bkqt bkqt-${type}"><div class="bkqt-body"><span class="bkqt-label">${label}:</span>${body}</div></div>`;
+  });
 }
 
 // ── HTML code-segment protection ──
@@ -470,7 +479,26 @@ function processAlphabeticalLists(markdown) {
 
 const MONTH_NAMES = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
 
-function processContextAnnotations(markdown) {
+function computeRelativeTime(articleDateStr, yy, mm, dd) {
+  if (!articleDateStr) return null;
+  const articleDate = new Date(articleDateStr);
+  if (isNaN(articleDate.getTime())) return null;
+  const annotDate = new Date(2000 + parseInt(yy, 10), parseInt(mm, 10) - 1, parseInt(dd, 10));
+  if (annotDate.getTime() - articleDate.getTime() < 86400000) return null;
+  let years = annotDate.getFullYear() - articleDate.getFullYear();
+  let months = annotDate.getMonth() - articleDate.getMonth();
+  let days = annotDate.getDate() - articleDate.getDate();
+  if (days < 0) { months--; days += new Date(annotDate.getFullYear(), annotDate.getMonth(), 0).getDate(); }
+  if (months < 0) { years--; months += 12; }
+  const parts = [];
+  if (years > 0) parts.push(`${years}y`);
+  if (months > 0) parts.push(`${months}m`);
+  if (days > 0) parts.push(`${days}d`);
+  if (parts.length === 0) return null;
+  return `(${parts.join(' ')} later)`;
+}
+
+function processContextAnnotations(markdown, articleDate) {
   return markdown.replace(
     /^(>> \d{2}\.\d{2}\.\d{2} - .+(?:\n>> \d{2}\.\d{2}\.\d{2} - .+)*)/gm,
     (block) => {
@@ -481,12 +509,14 @@ function processContextAnnotations(markdown) {
         const [, yy, mm, dd, text] = m;
         const monthIdx = parseInt(mm, 10) - 1;
         const monthName = MONTH_NAMES[monthIdx] || mm;
-        const dayNum = parseInt(dd, 10);
-        const dateDisplay = `${yy} · ${monthName} ${dayNum}`;
+        const dateDisplay = `${yy} · ${monthName} ${dd}`;
+        const relative = computeRelativeTime(articleDate, yy, mm, dd);
+        const relativeHtml = relative ? `<span class="ctx-note-relative">${relative}</span>` : '';
         const parsedText = marked.parseInline(text.trim());
-        return `<div class="ctx-note-entry"><span class="ctx-note-date">${dateDisplay}</span><span class="ctx-note-text">${parsedText}</span></div>`;
-      }).join('');
-      return `<div class="ctx-note"><img src="https://avatars.githubusercontent.com/yago-mendoza" alt="" class="ctx-note-avatar" /><div class="ctx-note-body">${entries}</div></div>`;
+        return `<div class="ctx-note-entry"><div class="ctx-note-date-row"><span class="ctx-note-date">${dateDisplay}</span>${relativeHtml}</div><span class="ctx-note-text">${parsedText}</span></div>`;
+      });
+      const html = entries.filter(Boolean).join('<hr class="ctx-note-divider">');
+      return `<div class="ctx-note"><img src="https://avatars.githubusercontent.com/yago-mendoza" alt="" class="ctx-note-avatar" /><div class="ctx-note-body">${html}</div></div>`;
     }
   );
 }
@@ -560,7 +590,7 @@ for (const t of Object.values(LANG_THEMES)) {
 
 const highlighter = await createHighlighter({
   themes: [...allThemes],
-  langs: Object.keys(bundledLanguages),
+  langs: ['typescript', 'javascript', 'python', 'rust', 'go', 'yaml', 'json', 'html', 'css', 'bash'],
 });
 
 const PAGES_DIR = path.join(__dirname, '../src/data/pages');
@@ -571,21 +601,7 @@ function processMarkdownFile(filePath) {
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   const { data: frontmatter, content } = matter(fileContent);
 
-  // Pipeline: protect → preProcessors → bkqt (with placeholders) → restore → externalUrls → sideImages → defLists → alphaLists → marked → shiki → postProcessors → annotations
-  const { text: safeContent, placeholders } = protectBackticks(content);
-  const withCustomSyntax = applyPreProcessors(safeContent);
-  const withBkqt = processCustomBlockquotes(withCustomSyntax, placeholders);
-  const restored = restoreBackticks(withBkqt, placeholders);
-  const withExternalUrls = processExternalUrls(restored);
-  const withSideImages = preprocessSideImages(withExternalUrls);
-  const withDefLists = processDefinitionLists(withSideImages);
-  const withAlphaLists = processAlphabeticalLists(withDefLists);
-  const withCtxNotes = processContextAnnotations(withAlphaLists);
-  const parsed = marked.parse(withCtxNotes);
-  const cleanHeadings = stripHeadingFormatting(parsed);
-  const highlighted = highlightCodeBlocks(cleanHeadings, highlighter);
-  const postProcessed = applyPostProcessors(highlighted);
-  const htmlContent = processOutsideCode(postProcessed, processAnnotations);
+  const htmlContent = compileMarkdown(content, frontmatter.date);
 
   return {
     id: frontmatter.id,
@@ -627,9 +643,10 @@ function getAllMarkdownFiles(dir, isRoot = false) {
     const stat = fs.statSync(fullPath);
 
     if (stat.isDirectory()) {
+      // Skip fieldnotes/ — handled separately by processFieldnotesDir()
+      if (item === 'fieldnotes') continue;
       files.push(...getAllMarkdownFiles(fullPath));
     } else if (!isRoot && item.endsWith('.md') && !item.startsWith('_')) {
-      // Skip _fieldnotes.md, other _*.md files, and loose files in the root pages dir
       files.push(fullPath);
     }
   }
@@ -657,118 +674,203 @@ function getAllCategoryConfigs(dir) {
   return configs;
 }
 
-// --- Fieldnotes: parse _fieldnotes.md ---
+// ── Shared compilation pipeline ──
+// Both regular posts and fieldnotes use this exact 14-step pipeline.
 
-function processFieldnotesFile() {
-  const fieldnotesDir = path.join(PAGES_DIR, 'fieldnotes');
-  if (!fs.existsSync(fieldnotesDir)) return [];
-
-  // Find _*.md files (not _category.yaml)
-  const dirFiles = fs.readdirSync(fieldnotesDir);
-  const fieldnotesFile = dirFiles.find(f => f.startsWith('_') && f.endsWith('.md'));
-  if (!fieldnotesFile) return [];
-
-  const filePath = path.join(fieldnotesDir, fieldnotesFile);
-  const content = fs.readFileSync(filePath, 'utf-8');
-  const blocks = content.split(/\n---\n/).map(b => b.trim()).filter(Boolean);
-
-  return blocks.map(block => {
-    const lines = block.split('\n');
-    const address = lines[0].trim();
-    const bodyLines = lines.slice(1);
-    const bodyMd = bodyLines.join('\n').trim();
-
-    // Generate ID: lowercase, // → --, / → -, space → -
-    const id = address.toLowerCase().replace(/\/\//g, '--').replace(/\//g, '-').replace(/\s+/g, '-');
-
-    // Address parts
-    const addressParts = address.split('//').map(s => s.trim());
-    const displayTitle = addressParts[addressParts.length - 1];
-
-    // Description: first non-empty, non-heading, non-image text line
-    const firstTextLine = bodyLines.find(l => {
-      const trimmed = l.trim();
-      return trimmed && !trimmed.startsWith('#') && !trimmed.startsWith('!');
-    });
-    const description = firstTextLine
-      ? firstTextLine.trim().replace(/\[\[([^\]]+)\]\]/g, (_m, addr) => addr.split('//').pop().trim())
-      : '';
-
-    // Extract ALL [[...]] references from body markdown
-    const refRegex = /\[\[([^\]]+)\]\]/g;
-    const references = [];
-    let match;
-    while ((match = refRegex.exec(bodyMd)) !== null) {
-      references.push(match[1]);
-    }
-
-    // Extract trailing refs (standalone [[...]] lines at end of block)
-    const trailingRefs = [];
-    const trailingRefPattern = /^\s*(\[\[[^\]]+\]\]\s*)+$/;
-    for (let i = bodyLines.length - 1; i >= 0; i--) {
-      const line = bodyLines[i].trim();
-      if (!line) continue;
-      if (trailingRefPattern.test(line)) {
-        const lineRefRegex = /\[\[([^\]]+)\]\]/g;
-        let lineMatch;
-        while ((lineMatch = lineRefRegex.exec(line)) !== null) {
-          trailingRefs.push(lineMatch[1]);
-        }
-      } else {
-        break;
-      }
-    }
-
-    // Pipeline: protect → preProcessors → bkqt (with placeholders) → restore → externalUrls → sideImages → defLists → alphaLists → marked → shiki → postProcessors → annotations
-    const { text: safeBody, placeholders } = protectBackticks(bodyMd);
-    const withCustomSyntax = applyPreProcessors(safeBody);
-    const withBkqt = processCustomBlockquotes(withCustomSyntax, placeholders);
-    const restoredBody = restoreBackticks(withBkqt, placeholders);
-    const withExternalUrls = processExternalUrls(restoredBody);
-    const withSideImages = preprocessSideImages(withExternalUrls);
-    const withDefLists = processDefinitionLists(withSideImages);
-    const withAlphaLists = processAlphabeticalLists(withDefLists);
-    const withCtxNotes = processContextAnnotations(withAlphaLists);
-    const parsed = marked.parse(withCtxNotes);
-    const cleanHeadings2 = stripHeadingFormatting(parsed);
-    const highlighted = highlightCodeBlocks(cleanHeadings2, highlighter);
-    const postProcessed = applyPostProcessors(highlighted);
-    const htmlContent = processOutsideCode(postProcessed, processAnnotations);
-
-    return {
-      id,
-      title: address,
-      displayTitle,
-      category: 'fieldnotes',
-      date: '',
-      thumbnail: null,
-      description,
-      content: htmlContent,
-      address,
-      addressParts,
-      references,
-      trailingRefs,
-    };
-  });
+function compileMarkdown(rawMd, articleDate) {
+  const { text, placeholders } = protectBackticks(rawMd);
+  const withSyntax = applyPreProcessors(text);
+  const withBkqt = processCustomBlockquotes(withSyntax, placeholders);
+  const restored = restoreBackticks(withBkqt, placeholders);
+  const withUrls = processExternalUrls(restored);
+  const withSide = preprocessSideImages(withUrls);
+  const withDefs = processDefinitionLists(withSide);
+  const withAlpha = processAlphabeticalLists(withDefs);
+  const withCtx = processContextAnnotations(withAlpha, articleDate);
+  const parsed = marked.parse(withCtx);
+  const clean = stripHeadingFormatting(parsed);
+  const highlighted = highlightCodeBlocks(clean, highlighter);
+  const postProcessed = applyPostProcessors(highlighted);
+  return processOutsideCode(postProcessed, processAnnotations);
 }
 
-// Main
+// --- Fieldnotes: read individual .md files ---
+
+function extractFieldnoteMeta(filename, filePath) {
+  const fileContent = fs.readFileSync(filePath, 'utf-8');
+  const { data: frontmatter, content: bodyMd } = matter(fileContent);
+
+  const address = frontmatter.address;
+  if (!address) {
+    console.error(`  \x1b[31mERROR: ${filename} missing 'address' in frontmatter\x1b[0m`);
+    buildErrors.push(`${filename} missing 'address' in frontmatter`);
+    return null;
+  }
+
+  const date = frontmatter.date || '';
+  const id = address.toLowerCase().replace(/\/\//g, '--').replace(/\//g, '-').replace(/\s+/g, '-');
+  const addressParts = address.split('//').map(s => s.trim());
+  const displayTitle = addressParts[addressParts.length - 1];
+
+  const bodyLines = bodyMd.split('\n');
+  const firstTextLine = bodyLines.find(l => {
+    const trimmed = l.trim();
+    return trimmed && !trimmed.startsWith('#') && !trimmed.startsWith('!');
+  });
+  const description = firstTextLine
+    ? firstTextLine.trim().replace(/\[\[([^\]]+)\]\]/g, (_m, addr) => addr.split('//').pop().trim())
+    : '';
+
+  const refRegex = /\[\[([^\]]+)\]\]/g;
+  const references = [];
+  let match;
+  while ((match = refRegex.exec(bodyMd)) !== null) {
+    references.push(match[1]);
+  }
+
+  const trailingRefs = [];
+  const trailingRefPattern = /^\s*(\[\[[^\]]+\]\]\s*)+$/;
+  for (let i = bodyLines.length - 1; i >= 0; i--) {
+    const line = bodyLines[i].trim();
+    if (!line) continue;
+    if (trailingRefPattern.test(line)) {
+      const lineRefRegex = /\[\[([^\]]+)\]\]/g;
+      let lineMatch;
+      while ((lineMatch = lineRefRegex.exec(line)) !== null) {
+        trailingRefs.push(lineMatch[1]);
+      }
+    } else {
+      break;
+    }
+  }
+
+  const preLinkHtml = compileMarkdown(bodyMd.trim(), date);
+  const searchText = preLinkHtml.replace(/<[^>]*>/g, '').toLowerCase();
+
+  return {
+    metadata: { id, title: address, displayTitle, category: 'fieldnotes', date, description, address, addressParts, references, trailingRefs, searchText },
+    preLinkHtml,
+  };
+}
+
+// ── Unified incremental cache ──
+
+const CACHE_FILE = path.join(__dirname, '../.content-cache.json');
+
+function computeConfigHash() {
+  const configContent = fs.readFileSync(path.join(__dirname, 'compiler.config.js'), 'utf-8');
+  return createHash('sha256').update(configContent).digest('hex').slice(0, 16);
+}
+
+function loadCache() {
+  try {
+    if (!fs.existsSync(CACHE_FILE)) return null;
+    return JSON.parse(fs.readFileSync(CACHE_FILE, 'utf-8'));
+  } catch { return null; }
+}
+
+function saveCache(cache) {
+  fs.writeFileSync(CACHE_FILE, JSON.stringify(cache));
+}
+
+// --- Cached regular posts ---
+
+function processRegularPosts(cache, configHash, forceRebuild) {
+  const files = getAllMarkdownFiles(PAGES_DIR, true);
+  const cacheValid = cache?.version === 1 && cache?.configHash === configHash && !forceRebuild;
+  const cached = cacheValid ? (cache.posts || {}) : {};
+  const newCache = {};
+  const results = [];
+  let hits = 0, compiled = 0;
+
+  for (const filePath of files) {
+    const key = path.relative(PAGES_DIR, filePath).replace(/\\/g, '/');
+    const mtime = fs.statSync(filePath).mtimeMs;
+    if (cached[key]?.mtime === mtime) {
+      newCache[key] = cached[key];
+      results.push(cached[key].result);
+      hits++;
+    } else {
+      const result = processMarkdownFile(filePath);
+      newCache[key] = { mtime, result };
+      results.push(result);
+      compiled++;
+    }
+  }
+  console.log(`  Posts: ${compiled} compiled, ${hits} cached`);
+  return { results, cachePosts: newCache };
+}
+
+// --- Cached fieldnotes ---
+
+function processFieldnotesDir(cache, configHash, forceRebuild) {
+  const fieldnotesDir = path.join(PAGES_DIR, 'fieldnotes');
+  if (!fs.existsSync(fieldnotesDir)) return { results: [], cacheFieldnotes: {} };
+
+  const files = fs.readdirSync(fieldnotesDir)
+    .filter(f => f.endsWith('.md') && !f.startsWith('_'));
+
+  const cacheValid = cache?.version === 1 && cache?.configHash === configHash && !forceRebuild;
+  const cachedNotes = cacheValid ? (cache.fieldnotes || {}) : {};
+
+  let hits = 0, compiled = 0;
+  const newCache = {};
+  const results = [];
+
+  for (const filename of files) {
+    const filePath = path.join(fieldnotesDir, filename);
+    const mtime = fs.statSync(filePath).mtimeMs;
+    const entry = cachedNotes[filename];
+
+    if (entry && entry.mtime === mtime) {
+      newCache[filename] = entry;
+      results.push({ ...entry.metadata, content: entry.preLinkHtml });
+      hits++;
+    } else {
+      const result = extractFieldnoteMeta(filename, filePath);
+      if (!result) continue;
+      newCache[filename] = { mtime, metadata: result.metadata, preLinkHtml: result.preLinkHtml };
+      results.push({ ...result.metadata, content: result.preLinkHtml });
+      compiled++;
+    }
+  }
+  console.log(`  Fieldnotes: ${compiled} compiled, ${hits} cached`);
+  return { results, cacheFieldnotes: newCache };
+}
+
+// ── Main ──
+
 console.log('Building content...');
 
-const markdownFiles = getAllMarkdownFiles(PAGES_DIR, true);
-const regularPosts = markdownFiles.map(processMarkdownFile);
-const fieldnotePosts = processFieldnotesFile();
+const FIELDNOTES_INDEX_FILE = path.join(__dirname, '../src/data/fieldnotes-index.generated.json');
+const FIELDNOTES_CONTENT_DIR = path.join(__dirname, '../public/fieldnotes');
 
-// Apply unified [[link]] processing to all posts (skipping <code> content)
-const allPosts = [...regularPosts, ...fieldnotePosts].map(post => ({
+const forceRebuild = process.argv.includes('--force');
+const configHash = computeConfigHash();
+const cache = loadCache();
+
+const { results: regularPosts, cachePosts } = processRegularPosts(cache, configHash, forceRebuild);
+const { results: fieldnotePosts, cacheFieldnotes } = processFieldnotesDir(cache, configHash, forceRebuild);
+
+// Save unified cache
+saveCache({ version: 1, configHash, posts: cachePosts, fieldnotes: cacheFieldnotes });
+
+// Apply unified [[link]] processing to all content (skipping <code> blocks)
+// This always runs on all content — link targets may change when notes are added/removed
+const linkedRegularPosts = regularPosts.map(post => ({
+  ...post,
+  content: processOutsideCode(post.content, processAllLinks),
+}));
+const linkedFieldnotePosts = fieldnotePosts.map(post => ({
   ...post,
   content: processOutsideCode(post.content, processAllLinks),
 }));
 
 const categories = getAllCategoryConfigs(PAGES_DIR);
 
-// Validate fieldnotes + wiki-links
-const validation = validateFieldnotes(fieldnotePosts, allPosts, compilerConfig.validation);
+// Validate fieldnotes + wiki-links (uses combined set for cross-reference checks)
+const allLinkedPosts = [...linkedRegularPosts, ...linkedFieldnotePosts];
+const validation = validateFieldnotes(fieldnotePosts, allLinkedPosts, compilerConfig.validation);
 
 const totalErrors = buildErrors.length + validation.errors;
 if (totalErrors > 0) {
@@ -776,8 +878,37 @@ if (totalErrors > 0) {
   process.exit(1);
 }
 
-fs.writeFileSync(OUTPUT_FILE, JSON.stringify(allPosts, null, 2));
+// Output 1: posts.generated.json (regular posts only — no fieldnotes)
+fs.writeFileSync(OUTPUT_FILE, JSON.stringify(linkedRegularPosts, null, 2));
+
+// Output 2: fieldnotes-index.generated.json (metadata only — no content)
+const fieldnotesIndex = linkedFieldnotePosts.map(({ content, searchText, ...meta }) => ({ ...meta, searchText }));
+fs.writeFileSync(FIELDNOTES_INDEX_FILE, JSON.stringify(fieldnotesIndex, null, 2));
+
+// Output 3: public/fieldnotes/{id}.json (individual content files)
+if (!fs.existsSync(FIELDNOTES_CONTENT_DIR)) {
+  fs.mkdirSync(FIELDNOTES_CONTENT_DIR, { recursive: true });
+}
+
+const currentIds = new Set();
+for (const post of linkedFieldnotePosts) {
+  currentIds.add(post.id);
+  const contentFile = path.join(FIELDNOTES_CONTENT_DIR, `${post.id}.json`);
+  fs.writeFileSync(contentFile, JSON.stringify({ content: post.content }));
+}
+
+// Clean stale content files
+const existingFiles = fs.readdirSync(FIELDNOTES_CONTENT_DIR).filter(f => f.endsWith('.json'));
+for (const file of existingFiles) {
+  const id = file.replace('.json', '');
+  if (!currentIds.has(id)) {
+    fs.unlinkSync(path.join(FIELDNOTES_CONTENT_DIR, file));
+    console.log(`  Removed stale: ${file}`);
+  }
+}
+
 fs.writeFileSync(CATEGORIES_OUTPUT, JSON.stringify(categories, null, 2));
 
-console.log(`Generated ${allPosts.length} posts → ${OUTPUT_FILE}`);
+console.log(`Generated ${linkedRegularPosts.length} posts → ${OUTPUT_FILE}`);
+console.log(`Generated ${linkedFieldnotePosts.length} fieldnotes → ${FIELDNOTES_INDEX_FILE} + public/fieldnotes/`);
 console.log(`Generated ${Object.keys(categories).length} categories → ${CATEGORIES_OUTPUT}`);

@@ -24,6 +24,7 @@ dist-ssr
 
 # Generated content
 *.generated.json
+.content-cache.json
 
 # Editor directories and files
 .vscode/*
