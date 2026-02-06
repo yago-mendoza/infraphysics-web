@@ -7,11 +7,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Markdowns (root)
+# Markdowns (root) — except tracked project docs
 /*.md
-
-# Claude
-CLAUDE.md
+!README.md
+!CLAUDE.md
 
 # Environments
 .env.*
@@ -30,7 +29,8 @@ dist-ssr
 .vscode/*
 !.vscode/extensions.json
 .idea
-.claude
+.claude/settings.local.json
+.claude/CLAUDE.local.md
 .DS_Store
 *.suo
 *.ntvs*
