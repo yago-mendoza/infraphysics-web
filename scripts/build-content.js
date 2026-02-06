@@ -749,24 +749,35 @@ function extractFieldnoteMeta(filename, filePath) {
   const trailingRefs = [];
   const singleRefAnnotated = /^\s*\[\[([^\]]+)\]\]\s*::\s*(.+)\s*$/;
   const multiRefLine = /^\s*(\[\[[^\]]+\]\]\s*)+$/;
+  let trailingRefStart = bodyLines.length;
   for (let i = bodyLines.length - 1; i >= 0; i--) {
     const line = bodyLines[i].trim();
     if (!line) continue;
     const annotatedMatch = singleRefAnnotated.exec(line);
     if (annotatedMatch) {
       trailingRefs.push({ address: annotatedMatch[1].trim(), annotation: annotatedMatch[2].trim() });
+      trailingRefStart = i;
     } else if (multiRefLine.test(line)) {
       const lineRefRegex = /\[\[([^\]]+)\]\]/g;
       let lineMatch;
       while ((lineMatch = lineRefRegex.exec(line)) !== null) {
         trailingRefs.push({ address: lineMatch[1].trim(), annotation: null });
       }
+      trailingRefStart = i;
     } else {
       break;
     }
   }
 
-  const preLinkHtml = compileMarkdown(bodyMd.trim(), date);
+  // Strip trailing refs (and preceding blank lines) from body before compiling
+  let contentMd = bodyMd;
+  if (trailingRefStart < bodyLines.length) {
+    let cutoff = trailingRefStart;
+    while (cutoff > 0 && !bodyLines[cutoff - 1].trim()) cutoff--;
+    contentMd = bodyLines.slice(0, cutoff).join('\n');
+  }
+
+  const preLinkHtml = compileMarkdown(contentMd.trim(), date);
   const searchText = preLinkHtml.replace(/<[^>]*>/g, '').toLowerCase();
 
   return {
