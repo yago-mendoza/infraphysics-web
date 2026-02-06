@@ -58,9 +58,8 @@ export interface FieldNoteMeta {
   trailingRefs?: ConnectionRef[];
   searchText?: string;
   aliases?: string[];
-  status?: 'stub' | 'draft' | 'stable';
-  tags?: string[];
   supersedes?: string;
+  distinct?: string[];
 }
 
 export interface FieldNote extends FieldNoteMeta {

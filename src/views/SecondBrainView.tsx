@@ -376,16 +376,6 @@ export const SecondBrainView: React.FC = () => {
               <span>links to {outgoingRefCount}</span>
               <span>&middot;</span>
               <span>mentioned in {mentions.length}</span>
-              {activePost!.status && activePost!.status !== 'stable' && (
-                <>
-                  <span>&middot;</span>
-                  <span className={`px-1.5 py-0.5 text-[9px] uppercase tracking-wider ${
-                    activePost!.status === 'stub' ? 'bg-amber-400/15 text-amber-400' : 'bg-blue-400/15 text-blue-400'
-                  }`}>
-                    {activePost!.status}
-                  </span>
-                </>
-              )}
             </div>
 
             {/* Content — fetched on demand, styled via article.css base + wiki-content.css overrides */}
@@ -400,17 +390,6 @@ export const SecondBrainView: React.FC = () => {
                 />
               )}
             </div>
-
-            {/* Tags */}
-            {activePost!.tags && activePost!.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-6">
-                {activePost!.tags.map(tag => (
-                  <span key={tag} className="text-[9px] px-1.5 py-0.5 text-th-tertiary border border-th-hub-border">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
 
             {/* ─── Interactions (bilateral, annotated) ─── */}
             {connections.length > 0 && (
@@ -557,13 +536,6 @@ export const SecondBrainView: React.FC = () => {
                     <span className={`text-sm font-medium transition-colors group-hover:text-th-primary ${isVisited(note.id) ? 'text-blue-400/70' : 'text-violet-400'}`}>
                       {noteLabel(note)}
                     </span>
-                    {note.status && note.status !== 'stable' && (
-                      <span className={`text-[8px] px-1 py-px uppercase ${
-                        note.status === 'stub' ? 'text-amber-400/70' : 'text-blue-400/70'
-                      }`}>
-                        {note.status}
-                      </span>
-                    )}
                   </div>
                   {note.addressParts && note.addressParts.length > 1 && (
                     <div className="text-[10px] text-th-tertiary mb-1">

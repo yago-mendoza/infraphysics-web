@@ -723,8 +723,6 @@ function extractFieldnoteMeta(filename, filePath) {
 
   // Optional frontmatter fields
   const aliases = frontmatter.aliases || null;
-  const status = frontmatter.status || null;  // stub | draft | stable
-  const tags = frontmatter.tags || null;
   const supersedes = frontmatter.supersedes || null;
   const distinct = frontmatter.distinct || null;
 
@@ -772,7 +770,7 @@ function extractFieldnoteMeta(filename, filePath) {
   const searchText = preLinkHtml.replace(/<[^>]*>/g, '').toLowerCase();
 
   return {
-    metadata: { id, title: address, displayTitle, category: 'fieldnotes', date, description, address, addressParts, references, trailingRefs, searchText, aliases, status, tags, supersedes, distinct },
+    metadata: { id, title: address, displayTitle, category: 'fieldnotes', date, description, address, addressParts, references, trailingRefs, searchText, aliases, supersedes, distinct },
     preLinkHtml,
   };
 }

@@ -14,8 +14,6 @@ export interface FilterState {
   hubThreshold: number;  // 0 = off
   depthMin: number;      // 1-based
   depthMax: number;      // Infinity = no upper bound
-  status: 'all' | 'stub' | 'draft' | 'stable';
-  tags: string[];        // empty = no tag filter
 }
 
 const DEFAULT_FILTER_STATE: FilterState = {
@@ -24,8 +22,6 @@ const DEFAULT_FILTER_STATE: FilterState = {
   hubThreshold: 0,
   depthMin: 1,
   depthMax: Infinity,
-  status: 'all',
-  tags: [],
 };
 
 export interface TreeNode {
@@ -308,8 +304,8 @@ export const useSecondBrainHub = () => {
 
   // --- Filters ---
   const filteredNotes = useMemo(() => {
-    const { orphans, leaf, hubThreshold, depthMin, depthMax, status, tags } = filterState;
-    const hasAnyFilter = orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || status !== 'all' || tags.length > 0;
+    const { orphans, leaf, hubThreshold, depthMin, depthMax } = filterState;
+    const hasAnyFilter = orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity;
     if (!hasAnyFilter) return scopedResults;
 
     return scopedResults.filter(note => {
@@ -323,18 +319,6 @@ export const useSecondBrainHub = () => {
       if (hubThreshold > 0 && totalConnections < hubThreshold) return false;
       if (depth < depthMin) return false;
       if (depthMax < Infinity && depth > depthMax) return false;
-
-      // Status filter
-      if (status !== 'all') {
-        const noteStatus = note.status || 'stable';
-        if (noteStatus !== status) return false;
-      }
-
-      // Tag filter (intersection: note must have ALL selected tags)
-      if (tags.length > 0) {
-        const noteTags = note.tags || [];
-        if (!tags.every(t => noteTags.includes(t))) return false;
-      }
 
       return true;
     });
@@ -403,22 +387,9 @@ export const useSecondBrainHub = () => {
 
   // Check if any filter is active
   const hasActiveFilters = useMemo(() => {
-    const { orphans, leaf, hubThreshold, depthMin, depthMax, status, tags } = filterState;
-    return orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || status !== 'all' || tags.length > 0;
+    const { orphans, leaf, hubThreshold, depthMin, depthMax } = filterState;
+    return orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity;
   }, [filterState]);
-
-  // All unique tags across fieldnotes (for sidebar tag filter)
-  const allTags = useMemo(() => {
-    const tagCounts = new Map<string, number>();
-    allFieldNotes.forEach(note => {
-      (note.tags || []).forEach(tag => {
-        tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
-      });
-    });
-    return [...tagCounts.entries()]
-      .sort((a, b) => b[1] - a[1]) // most-used first
-      .map(([tag, count]) => ({ tag, count }));
-  }, [allFieldNotes]);
 
   // Signal from sidebar directory: "this click should reset the trail"
   const directoryNavRef = useRef(false);
@@ -473,7 +444,6 @@ export const useSecondBrainHub = () => {
     noteById,
     sortedResults,
     stats: globalStats,
-    allTags,
 
     // Detail view data
     backlinks,

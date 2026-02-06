@@ -278,7 +278,6 @@ export const SecondBrainSidebar: React.FC = () => {
     directoryQuery, setDirectoryQuery,
     filteredTree,
     stats,
-    allTags,
     signalDirectoryNav,
   } = hub;
 
@@ -483,56 +482,6 @@ export const SecondBrainSidebar: React.FC = () => {
               <span className="text-[9px] text-th-muted">off</span>
             )}
           </div>
-
-          {/* Status filter */}
-          <div className="flex items-center gap-1.5 text-[10px] text-th-muted">
-            <span>status</span>
-            <div className="flex gap-1">
-              {(['all', 'stub', 'draft', 'stable'] as const).map(s => (
-                <button
-                  key={s}
-                  onClick={() => updateFilter('status', s)}
-                  className={`text-[9px] px-1.5 py-0.5 transition-colors ${
-                    filterState.status === s
-                      ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
-                      : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Tag filter */}
-          {allTags.length > 0 && (
-            <div>
-              <div className="text-[10px] text-th-muted mb-1">tags</div>
-              <div className="flex gap-1 flex-wrap max-h-24 overflow-y-auto thin-scrollbar hub-scrollbar">
-                {allTags.map(({ tag, count }) => {
-                  const active = filterState.tags.includes(tag);
-                  return (
-                    <button
-                      key={tag}
-                      onClick={() => {
-                        const next = active
-                          ? filterState.tags.filter(t => t !== tag)
-                          : [...filterState.tags, tag];
-                        updateFilter('tags', next);
-                      }}
-                      className={`text-[9px] px-1.5 py-0.5 transition-colors ${
-                        active
-                          ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
-                          : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
-                      }`}
-                    >
-                      {tag} <span className="opacity-50">{count}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
 
           {/* Reset */}
           {hasActiveFilters && (
