@@ -3,7 +3,8 @@
 // scheduleReset / scheduleExtend in click handlers.
 
 import { useState, useCallback, useRef, useEffect, type MutableRefObject } from 'react';
-import type { Post } from '../types';
+// Minimal type — works with both Post and FieldNoteMeta
+interface TrailSource { id: string; title: string; displayTitle?: string; }
 
 export interface TrailItem {
   id: string;
@@ -12,17 +13,17 @@ export interface TrailItem {
 
 const MAX_TRAIL = 25;
 
-const toTrailItem = (post: Post): TrailItem => ({
+const toTrailItem = (post: TrailSource): TrailItem => ({
   id: post.id,
   label: post.displayTitle || post.title,
 });
 
 type TrailAction =
-  | { type: 'reset'; post: Post }
-  | { type: 'extend'; post: Post };
+  | { type: 'reset'; post: TrailSource }
+  | { type: 'extend'; post: TrailSource };
 
 interface UseNavigationTrailOptions {
-  activePost: Post | null;
+  activePost: TrailSource | null;
   directoryNavRef: MutableRefObject<boolean>;
 }
 
@@ -55,12 +56,12 @@ export const useNavigationTrail = ({ activePost, directoryNavRef }: UseNavigatio
   }, []);
 
   /** Queue a trail reset for the next activePost sync (grid/search clicks). */
-  const scheduleReset = useCallback((post: Post) => {
+  const scheduleReset = useCallback((post: TrailSource) => {
     pendingAction.current = { type: 'reset', post };
   }, []);
 
   /** Queue a trail extend for the next activePost sync (wiki-link/backlink clicks). */
-  const scheduleExtend = useCallback((post: Post) => {
+  const scheduleExtend = useCallback((post: TrailSource) => {
     pendingAction.current = { type: 'extend', post };
   }, []);
 

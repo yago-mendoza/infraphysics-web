@@ -3,7 +3,7 @@
 import React, { useMemo, useEffect, useState, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { formatDate, formatDateTerminal, calculateReadingTime } from '../lib';
-import { allFieldNotes } from '../lib/brainIndex';
+import { initBrainIndex, type BrainIndex } from '../lib/brainIndex';
 import { WikiContent } from '../components/WikiContent';
 import { CATEGORY_CONFIG, STATUS_CONFIG, sectionPath as getSectionPath, postPath, isBlogCategory } from '../config/categories';
 import { ArrowRightIcon, GitHubIcon, LinkedInIcon, TwitterIcon, RedditIcon, HackerNewsIcon, ClipboardIcon, CheckIcon } from '../components/icons';
@@ -25,6 +25,10 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const isBlog = isBlogCategory(post.category);
   const [copied, setCopied] = useState(false);
   const { setArticleState, clearArticleState, updateActiveHeading } = useArticleContext();
+
+  // Async brain index for wiki-link resolution in articles
+  const [brainIndex, setBrainIndex] = useState<BrainIndex | null>(null);
+  useEffect(() => { initBrainIndex().then(setBrainIndex); }, []);
 
   // Compute next/prev posts within same category sorted by date
   const { nextPost, prevPost } = useMemo(() => {
@@ -80,19 +84,12 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
         const id = `toc-${slug}`;
         raw.push({ level, text, id });
-        const tocArrow = `<a class="heading-toc-arrow" data-toc-id="${id}" aria-label="Back to table of contents"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5L6 2.5L8 4.5"/><path d="M4 7.5L6 9.5L8 7.5"/></svg></a>`;
+        const tocArrow = `<a class="heading-toc-arrow" data-toc-id="${id}" aria-label="Back to table of contents"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7L6 5L8 7"/><path d="M4 4.5L6 2.5L8 4.5"/></svg></a>`;
         return `<${tag}${attrs || ''} id="${id}">${inner}${tocArrow}</${tag}>`;
       }
     );
 
-    // Blog posts: strip the first h1 (duplicates the displayTitle rendered above)
-    let finalProcessed = processed;
-    if (isBlog) {
-      finalProcessed = finalProcessed.replace(/<h1[\s][^>]*>.*?<\/h1>/i, '');
-      // Also remove it from TOC entries
-      const firstH1Idx = raw.findIndex(h => h.level === 1);
-      if (firstH1Idx !== -1) raw.splice(firstH1Idx, 1);
-    }
+    const finalProcessed = processed;
 
     if (raw.length === 0) {
       return { headings: [] as { level: number; text: string; id: string; number: string; depth: number }[], contentWithIds: finalProcessed };
@@ -277,10 +274,11 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
     return pool.slice(0, 3);
   }, [post, targetCategory]);
 
-  // TOC list rendering
-  const tocList = headings.length > 1 ? (
+  // TOC list rendering — blog capped at 10 entries
+  const tocHeadings = isBlog ? headings.slice(0, 10) : headings;
+  const tocList = tocHeadings.length > 1 ? (
     <ol className="article-toc-list">
-      {headings.map((h) => (
+      {tocHeadings.map((h) => (
         <li
           key={h.id}
           className={`article-toc-item article-toc-depth-${h.depth}`}
@@ -495,7 +493,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                 onClick={() => setTocOpen(o => !o)}
                 aria-expanded={tocOpen}
               >
-                <span className="article-toc-label">{isBlog ? 'Contents' : '// CONTENTS'}</span>
+                <span className="article-toc-label">{isBlog ? 'CONTENTS' : '// CONTENTS'}</span>
                 <svg
                   className={`article-toc-chevron${tocOpen ? ' article-toc-chevron--open' : ''}`}
                   viewBox="0 0 12 12"
@@ -517,7 +515,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
           {/* Article content */}
           <WikiContent
             html={contentWithIds}
-            allFieldNotes={allFieldNotes}
+            allFieldNotes={brainIndex?.allFieldNotes}
             className="article-content"
           />
 

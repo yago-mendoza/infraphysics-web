@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { posts } from '../data/data';
 import { postPath } from '../config/categories';
-import { allFieldNotes } from '../lib/brainIndex';
+import { initBrainIndex, type BrainIndex } from '../lib/brainIndex';
 import { useArticleContext } from '../contexts/ArticleContext';
 import { useTheme } from '../contexts/ThemeContext';
 import {
@@ -40,6 +40,11 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
   const navigate = useNavigate();
   const { article } = useArticleContext();
   const { theme, toggleTheme } = useTheme();
+
+  // Async brain index for concept search
+  const [brainIndex, setBrainIndex] = useState<BrainIndex | null>(null);
+  useEffect(() => { initBrainIndex().then(setBrainIndex); }, []);
+  const allFieldNotes = brainIndex?.allFieldNotes ?? [];
 
   const executeAndClose = useCallback((fn: () => void) => {
     fn();
@@ -107,7 +112,6 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
 
     // ── Global shortcut actions ──
     const mostRecent = [...posts]
-      .filter(p => p.category !== 'fieldnotes')
       .sort((a, b) => b.date.localeCompare(a.date))[0];
 
     if (mostRecent) {
@@ -168,9 +172,8 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
           </span>
         ),
         action: () => {
-          const validPosts = posts.filter(p => p.category !== 'fieldnotes');
-          if (validPosts.length === 0) return;
-          const randomPost = validPosts[Math.floor(Math.random() * validPosts.length)];
+          if (posts.length === 0) return;
+          const randomPost = posts[Math.floor(Math.random() * posts.length)];
           executeAndClose(() => navigate(postPath(randomPost.category, randomPost.id)));
         },
         group: 'nav',
@@ -270,6 +273,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
     switch (group) {
       case 'contextual': return 'Article';
       case 'global': return 'Shortcuts';
+      case 'nav': return 'Navigate';
       case 'concept': return 'Second Brain';
       default: return null;
     }
@@ -288,7 +292,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
 
       {/* Panel */}
       <div
-        className="relative w-full max-w-lg mx-4 rounded-xl bg-th-sidebar border border-th-border shadow-2xl animate-fade-in overflow-hidden"
+        className="relative w-full max-w-lg mx-4 max-h-[70vh] flex flex-col rounded-xl bg-th-sidebar border border-th-border shadow-2xl animate-fade-in overflow-hidden"
         onKeyDown={handleKeyDown}
       >
         {/* Search input row */}
@@ -313,7 +317,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
         </div>
 
         {/* Action list */}
-        <div ref={listRef} className="py-2 max-h-[40vh] overflow-y-auto thin-scrollbar palette-scrollbar">
+        <div ref={listRef} className="py-2 flex-1 min-h-0 overflow-y-auto thin-scrollbar palette-scrollbar">
           {filtered.length === 0 ? (
             <div className="px-4 py-6 text-sm text-th-tertiary text-center">
               No results found
@@ -322,11 +326,11 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
             filtered.map((action, i) => {
               // Show group header when group changes
               let header: React.ReactNode = null;
-              if (action.group && action.group !== lastGroup && (!query.trim() || action.group === 'concept')) {
+              if (action.group && action.group !== lastGroup) {
                 const label = groupLabel(action.group);
                 if (label) {
                   header = (
-                    <div className="px-4 pt-2 pb-1 text-[10px] font-mono uppercase tracking-wider text-th-muted">
+                    <div className="px-4 pt-3 pb-1.5 text-[11px] font-semibold tracking-wide text-th-muted">
                       {label}
                     </div>
                   );
@@ -360,6 +364,23 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
               );
             })
           )}
+        </div>
+
+        {/* Footer — keyboard hints */}
+        <div className="flex items-center gap-4 px-4 py-2 border-t border-th-border text-[11px] text-th-muted">
+          <span className="flex items-center gap-1.5">
+            <kbd className="inline-flex items-center justify-center w-5 h-5 rounded bg-th-surface-alt border border-th-border text-[10px] font-mono">↑</kbd>
+            <kbd className="inline-flex items-center justify-center w-5 h-5 rounded bg-th-surface-alt border border-th-border text-[10px] font-mono">↓</kbd>
+            <span className="ml-0.5">to navigate</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <kbd className="inline-flex items-center justify-center h-5 px-1.5 rounded bg-th-surface-alt border border-th-border text-[10px] font-mono">↵</kbd>
+            <span className="ml-0.5">to select</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <kbd className="inline-flex items-center justify-center h-5 px-1.5 rounded bg-th-surface-alt border border-th-border text-[10px] font-mono">esc</kbd>
+            <span className="ml-0.5">to close</span>
+          </span>
         </div>
       </div>
     </div>

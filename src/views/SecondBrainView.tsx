@@ -1,15 +1,14 @@
 // Second Brain / Concept Wiki view component — theme-aware
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useHub } from '../contexts/SecondBrainHubContext';
 import { useNavigationTrail } from '../hooks/useNavigationTrail';
 import { WikiContent } from '../components/WikiContent';
 import { NavigationTrail } from '../components/NavigationTrail';
 import { addressToId } from '../lib/addressToId';
-import { noteById } from '../lib/brainIndex';
 import type { SortMode } from '../hooks/useSecondBrainHub';
-import type { Post } from '../types';
+import type { FieldNoteMeta } from '../types';
 import '../styles/article.css';
 import '../styles/wiki-content.css';
 
@@ -31,6 +30,9 @@ export const SecondBrainView: React.FC = () => {
     relatedConcepts,
     outgoingRefCount,
     resolvedHtml,
+    contentLoading,
+    indexLoading,
+    noteById,
     query,
     setQuery,
     searchActive,
@@ -52,18 +54,49 @@ export const SecondBrainView: React.FC = () => {
   }, [scheduleExtend]);
 
   // Grid card click — reset trail to single item & clear search so detail view shows
-  const handleGridCardClick = useCallback((post: Post) => {
+  const handleGridCardClick = useCallback((post: FieldNoteMeta) => {
     scheduleReset(post);
     clearSearch();
   }, [scheduleReset, clearSearch]);
 
   // Related / backlink click — extend trail
-  const handleConnectionClick = useCallback((post: Post) => {
+  const handleConnectionClick = useCallback((post: FieldNoteMeta) => {
     scheduleExtend(post);
   }, [scheduleExtend]);
 
   // When search is active, force list view even if we're on a detail URL
   const showDetail = activePost && !searchActive;
+
+  // --- Infinite scroll ---
+  const BATCH_SIZE = 50;
+  const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Reset visible count when results change
+  useEffect(() => {
+    setVisibleCount(BATCH_SIZE);
+  }, [sortedResults]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisibleCount(prev => Math.min(prev + BATCH_SIZE, sortedResults.length));
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [sortedResults.length]);
+
+  const visibleResults = sortedResults.slice(0, visibleCount);
+
+  if (indexLoading) {
+    return <div className="animate-fade-in py-12 text-center text-xs text-th-tertiary">Loading index...</div>;
+  }
 
   return (
     <div className="animate-fade-in">
@@ -112,13 +145,17 @@ export const SecondBrainView: React.FC = () => {
               links to {outgoingRefCount} &middot; linked from {backlinks.length}
             </div>
 
-            {/* Content — pre-resolved HTML, styled via article.css base + wiki-content.css overrides */}
+            {/* Content — fetched on demand, styled via article.css base + wiki-content.css overrides */}
             <div className="article-page-wrapper article-wiki">
-              <WikiContent
-                html={resolvedHtml}
-                className="article-content"
-                onWikiLinkClick={handleWikiLinkClick}
-              />
+              {contentLoading ? (
+                <div className="text-xs text-th-tertiary py-4">Loading...</div>
+              ) : (
+                <WikiContent
+                  html={resolvedHtml}
+                  className="article-content"
+                  onWikiLinkClick={handleWikiLinkClick}
+                />
+              )}
             </div>
           </div>
 
@@ -223,8 +260,8 @@ export const SecondBrainView: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {sortedResults.length > 0 ? (
-              sortedResults.map(note => (
+            {visibleResults.length > 0 ? (
+              visibleResults.map(note => (
                 <Link
                   key={note.id}
                   to={`/lab/second-brain/${note.id}`}
@@ -254,6 +291,10 @@ export const SecondBrainView: React.FC = () => {
               </div>
             )}
           </div>
+          {/* Infinite scroll sentinel */}
+          {visibleCount < sortedResults.length && (
+            <div ref={sentinelRef} className="h-1" />
+          )}
         </div>
       )}
     </div>

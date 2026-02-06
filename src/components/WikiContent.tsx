@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useMemo, useState, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Post } from '../types';
+import { FieldNoteMeta } from '../types';
 import { resolveWikiLinks } from '../lib/wikilinks';
 import { WikiLinkPreview } from './WikiLinkPreview';
 
@@ -26,7 +26,7 @@ const INITIAL_PREVIEW: PreviewState = {
 
 interface WikiContentProps {
   html: string;
-  allFieldNotes?: Post[];
+  allFieldNotes?: FieldNoteMeta[];
   className?: string;
   onWikiLinkClick?: (conceptId: string) => void;
 }

@@ -1,6 +1,6 @@
 // App shell: provides layout structure and top-level routing
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams, useNavigate } from 'react-router-dom';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { ArticleContextProvider } from '../contexts/ArticleContext';
@@ -13,6 +13,10 @@ import { HomeView, AboutView, ContactView, ThanksView, SectionView, PostView, Se
 import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../constants/layout';
 import { useKeyboardShortcuts, ShortcutDef } from '../hooks/useKeyboardShortcuts';
 import { posts } from '../data/data';
+import { initBrainIndex } from '../lib/brainIndex';
+
+// Fire-and-forget: start loading the brain index early so it's ready by navigation time
+initBrainIndex();
 
 /** Redirect old /:category/:id URLs to grouped /lab|blog/:category/:id */
 const LegacyPostRedirect: React.FC = () => {
@@ -25,7 +29,7 @@ const STARFIELD_PAGES = ['/', '/home', '/about', '/contact', '/thanks'];
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, setTheme } = useTheme();
   const [searchOpen, setSearchOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -34,7 +38,6 @@ const AppLayout: React.FC = () => {
   // Global keyboard shortcuts (. for most recent, Shift+T for theme)
   const globalShortcuts = useMemo<ShortcutDef[]>(() => {
     const mostRecent = [...posts]
-      .filter(p => p.category !== 'fieldnotes')
       .sort((a, b) => b.date.localeCompare(a.date))[0];
 
     return [
@@ -73,6 +76,14 @@ const AppLayout: React.FC = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
+
+  // Auto-switch theme by route: blog (threads/bits2bricks) → light, lab (projects/second-brain) → dark
+  // useLayoutEffect fires BEFORE browser paint — no flash
+  useLayoutEffect(() => {
+    const path = location.pathname;
+    if (path.startsWith('/blog')) setTheme('light');
+    else if (path.startsWith('/lab')) setTheme('dark');
+  }, [location.pathname, setTheme]);
 
   const isStarfieldPage = STARFIELD_PAGES.includes(location.pathname);
   const showGrid = location.pathname.startsWith('/lab');

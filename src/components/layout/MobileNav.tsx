@@ -30,10 +30,9 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearc
 
 
   const handleRandom = () => {
-    const validPosts = posts.filter(p => p.category !== 'fieldnotes');
-    if (validPosts.length === 0) return;
-    const randomIndex = Math.floor(Math.random() * validPosts.length);
-    const randomPost = validPosts[randomIndex];
+    if (posts.length === 0) return;
+    const randomIndex = Math.floor(Math.random() * posts.length);
+    const randomPost = posts[randomIndex];
     navigate(`/${randomPost.category}/${randomPost.id}`);
     setIsOpen(false);
   };

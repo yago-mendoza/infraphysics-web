@@ -1,17 +1,9 @@
 // Second Brain Hub hook — tree building, multi-mode search, filters, sorts, stats
 
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FieldNote } from '../types';
-import {
-  allFieldNotes,
-  noteById,
-  backlinksMap,
-  relatedConceptsMap,
-  resolvedHtmlMap,
-  globalStats,
-  parentIds,
-} from '../lib/brainIndex';
+import { FieldNoteMeta } from '../types';
+import { initBrainIndex, fetchNoteContent, type BrainIndex } from '../lib/brainIndex';
 
 export type SearchMode = 'name' | 'content' | 'backlinks';
 export type SortMode = 'a-z' | 'most-links' | 'fewest-links' | 'depth' | 'shuffle';
@@ -35,7 +27,7 @@ const DEFAULT_FILTER_STATE: FilterState = {
 export interface TreeNode {
   label: string;
   path: string;           // full path e.g. "LAPTOP//UI//SCROLLING"
-  concept: FieldNote | null;
+  concept: FieldNoteMeta | null;
   children: TreeNode[];
   childCount: number;     // total descendants (concepts only)
 }
@@ -60,6 +52,23 @@ export const useSecondBrainHub = () => {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
 
+  // Async index state
+  const [index, setIndex] = useState<BrainIndex | null>(null);
+  const [resolvedHtml, setResolvedHtml] = useState('');
+  const [contentLoading, setContentLoading] = useState(false);
+
+  // Load index on mount
+  useEffect(() => {
+    initBrainIndex().then(setIndex);
+  }, []);
+
+  const allFieldNotes = index?.allFieldNotes ?? [];
+  const noteById = index?.noteById ?? new Map();
+  const backlinksMap = index?.backlinksMap ?? new Map();
+  const relatedConceptsMap = index?.relatedConceptsMap ?? new Map();
+  const parentIds = index?.parentIds ?? new Set();
+  const globalStats = index?.globalStats ?? { totalConcepts: 0, totalLinks: 0, orphanCount: 0, avgRefs: 0, maxDepth: 0, density: 0, mostConnectedHub: null };
+
   // Parse ID from pathname since this hook runs outside <Routes>
   const id = useMemo(() => {
     const match = location.pathname.match(/^\/lab\/second-brain\/(.+)$/);
@@ -76,7 +85,21 @@ export const useSecondBrainHub = () => {
   const activePost = useMemo(() => {
     if (id) return noteById.get(id) || null;
     return null;
-  }, [id]);
+  }, [id, noteById]);
+
+  // Fetch content when activePost changes
+  useEffect(() => {
+    if (!activePost) { setResolvedHtml(''); return; }
+    let cancelled = false;
+    setContentLoading(true);
+    fetchNoteContent(activePost.id).then(html => {
+      if (!cancelled) {
+        setResolvedHtml(html);
+        setContentLoading(false);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [activePost]);
 
   // Track which concept we were viewing before searching, so we can return to it
   const savedIdRef = useRef<string | undefined>(undefined);
@@ -100,22 +123,16 @@ export const useSecondBrainHub = () => {
   const backlinks = useMemo(() => {
     if (!activePost) return [];
     return (backlinksMap.get(activePost.id) || []).filter(n => n.id !== activePost.id);
-  }, [activePost]);
+  }, [activePost, backlinksMap]);
 
   // Related concepts — O(1) lookup
   const relatedConcepts = useMemo(() => {
     if (!activePost) return [];
     return relatedConceptsMap.get(activePost.id) || [];
-  }, [activePost]);
+  }, [activePost, relatedConceptsMap]);
 
   // Outgoing ref count
   const outgoingRefCount = useMemo(() => activePost?.references?.length || 0, [activePost]);
-
-  // Pre-resolved HTML — O(1) lookup
-  const resolvedHtml = useMemo(() => {
-    if (!activePost) return '';
-    return resolvedHtmlMap.get(activePost.id) || activePost.content;
-  }, [activePost]);
 
   // --- Directory Tree ---
   const tree = useMemo(() => {
@@ -170,7 +187,7 @@ export const useSecondBrainHub = () => {
     roots.sort((a, b) => a.label.localeCompare(b.label));
 
     return roots;
-  }, []);
+  }, [allFieldNotes]);
 
   // --- Filtered tree (by directoryQuery) ---
   const filteredTree = useMemo(() => {
@@ -209,8 +226,9 @@ export const useSecondBrainHub = () => {
     }
 
     if (searchMode === 'content') {
+      // Use pre-built searchText for content search (no need to load full HTML)
       return allFieldNotes.filter(note =>
-        note.content.toLowerCase().includes(q) ||
+        (note.searchText || '').includes(q) ||
         note.description.toLowerCase().includes(q)
       );
     }
@@ -227,7 +245,7 @@ export const useSecondBrainHub = () => {
     }
 
     return allFieldNotes;
-  }, [query, searchMode]);
+  }, [query, searchMode, allFieldNotes, backlinksMap]);
 
   // --- Directory scope filter ---
   const scopedResults = useMemo(() => {
@@ -262,7 +280,7 @@ export const useSecondBrainHub = () => {
 
       return true;
     });
-  }, [scopedResults, filterState]);
+  }, [scopedResults, filterState, backlinksMap, parentIds]);
 
   // --- Sort ---
   const sortedResults = useMemo(() => {
@@ -298,7 +316,7 @@ export const useSecondBrainHub = () => {
         break;
     }
     return sorted;
-  }, [filteredNotes, sortMode, shuffleSeed]);
+  }, [filteredNotes, sortMode, shuffleSeed, backlinksMap]);
 
   // --- Reshuffle ---
   const reshuffle = useCallback(() => {
@@ -341,6 +359,10 @@ export const useSecondBrainHub = () => {
   }, []);
 
   return {
+    // Loading state
+    indexLoading: !index,
+    contentLoading,
+
     // URL state
     activePost,
 
@@ -371,6 +393,7 @@ export const useSecondBrainHub = () => {
 
     // Data
     allFieldNotes,
+    noteById,
     sortedResults,
     stats: globalStats,
 

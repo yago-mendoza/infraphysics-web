@@ -1,9 +1,10 @@
 // Home page view — minimalist cosmic landing
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { posts } from '../data/data';
 import { Post } from '../types';
+import { initBrainIndex, type BrainIndex } from '../lib/brainIndex';
 import { ArrowRightIcon, SearchIcon } from '../components/icons';
 import { CATEGORY_CONFIG, catAccentVar, postPath, sectionPath } from '../config/categories';
 import { getSearchExcerpt, countMatches } from '../lib';
@@ -13,7 +14,7 @@ const categoryKeys = ['projects', 'threads', 'bits2bricks'] as const;
 export const HomeView: React.FC = () => {
   const featuredPosts = useMemo(() =>
     posts
-      .filter(p => p.featured && p.category !== 'fieldnotes')
+      .filter(p => p.featured)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
   []);
 
@@ -26,11 +27,15 @@ export const HomeView: React.FC = () => {
     return counts;
   }, []);
 
-  // Second Brain stats
-  const brainStats = useMemo(() => {
-    const fieldnotes = posts.filter(p => p.category === 'fieldnotes');
-    const totalRefs = fieldnotes.reduce((sum, fn) => sum + (fn.references?.length || 0), 0);
-    return { notes: fieldnotes.length, connections: totalRefs };
+  // Second Brain stats — loaded from async brain index
+  const [brainStats, setBrainStats] = useState({ notes: 0, connections: 0 });
+  useEffect(() => {
+    initBrainIndex().then(idx => {
+      setBrainStats({
+        notes: idx.globalStats.totalConcepts,
+        connections: idx.globalStats.totalLinks,
+      });
+    });
   }, []);
 
   // Unified search
@@ -56,7 +61,7 @@ export const HomeView: React.FC = () => {
     const q = searchQuery.trim();
     if (!q) return null;
 
-    const allPosts = posts.filter(p => p.category !== 'fieldnotes');
+    const allPosts = posts;
     const matches: { post: Post; matchCount: number; excerpt: string | null }[] = [];
     const counts: Record<string, number> = { projects: 0, threads: 0, bits2bricks: 0 };
 
