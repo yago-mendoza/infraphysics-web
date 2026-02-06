@@ -1,15 +1,29 @@
 // Async Second Brain index — loads fieldnotes metadata from generated index,
 // fetches individual note content on demand.
 
-import { FieldNoteMeta } from '../types';
+import { FieldNoteMeta, ConnectionRef } from '../types';
 import { addressToId } from './addressToId';
 import { resolveWikiLinks } from './wikilinks';
+
+export interface Connection {
+  note: FieldNoteMeta;
+  annotation: string | null;       // from the declaring side
+  reverseAnnotation: string | null; // from the other side (if bilateral)
+}
+
+export interface Neighborhood {
+  parent: FieldNoteMeta | null;
+  siblings: FieldNoteMeta[];
+  children: FieldNoteMeta[];
+}
 
 export interface BrainIndex {
   allFieldNotes: FieldNoteMeta[];
   noteById: Map<string, FieldNoteMeta>;
   backlinksMap: Map<string, FieldNoteMeta[]>;
-  relatedConceptsMap: Map<string, FieldNoteMeta[]>;
+  connectionsMap: Map<string, Connection[]>;
+  mentionsMap: Map<string, FieldNoteMeta[]>;
+  neighborhoodMap: Map<string, Neighborhood>;
   parentIds: Set<string>;
   globalStats: {
     totalConcepts: number;
@@ -33,12 +47,30 @@ export async function initBrainIndex(): Promise<BrainIndex> {
   if (_initPromise) return _initPromise;
 
   _initPromise = (async () => {
-    const indexData: FieldNoteMeta[] = await import('../data/fieldnotes-index.generated.json').then(m => m.default as FieldNoteMeta[]);
+    const indexData: FieldNoteMeta[] = await import('../data/fieldnotes-index.generated.json').then(m => m.default as unknown as FieldNoteMeta[]);
 
     const allFieldNotes = indexData;
     const noteById = new Map(allFieldNotes.map(n => [n.id, n]));
 
-    // Backlinks
+    // Address → note ID mapping (for neighborhood computation)
+    const addressToNoteId = new Map<string, string>();
+    allFieldNotes.forEach(note => {
+      if (note.address) addressToNoteId.set(note.address, note.id);
+    });
+
+    // Collect trailing ref addresses per note (for excluding from mentions)
+    const trailingRefIds = new Map<string, Set<string>>();
+    allFieldNotes.forEach(note => {
+      const refs = note.trailingRefs || [];
+      const ids = new Set<string>();
+      refs.forEach(ref => {
+        const addr = typeof ref === 'object' ? ref.address : ref;
+        ids.add(addressToId(addr));
+      });
+      trailingRefIds.set(note.id, ids);
+    });
+
+    // Backlinks (all references, including inline body + trailing)
     const backlinksMap = new Map<string, FieldNoteMeta[]>();
     allFieldNotes.forEach(note => {
       const seen = new Set<string>();
@@ -51,21 +83,90 @@ export async function initBrainIndex(): Promise<BrainIndex> {
       });
     });
 
-    // Related concepts
-    const relatedConceptsMap = new Map<string, FieldNoteMeta[]>();
+    // Bilateral connections from trailing refs
+    // For each note A with trailingRef B: A→B connection.
+    // If B also has trailingRef A: merge into single bilateral connection.
+    const connectionsMap = new Map<string, Connection[]>();
+
+    // First pass: collect all declared trailing ref connections
+    const declaredConnections = new Map<string, Map<string, string | null>>(); // noteId → Map<targetId, annotation>
     allFieldNotes.forEach(note => {
-      if (!note.trailingRefs || note.trailingRefs.length === 0) return;
-      const related = note.trailingRefs
-        .map(ref => noteById.get(addressToId(ref)))
-        .filter((n): n is FieldNoteMeta => n !== undefined);
-      if (related.length > 0) relatedConceptsMap.set(note.id, related);
+      const refs = note.trailingRefs || [];
+      if (refs.length === 0) return;
+      const map = new Map<string, string | null>();
+      refs.forEach(ref => {
+        const addr = typeof ref === 'object' ? ref.address : ref;
+        const annotation = typeof ref === 'object' ? ref.annotation : null;
+        const targetId = addressToId(addr);
+        if (targetId !== note.id) { // Skip self-refs
+          map.set(targetId, annotation);
+        }
+      });
+      declaredConnections.set(note.id, map);
+    });
+
+    // Second pass: build bilateral connections for each note
+    allFieldNotes.forEach(note => {
+      const seen = new Set<string>();
+      const connections: Connection[] = [];
+
+      // From this note's own trailing refs
+      const myDeclared = declaredConnections.get(note.id);
+      if (myDeclared) {
+        myDeclared.forEach((annotation, targetId) => {
+          const target = noteById.get(targetId);
+          if (!target || seen.has(targetId)) return;
+          seen.add(targetId);
+
+          // Check if target also declared a connection back
+          const theirDeclared = declaredConnections.get(targetId);
+          const reverseAnnotation = theirDeclared?.get(note.id) ?? null;
+
+          connections.push({ note: target, annotation, reverseAnnotation });
+        });
+      }
+
+      // From other notes' trailing refs that point to this note (bilateral reverse)
+      declaredConnections.forEach((theirRefs, otherId) => {
+        if (otherId === note.id || seen.has(otherId)) return;
+        if (theirRefs.has(note.id)) {
+          const other = noteById.get(otherId);
+          if (!other) return;
+          seen.add(otherId);
+          connections.push({
+            note: other,
+            annotation: null, // this note didn't declare the connection
+            reverseAnnotation: theirRefs.get(note.id) ?? null,
+          });
+        }
+      });
+
+      if (connections.length > 0) {
+        connectionsMap.set(note.id, connections);
+      }
+    });
+
+    // Mentions: body-text backlinks EXCLUDING trailing refs
+    // If note A references B in body text (but not as a trailing ref), B gets A as a "mention"
+    const mentionsMap = new Map<string, FieldNoteMeta[]>();
+    allFieldNotes.forEach(note => {
+      const seen = new Set<string>();
+      const myTrailingIds = trailingRefIds.get(note.id) || new Set();
+
+      (note.references || []).forEach(ref => {
+        const refId = addressToId(ref);
+        if (seen.has(refId) || refId === note.id) return;
+        seen.add(refId);
+
+        // Skip if this ref is also a trailing ref from note
+        if (myTrailingIds.has(refId)) return;
+
+        if (!mentionsMap.has(refId)) mentionsMap.set(refId, []);
+        mentionsMap.get(refId)!.push(note);
+      });
     });
 
     // Parent IDs
-    const addressToNoteId = new Map<string, string>();
-    allFieldNotes.forEach(note => {
-      if (note.address) addressToNoteId.set(note.address, note.id);
-    });
     const parentIds = new Set<string>();
     allFieldNotes.forEach(note => {
       const parts = note.addressParts;
@@ -75,6 +176,65 @@ export async function initBrainIndex(): Promise<BrainIndex> {
         const ancestorId = addressToNoteId.get(ancestorAddr);
         if (ancestorId) parentIds.add(ancestorId);
       }
+    });
+
+    // Neighborhood: parent, siblings, children for each note
+    const neighborhoodMap = new Map<string, Neighborhood>();
+    allFieldNotes.forEach(note => {
+      const parts = note.addressParts || [note.title];
+
+      // Parent
+      let parent: FieldNoteMeta | null = null;
+      if (parts.length > 1) {
+        const parentAddr = parts.slice(0, -1).join('//');
+        const parentId = addressToNoteId.get(parentAddr);
+        if (parentId) parent = noteById.get(parentId) || null;
+      }
+
+      // Siblings: same parent prefix, same depth
+      const siblings: FieldNoteMeta[] = [];
+      if (parts.length > 1) {
+        const parentPrefix = parts.slice(0, -1).join('//') + '//';
+        allFieldNotes.forEach(other => {
+          if (other.id === note.id) return;
+          const otherParts = other.addressParts || [other.title];
+          if (otherParts.length !== parts.length) return;
+          const otherAddr = other.address || '';
+          if (otherAddr.startsWith(parentPrefix)) {
+            // Must be direct child of same parent (no deeper nesting)
+            const remainder = otherAddr.slice(parentPrefix.length);
+            if (!remainder.includes('//')) {
+              siblings.push(other);
+            }
+          }
+        });
+      } else {
+        // Root-level: siblings are other root-level notes
+        allFieldNotes.forEach(other => {
+          if (other.id === note.id) return;
+          const otherParts = other.addressParts || [other.title];
+          if (otherParts.length === 1) siblings.push(other);
+        });
+      }
+
+      // Children: notes one level deeper with this note's address as prefix
+      const children: FieldNoteMeta[] = [];
+      const childPrefix = note.address + '//';
+      allFieldNotes.forEach(other => {
+        if (other.id === note.id) return;
+        const otherAddr = other.address || '';
+        if (otherAddr.startsWith(childPrefix)) {
+          const remainder = otherAddr.slice(childPrefix.length);
+          if (!remainder.includes('//')) {
+            children.push(other);
+          }
+        }
+      });
+
+      siblings.sort((a, b) => (a.address || a.title).localeCompare(b.address || b.title));
+      children.sort((a, b) => (a.address || a.title).localeCompare(b.address || b.title));
+
+      neighborhoodMap.set(note.id, { parent, siblings, children });
     });
 
     // Stats
@@ -115,7 +275,9 @@ export async function initBrainIndex(): Promise<BrainIndex> {
       allFieldNotes,
       noteById,
       backlinksMap,
-      relatedConceptsMap,
+      connectionsMap,
+      mentionsMap,
+      neighborhoodMap,
       parentIds,
       globalStats: { totalConcepts, totalLinks, orphanCount, avgRefs, maxDepth, density, mostConnectedHub },
     };
