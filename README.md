@@ -27,6 +27,8 @@ infraphysics-web/
     compiler.config.js        # Centralized compiler configuration
     build-content.js          # Markdown → JSON pipeline (triple output)
     validate-fieldnotes.js    # Reference integrity checks
+    rename-address.js         # Rename fieldnote address + update all references
+    check-references.js       # Detect orphans, weak parents, stale refs
     README.md                 # Build pipeline docs, cache format
   docs/
     validate-fieldnotes-term-err-view.jpg  # Validation output screenshot
@@ -38,6 +40,10 @@ infraphysics-web/
       ErrorBoundary.tsx       # React error boundary (prevents white-screen crashes)
       WikiContent.tsx         # HTML renderer with wiki-link resolution + hover preview
       WikiLinkPreview.tsx     # Floating preview card (portal)
+      NeighborhoodGraph.tsx   # SVG graph + detail panel (parent/siblings/children)
+      NavigationTrail.tsx     # Breadcrumb trail for concept navigation
+      SearchPalette.tsx       # Global search overlay (Cmd+K)
+      HomeTour.tsx            # Guided tour for landing page
       RotatingTitle.tsx       # Animated header widget
       sections/               # SearchResultsList, ProjectsList, ThreadsList, Bits2BricksGrid
       layout/                 # Sidebar, MobileNav, Footer, Starfield, DualGrid
@@ -57,6 +63,7 @@ infraphysics-web/
         threads/              # .md posts + _category.yaml
         bits2bricks/          # .md posts + _category.yaml
         fieldnotes/           # Individual .md files (1 per concept)
+          README.md             # Fieldnotes management guide (scripts, workflows, errors)
         home/                 # _home-featured.yaml
       posts.generated.json    # Regular posts only (no fieldnotes)
       fieldnotes-index.generated.json  # Fieldnote metadata (no content)
@@ -112,7 +119,7 @@ All colors flow through a three-layer cascade: CSS custom properties in `index.h
 
 ### Second Brain
 
-A flat knowledge graph of individual `.md` files in `fieldnotes/`. Each note has an `address` (hierarchical, `//`-separated) and links to other notes via `[[wiki-links]]`. Build produces three outputs: a posts JSON (no fieldnotes), a metadata index (no content), and individual content files served as static assets. At runtime, the index loads eagerly while content is fetched on demand per note. Wiki-links are resolved at fetch time against the loaded index.
+A flat knowledge graph of individual `.md` files in `fieldnotes/`. Each note has an `address` (hierarchical, `//`-separated) and links to other notes via `[[wiki-links]]`. Build produces three outputs: a posts JSON (no fieldnotes), a metadata index (no content), and individual content files served as static assets. At runtime, the index loads eagerly while content is fetched on demand per note. Wiki-links are resolved at fetch time against the loaded index. For managing fieldnotes (renaming, deleting, restructuring, auditing), see **[src/data/pages/fieldnotes/README.md](src/data/pages/fieldnotes/README.md)**.
 
 ---
 

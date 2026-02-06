@@ -796,7 +796,7 @@ For callout-style blocks with color coding and labels, use [typed blockquotes](#
 
 ## Second Brain (Fieldnotes)
 
-Each fieldnote is an individual `.md` file inside `fieldnotes/`. Every file uses YAML frontmatter followed by the body markdown.
+Each fieldnote is an individual `.md` file inside `fieldnotes/`. Every file uses YAML frontmatter followed by the body markdown. For the **operational side** (creating, renaming, deleting, available scripts, build errors, cascading effects), see **[fieldnotes/README.md](fieldnotes/README.md)**.
 
 ### File format
 
@@ -819,7 +819,7 @@ The arithmetic logic unit — the circuit inside a [[CPU//core]] that performs..
 | `address` | yes | string | Hierarchical identifier using `//` as separator. Primary identity. |
 | `date` | yes | string | ISO 8601 date (`YYYY-MM-DD`). |
 | `aliases` | no | string[] | Alternative names for the concept. Matched during name search. |
-| `supersedes` | no | string | Old address this note replaced. The build creates a redirect so old `[[refs]]` resolve to the new address. |
+| `supersedes` | no | string | Old address this note replaced. Build-time redirect so stale `[[refs]]` resolve to the new address. **Temporary** — remove after all references are updated. |
 | `distinct` | no | string[] | Addresses that share a segment name with this note but are intentionally different concepts. Suppresses segment collision warnings. Bilateral — only one note needs the annotation. |
 
 ### Filename convention
@@ -874,9 +874,16 @@ The runtime distinguishes three relationship types:
 
 ### Supersedes (address rename)
 
-When renaming a note, add `supersedes: "old address"` to the new note's frontmatter. The build creates a redirect map so all `[[old address]]` references resolve to the new address automatically. This is a soft migration — old references keep working without editing every file that used the old address.
+`supersedes` is a **build-time redirect only** — it resolves stale `[[wiki-links]]` to the new address at compile time. It does **not** redirect browser URLs or router paths.
 
-For a full rename (updating all source files), use the rename script: `node scripts/rename-address.js "old" "new"`.
+It is a **temporary migration aid**, not permanent metadata:
+
+1. Rename the note (or use `node scripts/rename-address.js "old" "new"`)
+2. Add `supersedes: "old address"` so stale `[[refs]]` keep working during transition
+3. Run the rename script with `--apply` to update all source references
+4. Once all references are updated, **remove** `supersedes` — it has served its purpose
+
+It should not accumulate. After a full rename pass, no stale references remain and the field is unnecessary.
 
 ### Validation
 

@@ -13,6 +13,8 @@ These are **mandatory triggers** — when X happens, do Y.
 ### On writing or editing article content
 **Before generating or editing any markdown**, read **[src/data/pages/README.md](src/data/pages/README.md)**. It documents every available syntax feature, frontmatter schema per content type (projects, threads, bits2bricks, fieldnotes), edge cases, and recommendations. Never guess syntax from memory — always consult that file.
 
+**Before managing fieldnotes** (creating, renaming, deleting, restructuring), read **[src/data/pages/fieldnotes/README.md](src/data/pages/fieldnotes/README.md)**. It covers the available scripts, step-by-step workflows, cascading effects, and the full error reference. Never rename or delete fieldnotes by hand — use the scripts.
+
 **After editing any `.md` file in `src/data/pages/`**, run `npm run build` to recompile content. Markdown is compiled at build time — changes are invisible until the build runs.
 
 ### On syntax/pipeline/frontmatter change
@@ -25,6 +27,7 @@ Root `README.md` is a **hub** — max 3 lines per topic, then link to a speciali
 |---|---|
 | **scripts/README.md** | Build pipeline (14 steps), cache format, outputs, Shiki, validation |
 | **src/data/pages/README.md** | Authoring: frontmatter, custom syntax, wiki-links, edge cases |
+| **src/data/pages/fieldnotes/README.md** | Fieldnotes management: scripts, workflows, rename/delete, build errors, cascading effects |
 
 If a new subsystem needs more than a paragraph of docs, extend or create a specialized README and link from root.
 

@@ -271,7 +271,7 @@ All validation flags live in `compiler.config.js` under `validation`:
 
 ## `check-references.js`
 
-Optional deep audit script (not part of `npm run build`). Run manually:
+Optional deep audit script (not part of `npm run build`). Run manually. For the full developer workflow (when to run this, how to act on results, cascading effects), see **[src/data/pages/fieldnotes/README.md](../src/data/pages/fieldnotes/README.md)**.
 
 ```bash
 node scripts/check-references.js

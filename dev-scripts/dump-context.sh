@@ -90,6 +90,8 @@ FILES=(
   "src/components/App.tsx"
   "src/components/SearchPalette.tsx"
   "src/components/NavigationTrail.tsx"
+  "src/components/NeighborhoodGraph.tsx"
+  "src/components/HomeTour.tsx"
   "src/components/RotatingTitle.tsx"
   "src/components/WikiContent.tsx"
   "src/components/WikiLinkPreview.tsx"
@@ -114,7 +116,10 @@ FILES=(
   "scripts/build-content.js"
   "scripts/compiler.config.js"
   "scripts/validate-fieldnotes.js"
+  "scripts/rename-address.js"
+  "scripts/check-references.js"
   "scripts/README.md"
+  "src/data/pages/fieldnotes/README.md"
 
   # --- Contenido representativo (1 por categoría + 1 fieldnote, para mostrar frontmatter) ---
   "src/data/pages/threads/anatomy-of-a-markdown-compiler.md"
