@@ -53,11 +53,19 @@ export const SecondBrainView: React.FC = () => {
     if (concept) scheduleExtend(concept);
   }, [scheduleExtend]);
 
-  // Grid card click — reset trail to single item & clear search so detail view shows
+  // Grid card click — reset trail to single item (search clears via effect below)
   const handleGridCardClick = useCallback((post: FieldNoteMeta) => {
     scheduleReset(post);
-    clearSearch();
-  }, [scheduleReset, clearSearch]);
+  }, [scheduleReset]);
+
+  // Clear search AFTER activePost changes (avoids 1-frame flicker of old note)
+  const prevActiveIdRef = useRef(activePost?.id);
+  useEffect(() => {
+    if (activePost && activePost.id !== prevActiveIdRef.current && searchActive) {
+      clearSearch();
+    }
+    prevActiveIdRef.current = activePost?.id;
+  }, [activePost, searchActive, clearSearch]);
 
   // Related / backlink click — extend trail
   const handleConnectionClick = useCallback((post: FieldNoteMeta) => {

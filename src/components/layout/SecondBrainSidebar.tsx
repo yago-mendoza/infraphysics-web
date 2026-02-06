@@ -194,10 +194,22 @@ export const SecondBrainSidebar: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Type-to-search: any printable key focuses the search bar and starts typing
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'f') {
         e.preventDefault();
+        searchInputRef.current?.focus();
+        return;
+      }
+
+      // Skip if already focused on an input/textarea, or if modifier keys are held
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      // Printable character — single char, not a control key
+      if (e.key.length === 1) {
         searchInputRef.current?.focus();
       }
     };
@@ -233,20 +245,24 @@ export const SecondBrainSidebar: React.FC = () => {
   const sections = (
     <>
       {/* Search */}
-      <Section title={<>search <kbd className="normal-case tracking-normal text-th-muted text-[8px] opacity-60">Ctrl+Shift+F</kbd></>} icon={<SearchIcon />} defaultOpen={true}>
+      <Section title={<>search <span className="normal-case tracking-normal text-th-muted text-[8px] opacity-40 font-normal">type anywhere to search</span></>} icon={<SearchIcon />} defaultOpen={true}>
         <div className="flex items-center border border-th-hub-border px-2 py-1.5 bg-th-surface focus-within:border-th-border-active transition-colors mb-2">
           <input
             ref={searchInputRef}
             type="text"
             placeholder="Search..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              setQuery(val);
+              if (!val) searchInputRef.current?.blur();
+            }}
             onKeyDown={(e) => { if (e.key === 'Escape') { setQuery(''); searchInputRef.current?.blur(); } }}
             className="w-full text-[11px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
           />
           {query && (
             <button
-              onClick={() => setQuery('')}
+              onClick={() => { setQuery(''); searchInputRef.current?.blur(); }}
               className="text-th-muted hover:text-th-secondary text-[10px] ml-1 flex-shrink-0"
             >
               &times;
