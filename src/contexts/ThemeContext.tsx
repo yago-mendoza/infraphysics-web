@@ -1,20 +1,21 @@
 // Theme context — dark/light toggle with persistence
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 type Theme = 'dark' | 'light';
 
 interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
+  setTheme: (next: Theme) => void;
 }
 
-const ThemeContext = createContext<ThemeContextType>({ theme: 'dark', toggleTheme: () => {} });
+const ThemeContext = createContext<ThemeContextType>({ theme: 'dark', toggleTheme: () => {}, setTheme: () => {} });
 
 export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>(() => {
+  const [theme, setThemeState] = useState<Theme>(() => {
     try {
       const saved = localStorage.getItem('theme') as Theme | null;
       if (saved === 'dark' || saved === 'light') return saved;
@@ -27,33 +28,33 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try { localStorage.setItem('theme', theme); } catch {}
   }, [theme]);
 
-  const toggleTheme = () => {
-    const next: Theme = theme === 'dark' ? 'light' : 'dark';
+  // Instant theme set — for route-based auto-switching (no animation)
+  const setTheme = useCallback((next: Theme) => {
+    if (document.documentElement.getAttribute('data-theme') === next) return;
+    document.documentElement.setAttribute('data-theme', next);
+    setThemeState(next);
+  }, []);
 
-    // 1. Declare transitions on every element
+  // Smooth animated toggle — for manual user action only
+  const toggleTheme = useCallback(() => {
+    const current = document.documentElement.getAttribute('data-theme') as Theme;
+    const next: Theme = current === 'dark' ? 'light' : 'dark';
+
     document.documentElement.classList.add('theme-transitioning');
-
-    // 2. Force reflow so the browser registers the transition properties
-    //    BEFORE any values change.
     void document.documentElement.offsetHeight;
-
-    // 3. Flip data-theme synchronously — CSS vars update in the same frame,
-    //    transitions kick in immediately for all elements.
     document.documentElement.setAttribute('data-theme', next);
 
-    // 4. Delay React re-render to next frame so Chrome commits to the
-    //    CSS transition before React touches any DOM attributes/styles.
     requestAnimationFrame(() => {
-      setTheme(next);
+      setThemeState(next);
     });
 
     setTimeout(() => {
       document.documentElement.classList.remove('theme-transitioning');
     }, 1100);
-  };
+  }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );
