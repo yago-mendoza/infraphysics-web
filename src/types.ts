@@ -38,14 +38,26 @@ export interface ArticlePost extends BasePost {
   category: 'threads' | 'bits2bricks';
 }
 
-export interface FieldNote extends BasePost {
+/* ── Fieldnote: lightweight metadata (no content) + full type ── */
+
+export interface FieldNoteMeta {
+  id: string;
+  title: string;
+  displayTitle?: string;
   category: 'fieldnotes';
+  date: string;
+  description: string;
   address: string;
   addressParts?: string[];
   references?: string[];
   trailingRefs?: string[];
+  searchText?: string;
 }
 
-/* ── Discriminated union ── */
+export interface FieldNote extends FieldNoteMeta {
+  content: string;
+}
 
-export type Post = ProjectPost | ArticlePost | FieldNote;
+/* ── Discriminated union (fieldnotes excluded — loaded via brainIndex) ── */
+
+export type Post = ProjectPost | ArticlePost;

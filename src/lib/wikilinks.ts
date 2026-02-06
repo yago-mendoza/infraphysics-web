@@ -1,12 +1,12 @@
 // Shared utility for resolving wiki-links at runtime
 
-import { FieldNote } from '../types';
+import { FieldNoteMeta } from '../types';
 import { addressToId } from './addressToId';
 
 export function resolveWikiLinks(
   html: string,
-  allFieldNotes: FieldNote[],
-  noteMap?: Map<string, FieldNote>,
+  allFieldNotes: FieldNoteMeta[],
+  noteMap?: Map<string, FieldNoteMeta>,
 ): { html: string; resolvedRefs: string[]; unresolvedRefs: string[] } {
   const resolvedRefs: string[] = [];
   const unresolvedRefs: string[] = [];
