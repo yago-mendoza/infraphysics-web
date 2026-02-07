@@ -11,8 +11,13 @@ import { addressToId } from '../lib/addressToId';
 import type { SortMode } from '../hooks/useSecondBrainHub';
 import { noteLabel, type FieldNoteMeta } from '../types';
 import type { Connection } from '../lib/brainIndex';
+import { ICON_REF_IN, ICON_REF_OUT } from '../lib/icons';
+import { WikiLinkPreview } from '../components/WikiLinkPreview';
 import '../styles/article.css';
 import '../styles/wiki-content.css';
+
+/** Display-friendly address: `//` → `/` */
+const displayAddress = (addr: string) => addr.replace(/\/\//g, ' / ');
 
 const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: 'a-z', label: 'A\u2013Z' },
@@ -35,8 +40,9 @@ export const SecondBrainView: React.FC = () => {
     mentions,
     neighborhood,
     outgoingRefCount,
+    homonyms,
     resolvedHtml,
-    contentLoading,
+    contentReadyId,
     indexLoading,
     noteById,
     query,
@@ -60,10 +66,12 @@ export const SecondBrainView: React.FC = () => {
     if (concept) scheduleExtend(concept);
   }, [scheduleExtend]);
 
-  // Grid card click — reset trail to single item (search clears via effect below)
+  // Grid card click — reset trail to single item, clear search synchronously
+  // (clearing in handler prevents 1-frame flash where searchActive is still true)
   const handleGridCardClick = useCallback((post: FieldNoteMeta) => {
+    if (searchActive) clearSearch();
     scheduleReset(post);
-  }, [scheduleReset]);
+  }, [scheduleReset, searchActive, clearSearch]);
 
   // Clear search AFTER activePost changes (avoids 1-frame flicker of old note)
   const prevActiveIdRef = useRef(activePost?.id);
@@ -82,6 +90,34 @@ export const SecondBrainView: React.FC = () => {
   // When search is active, force list view even if we're on a detail URL
   const showDetail = activePost && !searchActive;
 
+  // Content ready = content loaded for the currently displayed note
+  const contentReady = activePost?.id === contentReadyId;
+
+  // Mention hover preview
+  const [mentionPreview, setMentionPreview] = useState<{
+    visible: boolean; title: string; address: string; description: string; x: number; y: number;
+  }>({ visible: false, title: '', address: '', description: '', x: 0, y: 0 });
+  const mentionHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showMentionPreview = useCallback((m: FieldNoteMeta, e: React.MouseEvent) => {
+    if (mentionHideTimer.current) { clearTimeout(mentionHideTimer.current); mentionHideTimer.current = null; }
+    setMentionPreview({
+      visible: true,
+      title: noteLabel(m),
+      address: m.address || '',
+      description: m.description || '',
+      x: e.clientX,
+      y: e.clientY,
+    });
+  }, []);
+
+  const hideMentionPreview = useCallback(() => {
+    mentionHideTimer.current = setTimeout(() => {
+      setMentionPreview(p => ({ ...p, visible: false }));
+      mentionHideTimer.current = null;
+    }, 80);
+  }, []);
+
   // "Unvisited only" filter for grid view
   const [unvisitedOnly, setUnvisitedOnly] = useState(false);
 
@@ -90,17 +126,19 @@ export const SecondBrainView: React.FC = () => {
   const [focusedDetailIdx, setFocusedDetailIdx] = useState(0);
   const [showDetailFocus, setShowDetailFocus] = useState(false);
 
-  // Set default zone when note changes: siblings > children > parent
+  // Set default zone when note changes — persist previous zone if still valid
   useEffect(() => {
-    if (neighborhood.siblings.length > 0) {
-      setActiveZone('siblings');
-    } else if (neighborhood.children.length > 0) {
-      setActiveZone('children');
-    } else if (neighborhood.parent) {
-      setActiveZone('parent');
-    } else {
-      setActiveZone(null);
-    }
+    setActiveZone(prev => {
+      // Keep current zone if the new note still has it
+      if (prev === 'parent' && neighborhood.parent) return 'parent';
+      if (prev === 'siblings' && neighborhood.siblings.length > 0) return 'siblings';
+      if (prev === 'children' && neighborhood.children.length > 0) return 'children';
+      // Fall back to default priority
+      if (neighborhood.siblings.length > 0) return 'siblings';
+      if (neighborhood.children.length > 0) return 'children';
+      if (neighborhood.parent) return 'parent';
+      return null;
+    });
     setFocusedDetailIdx(0);
   }, [activePost?.id, neighborhood.siblings.length, neighborhood.children.length, neighborhood.parent]);
 
@@ -143,17 +181,72 @@ export const SecondBrainView: React.FC = () => {
     return results;
   }, [sortedResults, visibleCount, searchActive, activePost, unvisitedOnly, isVisited]);
 
+  // --- Grid arrow-key navigation ---
+  const navigate = useNavigate();
+
+  // --- Homonyms: other parents that share the same leaf name ---
+  const homonymParents = useMemo(() => {
+    if (!activePost || homonyms.length < 2) return [];
+    return homonyms
+      .filter(h => h.id !== activePost.id)
+      .map(h => {
+        const parts = h.addressParts || [h.title];
+        if (parts.length < 2) return null;
+        const parentAddr = parts.slice(0, -1).join('//');
+        const parentId = addressToId(parentAddr);
+        const parentNote = noteById.get(parentId);
+        return parentNote ? { parent: parentNote, homonym: h } : null;
+      })
+      .filter((x): x is { parent: FieldNoteMeta; homonym: FieldNoteMeta } => x !== null);
+  }, [activePost, homonyms, noteById]);
+
+  const homonymLeaf = useMemo(() => {
+    if (!activePost || homonyms.length < 2) return '';
+    const parts = activePost.addressParts || [activePost.title];
+    return parts[parts.length - 1];
+  }, [activePost, homonyms]);
+
+  const [homonymIdx, setHomonymIdx] = useState(0);
+
+  // Reset homonym index when note changes
+  useEffect(() => { setHomonymIdx(0); }, [activePost?.id]);
+
+  const cycleHomonym = useCallback((direction: 'prev' | 'next') => {
+    if (homonymParents.length === 0) return;
+    const next = direction === 'prev'
+      ? (homonymIdx - 1 + homonymParents.length) % homonymParents.length
+      : (homonymIdx + 1) % homonymParents.length;
+    const target = homonymParents[next].homonym;
+    setHomonymIdx(next);
+    scheduleExtend(target);
+    navigate(`/lab/second-brain/${target.id}`);
+  }, [homonymParents, homonymIdx, scheduleExtend, navigate]);
+
+  // Available zones in left→right order (matches SVG layout)
+  const availableZones = useMemo<Zone[]>(() => {
+    const z: Zone[] = [];
+    if (neighborhood.parent) z.push('parent');
+    if (neighborhood.siblings.length > 0) z.push('siblings');
+    if (neighborhood.children.length > 0) z.push('children');
+    return z;
+  }, [neighborhood.parent, neighborhood.siblings.length, neighborhood.children.length]);
+
   // --- Detail-view items for keyboard nav ---
   const detailItems = useMemo(() => {
     if (!showDetail || !activeZone) return [];
-    if (activeZone === 'parent' && neighborhood.parent) return [neighborhood.parent];
+    if (activeZone === 'parent') {
+      const items: FieldNoteMeta[] = [];
+      if (neighborhood.parent) items.push(neighborhood.parent);
+      homonymParents.forEach(gp => {
+        if (!items.some(i => i.id === gp.parent.id)) items.push(gp.parent);
+      });
+      return items;
+    }
     if (activeZone === 'siblings') return neighborhood.siblings;
     if (activeZone === 'children') return neighborhood.children;
     return [];
-  }, [showDetail, activeZone, neighborhood]);
+  }, [showDetail, activeZone, neighborhood, homonymParents]);
 
-  // --- Grid arrow-key navigation ---
-  const navigate = useNavigate();
   const [focusedIdx, setFocusedIdx] = useState(0);
   const gridRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Map<number, HTMLAnchorElement>>(new Map());
@@ -247,6 +340,10 @@ export const SecondBrainView: React.FC = () => {
           }
           return;
         case 'Escape':
+          if (searchActive && activePost) {
+            // Return to the note the user was reading before typing to search
+            clearSearch();
+          }
           setFocusedIdx(-1);
           return;
         default:
@@ -261,7 +358,7 @@ export const SecondBrainView: React.FC = () => {
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [showDetail, focusedIdx, visibleResults, getColCount, handleGridCardClick, navigate]);
+  }, [showDetail, focusedIdx, visibleResults, getColCount, handleGridCardClick, navigate, searchActive, activePost, clearSearch]);
 
   // --- Detail-view arrow-key navigation (right column boxes) ---
   useEffect(() => {
@@ -270,6 +367,17 @@ export const SecondBrainView: React.FC = () => {
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+      // Zone cycling — ArrowLeft/Right cycles between parent/siblings/children
+      if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && availableZones.length > 1) {
+        e.preventDefault();
+        const curIdx = activeZone ? availableZones.indexOf(activeZone) : -1;
+        const nextIdx = e.key === 'ArrowLeft'
+          ? (curIdx <= 0 ? availableZones.length - 1 : curIdx - 1)
+          : (curIdx >= availableZones.length - 1 ? 0 : curIdx + 1);
+        setActiveZone(availableZones[nextIdx]);
+        return;
+      }
 
       const total = detailItems.length;
       if (total === 0) return;
@@ -307,7 +415,7 @@ export const SecondBrainView: React.FC = () => {
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [showDetail, detailItems, focusedDetailIdx, handleConnectionClick, navigate]);
+  }, [showDetail, detailItems, focusedDetailIdx, handleConnectionClick, navigate, availableZones, activeZone]);
 
   // Hide detail focus highlight on mouse click (re-shown on next arrow key)
   useEffect(() => {
@@ -327,8 +435,14 @@ export const SecondBrainView: React.FC = () => {
       {showDetail ? (
         /* --- Concept Detail View --- */
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-          {/* Left: Content + Connections + Mentions — page scrolls naturally */}
-          <div className="lg:col-span-3">
+          {/* Left: Content + Connections + Mentions — fades during note transitions */}
+          <div
+            className="lg:col-span-3"
+            style={{
+              opacity: contentReady ? 1 : 0,
+              transition: contentReady ? 'opacity 200ms ease-in' : 'none',
+            }}
+          >
             {/* Navigation Trail */}
             <NavigationTrail
               trail={trail}
@@ -371,11 +485,14 @@ export const SecondBrainView: React.FC = () => {
                     key={m.id}
                     to={`/lab/second-brain/${m.id}`}
                     onClick={() => handleConnectionClick(m)}
+                    onMouseEnter={(e) => showMentionPreview(m, e)}
+                    onMouseLeave={hideMentionPreview}
                     className={`text-sm font-medium transition-colors no-underline ${isVisited(m.id) ? 'text-blue-400/70 hover:text-blue-400' : 'text-violet-400/70 hover:text-violet-400'}`}
                   >
-                    <sup className="text-[0.6em] opacity-60 mr-0.5">{'\u25C7'}</sup>{noteLabel(m)}
+                    {noteLabel(m)}<svg className="inline w-[0.85em] h-[0.85em] ml-0.5 opacity-50" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style={{ verticalAlign: '-0.1em' }}><path fillRule="evenodd" clipRule="evenodd" d={ICON_REF_IN}/></svg>
                   </Link>
                 ))}
+                <WikiLinkPreview {...mentionPreview} variant="blue" />
               </div>
             )}
 
@@ -386,17 +503,16 @@ export const SecondBrainView: React.FC = () => {
               <span>mentioned {'\u2191'} {mentions.length}</span>
             </div>
 
-            {/* Content — fetched on demand, styled via article.css base + wiki-content.css overrides */}
+            {/* Content — fetched on demand, styled via article.css base + wiki-content.css overrides.
+                Always render WikiContent (no "Loading..." conditional) — the column opacity
+                hides everything during transitions, avoiding layout shifts from height changes. */}
             <div className="article-page-wrapper article-wiki">
-              {contentLoading ? (
-                <div className="text-xs text-th-tertiary py-4">Loading...</div>
-              ) : (
-                <WikiContent
-                  html={resolvedHtml}
-                  className="article-content"
-                  onWikiLinkClick={handleWikiLinkClick}
-                />
-              )}
+              <WikiContent
+                html={resolvedHtml}
+                className="article-content"
+                onWikiLinkClick={handleWikiLinkClick}
+                isVisited={isVisited}
+              />
             </div>
 
             {/* ─── Interactions (bilateral, annotated) ─── */}
@@ -405,34 +521,29 @@ export const SecondBrainView: React.FC = () => {
                 <h3 className="text-[11px] text-th-tertiary uppercase tracking-wider mb-4">
                   Interactions
                 </h3>
-                <div className="space-y-4">
-                  {connections.map((conn: Connection) => (
-                    <Link
-                      key={conn.note.id}
-                      to={`/lab/second-brain/${conn.note.id}`}
-                      onClick={() => handleConnectionClick(conn.note)}
-                      className="block group"
-                    >
-                      <div className="flex items-center gap-2">
-                        <svg className="w-3.5 h-3.5 flex-shrink-0 text-th-muted" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M1 7h12M4 4L1 7l3 3M10 4l3 3-3 3" />
-                        </svg>
-                        <span className={`text-sm font-medium transition-colors whitespace-nowrap ${isVisited(conn.note.id) ? 'text-blue-400/70 group-hover:text-blue-400' : 'text-violet-400/70 group-hover:text-violet-400'}`}>
-                          {noteLabel(conn.note)}
-                        </span>
+                <div className="space-y-3">
+                  {connections.map((conn: Connection) => {
+                    const v = isVisited(conn.note.id);
+                    return (
+                      <div key={conn.note.id}>
+                        <Link
+                          to={`/lab/second-brain/${conn.note.id}`}
+                          onClick={() => handleConnectionClick(conn.note)}
+                          className={`inline transition-colors no-underline border-b border-solid cursor-pointer ${v ? 'text-blue-400/70 hover:text-blue-400 border-blue-400/40 hover:border-blue-400' : 'text-violet-400/70 hover:text-violet-400 border-violet-400/40 hover:border-violet-400'}`}
+                        >
+                          <span className="text-sm">{noteLabel(conn.note)}</span><svg className="inline w-[0.85em] h-[0.85em] ml-0.5 opacity-80" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style={{ verticalAlign: '-0.1em' }}><path fillRule="evenodd" clipRule="evenodd" d={ICON_REF_OUT}/></svg>
+                        </Link>
                         {conn.note.address && (
-                          <span className="text-xs text-th-muted">
-                            {conn.note.address}
-                          </span>
+                          <span className="text-xs text-th-muted ml-2">{displayAddress(conn.note.address)}</span>
+                        )}
+                        {(conn.annotation || conn.reverseAnnotation) && (
+                          <div className="text-xs text-th-tertiary mt-0.5 italic font-sans">
+                            {conn.annotation || conn.reverseAnnotation}
+                          </div>
                         )}
                       </div>
-                      {(conn.annotation || conn.reverseAnnotation) && (
-                        <div className="text-xs text-th-tertiary mt-0.5 italic font-sans pl-[22px]">
-                          {conn.annotation || conn.reverseAnnotation}
-                        </div>
-                      )}
-                    </Link>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -448,6 +559,12 @@ export const SecondBrainView: React.FC = () => {
               activeZone={activeZone}
               onActiveZoneChange={setActiveZone}
               focusedDetailIdx={showDetailFocus ? focusedDetailIdx : -1}
+              homonymParents={homonymParents}
+              homonymLeaf={homonymLeaf}
+              onHomonymNavigate={(homonym) => {
+                scheduleExtend(homonym);
+                navigate(`/lab/second-brain/${homonym.id}`);
+              }}
             />
           </div>
         </div>
@@ -520,7 +637,7 @@ export const SecondBrainView: React.FC = () => {
                   </div>
                   {note.addressParts && note.addressParts.length > 1 && (
                     <div className="text-[10px] text-th-tertiary mb-1">
-                      {note.address}
+                      {displayAddress(note.address!)}
                     </div>
                   )}
                   {note.description && (

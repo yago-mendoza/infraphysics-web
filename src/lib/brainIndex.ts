@@ -24,6 +24,7 @@ export interface BrainIndex {
   connectionsMap: Map<string, Connection[]>;
   mentionsMap: Map<string, FieldNoteMeta[]>;
   neighborhoodMap: Map<string, Neighborhood>;
+  homonymsMap: Map<string, FieldNoteMeta[]>;
   parentIds: Set<string>;
   globalStats: {
     totalConcepts: number;
@@ -237,6 +238,22 @@ export async function initBrainIndex(): Promise<BrainIndex> {
       neighborhoodMap.set(note.id, { parent, siblings, children });
     });
 
+    // Homonyms: group notes that share the same leaf segment name
+    const homonymsMap = new Map<string, FieldNoteMeta[]>();
+    const _leafBuckets = new Map<string, FieldNoteMeta[]>();
+    allFieldNotes.forEach(note => {
+      const parts = note.addressParts || [note.title];
+      const leaf = parts[parts.length - 1].toLowerCase();
+      if (!_leafBuckets.has(leaf)) _leafBuckets.set(leaf, []);
+      _leafBuckets.get(leaf)!.push(note);
+    });
+    _leafBuckets.forEach((notes, leaf) => {
+      if (notes.length >= 2) {
+        notes.sort((a, b) => (a.address || a.title).localeCompare(b.address || b.title));
+        homonymsMap.set(leaf, notes);
+      }
+    });
+
     // Stats
     const totalConcepts = allFieldNotes.length;
     const totalLinks = allFieldNotes.reduce((sum, n) => sum + (n.references?.length || 0), 0);
@@ -278,6 +295,7 @@ export async function initBrainIndex(): Promise<BrainIndex> {
       connectionsMap,
       mentionsMap,
       neighborhoodMap,
+      homonymsMap,
       parentIds,
       globalStats: { totalConcepts, totalLinks, orphanCount, avgRefs, maxDepth, density, mostConnectedHub },
     };

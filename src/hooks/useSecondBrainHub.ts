@@ -56,6 +56,7 @@ export const useSecondBrainHub = () => {
   const [index, setIndex] = useState<BrainIndex | null>(null);
   const [resolvedHtml, setResolvedHtml] = useState('');
   const [contentLoading, setContentLoading] = useState(false);
+  const [contentReadyId, setContentReadyId] = useState<string | undefined>();
 
   // Load index on mount
   useEffect(() => {
@@ -68,6 +69,7 @@ export const useSecondBrainHub = () => {
   const connectionsMap = index?.connectionsMap ?? new Map();
   const mentionsMap = index?.mentionsMap ?? new Map();
   const neighborhoodMap = index?.neighborhoodMap ?? new Map();
+  const homonymsMap = index?.homonymsMap ?? new Map();
   const parentIds = index?.parentIds ?? new Set();
   const globalStats = index?.globalStats ?? { totalConcepts: 0, totalLinks: 0, orphanCount: 0, avgRefs: 0, maxDepth: 0, density: 0, mostConnectedHub: null };
 
@@ -116,13 +118,14 @@ export const useSecondBrainHub = () => {
 
   // Fetch content when activePost changes
   useEffect(() => {
-    if (!activePost) { setResolvedHtml(''); return; }
+    if (!activePost) { setResolvedHtml(''); setContentReadyId(undefined); return; }
     let cancelled = false;
     setContentLoading(true);
     fetchNoteContent(activePost.id).then(html => {
       if (!cancelled) {
         setResolvedHtml(html);
         setContentLoading(false);
+        setContentReadyId(activePost.id);
       }
     });
     return () => { cancelled = true; };
@@ -172,6 +175,14 @@ export const useSecondBrainHub = () => {
 
   // Outgoing ref count
   const outgoingRefCount = useMemo(() => activePost?.references?.length || 0, [activePost]);
+
+  // Homonyms: other notes that share the same leaf segment name
+  const homonyms = useMemo((): FieldNoteMeta[] => {
+    if (!activePost) return [];
+    const parts = activePost.addressParts || [activePost.title];
+    const leaf = parts[parts.length - 1].toLowerCase();
+    return homonymsMap.get(leaf) || [];
+  }, [activePost, homonymsMap]);
 
   // --- Directory Tree ---
   const tree = useMemo(() => {
@@ -451,7 +462,9 @@ export const useSecondBrainHub = () => {
     mentions,
     neighborhood,
     outgoingRefCount,
+    homonyms,
     resolvedHtml,
+    contentReadyId,
 
     // Visited tracking (session-scoped)
     isVisited,
