@@ -47,7 +47,10 @@ export const WikiLinkPreview: React.FC<WikiLinkPreviewProps> = ({
   return createPortal(
     <div className={cls} style={{ left, top, pointerEvents: 'none' }}>
       <div className="wiki-preview-title">{title}</div>
-      <div className="wiki-preview-address">{address.replace(/\/\//g, ' / ')}</div>
+      <div className="wiki-preview-address">
+        {!address.includes('//') && <span className="opacity-50">root · </span>}
+        {address.replace(/\/\//g, ' / ')}
+      </div>
       {description && (
         <div className="wiki-preview-description">{description}</div>
       )}
