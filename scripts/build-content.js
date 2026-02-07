@@ -736,14 +736,15 @@ function extractFieldnoteMeta(filename, filePath) {
     : '';
 
   const refRegex = /\[\[([^\]]+)\]\]/g;
-  const references = [];
+  const refsSet = new Set();
   let match;
   while ((match = refRegex.exec(bodyMd)) !== null) {
     // Strip pipe display text (e.g. [[CPU//core|the core]] → CPU//core)
     const raw = match[1];
     const pipeIdx = raw.indexOf('|');
-    references.push(pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw);
+    refsSet.add(pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw);
   }
+  const references = [...refsSet];
 
   // Trailing refs — support annotated form: [[address]] :: annotation
   const trailingRefs = [];
