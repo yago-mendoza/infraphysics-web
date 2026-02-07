@@ -62,6 +62,7 @@ infraphysics-web/
       pages/
         README.md               # Authoring guide (frontmatter, syntax, pipeline, edge cases)
         projects/             # .md posts + _category.yaml
+          README.md             # Project article editorial guide
         threads/              # .md posts + _category.yaml
         bits2bricks/          # .md posts + _category.yaml
         fieldnotes/           # Individual .md files (1 per concept)
