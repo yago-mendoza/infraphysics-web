@@ -301,7 +301,7 @@ export const SecondBrainSidebar: React.FC = () => {
           <input
             ref={searchInputRef}
             type="text"
-            placeholder={directoryScope ? `Search in ${directoryScope.replace(/\/\//g, '/')}...` : 'Search...'}
+            placeholder={directoryScope ? `Search in ${directoryScope.replace(/\/\//g, ' / ')}...` : 'Search...'}
             value={query}
             onChange={(e) => {
               const val = e.target.value;
