@@ -2,6 +2,8 @@
 
 > Instructions for AI coding assistants (Claude Code, Copilot, Cursor, etc.) working on this codebase. Contains automation rules, architecture patterns, and active gotchas. Human developers may also find it useful as a concise architectural reference.
 
+> **[!!!!!] WORKFLOW AWARENESS [!!!!!]** — Before and after every task, check which automation rules apply. Every file change, every content edit, every structural decision has documentation consequences. Ask yourself: does this trigger a README update? A build? A tree update? A category README revision? Stay attentive to the full workflow, not just the code change.
+
 ## Automation Rules
 
 These are **mandatory triggers** — when X happens, do Y.
@@ -11,11 +13,13 @@ These are **mandatory triggers** — when X happens, do Y.
 2. Check if file should be added/removed from `FILES` array in `dev-scripts/dump-context.sh`
 
 ### On writing or editing article content
-**Before generating or editing any markdown**, read **[src/data/pages/README.md](src/data/pages/README.md)**. It documents every available syntax feature, frontmatter schema per content type (projects, threads, bits2bricks, fieldnotes), edge cases, and recommendations. Never guess syntax from memory — always consult that file.
+**Before generating or editing any markdown**, read **[src/data/pages/README.md](src/data/pages/README.md)**. It documents every available syntax feature, frontmatter schema per content type (projects, threads, bits2bricks, fieldnotes), edge cases, and recommendations. Never guess syntax from memory — always consult that file. Also check for category-specific READMEs (e.g. **[projects/README.md](src/data/pages/projects/README.md)** for editorial voice and storytelling patterns) — they contain writing guidelines learned from author feedback.
 
 **Before managing fieldnotes** (creating, renaming, deleting, restructuring), read **[src/data/pages/fieldnotes/README.md](src/data/pages/fieldnotes/README.md)**. It covers the available scripts, step-by-step workflows, cascading effects, and the full error reference. Never rename or delete fieldnotes by hand — use the scripts.
 
 **After editing any `.md` file in `src/data/pages/`**, run `npm run build` to recompile content. Markdown is compiled at build time — changes are invisible until the build runs.
+
+**When the user gives feedback on how to improve an article** (tone, structure, storytelling, editorial choices), incorporate the lesson into the README of that article's category folder (e.g. `src/data/pages/projects/README.md`). These READMEs accumulate editorial patterns — they're the memory for how each content type should be written.
 
 ### On syntax/pipeline/frontmatter change
 Update `src/data/pages/README.md` — it's the **single source of truth** for content authors. Covers: custom syntax rules (`compiler.config.js`), frontmatter fields, typed blockquotes, wiki-link/cross-doc link processing, image positioning, fieldnotes format, validation rules, Shiki language themes, pipeline ordering.
