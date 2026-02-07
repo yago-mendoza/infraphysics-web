@@ -32,7 +32,7 @@ function categoryColors(color: string) {
 export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
   projects: {
     title: 'Projects',
-    description: "What I've built, why, and what broke along the way.",
+    description: "Things I've built to scratch an itch. Some survived, some didn't\u2014all taught me something.",
     icon: <GearIcon />,
     color: 'lime-400',
     accent: '#a3e635',
@@ -44,7 +44,7 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
   },
   threads: {
     title: 'Threads',
-    description: 'Long-form thinking on engineering, systems, and how things work.',
+    description: "Making sense of complex topics out loud. If I can explain it simply, I actually understand it.",
     icon: <ThreadIcon />,
     color: 'rose-400',
     accent: '#fb7185',
@@ -57,7 +57,7 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
   },
   bits2bricks: {
     title: 'Bits2Bricks',
-    description: 'Where code meets atoms. Hardware, fabrication, physical computing.',
+    description: "Hard lessons from where software meets the real world. No theory\u2014just what worked, what broke, and why.",
     icon: <GradCapIcon />,
     color: 'blue-400',
     accent: '#3B82F6',
