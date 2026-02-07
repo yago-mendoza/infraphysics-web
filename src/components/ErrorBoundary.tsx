@@ -42,20 +42,8 @@ export class ErrorBoundary extends (React.Component as new (props: Props) => {
           }}
         >
           <p className="text-sm text-th-secondary text-center">
-            Something went wrong — try again or head back.
+            Something went wrong.
           </p>
-          {this.state.error && (
-            <pre
-              className="text-xs p-3 text-left overflow-auto max-h-24 rounded-sm"
-              style={{
-                color: `color-mix(in srgb, ${accent} 70%, var(--text-secondary))`,
-                background: `color-mix(in srgb, ${accent} 6%, var(--bg-surface-alt))`,
-                borderLeft: `2px solid color-mix(in srgb, ${accent} 40%, transparent)`,
-              }}
-            >
-              {this.state.error.message}
-            </pre>
-          )}
           <div className="flex gap-3 justify-center pt-1">
             <button
               onClick={handleReset}
