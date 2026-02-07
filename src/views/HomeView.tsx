@@ -8,6 +8,7 @@ import { initBrainIndex, type BrainIndex } from '../lib/brainIndex';
 import { ArrowRightIcon, SearchIcon } from '../components/icons';
 import { CATEGORY_CONFIG, catAccentVar, postPath, sectionPath } from '../config/categories';
 import { getSearchExcerpt, countMatches } from '../lib';
+import { Highlight } from '../components/ui';
 import { HomeTour } from '../components/HomeTour';
 
 const categoryKeys = ['projects', 'threads', 'bits2bricks'] as const;
@@ -171,14 +172,16 @@ export const HomeView: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-th-heading font-medium group-hover-accent transition-colors truncate"
                             style={{ '--ac-color': accent } as React.CSSProperties}>
-                            {post.displayTitle || post.title}
+                            <Highlight text={post.displayTitle || post.title} query={searchQuery} />
                           </span>
                           <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded" style={{ color: accent, backgroundColor: `color-mix(in srgb, ${accent} 10%, transparent)` }}>
                             &times;{matchCount}
                           </span>
                         </div>
                         {excerpt && (
-                          <p className="text-xs text-th-tertiary mt-1 line-clamp-1 font-sans">{excerpt}</p>
+                          <p className="text-xs text-th-tertiary mt-1 line-clamp-1 font-sans">
+                          <Highlight text={excerpt} query={searchQuery} />
+                        </p>
                         )}
                       </div>
                     </Link>
@@ -294,26 +297,28 @@ export const HomeView: React.FC = () => {
 
       {/* Second Brain */}
       <section className="pb-16 border-t border-th-border pt-12">
-        <div className="max-w-xl">
-          <h2 className="text-xs text-violet-400 uppercase tracking-wider mb-4">Second Brain</h2>
-          <p className="text-th-secondary leading-relaxed mb-4 font-sans">
-            Notes on infrastructure, AI, and emerging tech—explained from first principles so anyone can follow along. A growing knowledge graph.
-          </p>
-          <div className="flex gap-6 mb-6">
-            <span className="text-sm text-th-tertiary">
-              <span className="text-th-heading font-semibold">{brainStats.notes}</span> notes
-            </span>
-            <span className="text-sm text-th-tertiary">
-              <span className="text-th-heading font-semibold">{brainStats.connections}</span> connections
+        <Link
+          to="/lab/second-brain"
+          className="group block max-w-xl rounded-lg border border-violet-500/20 bg-violet-500/[0.03] p-6 hover:border-violet-500/40 hover:bg-violet-500/[0.06] transition-all"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xs text-violet-400 uppercase tracking-wider">Second Brain</h2>
+            <span className="inline-flex items-center gap-1 text-xs text-violet-400 opacity-0 group-hover:opacity-100 transition-opacity">
+              Open <ArrowRightIcon />
             </span>
           </div>
-          <Link
-            to="/lab/second-brain"
-            className="inline-flex items-center gap-1 text-sm text-violet-400 hover:text-violet-300 transition-colors"
-          >
-            Open Second Brain <ArrowRightIcon />
-          </Link>
-        </div>
+          <p className="text-th-secondary leading-relaxed mb-4 font-sans">
+            Where I think out loud about how things actually work&mdash;from silicon to systems. Everything connected, everything building on everything else.
+          </p>
+          <div className="flex gap-6">
+            <span className="text-sm text-th-tertiary">
+              <span className="text-violet-400 font-mono font-semibold">{brainStats.notes}</span> notes
+            </span>
+            <span className="text-sm text-th-tertiary">
+              <span className="text-violet-400 font-mono font-semibold">{brainStats.connections}</span> connections
+            </span>
+          </div>
+        </Link>
       </section>
 
       {/* CTA */}
