@@ -17,6 +17,56 @@ interface ArticlePostViewProps {
   post: Post;
 }
 
+const FEEDBACK_COPY: Record<string, { label: string; placeholder: string }> = {
+  projects: {
+    label: "If you see something I don't, I'd genuinely like to know.",
+    placeholder: 'A flaw in the approach, a better tool, a question I should be asking...',
+  },
+  threads: {
+    label: "If this sparked a 'wait, but...' moment, I want to hear it.",
+    placeholder: "A connection I didn't make, a 'yes, but', a book worth reading...",
+  },
+  bits2bricks: {
+    label: 'If the explanation broke down at some point, I\'d like to fix it.',
+    placeholder: 'A concept that needs unpacking, a leap that was too big...',
+  },
+};
+
+const FeedbackForm: React.FC<{ title: string; category: string }> = ({ title, category }) => {
+  const copy = FEEDBACK_COPY[category];
+  if (!copy) return null;
+
+  const [message, setMessage] = useState('');
+
+  const mailtoHref = `mailto:contact@infraphysics.net?subject=${encodeURIComponent(`[infraphysics] Feedback on: ${title}`)}&body=${encodeURIComponent(message)}`;
+
+  return (
+    <div className="article-feedback">
+      <label className="article-feedback-label">{copy.label}</label>
+      <div className="article-feedback-row">
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder={copy.placeholder}
+          className="article-feedback-input"
+          rows={3}
+        />
+        <a
+          href={mailtoHref}
+          className="article-feedback-send"
+          onClick={(e) => { if (!message.trim()) e.preventDefault(); }}
+        >
+          Send
+        </a>
+      </div>
+      <p className="article-feedback-alt">
+        Have more to say? —{' '}
+        <Link to="/contact" className="article-feedback-link">get in touch</Link>
+      </p>
+    </div>
+  );
+};
+
 export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const sectionPathUrl = getSectionPath(post.category);
   const location = useLocation();
@@ -518,6 +568,9 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
             allFieldNotes={brainIndex?.allFieldNotes}
             className="article-content"
           />
+
+          {/* Feedback form — categories with FEEDBACK_COPY */}
+          <FeedbackForm title={post.displayTitle || post.title} category={post.category} />
 
           {/* Share bar — reader perspective */}
           <div className="article-actions">

@@ -1386,6 +1386,93 @@
   cursor: pointer;
 }
 
+/* C1b. Project feedback form (inside box, above share) */
+
+.article-feedback {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--art-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.article-feedback-label {
+  font-size: 0.65rem;
+  color: var(--art-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+.article-feedback-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 26rem;
+}
+
+.article-feedback-input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  font-family: inherit;
+  background: var(--art-surface-alt);
+  border: 1px solid var(--art-border);
+  border-radius: 2px;
+  color: var(--art-text-body);
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.article-feedback-input::placeholder {
+  color: var(--art-text-muted);
+}
+
+.article-feedback-input:focus {
+  border-color: var(--art-border-strong);
+  background: var(--art-surface);
+}
+
+.article-feedback-send {
+  padding: 0.4rem 1rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--art-text-body);
+  background: var(--art-surface-alt);
+  border: 1px solid var(--art-border);
+  border-radius: 2px;
+  text-decoration: none;
+  transition: border-color 0.2s ease, color 0.2s ease;
+  cursor: pointer;
+}
+
+.article-feedback-send:hover {
+  border-color: var(--art-border-strong);
+  color: var(--art-text-title);
+}
+
+.article-feedback-alt {
+  font-size: 0.65rem;
+  color: var(--art-text-muted);
+}
+
+.article-feedback-link {
+  color: var(--art-text-dim);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.article-feedback-link:hover {
+  color: var(--art-text-body);
+}
+
 /* C2. Related posts (OUTSIDE box) */
 
 .article-related {
