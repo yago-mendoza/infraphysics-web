@@ -13,6 +13,7 @@ interface PreviewState {
   description: string;
   x: number;
   y: number;
+  variant: 'default' | 'blue';
 }
 
 const INITIAL_PREVIEW: PreviewState = {
@@ -22,6 +23,7 @@ const INITIAL_PREVIEW: PreviewState = {
   description: '',
   x: 0,
   y: 0,
+  variant: 'default',
 };
 
 interface WikiContentProps {
@@ -29,9 +31,10 @@ interface WikiContentProps {
   allFieldNotes?: FieldNoteMeta[];
   className?: string;
   onWikiLinkClick?: (conceptId: string) => void;
+  isVisited?: (noteId: string) => boolean;
 }
 
-export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, className, onWikiLinkClick }) => {
+export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, className, onWikiLinkClick, isVisited }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -52,6 +55,26 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
     setPreview(INITIAL_PREVIEW);
   }, [location.pathname, html]);
 
+  // CSS rules for visited wiki-links — attribute selectors survive dangerouslySetInnerHTML
+  // DOM recreation. Previous approach (useEffect adding .wiki-ref-visited class) caused a
+  // 1-frame purple flash because the class was stripped on re-render then re-added next frame.
+  const visitedStyles = useMemo(() => {
+    if (!isVisited) return '';
+    const hrefRegex = /href="\/lab\/second-brain\/([^"]+)"/g;
+    const selectors: string[] = [];
+    const seen = new Set<string>();
+    let m;
+    while ((m = hrefRegex.exec(resolvedHtml)) !== null) {
+      const noteId = m[1];
+      if (!seen.has(noteId) && isVisited(noteId)) {
+        seen.add(noteId);
+        selectors.push(`a.wiki-ref-resolved[href="/lab/second-brain/${noteId}"]`);
+      }
+    }
+    if (selectors.length === 0) return '';
+    return `${selectors.join(',\n')} { --wiki-link: rgba(96, 165, 250, 0.85); --wiki-link-hover: rgba(96, 165, 250, 1); }`;
+  }, [resolvedHtml, isVisited]);
+
   useEffect(() => {
     const kill = () => setPreview(INITIAL_PREVIEW);
     window.addEventListener('scroll', kill, true);
@@ -62,11 +85,13 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
     if (hideTimer.current) { clearTimeout(hideTimer.current); hideTimer.current = null; }
   }, []);
 
-  // Keep callbacks in refs so the click handler always has the latest functions
+  // Keep callbacks in refs so event handlers always have the latest functions
   const navigateRef = useRef(navigate);
   navigateRef.current = navigate;
   const onWikiLinkClickRef = useRef(onWikiLinkClick);
   onWikiLinkClickRef.current = onWikiLinkClick;
+  const isVisitedRef = useRef(isVisited);
+  isVisitedRef.current = isVisited;
 
   // Track the currently hovered wiki link href + element for click navigation.
   const hoveredLinkRef = useRef<{ el: HTMLElement; href: string } | null>(null);
@@ -102,7 +127,9 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
           const title = decodeURIComponent(link.getAttribute('data-title') || '');
           const address = link.getAttribute('data-address') || '';
           const description = decodeURIComponent(link.getAttribute('data-description') || '');
-          setPreview({ visible: true, title, address, description, x: e.clientX, y: e.clientY });
+          const hrefMatch = href.match(/^\/lab\/second-brain\/(.+)$/);
+          const visited = hrefMatch ? !!isVisitedRef.current?.(hrefMatch[1]) : false;
+          setPreview({ visible: true, title, address, description, x: e.clientX, y: e.clientY, variant: visited ? 'blue' : 'default' });
         }
       } else {
         // Mouse is on non-link content — schedule hide
@@ -170,6 +197,7 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
 
   return (
     <>
+      {visitedStyles && <style>{visitedStyles}</style>}
       <div
         ref={containerRef}
         className={className}

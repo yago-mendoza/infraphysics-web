@@ -191,19 +191,21 @@ html.theme-transitioning *::after {
   border-bottom-color: var(--wiki-link) !important;
 }
 
+/* Visited wiki-links — override the CSS variable so ALL rules cascade to blue */
+.wiki-ref-visited {
+  --wiki-link: rgba(96, 165, 250, 0.85);
+  --wiki-link-hover: rgba(96, 165, 250, 1);
+}
+
 .wiki-ref-icon {
-  font-size: 0.7em;
+  display: inline;
+  width: 0.85em;
+  height: 0.85em;
   color: var(--wiki-link);
   opacity: 0.8;
   transition: opacity 0.15s ease;
-  margin-left: 0.8px;
-  vertical-align: baseline;
-  position: relative;
-  top: -0.4em;
-  line-height: 1;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  transform: translateZ(0);
+  margin-left: 2px;
+  vertical-align: -0.1em;
 }
 
 .wiki-ref-resolved:hover .wiki-ref-icon {
@@ -282,6 +284,15 @@ html.theme-transitioning *::after {
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+/* Blue variant — for mention/backlink popups */
+.wiki-preview-blue {
+  border-left-color: rgba(96, 165, 250, 0.7);
+  border-bottom-color: rgba(96, 165, 250, 0.7);
+}
+.wiki-preview-blue .wiki-preview-address {
+  color: rgba(96, 165, 250, 0.8);
 }
 
 /* ============================================================

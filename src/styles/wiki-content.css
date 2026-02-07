@@ -67,3 +67,5 @@
   color: var(--wiki-link-hover) !important;
   border-bottom-color: var(--wiki-link-hover) !important;
 }
+
+/* Visited wiki-links — variable override cascades automatically via .wiki-ref-visited */

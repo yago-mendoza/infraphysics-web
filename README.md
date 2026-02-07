@@ -79,6 +79,7 @@ infraphysics-web/
       search.ts               # Search utilities
       brainIndex.ts           # Fieldnotes index helpers
       addressToId.ts          # Address → slug conversion
+      icons.ts                # Centralized SVG icon paths (Heroicons)
     styles/
       article.css             # Article post view styles (terminal/cyberpunk theme)
       wiki-content.css        # Wiki/second-brain content delta overrides

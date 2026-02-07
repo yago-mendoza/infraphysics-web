@@ -8,6 +8,7 @@ interface WikiLinkPreviewProps {
   description: string;
   x: number;
   y: number;
+  variant?: 'default' | 'blue';
 }
 
 export const WikiLinkPreview: React.FC<WikiLinkPreviewProps> = ({
@@ -17,6 +18,7 @@ export const WikiLinkPreview: React.FC<WikiLinkPreviewProps> = ({
   description,
   x,
   y,
+  variant = 'default',
 }) => {
   if (!visible) return null;
 
@@ -40,10 +42,12 @@ export const WikiLinkPreview: React.FC<WikiLinkPreviewProps> = ({
   left = Math.max(margin, Math.min(left, window.innerWidth - cardWidth - margin));
   top = Math.max(margin, top);
 
+  const cls = variant === 'blue' ? 'wiki-preview-card wiki-preview-blue' : 'wiki-preview-card';
+
   return createPortal(
-    <div className="wiki-preview-card" style={{ left, top, pointerEvents: 'none' }}>
+    <div className={cls} style={{ left, top, pointerEvents: 'none' }}>
       <div className="wiki-preview-title">{title}</div>
-      <div className="wiki-preview-address">{address}</div>
+      <div className="wiki-preview-address">{address.replace(/\/\//g, ' / ')}</div>
       {description && (
         <div className="wiki-preview-description">{description}</div>
       )}

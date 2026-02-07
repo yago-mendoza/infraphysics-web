@@ -60,6 +60,7 @@ FILES=(
   "src/lib/wikilinks.ts"
   "src/lib/color.ts"
   "src/lib/search.ts"
+  "src/lib/icons.ts"
 
   # --- Data ---
   "src/data/data.ts"
