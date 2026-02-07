@@ -53,7 +53,7 @@ export const AboutView: React.FC = () => {
 
           {/* Tagline */}
           <p className="text-th-primary leading-relaxed max-w-xl">
-              I'm into building things and making them move faster. I use AI to unlock compute, document everything I learn, and publish it here—because building in public is how I think best.
+              I'm into building things and making them move faster. I use AI to unlock compute, document everything I learn, and publish it here—because building in public is how I think best, and if it helps make complex topics more approachable along the way, even better.
           </p>
         </div>
 
@@ -80,7 +80,7 @@ export const AboutView: React.FC = () => {
             <div>
               <h3 className="text-th-heading font-semibold mb-2">The Record</h3>
               <p className="text-th-secondary leading-relaxed">
-                This site is a living, interconnected record. I document the process because clear thinking requires writing it down.
+                This site is a living, interconnected record. I document the process because clear thinking requires writing it down. I'm not an expert in any of this—I'm a generalist who stacks knowledge across domains and connects the dots. This site reflects that: work in progress, not finished reference.
               </p>
             </div>
           </div>

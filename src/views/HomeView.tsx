@@ -297,7 +297,7 @@ export const HomeView: React.FC = () => {
         <div className="max-w-xl">
           <h2 className="text-xs text-violet-400 uppercase tracking-wider mb-4">Second Brain</h2>
           <p className="text-th-secondary leading-relaxed mb-4 font-sans">
-            Everything I know, linked together. A growing knowledge graph.
+            Notes on infrastructure, AI, and emerging tech—explained from first principles so anyone can follow along. A growing knowledge graph.
           </p>
           <div className="flex gap-6 mb-6">
             <span className="text-sm text-th-tertiary">
