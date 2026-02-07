@@ -49,6 +49,8 @@ node scripts/rename-address.js "old address" "new address" --apply
 4. Scans ALL `.md` files under `src/data/pages/` for `[[old address]]` and `[[old address | annotation]]` references → replaces with the new address
 5. Reports every change: files touched, reference counts
 
+> **The script renames ONE exact address. It does NOT cascade to children.** If `node` has children like `node//child`, renaming `node` → `X//node` will NOT touch `node//child`. The child's address, filename, and every `[[node//child]]` reference across the codebase remain unchanged — leaving them orphaned from the new parent path. Each child must be renamed in a separate script call. See [Restructuring a hierarchy](#restructuring-a-hierarchy).
+
 **Always dry-run first.** Review the output before passing `--apply`.
 
 **After applying:** Run `npm run build` to verify no broken references remain.
@@ -109,23 +111,30 @@ Every one of these runs the full validation pipeline. **The build is your safety
 4. Create stub notes for any missing parents
 5. Review one-way trailing refs — decide if reciprocal refs are needed
 
-### Renaming an address
+### Renaming an address (simple — no children)
 
 **Never rename by hand.** Manually editing the address, filename, and every `[[reference]]` across dozens of files is error-prone and will break the graph.
 
 1. `node scripts/rename-address.js "old" "new"` — review the dry-run output
 2. `node scripts/rename-address.js "old" "new" --apply` — execute
 3. `npm run build` — verify no broken references
-4. Commit all changed files together (the rename touches multiple files atomically)
+4. Check for stale `distinct` entries referencing the old address in other notes
+5. Commit all changed files together (the rename touches multiple files atomically)
+
+> If the note has children, **stop here** and follow "Restructuring a hierarchy" below instead.
 
 ### Restructuring a hierarchy
 
-When moving a note deeper (e.g. `chip` → `component//chip`), its children also need updating:
+**Required when renaming any note that has children** (e.g. `chip` → `component//chip`). The rename script does NOT cascade — each child must be renamed in a separate script call or they will be orphaned.
 
-1. Rename the parent: `chip` → `component//chip`
-2. Rename each child: `chip//MCU` → `component//chip//MCU`, etc.
-3. Run `npm run build` after each rename (or batch them and build once at the end)
-4. Run `node scripts/check-references.js` to catch anything missed
+> **`//` = hierarchy separator** (parent//child). **`/` = part of a segment name** (like `I/O`). Using `/` when you mean `//` silently creates a single flat node instead of a parent-child relationship.
+
+1. **List all children first** — find every address prefixed with `oldParent//` so you know the full scope
+2. **Rename the parent**: `node scripts/rename-address.js "chip" "component//chip" --apply`
+3. **Rename each child individually**: `node scripts/rename-address.js "chip//MCU" "component//chip//MCU" --apply` (one call per child — the script will NOT do this automatically)
+4. `npm run build` — verify no broken references (batch build after all renames is fine)
+5. `node scripts/check-references.js` — catch orphans, one-way refs, stale `distinct` entries
+6. Commit all changed files together
 
 ### Deleting a fieldnote
 
@@ -246,8 +255,9 @@ Understanding what changes propagate where prevents subtle breakage.
 - **The note's own file**: frontmatter `address` + filename
 - **Every file that references it**: inline `[[refs]]` and trailing `[[refs]]` across ALL `.md` files in `src/data/pages/`
 - **Build outputs**: the `.json` content file in `public/fieldnotes/` gets a new name (old one is auto-cleaned)
-- **Children**: if a parent address changes, children still point to the old parent — they need renaming too
-- **`distinct` entries**: any note with `distinct: ["old-address"]` becomes stale
+- **Children: NOT automatic.** If a parent address changes, children still point to the old parent path. They must each be renamed in a separate `rename-address.js` call or they become orphaned. See [Restructuring a hierarchy](#restructuring-a-hierarchy).
+- **`distinct` entries**: any note with `distinct: ["old-address"]` becomes stale — update or remove them
+- **Other root nodes**: NOT affected. The script uses exact string matching (`[[old address]]`), so renaming `node` will not touch `node2` or `another-node`
 
 ### Deleting a note affects:
 - **Every note that references it**: their `[[refs]]` become broken (build ERROR)

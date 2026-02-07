@@ -39,11 +39,23 @@ User may say "dump context", "dame un TXT", etc. Before running `dev-scripts/dum
 4. Run and report output path
 
 ### On address rename (fieldnotes)
-1. Run `node scripts/rename-address.js "old" "new"` first (dry-run by default)
-2. Review the output
-3. Run with `--apply`
-4. Run `npm run build` to verify
+
+> **`rename-address.js` renames ONE exact address. It does NOT cascade to children.** If the note has children (e.g. `node//child`), each child must be renamed in a separate script call. See "Restructuring a hierarchy" in [fieldnotes/README.md](src/data/pages/fieldnotes/README.md#restructuring-a-hierarchy).
+
+**Simple rename** (no children, no hierarchy change):
+1. `node scripts/rename-address.js "old" "new"` — dry-run, review output
+2. `node scripts/rename-address.js "old" "new" --apply`
+3. `npm run build` to verify
+4. Check `distinct` entries in other notes — any referencing the old address are now stale
 5. Commit all changed files together
+
+**Restructuring** (moving into/out of a hierarchy, e.g. `node` → `X//node`):
+1. Use `//` for hierarchy, NOT `/` (`/` is part of a segment name like `I/O`)
+2. Rename the parent first: `"node"` → `"X//node"`
+3. Rename **each child separately**: `"node//child"` → `"X//node//child"` (one script call per child)
+4. `npm run build` after all renames
+5. `node scripts/check-references.js` to catch orphans, stale `distinct`, one-way refs
+6. Commit all changed files together
 
 ### On creating fieldnotes in bulk
 1. After creating, run `npm run build` to validate all references
