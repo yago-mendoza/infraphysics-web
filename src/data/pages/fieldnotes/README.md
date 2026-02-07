@@ -74,6 +74,46 @@ node scripts/check-references.js
 
 Checks 3-5 are **exclusive to this script** — the build validator does not perform them. This is the tool to run after bulk creation or major restructuring.
 
+### `analyze-pairs.js` — Relationship analyzer
+
+Answers "how are A and B connected?" by checking structural hierarchy, trailing refs (with `::` annotations), and body mentions.
+
+```bash
+# Pair mode — analyze consecutive pairs
+node scripts/analyze-pairs.js "CPU" "RAM"
+
+# All mode — every relationship for one address
+node scripts/analyze-pairs.js "CPU" --all
+```
+
+Supports fuzzy address resolution: exact → case-insensitive → alias → last-segment. Warns on ambiguous matches. Useful before creating new notes (check what connections already exist) or after renaming (verify relationships survived).
+
+### `move-hierarchy.js` — Cascading hierarchy rename
+
+Moves a fieldnote **and all its descendants** to a new address prefix in a single operation. No manual per-child calls needed.
+
+```bash
+# Dry-run (default) — shows full plan, writes nothing
+node scripts/move-hierarchy.js "chip" "component//chip"
+
+# Apply — executes all renames
+node scripts/move-hierarchy.js "chip" "component//chip" --apply
+```
+
+**What it does:**
+1. Finds root note (`address === oldPrefix`) and all descendants (`address.startsWith(oldPrefix + "//")`)
+2. Validates: no target filename/ID collisions
+3. Updates `address:` fields, `distinct:`/`supersedes:` entries, and `[[refs]]` across ALL `.md` files
+4. Renames files (after all content updates)
+
+Handles deep nesting, `distinct`/`supersedes` auto-update, `|` display text preservation, and `::` annotation preservation. Longer addresses are processed first to prevent partial matches.
+
+**Always dry-run first.** Review the output before passing `--apply`.
+
+**After applying:** Run `npm run build` to verify, then `node scripts/check-references.js` to catch any stale entries.
+
+> For single-note renames (no children, no hierarchy change), use `rename-address.js` instead.
+
 ### `validate-fieldnotes.js` — Build-time validator
 
 Called automatically by `build-content.js` at the end of every build. Not run standalone. See [Build-Time Validation](#build-time-validation) below.
@@ -95,21 +135,29 @@ Every one of these runs the full validation pipeline. **The build is your safety
 
 ## Workflows
 
+### Pre-creation check: segment collisions
+
+Before creating any fieldnote, search existing addresses for the last segment of the proposed address (case-insensitive). For example, before creating `X//Y//cache`, check if `cache` already appears anywhere — even as a non-terminal segment like `CPU//cache//L1`. If the segment exists, evaluate whether the new note is the same concept or genuinely distinct. This avoids creating notes that immediately trigger build-time collision warnings and require rework.
+
+Quick check: search `address:` lines in `src/data/pages/fieldnotes/*.md` for the segment name.
+
 ### Creating a single fieldnote
 
-1. Create `src/data/pages/fieldnotes/{FILENAME}.md` following the [filename convention](../README.md#filename-convention-1)
-2. Add frontmatter with `address` (required) and `date` (required)
-3. Write the body + trailing refs
-4. Run `npm run build` — fix any errors
-5. If the build warns about missing parents, create stub notes for them
+1. Run the [pre-creation check](#pre-creation-check-segment-collisions) for the proposed address
+2. Create `src/data/pages/fieldnotes/{FILENAME}.md` following the [filename convention](../README.md#filename-convention-1)
+3. Add frontmatter with `address` (required) and `date` (required)
+4. Write the body + trailing refs
+5. Run `npm run build` — fix any errors
+6. If the build warns about missing parents, create stub notes for them
 
 ### Creating fieldnotes in bulk
 
-1. Create all the `.md` files
-2. Run `npm run build` to validate all references at once
-3. Run `node scripts/check-references.js` to catch one-way refs, orphans, and weak parents
-4. Create stub notes for any missing parents
-5. Review one-way trailing refs — decide if reciprocal refs are needed
+1. Run the [pre-creation check](#pre-creation-check-segment-collisions) for each proposed address
+2. Create all the `.md` files
+3. Run `npm run build` to validate all references at once
+4. Run `node scripts/check-references.js` to catch one-way refs, orphans, and weak parents
+5. Create stub notes for any missing parents
+6. Review one-way trailing refs — decide if reciprocal refs are needed
 
 ### Renaming an address (simple — no children)
 
@@ -125,16 +173,29 @@ Every one of these runs the full validation pipeline. **The build is your safety
 
 ### Restructuring a hierarchy
 
-**Required when renaming any note that has children** (e.g. `chip` → `component//chip`). The rename script does NOT cascade — each child must be renamed in a separate script call or they will be orphaned.
+**Required when renaming any note that has children** (e.g. `chip` → `component//chip`). Use `move-hierarchy.js` — it cascades to all descendants automatically.
 
 > **`//` = hierarchy separator** (parent//child). **`/` = part of a segment name** (like `I/O`). Using `/` when you mean `//` silently creates a single flat node instead of a parent-child relationship.
 
-1. **List all children first** — find every address prefixed with `oldParent//` so you know the full scope
+1. `node scripts/move-hierarchy.js "chip" "component//chip"` — dry-run, review the full plan
+2. `node scripts/move-hierarchy.js "chip" "component//chip" --apply` — execute
+3. `npm run build` — verify no broken references
+4. `node scripts/check-references.js` — catch orphans, stale `distinct`, one-way refs
+5. Commit all changed files together
+
+<details>
+<summary>Manual fallback (using rename-address.js individually)</summary>
+
+If `move-hierarchy.js` can't be used (e.g. orphaned children without a parent note), rename each note individually:
+
+1. **List all children first** — find every address prefixed with `oldParent//`
 2. **Rename the parent**: `node scripts/rename-address.js "chip" "component//chip" --apply`
-3. **Rename each child individually**: `node scripts/rename-address.js "chip//MCU" "component//chip//MCU" --apply` (one call per child — the script will NOT do this automatically)
-4. `npm run build` — verify no broken references (batch build after all renames is fine)
-5. `node scripts/check-references.js` — catch orphans, one-way refs, stale `distinct` entries
+3. **Rename each child individually**: `node scripts/rename-address.js "chip//MCU" "component//chip//MCU" --apply` (one call per child)
+4. `npm run build` after all renames
+5. `node scripts/check-references.js`
 6. Commit all changed files together
+
+</details>
 
 ### Deleting a fieldnote
 

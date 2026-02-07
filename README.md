@@ -29,6 +29,8 @@ infraphysics-web/
     validate-fieldnotes.js    # Reference integrity checks
     rename-address.js         # Rename fieldnote address + update all references
     check-references.js       # Detect orphans, weak parents, stale refs
+    analyze-pairs.js          # Relationship analyzer for fieldnote pairs
+    move-hierarchy.js         # Cascading rename for address + all descendants
     README.md                 # Build pipeline docs, cache format
   docs/
     validate-fieldnotes-term-err-view.jpg  # Validation output screenshot

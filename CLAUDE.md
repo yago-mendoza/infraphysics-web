@@ -49,18 +49,22 @@ User may say "dump context", "dame un TXT", etc. Before running `dev-scripts/dum
 4. Check `distinct` entries in other notes — any referencing the old address are now stale
 5. Commit all changed files together
 
-**Restructuring** (moving into/out of a hierarchy, e.g. `node` → `X//node`):
+**Restructuring** (moving into/out of a hierarchy, or any rename where the note has children):
 1. Use `//` for hierarchy, NOT `/` (`/` is part of a segment name like `I/O`)
-2. Rename the parent first: `"node"` → `"X//node"`
-3. Rename **each child separately**: `"node//child"` → `"X//node//child"` (one script call per child)
-4. `npm run build` after all renames
+2. `node scripts/move-hierarchy.js "node" "X//node"` — dry-run, review plan
+3. `node scripts/move-hierarchy.js "node" "X//node" --apply` — execute (cascades to all descendants)
+4. `npm run build` to verify
 5. `node scripts/check-references.js` to catch orphans, stale `distinct`, one-way refs
 6. Commit all changed files together
 
-### On creating fieldnotes in bulk
-1. After creating, run `npm run build` to validate all references
+### On creating fieldnotes (single or bulk)
+**Before creating**, check for segment collisions: search existing fieldnote addresses for the last segment of each proposed address (case-insensitive). If the segment already appears anywhere in the hierarchy — even as a non-terminal (e.g. creating `X//Y//Z` when `P//Q//Z//U` exists) — evaluate whether it's the same concept. If it is, the new note may belong under the existing hierarchy instead. This avoids creating notes that immediately trigger build-time collision warnings.
+
+**After creating:**
+1. Run `npm run build` to validate all references
 2. Run `node scripts/check-references.js` to check for orphans and weak parents
 3. Create stub notes for any missing parents
+4. Optionally: `node scripts/analyze-pairs.js "addr" --all` to verify expected connections exist
 
 ### On Second Brain UX change
 If a change affects non-obvious behavior or interaction patterns in the Second Brain (keyboard shortcuts, navigation, visual indicators, filters, etc.), update the **GuidePopup** tips in `src/components/layout/SecondBrainSidebar.tsx` so users can discover the feature via the info icon.

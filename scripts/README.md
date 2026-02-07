@@ -289,3 +289,86 @@ node scripts/check-references.js
 | 6 | **Segment collisions** | Same segment name at different hierarchy paths (same algorithm as Phase 5 of the build validator) |
 
 Checks 1-5 are informational. Check 6 uses the same collision detection and tier classification as the build validator, including `distinct` suppression and supersedes exclusion.
+
+---
+
+## `analyze-pairs.js`
+
+Relationship analyzer for fieldnote pairs. Answers "how are A and B connected?" by checking structural, trailing ref, and body mention relationships.
+
+```bash
+# Pair mode — analyze consecutive pairs
+node scripts/analyze-pairs.js "CPU" "RAM" "GPU" "CPU//core"
+
+# All mode — every relationship for one address
+node scripts/analyze-pairs.js "CPU" --all
+```
+
+### Relationship types
+
+| Category | What it detects |
+|---|---|
+| **Structural** | parent→child, ancestor→descendant, siblings (shared parent), root peers |
+| **Trailing** | A→B and/or B→A trailing refs, with `::` annotations displayed |
+| **Body** | A mentions B in body text (not trailing), B mentions A |
+
+### Address resolution
+
+The script resolves addresses using a four-step fallback chain:
+
+1. **Exact** — `"CPU"` matches `address: "CPU"`
+2. **Case-insensitive** — `"cpu"` matches `address: "CPU"`
+3. **Alias** — `"processor"` matches if a note has `aliases: ["processor"]`
+4. **Last segment** — `"core"` matches `CPU//core` (warns if ambiguous)
+
+Ambiguous matches produce a warning listing all candidates — no silent guess.
+
+---
+
+## `move-hierarchy.js`
+
+Cascading hierarchy rename. Moves a fieldnote **and all its descendants** to a new address prefix in a single atomic operation. Wraps the same logic as `rename-address.js` but cascades automatically — no manual per-child calls needed.
+
+```bash
+# Dry-run (default) — shows full plan, writes nothing
+node scripts/move-hierarchy.js "chip" "component//chip"
+
+# Apply — executes all renames
+node scripts/move-hierarchy.js "chip" "component//chip" --apply
+```
+
+### What it does (6 steps)
+
+| # | Step | What it does |
+|---|---|---|
+| 1 | Build rename map | Finds root note (`address === oldPrefix`) + all descendants (`address.startsWith(oldPrefix + "//")`) |
+| 2 | Validate | Checks: root exists, no target filename/ID collisions, old ≠ new |
+| 3 | Update address fields | For each moved note, updates `address:` in frontmatter |
+| 4 | Update frontmatter refs | Replaces old addresses in `distinct:` and `supersedes:` arrays across ALL notes |
+| 5 | Update body refs | Replaces `[[oldAddr]]` and `[[oldAddr \| display]]` across ALL `.md` files |
+| 6 | Rename files | Renames `.md` files to match new addresses (after all content updates) |
+
+Longer addresses are processed first in steps 4-5 to prevent partial matches.
+
+### Edge cases
+
+| Case | Behavior |
+|---|---|
+| Root has no children | Works like `rename-address.js` — moves just the root |
+| Deep nesting (3+ levels) | All descendants found by prefix scan, regardless of depth |
+| Moving to root (`CPU//cache` → `cache`) | Prefix replacement works — children follow |
+| Same-level rename (`chip` → `circuit`) | Cascades to children: `chip//MCU` → `circuit//MCU` |
+| Address has `/` (`I/O` → `hardware//I/O`) | `escapeRegex()` handles it — children `I/O//DMA` → `hardware//I/O//DMA` |
+| Target file exists | Error before any writes |
+| No root note | Error: "No fieldnote with address 'X'" |
+| `distinct`/`supersedes` entries | Auto-updated in all notes |
+| `\| display text` in refs | Preserved (same capture group as rename-address.js) |
+| `:: annotations` in trailing refs | Preserved automatically (outside `[[ ]]` brackets) |
+
+### Comparison with `rename-address.js`
+
+| | `rename-address.js` | `move-hierarchy.js` |
+|---|---|---|
+| **Scope** | Single note | Root + all descendants |
+| **Children** | Not touched — must rename individually | Automatically included |
+| **Use case** | Leaf note rename, alias change | Hierarchy restructuring, moving branches |
