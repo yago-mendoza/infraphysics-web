@@ -493,18 +493,27 @@ function computeRelativeTime(articleDateStr, yy, mm, dd) {
   const articleDate = new Date(articleDateStr);
   if (isNaN(articleDate.getTime())) return null;
   const annotDate = new Date(2000 + parseInt(yy, 10), parseInt(mm, 10) - 1, parseInt(dd, 10));
-  if (annotDate.getTime() - articleDate.getTime() < 86400000) return null;
-  let years = annotDate.getFullYear() - articleDate.getFullYear();
-  let months = annotDate.getMonth() - articleDate.getMonth();
-  let days = annotDate.getDate() - articleDate.getDate();
-  if (days < 0) { months--; days += new Date(annotDate.getFullYear(), annotDate.getMonth(), 0).getDate(); }
+
+  const diffMs = annotDate.getTime() - articleDate.getTime();
+
+  // Same day (within 24h to account for timezone construction differences)
+  if (Math.abs(diffMs) < 86400000) return '(day zero)';
+
+  // Determine direction and compute from→to diff
+  const isLater = diffMs > 0;
+  const [from, to] = isLater ? [articleDate, annotDate] : [annotDate, articleDate];
+
+  let years = to.getFullYear() - from.getFullYear();
+  let months = to.getMonth() - from.getMonth();
+  let days = to.getDate() - from.getDate();
+  if (days < 0) { months--; days += new Date(to.getFullYear(), to.getMonth(), 0).getDate(); }
   if (months < 0) { years--; months += 12; }
   const parts = [];
   if (years > 0) parts.push(`${years}y`);
   if (months > 0) parts.push(`${months}m`);
   if (days > 0) parts.push(`${days}d`);
   if (parts.length === 0) return null;
-  return `(${parts.join(' ')} later)`;
+  return `(${parts.join(' ')} ${isLater ? 'later' : 'earlier'})`;
 }
 
 function processContextAnnotations(markdown, articleDate) {
@@ -655,7 +664,7 @@ function getAllMarkdownFiles(dir, isRoot = false) {
       // Skip fieldnotes/ — handled separately by processFieldnotesDir()
       if (item === 'fieldnotes') continue;
       files.push(...getAllMarkdownFiles(fullPath));
-    } else if (!isRoot && item.endsWith('.md') && !item.startsWith('_')) {
+    } else if (!isRoot && item.endsWith('.md') && !item.startsWith('_') && item !== 'README.md') {
       files.push(fullPath);
     }
   }
@@ -842,7 +851,7 @@ function processFieldnotesDir(cache, configHash, forceRebuild) {
   if (!fs.existsSync(fieldnotesDir)) return { results: [], cacheFieldnotes: {} };
 
   const files = fs.readdirSync(fieldnotesDir)
-    .filter(f => f.endsWith('.md') && !f.startsWith('_'));
+    .filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md');
 
   const cacheValid = cache?.version === 1 && cache?.configHash === configHash && !forceRebuild;
   const cachedNotes = cacheValid ? (cache.fieldnotes || {}) : {};
