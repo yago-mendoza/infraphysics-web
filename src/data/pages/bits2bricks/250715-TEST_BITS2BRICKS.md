@@ -41,9 +41,8 @@ two bare-delimiter syntaxes:
 
 _underline_ uses word-boundary matching, so code_with_underscores stays safe. `_literal underscores in code_` are also unaffected. the backtick protection runs before all preprocessors.
 
-### small caps, super, sub, keyboard
+### super, sub, keyboard
 
-- {sc:Small Caps} — `{sc:Small Caps}` — good for abbreviations: {sc:API}, {sc:GPU}, {sc:LSTM}
 - x{^:2} + y{^:2} = z{^:2} — `{^:2}` for superscript
 - H{v:2}O, CO{v:2}, Fe{v:2}O{v:3} — `{v:2}` for subscript
 - {kbd:Ctrl} + {kbd:C} — `{kbd:Ctrl}` for keyboard keys
@@ -108,7 +107,7 @@ custom labels let you give each blockquote a precise, descriptive title. the typ
 
 ## code blocks
 
-fenced code blocks get terminal chrome (three dots + language tab) and {sc:Shiki} syntax highlighting.
+fenced code blocks get terminal chrome (three dots + language tab) and Shiki syntax highlighting.
 
 ```python
 import torch
@@ -209,10 +208,10 @@ positions: `"center"`, `"right"`, `"left"`, `"full"`. without a position keyword
 |---|---|---|---|
 | 1 | bag-of-words | none | yes |
 | 2 | word2vec | local (window) | yes |
-| 3 | {sc:LSTM} | sequential (decaying) | no |
+| 3 | LSTM | sequential (decaying) | no |
 | 4 | transformer | global (all-to-all) | yes |
 
-tables support inline formatting: _underline_, --accent--, {#3B82F6:color}, {sc:Small Caps}, `code`.
+tables support inline formatting: _underline_, --accent--, {#3B82F6:color}, `code`.
 
 ---
 
@@ -225,13 +224,13 @@ tables support inline formatting: _underline_, --accent--, {#3B82F6:color}, {sc:
 - third item with {#3B82F6:colored text}
   - nested with {#3B82F6:colored text}
   - nested with `inline code`
-    - deeply nested with {sc:Small Caps}
+    - deeply nested with --accent text--
 
 ### ordered
 
 1. write the markdown
 2. the build script preprocesses it
-3. {sc:Shiki} highlights code blocks
+3. Shiki highlights code blocks
 4. the result is rendered in the browser
 
 ---
@@ -248,7 +247,7 @@ it works for sub-subsections that don't need TOC visibility.
 
 ## everything combined
 
-a paragraph that uses every feature at once: _underlined_, --accented--, {#3B82F6:colored}, {sc:Small Caps}, {^:super}, {v:sub}, {kbd:key}, and `code`. followed by a blockquote that demonstrates adaptation:
+a paragraph that uses every feature at once: _underlined_, --accented--, {#3B82F6:colored}, {^:super}, {v:sub}, {kbd:key}, and `code`. followed by a blockquote that demonstrates adaptation:
 
 {bkqt/keyconcept|Accent summary}
 the accent color on this page is {#3B82F6:blue} because the category is bits2bricks. --accent text-- uses blue here. inside this blockquote, it uses the keyconcept color instead. the companion page — [[threads/TEST_THREAD|threads syntax reference]] — shows the same features in rose.

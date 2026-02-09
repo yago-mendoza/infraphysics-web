@@ -150,12 +150,6 @@ Chemical formulas: H{v:2}O, CO{v:2}, C{v:6}H{v:12}O{v:6}
 Syntax reference (preserved): `{^:text}` for superscript, `{v:text}` for subscript.
 
 
-# small caps
-
-{sc:small caps} are useful for {sc:abbreviations} like {sc:nasa} or {sc:http}.
-
-Syntax reference (preserved): `{sc:text}`
-
 
 # keyboard shortcuts
 
@@ -364,7 +358,6 @@ Side layouts pair an image with text in a flexbox row:
 | Accent | `--text--` | accented text |
 | Superscript | `{^:text}` | raised text |
 | Subscript | `{v:text}` | lowered text |
-| Small caps | `{sc:text}` | small caps |
 | Keyboard | `{kbd:text}` | key style |
 
 
@@ -373,7 +366,7 @@ Side layouts pair an image with text in a flexbox row:
 You can nest custom syntax inside markdown formatting:
 
 - **bold {#e74c3c:red text}** works
-- lists can have H{v:2}O and {sc:abbreviations}
+- lists can have H{v:2}O and abbreviations
 - {_:underlined with {#3498db:blue inside}}
 
 
@@ -385,7 +378,6 @@ Backtick protection ensures these render as literal code:
 - `--not accented--` — accent preserved
 - `{^:not super}` — superscript preserved
 - `{v:not sub}` — subscript preserved
-- `{sc:not smallcaps}` — small caps preserved
 - `{kbd:not kbd}` — keyboard preserved
 - `{shout:not a shout}` — shout preserved
 - `{#ff0000:not red}` — color preserved

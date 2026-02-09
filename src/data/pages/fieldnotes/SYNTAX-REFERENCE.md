@@ -38,8 +38,6 @@ Corchetes para texto, paréntesis para URL: [ejemplo](https://example.com). Rend
 Sintaxis personalizada definida en `compiler.config.js`. Se resuelve _antes_ de que `marked` procese el markdown, por lo que los `<span>` resultantes sobreviven al parser.
 ## Color de texto
 Llaves con almohadilla + nombre CSS o hex + dos puntos: {#red:rojo}, {#blue:azul}, {#22c55e:verde hex}, {#f59e0b:ámbar hex}, {#a78bfa:violeta hex}.
-## Versalitas
-Llaves con sc: {sc:texto en versalitas}. Útil para acrónimos estilizados.
 ## Superíndice
 Llaves con caret: E = mc{^:2}, x{^:n+1}, nota{^:1}.
 ## Subíndice

@@ -40,15 +40,15 @@ so for decades, the industry had two options. and they both sucked.
 
 languages like Java, Python, Go, and C# said: "okay, clearly humans can't be trusted with memory. so we'll handle it for you." a background process — the garbage collector — periodically scans the heap, finds objects nobody's using anymore, and frees them automatically. problem solved.
 
-except... not really. garbage collectors introduce latency spikes. they consume memory overhead (sometimes substantial). they make performance unpredictable — your program might pause for 50 milliseconds at any moment while the {sc:GC} does its thing. for a web server, that's usually fine. for a game engine running at 60fps, that's a dropped frame. for an embedded system in a pacemaker, that's potentially fatal.
+except... not really. garbage collectors introduce latency spikes. they consume memory overhead (sometimes substantial). they make performance unpredictable — your program might pause for 50 milliseconds at any moment while the GC does its thing. for a web server, that's usually fine. for a game engine running at 60fps, that's a dropped frame. for an embedded system in a pacemaker, that's potentially fatal.
 
 {bkqt/note}
-garbage collection is the right trade-off for most software. if you're writing a {sc:CRUD} app, an {sc:API} server, a data pipeline, a mobile app — {sc:GC} languages are great. the performance tax is small and the productivity gain is enormous. the problem is that some software can't afford the tax at all.
+garbage collection is the right trade-off for most software. if you're writing a CRUD app, an API server, a data pipeline, a mobile app — GC languages are great. the performance tax is small and the productivity gain is enormous. the problem is that some software can't afford the tax at all.
 {/bkqt}
 
 **option two: manual memory management.**
 
-C and C++ said: "you're the programmer. you know when memory should be allocated and freed. do it yourself." this gives you total control and zero overhead. it also gives you use-after-free, double-free, dangling pointers, buffer overflows, data races, and an entire zoo of bugs that have collectively cost the industry more money than most countries' {sc:GDP}.
+C and C++ said: "you're the programmer. you know when memory should be allocated and freed. do it yourself." this gives you total control and zero overhead. it also gives you use-after-free, double-free, dangling pointers, buffer overflows, data races, and an entire zoo of bugs that have collectively cost the industry more money than most countries' GDP.
 
 so that's the landscape. you get safety but lose control, or you get control but lose safety.
 
@@ -166,10 +166,10 @@ fn area(shape: &Shape) -> f64 {
 Rust isn't a toy language or an academic experiment. it's in production at:
 
 - **Mozilla** — parts of Firefox's rendering engine (Servo/Stylo)
-- **Amazon** — Firecracker (the {sc:VM} that powers Lambda and Fargate)
+- **Amazon** — Firecracker (the VM that powers Lambda and Fargate)
 - **Microsoft** — rewriting core Windows components from C++
 - **Google** — Android's bluetooth stack, parts of Fuchsia
-- **Cloudflare** — Pingora, their {sc:HTTP} proxy that handles a significant chunk of internet traffic
+- **Cloudflare** — Pingora, their HTTP proxy that handles a significant chunk of internet traffic
 - **Discord** — rewrote their read states service from Go to Rust for predictable latency
 - **Linux kernel** — Rust is now an officially supported language for kernel modules (this is a *massive* endorsement)
 

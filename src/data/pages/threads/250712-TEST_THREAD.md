@@ -49,10 +49,6 @@ wrap text in double dashes: `--accent text--`
 
 this is --accent text-- in a sentence. it uses the category accent color — on this page, that's rose. inside blockquotes, it adapts to the blockquote color instead.
 
-### small caps
-
-write `{sc:TEXT}` for small capitals: {sc:Small Caps Text}. useful for abbreviations like {sc:HTML}, {sc:CSS}, {sc:API}.
-
 ### superscript and subscript
 
 - superscript: `{^:text}` → E = mc{^:2}
@@ -64,7 +60,7 @@ write `{kbd:key}` for keyboard styling: press {kbd:Ctrl} + {kbd:Shift} + {kbd:P}
 
 ### combining formats
 
-these can be combined freely. here is _underlined_ text and {#fb7185:colored --accent mixed-- text} and {sc:Small Caps} with a {^:superscript}.
+these can be combined freely. here is _underlined_ text and {#fb7185:colored --accent mixed-- text} with a {^:superscript}.
 
 ---
 
@@ -170,7 +166,7 @@ a `>` line produces small, muted text (not a traditional blockquote):
 
 ## code blocks
 
-fenced code blocks get terminal chrome (title bar with dots) and syntax highlighting via {sc:Shiki}.
+fenced code blocks get terminal chrome (title bar with dots) and syntax highlighting via Shiki.
 
 ```python
 def fibonacci(n):
@@ -259,12 +255,11 @@ use pipe syntax in the alt text: `![alt|Caption text](url "center")`
 
 ## tables
 
-standard {sc:GFM} tables:
+standard GFM tables:
 
 | feature | syntax | example |
 |---|---|---|
 | colored text | `{#hex:text}` | {#fb7185:rose} |
-| small caps | `{sc:text}` | {sc:HTML} |
 | superscript | `{^:text}` | x{^:2} |
 | subscript | `{v:text}` | H{v:2}O |
 | keyboard | `{kbd:key}` | {kbd:Enter} |
@@ -390,7 +385,7 @@ E. Deployment and post-launch monitoring
 a. **tokenization** — split raw text into a sequence of tokens
 b. **parsing** — build a tree structure from the token stream using {#3B82F6:recursive descent}
 c. **type checking** — verify that every expression has a --consistent type--
-d. **code generation** — emit bytecode or machine instructions from the typed {sc:AST}
+d. **code generation** — emit bytecode or machine instructions from the typed AST
 
 ### alphabetical lists inside blockquotes
 

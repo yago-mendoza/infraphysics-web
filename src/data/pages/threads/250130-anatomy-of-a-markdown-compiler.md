@@ -35,7 +35,6 @@ the solution: validation at the end. after the full pipeline runs, the validator
 | `{#FF0000:text}` | {#FF0000:colored} |
 | `_text_` | _underlined_ |
 | `--text--` | --accented-- |
-| `{sc:text}` | {sc:small caps} |
 | `{^:text}` | x{^:2} |
 | `{v:text}` | H{v:2}O |
 | `{kbd:text}` | {kbd:Enter} |
