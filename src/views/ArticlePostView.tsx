@@ -1,6 +1,6 @@
 // Article post view — unified terminal/cyberpunk theme for all article categories
 
-import React, { useMemo, useEffect, useState, useCallback } from 'react';
+import React, { useMemo, useEffect, useState, useCallback, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { formatDate, formatDateTerminal, calculateReadingTime } from '../lib';
 import { initBrainIndex, type BrainIndex } from '../lib/brainIndex';
@@ -42,6 +42,7 @@ const FeedbackForm: React.FC<{ title: string; category: string }> = ({ title, ca
 
   return (
     <div className="article-feedback">
+      <span className="article-feedback-heading">End of the line. Thanks for reading.</span>
       <label className="article-feedback-label">{copy.label}</label>
       <div className="article-feedback-row">
         <textarea
@@ -95,8 +96,8 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   // Status label + dot color
   const statusConfig = post.status ? (STATUS_CONFIG[post.status] || null) : null;
 
-  const formattedDate = formatDateTerminal(post.date);
-  const readingTime = calculateReadingTime(post.content);
+  const formattedDate = useMemo(() => formatDateTerminal(post.date), [post.date]);
+  const readingTime = useMemo(() => calculateReadingTime(post.content), [post.content]);
 
   const authorName = post.author || 'Yago Mendoza';
   const authorPath = authorName.toLowerCase() === 'yago mendoza' ? '/about' : '/contact';
@@ -134,12 +135,20 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
         const id = `toc-${slug}`;
         raw.push({ level, text, id });
-        const tocArrow = `<a class="heading-toc-arrow" data-toc-id="${id}" aria-label="Back to table of contents"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7L6 5L8 7"/><path d="M4 4.5L6 2.5L8 4.5"/></svg></a>`;
-        return `<${tag}${attrs || ''} id="${id}">${inner}${tocArrow}</${tag}>`;
+        return `<${tag}${attrs || ''} id="${id}" data-toc-id="${id}" class="heading-toc-link">${inner}</${tag}>`;
       }
     );
 
-    const finalProcessed = processed;
+    // Rewrite in-article anchor links: href="#slug" → href="#toc-slug" for matching headings
+    const slugSet = new Set(raw.map(h => h.id.replace(/^toc-/, '')));
+    const finalProcessed = processed.replace(
+      /href="#([^"]+)"/g,
+      (m, slug) => {
+        if (slug.startsWith('toc-') && slugSet.has(slug.replace(/^toc-/, ''))) return m;
+        if (slugSet.has(slug)) return `href="#toc-${slug}"`;
+        return m;
+      }
+    );
 
     if (raw.length === 0) {
       return { headings: [] as { level: number; text: string; id: string; number: string; depth: number }[], contentWithIds: finalProcessed };
@@ -163,16 +172,38 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   }, [post.content, isBlog]);
 
   const [tocOpen, setTocOpen] = useState(isBlog);
+  const [blinkId, setBlinkId] = useState<string>('');
+  const blinkTimer = useRef<ReturnType<typeof setTimeout>>(0 as any);
 
-  // Scroll-based active heading tracking for inline TOC highlight.
-  const [activeId, setActiveId] = useState<string>('');
+  // Scroll-based active heading tracking — ref + direct DOM, no React re-renders.
+  // This avoids disrupting browser Ctrl+F which breaks when React reconciles during scroll.
+  const activeIdRef = useRef<string>('');
+
+  // Compute ancestor chain for a heading (parent sections at shallower depths)
+  const getActiveChain = useCallback((id: string) => {
+    const ids = new Set<string>();
+    if (!id || headings.length < 2) return ids;
+    const idx = headings.findIndex(h => h.id === id);
+    if (idx === -1) return ids;
+    ids.add(id);
+    let depth = headings[idx].depth;
+    for (let i = idx - 1; i >= 0; i--) {
+      if (headings[i].depth < depth) {
+        ids.add(headings[i].id);
+        depth = headings[i].depth;
+        if (depth === 0) break;
+      }
+    }
+    return ids;
+  }, [headings]);
 
   useEffect(() => {
     if (headings.length < 2) return;
 
     let currentActiveId = '';
+    let rafId = 0;
 
-    const handleScroll = () => {
+    const tick = () => {
       let newActiveId = '';
       for (const h of headings) {
         const el = document.getElementById(h.id);
@@ -185,80 +216,88 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
       }
       if (newActiveId !== currentActiveId) {
         currentActiveId = newActiveId;
-        setActiveId(newActiveId);
+        activeIdRef.current = newActiveId;
+
+        // Direct DOM manipulation — no React re-render
+        const tocEl = document.getElementById('article-toc');
+        if (tocEl) {
+          const activeSet = getActiveChain(newActiveId);
+          tocEl.querySelectorAll('.article-toc-link').forEach(link => {
+            const href = link.getAttribute('href');
+            const id = href?.startsWith('#') ? href.slice(1) : '';
+            link.classList.toggle('article-toc-link--active', activeSet.has(id));
+          });
+        }
+
       }
+      rafId = 0;
+    };
+
+    const handleScroll = () => {
+      if (!rafId) rafId = requestAnimationFrame(tick);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [headings]);
+    tick();
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, [headings, getActiveChain]);
 
-  // Click handler for heading TOC arrows — opens TOC, scrolls to it, blinks entry
+  // Click handler for headings — opens TOC, scrolls to it, blinks entry
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      const arrow = (e.target as HTMLElement).closest('.heading-toc-arrow') as HTMLElement | null;
-      if (!arrow) return;
-      e.preventDefault();
-      const tocId = arrow.dataset.tocId;
+      const heading = (e.target as HTMLElement).closest('.heading-toc-link') as HTMLElement | null;
+      if (!heading) return;
+      // Don't intercept clicks on actual links inside headings
+      if ((e.target as HTMLElement).closest('a')) return;
+      const tocId = heading.dataset.tocId;
       if (!tocId) return;
 
       // Open TOC if collapsed
       setTocOpen(true);
 
-      // Wait for React render, then scroll + blink
+      // Reset blink so React can restart the animation even if same ID
+      clearTimeout(blinkTimer.current);
+      setBlinkId('');
+
+      // Wait for React render (blink cleared), then scroll + set blink
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          const tocEl = document.getElementById('article-toc');
-          if (tocEl) {
-            tocEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-
-          // Delay for scroll to arrive, then blink the matching link
-          setTimeout(() => {
-            const link = document.querySelector(`.article-toc-link[href="#${tocId}"]`) as HTMLElement | null;
-            if (link) {
-              link.classList.add('toc-blink');
-              link.addEventListener('animationend', () => link.classList.remove('toc-blink'), { once: true });
-            }
-          }, 300);
+          const link = document.querySelector(`.article-toc-link[href="#${tocId}"]`) as HTMLElement | null;
+          if (link) link.scrollIntoView({ behavior: 'instant', block: 'center' });
+          setBlinkId(tocId!);
+          blinkTimer.current = setTimeout(() => setBlinkId(''), 1200);
         });
       });
     };
 
+    // In-article anchor links (href="#toc-...") — instant scroll to heading
+    const anchorHandler = (e: MouseEvent) => {
+      const a = (e.target as HTMLElement).closest('.article-content a[href^="#toc-"]') as HTMLAnchorElement | null;
+      if (!a) return;
+      const id = a.getAttribute('href')!.slice(1);
+      const target = document.getElementById(id);
+      if (!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'instant', block: 'start' });
+    };
+
     document.addEventListener('click', handler);
-    return () => document.removeEventListener('click', handler);
+    document.addEventListener('click', anchorHandler);
+    return () => {
+      document.removeEventListener('click', handler);
+      document.removeEventListener('click', anchorHandler);
+    };
   }, []);
-
-  // Compute active heading + its ancestor chain (parent sections)
-  const activeIds = useMemo(() => {
-    const ids = new Set<string>();
-    if (!activeId || headings.length < 2) return ids;
-
-    const activeIndex = headings.findIndex(h => h.id === activeId);
-    if (activeIndex === -1) return ids;
-
-    ids.add(activeId);
-
-    // Walk backwards to find ancestor headings at each shallower depth
-    let currentDepth = headings[activeIndex].depth;
-    for (let i = activeIndex - 1; i >= 0; i--) {
-      if (headings[i].depth < currentDepth) {
-        ids.add(headings[i].id);
-        currentDepth = headings[i].depth;
-        if (currentDepth === 0) break;
-      }
-    }
-
-    return ids;
-  }, [activeId, headings]);
 
   // Push article state to ArticleContext (consumed by SearchPalette)
   useEffect(() => {
     setArticleState({
       post,
       headings: headings as any,
-      activeHeadingId: activeId,
+      activeHeadingId: activeIdRef.current,
       nextPost,
       prevPost,
     });
@@ -266,25 +305,20 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   }, [post, headings, nextPost, prevPost]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync active heading ID to context
-  useEffect(() => {
-    updateActiveHeading(activeId);
-  }, [activeId, updateActiveHeading]);
-
   // Contextual keyboard shortcuts
   const scrollToHeading = useCallback((direction: 'next' | 'prev') => {
     if (headings.length < 2) return;
-    const activeIndex = headings.findIndex(h => h.id === activeId);
+    const activeIndex = headings.findIndex(h => h.id === activeIdRef.current);
     let targetIdx: number;
     if (direction === 'next') {
       targetIdx = activeIndex < headings.length - 1 ? activeIndex + 1 : headings.length - 1;
-      // If no active, go to first
       if (activeIndex === -1) targetIdx = 0;
     } else {
       targetIdx = activeIndex > 0 ? activeIndex - 1 : 0;
       if (activeIndex === -1) targetIdx = 0;
     }
-    document.getElementById(headings[targetIdx].id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [headings, activeId]);
+    document.getElementById(headings[targetIdx].id)?.scrollIntoView({ behavior: 'instant', block: 'start' });
+  }, [headings]);
 
   const articleShortcuts = useMemo<ShortcutDef[]>(() => [
     { key: 'g', label: 'GitHub', action: () => { if (post.github) window.open(post.github, '_blank'); }, enabled: !!post.github },
@@ -324,8 +358,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
     return pool.slice(0, 3);
   }, [post, targetCategory]);
 
-  // TOC list rendering — blog capped at 10 entries
-  const tocHeadings = isBlog ? headings.slice(0, 10) : headings;
+  const tocHeadings = headings;
   const tocList = tocHeadings.length > 1 ? (
     <ol className="article-toc-list">
       {tocHeadings.map((h) => (
@@ -335,10 +368,10 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
         >
           <a
             href={`#${h.id}`}
-            className={`article-toc-link${activeIds.has(h.id) ? ' article-toc-link--active' : ''}`}
+            className={`article-toc-link${blinkId === h.id ? ' toc-blink' : ''}`}
             onClick={(e) => {
               e.preventDefault();
-              document.getElementById(h.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              document.getElementById(h.id)?.scrollIntoView({ behavior: 'instant', block: 'start' });
             }}
           >
             <span className="article-toc-num">{h.number}</span>
@@ -382,6 +415,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
             <img
               src={post.thumbnail}
               alt={post.displayTitle || post.title}
+              loading="lazy"
               className="article-hero-img"
             />
             <div className="article-hero-gradient" />
@@ -509,6 +543,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               <img
                 src={post.thumbnail}
                 alt={post.displayTitle || post.title}
+                loading="lazy"
                 className="article-blog-image-img"
               />
             </div>
@@ -649,6 +684,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                 <img
                   src={rec.thumbnail || ''}
                   alt=""
+                  loading="lazy"
                   className="w-full h-full object-cover transition-transform group-hover:scale-105"
                 />
               </div>
