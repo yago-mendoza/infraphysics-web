@@ -7,12 +7,13 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Markdowns (root) — except tracked project docs
+# Markdowns (root) (except tracked project docs)
 /*.md
 !README.md
 !CLAUDE.md
 
 # Environments
+.env
 .env.*
 
 # Node
