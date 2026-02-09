@@ -263,6 +263,7 @@ export const HomeView: React.FC = () => {
                   <img
                     src={post.thumbnail}
                     alt=""
+                    loading="lazy"
                     className="w-full h-32 object-cover rounded"
                   />
                 </div>
@@ -308,7 +309,7 @@ export const HomeView: React.FC = () => {
             </span>
           </div>
           <p className="text-th-secondary leading-relaxed mb-4 font-sans">
-            Where I think out loud about how things actually work&mdash;from silicon to systems. Everything connected, everything building on everything else.
+            Atomic notes &mdash; one idea, one page, linked to everything else.
           </p>
           <div className="flex gap-6">
             <span className="text-sm text-th-tertiary">

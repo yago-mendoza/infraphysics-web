@@ -1,11 +1,17 @@
 // Category metadata with associated icons and colors — dark theme
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { GearIcon, ThreadIcon, GradCapIcon } from '../components/icons';
+
+/** Discrete section link — underline only, inherits text color */
+const sl = (to: string, text: string) => (
+  <Link to={to} className="underline underline-offset-2">{text}</Link>
+);
 
 export interface CategoryDisplayConfig {
   title: string;
-  description: string;
+  description: React.ReactNode;
   icon: React.ReactNode;
   color: string;
   colorClass: string;
@@ -32,7 +38,7 @@ function categoryColors(color: string) {
 export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
   projects: {
     title: 'Projects',
-    description: "Things I've built to scratch an itch. Some survived, some didn't\u2014all taught me something.",
+    description: <>Things I build. Design decisions, dead ends and what stuck as it actually happened.</>,
     icon: <GearIcon />,
     color: 'lime-400',
     accent: '#a3e635',
@@ -44,7 +50,7 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
   },
   threads: {
     title: 'Threads',
-    description: "Making sense of complex topics out loud. If I can explain it simply, I actually understand it.",
+    description: <>Essays, takes, and personal rants about ideas that won't sit still. When something deserves more depth than an essay can give it, check {sl('/blog/bits2bricks', 'bits2bricks')}.</>,
     icon: <ThreadIcon />,
     color: 'rose-400',
     accent: '#fb7185',
@@ -57,7 +63,7 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
   },
   bits2bricks: {
     title: 'Bits2Bricks',
-    description: "Hard lessons from where software meets the real world. No theory\u2014just what worked, what broke, and why.",
+    description: "Subjects I needed to understand, explained the way I wish someone had explained them to me. One topic at a time, taken apart until it clicks.",
     icon: <GradCapIcon />,
     color: 'blue-400',
     accent: '#3B82F6',
