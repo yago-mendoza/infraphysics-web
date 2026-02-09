@@ -301,11 +301,14 @@ html.theme-transitioning *::after {
 
 .code-terminal pre code span {
   color: var(--shiki-dark);
-  transition: color 0.95s ease;
 }
 
 [data-theme="light"] .code-terminal pre code span {
   color: var(--shiki-light);
+}
+
+html.theme-transitioning .code-terminal pre code span {
+  transition: color 0.95s ease;
 }
 
 /* ============================================================

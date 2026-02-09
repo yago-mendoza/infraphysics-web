@@ -552,14 +552,15 @@
   color: var(--art-text-title) !important;
 }
 
-/* TOC blink — flash when heading arrow is clicked */
+/* TOC blink — flash when heading is clicked to jump back to TOC */
 @keyframes toc-blink {
-  0%, 100% { background: transparent; color: inherit; }
-  20%, 60% { background: var(--art-accent-bg); color: var(--art-accent); }
+  0%   { background: var(--art-accent); color: var(--bg-base); }
+  100% { background: transparent; color: inherit; }
 }
 
 .toc-blink {
-  animation: toc-blink 1s ease;
+  animation: toc-blink 1.2s ease-out;
+  border-radius: 2px;
 }
 
 /* Indentation by depth */
@@ -605,8 +606,6 @@
   font-size: 1.75rem;
   color: var(--art-accent);
   margin: 2.5rem 0 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--art-border-subtle);
 }
 
 .article-content h2 {
@@ -627,36 +626,11 @@
   margin: 1.25rem 0 0.4rem;
 }
 
-/* B1b. Heading TOC arrow — superscript chevron, scrolls back to TOC */
+/* B1b. Clickable headings — click to scroll back to TOC */
 
-.heading-toc-arrow {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  vertical-align: text-top;
-  width: 20px;
-  height: 20px;
-  padding: 2px;
-  margin-left: 0.05em;
-  color: var(--art-text-mid);
-  opacity: 0.6;
-  transition: opacity 0.2s, color 0.2s;
+.heading-toc-link {
   cursor: pointer;
-  text-decoration: none;
-  border: none !important;
-  border-radius: 2px;
 }
-
-/* h1 uses accent on hover (already accent-colored title) */
-.article-content h1 .heading-toc-arrow:hover {
-  opacity: 1;
-  color: var(--art-accent);
-}
-
-/* h2-h4 use their own heading color on hover */
-.article-content h2 .heading-toc-arrow:hover { opacity: 1; color: var(--art-text-h2); }
-.article-content h3 .heading-toc-arrow:hover { opacity: 1; color: var(--art-text-h3); }
-.article-content h4 .heading-toc-arrow:hover { opacity: 1; color: var(--art-text-h4); }
 
 /* B2. Paragraphs */
 
@@ -712,7 +686,6 @@
   position: relative;
   padding-left: 1.5rem;
   margin-bottom: 0.25rem;
-  font-size: inherit;
 }
 
 .article-content .bkqt ul li::before {
@@ -733,7 +706,6 @@
 
 .article-content .bkqt ol li {
   margin-bottom: 0.25rem;
-  font-size: inherit;
 }
 
 .article-content .bkqt ol li::marker {
@@ -752,12 +724,11 @@
 }
 
 .article-content .bkqt .defn {
-  font-size: inherit;
   margin-bottom: 0.25rem;
 }
 
-.article-content .bkqt .defn strong {
-  color: inherit;
+.article-content .bkqt strong {
+  color: var(--art-text-body);
 }
 
 /* Alpha lists inside blockquotes */
@@ -770,7 +741,6 @@
 .article-content .bkqt ol[type="a"] li,
 .article-content .bkqt ol[type="A"] li {
   margin-bottom: 0.25rem;
-  font-size: inherit;
 }
 
 .article-content .bkqt ol[type="a"] li::marker,
@@ -788,10 +758,18 @@
 .article-content .bkqt-label {
   font-size: 0.75rem;
   font-weight: 600;
-  color: inherit;
+  color: var(--art-text-title);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-right: 0.4em;
+}
+
+.article-content .bkqt-label::after {
+  content: ':';
+}
+
+.article-threads .article-content .bkqt-label::after {
+  content: none;
 }
 
 .article-content .bkqt-body > .bkqt-label + p {
@@ -923,11 +901,11 @@
   font-size: 0.75em;
   font-weight: 600;
   cursor: default;
-  margin-left: 0.1em;
+  margin-left: 0.25em;
 }
 
 .article-content .annotations {
-  padding-left: 1.5rem;
+  padding-left: 3.0rem;
   margin-top: -0.25rem;
   margin-bottom: 1rem;
 }
@@ -936,7 +914,7 @@
   font-size: 0.8rem;
   color: var(--art-text-mid);
   line-height: 1.5;
-  margin-bottom: 0.25rem;
+  margin-bottom: 1rem;
 }
 
 .article-content .ann-note sup {
@@ -947,9 +925,13 @@
   vertical-align: super;
 }
 
+.article-content .bkqt .annotations {
+  margin-top: 0.75rem;
+}
+
 .article-content .annotations-nested {
-  padding-left: 1.25rem;
-  margin-top: 0;
+  padding-left: 2.5rem;
+  margin-top: 0.5;
   margin-bottom: 0;
 }
 
@@ -1080,7 +1062,6 @@
   border-radius: 0;
   margin: 1.5rem 0;
   overflow: hidden;
-  transition: background-color 0.95s ease, border-color 0.95s ease;
 }
 
 .article-content .code-terminal-bar {
@@ -1090,6 +1071,10 @@
   padding: 0.35rem 0.75rem;
   background-color: var(--art-surface-bar);
   border-bottom: 1px solid var(--art-border-subtle);
+}
+
+html.theme-transitioning .article-content .code-terminal,
+html.theme-transitioning .article-content .code-terminal-bar {
   transition: background-color 0.95s ease, border-color 0.95s ease;
 }
 
@@ -1147,6 +1132,9 @@
   padding: 1rem;
   margin: 1.5rem 0;
   overflow-x: auto;
+}
+
+html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   transition: background-color 0.95s ease, border-color 0.95s ease;
 }
 
@@ -1179,14 +1167,14 @@
 
 /* B9. Links */
 
-.article-content a:not(.wiki-ref):not(.wiki-ref-resolved):not(.doc-ref):not(.heading-toc-arrow) {
+.article-content a:not(.wiki-ref):not(.wiki-ref-resolved):not(.doc-ref) {
   color: var(--art-accent);
   text-decoration: none;
   border-bottom: 1px solid var(--art-accent-dim);
   transition: border-color 0.2s;
 }
 
-.article-content a:not(.wiki-ref):not(.wiki-ref-resolved):not(.doc-ref):not(.heading-toc-arrow):hover {
+.article-content a:not(.wiki-ref):not(.wiki-ref-resolved):not(.doc-ref):hover {
   border-bottom-color: var(--art-accent);
 }
 
@@ -1396,6 +1384,15 @@
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
+}
+
+.article-feedback-heading {
+  font-size: 0.8rem;
+  color: var(--art-text-dim);
+  letter-spacing: 0.02em;
+  text-align: center;
+  margin-top: 0.90rem;
+  margin-bottom: 0.15rem;
 }
 
 .article-feedback-label {
@@ -1638,6 +1635,61 @@
   text-transform: none;
   letter-spacing: normal;
   font-weight: 600;
+}
+
+/* E2b. Feedback form — Inter for blog */
+.article-blog .article-feedback {
+  font-family: 'Inter', var(--font-sans);
+}
+
+/* E2c. Threads typography — serif (Source Serif 4) for prose + headings */
+.article-threads .article-content p,
+.article-threads .article-content li,
+.article-threads .article-content td,
+.article-threads .article-content .small-text p,
+.article-threads .article-content .ann-note {
+  font-family: 'Source Serif 4', var(--font-serif);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.article-threads .article-title,
+.article-threads .article-subtitle,
+.article-threads .article-content h1,
+.article-threads .article-content h2,
+.article-threads .article-content h3,
+.article-threads .article-content h4 {
+  font-family: 'Source Serif 4', var(--font-serif);
+}
+
+.article-threads .article-feedback {
+  font-family: 'Source Serif 4', var(--font-serif);
+}
+
+.article-threads .article-toc-label,
+.article-threads .article-toc-link {
+  font-family: 'Source Serif 4', var(--font-serif);
+}
+
+.article-threads .article-content .bkqt-body {
+  padding: 1rem 2rem;
+}
+
+/* E2d. Threads blockquote label — block above text, bold serif (not inline monospace) */
+.article-threads .article-content .bkqt-label {
+  display: block;
+  font-family: 'Source Serif 4', var(--font-serif);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: normal;
+  margin-right: 0;
+  margin-top: 0;
+  margin-bottom: 0.1rem;
+}
+
+.article-threads .article-content .bkqt-body > .bkqt-label + p {
+  display: block;
 }
 
 /* E3. Breadcrumbs */
