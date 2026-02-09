@@ -60,11 +60,14 @@ infraphysics-web/
       ContactView.tsx         # Contact form (Formspree)
     data/
       pages/
-        README.md               # Authoring guide (frontmatter, syntax, pipeline, edge cases)
+        README.md               # Authoring hub (frontmatter, content types, editorial rules, pipeline)
+        SYNTAX.md               # Syntax reference (16 custom features, edge cases, quick ref)
         projects/             # .md posts + _category.yaml
-          README.md             # Project article editorial guide
+          README.md             # Projects editorial voice
         threads/              # .md posts + _category.yaml
+          README.md             # Threads editorial voice
         bits2bricks/          # .md posts + _category.yaml
+          README.md             # Bits2Bricks editorial voice
         fieldnotes/           # Individual .md files (1 per concept)
           README.md             # Fieldnotes management guide (scripts, workflows, errors)
         home/                 # _home-featured.yaml
@@ -111,7 +114,7 @@ The build pipeline compiles posts and fieldnotes through a shared 14-step transf
 
 ### Writing content
 
-All article and fieldnote markdown lives in `src/data/pages/`. The compiler supports a **custom syntax superset** on top of standard GFM: colored text, accent text, typed blockquotes, definition lists, alphabetical lists, context annotations, wiki-links, cross-document links, image positioning, and inline footnotes. Full authoring reference with frontmatter schemas per category, syntax examples, and edge cases: **[src/data/pages/README.md](src/data/pages/README.md)**
+All article and fieldnote markdown lives in `src/data/pages/`. The compiler supports a **custom syntax superset** on top of standard GFM: colored text, accent text, typed blockquotes, definition lists, alphabetical lists, context annotations, wiki-links, cross-document links, image positioning, and inline footnotes. Authoring hub (frontmatter, content types, editorial rules): **[src/data/pages/README.md](src/data/pages/README.md)**. Syntax reference (all 16 features, edge cases): **[src/data/pages/SYNTAX.md](src/data/pages/SYNTAX.md)**
 
 ---
 

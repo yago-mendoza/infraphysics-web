@@ -2,81 +2,79 @@
 
 > Instructions for AI coding assistants (Claude Code, Copilot, Cursor, etc.) working on this codebase. Contains automation rules, architecture patterns, and active gotchas. Human developers may also find it useful as a concise architectural reference.
 
-> **[!!!!!] WORKFLOW AWARENESS [!!!!!]** — Before and after every task, check which automation rules apply. Every file change, every content edit, every structural decision has documentation consequences. Ask yourself: does this trigger a README update? A build? A tree update? A category README revision? Stay attentive to the full workflow, not just the code change.
+**Before and after every task**, check which automation rules below apply. Every file change, content edit, or structural decision has documentation consequences.
+
+---
 
 ## Automation Rules
 
-These are **mandatory triggers** — when X happens, do Y.
+Mandatory triggers — when X happens, do Y.
+
+### On writing or editing ARTICLES content
+
+**1. Read the authoring docs first.** Never guess syntax, frontmatter, or editorial conventions from memory.
+
+| Doc | What to look up |
+|---|---|
+| [pages/README.md](src/data/pages/README.md) | Frontmatter schemas, content types, editorial rules, compilation pipeline |
+| [pages/SYNTAX.md](src/data/pages/SYNTAX.md) | All 16 custom syntax features, edge cases, quick reference table |
+| [projects/README.md](src/data/pages/projects/README.md) | Projects editorial voice, storytelling patterns, ctx annotation conventions |
+| [threads/README.md](src/data/pages/threads/README.md) | Threads editorial voice, serif typography, blockquote label rules, ctx restrictions |
+| [bits2bricks/README.md](src/data/pages/bits2bricks/README.md) | Bits2Bricks editorial voice, tutorial structure |
+
+**2. Verify factual claims.** When writing content that states dates, names, technical specs, historical events, or statistics — use web search to check accuracy. Do not assume recalled facts are correct.
+
+**3. Build after editing.** After editing any `.md` file in `src/data/pages/`, run `npm run build`. Markdown is compiled at build time — changes are invisible until the build runs.
+
+### On editorial feedback
+
+When the user gives feedback on article quality (tone, structure, storytelling, editorial choices), incorporate the lesson into the README of that article's category folder (e.g. `src/data/pages/projects/README.md`). These READMEs accumulate editorial patterns — they're the memory for how each content type should be written.
+
+### On managing fieldnotes
+
+**Before** creating, renaming, deleting, or restructuring fieldnotes, read **[fieldnotes/README.md](src/data/pages/fieldnotes/README.md)**. It covers available scripts, step-by-step workflows, cascading effects, and the full error reference. Never rename or delete fieldnotes by hand — use the scripts.
+
+**Creating fieldnotes:** Check for segment collisions first — search existing addresses for the last segment of each proposed address (case-insensitive). If it already exists anywhere in the hierarchy, evaluate whether it's the same concept before creating. After creating, run `npm run build`, then `node scripts/check-references.js` for orphans and weak parents, and create stub notes for missing parents.
+
+**Renaming fieldnotes:**
+
+> `rename-address.js` renames ONE exact address. It does NOT cascade to children. See [fieldnotes/README.md](src/data/pages/fieldnotes/README.md#restructuring-a-hierarchy).
+
+- **Simple rename** (no children): dry-run → `--apply` → `npm run build` → check stale `distinct` entries → commit together.
+- **Restructuring** (hierarchy change or note has children): use `move-hierarchy.js` instead — it cascades to all descendants. Dry-run → `--apply` → `npm run build` → `check-references.js` → commit together.
+- Hierarchy separator is `//`, not `/`. `X//node` = child. `X/node` = literal slash in the segment name.
 
 ### On file create/delete
+
 1. Update file tree in root `README.md`
 2. Check if file should be added/removed from `FILES` array in `dev-scripts/dump-context.sh`
 
-### On writing or editing article content
-**Before generating or editing any markdown**, read **[src/data/pages/README.md](src/data/pages/README.md)**. It documents every available syntax feature, frontmatter schema per content type (projects, threads, bits2bricks, fieldnotes), edge cases, and recommendations. Never guess syntax from memory — always consult that file. Also check for category-specific READMEs (e.g. **[projects/README.md](src/data/pages/projects/README.md)** for editorial voice and storytelling patterns) — they contain writing guidelines learned from author feedback.
-
-**Before managing fieldnotes** (creating, renaming, deleting, restructuring), read **[src/data/pages/fieldnotes/README.md](src/data/pages/fieldnotes/README.md)**. It covers the available scripts, step-by-step workflows, cascading effects, and the full error reference. Never rename or delete fieldnotes by hand — use the scripts.
-
-**After editing any `.md` file in `src/data/pages/`**, run `npm run build` to recompile content. Markdown is compiled at build time — changes are invisible until the build runs.
-
-**When the user gives feedback on how to improve an article** (tone, structure, storytelling, editorial choices), incorporate the lesson into the README of that article's category folder (e.g. `src/data/pages/projects/README.md`). These READMEs accumulate editorial patterns — they're the memory for how each content type should be written.
-
 ### On syntax/pipeline/frontmatter change
-Update `src/data/pages/README.md` — it's the **single source of truth** for content authors. Covers: custom syntax rules (`compiler.config.js`), frontmatter fields, typed blockquotes, wiki-link/cross-doc link processing, image positioning, fieldnotes format, validation rules, Shiki language themes, pipeline ordering.
+
+Update **[SYNTAX.md](src/data/pages/SYNTAX.md)** for syntax features. Update **[pages/README.md](src/data/pages/README.md)** for frontmatter schemas, content types, editorial rules, or pipeline changes. The two files together are the single source of truth for content authors.
 
 ### On README-worthy documentation
-Root `README.md` is a **hub** — max 3 lines per topic, then link to a specialized README:
 
-| README | Covers |
-|---|---|
-| **scripts/README.md** | Build pipeline (14 steps), cache format, outputs, Shiki, validation |
-| **src/data/pages/README.md** | Authoring: frontmatter, custom syntax, wiki-links, edge cases |
-| **src/data/pages/fieldnotes/README.md** | Fieldnotes management: scripts, workflows, rename/delete, build errors, cascading effects |
+Root `README.md` is a hub — max 3 lines per topic, then link to a specialized README. If a new subsystem needs more than a paragraph of docs, create a specialized README and link from root.
 
-If a new subsystem needs more than a paragraph of docs, extend or create a specialized README and link from root.
+### On Second Brain UX change
+
+If a change affects non-obvious behavior in the Second Brain (keyboard shortcuts, navigation, visual indicators, filters), update the **GuidePopup** tips in `src/components/layout/SecondBrainSidebar.tsx`.
 
 ### On context dump request
+
 User may say "dump context", "dame un TXT", etc. Before running `dev-scripts/dump-context.sh`:
 1. Ask what area/purpose
 2. Tailor the `FILES` array (comment out irrelevant, uncomment relevant)
 3. Verify files exist
 4. Run and report output path
 
-### On address rename (fieldnotes)
-
-> **`rename-address.js` renames ONE exact address. It does NOT cascade to children.** If the note has children (e.g. `node//child`), each child must be renamed in a separate script call. See "Restructuring a hierarchy" in [fieldnotes/README.md](src/data/pages/fieldnotes/README.md#restructuring-a-hierarchy).
-
-**Simple rename** (no children, no hierarchy change):
-1. `node scripts/rename-address.js "old" "new"` — dry-run, review output
-2. `node scripts/rename-address.js "old" "new" --apply`
-3. `npm run build` to verify
-4. Check `distinct` entries in other notes — any referencing the old address are now stale
-5. Commit all changed files together
-
-**Restructuring** (moving into/out of a hierarchy, or any rename where the note has children):
-1. Use `//` for hierarchy, NOT `/` (`/` is part of a segment name like `I/O`)
-2. `node scripts/move-hierarchy.js "node" "X//node"` — dry-run, review plan
-3. `node scripts/move-hierarchy.js "node" "X//node" --apply` — execute (cascades to all descendants)
-4. `npm run build` to verify
-5. `node scripts/check-references.js` to catch orphans, stale `distinct`, one-way refs
-6. Commit all changed files together
-
-### On creating fieldnotes (single or bulk)
-**Before creating**, check for segment collisions: search existing fieldnote addresses for the last segment of each proposed address (case-insensitive). If the segment already appears anywhere in the hierarchy — even as a non-terminal (e.g. creating `X//Y//Z` when `P//Q//Z//U` exists) — evaluate whether it's the same concept. If it is, the new note may belong under the existing hierarchy instead. This avoids creating notes that immediately trigger build-time collision warnings.
-
-**After creating:**
-1. Run `npm run build` to validate all references
-2. Run `node scripts/check-references.js` to check for orphans and weak parents
-3. Create stub notes for any missing parents
-4. Optionally: `node scripts/analyze-pairs.js "addr" --all` to verify expected connections exist
-
-### On Second Brain UX change
-If a change affects non-obvious behavior or interaction patterns in the Second Brain (keyboard shortcuts, navigation, visual indicators, filters, etc.), update the **GuidePopup** tips in `src/components/layout/SecondBrainSidebar.tsx` so users can discover the feature via the info icon.
-
 ### On any code change
+
 Do **only** what was requested. Do not refactor adjacent code, add extra styling, or make unsolicited improvements. If something else should change, mention it — don't do it.
 
 ### On completed task
+
 Append relevant lessons to the **Gotchas** section below. Update or remove stale entries.
 
 ---

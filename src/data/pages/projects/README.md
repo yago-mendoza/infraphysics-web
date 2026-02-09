@@ -23,7 +23,25 @@ Concise editorial guide for project writeups. These are lessons, not rules — a
 
 - **Footnotes `{{visible|explanation}}`** — for parenthetical material that would break the sentence rhythm. Better than actual parentheses.
 - **Small text `> ...`** — for dispensable technical details (keybindings, exact class names, implementation minutiae). If removing it doesn't hurt the story, it belongs in small text.
-- **Context annotations `>> date - text`** — story beats, not documentation. Keep them short and human.
+- **Context annotations `>> date - text`** — story beats, not documentation. Keep them short and human. See dedicated section below.
+
+### Context annotations in projects
+
+In projects, the article `date` is when the project is finished (or published). Context annotations (`>>`) serve as a **project diary** — they document how the project evolved, both during and after.
+
+**Opening annotation.** Right after the intro text (before the first `#` heading), include a ctx with the date the project actually started. This is the first diary entry: a brief lateral comment, a mood, or a compressed version of what the intro says. The `notes` frontmatter handles factual notices ("WIP", "requires X"); the opening ctx is personal and timestamped.
+
+```
+intro text explaining the project...
+
+>> 25.11.02 - started sketching this after getting frustrated with X.
+
+# First heading
+```
+
+**During the project.** Annotations can appear anywhere in the body to mark milestones, shifts in direction, or moments worth recording. Dates can be before or after the article's `date` — both are valid because the article is written retrospectively about a project that spans time.
+
+**After the project.** Post-publication updates, corrections, and reflections work the same as in any other category.
 
 ### Heading hierarchy
 
