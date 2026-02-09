@@ -46,6 +46,16 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
 
   const { theme } = useTheme();
 
+  // Reset all filters when navigating between categories
+  useEffect(() => {
+    setQuery('');
+    setSelectedTopics([]);
+    setSelectedTechs([]);
+    setSelectedStatuses([]);
+    setSortBy('newest');
+    setVisibleCount(PAGE_SIZE);
+  }, [category]);
+
   const sectionPosts = useMemo(() => posts.filter(p => p.category === category), [category]);
 
   const allTopics = useMemo(() => [...new Set(sectionPosts.flatMap(p => p.tags || []))].sort(), [sectionPosts]);
@@ -54,24 +64,6 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
     const statuses = [...new Set(sectionPosts.map(p => p.status).filter(Boolean))] as string[];
     const order = ['ongoing', 'implemented'];
     return statuses.sort((a, b) => order.indexOf(a) - order.indexOf(b));
-  }, [sectionPosts]);
-
-  const topicCounts = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const p of sectionPosts) for (const t of p.tags || []) map[t] = (map[t] || 0) + 1;
-    return map;
-  }, [sectionPosts]);
-
-  const techCounts = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const p of sectionPosts) for (const t of p.technologies || []) map[t] = (map[t] || 0) + 1;
-    return map;
-  }, [sectionPosts]);
-
-  const statusCounts = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const p of sectionPosts) if (p.status) map[p.status] = (map[p.status] || 0) + 1;
-    return map;
   }, [sectionPosts]);
 
   const filteredPosts = useMemo(() => {
@@ -107,6 +99,24 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
 
     return result;
   }, [sectionPosts, query, sortBy, selectedTopics, selectedTechs, selectedStatuses]);
+
+  const topicCounts = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const p of filteredPosts) for (const t of p.tags || []) map[t] = (map[t] || 0) + 1;
+    return map;
+  }, [filteredPosts]);
+
+  const techCounts = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const p of filteredPosts) for (const t of p.technologies || []) map[t] = (map[t] || 0) + 1;
+    return map;
+  }, [filteredPosts]);
+
+  const statusCounts = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const p of filteredPosts) if (p.status) map[p.status] = (map[p.status] || 0) + 1;
+    return map;
+  }, [filteredPosts]);
 
   // Infinite scroll
   const visiblePosts = filteredPosts.slice(0, visibleCount);
@@ -170,7 +180,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
             <span>{filteredPosts.reduce((acc, p) => acc + calculateReadingTime(p.content), 0)} min total</span>
           </div>
         </div>
-        <p className="text-sm text-th-secondary leading-relaxed max-w-2xl font-sans">
+        <p className={`text-sm text-th-secondary leading-relaxed max-w-2xl ${category === 'threads' ? 'font-serif' : category === 'projects' ? 'font-mono' : 'font-sans'}`}>
           {categoryInfo.description}
         </p>
       </header>
@@ -224,6 +234,8 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
                   {allStatuses.map(s => {
                     const cfg = STATUS_CONFIG[s] || { label: s, accent: '#9ca3af', dotColor: '#9ca3af' };
                     const active = selectedStatuses.includes(s);
+                    const count = statusCounts[s] || 0;
+                    if (!active && (count === 0 || count === filteredPosts.length)) return null;
                     return (
                       <button
                         key={s}
@@ -231,7 +243,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
                         className="text-xs px-2.5 py-0.5 border rounded-sm transition-colors accent-chip"
                         style={accentChipStyle(cfg.accent, active)}
                       >
-                        {cfg.label} ({statusCounts[s] || 0})
+                        {cfg.label} ({count})
                       </button>
                     );
                   })}
@@ -243,19 +255,24 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
               <div>
                 <span className="text-xs text-th-tertiary uppercase block mb-2">Tags</span>
                 <div className="flex flex-wrap gap-2">
-                  {allTopics.map(t => (
-                    <button
-                      key={t}
-                      onClick={() => toggleTopic(t)}
-                      className={`text-xs px-2.5 py-0.5 border rounded-sm transition-colors ${
-                        selectedTopics.includes(t)
-                          ? 'bg-slate-400/20 border-slate-400/50 text-slate-400'
-                          : 'border-slate-400/40 text-slate-400/80 hover:border-slate-400/60'
-                      }`}
-                    >
-                      {t} ({topicCounts[t] || 0})
-                    </button>
-                  ))}
+                  {allTopics.map(t => {
+                    const active = selectedTopics.includes(t);
+                    const count = topicCounts[t] || 0;
+                    if (!active && (count === 0 || count === filteredPosts.length)) return null;
+                    return (
+                      <button
+                        key={t}
+                        onClick={() => toggleTopic(t)}
+                        className={`text-xs px-2.5 py-0.5 border rounded-sm transition-colors ${
+                          active
+                            ? 'bg-slate-400/20 border-slate-400/50 text-slate-400'
+                            : 'border-slate-400/40 text-slate-400/80 hover:border-slate-400/60'
+                        }`}
+                      >
+                        {t} ({count})
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -266,6 +283,8 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
                 <div className="flex flex-wrap gap-2">
                   {allTechs.map(t => {
                     const isActive = selectedTechs.includes(t);
+                    const count = techCounts[t] || 0;
+                    if (!isActive && (count === 0 || count === filteredPosts.length)) return null;
                     return (
                       <button
                         key={t}
@@ -273,7 +292,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
                         className="text-xs px-2.5 py-0.5 border rounded-sm transition-colors accent-chip"
                         style={accentChipStyle(accent, isActive)}
                       >
-                        {t} ({techCounts[t] || 0})
+                        {t} ({count})
                       </button>
                     );
                   })}
