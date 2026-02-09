@@ -42,6 +42,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                     <img
                       src={post.thumbnail}
                       alt=""
+                      loading="lazy"
                       className="w-full h-full object-cover"
                     />
                   </Link>

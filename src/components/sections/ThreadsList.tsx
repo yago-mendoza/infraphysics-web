@@ -35,10 +35,10 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
 
                 {/* Title + Description — both clickable */}
                 <Link to={postPath(post.category, post.id)} className="listing-title-link thread-title-link group block mb-3">
-                  <h3 className="listing-card-title thread-card-title text-xl font-bold text-th-primary transition-colors leading-tight mb-2">
+                  <h3 className="listing-card-title thread-card-title text-xl font-bold font-serif text-th-primary transition-colors leading-tight mb-2">
                     {post.displayTitle || post.title}
                   </h3>
-                  <p className="text-sm text-th-secondary font-sans leading-relaxed">
+                  <p className="text-sm text-th-secondary font-serif leading-relaxed">
                     {post.description}
                   </p>
                 </Link>
@@ -64,6 +64,7 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
                   <img
                     src={post.thumbnail}
                     alt=""
+                    loading="lazy"
                     className="w-full h-full object-cover"
                   />
                 </Link>

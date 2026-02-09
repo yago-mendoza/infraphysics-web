@@ -65,7 +65,7 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearc
   return (
     <div className="md:hidden fixed top-0 left-0 right-0 z-50">
       {/* Mobile Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-th-base backdrop-blur-sm border-b border-th-border">
+      <div className="flex items-center justify-between px-4 py-3 bg-th-base border-b border-th-border">
         <Link to="/home" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-th-active rounded-sm flex items-center justify-center">
             <Logo className="w-5 h-5" color="var(--text-primary)" />
