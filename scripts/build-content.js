@@ -52,12 +52,12 @@ customRenderer.image = function({ href, title, text }) {
 
   if (caption) {
     const figClass = className ? ` class="${className}"` : '';
-    const imgTag = `<img src="${href}" alt="${alt}"${styleAttr}${titleAttr} />`;
+    const imgTag = `<img src="${href}" alt="${alt}"${styleAttr}${titleAttr} loading="lazy" />`;
     return `<figure${figClass}>${imgTag}<figcaption>${caption}</figcaption></figure>`;
   }
 
   const classAttr = className ? ` class="${className}"` : '';
-  const imgTag = `<img src="${href}" alt="${alt}"${classAttr}${styleAttr}${titleAttr} />`;
+  const imgTag = `<img src="${href}" alt="${alt}"${classAttr}${styleAttr}${titleAttr} loading="lazy" />`;
   return imgTag;
 };
 
@@ -72,6 +72,15 @@ function stripHeadingFormatting(html) {
   return html.replace(/<(h[1-4])(\s[^>]*)?>(.+?)<\/\1>/gi, (match, tag, attrs, inner) => {
     const plain = inner.replace(/<[^>]*>/g, '');
     return `<${tag}${attrs || ''}>${plain}</${tag}>`;
+  });
+}
+
+// Auto-number <h1> headings sequentially (1. Title, 2. Title, ...)
+function numberH1Headings(html) {
+  let counter = 0;
+  return html.replace(/<h1(\s[^>]*)?>(.+?)<\/h1>/gi, (match, attrs, inner) => {
+    counter++;
+    return `<h1${attrs || ''}>${counter}. ${inner}</h1>`;
   });
 }
 
@@ -213,7 +222,7 @@ function processCustomBlockquotes(markdown, placeholders) {
       return `<div class="bkqt bkqt-${type}"><div class="bkqt-body">${body}${attrib}</div></div>`;
     }
     const label = customLabel ? customLabel.trim() : config.label;
-    return `<div class="bkqt bkqt-${type}"><div class="bkqt-body"><span class="bkqt-label">${label}:</span>${body}</div></div>`;
+    return `<div class="bkqt bkqt-${type}"><div class="bkqt-body"><span class="bkqt-label">${label}</span>${body}</div></div>`;
   });
 }
 
@@ -351,15 +360,15 @@ function extractAnnotations(content) {
 }
 
 function processAnnotations(html) {
-  // First pass: <p> tags (outermost annotations extracted, inner ones stay in explanation text)
-  let result = html.replace(/<p>([\s\S]*?)<\/p>/g, (match, inner) => {
+  // First pass: <p>, <li>, and <td> tags (outermost annotations extracted, inner ones stay in explanation text)
+  let result = html.replace(/<(p|li|td)>([\s\S]*?)<\/\1>/g, (match, tag, inner) => {
     if (!inner.includes('{{')) return match;
     const { processed, annotations } = extractAnnotations(inner);
     if (annotations.length === 0) return match;
     const notesHtml = annotations.map(a =>
       `<div class="ann-note"><sup>${a.num}</sup>${a.text}</div>`
     ).join('');
-    return `<p>${processed}</p>\n<div class="annotations">${notesHtml}</div>`;
+    return `<${tag}>${processed}</${tag}>\n<div class="annotations">${notesHtml}</div>`;
   });
 
   // Nested passes: peel annotations inside ann-note divs level by level
@@ -419,7 +428,7 @@ function preprocessSideImages(markdown) {
 
         // Create flexbox container with image and text side by side
         result.push(`<div class="img-side-layout img-side-${position}">
-<img src="${src}" alt="${alt}" class="img-side-img" style="${widthStyle}">
+<img src="${src}" alt="${alt}" class="img-side-img" style="${widthStyle}" loading="lazy">
 <div class="img-side-content">
 ${paragraphs}
 </div>
@@ -696,6 +705,7 @@ function getAllCategoryConfigs(dir) {
 // Both regular posts and fieldnotes use this exact 14-step pipeline.
 
 function compileMarkdown(rawMd, articleDate) {
+  rawMd = rawMd.replace(/\r\n/g, '\n');
   const { text, placeholders } = protectBackticks(rawMd);
   const withSyntax = applyPreProcessors(text);
   const withBkqt = processCustomBlockquotes(withSyntax, placeholders);

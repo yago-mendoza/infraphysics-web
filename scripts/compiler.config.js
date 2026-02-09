@@ -35,7 +35,6 @@ export default {
   // Order matters: curly-brace patterns first (unambiguous), then bare-delimiter patterns
   preProcessors: [
     { name: 'text-color',       pattern: /\{#([a-fA-F0-9]{3,6}|[a-z]+):([^}]+)\}/g,  replace: '<span style="color:#$1">$2</span>' },
-    { name: 'small-caps',       pattern: /\{sc:([^}]+)\}/g,                             replace: '<span style="font-variant:small-caps">$1</span>' },
     { name: 'superscript',      pattern: /\{\^:([^}]+)\}/g,                             replace: '<sup>$1</sup>' },
     { name: 'subscript',        pattern: /\{v:([^}]+)\}/g,                              replace: '<sub>$1</sub>' },
     { name: 'keyboard',         pattern: /\{kbd:([^}]+)\}/g,                            replace: '<kbd>$1</kbd>' },

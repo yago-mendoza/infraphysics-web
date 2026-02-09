@@ -23,7 +23,7 @@ Both regular posts and fieldnotes pass through the same `compileMarkdown()` pipe
 | 11 | `stripHeadingFormatting` | Post-marked | Removes all inline HTML tags from `<h1>`-`<h4>` content (no `<code>`, `<em>`, `<strong>` inside headings) |
 | 12 | `highlightCodeBlocks` | Post-marked | Shiki dual-theme highlighting. Wraps in `.code-terminal` with macOS dots, language label, copy button |
 | 13 | `applyPostProcessors` | Post-marked | Runs post-processor regex rules from `compiler.config.js` (currently empty) |
-| 14 | `processAnnotations` | Post-marked | Converts `{{ref\|explanation}}` into superscript notes. Uses balanced-bracket parser for nesting. Runs inside `processOutsideCode` to skip `<pre>`/`<code>` |
+| 14 | `processAnnotations` | Post-marked | Converts `{{ref\|explanation}}` into superscript notes. Works inside `<p>`, `<li>`, and `<td>` elements. Uses balanced-bracket parser for nesting. Runs inside `processOutsideCode` to skip `<pre>`/`<code>` |
 
 ### Image renderer
 
@@ -162,7 +162,6 @@ Regex rules applied BEFORE `marked.parse`, in order. Heading lines are protected
 | Name | Syntax | Output |
 |---|---|---|
 | text-color | `{#ff0:text}` or `{#red:text}` | `<span style="color:#ff0">text</span>` |
-| small-caps | `{sc:text}` | `<span style="font-variant:small-caps">text</span>` |
 | superscript | `{^:text}` | `<sup>text</sup>` |
 | subscript | `{v:text}` | `<sub>text</sub>` |
 | keyboard | `{kbd:text}` | `<kbd>text</kbd>` |
