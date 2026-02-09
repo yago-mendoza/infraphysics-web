@@ -11,7 +11,8 @@ interface HighlightProps {
 export const Highlight: React.FC<HighlightProps> = ({ text, query, className }) => {
   if (!query) return <span className={className}>{text}</span>;
 
-  const parts = text.split(new RegExp(`(${query})`, 'gi'));
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const parts = text.split(new RegExp(`(${escaped})`, 'gi'));
 
   return (
     <span className={className}>

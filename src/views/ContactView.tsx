@@ -46,6 +46,8 @@ export const ContactView: React.FC = () => {
 
         {/* Contact Form */}
         <form onSubmit={handleSubmit} className="max-w-lg mb-14">
+          {/* Honeypot — hidden from humans, bots fill it, Formspree discards those */}
+          <input type="text" name="_gotcha" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
           <div className="flex flex-col gap-5">
             <div>
               <label htmlFor="name" className="block text-xs text-th-tertiary uppercase tracking-wider mb-2">

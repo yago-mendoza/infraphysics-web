@@ -301,7 +301,10 @@ export async function initBrainIndex(): Promise<BrainIndex> {
     };
 
     return _index;
-  })();
+  })().catch(err => {
+    _initPromise = null;
+    throw err;
+  });
 
   return _initPromise;
 }
