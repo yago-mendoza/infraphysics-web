@@ -23,6 +23,8 @@ Personal website and knowledge system. Articles, projects, field notes, and a se
 
 ```
 infraphysics-web/
+  functions/
+    [[catchall]].ts           # Cloudflare Pages Function (dynamic OG tags for social crawlers)
   scripts/
     compiler.config.js        # Centralized compiler configuration
     build-content.js          # Markdown → JSON pipeline (triple output)
@@ -77,6 +79,8 @@ infraphysics-web/
       data.ts                 # Runtime data loader
     public/
       fieldnotes/             # {id}.json content files (served as static assets)
+      og-manifest.json        # Generated: URL path → OG metadata for social previews
+      _routes.json            # Cloudflare Pages routing (which paths invoke the Function)
     lib/
       wikilinks.ts            # Runtime wiki-link resolver
       content.ts              # Content utilities
@@ -144,6 +148,12 @@ The build pipeline includes a 6-phase integrity checker that catches reference e
 | Orphan detection | Notes with no connections to the graph | INFO |
 
 There is also an optional deep audit script (`node scripts/check-references.js`) that adds one-way trailing ref analysis, redundant ref detection, and fuzzy duplicate detection. Full validation details: **[scripts/README.md](scripts/README.md)**
+
+---
+
+### Social previews
+
+Article URLs return dynamic OG meta tags for social crawlers (WhatsApp, Twitter, Discord, etc.) via a Cloudflare Pages Function (`functions/[[catchall]].ts`). The build generates `public/og-manifest.json` mapping every article and fieldnote URL to its title, description, and thumbnail. Routing (`public/_routes.json`) limits the Function to article paths only — static assets and section listings are served directly.
 
 ---
 

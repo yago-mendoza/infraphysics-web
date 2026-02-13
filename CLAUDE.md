@@ -176,3 +176,6 @@ Related section uses `article-${targetCategory}` but `--art-accent` inherits fro
 
 ### StatusBadge dark/light split
 `dark:` styles only apply when `theme !== 'light'`. Light variant uses its own class string. Keep both paths in sync when editing.
+
+### Blog category list duplicated for OG manifest
+`build-content.js` has a local `BLOG_CATS` set (used to build URL paths for `og-manifest.json`) that mirrors `BLOG_CATEGORIES` in `categories.tsx`. If a new blog category is added, update both. Also add the new route pattern to `public/_routes.json`.

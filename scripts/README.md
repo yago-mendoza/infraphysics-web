@@ -76,6 +76,7 @@ Cross-doc links **require** display text (`|Display`). Missing display text prod
 | Fieldnotes index | `src/data/fieldnotes-index.generated.json` | Metadata array (id, title, address, addressParts, references, trailingRefs, searchText, description). No `content` field. |
 | Fieldnote content | `public/fieldnotes/{id}.json` | `{ "content": "<html>" }` per note. Served as static assets. Stale files auto-cleaned. |
 | Categories | `src/data/categories.generated.json` | Category config from `_category.yaml` files. |
+| OG manifest | `public/og-manifest.json` | URL path → OG metadata (title, description, thumbnail, category) for all articles + fieldnotes. Consumed by the Cloudflare Pages Function for social previews. |
 
 ### Fieldnote metadata extraction
 
