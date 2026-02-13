@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "include": [
+    "/lab/projects/*",
+    "/lab/second-brain/*",
+    "/blog/threads/*",
+    "/blog/bits2bricks/*"
+  ],
+  "exclude": []
+}
