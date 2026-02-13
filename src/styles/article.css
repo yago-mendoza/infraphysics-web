@@ -411,6 +411,7 @@
   gap: 0.75rem;
   font-size: 0.75rem;
   margin-bottom: 0.75rem;
+  font-family: 'JetBrains Mono', var(--font-mono);
 }
 
 .article-meta-date {
@@ -647,9 +648,9 @@
   margin: 1.5rem -2rem;
   border-radius: 0;
   overflow: hidden;
-  font-size: 0.78rem;
-  color: var(--art-text-bright);
-  line-height: 1.6;
+  font-size: 0.875rem;
+  color: var(--art-text-body);
+  line-height: 1.4;
   --bkqt-bg: color-mix(in srgb, var(--bkqt-color) 6%, transparent);
 }
 
@@ -1777,6 +1778,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   margin-top: 1.25rem;
 }
 
+
 /* E6b. Context annotations (.ctx-note) — inline timestamped author notes */
 .article-content .ctx-note {
   position: relative;
@@ -1865,13 +1867,19 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 /* E7. Blog TOC — same box as projects, depth-scaled sizing */
 .article-toc--blog .article-toc-label {
   font-family: 'Inter', var(--font-sans);
+  font-size: 1rem;
 }
 
 .article-toc--blog .article-toc-link {
   font-family: 'Inter', var(--font-sans);
+  text-transform: none;
 }
 
-.article-toc--blog .article-toc-depth-0 > .article-toc-link { font-size: 0.75rem; }
-.article-toc--blog .article-toc-depth-1 > .article-toc-link { font-size: 0.7rem; }
-.article-toc--blog .article-toc-depth-2 > .article-toc-link { font-size: 0.65rem; }
-.article-toc--blog .article-toc-depth-3 > .article-toc-link { font-size: 0.6rem; }
+.article-toc--blog .article-toc-depth-0 > .article-toc-link { font-size: 1rem; font-weight: 400; }
+.article-toc--blog .article-toc-depth-0 > .article-toc-link > .article-toc-num { font-size: 0.85rem; }
+.article-toc--blog .article-toc-depth-1 > .article-toc-link { font-size: 0.925rem; }
+.article-toc--blog .article-toc-depth-1 > .article-toc-link > .article-toc-num { font-size: 0.8rem; }
+.article-toc--blog .article-toc-depth-2 > .article-toc-link { font-size: 0.85rem; }
+.article-toc--blog .article-toc-depth-2 > .article-toc-link > .article-toc-num { font-size: 0.75rem; }
+.article-toc--blog .article-toc-depth-3 > .article-toc-link { font-size: 0.8rem; }
+.article-toc--blog .article-toc-depth-3 > .article-toc-link > .article-toc-num { font-size: 0.7rem; }

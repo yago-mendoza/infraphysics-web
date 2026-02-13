@@ -29,7 +29,7 @@ export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, 
                 src={post.thumbnail || 'https://via.placeholder.com/400'}
                 alt=""
                 loading="lazy"
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-300 scale-[1.03] group-hover:scale-100"
               />
             </div>
 

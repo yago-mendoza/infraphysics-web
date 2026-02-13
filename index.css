@@ -423,10 +423,11 @@ button:focus {
   border: none;
   outline: none;
   color: transparent;
+  transform: scale(1.03);
 }
 
 .listing-card:has(.listing-title-link:hover, .listing-thumb:hover) .listing-thumb img {
-  transform: scale(1.05);
+  transform: scale(1);
 }
 
 .listing-card:has(.listing-title-link:hover, .listing-thumb:hover) .listing-card-title {
