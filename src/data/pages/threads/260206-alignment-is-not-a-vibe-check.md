@@ -5,7 +5,7 @@ displayTitle: Alignment is not a vibe check
 subtitle: From RLHF to strategic deception — the field went from "be nice" to "oh no"
 category: threads
 date: 2026-02-06
-thumbnail: https://cdn.infraphysics.net/thumbnail_1.png
+thumbnail: https://cdn.infraphysics.net/fkk8-sj88-8888.png
 thumbnailAspect: full
 description: Billions of dollars, thousands of researchers, and one very uncomfortable discovery about what happens when you teach a model to pretend.
 tags: [ai, alignment, safety, rlhf, scaling, anthropic, openai]

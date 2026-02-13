@@ -11,7 +11,9 @@ tags: [ai, security, docker, networking, agents, openclaw, devops]
 related: [openclaw-and-the-keys-to-your-kingdom]
 ---
 
-This is the companion piece to [OpenClaw and the keys to your kingdom](/blog/threads/openclaw-and-the-keys-to-your-kingdom). That article covers the --why-- — what "full system access" actually means, what an AI agent can reach on your machine and network, and why the supply chain is the part that should keep you up at night. This one covers the --how-- — specific techniques for containing the agent, ranked by effort and protection, with real commands and real tradeoffs.
+>> 26.02.09 - spent three days trying every containment setup I could find for OpenClaw. this is what worked, what didn't, and what I actually ended up using.
+
+This is the companion piece to [OpenClaw and the keys to your kingdom](/blog/threads/openclaw-and-the-keys-to-your-kingdom). That article covers the --why--. This one covers the --how-- — specific techniques for containing the agent, ranked by effort and protection, with real commands and real tradeoffs.
 
 If you haven't read the thread, the one-paragraph version: OpenClaw is an open-source AI agent that runs on your computer and acts autonomously — reading files, running commands, accessing your network, all controlled from your phone via WhatsApp or Telegram. It's genuinely useful. It's also a process running as your user with access to your SSH keys, your cloud credentials, your browser sessions, and every device on your LAN. A community skill was already found containing malware. The question isn't whether to use it — it's how to contain it.
 
@@ -78,6 +80,8 @@ Flag-by-flag:
 - `-v /path/to/output:/output:rw` — separate writable mount for output. The agent writes here and nowhere else.
 
 **Setup time: 5 minutes.** Copy the command, adjust the two volume paths, run it.
+
+One thing I learned the hard way: `--network=none` means *none*. The first time I ran this, the agent died immediately trying to resolve DNS for the Anthropic API. Obvious in retrospect. If your agent needs to call an API — and most do — you need the next section.
 
 ## When the agent needs internet
 
@@ -165,7 +169,7 @@ orb shell agent-sandbox
 # your macOS home directory, SSH keys, browser profiles = invisible
 ```
 
-I ran OpenClaw's core loop in an OrbStack instance for three days. The overhead was negligible — less than 0.1% background CPU, under 10 MB disk footprint. It felt like running a native process, except my host machine's credentials and files were completely invisible to it.
+I ran OpenClaw's core loop in an OrbStack instance for three days. Forgot it was running twice — the overhead is that invisible. Less than 0.1% background CPU, under 10 MB disk. My host machine's credentials and files were completely invisible to it, which is the whole point. This is what I actually use day to day.
 
 Docker containers inside OrbStack get an extra layer: a container escape compromises the OrbStack Linux VM, --not your Mac--. That's a fundamentally different threat level than Docker Desktop, where an escape lands you on macOS directly.
 
@@ -221,7 +225,7 @@ clawdbot onboard --install-daemon
 # → installs a systemd service that runs 24/7
 ```
 
-That's it. The gateway runs as a systemd service — survives SSH disconnects, reboots, everything. You chat through WhatsApp, the TUI (`clawdbot tui`), or a web dashboard (via SSH tunnel to `localhost:18789`).
+That's it. The gateway runs as a systemd service — survives SSH disconnects, reboots, everything. You chat through WhatsApp, the TUI (`clawdbot tui`), or a web dashboard (via SSH tunnel to `localhost:18789`). The WhatsApp QR linking is slightly unnerving — you're pairing your personal WhatsApp to a machine in a datacenter — but it works.
 
 {bkqt/tip|What the cloud gives you for free}
 - **No local files at risk** — the droplet doesn't have your SSH keys, browser sessions, or personal documents
@@ -311,7 +315,7 @@ A practical home layout:
 
 # The credential audit
 
-Do this regardless of which containment strategy you pick. 15 minutes that tells you exactly what's at risk.
+Do this regardless of which containment strategy you pick. 15 minutes that tells you exactly what's at risk. I ran these on my own machine while writing [the thread](/blog/threads/openclaw-and-the-keys-to-your-kingdom) and found four unencrypted SSH keys and two forgotten `.env` files with production credentials. Years of this, and I'd never once checked.
 
 ```bash
 # 1. SSH keys — are they passphrase-protected?
