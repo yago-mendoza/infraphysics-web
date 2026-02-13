@@ -2,7 +2,47 @@
 
 Editorial guide for thread articles — essays, analysis, and long-form arguments. These lessons accumulate from author feedback. Apply judgment, not rote rules.
 
-For syntax features, see **[SYNTAX.md](../SYNTAX.md)**. For frontmatter and general authoring, see **[README.md](../README.md)**.
+For syntax features, see **[SYNTAX.md](../SYNTAX.md)**. For general authoring rules and cross-referencing, see **[README.md](../README.md)**.
+
+---
+
+### Frontmatter
+
+Every thread starts with a YAML frontmatter block. Prefix filenames with `YYMMDD-` for chronological sorting (e.g. `260206-alignment-is-not-a-vibe-check.md`). The `id` field determines URLs — the filename is only for directory organization.
+
+Threads use only universal fields — no category-specific extras.
+
+| Field | Required | Type | What it does |
+|---|---|---|---|
+| `id` | yes | string | Unique slug used in URLs and as the primary key. |
+| `displayTitle` | no | string | Human-readable title shown in UI. Falls back to `id`. |
+| `category` | yes | string | Must be `threads`. |
+| `date` | yes | string | ISO 8601 (`YYYY-MM-DD`). Publication date. |
+| `description` | yes | string | One-liner for cards and meta tags. |
+| `thumbnail` | no | string | Hero image URL. Prefer Cloudflare R2 or Unsplash. |
+| `thumbnailAspect` | no | string | Crop ratio: `full` (default), `wide` (16/7), `banner` (16/4), `strip` (16/2). |
+| `thumbnailShading` | no | string | Overlay: `heavy`, `light`, `none` (default). |
+| `tags` | no | string[] | Topic tags for filter system. `[tag1, tag2]`. |
+| `subtitle` | no | string | Below the title in the article header. |
+| `related` | no | string[] | Post IDs for the "Related" section. |
+| `featured` | no | boolean | Shows in "Latest Work" on home page. |
+| `tldr` | no | string/string[] | Key takeaway lines in the header area. |
+| `author` | no | string | Defaults to `Yago Mendoza`. |
+
+**Example:**
+
+```yaml
+---
+id: entropy-and-software-decay
+displayTitle: entropy and software decay
+category: threads
+date: 2024-01-10
+thumbnail: https://images.unsplash.com/photo-xxx
+description: why code rots without maintenance.
+tags: [physics, systems, maintenance]
+featured: true
+---
+```
 
 ---
 

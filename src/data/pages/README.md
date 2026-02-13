@@ -28,121 +28,12 @@ Nothing in this document uses the custom syntax it describes, because GitHub's r
 
 ## Frontmatter
 
-Every markdown file starts with a YAML frontmatter block delimited by `---`. The build script uses **gray-matter** to extract it. Fields that are absent default to `null` in the generated JSON.
+Every markdown file starts with a YAML frontmatter block (`---`). Frontmatter schemas are documented in each category's own README:
 
-### Universal fields (all categories)
-
-| Field | Required | Type | What it does |
-|---|---|---|---|
-| `id` | yes | string | Unique slug used in URLs, as the primary key, and as the fallback display name when `displayTitle` is absent. The build reads this field directly — it is **not** derived from the filename. |
-| `displayTitle` | no | string | Human-readable title shown in the UI (headings, cards, browser tab). Falls back to `id` if missing. |
-| `category` | yes | string | One of `projects`, `threads`, `bits2bricks`. Determines which section lists the post and which accent color it gets. |
-| `date` | yes | string | ISO 8601 date (`YYYY-MM-DD`). Shown in post headers and used for default sort order (newest first). |
-| `description` | yes | string | One-liner. Appears on listing cards, meta tags, and search result excerpts. Keep it short. |
-| `thumbnail` | no | string | URL to an image. Shown as the hero image on the post page and as the card thumbnail in listings. Prefer Cloudflare R2 or Unsplash URLs. |
-| `thumbnailAspect` | no | string | Controls the crop ratio of the hero image. Values: `full` (auto height), `wide` (16/7), `banner` (16/4), `strip` (16/2). Default is `full`. |
-| `thumbnailShading` | no | string | Overlay filter on the hero image. Values: `heavy`, `light`, `none`. Default is `none`. |
-| `tags` | no | string[] | Topic tags shown as pills/hashtags. Used by the filter system in section listings. YAML array syntax: `[tag1, tag2, tag3]`. |
-| `author` | no | string | Defaults to `Yago Mendoza` if absent. |
-| `subtitle` | no | string | Appears below the title in the article header. |
-| `related` | no | string[] | Array of post IDs. The "Related" section at the bottom of a post will show these. If empty, the system picks random posts from the same category. |
-| `featured` | no | boolean | Flag for potential featured/pinned treatment in listings. |
-| `notes` | no | string or string[] | Author notes displayed in the project header area. Can be a single string or a YAML array. |
-
-### Filename convention (posts)
-
-Prefix post filenames with the date in `YYMMDD-` format so they sort chronologically in the directory:
-
-```
-260206-alignment-is-not-a-vibe-check.md
-260205-everything-is-a-pipe.md
-250130-anatomy-of-a-markdown-compiler.md
-```
-
-The build uses the frontmatter `id` field for URLs and routing — the filename is only for directory organization. The `id` does **not** need to match the filename.
-
-### Projects-specific fields
-
-These fields only have an effect when `category: projects`.
-
-| Field | Type | What it does |
-|---|---|---|
-| `status` | string | Lifecycle badge shown in the post header and as a filterable chip in the projects listing. Values: `ongoing`, `implemented`, `active`, `in-progress`, `completed`, `archived`. Each has a hardcoded accent color defined in `STATUS_CONFIG` (`config/categories.tsx`). |
-| `technologies` | string[] | Tech stack shown as pills in the post header and as filterable chips in the listing. Syntax: `[TypeScript, React, Vite]`. |
-| `github` | string | URL to the GitHub repository. Renders a clickable icon/link in the post header. |
-| `demo` | string | URL to a live demo. Same treatment as `github`. |
-| `caseStudy` | string | URL to an external case study. |
-| `duration` | string | Free-form project duration string (e.g. `4 weeks`, `ongoing`). |
-
-### Threads
-
-Threads posts use the universal fields. No additional category-specific fields.
-
-### Bits2Bricks
-
-Bits2Bricks posts use the universal fields. No additional category-specific fields.
-
-### Blog TOC behavior (Threads & Bits2Bricks)
-
-Blog categories (threads, bits2bricks) share the same bordered TOC box as projects. Differences:
-- **Max 10 entries** — only the first 10 headings appear in the TOC (projects show all).
-- **Font**: Inter instead of monospace. Uppercase labels.
-- **Depth-scaled sizing**: depth-0 at `0.75rem`, depth-1 at `0.7rem`, depth-2 at `0.65rem`, depth-3 at `0.6rem`.
-
-### Fieldnotes (Second Brain)
-
-Each fieldnote is an individual `.md` file in `fieldnotes/` with `address` (required), `date` (required), and optional `aliases`, `supersedes`, `distinct` frontmatter. See the [Second Brain](#second-brain-fieldnotes) section.
-
-### Example frontmatters
-
-**Project:**
-
-```yaml
----
-id: neural-cellular-automata
-displayTitle: neural cellular automata
-category: projects
-date: 2024-06-15
-thumbnail: https://pub-xxx.r2.dev/nca-hero.webp
-description: self-organizing patterns via learned update rules.
-status: completed
-technologies: [TypeScript, WebGL, React]
-github: https://github.com/user/nca
-demo: https://nca.infraphysics.dev
-tags: [simulation, graphics, ml]
-related: [quantum-interference-visualizer]
----
-```
-
-**Thread:**
-
-```yaml
----
-id: entropy-and-software-decay
-displayTitle: entropy and software decay
-category: threads
-date: 2024-01-10
-thumbnail: https://images.unsplash.com/photo-xxx
-description: why code rots without maintenance.
-tags: [physics, systems, maintenance]
-featured: true
----
-```
-
-**Bits2Bricks:**
-
-```yaml
----
-id: fpga-uart-controller
-displayTitle: FPGA UART controller
-category: bits2bricks
-date: 2024-08-01
-thumbnail: https://pub-xxx.r2.dev/fpga-hero.webp
-thumbnailAspect: banner
-description: hardware serial communication from scratch.
-tags: [fpga, verilog, hardware]
----
-```
+- **[projects/README.md](projects/README.md)** — universal fields + `status`, `technologies`, `github`, `demo`, `duration`
+- **[threads/README.md](threads/README.md)** — universal fields only
+- **[bits2bricks/README.md](bits2bricks/README.md)** — universal fields only
+- **Fieldnotes** — `address`, `date`, `aliases`, `supersedes`, `distinct`. See [Second Brain](#second-brain-fieldnotes) below.
 
 ---
 
@@ -157,16 +48,16 @@ Any text that appears **after the frontmatter but before the first heading** is 
 
 The intro is **not** the same as the `description` frontmatter (which is a one-liner for cards and meta tags). The intro is the first thing a reader sees in the article body — it sets the tone.
 
-### When to use `notes`, `>>` context annotations, or intro text
+### When to use `tldr`, `>>` context annotations, or intro text
 
 | Tool | Purpose | Where it appears | When to use |
 |---|---|---|---|
-| **`notes` frontmatter** | Global notices about the post | Header area, above the content | "WIP", "requires X", "updated timeline", disclaimers |
+| **`tldr` frontmatter** | Central idea at a glance | Header area, above the content | Key takeaways, core premise, project summary bullets |
 | **Intro text** | Motivation, audience, what to expect | Between TOC and first heading | First time reading the post — sets expectations |
 | **`>> annotations`** | Timestamped post-publication edits | Anywhere in the article body | "Rewrote this section", "corrected after feedback", changelogs |
 | **`{bkqt/note}`** | In-flow supplementary information | Wherever placed in body | "See also...", tangential context, clarifications |
 
-`notes` is metadata. Intro text is narrative. `>>` annotations are a changelog. `{bkqt/note}` is a callout. They serve different purposes and can coexist in the same post.
+`tldr` is metadata. Intro text is narrative. `>>` annotations are a changelog. `{bkqt/note}` is a callout. They serve different purposes and can coexist in the same post.
 
 ### Writing conventions per content type
 
@@ -226,7 +117,9 @@ These apply across all content types unless noted otherwise.
 
 **Context annotations — category-specific rules.** Projects and threads use ctx annotations very differently. Projects use them as a project diary (dates before and after the article `date` are valid, and an opening ctx after the intro is expected). Threads restrict them to post-publication updates only (no opening ctx, no dates before the article `date`). See **[projects/README.md](projects/README.md)** and **[threads/README.md](threads/README.md)** for the full rules.
 
-**Tables are for objective data.** Use tables when comparing structured, factual information (specs, API fields, syntax options, dates, metrics). Do not use tables for rhetorical contrasts like "what people hear" vs. "what it actually means" — that's argumentation, not data. Use prose, blockquotes, or definition lists for subjective comparisons.
+**Tables are for objective data.** Use tables when comparing structured, factual information (specs, API fields, syntax options, dates, metrics). Do not use tables for rhetorical contrasts ("what people hear" vs. "what it actually means"), conceptual analogies ("MRP concept → Finance equivalent"), or terminology glossaries — those are argumentation or explanation, not data. Use prose, definition lists (`TERM:: description`), or blockquotes instead.
+
+**Never use `→` in article prose.** The arrow character looks technical and breaks the conversational tone. Use "becomes", "maps to", "turns into", or rephrase as a sentence.
 
 ---
 
@@ -238,7 +131,7 @@ The pipeline runs at build time (`npm run content`). No markdown is parsed in th
 
 ### Per-file compilation (`compileMarkdown`)
 
-Each markdown file passes through this 14-step pipeline:
+Each markdown file passes through this 15-step pipeline:
 
 ```
 raw markdown
@@ -255,8 +148,9 @@ raw markdown
 [10] processContextAnnotations  -- >> YY.MM.DD - text → <div class="ctx-note">
 [11] marked.parse               -- standard GFM markdown → HTML
 [12] stripHeadingFormatting      -- remove inline tags (<code>, <em>, etc.) from h1-h4
-[13] highlightCodeBlocks         -- Shiki syntax highlighting per language
-[14] applyPostProcessors         -- extensible HTML transforms (currently empty)
+[13] numberH1Headings            -- auto-number <h1> headings sequentially (1. 2. 3. ...)
+[14] highlightCodeBlocks         -- Shiki syntax highlighting per language
+[15] applyPostProcessors         -- extensible HTML transforms (currently empty)
 ```
 
 ### After all files are compiled

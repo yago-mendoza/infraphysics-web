@@ -2,6 +2,55 @@
 
 Concise editorial guide for project writeups. These are lessons, not rules — apply judgment.
 
+For syntax features, see **[SYNTAX.md](../SYNTAX.md)**. For general authoring rules and cross-referencing, see **[README.md](../README.md)**.
+
+---
+
+### Frontmatter
+
+Every project article starts with a YAML frontmatter block. Prefix filenames with `YYMMDD-` for chronological sorting (e.g. `260121-infraphysics-web.md`). The `id` field determines URLs — the filename is only for directory organization.
+
+| Field | Required | Type | What it does |
+|---|---|---|---|
+| `id` | yes | string | Unique slug used in URLs and as the primary key. |
+| `displayTitle` | no | string | Human-readable title shown in UI. Falls back to `id`. |
+| `category` | yes | string | Must be `projects`. |
+| `date` | yes | string | ISO 8601 (`YYYY-MM-DD`). When the project was finished or published. |
+| `description` | yes | string | One-liner for cards and meta tags. |
+| `thumbnail` | no | string | Hero image URL. Prefer Cloudflare R2 or Unsplash. |
+| `thumbnailAspect` | no | string | Crop ratio: `full` (default), `wide` (16/7), `banner` (16/4), `strip` (16/2). |
+| `thumbnailShading` | no | string | Overlay: `heavy`, `light`, `none` (default). |
+| `tags` | no | string[] | Topic tags for filter system. `[tag1, tag2]`. |
+| `subtitle` | no | string | Below the title in the article header. |
+| `related` | no | string[] | Post IDs for the "Related" section. |
+| `featured` | no | boolean | Shows in "Latest Work" on home page. |
+| `tldr` | no | string/string[] | Key takeaway lines in the header area. |
+| `author` | no | string | Defaults to `Yago Mendoza`. |
+| `status` | no | string | Lifecycle badge. Values: `ongoing` (violet), `deployed` (green), `completed` (blue), `arrested` (red). Defined in `STATUS_CONFIG` (`config/categories.tsx`). |
+| `technologies` | no | string[] | Tech stack pills in the header. `[TypeScript, React, Vite]`. |
+| `github` | no | string | GitHub repo URL. Renders a clickable link in the header. |
+| `demo` | no | string | Live demo URL. Same treatment as `github`. |
+| `caseStudy` | no | string | External case study URL. |
+| `duration` | no | string | Free-form duration (e.g. `4 weeks`, `ongoing`). |
+
+**Example:**
+
+```yaml
+---
+id: neural-cellular-automata
+displayTitle: neural cellular automata
+category: projects
+date: 2024-06-15
+thumbnail: https://pub-xxx.r2.dev/nca-hero.webp
+description: self-organizing patterns via learned update rules.
+status: ongoing
+technologies: [TypeScript, WebGL, React]
+github: https://github.com/user/nca
+tags: [simulation, graphics, ml]
+related: [quantum-interference-visualizer]
+---
+```
+
 ---
 
 ### Voice & rhythm

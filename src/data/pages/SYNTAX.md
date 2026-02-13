@@ -69,6 +69,10 @@ Seven custom inline rules are applied as pre-processors (step 3). They are defin
 
 Section headings (`#`, `##`, `###`, `####`) are **never processed** by any inline formatting rules. No accent text, colored text, inline code (backticks), or any other custom syntax will be applied inside a heading line. Headings are plain text only. Use standard capitalization and nothing else.
 
+### H1 auto-numbering
+
+Top-level headings (`#`) are automatically numbered by the compiler (step 13 in the pipeline). A sequential counter prefixes each `<h1>` with `1. `, `2. `, `3. `, etc. **Do not write the numbers in the markdown source** — the compiler adds them. This only applies to `#` (h1). Subheadings (`##`, `###`, etc.) are never numbered.
+
 ### Colored text
 
 Write `{#HEX:text}` where HEX is a 3-to-6 character hex code or a CSS named color. The compiler produces a span with an inline `color` style.
