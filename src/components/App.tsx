@@ -77,12 +77,11 @@ const AppLayout: React.FC = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  // Auto-switch theme by route: blog (threads/bits2bricks) → light, lab (projects/second-brain) → dark
+  // Auto-switch theme by route: blog → light, everything else → dark
   // useLayoutEffect fires BEFORE browser paint — no flash
   useLayoutEffect(() => {
-    const path = location.pathname;
-    if (path.startsWith('/blog')) setTheme('light');
-    else if (path.startsWith('/lab')) setTheme('dark');
+    if (location.pathname.startsWith('/blog')) setTheme('light');
+    else setTheme('dark');
   }, [location.pathname, setTheme]);
 
   const isStarfieldPage = STARFIELD_PAGES.includes(location.pathname);

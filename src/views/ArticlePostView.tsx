@@ -102,11 +102,11 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const authorName = post.author || 'Yago Mendoza';
   const authorPath = authorName.toLowerCase() === 'yago mendoza' ? '/about' : '/contact';
 
-  const notesArray: string[] = !post.notes
+  const tldrArray: string[] = !post.tldr
     ? []
-    : Array.isArray(post.notes)
-      ? post.notes
-      : String(post.notes).split('\n').map(l => l.trim()).filter(Boolean);
+    : Array.isArray(post.tldr)
+      ? post.tldr
+      : String(post.tldr).split('\n').map(l => l.trim()).filter(Boolean);
 
   /*
    * Heading extraction + content enrichment
@@ -121,7 +121,8 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
         const level = parseInt(tag[1]);
         const text = inner.replace(/<[^>]*>/g, '').trim()
           .replace(/&#39;/g, "'").replace(/&quot;/g, '"')
-          .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+          .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+          .replace(/^\d+\.\s+/, '');
         let slug = text
           .toLowerCase()
           .replace(/[^a-z0-9\s-]/g, '')
@@ -555,11 +556,11 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               {/* Thin gray line between meta and notes */}
               <div className="article-divider-thin" />
 
-              {/* Author notes */}
-              {notesArray.length > 0 && (
+              {/* TLDR */}
+              {tldrArray.length > 0 && (
                 <div className="article-notes">
-                  {notesArray.map((note, i) => (
-                    <p key={i} className="article-notes-line">— {note}</p>
+                  {tldrArray.map((line, i) => (
+                    <p key={i} className="article-notes-line">— {line}</p>
                   ))}
                 </div>
               )}
@@ -685,7 +686,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                   src={rec.thumbnail || ''}
                   alt=""
                   loading="lazy"
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform scale-[1.03] group-hover:scale-100"
                 />
               </div>
               <div className="article-related-info">

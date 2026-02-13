@@ -17,7 +17,8 @@ export const HomeView: React.FC = () => {
   const featuredPosts = useMemo(() =>
     posts
       .filter(p => p.featured)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 6),
   []);
 
   // Post counts per category
@@ -197,7 +198,7 @@ export const HomeView: React.FC = () => {
             {/* Recent articles from history */}
             {recentPosts.length > 0 && (
               <div className="mb-6">
-                <h3 className="text-[10px] text-th-tertiary uppercase tracking-wider mb-3">Previous</h3>
+                <h3 className="text-[10px] text-th-tertiary uppercase tracking-wider mb-3">Recently viewed</h3>
                 <div className="space-y-1">
                   {recentPosts.map(post => {
                     const accent = catAccentVar(post.category);
@@ -300,24 +301,59 @@ export const HomeView: React.FC = () => {
       <section className="pb-16 border-t border-th-border pt-12">
         <Link
           to="/lab/second-brain"
-          className="group block max-w-xl rounded-lg border border-violet-500/20 bg-violet-500/[0.03] p-6 hover:border-violet-500/40 hover:bg-violet-500/[0.06] transition-all"
+          className="group block rounded-lg border border-violet-500/20 bg-violet-500/[0.03] p-6 md:p-8 hover:border-violet-500/40 hover:bg-violet-500/[0.06] transition-all overflow-hidden"
         >
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs text-violet-400 uppercase tracking-wider">Second Brain</h2>
-            <span className="inline-flex items-center gap-1 text-xs text-violet-400 opacity-0 group-hover:opacity-100 transition-opacity">
-              Open <ArrowRightIcon />
-            </span>
-          </div>
-          <p className="text-th-secondary leading-relaxed mb-4 font-sans">
-            Atomic notes &mdash; one idea, one page, linked to everything else.
-          </p>
-          <div className="flex gap-6">
-            <span className="text-sm text-th-tertiary">
-              <span className="text-violet-400 font-mono font-semibold">{brainStats.notes}</span> notes
-            </span>
-            <span className="text-sm text-th-tertiary">
-              <span className="text-violet-400 font-mono font-semibold">{brainStats.connections}</span> connections
-            </span>
+          <div className="flex items-start justify-between gap-8">
+            {/* Left: content */}
+            <div className="flex-1 min-w-0 flex flex-col md:min-h-[8rem]">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-xs text-violet-400 uppercase tracking-wider">Second Brain</h2>
+                  <span className="inline-flex items-center gap-1 text-xs text-violet-400 opacity-0 group-hover:opacity-100 transition-opacity md:hidden">
+                    Open <ArrowRightIcon />
+                  </span>
+                </div>
+                <p className="text-th-secondary text-sm leading-relaxed font-sans">
+                  The job of an industrial engineer is making sense of how things work, across domains. From signals to structures to code, the same fundamentals keep appearing. This maps the ones that matter. One concept per page, all connected.
+                </p>
+              </div>
+              <div className="flex items-center gap-6 mt-auto pt-4">
+                <span className="text-sm text-th-tertiary">
+                  <span className="text-violet-400 font-mono font-semibold">{brainStats.notes}</span> notes
+                </span>
+                <span className="text-sm text-th-tertiary">
+                  <span className="text-violet-400 font-mono font-semibold">{brainStats.connections}</span> connections
+                </span>
+                <span className="hidden md:inline-flex items-center gap-1 text-xs text-violet-400 opacity-0 group-hover:opacity-100 transition-opacity ml-auto">
+                  Explore <ArrowRightIcon />
+                </span>
+              </div>
+            </div>
+
+            {/* Right: network graph */}
+            <div className="hidden md:block shrink-0 w-32 h-32 opacity-30 group-hover:opacity-50 transition-opacity">
+              <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                {/* Connections */}
+                <line x1="60" y1="30" x2="30" y2="70" stroke="#8b5cf6" strokeWidth="1" />
+                <line x1="60" y1="30" x2="90" y2="55" stroke="#8b5cf6" strokeWidth="1" />
+                <line x1="30" y1="70" x2="75" y2="90" stroke="#8b5cf6" strokeWidth="1" />
+                <line x1="90" y1="55" x2="75" y2="90" stroke="#8b5cf6" strokeWidth="1" />
+                <line x1="30" y1="70" x2="15" y2="40" stroke="#8b5cf6" strokeWidth="0.75" />
+                <line x1="90" y1="55" x2="105" y2="30" stroke="#8b5cf6" strokeWidth="0.75" />
+                <line x1="75" y1="90" x2="100" y2="100" stroke="#8b5cf6" strokeWidth="0.75" />
+                <line x1="60" y1="30" x2="45" y2="10" stroke="#8b5cf6" strokeWidth="0.75" />
+                {/* Core nodes */}
+                <circle cx="60" cy="30" r="4" fill="#8b5cf6" />
+                <circle cx="30" cy="70" r="3.5" fill="#8b5cf6" />
+                <circle cx="90" cy="55" r="3.5" fill="#8b5cf6" />
+                <circle cx="75" cy="90" r="3" fill="#8b5cf6" />
+                {/* Leaf nodes */}
+                <circle cx="15" cy="40" r="2" fill="#7c3aed" />
+                <circle cx="105" cy="30" r="2" fill="#7c3aed" />
+                <circle cx="100" cy="100" r="2" fill="#7c3aed" />
+                <circle cx="45" cy="10" r="2" fill="#7c3aed" />
+              </svg>
+            </div>
           </div>
         </Link>
       </section>

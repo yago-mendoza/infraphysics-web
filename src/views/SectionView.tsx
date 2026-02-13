@@ -180,7 +180,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
             <span>{filteredPosts.reduce((acc, p) => acc + calculateReadingTime(p.content), 0)} min total</span>
           </div>
         </div>
-        <p className={`text-sm text-th-secondary leading-relaxed max-w-2xl ${category === 'threads' ? 'font-serif' : category === 'projects' ? 'font-mono' : 'font-sans'}`}>
+        <p className={`text-sm text-th-secondary leading-relaxed max-w-2xl ${category === 'projects' ? 'font-mono' : 'font-sans'}`}>
           {categoryInfo.description}
         </p>
       </header>
