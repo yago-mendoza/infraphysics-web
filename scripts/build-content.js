@@ -651,7 +651,7 @@ function processMarkdownFile(filePath) {
     featured: frontmatter.featured || null,
     author: frontmatter.author || null,
     subtitle: frontmatter.subtitle || null,
-    notes: frontmatter.notes || null,
+    tldr: frontmatter.tldr || null,
     related: frontmatter.related || null,
   };
 }
@@ -671,7 +671,8 @@ function getAllMarkdownFiles(dir, isRoot = false) {
 
     if (stat.isDirectory()) {
       // Skip fieldnotes/ — handled separately by processFieldnotesDir()
-      if (item === 'fieldnotes') continue;
+      // Skip FinBoard/ — source material, not content
+      if (item === 'fieldnotes' || item === 'FinBoard') continue;
       files.push(...getAllMarkdownFiles(fullPath));
     } else if (!isRoot && item.endsWith('.md') && !item.startsWith('_') && item !== 'README.md') {
       files.push(fullPath);
@@ -717,7 +718,8 @@ function compileMarkdown(rawMd, articleDate) {
   const withCtx = processContextAnnotations(withAlpha, articleDate);
   const parsed = marked.parse(withCtx);
   const clean = stripHeadingFormatting(parsed);
-  const highlighted = highlightCodeBlocks(clean, highlighter);
+  const numbered = numberH1Headings(clean);
+  const highlighted = highlightCodeBlocks(numbered, highlighter);
   const postProcessed = applyPostProcessors(highlighted);
   return processOutsideCode(postProcessed, processAnnotations);
 }
@@ -986,6 +988,34 @@ for (const file of existingFiles) {
 
 fs.writeFileSync(CATEGORIES_OUTPUT, JSON.stringify(categories, null, 2));
 
+// Output 5: public/og-manifest.json (OG metadata for social previews)
+const BLOG_CATS = new Set(['threads', 'bits2bricks']);
+const catGroup = (cat) => BLOG_CATS.has(cat) ? 'blog' : 'lab';
+
+const ogManifest = {};
+for (const post of linkedRegularPosts) {
+  const urlPath = `/${catGroup(post.category)}/${post.category}/${post.id}`;
+  ogManifest[urlPath] = {
+    t: post.title,
+    d: post.description || '',
+    img: post.thumbnail || null,
+    cat: post.category,
+  };
+}
+for (const note of fieldnotesIndex) {
+  const urlPath = `/lab/second-brain/${note.id}`;
+  ogManifest[urlPath] = {
+    t: note.title,
+    d: note.description || '',
+    img: null,
+    cat: 'fieldnotes',
+  };
+}
+
+const OG_MANIFEST_FILE = path.join(__dirname, '../public/og-manifest.json');
+fs.writeFileSync(OG_MANIFEST_FILE, JSON.stringify(ogManifest));
+
 console.log(`Generated ${linkedRegularPosts.length} posts → ${OUTPUT_FILE}`);
 console.log(`Generated ${linkedFieldnotePosts.length} fieldnotes → ${FIELDNOTES_INDEX_FILE} + public/fieldnotes/`);
 console.log(`Generated ${Object.keys(categories).length} categories → ${CATEGORIES_OUTPUT}`);
+console.log(`Generated ${Object.keys(ogManifest).length} entries → ${OG_MANIFEST_FILE}`);
