@@ -100,11 +100,9 @@ export const catAccentVar = (cat: string): string =>
 /* ── Status metadata (shared across SectionView filters + ArticlePostView header) ── */
 
 export const STATUS_CONFIG: Record<string, { label: string; accent: string; dotColor: string }> = {
-  'ongoing':      { label: 'ONGOING',      accent: '#a78bfa', dotColor: '#a78bfa' },
-  'implemented':  { label: 'IMPLEMENTED',  accent: '#d97706', dotColor: '#34d399' },
-  'active':       { label: 'ACTIVE',       accent: '#34d399', dotColor: '#34d399' },
-  'in-progress':  { label: 'IN PROGRESS',  accent: '#fbbf24', dotColor: '#fbbf24' },
-  'completed':    { label: 'COMPLETED',    accent: '#60a5fa', dotColor: '#60a5fa' },
-  'archived':     { label: 'ARCHIVED',     accent: '#9ca3af', dotColor: '#9ca3af' },
+  'ongoing':    { label: 'ONGOING',    accent: '#a78bfa', dotColor: '#a78bfa' },
+  'deployed':   { label: 'DEPLOYED',   accent: '#34d399', dotColor: '#34d399' },
+  'completed':  { label: 'COMPLETED',  accent: '#60a5fa', dotColor: '#60a5fa' },
+  'arrested':   { label: 'ARRESTED',   accent: '#f87171', dotColor: '#f87171' },
 };
 

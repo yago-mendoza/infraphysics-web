@@ -8,11 +8,11 @@ thumbnail: https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=400&
 thumbnailAspect: wide
 thumbnailShading: heavy
 description: "How a systems engineer built a personal site with a custom markdown compiler, a second brain, and an AI development partner — and what went wrong along the way."
-status: active
+status: ongoing
 tags: [React, Vite, Markdown, Second Brain, Web Development]
 technologies: [React, TypeScript, Vite, Tailwind CSS, Shiki, marked]
 github: https://github.com/yago-mendoza/infraphysics-web
-notes:
+tldr:
   - This is the website you're reading right now. The article, the compiler that rendered it, the theme system coloring it, the wiki-links connecting it — all of it is the project.
   - Started January 21st with a blank Vite scaffold and no web development experience worth mentioning. 18 days and 132 commits later, I had a custom markdown language, a knowledge graph with 60+ notes, and strong opinions about CSS custom properties.
   - From day 16 I worked with Claude Code (an AI coding assistant) as a development partner. The last section of the article is about what it's like to teach an LLM to maintain a codebase it didn't build — and why it keeps trying to "improve" things you didn't ask it to touch.

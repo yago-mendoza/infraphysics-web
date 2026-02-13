@@ -8,11 +8,11 @@ thumbnail: https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=400&
 thumbnailAspect: wide
 thumbnailShading: heavy
 description: "18 days, 132 commits, one systems engineer who doesn't know CSS, and the website that somehow came out of it."
-status: active
+status: ongoing
 tags: [React, Vite, Markdown, Second Brain, Web Development]
 technologies: [React, TypeScript, Vite, Tailwind CSS, Shiki, marked]
 github: https://github.com/yago-mendoza/infraphysics-web
-notes:
+tldr:
   - This is the website you're reading right now. The article, the compiler, the wiki-links — it's all one thing.
   - 18 days. 132 commits. No meaningful web development experience at the start. Strong opinions about CSS custom properties by the end.
   - From day 16 I worked with Claude Code (an AI coding assistant). The last section is about the experience of collaborating with something that can hold your entire architecture in context but forgets everything the next morning.

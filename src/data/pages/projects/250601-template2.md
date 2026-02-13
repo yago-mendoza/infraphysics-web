@@ -15,7 +15,7 @@ github: https://github.com/user/repo
 demo: https://demo-url.com
 caseStudy: https://www.rd.usda.gov/sites/default/files/pdf-sample_0.pdf
 author: Yago Mendoza
-notes:
+tldr:
   - Shipped in ~4 hours as a weekend experiment.
   - Built to understand load balancing internals at the OS level.
   - Written with zero external dependencies beyond Express.

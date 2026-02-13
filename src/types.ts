@@ -17,7 +17,7 @@ interface BasePost {
   thumbnailAspect?: string | null;
   thumbnailShading?: string | null;
   subtitle?: string | null;
-  notes?: string[] | string | null;
+  tldr?: string[] | string | null;
   related?: string[] | null;
   featured?: boolean;
 }
