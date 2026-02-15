@@ -6,7 +6,7 @@
 // Checks:
 //   1. Orphan notes (no incoming or outgoing references)
 //   2. Weak parents (address segments with no dedicated note)
-//   3. One-way trailing refs (A→B but not B→A)
+//   3. Duplicate trailing refs (A→B and B→A — redundant, keep only one)
 //   4. Redundant trailing refs (also mentioned in body text)
 //   5. Potential duplicate addresses (fuzzy similarity)
 
@@ -138,23 +138,28 @@ function checkWeakParents(notes) {
   return weakParents;
 }
 
-function checkOneWayTrailingRefs(notes) {
+function checkDuplicateTrailingRefs(notes) {
   const noteById = new Map(notes.map(n => [n.id, n]));
-  const oneWay = [];
+  const duplicates = [];
+  const seen = new Set();
 
   for (const note of notes) {
     for (const refUid of note.trailingRefs) {
       const target = noteById.get(refUid);
-      if (!target) continue; // broken ref — caught by build validation
+      if (!target) continue;
+
+      const pairKey = [note.id, target.id].sort().join('\0');
+      if (seen.has(pairKey)) continue;
 
       const targetHasBack = target.trailingRefs.includes(note.id);
-      if (!targetHasBack) {
-        oneWay.push({ from: note.address, to: target.address });
+      if (targetHasBack) {
+        seen.add(pairKey);
+        duplicates.push({ a: note.address, b: target.address });
       }
     }
   }
 
-  return oneWay;
+  return duplicates;
 }
 
 function checkRedundantTrailingRefs(notes) {
@@ -371,17 +376,17 @@ if (weakParents.size > 0) {
   console.log(`\x1b[32m[WEAK PARENTS]\x1b[0m All address segments have dedicated notes.\n`);
 }
 
-// 3. One-way trailing refs
-const oneWay = checkOneWayTrailingRefs(notes);
-if (oneWay.length > 0) {
-  console.log(`\x1b[33m[ONE-WAY TRAILING REFS]\x1b[0m ${oneWay.length} trailing ref${oneWay.length !== 1 ? 's' : ''} without a reciprocal:`);
-  for (const { from, to } of oneWay) {
-    console.log(`  ${from} → ${to}  (but ${to} does not trail-ref back)`);
+// 3. Duplicate trailing refs (both sides have the same connection — redundant)
+const duplicates = checkDuplicateTrailingRefs(notes);
+if (duplicates.length > 0) {
+  console.log(`\x1b[33m[DUPLICATE TRAILING REFS]\x1b[0m ${duplicates.length} trailing ref${duplicates.length !== 1 ? 's' : ''} duplicated on both sides:`);
+  for (const { a, b } of duplicates) {
+    console.log(`  ${a} ↔ ${b}  (trailing ref exists on BOTH notes — remove one)`);
   }
   console.log('');
-  issues += oneWay.length;
+  issues += duplicates.length;
 } else {
-  console.log(`\x1b[32m[ONE-WAY TRAILING REFS]\x1b[0m All trailing refs are bilateral.\n`);
+  console.log(`\x1b[32m[DUPLICATE TRAILING REFS]\x1b[0m No trailing refs are duplicated.\n`);
 }
 
 // 4. Redundant trailing refs
