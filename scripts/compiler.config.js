@@ -8,15 +8,10 @@ export default {
     breaks: false,
   },
 
-  // Wiki-links: [[address]] → <a class="wiki-ref">
+  // Wiki-links: [[uid]] → <a class="wiki-ref"> (processed by processAllLinks in build-content.js)
   wikiLinks: {
     enabled: true,
     pattern: /\[\[([^\]]+)\]\]/g,
-    toHtml: (address) => {
-      const segments = address.split('//');
-      const displayText = segments[segments.length - 1].trim();
-      return `<a class="wiki-ref" data-address="${address}">${displayText}</a>`;
-    },
   },
 
   // Image positioning (title-based)

@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { createHash } from 'crypto';
 import { createHighlighter } from 'shiki';
 import { validateFieldnotes } from './validate-fieldnotes.js';
+import { resolveIssues } from './resolve-issues.js';
 import compilerConfig from './compiler.config.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -272,14 +273,14 @@ const CROSS_DOC_ICONS = {
   bits2bricks: `<svg class="doc-ref-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5"/></svg>`,
 };
 
-// redirectMap is set in main() before link processing runs
-let _redirectMap = new Map();
+// uidToMeta map is set in main() before link processing runs
+let _uidToMeta = new Map(); // uid → { address, name }
 
 function processAllLinks(html) {
   if (!compilerConfig.wikiLinks.enabled) return html;
 
-  return html.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (match, address, displayText) => {
-    const crossDocMatch = address.match(/^(projects|threads|bits2bricks)\/(.*)/);
+  return html.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (match, ref, displayText) => {
+    const crossDocMatch = ref.match(/^(projects|threads|bits2bricks)\/(.*)/);
 
     if (crossDocMatch) {
       const [, category, slug] = crossDocMatch;
@@ -287,7 +288,7 @@ function processAllLinks(html) {
       if (!config) return match;
 
       if (!displayText) {
-        const msg = `cross-doc link [[${address.trim()}]] missing display text — use [[${address.trim()}|Display Text]]`;
+        const msg = `cross-doc link [[${ref.trim()}]] missing display text — use [[${ref.trim()}|Display Text]]`;
         console.error(`  \x1b[31mERROR: ${msg}\x1b[0m`);
         buildErrors.push(msg);
         return match;
@@ -297,16 +298,16 @@ function processAllLinks(html) {
       return `<a class="doc-ref doc-ref-${category}" href="${href}" target="_blank" rel="noopener noreferrer">${category}/${displayText.trim()}</a>`;
     }
 
-    // Apply supersedes redirect if available
-    let resolvedAddress = address;
-    if (_redirectMap.has(address)) {
-      resolvedAddress = _redirectMap.get(address);
-    }
-
-    // Second-brain wiki-ref
-    const segments = resolvedAddress.split('//');
-    const display = displayText ? displayText.trim() : segments[segments.length - 1].trim();
-    return `<a class="wiki-ref" data-address="${resolvedAddress}">${display}</a>`;
+    // UID-based wiki-ref
+    // Pipe text is a readability hint when it matches meta.name — build always
+    // uses the current name so renames propagate. Only truly different pipe text
+    // (e.g. [[uid|other methods]]) is treated as a display override.
+    const uid = ref.trim();
+    const meta = _uidToMeta.get(uid);
+    const currentName = meta ? meta.name : uid;
+    const pipeText = displayText ? displayText.trim() : null;
+    const display = pipeText && pipeText !== currentName ? pipeText : currentName;
+    return `<a class="wiki-ref" data-uid="${uid}">${display}</a>`;
   });
 }
 
@@ -737,10 +738,18 @@ function extractFieldnoteMeta(filename, filePath) {
     return null;
   }
 
+  const uid = frontmatter.uid;
+  if (!uid) {
+    console.error(`  \x1b[31mERROR: ${filename} missing 'uid' in frontmatter\x1b[0m`);
+    buildErrors.push(`${filename} missing 'uid' in frontmatter`);
+    return null;
+  }
+
   const date = frontmatter.date || '';
-  const id = address.toLowerCase().replace(/\/\//g, '--').replace(/\//g, '-').replace(/\s+/g, '-');
+  const id = uid;
   const addressParts = address.split('//').map(s => s.trim());
-  const displayTitle = addressParts[addressParts.length - 1];
+  const name = frontmatter.name || addressParts[addressParts.length - 1];
+  const displayTitle = name;
 
   // Optional frontmatter fields
   const aliases = frontmatter.aliases || null;
@@ -753,21 +762,21 @@ function extractFieldnoteMeta(filename, filePath) {
     return trimmed && !trimmed.startsWith('#') && !trimmed.startsWith('!');
   });
   const description = firstTextLine
-    ? firstTextLine.trim().replace(/\[\[([^\]]+)\]\]/g, (_m, addr) => addr.split('//').pop().trim())
+    ? firstTextLine.trim().replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_m, ref, pipe) => pipe ? pipe.trim() : ref.trim())
     : '';
 
   const refRegex = /\[\[([^\]]+)\]\]/g;
   const refsSet = new Set();
   let match;
   while ((match = refRegex.exec(bodyMd)) !== null) {
-    // Strip pipe display text (e.g. [[CPU//core|the core]] → CPU//core)
+    // Strip pipe display text (e.g. [[uid|custom text]] → uid)
     const raw = match[1];
     const pipeIdx = raw.indexOf('|');
     refsSet.add(pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw);
   }
   const references = [...refsSet];
 
-  // Trailing refs — support annotated form: [[address]] :: annotation
+  // Trailing refs — support annotated form: [[uid]] :: annotation
   const trailingRefs = [];
   const singleRefAnnotated = /^\s*\[\[([^\]]+)\]\]\s*::\s*(.+)\s*$/;
   const multiRefLine = /^\s*(\[\[[^\]]+\]\]\s*)+$/;
@@ -777,13 +786,17 @@ function extractFieldnoteMeta(filename, filePath) {
     if (!line) continue;
     const annotatedMatch = singleRefAnnotated.exec(line);
     if (annotatedMatch) {
-      trailingRefs.push({ address: annotatedMatch[1].trim(), annotation: annotatedMatch[2].trim() });
+      const raw = annotatedMatch[1].trim();
+      const pipeIdx = raw.indexOf('|');
+      trailingRefs.push({ uid: pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw, annotation: annotatedMatch[2].trim() });
       trailingRefStart = i;
     } else if (multiRefLine.test(line)) {
       const lineRefRegex = /\[\[([^\]]+)\]\]/g;
       let lineMatch;
       while ((lineMatch = lineRefRegex.exec(line)) !== null) {
-        trailingRefs.push({ address: lineMatch[1].trim(), annotation: null });
+        const raw = lineMatch[1].trim();
+        const pipeIdx = raw.indexOf('|');
+        trailingRefs.push({ uid: pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw, annotation: null });
       }
       trailingRefStart = i;
     } else {
@@ -803,7 +816,7 @@ function extractFieldnoteMeta(filename, filePath) {
   const searchText = preLinkHtml.replace(/<[^>]*>/g, '').toLowerCase();
 
   return {
-    metadata: { id, title: address, displayTitle, category: 'fieldnotes', date, description, address, addressParts, references, trailingRefs, searchText, aliases, supersedes, distinct },
+    metadata: { id, title: address, displayTitle, name, category: 'fieldnotes', date, description, address, addressParts, references, trailingRefs, searchText, aliases, supersedes, distinct },
     preLinkHtml,
   };
 }
@@ -901,38 +914,36 @@ const FIELDNOTES_INDEX_FILE = path.join(__dirname, '../src/data/fieldnotes-index
 const FIELDNOTES_CONTENT_DIR = path.join(__dirname, '../public/fieldnotes');
 
 const forceRebuild = process.argv.includes('--force');
+const interactive = process.argv.includes('--interactive');
 const configHash = computeConfigHash();
 const cache = loadCache();
 
 const { results: regularPosts, cachePosts } = processRegularPosts(cache, configHash, forceRebuild);
 const { results: fieldnotePosts, cacheFieldnotes } = processFieldnotesDir(cache, configHash, forceRebuild);
 
-// Duplicate address detection
-const seenIds = new Map();
+// Duplicate UID detection
+const seenUids = new Map();
 for (const post of fieldnotePosts) {
-  if (seenIds.has(post.id)) {
-    const msg = `duplicate fieldnote ID "${post.id}" — addresses "${seenIds.get(post.id)}" and "${post.address}" normalize to the same slug`;
+  if (seenUids.has(post.id)) {
+    const msg = `duplicate fieldnote UID "${post.id}" — addresses "${seenUids.get(post.id)}" and "${post.address}"`;
     console.error(`  \x1b[31mERROR: ${msg}\x1b[0m`);
     buildErrors.push(msg);
   } else {
-    seenIds.set(post.id, post.address);
+    seenUids.set(post.id, post.address);
   }
 }
 
 // Save unified cache
 saveCache({ version: 1, configHash, posts: cachePosts, fieldnotes: cacheFieldnotes });
 
-// Build supersedes redirect map (old address → new address)
-const redirectMap = new Map();
+// Build uidToMeta map for processAllLinks display resolution
+const uidToMeta = new Map();
 for (const post of fieldnotePosts) {
-  if (post.supersedes) {
-    redirectMap.set(post.supersedes, post.address);
-    console.log(`  Redirect: "${post.supersedes}" → "${post.address}"`);
-  }
+  uidToMeta.set(post.id, { address: post.address, name: post.name || post.displayTitle });
 }
 
-// Set redirect map for processAllLinks
-_redirectMap = redirectMap;
+// Set uidToMeta for processAllLinks
+_uidToMeta = uidToMeta;
 
 // Apply unified [[link]] processing to all content (skipping <code> blocks)
 // This always runs on all content — link targets may change when notes are added/removed
@@ -955,6 +966,16 @@ const totalErrors = buildErrors.length + validation.errors;
 if (totalErrors > 0) {
   console.error(`\x1b[31mBuild failed with ${totalErrors} error(s)\x1b[0m`);
   process.exit(1);
+}
+
+// Interactive resolver — prompt user to fix promptable issues
+if (interactive && validation.issues.some(i => i.promptable)) {
+  const { filesModified } = await resolveIssues(validation.issues);
+  if (filesModified > 0) {
+    // Files were modified — stale data in memory, skip writing outputs
+    console.log('Skipping output generation — rebuild needed after fixes.');
+    process.exit(0);
+  }
 }
 
 // Output 1: posts.generated.json (regular posts only — no fieldnotes)

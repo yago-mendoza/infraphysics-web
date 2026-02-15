@@ -1,1 +1,0 @@
-{"content":"<p>The build-time system that transforms raw markdown into rendered HTML. Runs headlessly via Node.js — no <a class=\"wiki-ref\" data-address=\"UI//GUI\">GUI</a> involved. The pipeline is: pre-processors, side-image layout, marked.parse, post-processors, wiki-link injection.</p>\n"}

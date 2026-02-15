@@ -1,1 +1,0 @@
-{"content":"<p>The AI coding assistant CLI by Anthropic. Reads project context from <a class=\"wiki-ref\" data-address=\"claude-code//dot-claude\">dot-claude</a>, follows rules in CLAUDE.md, and executes tools (Bash, Read, Edit, Grep, etc.) autonomously. Configurable via settings, hooks, and skills.</p>\n"}

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "content": "node scripts/build-content.js",
+    "content:fix": "node scripts/build-content.js --interactive",
     "dev": "npm run content && vite",
     "build": "npm run content && vite build",
     "preview": "vite preview"
@@ -16,12 +17,13 @@
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
-    "shiki": "^3.22.0",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "gray-matter": "^4.0.3",
     "js-yaml": "^4.1.1",
     "marked": "^17.0.1",
+    "nanoid": "^5.1.6",
+    "shiki": "^3.22.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

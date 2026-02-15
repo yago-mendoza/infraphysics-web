@@ -7,7 +7,6 @@ import { useNavigationTrail } from '../hooks/useNavigationTrail';
 import { WikiContent } from '../components/WikiContent';
 import { NavigationTrail } from '../components/NavigationTrail';
 import { NeighborhoodGraph, type Zone } from '../components/NeighborhoodGraph';
-import { addressToId } from '../lib/addressToId';
 import type { SortMode } from '../hooks/useSecondBrainHub';
 import { noteLabel, type FieldNoteMeta } from '../types';
 import type { Connection } from '../lib/brainIndex';
@@ -66,12 +65,13 @@ export const SecondBrainView: React.FC = () => {
     if (concept) scheduleExtend(concept);
   }, [scheduleExtend]);
 
-  // Grid card click — reset trail to single item, clear search synchronously
-  // (clearing in handler prevents 1-frame flash where searchActive is still true)
+  // Grid card click — reset trail to single item.
+  // Do NOT clearSearch() here — that would set searchActive=false while activePost
+  // still points to the OLD note, causing a 1-frame flash of the previous note.
+  // Instead, the effect below (line ~77) clears search after activePost updates.
   const handleGridCardClick = useCallback((post: FieldNoteMeta) => {
-    if (searchActive) clearSearch();
     scheduleReset(post);
-  }, [scheduleReset, searchActive, clearSearch]);
+  }, [scheduleReset]);
 
   // Clear search AFTER activePost changes (avoids 1-frame flicker of old note)
   const prevActiveIdRef = useRef(activePost?.id);
@@ -193,8 +193,7 @@ export const SecondBrainView: React.FC = () => {
         const parts = h.addressParts || [h.title];
         if (parts.length < 2) return null;
         const parentAddr = parts.slice(0, -1).join('//');
-        const parentId = addressToId(parentAddr);
-        const parentNote = noteById.get(parentId);
+        const parentNote = [...noteById.values()].find(n => n.address === parentAddr) || null;
         return parentNote ? { parent: parentNote, homonym: h } : null;
       })
       .filter((x): x is { parent: FieldNoteMeta; homonym: FieldNoteMeta } => x !== null);
@@ -459,17 +458,18 @@ export const SecondBrainView: React.FC = () => {
               {activePost!.addressParts && activePost!.addressParts.length > 1
                 ? activePost!.addressParts.map((part, i) => {
                     const pathUpTo = activePost!.addressParts!.slice(0, i + 1).join('//');
-                    const id = addressToId(pathUpTo);
+                    const ancestor = [...noteById.values()].find(n => n.address === pathUpTo);
                     const isLast = i === activePost!.addressParts!.length - 1;
                     return (
                       <React.Fragment key={i}>
                         {i > 0 && <span className="mx-0.5 text-th-muted">/</span>}
                         {isLast
                           ? <span>{part}</span>
-                          : <Link to={`/lab/second-brain/${id}`} className="hover:text-violet-400 transition-colors" onClick={() => {
-                              const target = noteById.get(id);
-                              if (target) scheduleReset(target);
-                            }}>{part}</Link>
+                          : ancestor
+                            ? <Link to={`/lab/second-brain/${ancestor.id}`} className="hover:text-violet-400 transition-colors" onClick={() => {
+                                scheduleReset(ancestor);
+                              }}>{part}</Link>
+                            : <span>{part}</span>
                         }
                       </React.Fragment>
                     );

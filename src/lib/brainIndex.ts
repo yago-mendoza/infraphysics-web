@@ -2,7 +2,6 @@
 // fetches individual note content on demand.
 
 import { FieldNoteMeta, ConnectionRef } from '../types';
-import { addressToId } from './addressToId';
 import { resolveWikiLinks } from './wikilinks';
 
 export interface Connection {
@@ -59,34 +58,31 @@ export async function initBrainIndex(): Promise<BrainIndex> {
       if (note.address) addressToNoteId.set(note.address, note.id);
     });
 
-    // Collect trailing ref addresses per note (for excluding from mentions)
+    // Collect trailing ref UIDs per note (for excluding from mentions)
     const trailingRefIds = new Map<string, Set<string>>();
     allFieldNotes.forEach(note => {
       const refs = note.trailingRefs || [];
       const ids = new Set<string>();
       refs.forEach(ref => {
-        const addr = typeof ref === 'object' ? ref.address : ref;
-        ids.add(addressToId(addr));
+        ids.add(ref.uid);
       });
       trailingRefIds.set(note.id, ids);
     });
 
     // Backlinks (all references, including inline body + trailing)
+    // references[] now stores UIDs directly
     const backlinksMap = new Map<string, FieldNoteMeta[]>();
     allFieldNotes.forEach(note => {
       const seen = new Set<string>();
-      (note.references || []).forEach(ref => {
-        const refId = addressToId(ref);
-        if (seen.has(refId)) return;
-        seen.add(refId);
-        if (!backlinksMap.has(refId)) backlinksMap.set(refId, []);
-        backlinksMap.get(refId)!.push(note);
+      (note.references || []).forEach(refUid => {
+        if (seen.has(refUid)) return;
+        seen.add(refUid);
+        if (!backlinksMap.has(refUid)) backlinksMap.set(refUid, []);
+        backlinksMap.get(refUid)!.push(note);
       });
     });
 
     // Bilateral connections from trailing refs
-    // For each note A with trailingRef B: A→B connection.
-    // If B also has trailingRef A: merge into single bilateral connection.
     const connectionsMap = new Map<string, Connection[]>();
 
     // First pass: collect all declared trailing ref connections
@@ -96,9 +92,8 @@ export async function initBrainIndex(): Promise<BrainIndex> {
       if (refs.length === 0) return;
       const map = new Map<string, string | null>();
       refs.forEach(ref => {
-        const addr = typeof ref === 'object' ? ref.address : ref;
-        const annotation = typeof ref === 'object' ? ref.annotation : null;
-        const targetId = addressToId(addr);
+        const targetId = ref.uid;
+        const annotation = ref.annotation;
         if (targetId !== note.id) { // Skip self-refs
           map.set(targetId, annotation);
         }
@@ -148,22 +143,20 @@ export async function initBrainIndex(): Promise<BrainIndex> {
     });
 
     // Mentions: body-text backlinks EXCLUDING trailing refs
-    // If note A references B in body text (but not as a trailing ref), B gets A as a "mention"
     const mentionsMap = new Map<string, FieldNoteMeta[]>();
     allFieldNotes.forEach(note => {
       const seen = new Set<string>();
       const myTrailingIds = trailingRefIds.get(note.id) || new Set();
 
-      (note.references || []).forEach(ref => {
-        const refId = addressToId(ref);
-        if (seen.has(refId) || refId === note.id) return;
-        seen.add(refId);
+      (note.references || []).forEach(refUid => {
+        if (seen.has(refUid) || refUid === note.id) return;
+        seen.add(refUid);
 
         // Skip if this ref is also a trailing ref from note
-        if (myTrailingIds.has(refId)) return;
+        if (myTrailingIds.has(refUid)) return;
 
-        if (!mentionsMap.has(refId)) mentionsMap.set(refId, []);
-        mentionsMap.get(refId)!.push(note);
+        if (!mentionsMap.has(refUid)) mentionsMap.set(refUid, []);
+        mentionsMap.get(refUid)!.push(note);
       });
     });
 
@@ -202,7 +195,6 @@ export async function initBrainIndex(): Promise<BrainIndex> {
           if (otherParts.length !== parts.length) return;
           const otherAddr = other.address || '';
           if (otherAddr.startsWith(parentPrefix)) {
-            // Must be direct child of same parent (no deeper nesting)
             const remainder = otherAddr.slice(parentPrefix.length);
             if (!remainder.includes('//')) {
               siblings.push(other);
@@ -259,7 +251,7 @@ export async function initBrainIndex(): Promise<BrainIndex> {
     const totalLinks = allFieldNotes.reduce((sum, n) => sum + (n.references?.length || 0), 0);
     const linkedToSet = new Set<string>();
     allFieldNotes.forEach(n => {
-      (n.references || []).forEach(ref => linkedToSet.add(addressToId(ref)));
+      (n.references || []).forEach(refUid => linkedToSet.add(refUid));
     });
     const orphanCount = allFieldNotes.filter(n => {
       const hasOutgoing = (n.references?.length || 0) > 0;

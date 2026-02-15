@@ -1,1 +1,0 @@
-{"content":"<p>The ordered sequence of transformations applied to each markdown file. Custom syntax is resolved {<span style=\"text-decoration:underline\">:before} marked runs, so HTML spans survive the markdown parser. Wiki-links are injected {</span>:after} all HTML is generated.</p>\n"}

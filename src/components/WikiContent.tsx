@@ -125,7 +125,7 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
 
         if (isNewLink) {
           const title = decodeURIComponent(link.getAttribute('data-title') || '');
-          const address = link.getAttribute('data-address') || '';
+          const address = decodeURIComponent(link.getAttribute('data-address') || '');
           const description = decodeURIComponent(link.getAttribute('data-description') || '');
           const hrefMatch = href.match(/^\/lab\/second-brain\/(.+)$/);
           const visited = hrefMatch ? !!isVisitedRef.current?.(hrefMatch[1]) : false;

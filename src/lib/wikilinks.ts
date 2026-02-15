@@ -1,7 +1,6 @@
 // Shared utility for resolving wiki-links at runtime
 
 import { FieldNoteMeta } from '../types';
-import { addressToId } from './addressToId';
 import { WIKI_REF_ICON_HTML } from './icons';
 
 export function resolveWikiLinks(
@@ -13,19 +12,19 @@ export function resolveWikiLinks(
   const unresolvedRefs: string[] = [];
 
   const processed = html.replace(
-    /<a class="wiki-ref" data-address="([^"]+)">([^<]+)<\/a>/g,
-    (_match, address: string, displayText: string) => {
-      const targetId = addressToId(address);
-      const target = noteMap ? noteMap.get(targetId) : allFieldNotes.find(n => n.id === targetId);
+    /<a class="wiki-ref" data-uid="([^"]+)">([^<]+)<\/a>/g,
+    (_match, uid: string, displayText: string) => {
+      const target = noteMap ? noteMap.get(uid) : allFieldNotes.find(n => n.id === uid);
 
       if (target) {
-        resolvedRefs.push(address);
-        const title = encodeURIComponent(target.displayTitle || displayText);
+        resolvedRefs.push(uid);
+        const title = encodeURIComponent(target.name || target.displayTitle || displayText);
         const desc = encodeURIComponent(target.description || '');
-        return `<a class="wiki-ref wiki-ref-resolved" href="/lab/second-brain/${target.id}" data-address="${address}" data-title="${title}" data-description="${desc}">${displayText}${WIKI_REF_ICON_HTML}</a>`;
+        const address = encodeURIComponent(target.address || '');
+        return `<a class="wiki-ref wiki-ref-resolved" href="/lab/second-brain/${target.id}" data-uid="${uid}" data-title="${title}" data-description="${desc}" data-address="${address}">${displayText}${WIKI_REF_ICON_HTML}</a>`;
       } else {
-        unresolvedRefs.push(address);
-        return `<span class="wiki-ref wiki-ref-unresolved" data-address="${address}">${displayText}<sup class="wiki-ref-icon">?</sup></span>`;
+        unresolvedRefs.push(uid);
+        return `<span class="wiki-ref wiki-ref-unresolved" data-uid="${uid}">${displayText}<sup class="wiki-ref-icon">?</sup></span>`;
       }
     }
   );

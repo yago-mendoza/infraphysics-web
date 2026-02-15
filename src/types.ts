@@ -41,7 +41,7 @@ export interface ArticlePost extends BasePost {
 /* ── Fieldnote: lightweight metadata (no content) + full type ── */
 
 export interface ConnectionRef {
-  address: string;
+  uid: string;
   annotation: string | null;
 }
 
@@ -49,6 +49,7 @@ export interface FieldNoteMeta {
   id: string;
   title: string;
   displayTitle?: string;
+  name: string;
   category: 'fieldnotes';
   date: string;
   description: string;
