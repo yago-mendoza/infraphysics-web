@@ -139,17 +139,43 @@ function randomStubPhrase() {
 }
 
 /**
+ * Generate a random 8-character alphanumeric UID.
+ * Checks against existing filenames to avoid collisions.
+ */
+function generateUid() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const existing = new Set(
+    fs.readdirSync(FIELDNOTES_DIR)
+      .filter(f => f.endsWith('.md'))
+      .map(f => f.replace('.md', ''))
+  );
+  let uid;
+  do {
+    uid = '';
+    for (let i = 0; i < 8; i++) uid += chars[Math.floor(Math.random() * chars.length)];
+  } while (existing.has(uid));
+  return uid;
+}
+
+/**
  * Create a minimal stub fieldnote for a missing parent address.
  */
 function createStubNote(address) {
-  const filename = addressToFilename(address);
+  // Check if any existing file already has this address
+  const files = fs.readdirSync(FIELDNOTES_DIR).filter(f => f.endsWith('.md') && f !== 'README.md');
+  for (const file of files) {
+    const content = fs.readFileSync(path.join(FIELDNOTES_DIR, file), 'utf-8');
+    const addrMatch = content.match(/^address:\s*["']?(.+?)["']?\s*$/m);
+    if (addrMatch && addrMatch[1] === address) return { created: false, reason: 'already exists' };
+  }
+
+  const uid = generateUid();
+  const filename = `${uid}.md`;
   const filePath = path.join(FIELDNOTES_DIR, filename);
-
-  if (fs.existsSync(filePath)) return { created: false, reason: 'already exists' };
-
   const today = new Date().toISOString().split('T')[0];
+  const name = address.split('//').pop().trim();
   const phrase = randomStubPhrase();
-  const content = `---\naddress: "${address}"\ndate: "${today}"\n---\n\n${phrase}\n`;
+  const content = `---\nuid: "${uid}"\naddress: "${address}"\nname: "${name}"\ndate: "${today}"\n---\n${phrase}\n`;
   fs.writeFileSync(filePath, content, 'utf-8');
   return { created: true, filePath };
 }
