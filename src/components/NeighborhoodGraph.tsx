@@ -96,6 +96,7 @@ function ghostDiamondColumns(n: number): number[] {
 
 export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, onNoteClick, isVisited, activeZone, onActiveZoneChange, focusedDetailIdx, homonymParents, homonymLeaf, onHomonymNavigate }) => {
   const [hoveredZone, setHoveredZone] = useState<Zone>(null);
+  const [highlightedNoteId, setHighlightedNoteId] = useState<string | null>(null);
 
   const { parent, siblings, children } = neighborhood;
 
@@ -275,6 +276,16 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
           className="w-full block"
           style={{ height: Math.min(svgH, 240) }}
         >
+          <defs>
+            <filter id="node-glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
           {/* Active zone column highlight — follows clicks only */}
           <rect
             x={activeIndicator.x}
@@ -334,18 +345,22 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
           </g>
 
           {/* Parent node */}
-          {parentPos && (
-            <circle
-              cx={parentPos.x}
-              cy={parentPos.y}
-              r={5}
-              fill={isVisited?.(parent!.id) ? COL_PARENT_VISITED : COL_PARENT}
-              style={{ cursor: 'pointer' }}
-              onClick={() => handleZoneClick('parent')}
-              onMouseEnter={() => setHoveredZone('parent')}
-              onMouseLeave={() => setHoveredZone(null)}
-            />
-          )}
+          {parentPos && (() => {
+            const isHighlighted = highlightedNoteId === parent!.id;
+            return (
+              <circle
+                cx={parentPos.x}
+                cy={parentPos.y}
+                r={5}
+                fill={isHighlighted ? 'rgba(139,92,246,1)' : isVisited?.(parent!.id) ? COL_PARENT_VISITED : COL_PARENT}
+                filter={isHighlighted ? 'url(#node-glow)' : 'none'}
+                style={{ cursor: 'pointer', transition: 'fill 200ms ease' }}
+                onClick={() => handleZoneClick('parent')}
+                onMouseEnter={() => setHoveredZone('parent')}
+                onMouseLeave={() => setHoveredZone(null)}
+              />
+            );
+          })()}
 
           {/* Ghost parent dots — homonym alternate parents, diamond layout, no connectors */}
           {ghostParentPositions.map((pos) => (
@@ -365,6 +380,7 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
           {/* Center: current + siblings as uniform rects with stable keys (diamond layout) */}
           {centerPositions.map((pos) => {
             const isCur = pos.entry.isCurrent;
+            const isHighlighted = !isCur && highlightedNoteId === pos.entry.note.id;
             const w = isCur ? CURRENT_W : NODE_R * 2;
             const h = isCur ? CURRENT_H : NODE_R * 2;
             const rx = isCur ? 2 : NODE_R;
@@ -376,9 +392,10 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
                 width={w}
                 height={h}
                 rx={rx}
-                fill={isCur ? COL_CURRENT : (isVisited?.(pos.entry.note.id) ? COL_VISITED : COL_SIBLING)}
+                fill={isHighlighted ? 'rgba(139,92,246,1)' : isCur ? COL_CURRENT : (isVisited?.(pos.entry.note.id) ? COL_VISITED : COL_SIBLING)}
+                filter={isHighlighted ? 'url(#node-glow)' : 'none'}
                 style={{
-                  transition: `x ${TRANSITION}, y ${TRANSITION}, width ${TRANSITION}, height ${TRANSITION}, rx ${TRANSITION}, fill ${TRANSITION}`,
+                  transition: `x ${TRANSITION}, y ${TRANSITION}, width ${TRANSITION}, height ${TRANSITION}, rx ${TRANSITION}, fill 200ms ease`,
                   cursor: isCur ? 'default' : 'pointer',
                 }}
                 onClick={() => !isCur && handleZoneClick('siblings')}
@@ -389,19 +406,23 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
           })}
 
           {/* Children nodes */}
-          {childrenYs.map((cy, i) => (
-            <circle
-              key={`child-${children[i].id}`}
-              cx={CHILDREN_X}
-              cy={cy}
-              r={NODE_R}
-              fill={isVisited?.(children[i].id) ? COL_VISITED : COL_CHILD}
-              style={{ cursor: 'pointer' }}
-              onClick={() => handleZoneClick('children')}
-              onMouseEnter={() => setHoveredZone('children')}
-              onMouseLeave={() => setHoveredZone(null)}
-            />
-          ))}
+          {childrenYs.map((cy, i) => {
+            const isHighlighted = highlightedNoteId === children[i].id;
+            return (
+              <circle
+                key={`child-${children[i].id}`}
+                cx={CHILDREN_X}
+                cy={cy}
+                r={NODE_R}
+                fill={isHighlighted ? 'rgba(139,92,246,1)' : isVisited?.(children[i].id) ? COL_VISITED : COL_CHILD}
+                filter={isHighlighted ? 'url(#node-glow)' : 'none'}
+                style={{ cursor: 'pointer', transition: 'fill 200ms ease' }}
+                onClick={() => handleZoneClick('children')}
+                onMouseEnter={() => setHoveredZone('children')}
+                onMouseLeave={() => setHoveredZone(null)}
+              />
+            );
+          })}
 
           {/* Invisible click zones — sized to match dynamic center zone */}
           {parentPos && (
@@ -475,6 +496,8 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
                     ref={focusedDetailIdx === 0 ? focusedDetailRef : undefined}
                     to={`/lab/second-brain/${parent.id}`}
                     onClick={() => onNoteClick(parent)}
+                    onMouseEnter={() => setHighlightedNoteId(parent.id)}
+                    onMouseLeave={() => setHighlightedNoteId(null)}
                     className={`card-link group p-2.5 ${noteBorderCls(!!isVisited?.(parent.id))} flex-1 min-w-0${focusedDetailIdx === 0 ? ` ${noteFocusCls(!!isVisited?.(parent.id))}` : ''}`}
                   >
                     <div className={`text-xs font-medium transition-colors ${noteTextCls(!!isVisited?.(parent.id))}`}>
@@ -520,6 +543,8 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
                 ref={focusedDetailIdx === 0 ? focusedDetailRef : undefined}
                 to={`/lab/second-brain/${parent.id}`}
                 onClick={() => onNoteClick(parent)}
+                onMouseEnter={() => setHighlightedNoteId(parent.id)}
+                onMouseLeave={() => setHighlightedNoteId(null)}
                 className={`card-link group p-2.5 ${noteBorderCls(!!isVisited?.(parent.id))}${focusedDetailIdx === 0 ? ` ${noteFocusCls(!!isVisited?.(parent.id))}` : ''}`}
               >
                 <div className={`text-xs font-medium transition-colors ${noteTextCls(!!isVisited?.(parent.id))}`}>
@@ -542,6 +567,8 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
                     ref={idx === focusedDetailIdx ? focusedDetailRef : undefined}
                     to={`/lab/second-brain/${sib.id}`}
                     onClick={() => onNoteClick(sib)}
+                    onMouseEnter={() => setHighlightedNoteId(sib.id)}
+                    onMouseLeave={() => setHighlightedNoteId(null)}
                     className={`card-link group p-2.5 ${noteBorderCls(v)}${idx === focusedDetailIdx ? ` ${noteFocusCls(v)}` : ''}`}
                   >
                     <div className={`text-xs font-medium transition-colors ${noteTextCls(v)}`}>
@@ -563,6 +590,8 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
                     ref={idx === focusedDetailIdx ? focusedDetailRef : undefined}
                     to={`/lab/second-brain/${child.id}`}
                     onClick={() => onNoteClick(child)}
+                    onMouseEnter={() => setHighlightedNoteId(child.id)}
+                    onMouseLeave={() => setHighlightedNoteId(null)}
                     className={`card-link group p-2.5 ${noteBorderCls(v)}${idx === focusedDetailIdx ? ` ${noteFocusCls(v)}` : ''}`}
                   >
                     <div className={`text-xs font-medium transition-colors ${noteTextCls(v)}`}>

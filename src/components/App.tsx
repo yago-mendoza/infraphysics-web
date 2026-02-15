@@ -1,18 +1,17 @@
 // App shell: provides layout structure and top-level routing
 
 import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useParams, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useParams } from 'react-router-dom';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { ArticleContextProvider } from '../contexts/ArticleContext';
 import { SecondBrainHubProvider } from '../contexts/SecondBrainHubContext';
-import { categoryGroup, postPath } from '../config/categories';
+import { categoryGroup } from '../config/categories';
 import { Sidebar, MobileNav, Footer, DualGrid, Starfield, SecondBrainSidebar } from './layout';
 import { ErrorBoundary } from './ErrorBoundary';
 import { SearchPalette } from './SearchPalette';
 import { HomeView, AboutView, ContactView, ThanksView, SectionView, PostView, SecondBrainView } from '../views';
 import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../constants/layout';
 import { useKeyboardShortcuts, ShortcutDef } from '../hooks/useKeyboardShortcuts';
-import { posts } from '../data/data';
 import { initBrainIndex } from '../lib/brainIndex';
 
 // Fire-and-forget: start loading the brain index early so it's ready by navigation time
@@ -31,32 +30,18 @@ const AppLayout: React.FC = () => {
   const location = useLocation();
   const { theme, toggleTheme, setTheme } = useTheme();
   const [searchOpen, setSearchOpen] = useState(false);
-  const navigate = useNavigate();
 
   const openSearch = useCallback(() => setSearchOpen(true), []);
 
-  // Global keyboard shortcuts (. for most recent, Shift+T for theme)
-  const globalShortcuts = useMemo<ShortcutDef[]>(() => {
-    const mostRecent = [...posts]
-      .sort((a, b) => b.date.localeCompare(a.date))[0];
-
-    return [
-      {
-        key: '.',
-        label: 'Most recent post',
-        action: () => {
-          if (mostRecent) navigate(postPath(mostRecent.category, mostRecent.id));
-        },
-        enabled: !!mostRecent,
-      },
-      {
-        key: 't',
-        shift: true,
-        label: 'Toggle theme',
-        action: toggleTheme,
-      },
-    ];
-  }, [navigate, toggleTheme]);
+  // Global keyboard shortcuts (Shift+T for theme)
+  const globalShortcuts = useMemo<ShortcutDef[]>(() => [
+    {
+      key: 't',
+      shift: true,
+      label: 'Toggle theme',
+      action: toggleTheme,
+    },
+  ], [toggleTheme]);
 
   useKeyboardShortcuts(globalShortcuts, searchOpen);
 

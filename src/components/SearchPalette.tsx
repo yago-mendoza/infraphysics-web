@@ -1,17 +1,20 @@
 // Command palette triggered by search button or Ctrl+K / Cmd+K
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { posts } from '../data/data';
-import { postPath } from '../config/categories';
+import { postPath, sectionPath } from '../config/categories';
 import { initBrainIndex, type BrainIndex } from '../lib/brainIndex';
 import { useArticleContext } from '../contexts/ArticleContext';
 import { useTheme } from '../contexts/ThemeContext';
 import {
   HomeIcon,
   GearIcon,
+  ThreadIcon,
+  GradCapIcon,
   GitHubIcon,
   DiamondIcon,
+  DiceIcon,
   MailIcon,
   SearchIcon,
   ExternalLinkIcon,
@@ -26,11 +29,54 @@ interface SearchPaletteProps {
 
 interface QuickAction {
   label: string;
+  displayLabel?: React.ReactNode;
+  subtitle?: React.ReactNode;
   icon: React.ReactNode;
   action: () => void;
   shortcut?: string;
-  group?: 'contextual' | 'global' | 'nav' | 'concept';
+  group?: 'contextual' | 'global' | 'nav' | 'concept' | 'articles-title' | 'articles-content';
 }
+
+const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  projects: <GearIcon />,
+  threads: <ThreadIcon />,
+  bits2bricks: <GradCapIcon />,
+};
+
+/** Strip HTML tags for plain-text search */
+const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '');
+
+/** Every query word must match the start of at least one label word */
+const matchesWordStart = (label: string, q: string): boolean => {
+  const labelWords = label.toLowerCase().split(/\s+/);
+  const queryWords = q.toLowerCase().split(/\s+/).filter(Boolean);
+  return queryWords.every(qw => labelWords.some(lw => lw.startsWith(qw)));
+};
+
+/** Highlight first occurrence of query inside text (case-insensitive, preserves original case) */
+const highlightMatch = (text: string, query: string): React.ReactNode => {
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return text;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="bg-yellow-400/30 text-inherit rounded-sm px-0.5">{text.slice(idx, idx + query.length)}</mark>
+      {text.slice(idx + query.length)}
+    </>
+  );
+};
+
+/** Extract a short snippet around the first match */
+const extractSnippet = (text: string, query: string, radius = 40): string => {
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return '';
+  const start = Math.max(0, idx - radius);
+  const end = Math.min(text.length, idx + query.length + radius);
+  let snippet = text.slice(start, end).replace(/\s+/g, ' ');
+  if (start > 0) snippet = '\u2026' + snippet;
+  if (end < text.length) snippet += '\u2026';
+  return snippet;
+};
 
 export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState('');
@@ -38,6 +84,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { article } = useArticleContext();
   const { theme, toggleTheme } = useTheme();
 
@@ -51,7 +98,15 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
     onClose();
   }, [onClose]);
 
-  // Build all actions: contextual (article) → global shortcuts → navigation
+  // ── Current page detection ──
+  const pathname = location.pathname;
+  const isHome = pathname === '/home' || pathname === '/';
+  const currentCategory = useMemo(() => {
+    const m = pathname.match(/^\/(?:lab|blog)\/(projects|threads|bits2bricks)/);
+    return m ? m[1] : null;
+  }, [pathname]);
+
+  // Build all actions: contextual (article) → navigation → global shortcuts
   const actions = useMemo<QuickAction[]>(() => {
     const result: QuickAction[] = [];
 
@@ -110,20 +165,42 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
       }
     }
 
-    // ── Global shortcut actions ──
-    const mostRecent = [...posts]
-      .sort((a, b) => b.date.localeCompare(a.date))[0];
+    // ── Navigation actions (hide item matching current section/page) ──
+    const navItems: { label: string; icon: React.ReactNode; path: string; external?: boolean; hideWhen?: () => boolean }[] = [
+      { label: 'Go to Home', icon: <HomeIcon />, path: '/home', hideWhen: () => isHome },
+      { label: 'View Projects', icon: <GearIcon />, path: sectionPath('projects'), hideWhen: () => currentCategory === 'projects' },
+      { label: 'View Threads', icon: <ThreadIcon />, path: sectionPath('threads'), hideWhen: () => currentCategory === 'threads' },
+      { label: 'View Bits2Bricks', icon: <GradCapIcon />, path: sectionPath('bits2bricks'), hideWhen: () => currentCategory === 'bits2bricks' },
+      { label: 'Open Source / GitHub', icon: <GitHubIcon size={22} />, path: 'https://github.com/infraphysics', external: true },
+      { label: 'Second Brain', icon: <DiamondIcon />, path: '/lab/second-brain' },
+      { label: 'Contact', icon: <MailIcon />, path: '/contact' },
+    ];
 
-    if (mostRecent) {
+    for (const item of navItems) {
+      if (item.hideWhen?.()) continue;
       result.push({
-        label: `Most Recent: ${mostRecent.displayTitle || mostRecent.title}`,
-        icon: <span className="w-[22px] h-[22px] flex items-center justify-center text-[13px] text-th-secondary">⏎</span>,
-        action: () => executeAndClose(() => navigate(postPath(mostRecent.category, mostRecent.id))),
-        shortcut: '.',
-        group: 'global',
+        label: item.label,
+        icon: item.icon,
+        action: item.external
+          ? () => executeAndClose(() => window.open(item.path, '_blank'))
+          : () => executeAndClose(() => navigate(item.path)),
+        group: 'nav',
       });
     }
 
+    // Random Article (always shown in nav)
+    result.push({
+      label: 'Random Article',
+      icon: <DiceIcon />,
+      action: () => {
+        if (posts.length === 0) return;
+        const randomPost = posts[Math.floor(Math.random() * posts.length)];
+        executeAndClose(() => navigate(postPath(randomPost.category, randomPost.id)));
+      },
+      group: 'nav',
+    });
+
+    // ── Global shortcut actions ──
     result.push({
       label: `Toggle Theme (${theme === 'dark' ? 'Light' : 'Dark'})`,
       icon: theme === 'dark' ? <SunIcon /> : <MoonIcon />,
@@ -132,56 +209,85 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
       group: 'global',
     });
 
-    // ── Navigation actions ──
-    result.push(
-      {
-        label: 'Go to Home',
-        icon: <HomeIcon />,
-        action: () => executeAndClose(() => navigate('/home')),
-        group: 'nav',
-      },
-      {
-        label: 'View Projects',
-        icon: <GearIcon />,
-        action: () => executeAndClose(() => navigate('/lab/projects')),
-        group: 'nav',
-      },
-      {
-        label: 'Open Source / GitHub',
-        icon: <GitHubIcon size={22} />,
-        action: () => executeAndClose(() => window.open('https://github.com/infraphysics', '_blank')),
-        group: 'nav',
-      },
-      {
-        label: 'Second Brain',
-        icon: <DiamondIcon />,
-        action: () => executeAndClose(() => navigate('/lab/second-brain')),
-        group: 'nav',
-      },
-      {
-        label: 'Contact',
-        icon: <MailIcon />,
-        action: () => executeAndClose(() => navigate('/contact')),
-        group: 'nav',
-      },
-      {
-        label: 'Random Article',
-        icon: (
-          <span className="w-[22px] h-[22px] flex items-center justify-center bg-th-elevated rounded-sm text-[11px] text-th-secondary">
-            ?
-          </span>
-        ),
-        action: () => {
-          if (posts.length === 0) return;
-          const randomPost = posts[Math.floor(Math.random() * posts.length)];
-          executeAndClose(() => navigate(postPath(randomPost.category, randomPost.id)));
-        },
-        group: 'nav',
-      },
-    );
-
     return result;
-  }, [article, theme, navigate, executeAndClose, toggleTheme]);
+  }, [article, theme, navigate, executeAndClose, toggleTheme, isHome, currentCategory]);
+
+  // ── Article search matches (only when query is non-empty) ──
+  const articleMatches = useMemo<QuickAction[]>(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+
+    type MatchedPost = { post: typeof posts[number]; matchType: 'title' | 'content' };
+
+    const searchPosts = (subset: typeof posts): MatchedPost[] => {
+      const results: MatchedPost[] = [];
+      for (const post of subset) {
+        const title = (post.displayTitle || post.title).toLowerCase();
+        const desc = post.description.toLowerCase();
+        const plain = stripHtml(post.content).toLowerCase();
+
+        if (title.includes(q)) {
+          results.push({ post, matchType: 'title' });
+        } else if (desc.includes(q) || plain.includes(q)) {
+          results.push({ post, matchType: 'content' });
+        }
+      }
+      return results;
+    };
+
+    let matched: MatchedPost[];
+
+    // Context-aware: prefer current category, expand if ≤1 result
+    if (currentCategory) {
+      const catPosts = posts.filter(p => p.category === currentCategory);
+      const catResults = searchPosts(catPosts);
+      if (catResults.length > 1) {
+        matched = catResults;
+      } else {
+        const allResults = searchPosts(posts);
+        const catIds = new Set(catResults.map(r => r.post.id));
+        matched = [
+          ...catResults,
+          ...allResults.filter(r => !catIds.has(r.post.id)),
+        ];
+      }
+    } else {
+      matched = searchPosts(posts);
+    }
+
+    // Title matches first, then content matches — max 8 total
+    const ordered = [
+      ...matched.filter(m => m.matchType === 'title'),
+      ...matched.filter(m => m.matchType === 'content'),
+    ].slice(0, 8);
+
+    const raw = query.trim();
+
+    return ordered.map(({ post, matchType }) => {
+      const title = post.displayTitle || post.title;
+      if (matchType === 'title') {
+        return {
+          label: title,
+          displayLabel: highlightMatch(title, raw),
+          icon: CATEGORY_ICONS[post.category] ?? <GearIcon />,
+          action: () => executeAndClose(() => navigate(postPath(post.category, post.id))),
+          group: 'articles-title' as const,
+        };
+      }
+      // Content match — show snippet with highlight
+      const desc = post.description;
+      const plain = stripHtml(post.content);
+      const source = desc.toLowerCase().includes(q) ? desc : plain;
+      const snippet = extractSnippet(source, raw);
+      return {
+        label: title,
+        subtitle: highlightMatch(snippet, raw),
+        icon: CATEGORY_ICONS[post.category] ?? <GearIcon />,
+        action: () => executeAndClose(() => navigate(postPath(post.category, post.id))),
+        group: 'articles-content' as const,
+      };
+    });
+  }, [query, currentCategory, navigate, executeAndClose]);
 
   // Second Brain concept matches — only exact final-segment matches
   const conceptMatches = useMemo<QuickAction[]>(() => {
@@ -190,28 +296,34 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
 
     return allFieldNotes
       .filter(note => {
-        // Match against the last segment of the address (after final /)
-        const addr = note.address || '';
-        const lastSeg = addr.includes('/') ? addr.split('/').pop()! : addr;
-        return lastSeg.toLowerCase() === q;
+        const name = (note.name || '').toLowerCase();
+        const addr = (note.address || '').toLowerCase();
+        const aliases = (note.aliases || []).map(a => a.toLowerCase());
+        // Match name, last address segment, or any alias
+        const lastSeg = addr.includes('//') ? addr.split('//').pop()! : addr;
+        return name === q || lastSeg === q || aliases.includes(q);
       })
       .slice(0, 5)
       .map(note => ({
-        label: note.displayTitle || note.title,
+        label: note.name || note.displayTitle || note.title,
         icon: <DiamondIcon />,
         action: () => executeAndClose(() => navigate(`/lab/second-brain/${note.id}`)),
         group: 'concept' as const,
       }));
-  }, [query, navigate, executeAndClose]);
+  }, [query, allFieldNotes, navigate, executeAndClose]);
 
   const filtered = useMemo(() => {
     const q = query.trim();
     if (!q) return actions;
     const lower = q.toLowerCase();
-    const matchedActions = actions.filter(a => a.label.toLowerCase().includes(lower));
-    // Append concept matches after action matches
-    return [...matchedActions, ...conceptMatches];
-  }, [query, actions, conceptMatches]);
+    const matchedActions = actions.filter(a =>
+      a.group === 'nav'
+        ? matchesWordStart(a.label, lower)
+        : a.label.toLowerCase().includes(lower)
+    );
+    // Exact concept matches first, then articles
+    return [...matchedActions, ...conceptMatches, ...articleMatches];
+  }, [query, actions, articleMatches, conceptMatches]);
 
   // Reset state on open/close
   useEffect(() => {
@@ -244,6 +356,16 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
   }, [selectedIndex]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    // Stop event from reaching window-level listeners (e.g. SecondBrainView grid nav)
+    e.stopPropagation();
+
+    // Shift+T toggles theme even while palette is open
+    if (e.key === 'T' && e.shiftKey) {
+      e.preventDefault();
+      toggleTheme();
+      return;
+    }
+
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
@@ -269,7 +391,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
         }
         break;
     }
-  }, [filtered, selectedIndex, onClose]);
+  }, [filtered, selectedIndex, onClose, query, toggleTheme]);
 
   if (!isOpen) return null;
 
@@ -277,8 +399,10 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
   const groupLabel = (group?: string) => {
     switch (group) {
       case 'contextual': return 'Article';
-      case 'global': return 'Shortcuts';
       case 'nav': return 'Navigate';
+      case 'global': return 'Shortcuts';
+      case 'articles-title': return 'Articles';
+      case 'articles-content': return 'In Content';
       case 'concept': return 'Second Brain';
       default: return null;
     }
@@ -310,7 +434,14 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
             type="text"
             value={query}
             onChange={e => {
-              setQuery(e.target.value);
+              const val = e.target.value;
+              // Solo "." resets to main menu
+              if (val === '.') {
+                setQuery('');
+                setSelectedIndex(0);
+                return;
+              }
+              setQuery(val);
               setSelectedIndex(0);
             }}
             placeholder="Type to search... | Ctrl+K to toggle"
@@ -358,7 +489,12 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
                     <span className={i === selectedIndex ? 'text-th-primary' : 'text-th-tertiary'}>
                       {action.icon}
                     </span>
-                    <span className="flex-1 text-left truncate">{action.label}</span>
+                    <span className="flex-1 text-left min-w-0">
+                      <span className="block truncate">{action.displayLabel ?? action.label}</span>
+                      {action.subtitle && (
+                        <span className="block truncate text-xs text-th-muted mt-0.5">{action.subtitle}</span>
+                      )}
+                    </span>
                     {action.shortcut && (
                       <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] text-th-tertiary bg-th-surface-alt border border-th-border rounded font-mono ml-auto flex-shrink-0">
                         {action.shortcut}
@@ -376,15 +512,19 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
           <span className="flex items-center gap-1.5">
             <kbd className="inline-flex items-center justify-center w-5 h-5 rounded bg-th-surface-alt border border-th-border text-[10px] font-mono">↑</kbd>
             <kbd className="inline-flex items-center justify-center w-5 h-5 rounded bg-th-surface-alt border border-th-border text-[10px] font-mono">↓</kbd>
-            <span className="ml-0.5">to navigate</span>
+            <span className="ml-0.5">navigate</span>
           </span>
           <span className="flex items-center gap-1.5">
             <kbd className="inline-flex items-center justify-center h-5 px-1.5 rounded bg-th-surface-alt border border-th-border text-[10px] font-mono">↵</kbd>
-            <span className="ml-0.5">to select</span>
+            <span className="ml-0.5">select</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <kbd className="inline-flex items-center justify-center h-5 px-1.5 rounded bg-th-surface-alt border border-th-border text-[10px] font-mono">.</kbd>
+            <span className="ml-0.5">reset</span>
           </span>
           <span className="flex items-center gap-1.5">
             <kbd className="inline-flex items-center justify-center h-5 px-1.5 rounded bg-th-surface-alt border border-th-border text-[10px] font-mono">esc</kbd>
-            <span className="ml-0.5">to close</span>
+            <span className="ml-0.5">close</span>
           </span>
         </div>
       </div>

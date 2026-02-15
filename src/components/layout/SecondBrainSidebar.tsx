@@ -98,6 +98,8 @@ const TreeNodeItem: React.FC<{
   const isExpanded = forceExpanded || expanded;
   const isScoped = activeScope === node.path;
   const isConceptAndFolder = node.concept && hasChildren;
+  const isRootLeaf = depth === 0 && !hasChildren;
+  const displayLabel = node.label.charAt(0).toUpperCase() + node.label.slice(1);
 
   return (
     <div>
@@ -127,7 +129,7 @@ const TreeNodeItem: React.FC<{
                 onClick={onConceptClick}
                 className="text-[11px] text-th-secondary hover:text-violet-400 transition-colors truncate flex-1"
               >
-                {node.label}
+                {displayLabel}
               </Link>
               <ScopeIcon onClick={(e) => { e.preventDefault(); onScope(node.path); }} />
             </>
@@ -138,7 +140,7 @@ const TreeNodeItem: React.FC<{
               onClick={onConceptClick}
               className="text-[11px] text-th-secondary hover:text-violet-400 transition-colors truncate flex-1"
             >
-              {node.label}
+              {displayLabel}
             </Link>
           )
         ) : hasChildren ? (
@@ -149,15 +151,17 @@ const TreeNodeItem: React.FC<{
               isScoped ? 'text-violet-400' : 'text-th-muted hover:text-th-secondary'
             }`}
           >
-            {node.label}
+            {displayLabel}
           </button>
         ) : (
-          <span className="text-[11px] text-th-muted truncate flex-1">{node.label}</span>
+          <span className="text-[11px] text-th-muted truncate flex-1">{displayLabel}</span>
         )}
 
-        {hasChildren && (
+        {isRootLeaf ? (
+          <span className="text-[8px] text-th-muted opacity-50 flex-shrink-0">root</span>
+        ) : hasChildren ? (
           <span className="text-[9px] text-th-muted tabular-nums flex-shrink-0">{node.childCount}</span>
-        )}
+        ) : null}
       </div>
 
       {isExpanded && hasChildren && (
