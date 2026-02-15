@@ -64,6 +64,7 @@ For each approved new note:
    - Body: content from the user's input. Preserve the user's voice and structure — bullets, prose, definitions, whatever fits. Don't force bullet points if the content is naturally prose.
    - **No blank line** between frontmatter closing `---` and the first body line.
    - **No em dashes or en dashes** (`—`, `–`). Use parentheses, semicolons, periods, or commas instead.
+   - **Use long arrows only.** Never use `→` (U+2192). Always use `⟶` (U+27F6).
    - **No invented examples.** Only include examples if the user provided them as input content.
    - Wiki-links (`[[uid|name]]`): wrap terms that reference other fieldnotes. Match broadly:
      - Literal matches (term = note name)

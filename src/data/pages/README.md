@@ -283,6 +283,7 @@ The `address` and `name` fields follow capitalization rules based on what the te
 ### Writing style
 
 - **No em dashes or en dashes.** Never use `—` or `–` in fieldnote bodies. Use parentheses, semicolons, periods, or commas instead.
+- **Use long arrows only.** Never use `→` (U+2192). Always use `⟶` (U+27F6) for arrows in fieldnote content.
 - **No blank line after frontmatter.** The first body line starts immediately after the closing `---` (no empty line between them).
 - **No invented examples.** Only include examples if the user provided them as input content. Do not fabricate illustrative examples.
 
