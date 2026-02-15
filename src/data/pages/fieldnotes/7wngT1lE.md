@@ -8,3 +8,5 @@ date: "2026-02-05"
 - Found in smartphones, tablets, laptops (Apple M-series), and cloud servers (AWS Graviton)
 - Features out-of-order execution, virtual memory, and multi-level caches
 - Pairs with [[a2FkPabO|integrated]] and [[1yDGHLLU|NPU]] blocks inside a [[trkh9gwv|SoC]]
+- Designed for OS time-slicing; orchestrates processing of heavy data streams (camera, networking)
+- 1-12 Cortex-A cores per [[Jkr1CFGJ|MPU]] chip

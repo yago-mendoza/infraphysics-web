@@ -9,3 +9,8 @@ date: "2026-02-05"
 - Delivers maximum throughput per watt for fixed workloads — Bitcoin mining, video encoding, network packet processing
 - [[t8sPNl54|TPU]] is a category of ML-focused ASIC
 - Design cost is high, so ASICs only make sense at volume
+- Common ASICs found inside [[gKR2I1Nu|MCU]]s and [[trkh9gwv|SoC]]s: [[t8sPNl54|TPU]], NIC, [[1yDGHLLU|NPU]], DSP, [[WEUTQwqv|GPU]], ISP
+- Math embedded as silicon: `y = mx + n` computed on-circuit with no instruction overhead
+- DSP: soundwave ⟶ spectrogram (filters noise via Fourier Transforms)
+- Narrow, task-custom-made; attached to the silicon, only does one thing
+- Google's [[t8sPNl54|TPU]]s are ASICs (no core intelligence, pure matrix math)

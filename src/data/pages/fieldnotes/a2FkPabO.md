@@ -8,3 +8,5 @@ date: "2026-02-05"
 - Found in every laptop APU, mobile [[trkh9gwv|SoC]], and Apple Silicon
 - Lower power and bandwidth than [[LxUj37D3|discrete]]
 - Zero-copy data sharing with the CPU simplifies programming and cuts latency for lightweight graphics and [[1yDGHLLU|NPU]]-style inference tasks
+- Hardwired [[6YzJQiig|ASIC]] on-die; nail size, ~30 W
+- Handles lightweight inference (e.g. GPS, small models)

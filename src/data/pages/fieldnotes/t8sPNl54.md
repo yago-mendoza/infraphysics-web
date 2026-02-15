@@ -9,3 +9,4 @@ date: "2026-02-05"
 - TPU v4 pods interconnect thousands of chips via custom high-bandwidth networks
 - Exposed as cloud instances (Google Cloud TPU)
 - Represents the extreme end of ML hardware specialization
+- Math embedded as silicon; both TPU and [[1yDGHLLU|NPU]] are [[6YzJQiig|ASIC]]s optimized for tensor multiplication

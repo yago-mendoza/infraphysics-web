@@ -9,3 +9,4 @@ date: "2026-02-05"
 - Written in C/C++, compiled to ARM/RISC-V machine code
 - Flashed onto the device via SWD, JTAG, or USB bootloader
 - Over-the-air (OTA) updates allow field upgrades
+- Assembly steps: (1) C/Assembly for firmware, (2) basic electronics to power circuitry ([[nlro5GOJ|capacitor]]s), (3) KiCad for [[26t2rDup|PCB]] layout

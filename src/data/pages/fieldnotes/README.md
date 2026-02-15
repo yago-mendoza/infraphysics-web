@@ -32,8 +32,9 @@ All scripts live in `scripts/`. For full parameter docs, output formats, and imp
 
 - **`rename-address.js`** — Renames a single fieldnote address. Does NOT cascade to children. **Always dry-run first** (`node scripts/rename-address.js "old" "new"`), then `--apply`.
 - **`move-hierarchy.js`** — Cascading rename: moves a note and all its descendants to a new address prefix. **Always dry-run first**, then `--apply`. Use this instead of `rename-address.js` when the note has children.
-- **`check-references.js`** — Deep integrity audit (orphans, weak parents, one-way trailing refs, redundant refs, fuzzy duplicates, segment collisions). Not part of the build — run manually after bulk changes.
+- **`check-references.js`** — Deep integrity audit (orphans, weak parents, duplicate trailing refs, redundant refs, fuzzy duplicates, segment collisions). Not part of the build — run manually after bulk changes.
 - **`analyze-pairs.js`** — Relationship analyzer. Answers "how are A and B connected?" via structural, trailing ref, and body mention checks. Supports fuzzy address resolution.
+- **`preflight.js`** — Pre-creation briefing. Takes existing addresses (fuzzy-resolved) and dumps content, trailing refs (with bilateral warnings), interaction candidates, and cross-ref matrix. Use `--new "addr"` to collision-check proposed addresses. Run before creating or enriching notes.
 - **`validate-fieldnotes.js`** — Build-time validator. Called automatically by every build. See [Build-Time Validation](#build-time-validation) below.
 - **`resolve-issues.js`** — Interactive issue resolver. Called via `npm run content:fix`. Prompts to fix segment collisions and missing parents. See [Interactive Mode](#interactive-mode) below.
 
@@ -73,9 +74,9 @@ Quick check: search `address:` lines in `src/data/pages/fieldnotes/*.md` for the
 1. Run the [pre-creation check](#pre-creation-check-segment-collisions) for each proposed address
 2. Create all the `.md` files
 3. Run `npm run build` to validate all references at once
-4. Run `node scripts/check-references.js` to catch one-way refs, orphans, and weak parents
+4. Run `node scripts/check-references.js` to catch duplicate trailing refs, orphans, and weak parents
 5. Create stub notes for any missing parents
-6. Review one-way trailing refs — decide if reciprocal refs are needed
+6. Review duplicate trailing refs — each connection should exist on only ONE side
 
 ### Renaming an address (simple — no children)
 
@@ -139,16 +140,17 @@ Note: With UID-based references, children's connections remain intact even if th
 
 ## Build-Time Validation
 
-The build runs a 6-phase integrity check automatically. Errors fail the build (exit code 1). Warnings and info are logged but allowed.
+The build runs a 7-phase integrity check automatically. Errors fail the build (exit code 1). Warnings and info are logged but allowed.
 
 | Phase | What it catches | Severity |
 |---|---|---|
 | 1. Reference integrity | Broken `[[wiki-links]]` in fieldnotes and posts | **ERROR** |
 | 2. Self-references | Notes linking to themselves in trailing refs | WARN |
-| 3. Parent hierarchy | Missing parent notes in the address tree | WARN |
-| 4. Circular references | Cycles in the reference graph (opt-in, off by default) | WARN |
-| 5. Segment collisions | Same concept name at different hierarchy paths (HIGH/MED/LOW tiers) | WARN |
-| 6. Orphan detection | Notes with no connections to the graph | INFO |
+| 3. Bare trailing refs | Trailing refs without `::` annotation | **ERROR** |
+| 4. Parent hierarchy | Missing parent notes in the address tree | WARN |
+| 5. Circular references | Cycles in the reference graph (opt-in, off by default) | WARN |
+| 6. Segment collisions | Same concept name at different hierarchy paths (HIGH/MED/LOW tiers) | WARN |
+| 7. Orphan detection | Notes with no connections to the graph | INFO |
 
 ### How to use the validation output
 
@@ -173,16 +175,7 @@ The workflow is always: **build → read errors → fix → build again**.
 
 ### Validation configuration
 
-All flags live in `scripts/compiler.config.js` under `validation`:
-
-| Flag | Default | Effect |
-|---|---|---|
-| `validateFieldnoteRefs` | `true` | ERROR if `[[ref]]` inside a fieldnote points to nonexistent address |
-| `validateRegularPostWikiLinks` | `true` | ERROR if `[[wiki-ref]]` in a regular post points to nonexistent fieldnote |
-| `validateParentSegments` | `true` | WARN if parent address prefix has no dedicated note |
-| `detectCircularRefs` | `false` | WARN on reference cycles (off — knowledge graphs naturally have cycles) |
-| `detectSegmentCollisions` | `true` | WARN when same segment name exists in different hierarchies |
-| `detectOrphans` | `true` | INFO for notes with zero connections |
+All flags live in `scripts/compiler.config.js` under `validation`. See **[scripts/README.md — Configuration](../../../scripts/README.md#configuration)** for the full flag table.
 
 ### Error codes
 
@@ -193,6 +186,7 @@ Every validation output line includes a bracketed error code for easy scanning a
 | `BROKEN_REF` | ERROR | No | Inline `[[ref]]` to nonexistent fieldnote |
 | `BROKEN_WIKILINK` | ERROR | No | `[[wiki-link]]` in post to nonexistent fieldnote |
 | `SELF_REF` | WARN | No | Note trails a ref to itself |
+| `BARE_TRAILING_REF` | ERROR | No | Trailing ref without `::` annotation |
 | `MISSING_PARENT` | WARN | Yes | Parent address has no dedicated note |
 | `CIRCULAR_REF` | WARN | No | Cycle in reference graph |
 | `SEGMENT_COLLISION` | HIGH/MED/LOW | Yes | Same segment name at different hierarchy paths |
@@ -340,8 +334,9 @@ Understanding what changes propagate where prevents subtle breakage.
 - **Parent hierarchy**: if the new note has a hierarchical address, the build checks that parents exist
 
 ### Changing trailing refs affects:
-- **Bilateral display**: adding `[[B]]` to note A makes the connection appear on both A and B's pages
-- **Removing a trailing ref** removes it from both sides — no orphaned one-way display
+- **Bilateral display**: adding `[[B]]` to note A makes the connection appear on both A and B's pages. Write the trailing ref on **only ONE** note; the UI crosses it automatically.
+- **Removing a trailing ref** removes it from both sides
+- **Never duplicate** a trailing ref on both notes; `check-references.js` flags these as `DUPLICATE TRAILING REFS`
 
 ---
 
@@ -351,7 +346,7 @@ Understanding what changes propagate where prevents subtle breakage.
 
 - `//` is the **hierarchy separator** (parent-child): `CPU//ALU` means "ALU under CPU"
 - `/` is part of a **segment name**: `I/O` is the concept "I/O", not "I under O"
-- Filenames now use UIDs: `{uid}.md` (e.g. `fn-cpu-alu.md`), so the separator distinction doesn't affect filenames
+- Filenames use UIDs (`{uid}.md`), so the separator distinction doesn't affect filenames
 - In slugs/IDs (if address-derived): `//` → `--`, `/` → `-` (e.g. `I/O//MMIO` → `i-o--mmio`), but primary IDs are now UIDs
 
 ### Trailing refs must be contiguous at the end
@@ -389,7 +384,7 @@ You do **not** also need to add `distinct: ["networking//cache"]` to the CPU//ca
 
 ### Filename convention uses UIDs
 
-Filenames are now `{uid}.md` (e.g. `fn-cpu-alu.md`), not address-derived. The UID must be unique and stable. The `rename-address.js` script scans frontmatter to find files, not filenames, so no filename convention matching is required.
+Filenames are `{uid}.md` (e.g. `OkJJJyxX.md`), not address-derived. The UID must be unique and stable. The `rename-address.js` script scans frontmatter to find files, not filenames, so no filename convention matching is required.
 
 ### Cache invalidation
 

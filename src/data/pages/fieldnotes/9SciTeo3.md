@@ -9,3 +9,6 @@ date: "2026-02-05"
 - Features tightly-coupled memory, dual-core lockstep (fault detection), and fast interrupt response
 - Runs bare-metal or RTOS, not Linux
 - Bridges the gap between [[OQmzx1Vg|Cortex-M]] and [[7wngT1lE|Cortex-A]]
+- LOCKSTEP: two identical cores run the same instructions and cross-check; any mismatch triggers a fault
+- Zero jitter; applications: ABS brakes, airbags, flight control, dialysis machines
+- Does not support a full OS; bare-metal or RTOS only
