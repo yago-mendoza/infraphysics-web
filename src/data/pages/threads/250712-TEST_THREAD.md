@@ -210,9 +210,9 @@ inline code is unaffected by preprocessors: `_this stays literal_`, `--and this-
 
 ### wiki links (second brain)
 
-write `[[TERM]]` to link to a second brain entry: [[ML]], [[CPU]], [[GPU]].
+write `[[TERM]]` to link to a second brain entry: [[7aLJOACt]], [[OkJJJyxX]], [[WEUTQwqv]].
 
-multi-segment addresses work too: `[[CPU//mutex//GIL]]` displays as the last segment → [[CPU//mutex//GIL]].
+multi-segment addresses work too: `[[azuwblly]]` displays as the last segment → [[azuwblly]].
 
 ### cross-document links
 

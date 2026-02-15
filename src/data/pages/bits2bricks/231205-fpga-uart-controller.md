@@ -24,4 +24,4 @@ implemented a universal asynchronous receiver-transmitter (uart) on a cyclone iv
 
 works reliably at 115200 baud.
 
-this is fundamentally a [[Headless device]] — no display, just serial data in and out.
+this is fundamentally a headless device — no display, just serial data in and out.

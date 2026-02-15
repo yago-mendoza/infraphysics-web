@@ -27,7 +27,7 @@ power dissipation: P = I{^:2} x R = (0.5){^:2} x 10 = {#e74c3c:2.5W} — too hot
 
 ## cross-references
 
-this board interfaces with a [[Headless device]] via serial. the debug output renders through a [[UI//GUI]] terminal emulator.
+this board interfaces with a headless device via serial. the debug output renders through a [[PRWiYzcG]] terminal emulator.
 
 the uart protocol itself is documented in the fpga-uart-controller project.
 

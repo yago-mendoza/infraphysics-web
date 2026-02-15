@@ -38,7 +38,7 @@ Before we talk about the AI, we need to talk about the thing it lives inside. Be
 
 That is... not what a computer is. At all.
 
-Your computer is a city. A small one, sure, but a city. It has roads (your [[networking|network connections]]), intersections (your router, your switches), buildings (your applications), filing cabinets (your storage), and — this is the important part — --doors to the outside that are open 24 hours a day--. Some of those doors you opened on purpose. Most of them you didn't know existed.
+Your computer is a city. A small one, sure, but a city. It has roads (your [[TklVb4w3|network connections]]), intersections (your router, your switches), buildings (your applications), filing cabinets (your storage), and — this is the important part — --doors to the outside that are open 24 hours a day--. Some of those doors you opened on purpose. Most of them you didn't know existed.
 
 ## The roads between your devices
 

@@ -22,13 +22,13 @@ tldr:
 
 i am not a web developer.
 
-i build things that deal with hardware, systems, infrastructure — the kind of stuff where a misplaced byte crashes real silicon. i've spent more time reading datasheets than CSS specs. my natural habitat is closer to a [[compiler//pipeline]] than a landing page.
+i build things that deal with hardware, systems, infrastructure — the kind of stuff where a misplaced byte crashes real silicon. i've spent more time reading datasheets than CSS specs. my natural habitat is closer to a [[dlBw5GXu]] than a landing page.
 
 i could have used a template. a Hugo theme, some markdown, Netlify, done in an afternoon. honestly, i almost did. but i'd been circling around web development for a while — half-finished projects, experiments that never left localhost — and at some point i just wanted to see if i could build a real one. not because templates are bad. because i wanted to find out what i didn't know.
 
-so i spent 18 days building a custom React app with its own [[compiler|markdown compiler]], a knowledge graph i call the Second Brain, and a dual-theme system. this article is compiled by the same pipeline it describes. the wiki-links in the text point to fieldnotes that were compiled in the same build. everything here is the project.
+so i spent 18 days building a custom React app with its own [[E9olQ6Ox|markdown compiler]], a knowledge graph i call the Second Brain, and a dual-theme system. this article is compiled by the same pipeline it describes. the wiki-links in the text point to fieldnotes that were compiled in the same build. everything here is the project.
 
-> although the site runs on React, the content you're reading is static HTML — compiled at build time, before the site is deployed. the markdown goes through a [[compiler//pipeline|14-step pipeline]], becomes HTML, and gets served from a CDN. your browser doesn't generate any of this. it just renders what's already there.
+> although the site runs on React, the content you're reading is static HTML — compiled at build time, before the site is deployed. the markdown goes through a [[dlBw5GXu|14-step pipeline]], becomes HTML, and gets served from a CDN. your browser doesn't generate any of this. it just renders what's already there.
 
 ---
 
@@ -83,7 +83,7 @@ four content categories. naming them took longer than it should.
 
 i needed a way to write articles in markdown and get styled HTML. `marked` does this. but i also wanted colored text, subscript, superscript, keyboard shortcuts, accent text, typed blockquotes, wiki-links, syntax highlighting, and context annotations with relative timestamps.
 
-so i built a [[compiler//pipeline|14-step compilation pipeline]] that transforms raw markdown into the HTML you're reading right now. the same pipeline that later compiles the Second Brain.
+so i built a [[dlBw5GXu|14-step compilation pipeline]] that transforms raw markdown into the HTML you're reading right now. the same pipeline that later compiles the Second Brain.
 
 ## the ordering problem
 
@@ -91,7 +91,7 @@ the pipeline runs in a specific order, and --the order matters more than anythin
 
 imagine you write `{#e74c3c:some **bold** text}`:
 
-1. [[compiler//pre-processor|pre-processors]] fire first — the color syntax wraps content in a `<span>`
+1. [[W16WJgHC|pre-processors]] fire first — the color syntax wraps content in a `<span>`
 2. `marked` parses next — sees `**bold**` inside the span, converts to `<strong>`
 3. result: {#e74c3c:some **bold** text} — both work
 
@@ -138,7 +138,7 @@ on february 5th, the commit message reads: "Fixed fixes fixing fixes."
 
 when you're fixing the fixes of your previous fixes, the codebase is telling you something. it's telling you to stop.
 
-the old [[compiler]] was regex scattered across three files. the blockquote parser couldn't handle nested formatting. definition lists inside blockquotes produced broken HTML. every fix introduced a new edge case, and every edge case demanded another fix. the [[compiler//custom syntax]] features had become unpredictable — not because any individual feature was complex, but because they were composed without a clean boundary.
+the old [[E9olQ6Ox]] was regex scattered across three files. the blockquote parser couldn't handle nested formatting. definition lists inside blockquotes produced broken HTML. every fix introduced a new edge case, and every edge case demanded another fix. the [[JkzQf7qt]] features had become unpredictable — not because any individual feature was complex, but because they were composed without a clean boundary.
 
 i looked at the diff. i looked at the blockquote parser. i thought about the Hugo site i could've had two weeks ago.
 
@@ -148,7 +148,7 @@ then i deleted everything.
 
 >> 26.02.05 - "Syntax from scratch." everything from zero. the codebase got lighter. i sat in the chair and didn't do anything for ten minutes. it felt like exhaling after holding your breath for a week.
 
-the rewrite centralized the [[compiler]] into three layers: **`compiler.config.js`** (single source of truth for all syntax rules — changing it invalidates the entire build cache), **`build-content.js`** (the pipeline orchestrator), and **`article.css`** (one stylesheet, category accents through CSS vars). the new version could parse blockquotes with nested definition lists inside them. the old version literally couldn't. that's how you know a rewrite was the right call — the new version enables something the old version couldn't express.
+the rewrite centralized the [[E9olQ6Ox]] into three layers: **`compiler.config.js`** (single source of truth for all syntax rules — changing it invalidates the entire build cache), **`build-content.js`** (the pipeline orchestrator), and **`article.css`** (one stylesheet, category accents through CSS vars). the new version could parse blockquotes with nested definition lists inside them. the old version literally couldn't. that's how you know a rewrite was the right call — the new version enables something the old version couldn't express.
 
 ---
 
@@ -182,11 +182,11 @@ each content category has its own accent: {#a3e635:projects} (lime), {#fb7185:th
 
 before i explain the brain, i need to go backwards. because the brain didn't start with this project. it started with a folder.
 
-i had been keeping notes for months — loose markdown files about [[CPU//ALU|ALUs]], [[compiler//pipeline|compiler pipelines]], networking protocols, whatever i was studying. they lived in a directory on my laptop. some referenced each other by filename. most didn't reference anything. there was no search, no structure, no way to see how anything connected. just a flat list of files i'd written at various hours of the night, half of them with names like `cpu-notes-v2-FINAL.md`.
+i had been keeping notes for months — loose markdown files about [[egoxqpmC|ALUs]], [[dlBw5GXu|compiler pipelines]], networking protocols, whatever i was studying. they lived in a directory on my laptop. some referenced each other by filename. most didn't reference anything. there was no search, no structure, no way to see how anything connected. just a flat list of files i'd written at various hours of the night, half of them with names like `cpu-notes-v2-FINAL.md`.
 
 when i started building the site, those notes came with me. at first they were just another section — a list of topics you could scroll through. boring. functional. dead.
 
-but the more i built, the more i realized that what i wanted wasn't a list. it was a graph. a place where every concept knows its neighbors. where clicking [[CPU//ALU]] takes you to the ALU page and shows you that ALU connects to [[CPU//core]], which connects to [[compiler//pipeline]], which connects to the article you're reading right now. not a wiki. not a documentation site. a map of how i think.
+but the more i built, the more i realized that what i wanted wasn't a list. it was a graph. a place where every concept knows its neighbors. where clicking [[egoxqpmC]] takes you to the ALU page and shows you that ALU connects to [[Z9W6rweD]], which connects to [[dlBw5GXu]], which connects to the article you're reading right now. not a wiki. not a documentation site. a map of how i think.
 
 this is the part where the project stopped being a website and became something i actually use every day.
 
@@ -204,14 +204,14 @@ address: "CPU//ALU"
 date: "2026-02-05"
 aliases: [ALU, arithmetic logic unit]
 ---
-the arithmetic logic unit — the circuit inside a [[CPU//core]] that performs...
+the arithmetic logic unit — the circuit inside a [[Z9W6rweD]] that performs...
 
-[[CPU//core]] :: shares execution resources
-[[CPU//register]]
-[[CPU]]
+[[Z9W6rweD]] :: shares execution resources
+[[2S1PZjWY]]
+[[OkJJJyxX]]
 ```
 
-the `[[wiki-links]]` in the body create references. the links at the bottom are --trailing refs-- — intentional connections that show up on *both* sides. if note A has a trailing ref to note B, the connection appears on A's page and on B's page. one ref, bilateral display. the `::` syntax explains why: `[[CPU//core]] :: shares execution resources`.
+the `[[wiki-links]]` in the body create references. the links at the bottom are --trailing refs-- — intentional connections that show up on *both* sides. if note A has a trailing ref to note B, the connection appears on A's page and on B's page. one ref, bilateral display. the `::` syntax explains why: `[[Z9W6rweD]] :: shares execution resources`.
 
 the bidirectional resolution is one of the things i'm most proud of technically. the build processes every note, extracts every reference, computes the reverse links, and generates a complete relationship graph — every connection typed, annotated, and navigable from either end. the kind of thing you'd build with a graph database if you were being serious. i built it with JSON and a build script. it works.
 
@@ -225,7 +225,7 @@ building the tree view for browsing the hierarchy was the moment the project cro
 
 not a website anymore. a tool.
 
-i showed it to a friend. he looked at the Second Brain for about thirty seconds and said "this is like Wikipedia if Wikipedia had a panic attack." i still don't know if that was a compliment. another friend asked why i didn't just use Notion. that one stung a little. but Notion wouldn't let me write `[[CPU//ALU]] :: shares execution resources` and have it resolve bilaterally across 60 notes with aliases and hierarchical parents. i checked.
+i showed it to a friend. he looked at the Second Brain for about thirty seconds and said "this is like Wikipedia if Wikipedia had a panic attack." i still don't know if that was a compliment. another friend asked why i didn't just use Notion. that one stung a little. but Notion wouldn't let me write `[[egoxqpmC]] :: shares execution resources` and have it resolve bilaterally across 60 notes with aliases and hierarchical parents. i checked.
 
 and there was a naming problem. the site already had a {{sidebar|a persistent navigation panel on the left.}} — the main navigation. now the Second Brain had its own panel too. is it a "manager"? a "browser"? another "sidebar"? i come from systems, where a "panel" is a physical thing on a rack and a "browser" is what you use to read datasheets. i ended up calling it `SecondBrainSidebar` in code. descriptive if not elegant.
 
@@ -253,7 +253,7 @@ the rename script was born from a specific disaster. i manually renamed a concep
 
 # working with an AI
 
-on february 6th, i started using [[claude-code]] — an AI coding assistant that lives in the terminal. it can see the entire codebase, suggest changes across multiple files, and write code faster than i can type. it can hold the whole architecture in context — the compiler pipeline, the theme cascade, the wiki-link resolution, all of it at once.
+on february 6th, i started using [[gk4wYqzk]] — an AI coding assistant that lives in the terminal. it can see the entire codebase, suggest changes across multiple files, and write code faster than i can type. it can hold the whole architecture in context — the compiler pipeline, the theme cascade, the wiki-link resolution, all of it at once.
 
 it's also one of the most frustrating tools i've ever used.
 
@@ -269,7 +269,7 @@ the AI wasn't being malicious. it was being --helpful--. it saw code that could 
 
 ## the instructions file
 
-so i wrote a [[claude-code//dot-claude|CLAUDE.md]] — a document in the repo root with instructions for AI assistants. an onboarding guide for someone with amnesia who needs to re-read it every morning.
+so i wrote a [[vJBANeek|CLAUDE.md]] — a document in the repo root with instructions for AI assistants. an onboarding guide for someone with amnesia who needs to re-read it every morning.
 
 the rules are simple:
 
@@ -288,7 +288,7 @@ that last rule took three drafts. the first version said "try not to change thin
 
 even with CLAUDE.md, the AI forgets. it edits a fieldnote and doesn't run the build. it applies a rename without dry-running first. the instructions exist, but they rely on the AI checking them at the right moment.
 
-so i added [[claude-code//dot-claude//hooks|hooks]] — shell scripts that fire automatically when the AI uses specific tools. write a fieldnote file and a reminder injects: "FIELDNOTE MODIFIED — run the build when done." start a rename and a checklist appears: "did you dry-run first?"
+so i added [[0C6FXSnp|hooks]] — shell scripts that fire automatically when the AI uses specific tools. write a fieldnote file and a reminder injects: "FIELDNOTE MODIFIED — run the build when done." start a rename and a checklist appears: "did you dry-run first?"
 
 the hooks don't block anything. they just make sure the AI sees the reminder at the right moment. it's the difference between "please remember to lock the door" (CLAUDE.md) and a sign taped to the door that says "DID YOU LOCK THIS?" (hooks). CLAUDE.md catches 80% of mistakes. hooks catch another 15%. the last 5% is me reading every diff before committing. it's not bulletproof. but the combination is surprisingly effective.
 
@@ -296,7 +296,7 @@ the hooks don't block anything. they just make sure the AI sees the reminder at 
 
 ---
 
-this project was not the rational choice. the CSS is not how a frontend engineer would write it. the [[compiler]] is not how a language designer would build it. there are parts i'd do differently — the Tailwind CDN choice, the hardcoded colors on day one, the monolith fieldnotes file i should have split from the start.
+this project was not the rational choice. the CSS is not how a frontend engineer would write it. the [[E9olQ6Ox]] is not how a language designer would build it. there are parts i'd do differently — the Tailwind CDN choice, the hardcoded colors on day one, the monolith fieldnotes file i should have split from the start.
 
 but here's what i know that i didn't know 18 days ago. i know that `overflow: hidden` is the answer to questions you can't articulate yet. i know that CSS custom properties resolve at computation time, not declaration time, and that this matters more than it sounds. i know that `color-mix()` is unreasonably powerful and that transitioning CSS variables will give you a headache. i know that a wiki-link is really just a regex with ambition, and that if you build enough of them, a graph appears — and the graph is more interesting than any individual note.
 

@@ -169,9 +169,9 @@ the `>` prefix renders as small, muted text — not a traditional blockquote:
 
 ### wiki links
 
-`[[TERM]]` links to second brain entries: [[ML]], [[GPU]], [[CPU]].
+`[[TERM]]` links to second brain entries: [[7aLJOACt]], [[WEUTQwqv]], [[OkJJJyxX]].
 
-multi-segment: `[[CPU//mutex//GIL]]` → [[CPU//mutex//GIL]] (displays last segment).
+multi-segment: `[[azuwblly]]` → [[azuwblly]] (displays last segment).
 
 ### cross-document links
 

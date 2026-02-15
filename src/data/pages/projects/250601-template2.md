@@ -305,11 +305,11 @@ determines the type. All render with dashed underline.
 
 Single word or `//` paths resolve to fieldnote concepts:
 
-This is related to [[Headless device|este es un nodo]] concepts.
+This is related to headless device concepts.
 
-The output is rendered through a [[UI//GUI|este es un nodo]].
+The output is rendered through a [[PRWiYzcG|este es un nodo]].
 
-With explicit display text: [[compiler|the project compiler]].
+With explicit display text: [[E9olQ6Ox|the project compiler]].
 
 ## cross-document links
 

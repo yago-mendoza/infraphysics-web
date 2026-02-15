@@ -24,7 +24,7 @@ if the order were reversed, marked would see `{#e74c3c:...}` as plain text and l
 
 ## entropy and compilers
 
-every transformation adds entropy to the pipeline. a [[Headless device]] analogy: each processing stage is a black box that transforms input without visual feedback. errors compound silently.
+every transformation adds entropy to the pipeline. each processing stage is a black box that transforms input without visual feedback. errors compound silently.
 
 the solution: validation at the end. after the full pipeline runs, the validator checks every `data-address` attribute in the output HTML against the fieldnotes database. broken links are caught at _build time_, not runtime.
 
