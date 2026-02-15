@@ -204,70 +204,7 @@ Output uses colored severity labels with bracketed error codes:
 
 A legend of active error codes is printed after the issues. If fixable issues exist, a hint is shown: `(N fixable — run npm run content:fix)`.
 
-### Phase 1: Reference integrity (`validateFieldnoteRefs`, `validateRegularPostWikiLinks`)
-
-Checks that every `[[address]]` reference resolves to an existing fieldnote.
-
-- **Fieldnote → fieldnote**: inline `[[refs]]` and trailing `[[refs]]` must point to existing addresses
-- **Regular post → fieldnote**: `data-address="..."` attributes in compiled HTML must point to existing addresses
-- **Severity**: ERROR (fails build)
-
-### Phase 2: Self-references
-
-Detects fieldnotes that reference themselves in trailing refs.
-
-- **Severity**: WARN
-
-### Phase 3: Bare trailing refs
-
-Every trailing ref **must** have a `::` annotation explaining the contrastive insight. Bare `[[uid]]` trailing refs without annotations are prohibited — if a connection doesn't warrant an explanation, it belongs in the body text as an inline wiki-link, not as a trailing ref.
-
-- **Severity**: ERROR (fails build)
-
-### Phase 4: Parent hierarchy (`validateParentSegments`)
-
-For hierarchical addresses (containing `//`), checks that every **full parent path** has its own dedicated fieldnote. Deduplicated — each missing parent is reported once with a child count.
-
-- `CPU//mutex//GIL` → checks `CPU` exists, then `CPU//mutex` exists
-- **Severity**: WARN
-- **Example**: `LAPTOP//UI.md` exists but no `LAPTOP.md` → warns once
-
-### Phase 5: Circular references (`detectCircularRefs`)
-
-DFS-based cycle detection on the reference graph. Cycles are deduplicated by node-set so each unique cycle is reported once.
-
-- **Severity**: WARN
-- **Default**: OFF — knowledge graphs naturally have bidirectional references. Enable in `compiler.config.js` for structural analysis.
-
-### Phase 6: Segment collisions (`detectSegmentCollisions`)
-
-Detects when the same segment name appears in different address hierarchies, which may indicate accidental duplication of a concept.
-
-**How it works:**
-1. Builds a registry of all non-root segments (lowercased) with their parent paths
-2. Flags segments that appear under different parents (excluding hierarchical containment)
-3. Also checks segment names against aliases and alias-vs-alias conflicts
-4. Classifies each collision into severity tiers:
-
-| Tier | Condition | Example |
-|---|---|---|
-| **HIGH** | Segment is a leaf in 2+ addresses | `CPU//cache` and `networking//cache` — both notes are "about" cache |
-| **MED** | Segment is leaf in one, middle/root in another | `UI//GUI` (root) and `LAPTOP//UI` (leaf) |
-| **LOW** | Segment is a middle segment in all addresses | `x//core//a` and `y//core//b` — organizational overlap |
-
-**Suppression with `distinct`:** To mark two notes as intentionally different despite sharing a segment, add `distinct: ["other//address"]` to either note's frontmatter. Bilateral — only one note needs the annotation. Stale `distinct` entries (pointing to deleted notes) are flagged as warnings.
-
-**Alias integration:** If a segment name matches an alias on a different note, it's flagged as HIGH. If two notes share the same alias, also HIGH.
-
-**Exclusion list:** Generic organizational segment names (`overview`, `intro`, `basics`, `config`, etc.) are excluded from collision detection. Configurable in `compiler.config.js` via `segmentCollisionExclusions`.
-
-**Superseded addresses** are excluded from collision analysis.
-
-### Phase 7: Orphan notes (`detectOrphans`)
-
-Detects notes with no incoming and no outgoing references — completely disconnected from the graph.
-
-- **Severity**: INFO
+For the full 7-phase breakdown (what each phase catches, severity, error codes, example output), see **[fieldnotes/README.md — Build-Time Validation](../src/data/pages/fieldnotes/README.md#build-time-validation)**.
 
 ### Configuration
 
@@ -309,11 +246,10 @@ After all prompts (or on quit), the resolver prints:
 
 ### Implementation details
 
-- **Frontmatter modification**: uses regex-based editing (not `gray-matter.stringify`) to preserve quoting style. Handles: no `distinct` field (inserts before `---`), inline array (appends), already-present entries (skips).
-- **Stub note creation**: follows the `addressToFilename()` convention from `rename-address.js` (`//` → `_`, spaces → `-`).
-- **Non-TTY guard**: if `!process.stdin.isTTY`, skips interactive prompts and prints a hint to use `npm run content:fix`.
-- **Quit / Ctrl+C**: graceful — changes already written to disk are preserved, pending merges still print in the summary.
-- **File lookup**: tries convention-based filename first, falls back to scanning frontmatter `address:` fields.
+- **Frontmatter modification**: regex-based editing (preserves quoting style). Handles missing `distinct` field, inline arrays, and already-present entries.
+- **Stub note creation**: generates a random 8-char UID, creates `{uid}.md` with `uid`, `address`, `name`, `date` frontmatter.
+- **Non-TTY guard**: skips prompts and prints a hint to use `npm run content:fix`.
+- **Quit / Ctrl+C**: graceful — changes already on disk are preserved, pending merges still print.
 
 ---
 
@@ -331,12 +267,12 @@ node scripts/check-references.js
 |---|---|---|
 | 1 | **Orphans** | Notes with no incoming or outgoing references |
 | 2 | **Weak parents** | Address segments without dedicated notes |
-| 3 | **One-way trailing refs** | A→B but B doesn't trail-ref back |
+| 3 | **Duplicate trailing refs** | A→B and B→A (redundant; trailing refs should exist on only ONE side) |
 | 4 | **Redundant trailing refs** | `[[ref]]` in both body and trailing section |
 | 5 | **Potential duplicates** | Addresses with >80% Levenshtein similarity |
 | 6 | **Segment collisions** | Same segment name at different hierarchy paths (same algorithm as Phase 5 of the build validator) |
 
-Checks 1-5 are informational. Check 6 uses the same collision detection and tier classification as the build validator, including `distinct` suppression and supersedes exclusion.
+Checks 1-5 are informational. Check 6 uses the same collision detection and tier classification as Phase 6 of the build validator, including `distinct` suppression and supersedes exclusion.
 
 ---
 
@@ -370,6 +306,35 @@ The script resolves addresses using a four-step fallback chain:
 4. **Last segment** — `"core"` matches `CPU//core` (warns if ambiguous)
 
 Ambiguous matches produce a warning listing all candidates — no silent guess.
+
+---
+
+## `preflight.js`
+
+Pre-creation briefing tool. Run before creating or enriching fieldnotes to understand the current state of relevant notes at a glance.
+
+```bash
+# Brief existing notes (fuzzy address resolution)
+node scripts/preflight.js "MCU" "NPU" "sensor"
+
+# Collision check for proposed new addresses
+node scripts/preflight.js --new "sensor//lidar" "NVIDIA//CUDA"
+
+# Mixed — brief existing + collision check for new
+node scripts/preflight.js "MCU" "sensor" --new "sensor//lidar"
+```
+
+### Output sections
+
+| Section | What it shows |
+|---|---|
+| **Body** | Full note content (excluding trailing ref section) |
+| **Trailing refs** | Outgoing and incoming refs, with `:: annotations`. Flags bilateral duplicates with a warning. |
+| **Interaction candidates** | Body lines containing contrast language ("vs", "unlike", "contrast with", "differs from", etc.) that may belong as trailing ref interactions instead |
+| **Cross-refs** | For all queried notes, shows trailing ref and mention status between every pair |
+| **Collision check** (`--new`) | Exact match, last-segment collision, and missing parent checks for proposed addresses |
+
+Uses the same four-step fuzzy address resolution as `analyze-pairs.js` (exact, case-insensitive, alias, last-segment).
 
 ---
 

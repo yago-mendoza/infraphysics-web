@@ -38,6 +38,7 @@ infraphysics-web/
     rename-address.js         # Rename fieldnote address (frontmatter only — refs use stable UIDs)
     check-references.js       # Detect orphans, weak parents, stale refs
     analyze-pairs.js          # Relationship analyzer for fieldnote pairs
+    preflight.js              # Pre-creation briefing (content, refs, collisions)
     move-hierarchy.js         # Cascading rename for address + all descendants
     README.md                 # Build pipeline docs, cache format
   docs/
@@ -161,7 +162,7 @@ The build pipeline includes a 7-phase integrity checker that catches reference e
 
 When the build reports fixable issues (missing parents, segment collisions), **`npm run content:fix`** runs the same build but launches an interactive resolver: it walks you through each issue, creates stub notes, adds `distinct` entries, and collects merge instructions — all from the terminal. Pending merges are printed at the end as a ready-to-copy Claude instruction block. Full details: **[src/data/pages/fieldnotes/README.md](src/data/pages/fieldnotes/README.md#interactive-mode)**
 
-There is also an optional deep audit script (`node scripts/check-references.js`) that adds one-way trailing ref analysis, redundant ref detection, and fuzzy duplicate detection. Full validation details: **[scripts/README.md](scripts/README.md)**
+There is also an optional deep audit script (`node scripts/check-references.js`) that adds duplicate trailing ref detection, redundant ref detection, and fuzzy duplicate detection. Full validation details: **[scripts/README.md](scripts/README.md)**
 
 ---
 

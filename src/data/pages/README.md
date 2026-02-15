@@ -219,17 +219,9 @@ Each file contains:
 
 ### Wiki-linking strategy
 
-**Pipe text = readability hint by default.** Write `[[uid|name]]` so the raw markdown is readable. The build compares the pipe text against the note's current `name` — if they match, it uses the current name (so renames propagate automatically). You never need to update hint text after a rename; the build always resolves to the latest name.
+Write `[[uid|name]]` so the raw markdown is readable. If the pipe text matches the note's current `name`, renames propagate automatically (the build always resolves to the latest name). Use custom display text only when it intentionally differs from the note's name: `[[YwfNaR4R|preference-based methods]]` when the note is named "DPO".
 
-**Custom display text** kicks in only when pipe text differs from the note's name. For example, if a note is called "DPO" but in context you're talking about "preference-based methods", write `[[YwfNaR4R|preference-based methods]]`. The build sees that "preference-based methods" ≠ "DPO" and keeps it as an intentional override.
-
-```
-[[YwfNaR4R|DPO]]                    → hint (matches name) → renders current name
-[[YwfNaR4R|preference-based methods]] → override (differs) → renders "preference-based methods"
-[[YwfNaR4R]]                         → bare → renders current name (same as hint)
-```
-
-When authoring a new fieldnote, cross-reference its body against all existing note names and aliases — but also look for **non-literal connections** where the text discusses a concept without using its exact name. A mention of "the reward signal" might link to `reward model`; "silicon" might link to `semiconductor`. AI assistants should suggest these semantic links when helping draft fieldnotes.
+When authoring, also look for **non-literal connections** (e.g. "the reward signal" ⟶ link to `reward model`; "silicon" ⟶ `semiconductor`). AI assistants should suggest these semantic links.
 
 ### Trailing refs: contrastive interactions only
 
@@ -274,8 +266,6 @@ The `address` and `name` fields follow capitalization rules based on what the te
 - Use **hyphens** only when the hyphen is part of the established name (`Cortex-A`, `Pre-training`, `dot-claude`) or for compound programming terms (`post-processor`, `pre-processor`)
 - Avoid gratuitous "AI" — only uppercase `AI` in product names (`Scale AI`) or established technique names (`constitutional AI`). Don't append it as branding.
 
-**ID generation:** Each note's `uid` serves as its stable ID for URLs, filenames, and references. UIDs are 8-character random alphanumeric strings assigned at creation time and never change.
-
 **Parent requirement:** If you create `CPU//ALU`, the build validator expects a block for `CPU` to exist as well (it issues a warning if missing). This keeps the hierarchy navigable.
 
 **Address depth:** Each `//` step should be a small conceptual jump. Deeper nesting with short steps is always better than shallow nesting with big jumps. The leaf is the actual concept; everything above is the path to reach it. Any node can act as a container if it groups sub-concepts. Abbreviate when possible (`L4` not `transport layer`, `crypto` not `cryptography`, `fs` not `file system`). Examples of good depth: `cybersecurity//crypto//symmetric//AES`, `electronics//signals//analog//filter//low-pass`, `CPU//pipeline//hazard//branch prediction`. Anti-pattern: `steganography` alone at top level (should be `cybersecurity//data hiding//steganography`).
@@ -286,12 +276,13 @@ The `address` and `name` fields follow capitalization rules based on what the te
 - **Use long arrows only.** Never use `→` (U+2192). Always use `⟶` (U+27F6) for arrows in fieldnote content.
 - **No blank line after frontmatter.** The first body line starts immediately after the closing `---` (no empty line between them).
 - **No invented examples.** Only include examples if the user provided them as input content. Do not fabricate illustrative examples.
+- **No manual back-references.** Never write lines like "Referenced from [[uid|name]]" in the body. The web UI calculates and displays back-references automatically.
 
 ### References, connections, and mentions
 
 The runtime distinguishes three relationship types:
 
-1. **Connections** — Trailing refs create intentional, bilateral relationships. If A trail-refs B, both A and B show each other in their "Connections" section. Annotations are preserved.
+1. **Connections** — Trailing refs create intentional, bilateral relationships. If A trail-refs B, both A and B show each other in their "Connections" section. Annotations are preserved. **Write the trailing ref on only ONE of the two notes.** The UI automatically crosses it to the other side. Never duplicate a trailing ref on both notes.
 2. **Mentions** — Body-text wiki-links (excluding trailing refs) create one-way "mentioned in" backlinks. If A mentions B in its body text, B shows A in a collapsible "Mentioned in" section.
 3. **Neighborhood** — Structural context (parent, siblings, children) derived from the address hierarchy. Shown in the right panel on concept pages.
 
@@ -309,20 +300,19 @@ It should not accumulate. After a full rename pass, no stale references remain a
 
 ### Validation
 
-The build runs a 6-phase integrity check (see [scripts/README.md](../../scripts/README.md) for full details):
+The build runs a 7-phase integrity check automatically. Full phase details and error codes: **[fieldnotes/README.md](fieldnotes/README.md#build-time-validation)**.
 
 | # | Check | Severity |
 |---|---|---|
 | 1 | `[[refs]]` and trailing refs resolve to existing blocks; wiki-links in posts resolve to fieldnotes | ERROR |
 | 2 | Notes don't reference themselves | WARN |
-| 3 | Full parent paths exist (`CPU//mutex` not just `mutex`) | WARN |
-| 4 | Circular reference detection (opt-in, off by default) | WARN |
-| 5 | **Segment collisions** — same segment at different paths, with tier classification (HIGH/MED/LOW) and `distinct` suppression | WARN |
-| 6 | Orphan notes (no connections) | INFO |
+| 3 | Trailing refs without `::` annotation | ERROR |
+| 4 | Full parent paths exist (`CPU//mutex` not just `mutex`) | WARN |
+| 5 | Circular reference detection (opt-in, off by default) | WARN |
+| 6 | **Segment collisions** — same segment at different paths, with tier classification (HIGH/MED/LOW) and `distinct` suppression | WARN |
+| 7 | Orphan notes (no connections) | INFO |
 
-Additionally: duplicate address IDs (two notes normalizing to the same slug) are caught as errors.
-
-For deeper audit (one-way trailing refs, redundant refs, fuzzy duplicates, segment collisions), run `node scripts/check-references.js`.
+For deeper audit (duplicate trailing refs, redundant refs, fuzzy duplicates, segment collisions), run `node scripts/check-references.js`.
 
 Errors produce exit code 1. Warnings and info are logged but do not block the build.
 

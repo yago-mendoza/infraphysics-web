@@ -121,6 +121,7 @@ FILES=(
   "scripts/rename-address.js"
   "scripts/check-references.js"
   "scripts/analyze-pairs.js"
+  "scripts/preflight.js"
   "scripts/move-hierarchy.js"
   "scripts/README.md"
   "src/data/pages/fieldnotes/README.md"

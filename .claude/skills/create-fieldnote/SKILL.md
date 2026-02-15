@@ -37,12 +37,11 @@ Read the entire input holistically. Before doing anything, think:
 5. **Relationships**:
    - **Cross-links**: which notes (new or existing) will be `[[uid|name]]`-referenced in body text
    - **Interactions**: ONLY contrastive/surprising relationships. Every interaction needs a `::` annotation. If the relationship is just "related" or "part of the same field" — that's a cross-link, NOT an interaction
-   - **Bidirectional updates**: if a new note interacts with an existing note, the existing note may need a trailing ref added too
+   - **One-sided trailing refs**: write each trailing ref on only ONE note. The UI crosses it automatically. Before adding, check the target note for an existing trailing ref pointing back.
 
-6. **Dedup and collision check** (integrated into planning, not a separate phase):
-   - For each proposed new note, search: exact address match, case-insensitive match, last-segment match, alias match
-   - If a collision exists, evaluate: same concept (→ enrich existing) or different concept (→ add `distinct`)
-   - Use `node scripts/check-references.js` if the index alone isn't enough
+6. **Dedup, collision check, and preflight** (integrated into planning, not a separate phase):
+   - Run `node scripts/preflight.js "addr1" "addr2" ... --new "new1" "new2"` to get a full briefing: existing note content, trailing refs with bilateral warnings, interaction candidates, cross-ref matrix, and collision checks for new addresses
+   - If a collision exists, evaluate: same concept (⟶ enrich existing) or different concept (⟶ add `distinct`)
 
 Present the full plan. Wait for user approval. The user may:
 - Approve as-is
@@ -62,16 +61,14 @@ For each approved new note:
 2. **Write `{uid}.md`** with:
    - Frontmatter: `uid`, `address`, `name`, `date` (today's date). Add `distinct` if suppressing a segment collision.
    - Body: content from the user's input. Preserve the user's voice and structure — bullets, prose, definitions, whatever fits. Don't force bullet points if the content is naturally prose.
-   - **No blank line** between frontmatter closing `---` and the first body line.
-   - **No em dashes or en dashes** (`—`, `–`). Use parentheses, semicolons, periods, or commas instead.
-   - **Use long arrows only.** Never use `→` (U+2192). Always use `⟶` (U+27F6).
-   - **No invented examples.** Only include examples if the user provided them as input content.
+   - Follow all **writing style rules** in [pages/README.md](src/data/pages/README.md#writing-style) (no em dashes, long arrows only, no blank line after frontmatter, no invented examples, no manual back-references).
    - Wiki-links (`[[uid|name]]`): wrap terms that reference other fieldnotes. Match broadly:
      - Literal matches (term = note name)
      - Semantic matches (text says "gradient descent methods" → link to note "SGD" or "optimizer")
      - Contextual matches (text says "the model" in an ML context → link to note "LLM" if appropriate)
      - Use `|name` as hint when matching current name. Use `|custom text` only when genuinely different.
    - Trailing refs: ONLY for contrastive/surprising insights. Every ref has `:: annotation`. Tight `---` separator (no blank lines) between body and interactions.
+   - **Write each trailing ref on only ONE note.** The UI automatically crosses it to both sides. Never duplicate a trailing ref on both notes. Before adding a trailing ref, check whether the target note already has a trailing ref pointing back; if so, do not add another.
 
 ## Phase 2: Enrich existing notes
 
@@ -111,8 +108,8 @@ If creating the new notes reveals that existing notes would be better placed els
 - **Dedup is non-negotiable.** Check the index before proposing any new note.
 - **User's content is source of truth.** Don't invent information not in the input. You may restructure, link, and organize — but not fabricate.
 - **Interactions are special.** Contrastive, surprising, non-obvious connections only. "Related" is not an interaction — it's a wiki-link.
-- **Bidirectional awareness.** When note A interacts with note B, both notes may need trailing refs.
-- **Flexible input.** The input might be: a single concept name (→ create minimal note), bullet points (→ structure as-is), a wall of text (→ decompose into multiple notes), a question (→ clarify before proceeding), or a mix of all.
+- **One-sided trailing refs.** Write each trailing ref on only ONE note. The UI crosses it automatically.
+- **Flexible input.** The input might be: a single concept name (⟶ create minimal note), bullet points (⟶ structure as-is), a wall of text (⟶ decompose into multiple notes), a question (⟶ clarify before proceeding), or a mix of all.
 - **Ask when unsure.** Address placement, concept boundaries, interaction significance — when in doubt, ask the user.
 
 ## Address depth philosophy
