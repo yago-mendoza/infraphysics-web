@@ -63,8 +63,8 @@ Content inside blockquotes supports definition lists (`- term:: desc`), alphabet
 | `[[projects/slug\|Display]]` | Cross-doc link | `<a class="doc-ref doc-ref-projects" href="/lab/projects/slug">projects/Display</a>` |
 | `[[threads/slug\|Display]]` | Cross-doc link | `<a class="doc-ref doc-ref-threads" href="/blog/threads/slug">threads/Display</a>` |
 | `[[bits2bricks/slug\|Display]]` | Cross-doc link | `<a class="doc-ref doc-ref-bits2bricks" href="/blog/bits2bricks/slug">bits2bricks/Display</a>` |
-| `[[address]]` | Wiki-ref | `<a class="wiki-ref" data-address="address">last-segment</a>` |
-| `[[address\|Custom]]` | Wiki-ref | `<a class="wiki-ref" data-address="address">Custom</a>` |
+| `[[uid]]` | Wiki-ref | `<a class="wiki-ref" data-uid="uid">name</a>` |
+| `[[uid\|Custom]]` | Wiki-ref | `<a class="wiki-ref" data-uid="uid">Custom</a>` |
 
 Cross-doc links **require** display text (`|Display`). Missing display text produces a build error. Each cross-doc category has its own SVG icon. All link processing is wrapped in `processOutsideCode` to skip `<pre>`/`<code>` blocks.
 
@@ -73,8 +73,8 @@ Cross-doc links **require** display text (`|Display`). Missing display text prod
 | Output | Location | Contents |
 |---|---|---|
 | Regular posts | `src/data/posts.generated.json` | Projects, threads, bits2bricks with full HTML content. No fieldnotes. |
-| Fieldnotes index | `src/data/fieldnotes-index.generated.json` | Metadata array (id, title, address, addressParts, references, trailingRefs, searchText, description). No `content` field. |
-| Fieldnote content | `public/fieldnotes/{id}.json` | `{ "content": "<html>" }` per note. Served as static assets. Stale files auto-cleaned. |
+| Fieldnotes index | `src/data/fieldnotes-index.generated.json` | Metadata array (id/uid, name, address, addressParts, references, trailingRefs, searchText, description). No `content` field. |
+| Fieldnote content | `public/fieldnotes/{uid}.json` | `{ "content": "<html>" }` per note. Served as static assets. Stale files auto-cleaned. |
 | Categories | `src/data/categories.generated.json` | Category config from `_category.yaml` files. |
 | OG manifest | `public/og-manifest.json` | URL path → OG metadata (title, description, thumbnail, category) for all articles + fieldnotes. Consumed by the Cloudflare Pages Function for social previews. |
 
@@ -82,8 +82,9 @@ Cross-doc links **require** display text (`|Display`). Missing display text prod
 
 Each fieldnote `.md` file produces:
 
-- **id**: derived from address — `//` → `--`, `/` → `-`, lowercased (e.g. `CPU//ALU` → `cpu--alu`)
-- **displayTitle**: last segment of address
+- **id**: the `uid` from frontmatter (8-char alphanumeric, e.g. `OkJJJyxX`)
+- **name**: from frontmatter (fallback: last address segment)
+- **displayTitle**: the `name` field
 - **description**: first non-heading, non-image text line (wiki-refs stripped to plain text)
 - **references**: all `[[...]]` addresses found in body
 - **trailingRefs**: `[[...]]` links on the last contiguous lines (used for "see also" display)
@@ -134,6 +135,10 @@ The build collects errors from two sources and fails if any exist:
 
 Non-zero errors → `process.exit(1)`. Warnings (e.g. missing parent segments) do NOT fail the build.
 
+### Interactive mode (`--interactive`)
+
+When run with `--interactive` (or via `npm run content:fix`), the build passes fixable issues to `resolve-issues.js` after validation. If the resolver modifies any files, the build exits cleanly without writing outputs (stale data in memory) and prints a reminder to rebuild. See `resolve-issues.js` below.
+
 ---
 
 ## `compiler.config.js`
@@ -150,7 +155,6 @@ Options passed to `marked.setOptions()`:
 #### `wikiLinks`
 - `enabled`: master toggle for all `[[...]]` link processing
 - `pattern`: regex for matching wiki-links (`/\[\[([^\]]+)\]\]/g`)
-- `toHtml(address)`: converts address to `<a class="wiki-ref" data-address="...">` with last segment as display text
 
 #### `imagePositions`
 - `positions`: allowed position keywords (`right`, `left`, `center`, `full`)
@@ -185,14 +189,20 @@ Boolean flags controlling which validation checks run:
 
 ## `validate-fieldnotes.js`
 
-Six-phase content integrity checker. Called automatically at the end of every build. Errors fail the build; warnings and info are logged but allowed. Output uses colored severity labels:
+Seven-phase content integrity checker. Called automatically at the end of every build. Errors fail the build; warnings and info are logged but allowed.
+
+Returns `{ errors, warnings, infos, issues }` where `issues` is a structured array of all detected problems. Each issue has `{ code, severity, promptable, ...context }`. The `issues` array is consumed by `resolve-issues.js` for interactive fixing.
+
+Output uses colored severity labels with bracketed error codes:
 
 ![Validation output in terminal](../docs/validate-fieldnotes-term-err-view.jpg)
 
-- `ERROR` (red) — fails the build
-- `WARN` (yellow) — logged, build continues
-- `HIGH` / `MED` / `LOW` (red/yellow/dim) — segment collision tiers, treated as warnings
-- `INFO` (cyan) — informational, build continues
+- `ERROR [BROKEN_REF]` / `[BROKEN_WIKILINK]` / `[BARE_TRAILING_REF]` (red) — fails the build
+- `WARN [MISSING_PARENT]` / `[SELF_REF]` / `[STALE_DISTINCT]` / `[CIRCULAR_REF]` (yellow) — logged, build continues
+- `HIGH` / `MED` / `LOW [SEGMENT_COLLISION]` / `[ALIAS_COLLISION]` / `[ALIAS_ALIAS_COLLISION]` (red/yellow/dim) — collision tiers, treated as warnings
+- `INFO [ORPHAN_NOTE]` (cyan) — informational, build continues
+
+A legend of active error codes is printed after the issues. If fixable issues exist, a hint is shown: `(N fixable — run npm run content:fix)`.
 
 ### Phase 1: Reference integrity (`validateFieldnoteRefs`, `validateRegularPostWikiLinks`)
 
@@ -208,7 +218,13 @@ Detects fieldnotes that reference themselves in trailing refs.
 
 - **Severity**: WARN
 
-### Phase 3: Parent hierarchy (`validateParentSegments`)
+### Phase 3: Bare trailing refs
+
+Every trailing ref **must** have a `::` annotation explaining the contrastive insight. Bare `[[uid]]` trailing refs without annotations are prohibited — if a connection doesn't warrant an explanation, it belongs in the body text as an inline wiki-link, not as a trailing ref.
+
+- **Severity**: ERROR (fails build)
+
+### Phase 4: Parent hierarchy (`validateParentSegments`)
 
 For hierarchical addresses (containing `//`), checks that every **full parent path** has its own dedicated fieldnote. Deduplicated — each missing parent is reported once with a child count.
 
@@ -216,14 +232,14 @@ For hierarchical addresses (containing `//`), checks that every **full parent pa
 - **Severity**: WARN
 - **Example**: `LAPTOP//UI.md` exists but no `LAPTOP.md` → warns once
 
-### Phase 4: Circular references (`detectCircularRefs`)
+### Phase 5: Circular references (`detectCircularRefs`)
 
 DFS-based cycle detection on the reference graph. Cycles are deduplicated by node-set so each unique cycle is reported once.
 
 - **Severity**: WARN
 - **Default**: OFF — knowledge graphs naturally have bidirectional references. Enable in `compiler.config.js` for structural analysis.
 
-### Phase 5: Segment collisions (`detectSegmentCollisions`)
+### Phase 6: Segment collisions (`detectSegmentCollisions`)
 
 Detects when the same segment name appears in different address hierarchies, which may indicate accidental duplication of a concept.
 
@@ -247,7 +263,7 @@ Detects when the same segment name appears in different address hierarchies, whi
 
 **Superseded addresses** are excluded from collision analysis.
 
-### Phase 6: Orphan notes (`detectOrphans`)
+### Phase 7: Orphan notes (`detectOrphans`)
 
 Detects notes with no incoming and no outgoing references — completely disconnected from the graph.
 
@@ -266,6 +282,38 @@ All validation flags live in `compiler.config.js` under `validation`:
 | `detectSegmentCollisions` | `true` | Shared segments across different hierarchies |
 | `detectOrphans` | `true` | Notes with no connections |
 | `segmentCollisionExclusions` | `[...]` | Segment names too generic to flag |
+
+---
+
+## `resolve-issues.js`
+
+Interactive issue resolver. Called by `build-content.js` when `--interactive` is set (via `npm run content:fix`). Not run standalone.
+
+Exports `resolveIssues(issues)` which consumes the structured `issues[]` array from `validateFieldnotes()` and prompts the user to fix each promptable issue.
+
+### Supported flows
+
+Every prompt also accepts **(q)** to quit early — changes already written are kept, remaining issues are skipped.
+
+| Issue code | Prompt options | What it does |
+|---|---|---|
+| `SEGMENT_COLLISION` | **(d)** different, **(s)** same, **(k)** skip | **d**: adds `distinct: [...]` to one note's frontmatter (picks deepest note as target). **s**: queues merge instructions for the end-of-session summary. **k**: no action. |
+| `ALIAS_COLLISION` / `ALIAS_ALIAS_COLLISION` | **(k)** skip | Informational — manual resolution required. |
+| `MISSING_PARENT` | **(c)** create, **(k)** skip | **c**: creates stub `.md` with `address` + `date` frontmatter. **k**: no action. |
+
+### End-of-session summary
+
+After all prompts (or on quit), the resolver prints:
+1. **Files modified count** + rebuild reminder
+2. **Pending merges block** — if any `(s)` "same concept" responses were given, all merge instructions are collected into a bordered, copyable text block with step-by-step commands ready to paste into Claude or run manually.
+
+### Implementation details
+
+- **Frontmatter modification**: uses regex-based editing (not `gray-matter.stringify`) to preserve quoting style. Handles: no `distinct` field (inserts before `---`), inline array (appends), already-present entries (skips).
+- **Stub note creation**: follows the `addressToFilename()` convention from `rename-address.js` (`//` → `_`, spaces → `-`).
+- **Non-TTY guard**: if `!process.stdin.isTTY`, skips interactive prompts and prints a hint to use `npm run content:fix`.
+- **Quit / Ctrl+C**: graceful — changes already written to disk are preserved, pending merges still print in the summary.
+- **File lookup**: tries convention-based filename first, falls back to scanning frontmatter `address:` fields.
 
 ---
 
@@ -337,7 +385,7 @@ node scripts/move-hierarchy.js "chip" "component//chip"
 node scripts/move-hierarchy.js "chip" "component//chip" --apply
 ```
 
-### What it does (6 steps)
+### What it does (5 steps)
 
 | # | Step | What it does |
 |---|---|---|
@@ -345,8 +393,7 @@ node scripts/move-hierarchy.js "chip" "component//chip" --apply
 | 2 | Validate | Checks: root exists, no target filename/ID collisions, old ≠ new |
 | 3 | Update address fields | For each moved note, updates `address:` in frontmatter |
 | 4 | Update frontmatter refs | Replaces old addresses in `distinct:` and `supersedes:` arrays across ALL notes |
-| 5 | Update body refs | Replaces `[[oldAddr]]` and `[[oldAddr \| display]]` across ALL `.md` files |
-| 6 | Rename files | Renames `.md` files to match new addresses (after all content updates) |
+| 5 | Rename files | Renames `.md` files to match new addresses (after all content updates) |
 
 Longer addresses are processed first in steps 4-5 to prevent partial matches.
 
@@ -371,4 +418,5 @@ Longer addresses are processed first in steps 4-5 to prevent partial matches.
 |---|---|---|
 | **Scope** | Single note | Root + all descendants |
 | **Children** | Not touched — must rename individually | Automatically included |
+| **Updates** | Frontmatter only (address, distinct, supersedes) | Frontmatter only (address, distinct, supersedes) |
 | **Use case** | Leaf note rename, alias change | Hierarchy restructuring, moving branches |

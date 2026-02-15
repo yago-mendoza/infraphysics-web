@@ -23,8 +23,8 @@ For frontmatter schemas, content types, editorial rules, and the compilation pip
 | Warning with label | `{bkqt/warning\|Custom}` ... `{/bkqt}` |
 | Quote (full-width) | `{bkqt/quote\|Author}` ... `{/bkqt}` |
 | Pullquote (half-width) | `{bkqt/pullquote}` ... `{/bkqt}` |
-| Wiki-link | `[[concept]]` or `[[parent//child]]` |
-| Wiki-link (custom text) | `[[address\|display text]]` |
+| Wiki-link | `[[uid]]` |
+| Wiki-link (custom text) | `[[uid\|display text]]` |
 | Cross-doc link | `[[threads/slug\|Display Text]]` |
 | External link | `[[https://url\|Display Text]]` |
 | Heading anchor | `[text](#heading-slug)` |
@@ -312,13 +312,13 @@ The system supports three kinds of links, all using double-bracket syntax `[[...
 
 ### Wiki-links (Second Brain references)
 
-Write `[[address]]` to link to a fieldnote concept. The compiler generates an element with a `data-address` attribute. At runtime, `WikiContent.tsx` resolves it against the fieldnotes dataset.
+Write `[[uid]]` to link to a fieldnote concept, where `uid` is the note's stable 8-character identifier. The compiler generates an element with a `data-uid` attribute. At runtime, `WikiContent.tsx` resolves it against the fieldnotes dataset.
 
-- `[[entropy]]` links to the "entropy" fieldnote and displays "entropy".
-- `[[CPU//ALU]]` links to the "CPU//ALU" fieldnote and displays "ALU" (the last segment).
-- `[[CPU//ALU|the arithmetic unit]]` links to "CPU//ALU" but displays "the arithmetic unit".
+- `[[OkJJJyxX]]` links to the "CPU" fieldnote and displays "CPU" (the note's `name`).
+- `[[egoxqpmC]]` links to the "ALU" fieldnote and displays "ALU".
+- `[[egoxqpmC|the arithmetic unit]]` links to "ALU" but displays "the arithmetic unit".
 
-**Display text rule:** Without a pipe, the last `//`-separated segment becomes the visible text. With a pipe, you control it explicitly.
+**Display text rule:** Without a pipe, the note's `name` field becomes the visible text. With a pipe, you control it explicitly.
 
 **Resolution:** If the address maps to an existing fieldnote, the link becomes clickable with a violet dashed underline and a diamond icon (`◇`). Hovering shows a preview card with the concept's title, address path, and description. If unresolved, the link is greyed out with a question mark (`?`) and is not clickable.
 
@@ -639,7 +639,7 @@ This means:
 - `{^:2}` in running text becomes a superscript. Inside backticks, it stays literal.
 - `{shout:text}` in running text becomes a centered callout. Inside backticks, it stays literal.
 - `_text_` in running text becomes underlined. Inside backticks, it stays literal.
-- `[[address]]` in running text becomes a wiki-link. Inside `<pre>` or `<code>` blocks in the final HTML, it is also skipped by the link processor.
+- `[[uid]]` in running text becomes a wiki-link. Inside `<pre>` or `<code>` blocks in the final HTML, it is also skipped by the link processor.
 
 If you ever need to show custom syntax literally without it being processed, put it in backticks.
 

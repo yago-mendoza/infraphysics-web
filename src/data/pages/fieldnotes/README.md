@@ -18,7 +18,7 @@ Developer reference for managing the fieldnotes knowledge graph. This covers the
 
 ## Why This File Matters
 
-Fieldnotes form a **bidirectional graph**. Every `[[wiki-link]]` creates a relationship — in the body, in trailing refs, and in other posts that reference fieldnotes. Renaming, deleting, or restructuring a note has cascading effects across the entire graph. **Do not edit addresses, filenames, or references by hand.** Use the scripts below — they handle all the cross-cutting updates atomically.
+Fieldnotes form a **bidirectional graph**. Every `[[wiki-link]]` creates a relationship — in the body, in trailing refs, and in other posts that reference fieldnotes. References now use **stable UIDs** (`[[uid]]`), so renaming an address only changes ONE file's frontmatter. Deletion still breaks references across the graph. **Do not edit addresses or filenames by hand.** Use the scripts below — they handle validation and file operations correctly.
 
 The build pipeline validates the graph on every run. If you break a reference, the build will tell you exactly what's wrong and where. The workflow is: make changes → run build → read errors → fix → repeat.
 
@@ -28,108 +28,26 @@ The build pipeline validates the graph on every run. If you break a reference, t
 
 ## Available Scripts
 
-All scripts live in `scripts/`. They are **not** part of the fieldnotes content — they are build tools that operate on it.
+All scripts live in `scripts/`. For full parameter docs, output formats, and implementation details, see **[scripts/README.md](../../../scripts/README.md)**. This section covers only the workflow essentials.
 
-### `rename-address.js` — Rename a fieldnote address
+- **`rename-address.js`** — Renames a single fieldnote address. Does NOT cascade to children. **Always dry-run first** (`node scripts/rename-address.js "old" "new"`), then `--apply`.
+- **`move-hierarchy.js`** — Cascading rename: moves a note and all its descendants to a new address prefix. **Always dry-run first**, then `--apply`. Use this instead of `rename-address.js` when the note has children.
+- **`check-references.js`** — Deep integrity audit (orphans, weak parents, one-way trailing refs, redundant refs, fuzzy duplicates, segment collisions). Not part of the build — run manually after bulk changes.
+- **`analyze-pairs.js`** — Relationship analyzer. Answers "how are A and B connected?" via structural, trailing ref, and body mention checks. Supports fuzzy address resolution.
+- **`validate-fieldnotes.js`** — Build-time validator. Called automatically by every build. See [Build-Time Validation](#build-time-validation) below.
+- **`resolve-issues.js`** — Interactive issue resolver. Called via `npm run content:fix`. Prompts to fix segment collisions and missing parents. See [Interactive Mode](#interactive-mode) below.
 
-Renames an address and updates every reference across the entire `src/data/pages/` tree.
-
-```bash
-# Dry-run (default) — shows what would change, writes nothing
-node scripts/rename-address.js "old address" "new address"
-
-# Apply — executes all changes
-node scripts/rename-address.js "old address" "new address" --apply
-```
-
-**What it does (5 steps):**
-1. Finds the source `.md` file matching `address: "old address"`
-2. Updates the `address:` field in frontmatter
-3. Renames the file to match the new address (filename convention: `//` → `_`, `/` → `-`, spaces → `-`)
-4. Scans ALL `.md` files under `src/data/pages/` for `[[old address]]` and `[[old address | annotation]]` references → replaces with the new address
-5. Reports every change: files touched, reference counts
-
-> **The script renames ONE exact address. It does NOT cascade to children.** If `node` has children like `node//child`, renaming `node` → `X//node` will NOT touch `node//child`. The child's address, filename, and every `[[node//child]]` reference across the codebase remain unchanged — leaving them orphaned from the new parent path. Each child must be renamed in a separate script call. See [Restructuring a hierarchy](#restructuring-a-hierarchy).
-
-**Always dry-run first.** Review the output before passing `--apply`.
-
-**After applying:** Run `npm run build` to verify no broken references remain.
-
-### `check-references.js` — Deep integrity audit
-
-Six-check audit that catches issues the build validator doesn't. Run manually — not part of the build pipeline.
+**Build commands** (all run the full validation pipeline):
 
 ```bash
-node scripts/check-references.js
-```
-
-| # | Check | What it finds |
-|---|---|---|
-| 1 | Orphans | Notes with zero incoming and zero outgoing references |
-| 2 | Weak parents | Address segments (e.g. `CPU` in `CPU//ALU`) with no dedicated note |
-| 3 | One-way trailing refs | A trails B, but B doesn't trail back to A |
-| 4 | Redundant trailing refs | Same `[[ref]]` appears in both body text and trailing section |
-| 5 | Potential duplicates | Address pairs with >80% Levenshtein similarity |
-| 6 | Segment collisions | Same segment name at different hierarchy paths (HIGH/MED/LOW tiers) |
-
-Checks 3-5 are **exclusive to this script** — the build validator does not perform them. This is the tool to run after bulk creation or major restructuring.
-
-### `analyze-pairs.js` — Relationship analyzer
-
-Answers "how are A and B connected?" by checking structural hierarchy, trailing refs (with `::` annotations), and body mentions.
-
-```bash
-# Pair mode — analyze consecutive pairs
-node scripts/analyze-pairs.js "CPU" "RAM"
-
-# All mode — every relationship for one address
-node scripts/analyze-pairs.js "CPU" --all
-```
-
-Supports fuzzy address resolution: exact → case-insensitive → alias → last-segment. Warns on ambiguous matches. Useful before creating new notes (check what connections already exist) or after renaming (verify relationships survived).
-
-### `move-hierarchy.js` — Cascading hierarchy rename
-
-Moves a fieldnote **and all its descendants** to a new address prefix in a single operation. No manual per-child calls needed.
-
-```bash
-# Dry-run (default) — shows full plan, writes nothing
-node scripts/move-hierarchy.js "chip" "component//chip"
-
-# Apply — executes all renames
-node scripts/move-hierarchy.js "chip" "component//chip" --apply
-```
-
-**What it does:**
-1. Finds root note (`address === oldPrefix`) and all descendants (`address.startsWith(oldPrefix + "//")`)
-2. Validates: no target filename/ID collisions
-3. Updates `address:` fields, `distinct:`/`supersedes:` entries, and `[[refs]]` across ALL `.md` files
-4. Renames files (after all content updates)
-
-Handles deep nesting, `distinct`/`supersedes` auto-update, `|` display text preservation, and `::` annotation preservation. Longer addresses are processed first to prevent partial matches.
-
-**Always dry-run first.** Review the output before passing `--apply`.
-
-**After applying:** Run `npm run build` to verify, then `node scripts/check-references.js` to catch any stale entries.
-
-> For single-note renames (no children, no hierarchy change), use `rename-address.js` instead.
-
-### `validate-fieldnotes.js` — Build-time validator
-
-Called automatically by `build-content.js` at the end of every build. Not run standalone. See [Build-Time Validation](#build-time-validation) below.
-
-### `build-content.js` — Content compiler
-
-The main compiler. Relevant commands:
-
-```bash
-npm run build          # compile content + production build (runs validation)
-npm run dev            # compile content + start Vite dev server (runs validation)
-npm run content        # compile content only (runs validation)
+npm run build          # compile content + production build
+npm run dev            # compile content + start Vite dev server
+npm run content        # compile content only
 npm run content -- --force   # ignore cache, full rebuild
+npm run content:fix    # compile + interactive issue resolution
 ```
 
-Every one of these runs the full validation pipeline. **The build is your safety net** — run it after every change.
+**The build is your safety net** — run it after every change.
 
 ---
 
@@ -144,8 +62,8 @@ Quick check: search `address:` lines in `src/data/pages/fieldnotes/*.md` for the
 ### Creating a single fieldnote
 
 1. Run the [pre-creation check](#pre-creation-check-segment-collisions) for the proposed address
-2. Create `src/data/pages/fieldnotes/{FILENAME}.md` following the [filename convention](../README.md#filename-convention-1)
-3. Add frontmatter with `address` (required) and `date` (required)
+2. Create `src/data/pages/fieldnotes/{uid}.md` where `{uid}` is a unique identifier (assigned by migration script or manually generated)
+3. Add frontmatter with `uid` (required), `address` (required), and `date` (required)
 4. Write the body + trailing refs
 5. Run `npm run build` — fix any errors
 6. If the build warns about missing parents, create stub notes for them
@@ -161,13 +79,13 @@ Quick check: search `address:` lines in `src/data/pages/fieldnotes/*.md` for the
 
 ### Renaming an address (simple — no children)
 
-**Never rename by hand.** Manually editing the address, filename, and every `[[reference]]` across dozens of files is error-prone and will break the graph.
+**Never rename by hand.** Use the script to ensure correct frontmatter updates.
 
 1. `node scripts/rename-address.js "old" "new"` — review the dry-run output
 2. `node scripts/rename-address.js "old" "new" --apply` — execute
-3. `npm run build` — verify no broken references
+3. `npm run build` — verify
 4. Check for stale `distinct` entries referencing the old address in other notes
-5. Commit all changed files together (the rename touches multiple files atomically)
+5. Commit the changed file (only one file is modified)
 
 > If the note has children, **stop here** and follow "Restructuring a hierarchy" below instead.
 
@@ -179,8 +97,8 @@ Quick check: search `address:` lines in `src/data/pages/fieldnotes/*.md` for the
 
 1. `node scripts/move-hierarchy.js "chip" "component//chip"` — dry-run, review the full plan
 2. `node scripts/move-hierarchy.js "chip" "component//chip" --apply` — execute
-3. `npm run build` — verify no broken references
-4. `node scripts/check-references.js` — catch orphans, stale `distinct`, one-way refs
+3. `npm run build` — verify
+4. `node scripts/check-references.js` — catch stale `distinct` entries
 5. Commit all changed files together
 
 <details>
@@ -194,6 +112,8 @@ If `move-hierarchy.js` can't be used (e.g. orphaned children without a parent no
 4. `npm run build` after all renames
 5. `node scripts/check-references.js`
 6. Commit all changed files together
+
+Note: With UID-based references, children's connections remain intact even if their addresses are temporarily stale — references use UIDs, not addresses.
 
 </details>
 
@@ -264,6 +184,94 @@ All flags live in `scripts/compiler.config.js` under `validation`:
 | `detectSegmentCollisions` | `true` | WARN when same segment name exists in different hierarchies |
 | `detectOrphans` | `true` | INFO for notes with zero connections |
 
+### Error codes
+
+Every validation output line includes a bracketed error code for easy scanning and scripting.
+
+| Code | Severity | Fixable? | Meaning |
+|---|---|---|---|
+| `BROKEN_REF` | ERROR | No | Inline `[[ref]]` to nonexistent fieldnote |
+| `BROKEN_WIKILINK` | ERROR | No | `[[wiki-link]]` in post to nonexistent fieldnote |
+| `SELF_REF` | WARN | No | Note trails a ref to itself |
+| `MISSING_PARENT` | WARN | Yes | Parent address has no dedicated note |
+| `CIRCULAR_REF` | WARN | No | Cycle in reference graph |
+| `SEGMENT_COLLISION` | HIGH/MED/LOW | Yes | Same segment name at different hierarchy paths |
+| `ALIAS_COLLISION` | HIGH | Yes | Alias collides with a segment name |
+| `ALIAS_ALIAS_COLLISION` | HIGH | Yes | Same alias on multiple notes |
+| `STALE_DISTINCT` | WARN | No | `distinct` entry points to deleted note |
+| `ORPHAN_NOTE` | INFO | No | No incoming or outgoing references |
+
+A legend of active codes is printed at the end of each validation run. The "Fixable?" column indicates which issues can be resolved interactively.
+
+### Interactive mode
+
+Run `npm run content:fix` to compile content and then interactively fix promptable issues (segment collisions and missing parents). The workflow:
+
+1. The build runs normally — compiles content, validates, shows all issues with error codes
+2. If fixable issues exist, the resolver prompts you for each one
+3. After all prompts (or on quit), a summary prints: files modified, rebuild reminder, and any pending merge instructions
+4. Run `npm run content` again to verify the fixes
+
+Every prompt accepts **(q)** to quit early. Changes already written to disk are kept. Ctrl+C also quits gracefully.
+
+**Segment collision prompt:**
+```
+[1/3] SEGMENT_COLLISION (HIGH)
+  Segment "cache" exists at:
+    1. CPU//cache  (leaf)
+    2. networking//cache  (leaf)
+
+  (d) Different concepts — add distinct to suppress
+  (s) Same concept — collect merge instructions
+  (k) Skip  (q) Quit
+  >
+```
+
+- **d** — adds `distinct: ["CPU//cache"]` (or vice versa) to one note's frontmatter automatically
+- **s** — queues the merge for the end-of-session summary (doesn't modify files yet)
+- **k** — skips, the warning reappears next build
+
+**Missing parent prompt:**
+```
+[2/3] MISSING_PARENT
+  "LAPTOP" has no block (parent of LAPTOP//UI)
+
+  (c) Create stub note
+  (k) Skip  (q) Quit
+  >
+```
+
+- **c** — creates a minimal `fieldnotes/LAPTOP.md` with just `address` and `date`
+- **k** — skips
+
+**End-of-session merge block:**
+
+When you answer **(s)** to any collision, the resolver collects the merge instructions and prints them all together at the end in a bordered block ready to copy-paste:
+
+```
+╭──────────────────────────────────────────────────────────────────╮
+│  2 pending merges — copy the block below into Claude to execute  │
+╰──────────────────────────────────────────────────────────────────╯
+
+┌────────────────────────────────────────────────────────────────────┐
+│  Merge the following fieldnotes. For each group:                  │
+│  1. Run the rename commands with --apply                          │
+│  2. Manually combine the note bodies (keep the richer content)    │
+│  3. After all merges, run npm run build to verify                 │
+│                                                                   │
+│  Group 1: "cache" — keep "CPU//cache"                             │
+│    node scripts/rename-address.js "networking//cache" ... --apply  │
+│    node scripts/rename-address.js "storage//cache" ... --apply     │
+│                                                                   │
+│  Group 2: "ui" — keep "IPAD//UI"                                  │
+│    node scripts/rename-address.js "LAPTOP//UI" "IPAD//UI" --apply │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+Copy the content of the block (or the whole block) into Claude and it will execute the merges, combine note bodies, and rebuild.
+
+Non-interactive environments (CI, piped stdin) skip prompts and print a hint to use `content:fix`.
+
 ---
 
 ## Error Reference
@@ -274,11 +282,12 @@ Every error and warning you might encounter, where it comes from, and what to do
 
 | Message | Cause | Fix |
 |---|---|---|
+| `ERROR: {file} missing 'uid' in frontmatter` | A `.md` file has no `uid` field | Add `uid: "..."` to the YAML frontmatter |
 | `ERROR: {file} missing 'address' in frontmatter` | A `.md` file has no `address` field | Add `address: "..."` to the YAML frontmatter |
-| `ERROR: duplicate fieldnote ID "{id}"` | Two addresses normalize to the same slug | Rename one of the two notes |
-| `ERROR  [[{ref}]] in "{address}" -> no block` | Inline `[[ref]]` points to nonexistent fieldnote | Create the missing note or fix the reference |
-| `ERROR  trailing [[{addr}]] in "{address}" -> no block` | Trailing ref points to nonexistent fieldnote | Same — create or fix |
-| `ERROR  [[{addr}]] in post "{id}" -> no fieldnote` | Wiki-link in a regular post (thread, project, etc.) points to nonexistent fieldnote | Create the fieldnote or remove the wiki-link from the post |
+| `ERROR: duplicate fieldnote UID "{uid}"` | Two notes share the same UID | Change one UID to be unique |
+| `ERROR  [[{uid}]] in "{address}" -> no block` | Inline `[[uid]]` points to nonexistent fieldnote | Create the missing note or fix the reference |
+| `ERROR  trailing [[{uid}]] in "{address}" -> no block` | Trailing ref points to nonexistent fieldnote | Same — create or fix |
+| `ERROR  [[{uid}]] in post "{id}" -> no fieldnote` | Wiki-link in a regular post (thread, project, etc.) points to nonexistent fieldnote | Create the fieldnote or remove the wiki-link from the post |
 
 ### Build warnings (logged, build continues)
 
@@ -302,9 +311,9 @@ Every error and warning you might encounter, where it comes from, and what to do
 
 | Message | Cause | Fix |
 |---|---|---|
-| `ERROR: Source file not found: {filename}` | No file matches the old address | Check the address spelling and filename convention |
+| `ERROR: No file found with address "{address}"` | No fieldnote has the old address in frontmatter | Check the address spelling |
 | `ERROR: File {filename} has address "{actual}" but expected "{old}"` | File exists but frontmatter address doesn't match | Fix the frontmatter or use the correct address |
-| `ERROR: Target file already exists: {filename}` | A file for the new address already exists | Choose a different target address or merge the notes |
+| `ERROR: Target UID collision: {uid}` | A note with the same UID already exists at the target | Choose a different target address or merge the notes |
 
 ---
 
@@ -313,12 +322,11 @@ Every error and warning you might encounter, where it comes from, and what to do
 Understanding what changes propagate where prevents subtle breakage.
 
 ### Renaming an address affects:
-- **The note's own file**: frontmatter `address` + filename
-- **Every file that references it**: inline `[[refs]]` and trailing `[[refs]]` across ALL `.md` files in `src/data/pages/`
-- **Build outputs**: the `.json` content file in `public/fieldnotes/` gets a new name (old one is auto-cleaned)
-- **Children: NOT automatic.** If a parent address changes, children still point to the old parent path. They must each be renamed in a separate `rename-address.js` call or they become orphaned. See [Restructuring a hierarchy](#restructuring-a-hierarchy).
+- **The note's own file**: frontmatter `address` and `name` fields only
+- **Build outputs**: the compiled `.json` file in `public/fieldnotes/` uses the UID (which doesn't change), so output filename stays the same
+- **Children: NOT automatic.** If a parent address changes, children still have their old addresses. They must each be renamed (via `rename-address.js` or `move-hierarchy.js`) to reflect the new hierarchy path. However, references to children still work via their stable UIDs.
 - **`distinct` entries**: any note with `distinct: ["old-address"]` becomes stale — update or remove them
-- **Other root nodes**: NOT affected. The script uses exact string matching (`[[old address]]`), so renaming `node` will not touch `node2` or `another-node`
+- **References in other files**: NOT affected. References use stable UIDs (`[[uid]]`), not addresses, so they continue pointing to the same note regardless of address changes
 
 ### Deleting a note affects:
 - **Every note that references it**: their `[[refs]]` become broken (build ERROR)
@@ -339,20 +347,12 @@ Understanding what changes propagate where prevents subtle breakage.
 
 ## Edge Cases
 
-### Address normalization collisions
-
-Two different addresses can normalize to the same slug:
-- `CPU//ALU` → `cpu--alu`
-- `cpu//alu` → `cpu--alu`
-
-The build catches this as `ERROR: duplicate fieldnote ID`. Use distinct casing or hierarchy to avoid collisions.
-
 ### `/` vs `//` in addresses
 
 - `//` is the **hierarchy separator** (parent-child): `CPU//ALU` means "ALU under CPU"
 - `/` is part of a **segment name**: `I/O` is the concept "I/O", not "I under O"
-- In filenames: `//` → `_`, `/` → `-` (so `I/O//MMIO` → `I-O_MMIO.md`)
-- In IDs: `//` → `--`, `/` → `-` (so `I/O//MMIO` → `i-o--mmio`)
+- Filenames now use UIDs: `{uid}.md` (e.g. `fn-cpu-alu.md`), so the separator distinction doesn't affect filenames
+- In slugs/IDs (if address-derived): `//` → `--`, `/` → `-` (e.g. `I/O//MMIO` → `i-o--mmio`), but primary IDs are now UIDs
 
 ### Trailing refs must be contiguous at the end
 
@@ -387,9 +387,9 @@ distinct: ["CPU//cache"]
 
 You do **not** also need to add `distinct: ["networking//cache"]` to the CPU//cache note.
 
-### Filename convention must match address
+### Filename convention uses UIDs
 
-If you create a file manually, the filename must follow the convention exactly (`//` → `_`, `/` → `-`, spaces → `-`, casing preserved). A mismatch between filename and address won't cause a build error, but the rename script relies on this convention to find files.
+Filenames are now `{uid}.md` (e.g. `fn-cpu-alu.md`), not address-derived. The UID must be unique and stable. The `rename-address.js` script scans frontmatter to find files, not filenames, so no filename convention matching is required.
 
 ### Cache invalidation
 

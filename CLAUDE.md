@@ -90,7 +90,7 @@ Append relevant lessons to the **Gotchas** section below. Update or remove stale
 - Personal: `/home`, `/about`, `/contact`, `/thanks`
 - Lab: `/lab/projects` (dark theme)
 - Blog: `/blog/threads`, `/blog/bits2bricks` (light theme)
-- Second Brain: `/lab/second-brain`, `/lab/second-brain/:id` (dark theme)
+- Second Brain: `/lab/second-brain`, `/lab/second-brain/:uid` (dark theme)
 - Post detail: `/lab/:category/:id` (dark), `/blog/:category/:id` (light)
 - Theme auto-switch: `/lab/*` → dark, `/blog/*` → light (instant, no transition). Manual toggle (Shift+T) still works per-page.
 - Backgrounds: Starfield (personal, dark only), DualGrid (lab/wiki), Clean (blog posts)

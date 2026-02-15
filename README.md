@@ -23,13 +23,19 @@ Personal website and knowledge system. Articles, projects, field notes, and a se
 
 ```
 infraphysics-web/
+  .claude/
+    skills/
+      commit/SKILL.md             # /commit — atomic commit proposal workflow
+      create-fieldnote/SKILL.md   # /create-fieldnote — process raw input into fieldnotes
   functions/
     [[catchall]].ts           # Cloudflare Pages Function (dynamic OG tags for social crawlers)
   scripts/
     compiler.config.js        # Centralized compiler configuration
     build-content.js          # Markdown → JSON pipeline (triple output)
     validate-fieldnotes.js    # Reference integrity checks
-    rename-address.js         # Rename fieldnote address + update all references
+    resolve-issues.js         # Interactive issue resolver (segment collisions, missing parents)
+    migrate-to-uids.js        # One-time migration: address-based → UID-based refs
+    rename-address.js         # Rename fieldnote address (frontmatter only — refs use stable UIDs)
     check-references.js       # Detect orphans, weak parents, stale refs
     analyze-pairs.js          # Relationship analyzer for fieldnote pairs
     move-hierarchy.js         # Cascading rename for address + all descendants
@@ -70,7 +76,7 @@ infraphysics-web/
           README.md             # Threads editorial voice
         bits2bricks/          # .md posts + _category.yaml
           README.md             # Bits2Bricks editorial voice
-        fieldnotes/           # Individual .md files (1 per concept)
+        fieldnotes/           # Individual {uid}.md files (1 per concept, UID-named)
           README.md             # Fieldnotes management guide (scripts, workflows, errors)
         home/                 # _home-featured.yaml
       posts.generated.json    # Regular posts only (no fieldnotes)
@@ -78,7 +84,7 @@ infraphysics-web/
       categories.generated.json
       data.ts                 # Runtime data loader
     public/
-      fieldnotes/             # {id}.json content files (served as static assets)
+      fieldnotes/             # {uid}.json content files (served as static assets)
       og-manifest.json        # Generated: URL path → OG metadata for social previews
       _routes.json            # Cloudflare Pages routing (which paths invoke the Function)
     lib/
@@ -108,6 +114,7 @@ infraphysics-web/
 |---|---|
 | `npm run content` | Compile all markdown into JSON (incremental — only recompiles changed files) |
 | `npm run content -- --force` | Force full rebuild (ignore cache) |
+| `npm run content:fix` | Compile content + interactively fix segment collisions and missing parents |
 | `npm run dev` | Build content + start Vite dev server |
 | `npm run build` | Build content + production build |
 | `npm run preview` | Preview production build locally |
@@ -130,22 +137,29 @@ All colors flow through a three-layer cascade: CSS custom properties in `index.h
 
 ### Second Brain
 
-A flat knowledge graph of individual `.md` files in `fieldnotes/`. Each note has an `address` (hierarchical, `//`-separated) and links to other notes via `[[wiki-links]]`. Build produces three outputs: a posts JSON (no fieldnotes), a metadata index (no content), and individual content files served as static assets. At runtime, the index loads eagerly while content is fetched on demand per note. Wiki-links are resolved at fetch time against the loaded index. For managing fieldnotes (renaming, deleting, restructuring, auditing), see **[src/data/pages/fieldnotes/README.md](src/data/pages/fieldnotes/README.md)**.
+A flat knowledge graph of `{uid}.md` files in `fieldnotes/`. Each note has a stable 8-char UID (for references and URLs) and an `address` (hierarchical, `//`-separated, for display and neighborhood). Notes link to each other via `[[uid]]` wiki-links — renaming an address changes only one file's frontmatter. Build produces three outputs: a posts JSON (no fieldnotes), a metadata index (no content), and individual `{uid}.json` content files served as static assets. At runtime, the index loads eagerly while content is fetched on demand per note. For managing fieldnotes, see **[src/data/pages/fieldnotes/README.md](src/data/pages/fieldnotes/README.md)**.
+
+**Creating fieldnotes:** Use `/create-fieldnote` in Claude Code with raw text, concepts, or notes as input. The skill handles decomposition, dedup, addressing, stubs, and validation automatically.
+
+**Maintenance:** Periodically run `npm run content:fix` to interactively resolve segment collisions and missing parents. Also useful: ask Claude to audit the current state of fieldnotes (address quality, orphans, enrichment opportunities, structural improvements) using `check-references.js` and `analyze-pairs.js`.
 
 ---
 
 ### Build-time content validation
 
-The build pipeline includes a 6-phase integrity checker that catches reference errors, structural inconsistencies, and potential concept duplication before they reach production. This is the repo's own safety net — the kind of link validation and address consistency checks that tools like Obsidian provide via plugins, but implemented directly in the build pipeline so nothing slips through to the deployed site.
+The build pipeline includes a 7-phase integrity checker that catches reference errors, structural inconsistencies, and potential concept duplication before they reach production. This is the repo's own safety net — the kind of link validation and address consistency checks that tools like Obsidian provide via plugins, but implemented directly in the build pipeline so nothing slips through to the deployed site.
 
 | Phase | What it catches | Severity |
 |---|---|---|
 | Reference integrity | Broken `[[wiki-links]]` in fieldnotes and posts | ERROR (fails build) |
 | Self-references | Notes linking to themselves | WARN |
+| Bare trailing refs | Trailing `[[ref]]` without a `::` annotation — every interaction must explain why | ERROR (fails build) |
 | Parent hierarchy | Missing parent nodes in the address tree | WARN |
 | Circular references | Cycles in the reference graph (opt-in) | WARN |
-| **Segment collisions** | Same concept name appearing at different hierarchy paths — flags potential duplication with severity tiers (HIGH/MED/LOW) and supports `distinct` frontmatter for intentional disambiguation | WARN |
+| **Segment collisions** | Same concept name at different hierarchy paths — severity tiers (HIGH/MED/LOW), suppressible with `distinct` frontmatter | WARN |
 | Orphan detection | Notes with no connections to the graph | INFO |
+
+When the build reports fixable issues (missing parents, segment collisions), **`npm run content:fix`** runs the same build but launches an interactive resolver: it walks you through each issue, creates stub notes, adds `distinct` entries, and collects merge instructions — all from the terminal. Pending merges are printed at the end as a ready-to-copy Claude instruction block. Full details: **[src/data/pages/fieldnotes/README.md](src/data/pages/fieldnotes/README.md#interactive-mode)**
 
 There is also an optional deep audit script (`node scripts/check-references.js`) that adds one-way trailing ref analysis, redundant ref detection, and fuzzy duplicate detection. Full validation details: **[scripts/README.md](scripts/README.md)**
 

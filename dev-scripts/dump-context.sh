@@ -117,6 +117,7 @@ FILES=(
   "scripts/build-content.js"
   "scripts/compiler.config.js"
   "scripts/validate-fieldnotes.js"
+  "scripts/resolve-issues.js"
   "scripts/rename-address.js"
   "scripts/check-references.js"
   "scripts/analyze-pairs.js"
@@ -127,7 +128,9 @@ FILES=(
   # --- Contenido representativo (1 por categoría + 1 fieldnote, para mostrar frontmatter) ---
   "src/data/pages/threads/anatomy-of-a-markdown-compiler.md"
   "src/data/pages/bits2bricks/custom-syntax-pcb.md"
-  "src/data/pages/fieldnotes/CPU_ALU.md"
+  # Fieldnote files are now named {uid}.md — pick a representative one
+  # Check uid-map.json or ls src/data/pages/fieldnotes/ for current filenames
+  # "src/data/pages/fieldnotes/egoxqpmC.md"  # CPU//ALU
 )
 
 # ── Recopilar stats ───────────────────────────────────────────────────

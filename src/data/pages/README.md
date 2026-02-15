@@ -33,7 +33,7 @@ Every markdown file starts with a YAML frontmatter block (`---`). Frontmatter sc
 - **[projects/README.md](projects/README.md)** — universal fields + `status`, `technologies`, `github`, `demo`, `duration`
 - **[threads/README.md](threads/README.md)** — universal fields only
 - **[bits2bricks/README.md](bits2bricks/README.md)** — universal fields only
-- **Fieldnotes** — `address`, `date`, `aliases`, `supersedes`, `distinct`. See [Second Brain](#second-brain-fieldnotes) below.
+- **Fieldnotes** — `uid`, `address`, `name`, `date`, `aliases`, `supersedes`, `distinct`. See [Second Brain](#second-brain-fieldnotes) below.
 
 ---
 
@@ -183,51 +183,66 @@ Each fieldnote is an individual `.md` file inside `fieldnotes/`. Every file uses
 
 ```yaml
 ---
+uid: "OkJJJyxX"
 address: "CPU//ALU"
+name: "ALU"
 date: "2026-02-05"
 aliases: [ALU, arithmetic logic unit]
 ---
-The arithmetic logic unit — the circuit inside a [[CPU//core]] that performs...
-[[CPU//core]] :: shares execution resources
-[[CPU//register]]
-[[CPU]]
+The arithmetic logic unit — the circuit inside a [[vtSgUEG3]] that performs...
+[[vtSgUEG3]] :: shares execution resources but cache is per-core — a miss stalls one core, not the whole chip
 ```
 
 ### Frontmatter fields
 
 | Field | Required | Type | What it does |
 |---|---|---|---|
-| `address` | yes | string | Hierarchical identifier using `//` as separator. Primary identity. |
+| `uid` | yes | string | 8-character alphanumeric string (`[a-zA-Z0-9]`), randomly generated at creation time, never changes. Primary key for all references — stable even when the address is renamed. |
+| `address` | yes | string | Hierarchical identifier using `//` as separator. Freely renameable — only affects display and neighborhood computation. |
+| `name` | yes | string | Human-friendly display name (typically the last address segment). Used in search, link display text, and UI titles. |
 | `date` | yes | string | ISO 8601 date (`YYYY-MM-DD`). |
 | `aliases` | no | string[] | Alternative names for the concept. Matched during name search. |
-| `supersedes` | no | string | Old address this note replaced. Build-time redirect so stale `[[refs]]` resolve to the new address. **Temporary** — remove after all references are updated. |
+| `supersedes` | no | string | Old address this note replaced. Build-time redirect so stale `[[refs]]` resolve to the new address. **Temporary** — remove after all references are updated. Example: `supersedes: "old//address//name"` |
 | `distinct` | no | string[] | Addresses that share a segment name with this note but are intentionally different concepts. Suppresses segment collision warnings. Bilateral — only one note needs the annotation. |
 
 ### Filename convention
 
-The filename is derived from the address: `//` → `_`, `/` → `-`, spaces → `-`, casing preserved. Examples:
-- `CPU//ALU` → `CPU_ALU.md`
-- `I/O//MMIO` → `I-O_MMIO.md`
-- `MEDIA//IMAGE ALIGNMENT` → `MEDIA_IMAGE-ALIGNMENT.md`
+Each fieldnote file is named `{uid}.md` (e.g. `OkJJJyxX.md`). The UID is the stable identifier from frontmatter. Filenames never change when addresses are renamed.
 
 ### Block structure
 
 Each file contains:
 1. **Frontmatter:** See table above.
 2. **Body** — standard markdown plus all custom inline syntax. Wiki-links in the body are extracted as references.
-3. **Trailing references** — standalone `[[address]]` lines at the end (after the last body text). These create intentional **connections** between concepts.
+3. **`---` separator** (only if trailing refs follow).
+4. **Trailing references** — standalone `[[uid]] :: annotation` lines at the end. These create intentional **interactions** between concepts.
 
-### Trailing refs: annotated connections
+### Wiki-linking strategy
 
-Trailing refs support an optional annotation using `::` syntax:
+**Pipe text = readability hint by default.** Write `[[uid|name]]` so the raw markdown is readable. The build compares the pipe text against the note's current `name` — if they match, it uses the current name (so renames propagate automatically). You never need to update hint text after a rename; the build always resolves to the latest name.
+
+**Custom display text** kicks in only when pipe text differs from the note's name. For example, if a note is called "DPO" but in context you're talking about "preference-based methods", write `[[YwfNaR4R|preference-based methods]]`. The build sees that "preference-based methods" ≠ "DPO" and keeps it as an intentional override.
 
 ```
-[[CPU//core]] :: shares execution resources
-[[CPU//register]]
-[[CPU//mutex]] :: coordinates shared-state access
+[[YwfNaR4R|DPO]]                    → hint (matches name) → renders current name
+[[YwfNaR4R|preference-based methods]] → override (differs) → renders "preference-based methods"
+[[YwfNaR4R]]                         → bare → renders current name (same as hint)
 ```
 
-The annotation (everything after `::`) explains **why** the connection exists. It appears in the UI next to the linked concept as an "Interaction."
+When authoring a new fieldnote, cross-reference its body against all existing note names and aliases — but also look for **non-literal connections** where the text discusses a concept without using its exact name. A mention of "the reward signal" might link to `reward model`; "silicon" might link to `semiconductor`. AI assistants should suggest these semantic links when helping draft fieldnotes.
+
+### Trailing refs: contrastive interactions only
+
+Trailing refs are **not** for listing related concepts — body `[[wiki-links]]` already do that. A trailing ref should only exist when you have a **contrastive or non-obvious insight** to explain between two concepts. If you can't write a `::` annotation that reveals something surprising or counterintuitive, the connection belongs in the body text, not in trailing refs.
+
+**Every trailing ref MUST have a `::` annotation.** Bare `[[uid]]` refs without annotations add no value — the relationship is already visible through body links and the hierarchy. The annotation is the entire point.
+
+```
+[[vtSgUEG3]] :: shares execution resources but cache is per-core — a miss stalls one core, not the whole chip
+[[8P7MMv9C]] :: coordinates shared-state access across the cache-coherence boundary
+```
+
+The annotation (everything after `::`) explains **why** the connection is worth calling out. It appears in the UI as an "Interaction."
 
 **Important:** Do not use `|` for annotations in trailing refs. The pipe `|` is reserved for display text in inline wiki-links (`[[address|display text]]`). Use `::` exclusively for trailing ref annotations.
 
@@ -241,9 +256,35 @@ Addresses use `//` as a hierarchy separator.
 - `CPU//ALU` — ALU is a child of CPU.
 - `CPU//ALU//barrel shifter` — three-level nesting.
 
-**ID generation:** The address is normalized to a URL-safe slug: lowercase, `//` becomes `--`, `/` becomes `-`, spaces become `-`. So `CPU//ALU` becomes `cpu--alu`.
+### Naming conventions
+
+The `address` and `name` fields follow capitalization rules based on what the term represents:
+
+| Category | Rule | Examples |
+|---|---|---|
+| Product names / brands | Original capitalization | `Claude Code`, `Cortex-A`, `ESP32`, `STM32`, `GPT`, `TinyML` |
+| Acronyms | ALL CAPS | `MCU`, `SoC`, `DPO`, `RLHF`, `ALU`, `GIL`, `DMA`, `RAG`, `NPU` |
+| Major domain subdivisions | Capitalize first letter | `Training`, `Inference`, `Transformer`, `Alignment`, `Multimodal` |
+| Fields / disciplines | lowercase | `electronics`, `compiler`, `hardware`, `manufacturing`, `networking`, `semiconductor` |
+| Techniques / patterns | lowercase | `mutex`, `cache`, `pipeline`, `fab`, `firmware`, `register` |
+| Proper nouns in compound terms | Capitalize the proper noun only | `Goodhart's curse`, `constitutional AI` |
+
+**Spacing rules:**
+- Use **spaces** for multi-word terms: `reward model`, `latent space`, `event loop`, `smart sensor`, `vector database`
+- Use **hyphens** only when the hyphen is part of the established name (`Cortex-A`, `Pre-training`, `dot-claude`) or for compound programming terms (`post-processor`, `pre-processor`)
+- Avoid gratuitous "AI" — only uppercase `AI` in product names (`Scale AI`) or established technique names (`constitutional AI`). Don't append it as branding.
+
+**ID generation:** Each note's `uid` serves as its stable ID for URLs, filenames, and references. UIDs are 8-character random alphanumeric strings assigned at creation time and never change.
 
 **Parent requirement:** If you create `CPU//ALU`, the build validator expects a block for `CPU` to exist as well (it issues a warning if missing). This keeps the hierarchy navigable.
+
+**Address depth:** Each `//` step should be a small conceptual jump. Deeper nesting with short steps is always better than shallow nesting with big jumps. The leaf is the actual concept; everything above is the path to reach it. Any node can act as a container if it groups sub-concepts. Abbreviate when possible (`L4` not `transport layer`, `crypto` not `cryptography`, `fs` not `file system`). Examples of good depth: `cybersecurity//crypto//symmetric//AES`, `electronics//signals//analog//filter//low-pass`, `CPU//pipeline//hazard//branch prediction`. Anti-pattern: `steganography` alone at top level (should be `cybersecurity//data hiding//steganography`).
+
+### Writing style
+
+- **No em dashes or en dashes.** Never use `—` or `–` in fieldnote bodies. Use parentheses, semicolons, periods, or commas instead.
+- **No blank line after frontmatter.** The first body line starts immediately after the closing `---` (no empty line between them).
+- **No invented examples.** Only include examples if the user provided them as input content. Do not fabricate illustrative examples.
 
 ### References, connections, and mentions
 
@@ -261,8 +302,7 @@ It is a **temporary migration aid**, not permanent metadata:
 
 1. Rename the note (or use `node scripts/rename-address.js "old" "new"`)
 2. Add `supersedes: "old address"` so stale `[[refs]]` keep working during transition
-3. Run the rename script with `--apply` to update all source references
-4. Once all references are updated, **remove** `supersedes` — it has served its purpose
+3. Once the build confirms all references resolve, **remove** `supersedes` — it has served its purpose
 
 It should not accumulate. After a full rename pass, no stale references remain and the field is unnecessary.
 
