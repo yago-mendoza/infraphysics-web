@@ -1,13 +1,17 @@
 // Validation for content integrity — runs at build time
 // Checks reference integrity, structural consistency, and address ambiguity.
 //
-// 6 phases:
-//   1. Reference integrity   (ERROR — fails build)
+// 7 phases:
+//   1. Reference integrity    (ERROR — fails build)
 //   2. Self-references        (WARN)
-//   3. Parent hierarchy       (WARN)
-//   4. Circular references    (WARN)
-//   5. Segment collisions     (HIGH / MED / LOW)
-//   6. Orphan notes           (INFO)
+//   3. Bare trailing refs     (ERROR — fails build)
+//   4. Parent hierarchy       (WARN)
+//   5. Circular references    (WARN)
+//   6. Segment collisions     (HIGH / MED / LOW)
+//   7. Orphan notes           (INFO)
+//
+// Returns { errors, warnings, infos, issues } where issues[] is a structured
+// array used by resolve-issues.js for interactive fixing.
 
 /**
  * Validates fieldnotes and content integrity.
@@ -18,6 +22,7 @@
 export function validateFieldnotes(fieldnotePosts, allPosts, cfg) {
   // ANSI color codes
   const R = '\x1b[31m';   // red (errors)
+  const G = '\x1b[32m';   // green
   const Y = '\x1b[33m';   // yellow (warnings)
   const C = '\x1b[36m';   // cyan (info)
   const D = '\x1b[90m';   // dim
@@ -29,25 +34,29 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg) {
   let errors = 0;
   let warnings = 0;
   let infos = 0;
+  const issues = [];
 
+  const knownUids = new Set(fieldnotePosts.map(p => p.id));
   const knownAddresses = new Set(fieldnotePosts.map(p => p.address));
 
   // ── Phase 1: Reference integrity (ERROR) ────────────────────────
 
   if (cfg.validateFieldnoteRefs) {
     for (const post of fieldnotePosts) {
-      // Inline [[refs]] must resolve
+      // Inline [[refs]] must resolve (refs are now UIDs)
       for (const ref of (post.references || [])) {
-        if (!knownAddresses.has(ref)) {
-          console.log(`  ${R}ERROR${X}  [[${ref}]] in "${post.address}" → no block`);
+        if (!knownUids.has(ref)) {
+          console.log(`  ${R}ERROR${X}  [BROKEN_REF] [[${ref}]] in "${post.address}" → no block`);
+          issues.push({ code: 'BROKEN_REF', severity: 'ERROR', promptable: false, address: post.address, ref });
           errors++;
         }
       }
-      // Trailing refs must resolve
+      // Trailing refs must resolve (uid field)
       for (const ref of (post.trailingRefs || [])) {
-        const addr = typeof ref === 'object' ? ref.address : ref;
-        if (!knownAddresses.has(addr)) {
-          console.log(`  ${R}ERROR${X}  trailing [[${addr}]] in "${post.address}" → no block`);
+        const uid = typeof ref === 'object' ? ref.uid : ref;
+        if (!knownUids.has(uid)) {
+          console.log(`  ${R}ERROR${X}  [BROKEN_REF] trailing [[${uid}]] in "${post.address}" → no block`);
+          issues.push({ code: 'BROKEN_REF', severity: 'ERROR', promptable: false, address: post.address, ref: uid, trailing: true });
           errors++;
         }
       }
@@ -56,12 +65,13 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg) {
 
   if (cfg.validateRegularPostWikiLinks) {
     const regularPosts = allPosts.filter(p => p.category !== 'fieldnotes');
-    const addrRegex = /data-address="([^"]+)"/g;
+    const uidRegex = /data-uid="([^"]+)"/g;
     for (const post of regularPosts) {
       let match;
-      while ((match = addrRegex.exec(post.content)) !== null) {
-        if (!knownAddresses.has(match[1])) {
-          console.log(`  ${R}ERROR${X}  [[${match[1]}]] in post "${post.id}" → no fieldnote`);
+      while ((match = uidRegex.exec(post.content)) !== null) {
+        if (!knownUids.has(match[1])) {
+          console.log(`  ${R}ERROR${X}  [BROKEN_WIKILINK] [[${match[1]}]] in post "${post.id}" → no fieldnote`);
+          issues.push({ code: 'BROKEN_WIKILINK', severity: 'ERROR', promptable: false, postId: post.id, ref: match[1] });
           errors++;
         }
       }
@@ -72,15 +82,31 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg) {
 
   for (const post of fieldnotePosts) {
     for (const ref of (post.trailingRefs || [])) {
-      const addr = typeof ref === 'object' ? ref.address : ref;
-      if (addr === post.address) {
-        console.log(`  ${Y}WARN ${X}  "${post.address}" trails a ref to itself`);
+      const uid = typeof ref === 'object' ? ref.uid : ref;
+      if (uid === post.id) {
+        console.log(`  ${Y}WARN ${X}  [SELF_REF] "${post.address}" trails a ref to itself`);
+        issues.push({ code: 'SELF_REF', severity: 'WARN', promptable: false, address: post.address });
         warnings++;
       }
     }
   }
 
-  // ── Phase 3: Parent hierarchy (WARN) ────────────────────────────
+  // ── Phase 3: Bare trailing refs (ERROR) ─────────────────────────
+  // Every trailing ref MUST have a :: annotation. Bare refs are prohibited.
+
+  for (const post of fieldnotePosts) {
+    for (const ref of (post.trailingRefs || [])) {
+      const annotation = typeof ref === 'object' ? ref.annotation : null;
+      if (!annotation || annotation.trim() === '') {
+        const uid = typeof ref === 'object' ? ref.uid : ref;
+        console.log(`  ${R}ERROR${X}  [BARE_TRAILING_REF] "${post.address}" has trailing ref [[${uid}]] without :: annotation`);
+        issues.push({ code: 'BARE_TRAILING_REF', severity: 'ERROR', promptable: false, address: post.address, ref: uid });
+        errors++;
+      }
+    }
+  }
+
+  // ── Phase 4: Parent hierarchy (WARN) ─────────────────────────────
   // Checks full parent paths (CPU//mutex, not just "mutex").
   // Deduplicated: each missing parent warned once with child count.
 
@@ -102,12 +128,13 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg) {
 
     for (const [parent, children] of missingParents) {
       const extra = children.length > 1 ? ` +${children.length - 1} more` : '';
-      console.log(`  ${Y}WARN ${X}  "${parent}" has no block ${D}(parent of ${children[0]}${extra})${X}`);
+      console.log(`  ${Y}WARN ${X}  [MISSING_PARENT] "${parent}" has no block ${D}(parent of ${children[0]}${extra})${X}`);
+      issues.push({ code: 'MISSING_PARENT', severity: 'WARN', promptable: true, parent, children });
       warnings++;
     }
   }
 
-  // ── Phase 4: Circular references (WARN) ─────────────────────────
+  // ── Phase 5: Circular references (WARN) ─────────────────────────
   // DFS cycle detection. Deduplicated: each unique node-set reported once.
   // Off by default — knowledge graphs naturally have many reference cycles.
 
@@ -150,12 +177,13 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg) {
     }
 
     for (const cycle of cycles) {
-      console.log(`  ${Y}WARN ${X}  circular ref: ${cycle.join(' → ')}`);
+      console.log(`  ${Y}WARN ${X}  [CIRCULAR_REF] circular ref: ${cycle.join(' → ')}`);
+      issues.push({ code: 'CIRCULAR_REF', severity: 'WARN', promptable: false, cycle });
       warnings++;
     }
   }
 
-  // ── Phase 5: Segment collisions (HIGH / MED / LOW) ──────────────
+  // ── Phase 6: Segment collisions (HIGH / MED / LOW) ──────────────
   // Detects shared segment names across different address hierarchies.
   // Also checks alias collisions and supports `distinct` suppression.
 
@@ -303,20 +331,35 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg) {
       for (const col of collisions) {
         const tc = tierColor[col.tier];
         const tl = tierPad[col.tier];
+        const codeTag = col.type === 'segment' ? 'SEGMENT_COLLISION'
+          : col.type === 'alias' ? 'ALIAS_COLLISION'
+          : 'ALIAS_ALIAS_COLLISION';
 
         if (col.type === 'segment') {
           const locs = col.entries.map(e => {
             const role = e.isRoot ? 'root' : e.isLeaf ? 'leaf' : 'mid';
             return `${e.fullAddress} (${role})`;
           }).join(', ');
-          console.log(`  ${tc}${tl}${X}  segment "${col.segment}" exists at: ${locs}`);
+          console.log(`  ${tc}${tl}${X}  [${codeTag}] segment "${col.segment}" exists at: ${locs}`);
           console.log(`  ${D}       → same concept? add distinct: ["..."] to suppress${X}`);
+          issues.push({
+            code: codeTag, severity: col.tier, promptable: true,
+            segment: col.segment, entries: col.entries.map(e => ({ fullAddress: e.fullAddress, isLeaf: e.isLeaf, isRoot: e.isRoot })),
+          });
         } else if (col.type === 'alias') {
           const segLocs = col.segEntries.map(e => e.fullAddress).join(', ');
-          console.log(`  ${tc}${tl}${X}  "${col.segment}" is segment in [${segLocs}] and alias on "${col.aliasEntry.fullAddress}"`);
+          console.log(`  ${tc}${tl}${X}  [${codeTag}] "${col.segment}" is segment in [${segLocs}] and alias on "${col.aliasEntry.fullAddress}"`);
+          issues.push({
+            code: codeTag, severity: col.tier, promptable: true,
+            segment: col.segment, segAddresses: col.segEntries.map(e => e.fullAddress), aliasAddress: col.aliasEntry.fullAddress,
+          });
         } else if (col.type === 'alias-alias') {
           const locs = col.entries.map(e => e.fullAddress).join(', ');
-          console.log(`  ${tc}${tl}${X}  alias "${col.segment}" shared by: ${locs}`);
+          console.log(`  ${tc}${tl}${X}  [${codeTag}] alias "${col.segment}" shared by: ${locs}`);
+          issues.push({
+            code: codeTag, severity: col.tier, promptable: true,
+            segment: col.segment, addresses: col.entries.map(e => e.fullAddress),
+          });
         }
 
         warnings++;
@@ -327,14 +370,15 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg) {
     for (const post of fieldnotePosts) {
       for (const addr of (post.distinct || [])) {
         if (!knownAddresses.has(addr)) {
-          console.log(`  ${Y}WARN ${X}  stale distinct: "${addr}" in "${post.address}" → no block`);
+          console.log(`  ${Y}WARN ${X}  [STALE_DISTINCT] stale distinct: "${addr}" in "${post.address}" → no block`);
+          issues.push({ code: 'STALE_DISTINCT', severity: 'WARN', promptable: false, address: post.address, staleRef: addr });
           warnings++;
         }
       }
     }
   }
 
-  // ── Phase 6: Orphan notes (INFO) ────────────────────────────────
+  // ── Phase 7: Orphan notes (INFO) ────────────────────────────────
   // Notes with no incoming or outgoing references.
 
   if (cfg.detectOrphans !== false) {
@@ -345,11 +389,35 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg) {
 
     for (const post of fieldnotePosts) {
       const hasOut = (post.references || []).length > 0;
-      const hasIn = referenced.has(post.address);
+      const hasIn = referenced.has(post.id);
       if (!hasOut && !hasIn) {
-        console.log(`  ${C}INFO ${X}  "${post.address}" has no connections (orphan)`);
+        console.log(`  ${C}INFO ${X}  [ORPHAN_NOTE] "${post.address}" has no connections (orphan)`);
+        issues.push({ code: 'ORPHAN_NOTE', severity: 'INFO', promptable: false, address: post.address });
         infos++;
       }
+    }
+  }
+
+  // ── Legend ─────────────────────────────────────────────────────
+
+  if (issues.length > 0) {
+    const codes = new Set(issues.map(i => i.code));
+    const legend = {
+      BROKEN_REF: 'inline [[ref]] to nonexistent fieldnote',
+      BROKEN_WIKILINK: '[[wiki-link]] in post to nonexistent fieldnote',
+      SELF_REF: 'note trails a ref to itself',
+      BARE_TRAILING_REF: 'trailing ref without :: annotation (must explain why)',
+      MISSING_PARENT: 'parent address has no dedicated note',
+      CIRCULAR_REF: 'cycle in reference graph',
+      SEGMENT_COLLISION: 'same segment name at different hierarchy paths',
+      ALIAS_COLLISION: 'alias collides with a segment name',
+      ALIAS_ALIAS_COLLISION: 'same alias on multiple notes',
+      STALE_DISTINCT: 'distinct entry points to deleted note',
+      ORPHAN_NOTE: 'no incoming or outgoing references',
+    };
+    console.log(`\n  ${D}Legend:${X}`);
+    for (const code of codes) {
+      if (legend[code]) console.log(`  ${D}  ${code} — ${legend[code]}${X}`);
     }
   }
 
@@ -361,6 +429,18 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg) {
   if (infos > 0) parts.push(`${C}${infos} info${X}`);
   if (parts.length === 0) parts.push('\x1b[32mall clear\x1b[0m');
 
-  console.log(`${B}[VALIDATE]${X} ${parts.join(', ')}\n`);
-  return { errors, warnings, infos };
+  console.log(`${B}[VALIDATE]${X} ${parts.join(', ')}`);
+
+  const promptableCount = issues.filter(i => i.promptable).length;
+  if (promptableCount > 0) {
+    const M = '\x1b[35m';  // magenta
+    console.log('');
+    console.log(`  ${M}${B}╭─────────────────────────────────────────────────╮${X}`);
+    console.log(`  ${M}${B}│${X}  ${B}${promptableCount} issue${promptableCount !== 1 ? 's' : ''} can be fixed interactively${X}            ${M}${B}│${X}`);
+    console.log(`  ${M}${B}│${X}  Run: ${G}npm run content:fix${X}                       ${M}${B}│${X}`);
+    console.log(`  ${M}${B}╰─────────────────────────────────────────────────╯${X}`);
+  }
+  console.log('');
+
+  return { errors, warnings, infos, issues };
 }

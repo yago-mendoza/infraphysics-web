@@ -21,10 +21,6 @@ const FIELDNOTES_DIR = path.join(__dirname, '../src/data/pages/fieldnotes');
 
 // --- Parse all fieldnotes ---
 
-function addressToId(address) {
-  return address.toLowerCase().replace(/\/\//g, '--').replace(/\//g, '-').replace(/\s+/g, '-');
-}
-
 function parseAllFieldnotes() {
   if (!fs.existsSync(FIELDNOTES_DIR)) {
     console.error('Fieldnotes directory not found:', FIELDNOTES_DIR);
@@ -44,7 +40,9 @@ function parseAllFieldnotes() {
     const address = frontmatter.address;
     if (!address) continue;
 
-    const id = addressToId(address);
+    const uid = frontmatter.uid;
+    if (!uid) continue;
+    const id = uid;
     const addressParts = address.split('//').map(s => s.trim());
 
     // Extract all [[...]] references from body
@@ -103,19 +101,18 @@ function parseAllFieldnotes() {
 // --- Checks ---
 
 function checkOrphans(notes) {
-  const knownAddresses = new Set(notes.map(n => n.address));
-  const referencedAddresses = new Set();
+  const referencedUids = new Set();
 
-  // Collect all addresses that are referenced by any note
+  // Collect all UIDs that are referenced by any note
   for (const note of notes) {
     for (const ref of note.allRefs) {
-      referencedAddresses.add(ref);
+      referencedUids.add(ref);
     }
   }
 
   const orphans = notes.filter(note => {
     const hasOutgoing = note.allRefs.length > 0;
-    const hasIncoming = referencedAddresses.has(note.address);
+    const hasIncoming = referencedUids.has(note.id);
     return !hasOutgoing && !hasIncoming;
   });
 
@@ -142,17 +139,17 @@ function checkWeakParents(notes) {
 }
 
 function checkOneWayTrailingRefs(notes) {
-  const noteByAddress = new Map(notes.map(n => [n.address, n]));
+  const noteById = new Map(notes.map(n => [n.id, n]));
   const oneWay = [];
 
   for (const note of notes) {
-    for (const ref of note.trailingRefs) {
-      const target = noteByAddress.get(ref);
+    for (const refUid of note.trailingRefs) {
+      const target = noteById.get(refUid);
       if (!target) continue; // broken ref — caught by build validation
 
-      const targetHasBack = target.trailingRefs.includes(note.address);
+      const targetHasBack = target.trailingRefs.includes(note.id);
       if (!targetHasBack) {
-        oneWay.push({ from: note.address, to: ref });
+        oneWay.push({ from: note.address, to: target.address });
       }
     }
   }
@@ -162,12 +159,14 @@ function checkOneWayTrailingRefs(notes) {
 
 function checkRedundantTrailingRefs(notes) {
   const redundant = [];
+  const noteById = new Map(notes.map(n => [n.id, n]));
 
   for (const note of notes) {
-    for (const ref of note.trailingRefs) {
-      // Check if this trailing ref also appears in body text
-      if (note.bodyOnlyRefs.includes(ref)) {
-        redundant.push({ note: note.address, ref });
+    for (const refUid of note.trailingRefs) {
+      // Check if this trailing ref UID also appears in body text
+      if (note.bodyOnlyRefs.includes(refUid)) {
+        const target = noteById.get(refUid);
+        redundant.push({ note: note.address, ref: target ? target.address : refUid });
       }
     }
   }

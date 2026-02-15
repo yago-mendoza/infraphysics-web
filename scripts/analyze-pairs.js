@@ -37,10 +37,6 @@ const CROSS = `${C.red}✗${C.reset}`;
 
 // --- Parse all fieldnotes ---
 
-function addressToId(address) {
-  return address.toLowerCase().replace(/\/\//g, '--').replace(/\//g, '-').replace(/\s+/g, '-');
-}
-
 function parseAllFieldnotes() {
   if (!fs.existsSync(FIELDNOTES_DIR)) {
     console.error('Fieldnotes directory not found:', FIELDNOTES_DIR);
@@ -60,7 +56,9 @@ function parseAllFieldnotes() {
     const address = frontmatter.address;
     if (!address) continue;
 
-    const id = addressToId(address);
+    const uid = frontmatter.uid;
+    if (!uid) continue;
+    const id = uid;
     const addressParts = address.split('//').map(s => s.trim());
 
     // Extract all [[...]] references from body
@@ -210,8 +208,8 @@ function analyzeRelationship(noteA, noteB) {
   }
 
   // --- Trailing refs ---
-  const aToB = noteA.trailingRefs.find(r => r.address === noteB.address);
-  const bToA = noteB.trailingRefs.find(r => r.address === noteA.address);
+  const aToB = noteA.trailingRefs.find(r => r.address === noteB.id);
+  const bToA = noteB.trailingRefs.find(r => r.address === noteA.id);
 
   if (aToB) {
     const ann = aToB.annotation ? ` :: "${aToB.annotation}"` : '';
@@ -223,10 +221,10 @@ function analyzeRelationship(noteA, noteB) {
   }
 
   // --- Body mentions ---
-  if (noteA.bodyOnlyRefs.includes(noteB.address)) {
+  if (noteA.bodyOnlyRefs.includes(noteB.id)) {
     result.body.push(`${addrA} mentions ${addrB} in body text`);
   }
-  if (noteB.bodyOnlyRefs.includes(noteA.address)) {
+  if (noteB.bodyOnlyRefs.includes(noteA.id)) {
     result.body.push(`${addrB} mentions ${addrA} in body text`);
   }
 
@@ -311,8 +309,8 @@ function formatAllOutput(target, notes) {
     }
 
     // Classify trailing
-    const tOut = target.trailingRefs.find(r => r.address === addr);
-    const tIn = note.trailingRefs.find(r => r.address === target.address);
+    const tOut = target.trailingRefs.find(r => r.address === note.id);
+    const tIn = note.trailingRefs.find(r => r.address === target.id);
     if (tOut) {
       trailingOut.push({ address: addr, annotation: tOut.annotation });
     }
@@ -321,8 +319,8 @@ function formatAllOutput(target, notes) {
     }
 
     // Classify body
-    if (target.bodyOnlyRefs.includes(addr)) bodyOut.push(addr);
-    if (note.bodyOnlyRefs.includes(target.address)) bodyIn.push(addr);
+    if (target.bodyOnlyRefs.includes(note.id)) bodyOut.push(addr);
+    if (note.bodyOnlyRefs.includes(target.id)) bodyIn.push(addr);
   }
 
   console.log(`\n${C.bold}═══ All relationships for "${target.address}" ═══${C.reset}\n`);
