@@ -20,7 +20,7 @@ export const NavigationTrail: React.FC<NavigationTrailProps> = ({
   const hasTrail = trail.length > 0;
 
   return (
-    <nav className="text-xs flex items-center gap-1 flex-wrap mb-3">
+    <nav className="text-xs flex items-center gap-1 flex-wrap">
       {/* "all concepts" — link when trail has items, plain span on list view */}
       {hasTrail ? (
         <Link

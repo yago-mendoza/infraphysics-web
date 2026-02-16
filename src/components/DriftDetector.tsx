@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { noteLabel, type FieldNoteMeta } from '../types';
 import type { DriftEntry } from '../hooks/useGraphRelevance';
+import { InfoPopover, tipStrong } from './InfoPopover';
 
 interface Props {
   entries: DriftEntry[];
@@ -16,8 +17,20 @@ export const DriftDetector: React.FC<Props> = ({ entries, noteById, onNoteClick,
 
   return (
     <div>
-      <h3 className="text-[11px] text-th-tertiary uppercase tracking-wider mb-3">
+      <h3 className="text-[11px] text-th-tertiary uppercase tracking-wider mb-3 flex items-center gap-1.5">
         Missing links
+        <InfoPopover
+          size={12}
+          title="About missing links"
+          content={
+            <div className="space-y-2">
+              <p><strong className={tipStrong}>Missing links</strong> are suggestions for connections that probably should exist but don't yet.</p>
+              <p>The algorithm looks for <strong className={tipStrong}>mutual neighbors</strong> — if two notes share many connections but aren't linked to each other, they likely should be.</p>
+              <p><strong className={tipStrong}>"via"</strong> annotations show the shared neighbors that suggest the connection.</p>
+              <p>Top 3 suggestions are shown, ranked by connection strength.</p>
+            </div>
+          }
+        />
       </h3>
       <div className="space-y-3">
         {top3.map(({ uid, via }) => {

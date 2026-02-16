@@ -28,7 +28,7 @@ const STARFIELD_PAGES = ['/', '/home', '/about', '/contact', '/thanks'];
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
-  const { theme, toggleTheme, setTheme } = useTheme();
+  const { theme, toggleTheme, applyZone } = useTheme();
   const [searchOpen, setSearchOpen] = useState(false);
 
   const openSearch = useCallback(() => setSearchOpen(true), []);
@@ -62,12 +62,10 @@ const AppLayout: React.FC = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  // Auto-switch theme by route: blog → light, everything else → dark
-  // useLayoutEffect fires BEFORE browser paint — no flash
+  // Apply zone-specific theme preference on route change (instant, no flash)
   useLayoutEffect(() => {
-    if (location.pathname.startsWith('/blog')) setTheme('light');
-    else setTheme('dark');
-  }, [location.pathname, setTheme]);
+    applyZone(location.pathname.startsWith('/blog') ? 'blog' : 'app');
+  }, [location.pathname, applyZone]);
 
   const isStarfieldPage = STARFIELD_PAGES.includes(location.pathname);
   const showGrid = location.pathname.startsWith('/lab');
@@ -80,7 +78,7 @@ const AppLayout: React.FC = () => {
 
   const content = (
     <ErrorBoundary>
-    <div className={`min-h-screen flex relative ${isBlog ? 'bg-th-blog' : 'bg-th-base'}`}>
+    <div className={`min-h-screen flex relative overflow-x-hidden ${isBlog ? 'bg-th-blog' : 'bg-th-base'}`}>
       {/* Background — Starfield on personal pages (fades with theme), DualGrid on lab/wiki */}
       <div className="hidden md:block">
         {isStarfieldPage && <Starfield sidebarWidth={SIDEBAR_WIDTH} visible={theme === 'dark'} />}
@@ -100,8 +98,8 @@ const AppLayout: React.FC = () => {
       {isSecondBrain && <SecondBrainSidebar />}
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-h-screen">
-        <main className={`flex-grow w-full mx-auto relative z-10 ${isSecondBrain ? 'max-w-6xl px-10 py-10 md:py-12' : 'max-w-4xl px-6 py-10 md:py-16'}`}>
+      <div className="flex-1 min-w-0 flex flex-col min-h-screen">
+        <main className={`flex-grow w-full relative z-10 ${isSecondBrain ? 'max-w-6xl px-4 md:px-10 pt-20 pb-10 md:py-12 mx-auto' : 'max-w-4xl px-6 pt-20 pb-10 md:py-16 main-center-viewport'}`}>
           <Routes>
             <Route path="/" element={<Navigate to="/home" replace />} />
             <Route path="/home" element={<HomeView />} />

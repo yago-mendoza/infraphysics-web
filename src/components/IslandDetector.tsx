@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { useGraphRelevance, type IslandsData } from '../hooks/useGraphRelevance';
 import { useHub } from '../contexts/SecondBrainHubContext';
 import { noteLabel } from '../types';
-import { ChevronIcon, BarChartIcon } from './icons';
+import { ChevronIcon } from './icons';
 
 const MEMBER_CAP = 10;
 const SIDE_MEMBER_CAP = 8;
@@ -21,9 +21,8 @@ export const IslandDetector = forwardRef<IslandDetectorHandle, {
   onFocusHandled?: () => void;
   activeIslandScope?: number | null;
   onIslandScope?: (id: number) => void;
-  onStatsScope?: (id: number) => void;
   onExpandedChange?: (hasExpanded: boolean) => void;
-}>(({ focusComponentId, focusFlash = true, onFocusHandled, activeIslandScope, onIslandScope, onStatsScope, onExpandedChange }, ref) => {
+}>(({ focusComponentId, focusFlash = true, onFocusHandled, activeIslandScope, onIslandScope, onExpandedChange }, ref) => {
   const { getIslands, loaded } = useGraphRelevance();
   const hub = useHub();
 
@@ -110,6 +109,7 @@ export const IslandDetector = forwardRef<IslandDetectorHandle, {
       {significantComponents.map(comp => {
         const compCuts = cuts
           .filter(c => c.componentId === comp.id)
+
           .sort((a, b) => b.criticality - a.criticality);
         const isExpanded = expandedComps.has(comp.id);
 
@@ -155,15 +155,6 @@ export const IslandDetector = forwardRef<IslandDetectorHandle, {
                     <circle cx="8" cy="8" r="5" />
                     <circle cx="8" cy="8" r="2" />
                   </svg>
-                </button>
-              )}
-              {onStatsScope && (
-                <button
-                  onClick={() => onStatsScope(comp.id)}
-                  className="opacity-0 group-hover:opacity-100 text-th-muted hover:text-violet-400 transition-all flex-shrink-0"
-                  title="Show stats for this island"
-                >
-                  <BarChartIcon />
                 </button>
               )}
             </div>

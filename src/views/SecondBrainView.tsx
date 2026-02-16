@@ -1,6 +1,7 @@
 // Second Brain / Concept Wiki view component — theme-aware
 
 import React, { useCallback, useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { useHub } from '../contexts/SecondBrainHubContext';
 import { useNavigationTrail } from '../hooks/useNavigationTrail';
@@ -14,6 +15,7 @@ import { DriftDetector } from '../components/DriftDetector';
 import { useGraphRelevance } from '../hooks/useGraphRelevance';
 import type { SortMode, SearchMode, FilterState } from '../hooks/useSecondBrainHub';
 import { SearchIcon } from '../components/icons';
+import { InfoPopover, tipStrong, tipAccent, tipCode } from '../components/InfoPopover';
 import { noteLabel, type FieldNoteMeta } from '../types';
 import type { Connection } from '../lib/brainIndex';
 import { ICON_REF_IN, ICON_REF_OUT } from '../lib/icons';
@@ -42,79 +44,524 @@ const SEARCH_MODES: { value: SearchMode; label: string }[] = [
   { value: 'backlinks', label: 'backlinks' },
 ];
 
-// --- Floating Search Overlay ---
-const SearchOverlay: React.FC<{
-  open: boolean;
-  onClose: (keepQuery: boolean) => void;
+// --- StepperInput (inline, moved from sidebar) ---
+const StepperInput: React.FC<{
+  value: number;
+  displayValue?: string;
+  onDecrement: () => void;
+  onIncrement: () => void;
+  min?: number;
+  max?: number;
+}> = ({ value, displayValue, onDecrement, onIncrement, min = -Infinity, max = Infinity }) => (
+  <span className="inline-flex items-center border border-th-hub-border text-[10px] tabular-nums">
+    <button onClick={onDecrement} disabled={value <= min} className="px-1 py-0.5 text-th-muted hover:text-th-secondary disabled:opacity-30 transition-colors">&minus;</button>
+    <span className="px-1 py-0.5 text-th-primary min-w-[20px] text-center">{displayValue ?? value}</span>
+    <button onClick={onIncrement} disabled={value >= max} className="px-1 py-0.5 text-th-muted hover:text-th-secondary disabled:opacity-30 transition-colors">+</button>
+  </span>
+);
+
+// --- Chip (dismissible filter indicator) ---
+const Chip: React.FC<{
+  label: string;
+  onDismiss: () => void;
+  color?: 'violet' | 'amber';
+}> = ({ label, onDismiss, color = 'violet' }) => {
+  const cls = color === 'amber'
+    ? 'bg-amber-400/20 text-amber-400 border-amber-400/30'
+    : 'bg-violet-400/10 text-violet-400 border-violet-400/20';
+  return (
+    <span className={`text-[9px] px-1.5 py-0.5 border flex items-center gap-1 ${cls}`}>
+      {label}
+      <button onClick={onDismiss} className="hover:text-white">&times;</button>
+    </span>
+  );
+};
+
+// --- Activity Heatmap (GitHub-style) ---
+const DAY_NAMES = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+const ActivityHeatmap: React.FC<{
+  allNotes: FieldNoteMeta[];
+  dateFilter: string | null;
+  onDateClick: (date: string | null) => void;
+}> = ({ allNotes, dateFilter, onDateClick }) => {
+  const [year, setYear] = useState(() => new Date().getFullYear());
+  const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
+
+  // Build date → count map
+  const dateCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    allNotes.forEach(n => {
+      if (!n.date) return;
+      const d = n.date.slice(0, 10);
+      map.set(d, (map.get(d) || 0) + 1);
+    });
+    return map;
+  }, [allNotes]);
+
+  // Build weeks grid for the year
+  const weeks = useMemo(() => {
+    const startDate = new Date(year, 0, 1);
+    const endDate = new Date(year, 11, 31);
+    // Pad to start on Sunday
+    const startDay = startDate.getDay();
+    const actualStart = new Date(startDate);
+    actualStart.setDate(actualStart.getDate() - startDay);
+
+    const result: { date: string; count: number; inYear: boolean }[][] = [];
+    let current = new Date(actualStart);
+
+    while (current <= endDate || current.getDay() !== 0) {
+      const week: { date: string; count: number; inYear: boolean }[] = [];
+      for (let d = 0; d < 7; d++) {
+        const iso = current.toISOString().slice(0, 10);
+        week.push({
+          date: iso,
+          count: dateCounts.get(iso) || 0,
+          inYear: current.getFullYear() === year,
+        });
+        current.setDate(current.getDate() + 1);
+      }
+      result.push(week);
+      if (current > endDate && current.getDay() === 0) break;
+    }
+    return result;
+  }, [year, dateCounts]);
+
+  const cellColor = (count: number, inYear: boolean) => {
+    if (!inYear) return 'transparent';
+    if (count === 0) return 'var(--border-color)';
+    if (count <= 2) return 'rgba(167, 139, 250, 0.2)';
+    if (count <= 5) return 'rgba(167, 139, 250, 0.4)';
+    return 'rgba(167, 139, 250, 0.6)';
+  };
+
+  // Parse dateFilter into single or range for highlighting + click logic
+  const parsed = useMemo(() => {
+    if (!dateFilter) return null;
+    if (dateFilter.includes('..')) {
+      const [start, end] = dateFilter.split('..');
+      return { type: 'range' as const, start, end };
+    }
+    return { type: 'single' as const, date: dateFilter };
+  }, [dateFilter]);
+
+  const isSelected = (d: string) => {
+    if (!parsed) return false;
+    if (parsed.type === 'single') return d === parsed.date;
+    return d === parsed.start || d === parsed.end;
+  };
+  const isInRange = (d: string) => {
+    if (!parsed || parsed.type !== 'range') return false;
+    return d > parsed.start && d < parsed.end;
+  };
+
+  const handleCellClick = (clickedDate: string) => {
+    if (!parsed) {
+      // Nothing selected → single
+      onDateClick(clickedDate);
+    } else if (parsed.type === 'range') {
+      // Range selected → always reset to single
+      onDateClick(clickedDate);
+    } else {
+      // Single selected
+      if (clickedDate === parsed.date) {
+        onDateClick(null); // deselect
+      } else if (clickedDate > parsed.date) {
+        onDateClick(`${parsed.date}..${clickedDate}`); // range
+      } else {
+        onDateClick(clickedDate); // replace with earlier
+      }
+    }
+  };
+
+  const currentYear = new Date().getFullYear();
+
+  return (
+    <div className="relative">
+      {/* Year selector */}
+      <div className="flex items-center gap-2 mb-1.5">
+        <button onClick={() => setYear(y => y - 1)} className="text-[10px] text-th-muted hover:text-th-secondary transition-colors">&lsaquo;</button>
+        <span className="text-[10px] text-th-tertiary tabular-nums">{year}</span>
+        <button onClick={() => setYear(y => Math.min(y + 1, currentYear))} disabled={year >= currentYear} className="text-[10px] text-th-muted hover:text-th-secondary disabled:opacity-30 transition-colors">&rsaquo;</button>
+      </div>
+      {/* Grid */}
+      <div className="overflow-x-auto thin-scrollbar hub-scrollbar pb-1">
+        <div className="flex gap-px" style={{ minWidth: 'fit-content' }}>
+          {/* Day labels */}
+          <div className="flex flex-col gap-px mr-0.5 flex-shrink-0">
+            {DAY_NAMES.map((name, i) => (
+              <div key={i} className="text-[6px] text-th-muted leading-none" style={{ width: 8, height: 8, lineHeight: '8px' }}>
+                {i % 2 === 1 ? name : ''}
+              </div>
+            ))}
+          </div>
+          {weeks.map((week, wi) => (
+            <div key={wi} className="flex flex-col gap-px">
+              {week.map((day, di) => (
+                <div
+                  key={di}
+                  className={`cursor-pointer transition-all ${isSelected(day.date) ? 'ring-1 ring-violet-400' : isInRange(day.date) ? 'ring-1 ring-violet-400/40' : ''}`}
+                  style={{
+                    width: 8,
+                    height: 8,
+                    backgroundColor: cellColor(day.count, day.inYear),
+                    borderRadius: 1,
+                    opacity: day.inYear ? 1 : 0,
+                  }}
+                  onClick={() => {
+                    if (!day.inYear) return;
+                    handleCellClick(day.date);
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!day.inYear) return;
+                    const rect = (e.target as HTMLElement).getBoundingClientRect();
+                    setTooltip({
+                      text: `${day.date}: ${day.count} note${day.count !== 1 ? 's' : ''}`,
+                      x: rect.left + rect.width / 2,
+                      y: rect.top,
+                    });
+                  }}
+                  onMouseLeave={() => setTooltip(null)}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Tooltip */}
+      {tooltip && (
+        <div
+          className="fixed z-50 px-1.5 py-0.5 text-[9px] text-th-primary border border-th-hub-border rounded-sm pointer-events-none"
+          style={{
+            backgroundColor: 'var(--hub-sidebar-bg)',
+            left: tooltip.x,
+            top: tooltip.y - 24,
+            transform: 'translateX(-50%)',
+          }}
+        >
+          {tooltip.text}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// --- Docked Toolbar ---
+const DockedToolbar: React.FC<{
   query: string;
   setQuery: (q: string) => void;
   searchMode: SearchMode;
   setSearchMode: (m: SearchMode) => void;
-  resultCount: number;
-  scopeHint: string | null;
-}> = ({ open, onClose, query, setQuery, searchMode, setSearchMode, resultCount, scopeHint }) => {
-  const inputRef = useRef<HTMLInputElement>(null);
+  sortMode: SortMode;
+  setSortMode: (m: SortMode) => void;
+  filterState: FilterState;
+  updateFilter: <K extends keyof FilterState>(key: K, value: FilterState[K]) => void;
+  hasActiveFilters: boolean;
+  resetFilters: () => void;
+  directoryScope: string | null;
+  setDirectoryScope: (s: string | null) => void;
+  sortedCount: number;
+  unvisitedOnly: boolean;
+  setUnvisitedOnly: (v: boolean | ((prev: boolean) => boolean)) => void;
+  hasVisited: boolean;
+  isVisited: (id: string) => boolean;
+  allNotes: FieldNoteMeta[];
+  stats: { maxDepth: number };
+  inputRef: React.RefObject<HTMLInputElement | null>;
+}> = ({
+  query, setQuery, searchMode, setSearchMode,
+  sortMode, setSortMode,
+  filterState, updateFilter, hasActiveFilters, resetFilters,
+  directoryScope, setDirectoryScope,
+  sortedCount, unvisitedOnly, setUnvisitedOnly, hasVisited,
+  allNotes, stats, inputRef,
+}) => {
+  const { getIslands, loaded } = useGraphRelevance();
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
-  useEffect(() => {
-    if (open) inputRef.current?.focus();
-  }, [open]);
+  // Auto-expand filters when any filter is active
+  const isFiltersVisible = filtersOpen || hasActiveFilters;
 
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { e.preventDefault(); onClose(false); }
-      if (e.key === 'Enter') { e.preventDefault(); onClose(true); }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [open, onClose]);
-
-  if (!open) return null;
+  // Island options
+  const islandOptions = useMemo(() => {
+    if (!loaded) return [];
+    const islands = getIslands();
+    if (!islands) return [];
+    return islands.components
+      .filter(c => c.size > 1)
+      .sort((a, b) => b.size - a.size);
+  }, [getIslands, loaded]);
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-center" style={{ pointerEvents: 'none' }}>
-      <div className="absolute inset-0" style={{ pointerEvents: 'auto' }} onClick={() => onClose(true)} />
-      <div
-        className="relative mt-16 h-fit w-full max-w-md mx-4 border border-th-hub-border rounded-sm p-3"
-        style={{ backgroundColor: 'var(--hub-sidebar-bg)', pointerEvents: 'auto' }}
-      >
-        <div className="flex items-center border border-th-hub-border px-2 py-1.5 bg-th-surface focus-within:border-th-border-active transition-colors mb-2">
-          <span className="text-th-muted mr-1.5 flex-shrink-0"><SearchIcon /></span>
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder={scopeHint || 'Search...'}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full text-[11px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
-          />
-          {query && (
-            <button
-              onClick={() => setQuery('')}
-              className="text-th-muted hover:text-th-secondary text-[10px] ml-1 flex-shrink-0"
+    <div className="mb-3 border border-th-hub-border rounded-sm" style={{ backgroundColor: 'var(--hub-sidebar-bg)' }}>
+      {/* Row 1: Search + mode chips */}
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-th-hub-border">
+        <span className="text-th-muted flex-shrink-0"><SearchIcon /></span>
+        <input
+          ref={inputRef}
+          type="text"
+          placeholder={
+            directoryScope ? `Search in ${directoryScope.replace(/\/\//g, ' / ')}...`
+            : filterState.islandId != null ? `Search in island #${filterState.islandId}...`
+            : 'Search...'
+          }
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              setQuery('');
+              (e.target as HTMLElement).blur();
+            }
+          }}
+          autoComplete="off"
+          spellCheck={false}
+          className="flex-1 text-[11px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
+        />
+        {query && (
+          <button onClick={() => setQuery('')} className="text-th-muted hover:text-th-secondary text-[10px] flex-shrink-0">&times;</button>
+        )}
+        <span className="text-th-hub-border">|</span>
+        {SEARCH_MODES.map(mode => (
+          <button
+            key={mode.value}
+            onClick={() => setSearchMode(mode.value)}
+            className={`text-[9px] px-1 py-0 transition-colors flex-shrink-0 ${
+              searchMode === mode.value ? 'text-violet-400' : 'text-th-muted hover:text-th-secondary'
+            }`}
+          >
+            {mode.label}
+          </button>
+        ))}
+        <InfoPopover
+          size={12}
+          title="Search modes"
+          content={
+            <div className="space-y-2">
+              <p><strong className={tipStrong}>Name</strong> — matches against note names and addresses.</p>
+              <p><strong className={tipStrong}>Content</strong> — full-text search across note bodies.</p>
+              <p><strong className={tipStrong}>Backlinks</strong> — finds notes that <em>link to</em> a concept matching your query. If note A links to note B, then A is a "backlink" of B.</p>
+              <p><span className="text-blue-400">Blue</span> = visited this session. <span className={tipAccent}>Purple</span> = not yet visited.</p>
+            </div>
+          }
+        />
+      </div>
+
+      {/* Row 2: Filters (collapsible) */}
+      <div className="border-b border-th-hub-border">
+        <button
+          onClick={() => setFiltersOpen(v => !v)}
+          className="w-full flex items-center gap-1.5 px-3 py-1 text-[9px] text-th-muted hover:text-th-secondary transition-colors"
+        >
+          <span>{isFiltersVisible ? '\u25BE' : '\u25B8'}</span>
+          <span>filters</span>
+          {hasActiveFilters && <span className="w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0" />}
+          <span onClick={(e) => e.stopPropagation()}>
+            <InfoPopover
+              size={12}
+              title="Filter options"
+              content={
+                <div className="space-y-2">
+                  <p><strong className={tipStrong}>Orphans</strong> — notes with zero links to or from any other note.</p>
+                  <p><strong className={tipStrong}>Leaf</strong> — notes that have no children in the naming tree (they're at the end of a branch, e.g. <code className={tipCode}>chip//MCU//ARM</code> if ARM has no sub-notes).</p>
+                  <p><strong className={tipStrong}>Bridges</strong> — critical connector notes. If you removed one, its island would split in two. (See the topology section in the sidebar.)</p>
+                  <p><strong className={tipStrong}>Island</strong> — pick a specific connected group from the dropdown. Islands are clusters of notes linked to each other — see sidebar topology for the full map.</p>
+                  <p><strong className={tipStrong}>Depth</strong> — filter by position in the naming tree (<code className={tipCode}>a</code>=1, <code className={tipCode}>a//b</code>=2, <code className={tipCode}>a//b//c</code>=3).</p>
+                  <p><strong className={tipStrong}>Hubs &ge;</strong> — show only notes with at least N connections.</p>
+                  <p><strong className={tipStrong}>Heatmap</strong> — click a day to filter by creation date. Click two days to select a range.</p>
+                </div>
+              }
+            />
+          </span>
+          {hasActiveFilters && (
+            <span
+              className="ml-auto text-th-muted hover:text-violet-400"
+              onClick={(e) => { e.stopPropagation(); resetFilters(); }}
             >
-              &times;
-            </button>
+              reset
+            </span>
           )}
-        </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[8px] text-th-muted opacity-50">mode</span>
-            {SEARCH_MODES.map(mode => (
+        </button>
+        {isFiltersVisible && (
+          <div className="px-3 pb-2 space-y-2">
+            {/* Toggle filters + numeric filters — single row on mobile */}
+            <div className="flex items-center gap-1.5 md:gap-3 flex-wrap">
               <button
-                key={mode.value}
-                onClick={() => setSearchMode(mode.value)}
-                className={`text-[9px] px-1 py-0 transition-colors ${
-                  searchMode === mode.value
-                    ? 'text-violet-400'
-                    : 'text-th-muted hover:text-th-secondary'
+                onClick={() => updateFilter('orphans', !filterState.orphans)}
+                className={`text-[9px] px-1.5 py-0.5 transition-colors ${
+                  filterState.orphans
+                    ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
+                    : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
                 }`}
-              >
-                {mode.label}
-              </button>
-            ))}
+              >orphans</button>
+              <button
+                onClick={() => updateFilter('leaf', !filterState.leaf)}
+                className={`text-[9px] px-1.5 py-0.5 transition-colors ${
+                  filterState.leaf
+                    ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
+                    : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
+                }`}
+              >leaf</button>
+              <button
+                onClick={() => updateFilter('bridgesOnly', !filterState.bridgesOnly)}
+                className={`text-[9px] px-1.5 py-0.5 transition-colors ${
+                  filterState.bridgesOnly
+                    ? 'bg-amber-400/20 text-amber-400 border border-amber-400/30'
+                    : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
+                }`}
+              >bridges</button>
+            </div>
+            {/* Island dropdown + depth + hubs */}
+            <div className="flex items-center gap-1.5 md:gap-3 flex-wrap">
+              {islandOptions.length > 1 && (
+                <div className="flex items-center gap-1 text-[10px] text-th-muted">
+                  <span>island</span>
+                  <select
+                    value={filterState.islandId ?? ''}
+                    onChange={(e) => updateFilter('islandId', e.target.value === '' ? null : Number(e.target.value))}
+                    className="bg-th-surface border border-th-hub-border text-[10px] text-th-primary px-1 py-0.5 focus:outline-none focus:border-th-border-active"
+                  >
+                    <option value="">all</option>
+                    {islandOptions.map(c => (
+                      <option key={c.id} value={c.id}>#{c.id} ({c.size})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <div className="flex items-center gap-1 text-[10px] text-th-muted">
+                <span>depth</span>
+                <StepperInput
+                  value={filterState.depthMin}
+                  onDecrement={() => updateFilter('depthMin', Math.max(1, filterState.depthMin - 1))}
+                  onIncrement={() => updateFilter('depthMin', filterState.depthMin + 1)}
+                  min={1}
+                />
+                <span>&ndash;</span>
+                <StepperInput
+                  value={filterState.depthMax}
+                  displayValue={filterState.depthMax === Infinity ? '\u221e' : String(filterState.depthMax)}
+                  onDecrement={() => updateFilter('depthMax', filterState.depthMax === Infinity ? stats.maxDepth : Math.max(1, filterState.depthMax - 1))}
+                  onIncrement={() => {
+                    if (filterState.depthMax === Infinity) return;
+                    if (filterState.depthMax >= stats.maxDepth) updateFilter('depthMax', Infinity);
+                    else updateFilter('depthMax', filterState.depthMax + 1);
+                  }}
+                />
+              </div>
+              <div className="flex items-center gap-1 text-[10px] text-th-muted">
+                <span>hubs&ge;</span>
+                <StepperInput
+                  value={filterState.hubThreshold}
+                  onDecrement={() => updateFilter('hubThreshold', Math.max(0, filterState.hubThreshold - 1))}
+                  onIncrement={() => updateFilter('hubThreshold', filterState.hubThreshold + 1)}
+                  min={0}
+                />
+              </div>
+            </div>
+            {/* Heatmap — hidden on mobile (too small for touch) */}
+            <div className="hidden md:block">
+              <ActivityHeatmap
+                allNotes={allNotes}
+                dateFilter={filterState.dateFilter}
+                onDateClick={(d) => updateFilter('dateFilter', d)}
+              />
+            </div>
           </div>
-          <span className="text-[9px] text-th-muted tabular-nums">{resultCount} results</span>
+        )}
+      </div>
+
+      {/* Row 3: Sort + unvisited + count + active chips */}
+      <div className="flex items-center gap-1.5 px-3 py-1.5 flex-wrap">
+        {/* Sort: compact dropdown on mobile, inline buttons on desktop */}
+        <select
+          value={sortMode}
+          onChange={(e) => setSortMode(e.target.value as SortMode)}
+          className="md:hidden bg-th-surface border border-th-hub-border text-[10px] text-th-primary px-1 py-0.5 focus:outline-none focus:border-th-border-active"
+        >
+          {SORT_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+        {SORT_OPTIONS.map(opt => (
+          <button
+            key={opt.value}
+            onClick={() => setSortMode(opt.value)}
+            className={`hidden md:inline-block text-[10px] px-1.5 py-0.5 rounded-sm transition-colors ${
+              sortMode === opt.value
+                ? 'text-violet-400 bg-violet-400/10'
+                : 'text-th-muted hover:text-th-secondary'
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+        {hasVisited && (
+          <>
+            <span className="text-th-hub-border">|</span>
+            <button
+              onClick={() => setUnvisitedOnly((v: boolean) => !v)}
+              className={`text-[10px] px-1.5 py-0.5 rounded-sm transition-colors ${
+                unvisitedOnly ? 'text-blue-400' : 'text-th-muted hover:text-blue-400'
+              }`}
+            >
+              unvisited
+            </button>
+          </>
+        )}
+
+        {/* Count + info — pushed to the right */}
+        <span className="flex items-center gap-1.5 ml-auto">
+          <span className="text-[9px] text-th-muted tabular-nums">{sortedCount} {hasActiveFilters || query ? 'results' : 'notes'}</span>
+          <InfoPopover
+            size={13}
+            title="Sorting & shortcuts"
+            tabs={[
+              {
+                label: 'sorting',
+                content: (
+                  <div className="space-y-2">
+                    <p><strong className={tipStrong}>A–Z</strong> — alphabetical by name.</p>
+                    <p><strong className={tipStrong}>Newest / oldest</strong> — by creation date.</p>
+                    <p><strong className={tipStrong}>Most / fewest links</strong> — by total connection count (outgoing + incoming).</p>
+                    <p><strong className={tipStrong}>Depth</strong> — by address hierarchy depth (how deep the note sits in the naming tree).</p>
+                    <p><strong className={tipStrong}>Shuffle</strong> — random order. Click again to reshuffle.</p>
+                    <p><strong className={tipStrong}>Unvisited</strong> — hide cards you've already opened this session.</p>
+                  </div>
+                ),
+              },
+              {
+                label: 'shortcuts',
+                content: (
+                  <div className="space-y-2">
+                    <p><strong className={tipStrong}>Arrow keys</strong> — navigate between cards in the grid.</p>
+                    <p><strong className={tipStrong}>Enter</strong> — open the selected card.</p>
+                    <p><strong className={tipStrong}>Escape</strong> — clear the search query and deselect.</p>
+                    <p><strong className={tipStrong}>Any letter key</strong> — starts typing in the search bar instantly.</p>
+                  </div>
+                ),
+              },
+            ]}
+          />
+        </span>
+
+        {/* Active chips */}
+        <div className="flex items-center gap-1 flex-wrap">
+          {directoryScope && (
+            <Chip label={`scope: ${directoryScope.replace(/\/\//g, ' / ')}`} onDismiss={() => setDirectoryScope(null)} />
+          )}
+          {filterState.islandId != null && (
+            <Chip label={`island #${filterState.islandId}`} onDismiss={() => updateFilter('islandId', null)} />
+          )}
+          {filterState.dateFilter && (
+            <Chip label={filterState.dateFilter.replace('..', ' \u2192 ')} onDismiss={() => updateFilter('dateFilter', null)} />
+          )}
+          {filterState.orphans && <Chip label="orphans" onDismiss={() => updateFilter('orphans', false)} />}
+          {filterState.leaf && <Chip label="leaf" onDismiss={() => updateFilter('leaf', false)} />}
+          {filterState.bridgesOnly && <Chip label="bridges" onDismiss={() => updateFilter('bridgesOnly', false)} color="amber" />}
+          {filterState.depthMin > 1 && <Chip label={`depth \u2265 ${filterState.depthMin}`} onDismiss={() => updateFilter('depthMin', 1)} />}
+          {filterState.depthMax !== Infinity && <Chip label={`depth \u2264 ${filterState.depthMax}`} onDismiss={() => updateFilter('depthMax', Infinity)} />}
+          {filterState.hubThreshold > 0 && <Chip label={`hubs \u2265 ${filterState.hubThreshold}`} onDismiss={() => updateFilter('hubThreshold', 0)} />}
         </div>
       </div>
     </div>
@@ -154,6 +601,8 @@ export const SecondBrainView: React.FC = () => {
     directoryNavRef,
     isVisited,
     backlinksMap,
+    allFieldNotes,
+    stats,
   } = hub;
 
   const navigate = useNavigate();
@@ -161,44 +610,37 @@ export const SecondBrainView: React.FC = () => {
   const { trail, scheduleReset, scheduleExtend, truncateTrail, clearTrail, isOverflowing } =
     useNavigationTrail({ activePost, directoryNavRef });
 
-  // --- Floating search overlay ---
-  const [searchOpen, setSearchOpen] = useState(false);
+  const toolbarInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSearchClose = useCallback((keepQuery: boolean) => {
-    setSearchOpen(false);
-    if (!keepQuery) setQuery('');
-  }, [setQuery]);
-
-  // Type-to-search: any printable key or Backspace opens the overlay
+  // Auto-focus toolbar input when search becomes active (e.g. typed from detail view)
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'f') {
-        e.preventDefault();
-        setSearchOpen(true);
-        return;
-      }
-
-      const tag = (e.target as HTMLElement).tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
-
-      if (e.key.length === 1 || e.key === 'Backspace') {
-        setSearchOpen(true);
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, []);
+    if (searchActive && toolbarInputRef.current) {
+      toolbarInputRef.current.focus();
+    }
+  }, [searchActive]);
 
   const updateFilter = useCallback(<K extends keyof FilterState>(key: K, value: FilterState[K]) => {
     setFilterState(prev => ({ ...prev, [key]: value }));
   }, [setFilterState]);
 
-  const searchScopeHint = directoryScope
-    ? `Search in ${directoryScope.replace(/\/\//g, ' / ')}...`
-    : filterState.islandId != null
-      ? `Search in island #${filterState.islandId}...`
-      : null;
+  // Type-to-search: any printable key focuses toolbar input
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+
+      if (e.key.length === 1) {
+        e.preventDefault();
+        // Append character to query — this also flips detail→grid when searchActive becomes true
+        setQuery(query + e.key);
+        // Focus input if toolbar is already rendered (grid view)
+        toolbarInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [query, setQuery]);
 
   // Wiki-link click handler — extend trail with the clicked concept
   const handleWikiLinkClick = useCallback((conceptId: string) => {
@@ -207,9 +649,6 @@ export const SecondBrainView: React.FC = () => {
   }, [scheduleExtend]);
 
   // Grid card click — reset trail to single item.
-  // Do NOT clearSearch() here — that would set searchActive=false while activePost
-  // still points to the OLD note, causing a 1-frame flash of the previous note.
-  // Instead, the effect below (line ~77) clears search after activePost updates.
   const handleGridCardClick = useCallback((post: FieldNoteMeta) => {
     scheduleReset(post);
   }, [scheduleReset]);
@@ -297,11 +736,9 @@ export const SecondBrainView: React.FC = () => {
   // Set default zone when note changes — persist previous zone if still valid
   useEffect(() => {
     setActiveZone(prev => {
-      // Keep current zone if the new note still has it
       if (prev === 'parent' && neighborhood.parent) return 'parent';
       if (prev === 'siblings' && neighborhood.siblings.length > 0) return 'siblings';
       if (prev === 'children' && neighborhood.children.length > 0) return 'children';
-      // Fall back to default priority
       if (neighborhood.siblings.length > 0) return 'siblings';
       if (neighborhood.children.length > 0) return 'children';
       if (neighborhood.parent) return 'parent';
@@ -437,6 +874,9 @@ export const SecondBrainView: React.FC = () => {
   const lastArrowTime = useRef(0);
   const ARROW_THROTTLE = 80; // ms between arrow key repeats
 
+  // Check if any notes have been visited (for showing unvisited toggle)
+  const hasVisited = useMemo(() => sortedResults.some(n => isVisited(n.id)), [sortedResults, isVisited]);
+
   useEffect(() => {
     if (showDetail) return; // Only active in list view
 
@@ -450,7 +890,6 @@ export const SecondBrainView: React.FC = () => {
         e.preventDefault();
         (e.target as HTMLElement).blur();
         if (e.key === 'Enter') {
-          // Navigate to focused result
           const total = visibleResults.length;
           const idx = focusedIdx >= 0 ? focusedIdx : 0;
           if (idx < total) {
@@ -460,7 +899,6 @@ export const SecondBrainView: React.FC = () => {
           }
           return;
         }
-        // Fall through for arrow keys
       } else if (isInput) {
         return;
       }
@@ -505,7 +943,6 @@ export const SecondBrainView: React.FC = () => {
           return;
         case 'Escape':
           if (searchActive && activePost) {
-            // Return to the note the user was reading before typing to search
             clearSearch();
           }
           setFocusedIdx(-1);
@@ -515,7 +952,6 @@ export const SecondBrainView: React.FC = () => {
       }
 
       setFocusedIdx(next);
-      // Scroll into view
       const card = cardRefs.current.get(next);
       if (card) card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     };
@@ -532,7 +968,6 @@ export const SecondBrainView: React.FC = () => {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 
-      // Zone cycling — ArrowLeft/Right cycles between parent/siblings/children
       if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && availableZones.length > 1) {
         e.preventDefault();
         const curIdx = activeZone ? availableZones.indexOf(activeZone) : -1;
@@ -595,17 +1030,32 @@ export const SecondBrainView: React.FC = () => {
 
   return (
     <div className="animate-fade-in">
-      {/* Floating Search Overlay */}
-      <SearchOverlay
-        open={searchOpen}
-        onClose={handleSearchClose}
-        query={query}
-        setQuery={setQuery}
-        searchMode={searchMode}
-        setSearchMode={setSearchMode}
-        resultCount={sortedResults.length}
-        scopeHint={searchScopeHint}
-      />
+      {/* Toolbar — always mounted so type-to-search input exists in DOM.
+          Hidden in detail view to avoid layout shift, but input stays focusable. */}
+      <div style={showDetail ? { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0, pointerEvents: 'none' } : undefined}>
+        <DockedToolbar
+          query={query}
+          setQuery={setQuery}
+          searchMode={searchMode}
+          setSearchMode={setSearchMode}
+          sortMode={sortMode}
+          setSortMode={setSortMode}
+          filterState={filterState}
+          updateFilter={updateFilter}
+          hasActiveFilters={hasActiveFilters}
+          resetFilters={resetFilters}
+          directoryScope={directoryScope}
+          setDirectoryScope={setDirectoryScope}
+          sortedCount={sortedResults.length}
+          unvisitedOnly={unvisitedOnly}
+          setUnvisitedOnly={setUnvisitedOnly}
+          hasVisited={hasVisited}
+          isVisited={isVisited}
+          allNotes={allFieldNotes}
+          stats={stats}
+          inputRef={toolbarInputRef}
+        />
+      </div>
 
       {/* Main Content */}
       {showDetail ? (
@@ -620,44 +1070,97 @@ export const SecondBrainView: React.FC = () => {
             }}
           >
             {/* Navigation Trail */}
-            <NavigationTrail
-              trail={trail}
-              onItemClick={(index) => truncateTrail(index)}
-              onAllConceptsClick={clearTrail}
-              isOverflowing={isOverflowing}
-            />
+            <div className="flex items-center gap-2 mb-3">
+              <div className="flex-1 min-w-0">
+                <NavigationTrail
+                  trail={trail}
+                  onItemClick={(index) => truncateTrail(index)}
+                  onAllConceptsClick={clearTrail}
+                  isOverflowing={isOverflowing}
+                />
+              </div>
+              <InfoPopover
+                size={13}
+                title="Navigation & page guide"
+                tabs={[
+                  {
+                    label: 'navigation',
+                    content: (
+                      <div className="space-y-2">
+                        <p>The <strong className={tipStrong}>breadcrumb trail</strong> tracks your navigation path through concepts.</p>
+                        <p><strong className={tipStrong}>Click any crumb</strong> to jump back to that point in your trail.</p>
+                        <p><strong className={tipStrong}>"all concepts"</strong> — the first crumb always returns you to the grid.</p>
+                        <p><strong className={tipStrong}>Clicking a body link</strong> extends the trail — you can trace how you got somewhere.</p>
+                        <p><strong className={tipStrong}>Clicking a grid card</strong> resets the trail (starts a new navigation path).</p>
+                        <p>When the trail gets long, it <strong className={tipStrong}>collapses</strong> — older crumbs are hidden but still accessible.</p>
+                      </div>
+                    ),
+                  },
+                  {
+                    label: 'page layout',
+                    content: (
+                      <div className="space-y-2">
+                        <p className={`text-xs font-semibold ${tipAccent} mb-1`}>Mentioned ↑ <span className="font-normal text-th-muted">(incoming links)</span></p>
+                        <p>Colored names below the title — these are <em>other notes that link here</em>. Click to visit them.</p>
+                        <div className="border-t border-th-hub-border my-2" />
+                        <p className={`text-xs font-semibold ${tipAccent} mb-1`}>Links ↓ <span className="font-normal text-th-muted">(outgoing links)</span></p>
+                        <p>Highlighted words inside the note body are links to other concepts. Click to follow them.</p>
+                        <div className="border-t border-th-hub-border my-2" />
+                        <p><strong className={tipStrong}>Address path</strong> — the line below the title (e.g. <code className={tipCode}>chip / MCU / ARM</code>) shows where this note sits in the naming tree. Click an ancestor to go up.</p>
+                        <p><strong className={tipStrong}>Metadata line</strong> — <code className={tipCode}>links ↓ N</code> = how many notes this one links to. <code className={tipCode}>mentioned ↑ N</code> = how many notes link here.</p>
+                      </div>
+                    ),
+                  },
+                ]}
+              />
+            </div>
 
-            {/* Concept Title */}
-            <h2 className="text-2xl font-bold mb-1 text-th-heading">
-              {noteLabel(activePost!)}
-              <BridgeScoreBadge percentile={getPercentile(activePost!.id)} />
-              {(() => {
-                const topo = getNoteTopology(activePost!.id);
-                return (
-                  <>
-                    {topo.componentId != null && !topo.isOrphan && (
-                      <button
-                        onClick={() => {
-                          window.dispatchEvent(new CustomEvent('topology-focus', { detail: { componentId: topo.componentId } }));
-                        }}
-                        className="ml-2 inline-flex items-center text-[10px] font-normal px-1.5 py-0.5 border border-violet-400/30 text-violet-400/80 hover:text-violet-400 hover:border-violet-400/50 transition-colors rounded-sm align-middle"
-                        title={`Component #${topo.componentId} (${topo.componentSize} notes)`}
-                      >
-                        island #{topo.componentId}
-                      </button>
-                    )}
-                    {topo.isBridge && (
-                      <span className="ml-1.5 inline-flex items-center text-[10px] font-normal px-1.5 py-0.5 border border-amber-400/30 text-amber-400/80 rounded-sm align-middle">
-                        ⚡ bridge {Math.round((topo.bridgeCriticality ?? 0) * 100)}%
-                      </span>
-                    )}
-                    {topo.isOrphan && (
-                      <span className="ml-1.5 text-[10px] font-normal text-th-muted align-middle">(orphan)</span>
-                    )}
-                  </>
-                );
-              })()}
-            </h2>
+            {/* Topology badges + Concept Title */}
+            {(() => {
+              const topo = getNoteTopology(activePost!.id);
+              const badges = (
+                <>
+                  {topo.componentId != null && !topo.isOrphan && (
+                    <button
+                      onClick={() => {
+                        window.dispatchEvent(new CustomEvent('topology-focus', { detail: { componentId: topo.componentId } }));
+                      }}
+                      className="inline-flex items-center text-[10px] font-normal px-1.5 py-0.5 border border-violet-400/30 text-violet-400/80 hover:text-violet-400 hover:border-violet-400/50 transition-colors rounded-sm"
+                      title={`Component #${topo.componentId} (${topo.componentSize} notes)`}
+                    >
+                      island #{topo.componentId}
+                    </button>
+                  )}
+                  {topo.isBridge && (
+                    <span className="inline-flex items-center text-[10px] font-normal px-1.5 py-0.5 border border-amber-400/30 text-amber-400/80 rounded-sm">
+                      ⚡ bridge {Math.round((topo.bridgeCriticality ?? 0) * 100)}%
+                    </span>
+                  )}
+                  {topo.isOrphan && (
+                    <span className="text-[10px] font-normal text-th-muted">(orphan)</span>
+                  )}
+                </>
+              );
+              const hasBadges = topo.componentId != null || topo.isBridge || topo.isOrphan;
+              return (
+                <>
+                  {/* Mobile: badges above title, left-aligned */}
+                  {hasBadges && (
+                    <div className="flex items-center gap-1.5 mb-1 lg:hidden">
+                      {badges}
+                    </div>
+                  )}
+                  <h2 className="text-2xl font-bold mb-1 text-th-heading">
+                    {noteLabel(activePost!)}
+                    <BridgeScoreBadge percentile={getPercentile(activePost!.id)} />
+                    {/* Desktop: badges inline after title */}
+                    <span className="hidden lg:inline ml-2 align-middle">
+                      {badges}
+                    </span>
+                  </h2>
+                </>
+              );
+            })()}
             <div className="text-[11px] text-th-tertiary mb-2">
               {activePost!.addressParts && activePost!.addressParts.length > 1
                 ? activePost!.addressParts.map((part, i) => {
@@ -707,9 +1210,7 @@ export const SecondBrainView: React.FC = () => {
               <span>mentioned {'\u2191'} {mentions.length}</span>
             </div>
 
-            {/* Content — fetched on demand, styled via article.css base + wiki-content.css overrides.
-                Always render WikiContent (no "Loading..." conditional) — the column opacity
-                hides everything during transitions, avoiding layout shifts from height changes. */}
+            {/* Content */}
             <div className="article-page-wrapper article-wiki">
               <WikiContent
                 html={resolvedHtml}
@@ -729,8 +1230,19 @@ export const SecondBrainView: React.FC = () => {
                   <hr className="border-t border-th-border my-6" />
                   {connections.length > 0 && (
                     <div>
-                      <h3 className="text-[11px] text-th-tertiary uppercase tracking-wider mb-3">
+                      <h3 className="text-[11px] text-th-tertiary uppercase tracking-wider mb-3 flex items-center gap-1.5">
                         Interactions
+                        <InfoPopover
+                          size={12}
+                          title="About interactions"
+                          content={
+                            <div className="space-y-2">
+                              <p>Unlike regular body links, <strong className={tipStrong}>interactions</strong> are curated, annotated relationships — each one describes <em>how</em> two concepts relate (e.g. "contrast", "depends on", "example of").</p>
+                              <p>They are <strong className={tipStrong}>bilateral</strong> — if note A interacts with B, it appears on both sides automatically.</p>
+                              <p>Click the name to navigate to the related concept.</p>
+                            </div>
+                          }
+                        />
                       </h3>
                       <div className="space-y-3">
                         {connections.map((conn: Connection) => {
@@ -772,9 +1284,7 @@ export const SecondBrainView: React.FC = () => {
             })()}
           </div>
 
-          {/* Right: Context panel (parent/siblings/children) — sticky in viewport.
-              On mobile (single-column), fade in with content to prevent layout-shift blink
-              where the graph briefly flashes at top before body pushes it down. */}
+          {/* Right: Context panel */}
           <div
             className="lg:col-span-2 lg:sticky lg:top-12 lg:self-start"
             style={{
@@ -783,21 +1293,36 @@ export const SecondBrainView: React.FC = () => {
             }}
           >
             <hr className="lg:hidden border-t border-th-border my-6" />
-            {/* Graph — always visible */}
-            <NeighborhoodGraph
-              neighborhood={neighborhood}
-              currentNote={activePost!}
-              onNoteClick={handleConnectionClick}
-              isVisited={isVisited}
-              activeZone={zoneFilter ? activeZone : null}
-              onActiveZoneChange={(zone) => { setZoneFilter(true); setActiveZone(zone); }}
-              homonymParents={homonymParents}
-              onHomonymNavigate={(homonym) => {
-                scheduleExtend(homonym);
-                navigate(`/lab/second-brain/${homonym.id}`);
-              }}
-            />
-            {/* Zone filter toggle — below the graph */}
+            <div className="relative">
+              <NeighborhoodGraph
+                neighborhood={neighborhood}
+                currentNote={activePost!}
+                onNoteClick={handleConnectionClick}
+                isVisited={isVisited}
+                activeZone={zoneFilter ? activeZone : null}
+                onActiveZoneChange={(zone) => { setZoneFilter(true); setActiveZone(zone); }}
+                homonymParents={homonymParents}
+                onHomonymNavigate={(homonym) => {
+                  scheduleExtend(homonym);
+                  navigate(`/lab/second-brain/${homonym.id}`);
+                }}
+              />
+              <span className="absolute top-2 right-2">
+                <InfoPopover
+                  size={13}
+                  title="Neighborhood graph"
+                  content={
+                    <div className="space-y-2">
+                      <p>This graph shows where the current note sits in the <strong className={tipStrong}>naming hierarchy</strong> (its address path), not its link connections.</p>
+                      <p>Three zones: <strong className={tipStrong}>parent</strong> (above), <strong className={tipStrong}>siblings</strong> (same level), <strong className={tipStrong}>children</strong> (below). Click a zone to filter the leaderboard below.</p>
+                      <p><strong className={tipStrong}>Arrow keys</strong> — left/right switches zones, up/down navigates within a zone. Enter to open.</p>
+                      <p><strong className={tipStrong}>White bar</strong> = current note. <span className="text-blue-400">Blue</span> = visited. <span className={tipAccent}>Purple</span> = not yet visited.</p>
+                      <p><strong className={tipStrong}>Ghost dots</strong> — if the same name exists under multiple parents, dots mark the alternatives.</p>
+                    </div>
+                  }
+                />
+              </span>
+            </div>
             <label className="flex items-center gap-1.5 mt-3 mb-1 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -807,7 +1332,6 @@ export const SecondBrainView: React.FC = () => {
               />
               <span className="text-[10px] text-th-muted">filter by zone</span>
             </label>
-            {/* Family list — filtered by zone when toggle on, all when off */}
             <div className="mt-2">
             <RelevanceLeaderboard
               mode="family"
@@ -819,7 +1343,6 @@ export const SecondBrainView: React.FC = () => {
             />
             </div>
           </div>
-          {/* Back to top — mobile only (stacked layout) */}
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="lg:hidden w-full mt-8 mb-4 py-2 text-[10px] uppercase tracking-wider text-th-muted hover:text-violet-400 border border-th-hub-border hover:border-violet-400/30 transition-colors"
@@ -830,98 +1353,6 @@ export const SecondBrainView: React.FC = () => {
       ) : (
         /* --- Concept List View --- */
         <div>
-          {/* Sort control + scope/search/filter indicators */}
-          <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
-            <div className="flex items-center gap-2 flex-wrap">
-              {directoryScope && (
-                <span className="text-[9px] px-1.5 py-0.5 bg-violet-400/10 text-violet-400 border border-violet-400/20 flex items-center gap-1">
-                  scope: {directoryScope.replace(/\/\//g, ' / ')}
-                  <button onClick={() => setDirectoryScope(null)} className="hover:text-white">&times;</button>
-                </span>
-              )}
-              {filterState.islandId != null && (
-                <span className="text-[9px] px-1.5 py-0.5 bg-violet-400/10 text-violet-400 border border-violet-400/20 flex items-center gap-1">
-                  island #{filterState.islandId}
-                  <button onClick={() => updateFilter('islandId', null)} className="hover:text-white">&times;</button>
-                </span>
-              )}
-              {!searchOpen && query && (
-                <span className="text-[9px] px-1.5 py-0.5 bg-violet-400/10 text-violet-400 border border-violet-400/20 flex items-center gap-1 cursor-pointer" onClick={() => setSearchOpen(true)}>
-                  &ldquo;{query}&rdquo;
-                  <button onClick={(e) => { e.stopPropagation(); setQuery(''); }} className="hover:text-white">&times;</button>
-                </span>
-              )}
-              {filterState.orphans && (
-                <span className="text-[9px] px-1.5 py-0.5 bg-violet-400/20 text-violet-400 border border-violet-400/30 flex items-center gap-1">
-                  orphans
-                  <button onClick={() => updateFilter('orphans', false)} className="hover:text-white">&times;</button>
-                </span>
-              )}
-              {filterState.leaf && (
-                <span className="text-[9px] px-1.5 py-0.5 bg-violet-400/20 text-violet-400 border border-violet-400/30 flex items-center gap-1">
-                  leaf
-                  <button onClick={() => updateFilter('leaf', false)} className="hover:text-white">&times;</button>
-                </span>
-              )}
-              {filterState.bridgesOnly && (
-                <span className="text-[9px] px-1.5 py-0.5 bg-amber-400/20 text-amber-400 border border-amber-400/30 flex items-center gap-1">
-                  bridges
-                  <button onClick={() => updateFilter('bridgesOnly', false)} className="hover:text-white">&times;</button>
-                </span>
-              )}
-              {filterState.depthMin > 1 && (
-                <span className="text-[9px] px-1.5 py-0.5 bg-violet-400/20 text-violet-400 border border-violet-400/30 flex items-center gap-1">
-                  depth &ge; {filterState.depthMin}
-                  <button onClick={() => updateFilter('depthMin', 1)} className="hover:text-white">&times;</button>
-                </span>
-              )}
-              {filterState.depthMax !== Infinity && (
-                <span className="text-[9px] px-1.5 py-0.5 bg-violet-400/20 text-violet-400 border border-violet-400/30 flex items-center gap-1">
-                  depth &le; {filterState.depthMax}
-                  <button onClick={() => updateFilter('depthMax', Infinity)} className="hover:text-white">&times;</button>
-                </span>
-              )}
-              {filterState.hubThreshold > 0 && (
-                <span className="text-[9px] px-1.5 py-0.5 bg-violet-400/20 text-violet-400 border border-violet-400/30 flex items-center gap-1">
-                  hubs &ge; {filterState.hubThreshold}
-                  <button onClick={() => updateFilter('hubThreshold', 0)} className="hover:text-white">&times;</button>
-                </span>
-              )}
-              {!query && !hasActiveFilters && !directoryScope && (
-                <span className="text-[9px] text-th-muted">{sortedResults.length} concepts</span>
-              )}
-              {(query || hasActiveFilters) && (
-                <span className="text-[9px] text-th-muted tabular-nums">{sortedResults.length} results</span>
-              )}
-            </div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {sortedResults.some(n => isVisited(n.id)) && (
-                <button
-                  onClick={() => setUnvisitedOnly(v => !v)}
-                  className={`text-[10px] px-2 py-0.5 rounded-sm transition-colors ${
-                    unvisitedOnly ? 'text-blue-400' : 'text-th-muted hover:text-blue-400'
-                  }`}
-                >
-                  unvisited
-                </button>
-              )}
-              <span className="text-th-hub-border">|</span>
-              {SORT_OPTIONS.map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => setSortMode(opt.value)}
-                  className={`text-[10px] px-2 py-0.5 rounded-sm transition-colors ${
-                    sortMode === opt.value
-                      ? 'text-violet-400 bg-violet-400/10'
-                      : 'text-th-muted hover:text-th-secondary'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {visibleResults.length > 0 ? (
               visibleResults.map((note, idx) => {
@@ -981,6 +1412,24 @@ export const SecondBrainView: React.FC = () => {
             <div ref={sentinelRef} className="h-1" />
           )}
         </div>
+      )}
+
+      {/* Mobile floating search button — portal to body to escape animate-fade-in transform stacking context */}
+      {showDetail && createPortal(
+        <button
+          onClick={() => {
+            navigate('/lab/second-brain');
+            setTimeout(() => {
+              toolbarInputRef.current?.scrollIntoView({ block: 'nearest' });
+              toolbarInputRef.current?.focus();
+            }, 100);
+          }}
+          className="lg:hidden fixed bottom-16 right-4 z-40 w-10 h-10 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+          aria-label="Search concepts"
+        >
+          <SearchIcon />
+        </button>,
+        document.body
       )}
     </div>
   );
