@@ -147,7 +147,7 @@ export const IslandDetector = forwardRef<IslandDetectorHandle, {
                   className={`flex-shrink-0 transition-all ${
                     activeIslandScope === comp.id
                       ? 'text-violet-400 opacity-100'
-                      : 'opacity-0 group-hover:opacity-100 text-th-muted hover:text-violet-400'
+                      : 'hover-reveal text-th-muted hover:text-violet-400'
                   }`}
                   title={activeIslandScope === comp.id ? 'Clear island scope' : 'Scope search to this island'}
                 >
