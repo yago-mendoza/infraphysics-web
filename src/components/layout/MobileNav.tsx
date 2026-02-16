@@ -1,8 +1,7 @@
 // Mobile hamburger menu navigation component — theme-aware
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { posts } from '../../data/data';
+import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import {
   Logo,
@@ -27,7 +26,6 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearc
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);   // controls DOM presence
   const [visible, setVisible] = useState(false);    // controls CSS transition state
-  const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
 
   // Open: mount first, then trigger visible on next frame
@@ -138,17 +136,6 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearc
               <NavLink to="/about" accent={CATEGORY_ACCENTS.meta} icon={<UserIcon />}>About</NavLink>
               <NavLink to="/contact" accent={CATEGORY_ACCENTS.meta} icon={<MailIcon />}>Contact</NavLink>
 
-              {/* Divider */}
-              <div className="my-3 border-t border-th-border"></div>
-
-              {/* Random Button */}
-              <button
-                onClick={handleRandom}
-                className="flex items-center gap-2 px-3 py-1.5 text-xs text-th-tertiary hover:text-th-secondary transition-colors"
-              >
-                <span className="w-4 h-4 flex items-center justify-center bg-th-elevated rounded-sm text-[10px]">?</span>
-                Random post
-              </button>
             </nav>
           </div>
         </>
