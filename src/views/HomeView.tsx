@@ -111,7 +111,7 @@ export const HomeView: React.FC = () => {
 
           <p className="mt-3 md:mt-4 text-sm text-th-tertiary">
             by{' '}
-            <Link to="/about" className="text-th-secondary hover:text-th-heading transition-colors underline underline-offset-4 decoration-th-border">
+            <Link to="/about" className="text-th-secondary hover:text-th-heading transition-colors underline underline-offset-4 decoration-th-secondary">
               Yago Mendoza
             </Link>
             {' '}&mdash; industrial engineer, systems builder
