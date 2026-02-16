@@ -636,7 +636,7 @@ function processMarkdownFile(filePath) {
     title: frontmatter.title || frontmatter.id,
     displayTitle: frontmatter.displayTitle,
     category: frontmatter.category,
-    date: frontmatter.date,
+    date: frontmatter.date ? String(frontmatter.date).slice(0, 10) : '',
     thumbnail: frontmatter.thumbnail || null,
     thumbnailAspect: frontmatter.thumbnailAspect || null,
     thumbnailShading: frontmatter.thumbnailShading || null,
@@ -745,7 +745,7 @@ function extractFieldnoteMeta(filename, filePath) {
     return null;
   }
 
-  const date = frontmatter.date || '';
+  const date = frontmatter.date ? String(frontmatter.date).slice(0, 10) : '';
   const id = uid;
   const addressParts = address.split('//').map(s => s.trim());
   const name = frontmatter.name || addressParts[addressParts.length - 1];
