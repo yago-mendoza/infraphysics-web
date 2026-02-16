@@ -43,15 +43,6 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearc
 
   const close = useCallback(() => setIsOpen(false), []);
 
-
-  const handleRandom = () => {
-    if (posts.length === 0) return;
-    const randomIndex = Math.floor(Math.random() * posts.length);
-    const randomPost = posts[randomIndex];
-    navigate(`/${randomPost.category}/${randomPost.id}`);
-    close();
-  };
-
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
   const NavLink = ({ to, basePath, accent: linkAccent, icon, children }: { to: string, basePath?: string, accent: string, icon: React.ReactNode, children: React.ReactNode }) => {
