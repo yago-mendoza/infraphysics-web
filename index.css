@@ -1,6 +1,13 @@
 /* Prevent horizontal scroll on mobile */
 html, body { overflow-x: hidden; }
 
+/* Hover-revealed controls: always visible on touch, hover-to-show on pointer */
+.hover-reveal { opacity: 0.5; transition: opacity 150ms ease; }
+@media (hover: hover) {
+  .hover-reveal { opacity: 0; }
+  .group:hover .hover-reveal { opacity: 1; }
+}
+
 /* Register custom properties as <color> so Chrome can interpolate
    them during transitions instead of treating them as opaque strings. */
 
