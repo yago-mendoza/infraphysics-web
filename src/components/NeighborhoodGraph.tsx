@@ -3,20 +3,12 @@
 // Clicking a zone reveals its details below the graph.
 // Sibling-to-sibling navigation animates: the white bar slides to where the sibling dot was.
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { noteLabel, type FieldNoteMeta } from '../types';
 import type { Neighborhood } from '../lib/brainIndex';
 
 export type Zone = 'parent' | 'siblings' | 'children' | null;
-
-// Centralized visited/unvisited color classes for note links
-const noteTextCls = (visited: boolean) =>
-  visited ? 'text-blue-400/70 group-hover:text-blue-400' : 'text-violet-400/70 group-hover:text-violet-400';
-const noteBorderCls = (visited: boolean) =>
-  visited ? 'hover:border-blue-400/30' : 'hover:border-violet-400/30';
-const noteFocusCls = (visited: boolean) =>
-  visited ? 'border-blue-400/40 bg-blue-400/5' : 'border-violet-400/40 bg-violet-400/5';
 
 interface Props {
   neighborhood: Neighborhood;
@@ -25,9 +17,7 @@ interface Props {
   isVisited?: (noteId: string) => boolean;
   activeZone: Zone;
   onActiveZoneChange: (zone: Zone) => void;
-  focusedDetailIdx: number;
   homonymParents?: { parent: FieldNoteMeta; homonym: FieldNoteMeta }[];
-  homonymLeaf?: string;
   onHomonymNavigate?: (homonym: FieldNoteMeta) => void;
 }
 
@@ -41,6 +31,7 @@ const CHILDREN_X = 270;
 const NODE_R = 3.5;
 const CURRENT_W = 4;
 const CURRENT_H = 22;
+const HIT_R = 10;      // invisible hit-area radius for tooltip hover
 const TRANSITION = '400ms ease';
 const MAX_COL = 10;    // max nodes per center column before splitting
 const COL_GAP = 14;    // horizontal gap between center sub-columns
@@ -62,6 +53,25 @@ function distributeY(count: number, centerY: number, spacing: number): number[] 
   const totalSpan = (count - 1) * spacing;
   const startY = centerY - totalSpan / 2;
   return Array.from({ length: count }, (_, i) => startY + i * spacing);
+}
+
+// Distribute nodes around centerY but leave a gap at centerY for the current node.
+// Splits nodes into two halves above and below centerY.
+function distributeYWithGap(count: number, centerY: number, spacing: number, gapH: number): number[] {
+  if (count === 0) return [];
+  const halfGap = gapH / 2 + spacing / 2;
+  const above = Math.ceil(count / 2);
+  const below = count - above;
+  const ys: number[] = [];
+  // above group: bottom-aligned just above the gap
+  for (let i = 0; i < above; i++) {
+    ys.push(centerY - halfGap - (above - 1 - i) * spacing);
+  }
+  // below group: top-aligned just below the gap
+  for (let i = 0; i < below; i++) {
+    ys.push(centerY + halfGap + i * spacing);
+  }
+  return ys;
 }
 
 function bezierH(x1: number, y1: number, x2: number, y2: number): string {
@@ -94,9 +104,17 @@ function ghostDiamondColumns(n: number): number[] {
   return cols;
 }
 
-export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, onNoteClick, isVisited, activeZone, onActiveZoneChange, focusedDetailIdx, homonymParents, homonymLeaf, onHomonymNavigate }) => {
+export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, onNoteClick, isVisited, activeZone, onActiveZoneChange, homonymParents, onHomonymNavigate }) => {
+  const navigate = useNavigate();
   const [hoveredZone, setHoveredZone] = useState<Zone>(null);
   const [highlightedNoteId, setHighlightedNoteId] = useState<string | null>(null);
+  const [tooltip, setTooltip] = useState<{ label: string; x: number; y: number } | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  const showTooltip = (note: FieldNoteMeta, svgX: number, svgY: number) => {
+    setTooltip({ label: noteLabel(note), x: svgX, y: svgY });
+  };
+  const hideTooltip = () => setTooltip(null);
 
   const { parent, siblings, children } = neighborhood;
 
@@ -123,44 +141,68 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
   const svgH = Math.max(H_MIN, maxNodes * H_PER_NODE + 28);
   const centerY = svgH / 2;
 
-  // Diamond multi-column layout for center entries
+  // Diamond multi-column layout for center entries.
+  // Current node is always placed to the right of siblings and vertically centered,
+  // so parent→sibling lines don't cross over the current node.
   const centerPositions = useMemo(() => {
-    const N = centerEntries.length;
-    if (N <= MAX_COL) {
-      const ys = distributeY(N, centerY, H_PER_NODE);
-      return centerEntries.map((e, i) => ({ entry: e, x: CENTER_X, y: ys[i] }));
-    }
-    // Build diamond column counts: center=MAX_COL, sides taper by 2
-    let cols: number[];
-    if (N <= MAX_COL + 8) {
-      cols = [N - MAX_COL, MAX_COL];
-    } else if (N <= MAX_COL + 16) {
-      const rem = N - MAX_COL;
-      cols = [Math.ceil(rem / 2), MAX_COL, Math.floor(rem / 2)];
+    const siblingEntries = centerEntries.filter(e => !e.isCurrent);
+    const currentEntry = centerEntries.find(e => e.isCurrent);
+    const S = siblingEntries.length;
+
+    // Position siblings in columns. The rightmost column uses distributeYWithGap
+    // to leave a gap at centerY where the current node sits.
+    const positions: { entry: typeof centerEntries[0]; x: number; y: number }[] = [];
+
+    if (S === 0) {
+      // No siblings — current alone at center
+    } else if (S <= MAX_COL) {
+      // Single column — leave gap for current at centerY
+      const ys = distributeYWithGap(S, centerY, H_PER_NODE, CURRENT_H);
+      siblingEntries.forEach((e, i) => positions.push({ entry: e, x: CENTER_X, y: ys[i] }));
     } else {
-      const rem = N - MAX_COL;
-      const innerCap = 8;
-      const innerUsed = Math.min(rem, innerCap * 2);
-      const outerRem = rem - innerUsed;
-      const left = Math.ceil(innerUsed / 2);
-      const right = innerUsed - left;
-      const outerL = Math.ceil(outerRem / 2);
-      const outerR = outerRem - outerL;
-      cols = [outerL, left, MAX_COL, right, outerR].filter(c => c > 0);
-    }
-    const centerColIdx = cols.indexOf(Math.max(...cols));
-    const colXs = cols.map((_, i) => CENTER_X + (i - centerColIdx) * COL_GAP);
-    let idx = 0;
-    const result: { entry: typeof centerEntries[0]; x: number; y: number }[] = [];
-    for (let c = 0; c < cols.length; c++) {
-      const count = cols[c];
-      const ys = distributeY(count, centerY, H_PER_NODE);
-      for (let j = 0; j < count && idx < N; j++) {
-        result.push({ entry: centerEntries[idx], x: colXs[c], y: ys[j] });
-        idx++;
+      let cols: number[];
+      if (S <= MAX_COL + 8) {
+        cols = [S - MAX_COL, MAX_COL];
+      } else if (S <= MAX_COL + 16) {
+        const rem = S - MAX_COL;
+        cols = [Math.ceil(rem / 2), MAX_COL, Math.floor(rem / 2)];
+      } else {
+        const rem = S - MAX_COL;
+        const innerCap = 8;
+        const innerUsed = Math.min(rem, innerCap * 2);
+        const outerRem = rem - innerUsed;
+        const left = Math.ceil(innerUsed / 2);
+        const right = innerUsed - left;
+        const outerL = Math.ceil(outerRem / 2);
+        const outerR = outerRem - outerL;
+        cols = [outerL, left, MAX_COL, right, outerR].filter(c => c > 0);
+      }
+      const centerColIdx = cols.indexOf(Math.max(...cols));
+      const colXs = cols.map((_, i) => CENTER_X + (i - centerColIdx) * COL_GAP);
+      let idx = 0;
+      const lastCol = cols.length - 1;
+      for (let c = 0; c < cols.length; c++) {
+        const count = cols[c];
+        // Rightmost column: leave gap at centerY for current node
+        const ys = c === lastCol
+          ? distributeYWithGap(count, centerY, H_PER_NODE, CURRENT_H)
+          : distributeY(count, centerY, H_PER_NODE);
+        for (let j = 0; j < count && idx < S; j++) {
+          positions.push({ entry: siblingEntries[idx], x: colXs[c], y: ys[j] });
+          idx++;
+        }
       }
     }
-    return result;
+
+    // Current node: rightmost column, vertically centered
+    if (currentEntry) {
+      const curX = positions.length > 0
+        ? Math.max(...positions.map(p => p.x))
+        : CENTER_X;
+      positions.push({ entry: currentEntry, x: curX, y: centerY });
+    }
+
+    return positions;
   }, [centerEntries, centerY]);
 
   const parentPos = parent ? { x: PARENT_X, y: centerY } : null;
@@ -235,22 +277,6 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
     if (zone !== activeZone) onActiveZoneChange(zone);
   };
 
-  const focusedDetailRef = useRef<HTMLAnchorElement>(null);
-  useEffect(() => {
-    focusedDetailRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }, [focusedDetailIdx]);
-
-  // Only show fade overlay + bottom padding when scroll container actually overflows
-  const scrollElRef = useRef<HTMLDivElement>(null);
-  const [showFade, setShowFade] = useState(false);
-  useEffect(() => {
-    const el = scrollElRef.current;
-    if (!el) { setShowFade(false); return; }
-    requestAnimationFrame(() => {
-      setShowFade(el.scrollHeight > el.clientHeight + 4);
-    });
-  }, [activeZone, parent?.id, siblings.length, children.length, ghostParents.length]);
-
   const isEmpty = !parent && siblings.length === 0 && children.length === 0;
 
   if (isEmpty) {
@@ -272,6 +298,7 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
         style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}
       >
         <svg
+          ref={svgRef}
           viewBox={`0 0 ${W} ${svgH}`}
           className="w-full block"
           style={{ height: Math.min(svgH, 240) }}
@@ -308,6 +335,36 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
             rx={3}
             style={{ transition: `x ${TRANSITION}, width ${TRANSITION}, opacity 200ms ease` }}
           />
+
+          {/* Invisible click zones — behind nodes so <title> tooltips work */}
+          {parentPos && (
+            <rect
+              x={0} y={0} width={sibZoneX} height={svgH}
+              fill="transparent"
+              style={{ cursor: 'pointer' }}
+              onClick={() => handleZoneClick('parent')}
+              onMouseEnter={() => setHoveredZone('parent')}
+              onMouseLeave={() => setHoveredZone(null)}
+            />
+          )}
+          <rect
+            x={sibZoneX} y={0} width={sibZoneW} height={svgH}
+            fill="transparent"
+            style={{ cursor: siblings.length > 0 ? 'pointer' : 'default' }}
+            onClick={() => siblings.length > 0 && handleZoneClick('siblings')}
+            onMouseEnter={() => siblings.length > 0 && setHoveredZone('siblings')}
+            onMouseLeave={() => setHoveredZone(null)}
+          />
+          {children.length > 0 && (
+            <rect
+              x={sibZoneX + sibZoneW} y={0} width={W - sibZoneX - sibZoneW} height={svgH}
+              fill="transparent"
+              style={{ cursor: 'pointer' }}
+              onClick={() => handleZoneClick('children')}
+              onMouseEnter={() => setHoveredZone('children')}
+              onMouseLeave={() => setHoveredZone(null)}
+            />
+          )}
 
           {/* Lines: center nodes → parent */}
           {parentPos && (
@@ -348,33 +405,42 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
           {parentPos && (() => {
             const isHighlighted = highlightedNoteId === parent!.id;
             return (
-              <circle
-                cx={parentPos.x}
-                cy={parentPos.y}
-                r={5}
-                fill={isHighlighted ? 'rgba(139,92,246,1)' : isVisited?.(parent!.id) ? COL_PARENT_VISITED : COL_PARENT}
-                filter={isHighlighted ? 'url(#node-glow)' : 'none'}
-                style={{ cursor: 'pointer', transition: 'fill 200ms ease' }}
-                onClick={() => handleZoneClick('parent')}
-                onMouseEnter={() => setHoveredZone('parent')}
-                onMouseLeave={() => setHoveredZone(null)}
-              />
+              <g>
+                <circle
+                  cx={parentPos.x}
+                  cy={parentPos.y}
+                  r={5}
+                  fill={isHighlighted ? 'rgba(139,92,246,1)' : isVisited?.(parent!.id) ? COL_PARENT_VISITED : COL_PARENT}
+                  filter={isHighlighted ? 'url(#node-glow)' : 'none'}
+                  style={{ transition: 'fill 200ms ease' }}
+                />
+                <circle
+                  cx={parentPos.x} cy={parentPos.y} r={HIT_R}
+                  fill="transparent" style={{ cursor: 'pointer' }}
+                  onClick={() => { onNoteClick(parent!); navigate(`/lab/second-brain/${parent!.id}`); }}
+                  onMouseEnter={() => { setHoveredZone('parent'); showTooltip(parent!, parentPos.x, parentPos.y); }}
+                  onMouseLeave={() => { setHoveredZone(null); hideTooltip(); }}
+                />
+              </g>
             );
           })()}
 
           {/* Ghost parent dots — homonym alternate parents, diamond layout, no connectors */}
           {ghostParentPositions.map((pos) => (
-            <circle
-              key={`ghost-${pos.entry.homonym.id}`}
-              className="homonym-ghost-dot"
-              cx={pos.x}
-              cy={pos.y}
-              r={5}
-              fill={isVisited?.(pos.entry.parent.id) ? COL_GHOST_PARENT_VISITED : COL_GHOST_PARENT}
-              onClick={() => onHomonymNavigate?.(pos.entry.homonym)}
-            >
-              <title>{noteLabel(pos.entry.parent)}</title>
-            </circle>
+            <g key={`ghost-${pos.entry.homonym.id}`}>
+              <circle
+                className="homonym-ghost-dot"
+                cx={pos.x} cy={pos.y} r={5}
+                fill={isVisited?.(pos.entry.parent.id) ? COL_GHOST_PARENT_VISITED : COL_GHOST_PARENT}
+              />
+              <circle
+                cx={pos.x} cy={pos.y} r={HIT_R}
+                fill="transparent" style={{ cursor: 'pointer' }}
+                onClick={() => onHomonymNavigate?.(pos.entry.homonym)}
+                onMouseEnter={() => showTooltip(pos.entry.parent, pos.x, pos.y)}
+                onMouseLeave={hideTooltip}
+              />
+            </g>
           ))}
 
           {/* Center: current + siblings as uniform rects with stable keys (diamond layout) */}
@@ -385,23 +451,27 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
             const h = isCur ? CURRENT_H : NODE_R * 2;
             const rx = isCur ? 2 : NODE_R;
             return (
-              <rect
-                key={pos.entry.note.id}
-                x={pos.x - w / 2}
-                y={pos.y - h / 2}
-                width={w}
-                height={h}
-                rx={rx}
-                fill={isHighlighted ? 'rgba(139,92,246,1)' : isCur ? COL_CURRENT : (isVisited?.(pos.entry.note.id) ? COL_VISITED : COL_SIBLING)}
-                filter={isHighlighted ? 'url(#node-glow)' : 'none'}
-                style={{
-                  transition: `x ${TRANSITION}, y ${TRANSITION}, width ${TRANSITION}, height ${TRANSITION}, rx ${TRANSITION}, fill 200ms ease`,
-                  cursor: isCur ? 'default' : 'pointer',
-                }}
-                onClick={() => !isCur && handleZoneClick('siblings')}
-                onMouseEnter={() => !isCur && setHoveredZone('siblings')}
-                onMouseLeave={() => setHoveredZone(null)}
-              />
+              <g key={pos.entry.note.id}>
+                <rect
+                  x={pos.x - w / 2}
+                  y={pos.y - h / 2}
+                  width={w}
+                  height={h}
+                  rx={rx}
+                  fill={isHighlighted ? 'rgba(139,92,246,1)' : isCur ? COL_CURRENT : (isVisited?.(pos.entry.note.id) ? COL_VISITED : COL_SIBLING)}
+                  filter={isHighlighted ? 'url(#node-glow)' : 'none'}
+                  style={{
+                    transition: `x ${TRANSITION}, y ${TRANSITION}, width ${TRANSITION}, height ${TRANSITION}, rx ${TRANSITION}, fill 200ms ease`,
+                  }}
+                />
+                <circle
+                  cx={pos.x} cy={pos.y} r={HIT_R}
+                  fill="transparent" style={{ cursor: isCur ? 'default' : 'pointer' }}
+                  onClick={() => { if (!isCur) { onNoteClick(pos.entry.note); navigate(`/lab/second-brain/${pos.entry.note.id}`); } }}
+                  onMouseEnter={() => { if (!isCur) setHoveredZone('siblings'); showTooltip(pos.entry.note, pos.x, pos.y); }}
+                  onMouseLeave={() => { setHoveredZone(null); hideTooltip(); }}
+                />
+              </g>
             );
           })}
 
@@ -409,209 +479,49 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
           {childrenYs.map((cy, i) => {
             const isHighlighted = highlightedNoteId === children[i].id;
             return (
-              <circle
-                key={`child-${children[i].id}`}
-                cx={CHILDREN_X}
-                cy={cy}
-                r={NODE_R}
-                fill={isHighlighted ? 'rgba(139,92,246,1)' : isVisited?.(children[i].id) ? COL_VISITED : COL_CHILD}
-                filter={isHighlighted ? 'url(#node-glow)' : 'none'}
-                style={{ cursor: 'pointer', transition: 'fill 200ms ease' }}
-                onClick={() => handleZoneClick('children')}
-                onMouseEnter={() => setHoveredZone('children')}
-                onMouseLeave={() => setHoveredZone(null)}
-              />
+              <g key={`child-${children[i].id}`}>
+                <circle
+                  cx={CHILDREN_X}
+                  cy={cy}
+                  r={NODE_R}
+                  fill={isHighlighted ? 'rgba(139,92,246,1)' : isVisited?.(children[i].id) ? COL_VISITED : COL_CHILD}
+                  filter={isHighlighted ? 'url(#node-glow)' : 'none'}
+                  style={{ transition: 'fill 200ms ease' }}
+                />
+                <circle
+                  cx={CHILDREN_X} cy={cy} r={HIT_R}
+                  fill="transparent" style={{ cursor: 'pointer' }}
+                  onClick={() => { onNoteClick(children[i]); navigate(`/lab/second-brain/${children[i].id}`); }}
+                  onMouseEnter={() => { setHoveredZone('children'); showTooltip(children[i], CHILDREN_X, cy); }}
+                  onMouseLeave={() => { setHoveredZone(null); hideTooltip(); }}
+                />
+              </g>
             );
           })}
 
-          {/* Invisible click zones — sized to match dynamic center zone */}
-          {parentPos && (
-            <rect
-              x={0} y={0} width={sibZoneX} height={svgH}
-              fill="transparent"
-              style={{ cursor: 'pointer' }}
-              onClick={() => handleZoneClick('parent')}
-              onMouseEnter={() => setHoveredZone('parent')}
-              onMouseLeave={() => setHoveredZone(null)}
-            />
-          )}
-          <rect
-            x={sibZoneX} y={0} width={sibZoneW} height={svgH}
-            fill="transparent"
-            style={{ cursor: siblings.length > 0 ? 'pointer' : 'default' }}
-            onClick={() => siblings.length > 0 && handleZoneClick('siblings')}
-            onMouseEnter={() => siblings.length > 0 && setHoveredZone('siblings')}
-            onMouseLeave={() => setHoveredZone(null)}
-          />
-          {children.length > 0 && (
-            <rect
-              x={sibZoneX + sibZoneW} y={0} width={W - sibZoneX - sibZoneW} height={svgH}
-              fill="transparent"
-              style={{ cursor: 'pointer' }}
-              onClick={() => handleZoneClick('children')}
-              onMouseEnter={() => setHoveredZone('children')}
-              onMouseLeave={() => setHoveredZone(null)}
-            />
+          {/* Custom tooltip — instant, no browser delay */}
+          {tooltip && (
+            <g style={{ pointerEvents: 'none' }}>
+              <rect
+                x={tooltip.x + 8} y={tooltip.y - 14}
+                width={tooltip.label.length * 5.5 + 12} height={18}
+                rx={3}
+                fill="rgba(0,0,0,0.85)"
+              />
+              <text
+                x={tooltip.x + 14} y={tooltip.y - 2}
+                fill="rgba(255,255,255,0.9)"
+                fontSize={9}
+                fontFamily="system-ui, sans-serif"
+              >
+                {tooltip.label}
+              </text>
+            </g>
           )}
 
         </svg>
       </div>
 
-      {/* Detail section below graph — outer div handles collapse */}
-      <div
-        className="overflow-hidden relative"
-        style={{
-          maxHeight: activeZone ? 'calc(100dvh - 20rem)' : '0px',
-          opacity: activeZone ? 1 : 0,
-          transition: 'max-height 300ms ease-in-out, opacity 300ms ease-in-out',
-        }}
-      >
-        {/* Zone title — pinned above scroll */}
-        {activeZone === 'parent' && parent && (
-          <div className="pt-4 pb-2">
-            <div className="text-[9px] text-violet-400/60 uppercase tracking-wider">
-              {ghostParents.length > 0 ? `Parents (${1 + ghostParents.length})` : 'Parent'}
-            </div>
-          </div>
-        )}
-        {activeZone === 'siblings' && siblings.length > 0 && (
-          <div className="pt-4 pb-2">
-            <div className="text-[9px] text-violet-400/60 uppercase tracking-wider">Siblings ({siblings.length})</div>
-          </div>
-        )}
-        {activeZone === 'children' && children.length > 0 && (
-          <div className="pt-4 pb-2">
-            <div className="text-[9px] text-violet-400/60 uppercase tracking-wider">Children ({children.length})</div>
-          </div>
-        )}
-
-        {/* Scrollable items */}
-        <div ref={scrollElRef} className={`overflow-y-auto no-scrollbar scroll-smooth${showFade ? ' pb-4' : ''}`} style={{ maxHeight: 'calc(100dvh - 22rem)' }}>
-          {activeZone === 'parent' && parent && (
-            ghostParents.length > 0 ? (
-              <div className="space-y-1.5">
-                {/* Row 1: real parent + darkened empty chip (top right — you're on this path) */}
-                <div className="flex gap-1.5">
-                  <Link
-                    ref={focusedDetailIdx === 0 ? focusedDetailRef : undefined}
-                    to={`/lab/second-brain/${parent.id}`}
-                    onClick={() => onNoteClick(parent)}
-                    onMouseEnter={() => setHighlightedNoteId(parent.id)}
-                    onMouseLeave={() => setHighlightedNoteId(null)}
-                    className={`card-link group p-2.5 ${noteBorderCls(!!isVisited?.(parent.id))} flex-1 min-w-0${focusedDetailIdx === 0 ? ` ${noteFocusCls(!!isVisited?.(parent.id))}` : ''}`}
-                  >
-                    <div className={`text-xs font-medium transition-colors ${noteTextCls(!!isVisited?.(parent.id))}`}>
-                      {noteLabel(parent)}
-                    </div>
-                  </Link>
-                  <div
-                    className="flex-shrink-0 w-10 rounded-sm flex items-center justify-center"
-                    style={{ border: '1px solid var(--border-default)' }}
-                  >
-                    <div className="rounded-sm" style={{ width: 4, height: 22, backgroundColor: 'rgba(255,255,255,0.75)' }} />
-                  </div>
-                </div>
-                {/* Remaining rows: ghost parents + clickable chip with leaf name */}
-                {ghostParents.map((gp, idx) => {
-                  const focusIdx = idx + 1;
-                  const pv = !!isVisited?.(gp.parent.id);
-                  const hv = !!isVisited?.(gp.homonym.id);
-                  return (
-                    <div key={gp.homonym.id} className="flex gap-1.5">
-                      <Link
-                        ref={focusIdx === focusedDetailIdx ? focusedDetailRef : undefined}
-                        to={`/lab/second-brain/${gp.parent.id}`}
-                        onClick={() => onNoteClick(gp.parent)}
-                        className={`card-link group p-2.5 ${noteBorderCls(pv)} flex-1 min-w-0${focusIdx === focusedDetailIdx ? ` ${noteFocusCls(pv)}` : ''}`}
-                      >
-                        <div className={`text-xs font-medium transition-colors ${noteTextCls(pv)}`}>
-                          {noteLabel(gp.parent)}
-                        </div>
-                      </Link>
-                      <button
-                        className={`card-link group !flex flex-shrink-0 w-10 items-center justify-center text-[10px] font-mono cursor-pointer ${noteTextCls(hv)} ${noteBorderCls(hv)}`}
-                        onClick={() => onHomonymNavigate?.(gp.homonym)}
-                      >
-                        {homonymLeaf}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <Link
-                ref={focusedDetailIdx === 0 ? focusedDetailRef : undefined}
-                to={`/lab/second-brain/${parent.id}`}
-                onClick={() => onNoteClick(parent)}
-                onMouseEnter={() => setHighlightedNoteId(parent.id)}
-                onMouseLeave={() => setHighlightedNoteId(null)}
-                className={`card-link group p-2.5 ${noteBorderCls(!!isVisited?.(parent.id))}${focusedDetailIdx === 0 ? ` ${noteFocusCls(!!isVisited?.(parent.id))}` : ''}`}
-              >
-                <div className={`text-xs font-medium transition-colors ${noteTextCls(!!isVisited?.(parent.id))}`}>
-                  {noteLabel(parent)}
-                </div>
-                {parent.address && (
-                  <div className="text-[10px] text-th-muted">{parent.address.replace(/\/\//g, ' / ')}</div>
-                )}
-              </Link>
-            )
-          )}
-
-          {activeZone === 'siblings' && siblings.length > 0 && (
-            <div className="space-y-1.5">
-              {siblings.map((sib, idx) => {
-                const v = !!isVisited?.(sib.id);
-                return (
-                  <Link
-                    key={sib.id}
-                    ref={idx === focusedDetailIdx ? focusedDetailRef : undefined}
-                    to={`/lab/second-brain/${sib.id}`}
-                    onClick={() => onNoteClick(sib)}
-                    onMouseEnter={() => setHighlightedNoteId(sib.id)}
-                    onMouseLeave={() => setHighlightedNoteId(null)}
-                    className={`card-link group p-2.5 ${noteBorderCls(v)}${idx === focusedDetailIdx ? ` ${noteFocusCls(v)}` : ''}`}
-                  >
-                    <div className={`text-xs font-medium transition-colors ${noteTextCls(v)}`}>
-                      {noteLabel(sib)}
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-
-          {activeZone === 'children' && children.length > 0 && (
-            <div className="space-y-1.5">
-              {children.map((child, idx) => {
-                const v = !!isVisited?.(child.id);
-                return (
-                  <Link
-                    key={child.id}
-                    ref={idx === focusedDetailIdx ? focusedDetailRef : undefined}
-                    to={`/lab/second-brain/${child.id}`}
-                    onClick={() => onNoteClick(child)}
-                    onMouseEnter={() => setHighlightedNoteId(child.id)}
-                    onMouseLeave={() => setHighlightedNoteId(null)}
-                    className={`card-link group p-2.5 ${noteBorderCls(v)}${idx === focusedDetailIdx ? ` ${noteFocusCls(v)}` : ''}`}
-                  >
-                    <div className={`text-xs font-medium transition-colors ${noteTextCls(v)}`}>
-                      {noteLabel(child)}
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Bottom fade overlay — only when scroll container overflows */}
-        {showFade && (
-          <div
-            className="pointer-events-none absolute bottom-0 left-0 right-0 h-4"
-            style={{ background: 'linear-gradient(to top, var(--bg-base), transparent)' }}
-          />
-        )}
-      </div>
     </div>
   );
 };
