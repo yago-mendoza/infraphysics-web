@@ -169,6 +169,11 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
       if (link) {
         e.preventDefault();
         hoveredLinkRef.current = null;
+        // Track wiki-link clicks for retention hints
+        try {
+          const c = parseInt(localStorage.getItem('infraphysics:wikilink-clicks') || '0', 10);
+          localStorage.setItem('infraphysics:wikilink-clicks', String(c + 1));
+        } catch {}
         const href = link.getAttribute('href');
         if (href) {
           if (onWikiLinkClickRef.current) {
