@@ -1,3 +1,6 @@
+/* Prevent horizontal scroll on mobile */
+html, body { overflow-x: hidden; }
+
 /* Register custom properties as <color> so Chrome can interpolate
    them during transitions instead of treating them as opaque strings. */
 
