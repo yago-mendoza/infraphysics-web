@@ -1,10 +1,9 @@
 // Second Brain Manager Sidebar — data exploration dashboard for /second-brain* routes
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useHub } from '../../contexts/SecondBrainHubContext';
 import {
-  SearchIcon,
   ChevronIcon,
   FolderIcon,
   BarChartIcon,
@@ -13,29 +12,80 @@ import {
   InfoIcon,
   IslandIcon,
 } from '../icons';
-import { IslandDetector } from '../IslandDetector';
+import { IslandDetector, type IslandDetectorHandle } from '../IslandDetector';
+import { useGraphRelevance } from '../../hooks/useGraphRelevance';
 import { SECOND_BRAIN_SIDEBAR_WIDTH } from '../../constants/layout';
-import type { TreeNode, SearchMode, FilterState } from '../../hooks/useSecondBrainHub';
+import { noteLabel } from '../../types';
+import type { FieldNoteMeta } from '../../types';
+import type { TreeNode, FilterState } from '../../hooks/useSecondBrainHub';
+
+type StatsScope = null | { type: 'directory'; path: string } | { type: 'island'; id: number };
+
+/** Compute stats for a subset of notes. Links only counted when both ends are in the subset. */
+function computeScopedStats(
+  notes: FieldNoteMeta[],
+  backlinksMap: Map<string, FieldNoteMeta[]>,
+) {
+  const idSet = new Set(notes.map(n => n.id));
+  const totalConcepts = notes.length;
+  let totalLinks = 0;
+  notes.forEach(n => {
+    (n.references || []).forEach(ref => { if (idSet.has(ref)) totalLinks++; });
+  });
+  const linkedToSet = new Set<string>();
+  notes.forEach(n => {
+    (n.references || []).forEach(ref => { if (idSet.has(ref)) linkedToSet.add(ref); });
+  });
+  const orphanCount = notes.filter(n => {
+    const hasOutgoing = (n.references || []).some(ref => idSet.has(ref));
+    const hasIncoming = linkedToSet.has(n.id);
+    return !hasOutgoing && !hasIncoming;
+  }).length;
+  const avgRefs = totalConcepts > 0 ? Math.round((totalLinks / totalConcepts) * 10) / 10 : 0;
+  const maxDepth = notes.reduce((max, n) => {
+    const d = (n.addressParts || [n.title]).length;
+    return d > max ? d : max;
+  }, 0);
+  const possibleConnections = totalConcepts * (totalConcepts - 1);
+  const density = possibleConnections > 0
+    ? Math.round((totalLinks / possibleConnections) * 1000) / 10
+    : 0;
+  let mostConnectedHub: FieldNoteMeta | null = null;
+  let maxConnections = 0;
+  notes.forEach(n => {
+    const outgoing = (n.references || []).filter(ref => idSet.has(ref)).length;
+    const incoming = (backlinksMap.get(n.id) || []).filter(bl => idSet.has(bl.id)).length;
+    const total = outgoing + incoming;
+    if (total > maxConnections) { maxConnections = total; mostConnectedHub = n; }
+  });
+  return { totalConcepts, totalLinks, orphanCount, avgRefs, maxDepth, density, mostConnectedHub };
+}
 
 // --- Collapsible Section ---
 const Section: React.FC<{
   title: React.ReactNode;
   icon: React.ReactNode;
   defaultOpen?: boolean;
+  forceOpen?: boolean;
+  headerAction?: React.ReactNode;
   children: React.ReactNode;
-}> = ({ title, icon, defaultOpen = true, children }) => {
+}> = ({ title, icon, defaultOpen = true, forceOpen, headerAction, children }) => {
   const [open, setOpen] = useState(defaultOpen);
+  const isOpen = forceOpen || open;
   return (
     <div className="border-b border-th-hub-border">
       <button
-        onClick={() => setOpen(!open)}
+        onClick={() => setOpen(!isOpen)}
         className="w-full flex items-center gap-1.5 px-3 py-2 text-[10px] uppercase tracking-wider text-th-tertiary hover:text-th-secondary transition-colors"
       >
         <span className="text-th-muted">{icon}</span>
         <span className="flex-1 text-left">{title}</span>
-        <ChevronIcon isOpen={open} />
+        {headerAction && isOpen && (
+          <span className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>{headerAction}</span>
+        )}
+        <ChevronIcon isOpen={isOpen} />
       </button>
-      {open && <div className="px-3 pb-3">{children}</div>}
+      {isOpen && <div className="px-3 pb-3">{children}</div>}
     </div>
   );
 };
@@ -86,28 +136,58 @@ const ScopeIcon: React.FC<{ onClick: (e: React.MouseEvent) => void }> = ({ onCli
   </button>
 );
 
+// --- Centrality micro-bar ---
+const CentralityBar: React.FC<{ pct: number }> = ({ pct }) => {
+  if (pct === 0) return null;
+  const fillFromRight = pct < 50;
+  return (
+    <div className="w-8 h-1 bg-th-hub-border rounded-full flex-shrink-0 overflow-hidden" title={`Centrality: top ${100 - pct}%`}>
+      <div className={`h-full bg-violet-400/50 rounded-full ${fillFromRight ? 'ml-auto' : ''}`} style={{ width: `${pct}%` }} />
+    </div>
+  );
+};
+
+// --- Stats Scope Icon (for tree nodes) ---
+const StatsScopeIcon: React.FC<{ onClick: (e: React.MouseEvent) => void }> = ({ onClick }) => (
+  <button
+    onClick={onClick}
+    className="opacity-0 group-hover:opacity-100 text-th-muted hover:text-violet-400 transition-all flex-shrink-0"
+    title="Show stats for this folder"
+  >
+    <BarChartIcon />
+  </button>
+);
+
 // --- Tree Node ---
 const TreeNodeItem: React.FC<{
   node: TreeNode;
   depth?: number;
   activeScope: string | null;
   onScope: (path: string) => void;
+  onStatsScope?: (path: string) => void;
   onConceptClick?: () => void;
   forceExpanded?: boolean;
-}> = ({ node, depth = 0, activeScope, onScope, onConceptClick, forceExpanded = false }) => {
+  activePath?: string | null;
+  getPercentile?: (uid: string) => number;
+}> = ({ node, depth = 0, activeScope, onScope, onStatsScope, onConceptClick, forceExpanded = false, activePath, getPercentile }) => {
   const [expanded, setExpanded] = useState(false);
   const hasChildren = node.children.length > 0;
-  const isExpanded = forceExpanded || expanded;
+  // Auto-expand if active note is inside this node's subtree
+  const isOnActivePath = !!(activePath && hasChildren && (activePath === node.path || activePath.startsWith(node.path + '//')));
+  const isExpanded = forceExpanded || expanded || isOnActivePath;
   const isScoped = activeScope === node.path;
   const isConceptAndFolder = node.concept && hasChildren;
+  const isActive = !!(activePath && node.concept && activePath === node.path);
   const isRoot = depth === 0;
   const displayLabel = node.label.charAt(0).toUpperCase() + node.label.slice(1);
+  const countSuffix = hasChildren ? ` (${node.childCount})` : '';
+  const centralityPct = node.concept && getPercentile ? getPercentile(node.concept.id) : 0;
 
   return (
     <div>
       <div
         className={`flex items-center gap-1 py-0.5 group ${
-          isScoped ? 'bg-violet-400/10' : ''
+          isScoped ? 'bg-violet-400/10' : isActive ? 'bg-violet-400/5' : ''
         } ${isRoot ? 'border-l-2 border-violet-400/20' : ''}`}
         style={{ paddingLeft: `${depth * 12}px` }}
       >
@@ -129,46 +209,49 @@ const TreeNodeItem: React.FC<{
               <Link
                 to={`/lab/second-brain/${node.concept.id}`}
                 onClick={onConceptClick}
-                className="text-[11px] text-th-secondary hover:text-violet-400 transition-colors truncate flex-1"
+                className="text-[11px] text-th-secondary hover:text-violet-400 transition-colors truncate"
               >
                 {displayLabel}
               </Link>
+              <span className="text-[9px] text-th-muted tabular-nums">{countSuffix}</span>
+              <span className="flex-1" />
+              <CentralityBar pct={centralityPct} />
+              {onStatsScope && <StatsScopeIcon onClick={(e) => { e.preventDefault(); onStatsScope(node.path); }} />}
               <ScopeIcon onClick={(e) => { e.preventDefault(); onScope(node.path); }} />
             </>
           ) : (
             // Pure concept leaf: link to detail
-            <Link
-              to={`/lab/second-brain/${node.concept.id}`}
-              onClick={onConceptClick}
-              className="text-[11px] text-th-secondary hover:text-violet-400 transition-colors truncate flex-1"
-            >
-              {displayLabel}
-            </Link>
+            <>
+              <Link
+                to={`/lab/second-brain/${node.concept.id}`}
+                onClick={onConceptClick}
+                className="text-[11px] text-th-secondary hover:text-violet-400 transition-colors truncate"
+              >
+                {displayLabel}
+              </Link>
+              <span className="flex-1" />
+              <CentralityBar pct={centralityPct} />
+            </>
           )
         ) : hasChildren ? (
           // Pure folder: click label to scope
-          <button
-            onClick={() => onScope(node.path)}
-            className={`text-[11px] truncate flex-1 text-left transition-colors ${
-              isScoped ? 'text-violet-400' : 'text-th-muted hover:text-th-secondary'
-            }`}
-          >
-            {displayLabel}
-          </button>
+          <>
+            <button
+              onClick={() => onScope(node.path)}
+              className={`text-[11px] truncate text-left transition-colors ${
+                isScoped ? 'text-violet-400' : 'text-th-muted hover:text-th-secondary'
+              }`}
+            >
+              {displayLabel}
+            </button>
+            <span className="text-[9px] text-th-muted tabular-nums">{countSuffix}</span>
+            <span className="flex-1" />
+            {onStatsScope && <StatsScopeIcon onClick={(e) => { e.preventDefault(); onStatsScope(node.path); }} />}
+          </>
         ) : (
           <span className="text-[11px] text-th-muted truncate flex-1">{displayLabel}</span>
         )}
 
-        {isRoot && !hasChildren ? (
-          <span className="text-[8px] text-th-muted opacity-50 flex-shrink-0">Root node</span>
-        ) : isRoot && hasChildren ? (
-          <>
-            <span className="text-[8px] text-th-muted opacity-50 flex-shrink-0">Root node</span>
-            <span className="text-[9px] text-th-muted tabular-nums flex-shrink-0">{node.childCount}</span>
-          </>
-        ) : hasChildren ? (
-          <span className="text-[9px] text-th-muted tabular-nums flex-shrink-0">{node.childCount}</span>
-        ) : null}
       </div>
 
       {isExpanded && hasChildren && (
@@ -182,8 +265,11 @@ const TreeNodeItem: React.FC<{
                 depth={depth + 1}
                 activeScope={activeScope}
                 onScope={onScope}
+                onStatsScope={onStatsScope}
                 onConceptClick={onConceptClick}
                 forceExpanded={forceExpanded}
+                activePath={activePath}
+                getPercentile={getPercentile}
               />
             ))}
         </div>
@@ -191,14 +277,6 @@ const TreeNodeItem: React.FC<{
     </div>
   );
 };
-
-// --- Search Mode Chips ---
-const SEARCH_MODES: { value: SearchMode; label: string }[] = [
-  { value: 'name', label: 'name' },
-  { value: 'content', label: 'content' },
-  { value: 'backlinks', label: 'backlinks' },
-];
-
 
 // --- Guide Popup ---
 const GUIDE_TABS = ['commands', 'breadcrumb', 'links', 'interactions', 'illustration', 'topology'] as const;
@@ -212,11 +290,11 @@ const GuideTabContent: React.FC<{ tab: number }> = ({ tab }) => {
   switch (tab) {
     case 0: return (
       <div className={cls}>
-        <p><strong className={strong}>Just start typing</strong> — any key focuses the search bar. Backspace too. No need to click it.</p>
+        <p><strong className={strong}>Just start typing</strong> — any key opens the floating search overlay. Backspace too.</p>
         <p><strong className={strong}>Arrow keys</strong> — navigate the grid, move between search results, or step through graph zones in detail view.</p>
-        <p><strong className={strong}>Enter</strong> — open the selected card or search result.</p>
-        <p><strong className={strong}>Escape</strong> — clear search, close detail view, or dismiss popups.</p>
-        <p><strong className={strong}>Ctrl+Shift+F</strong> — focus search bar directly.</p>
+        <p><strong className={strong}>Enter</strong> — open the selected card, or close the search overlay (keeps query active).</p>
+        <p><strong className={strong}>Escape</strong> — close the search overlay and clear the query.</p>
+        <p><strong className={strong}>Ctrl+Shift+F</strong> — open search overlay directly.</p>
         <p><strong className={strong}>Shift+T</strong> — toggle light/dark theme.</p>
         <p><strong className={strong}>Unvisited filter</strong> — in the grid toolbar, hide cards you've already opened this session.</p>
         <p><span className="text-blue-400">Blue</span> = visited this session. <span className={accent}>Purple</span> = not yet. Tracked across grid, links, and graph.</p>
@@ -263,11 +341,12 @@ const GuideTabContent: React.FC<{ tab: number }> = ({ tab }) => {
     );
     case 5: return (
       <div className={cls}>
-        <p>The <strong className={strong}>topology</strong> section (sidebar, below filters) shows the graph's structural fragility.</p>
-        <p><strong className={strong}>Bridges</strong> (⚡) are articulation points — removing one would split a cluster into disconnected islands.</p>
-        <p><strong className={strong}>Side sizes</strong> (e.g. 19 | 1) show how many notes end up on each side if the bridge is removed. Bridges are sorted by criticality.</p>
-        <p><strong className={strong}>Click a bridge</strong> to navigate to that note.</p>
-        <p><strong className={strong}>Orphans</strong> (○) are notes with no connections at all.</p>
+        <p>The <strong className={strong}>topology</strong> section (sidebar) shows graph structure — components, bridges, and orphans.</p>
+        <p><strong className={strong}>Expand components</strong> — click the chevron next to a component to see all its member notes.</p>
+        <p><strong className={strong}>Bridges</strong> (⚡) are articulation points — removing one would split a cluster. Expand a bridge to see which notes end up on each side.</p>
+        <p><strong className={strong}>Orphans</strong> (○) are notes with no connections. Expand to see the full list.</p>
+        <p><strong className={strong}>Island badge</strong> — in detail view, each note shows its island number. Click to scroll the sidebar to that component.</p>
+        <p><strong className={strong}>Topology filters</strong> — in the filters section, use <span className={accent}>bridges only</span> to show only bridge notes, or the <span className={accent}>island</span> dropdown to filter by component.</p>
       </div>
     );
     default: return null;
@@ -322,48 +401,154 @@ const GuidePopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   );
 };
 
+// --- Topology Island Filter ---
+const TopologyIslandFilter: React.FC<{
+  filterState: FilterState;
+  updateFilter: <K extends keyof FilterState>(key: K, value: FilterState[K]) => void;
+}> = ({ filterState, updateFilter }) => {
+  const { getIslands, loaded } = useGraphRelevance();
+  if (!loaded) return null;
+  const islands = getIslands();
+  if (!islands) return null;
+
+  const significant = islands.components
+    .filter(c => c.size > 1)
+    .sort((a, b) => b.size - a.size);
+
+  if (significant.length <= 1) return null;
+
+  return (
+    <div className="flex items-center gap-1.5 text-[10px] text-th-muted">
+      <span>island</span>
+      <select
+        value={filterState.islandId ?? ''}
+        onChange={(e) => {
+          const val = e.target.value;
+          updateFilter('islandId', val === '' ? null : Number(val));
+        }}
+        className="bg-th-surface border border-th-hub-border text-[10px] text-th-primary px-1 py-0.5 focus:outline-none focus:border-th-border-active"
+      >
+        <option value="">all</option>
+        {significant.map(c => (
+          <option key={c.id} value={c.id}>
+            #{c.id} ({c.size} notes)
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
 // --- Main Sidebar ---
 export const SecondBrainSidebar: React.FC = () => {
   const hub = useHub();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const { getPercentile, getIslands } = useGraphRelevance();
+  const [statsScope, setStatsScope] = useState<StatsScope>(null);
 
-  // Type-to-search: any printable key focuses the search bar and starts typing
+  // Island detector ref for collapse-all button in header
+  const islandRef = useRef<IslandDetectorHandle>(null);
+  const [topologyHasExpanded, setTopologyHasExpanded] = useState(false);
+
+  // Topology focus: { id, flash } — flash=true only from chip click, false from auto-expand
+  const [topologyFocus, setTopologyFocus] = useState<{ id: number; flash: boolean } | null>(null);
+
+  // Chip click → focus with flash
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'f') {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-        return;
-      }
-
-      // Skip if already focused on an input/textarea, or if modifier keys are held
-      const tag = (e.target as HTMLElement).tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
-
-      // Printable character or Backspace — focus search bar
-      if (e.key.length === 1 || e.key === 'Backspace') {
-        searchInputRef.current?.focus();
-      }
+    const handler = (e: Event) => {
+      const compId = (e as CustomEvent).detail?.componentId;
+      if (typeof compId === 'number') setTopologyFocus({ id: compId, flash: true });
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener('topology-focus', handler);
+    return () => window.removeEventListener('topology-focus', handler);
   }, []);
+
+  // Auto-expand corresponding island on note navigation (no flash), collapse on grid view
+  const prevActiveIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!hub) return;
+    const { activePost } = hub;
+    if (!activePost) {
+      // Back to grid — collapse all topology
+      if (prevActiveIdRef.current) {
+        prevActiveIdRef.current = null;
+        islandRef.current?.collapseAll();
+      }
+      return;
+    }
+    if (activePost.id === prevActiveIdRef.current) return;
+    prevActiveIdRef.current = activePost.id;
+    const islands = getIslands();
+    if (!islands) return;
+    const compId = islands.nodeToComponent[activePost.id];
+    if (compId != null) setTopologyFocus({ id: compId, flash: false });
+  }, [hub, getIslands]);
 
   if (!hub) return null;
 
   const {
-    query, setQuery,
-    searchMode, setSearchMode,
     filterState, setFilterState, hasActiveFilters, resetFilters,
     directoryScope, setDirectoryScope,
     directoryQuery, setDirectoryQuery,
     filteredTree,
     stats,
+    allFieldNotes,
+    backlinksMap,
     signalDirectoryNav,
+    activePost,
   } = hub;
+
+  // Scoped stats computation
+  const scopedStats = useMemo(() => {
+    if (!statsScope) return stats;
+    if (statsScope.type === 'directory') {
+      const subset = allFieldNotes.filter(n => n.address.startsWith(statsScope.path));
+      return computeScopedStats(subset, backlinksMap);
+    }
+    if (statsScope.type === 'island') {
+      const islands = getIslands();
+      if (!islands) return stats;
+      const comp = islands.components.find(c => c.id === statsScope.id);
+      if (!comp) return stats;
+      const memberSet = new Set(comp.members);
+      const subset = allFieldNotes.filter(n => memberSet.has(n.id));
+      return computeScopedStats(subset, backlinksMap);
+    }
+    return stats;
+  }, [statsScope, stats, allFieldNotes, backlinksMap, getIslands]);
+
+  // Bonus stats for scoped views
+  const bonusStats = useMemo(() => {
+    if (!statsScope) return null;
+    if (statsScope.type === 'island') {
+      const islands = getIslands();
+      if (!islands) return null;
+      const comp = islands.components.find(c => c.id === statsScope.id);
+      if (!comp) return null;
+      const bridges = islands.cuts.filter(c => c.componentId === comp.id).length;
+      const hubName = scopedStats.mostConnectedHub ? noteLabel(scopedStats.mostConnectedHub) : '—';
+      return { type: 'island' as const, bridges, hub: hubName };
+    }
+    if (statsScope.type === 'directory') {
+      // Count direct child paths at next depth level
+      const prefix = statsScope.path + '//';
+      const childSegments = new Set<string>();
+      allFieldNotes.forEach(n => {
+        if (n.address.startsWith(prefix)) {
+          const rest = n.address.slice(prefix.length);
+          const seg = rest.split('//')[0];
+          if (seg) childSegments.add(seg);
+        }
+      });
+      return { type: 'directory' as const, subtrees: childSegments.size };
+    }
+    return null;
+  }, [statsScope, getIslands, scopedStats.mostConnectedHub, allFieldNotes]);
+
+  const handleStatsScope = (scope: StatsScope) => {
+    setStatsScope(scope);
+  };
 
   const handleScope = (path: string) => {
     // Toggle: clicking already-scoped folder clears scope
@@ -379,137 +564,22 @@ export const SecondBrainSidebar: React.FC = () => {
 
   const sections = (
     <>
-      {/* Search */}
-      <Section title={<>search <span className="normal-case tracking-normal text-th-muted text-[8px] opacity-40 font-normal">type anywhere to search</span></>} icon={<SearchIcon />} defaultOpen={true}>
-        <div className="flex items-center border border-th-hub-border px-2 py-1.5 bg-th-surface focus-within:border-th-border-active transition-colors mb-2">
-          <input
-            ref={searchInputRef}
-            type="text"
-            placeholder={directoryScope ? `Search in ${directoryScope.replace(/\/\//g, ' / ')}...` : 'Search...'}
-            value={query}
-            onChange={(e) => {
-              const val = e.target.value;
-              setQuery(val);
-              if (!val) searchInputRef.current?.blur();
-            }}
-            onKeyDown={(e) => { if (e.key === 'Escape') { setQuery(''); searchInputRef.current?.blur(); } }}
-            className="w-full text-[11px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
-          />
-          {query && (
-            <button
-              onClick={() => { setQuery(''); searchInputRef.current?.blur(); }}
-              className="text-th-muted hover:text-th-secondary text-[10px] ml-1 flex-shrink-0"
-            >
-              &times;
-            </button>
-          )}
-        </div>
-        <div className="flex gap-1 flex-wrap">
-          {SEARCH_MODES.map(mode => (
-            <button
-              key={mode.value}
-              onClick={() => setSearchMode(mode.value)}
-              className={`text-[9px] px-1.5 py-0.5 transition-colors ${
-                searchMode === mode.value
-                  ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
-                  : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
-              }`}
-            >
-              {mode.label}
-            </button>
-          ))}
-        </div>
-      </Section>
-
-      {/* Stats */}
-      <Section title="stats" icon={<BarChartIcon />} defaultOpen={false}>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-          <div>
-            <div className="text-[9px] text-th-muted">concepts</div>
-            <div className="text-[11px] text-th-primary tabular-nums">{stats.totalConcepts}</div>
-          </div>
-          <div>
-            <div className="text-[9px] text-th-muted">links</div>
-            <div className="text-[11px] text-th-primary tabular-nums">{stats.totalLinks}</div>
-          </div>
-          <div>
-            <div className="text-[9px] text-th-muted">orphans</div>
-            <div className="text-[11px] text-th-primary tabular-nums">{stats.orphanCount}</div>
-          </div>
-          <div>
-            <div className="text-[9px] text-th-muted">avg refs</div>
-            <div className="text-[11px] text-th-primary tabular-nums">{stats.avgRefs}</div>
-          </div>
-          <div>
-            <div className="text-[9px] text-th-muted">max depth</div>
-            <div className="text-[11px] text-th-primary tabular-nums">{stats.maxDepth}</div>
-          </div>
-          <div>
-            <div className="text-[9px] text-th-muted">density</div>
-            <div className="text-[11px] text-th-primary tabular-nums">{stats.density}%</div>
-          </div>
-        </div>
-      </Section>
-
-      {/* Topology */}
-      <Section title="topology" icon={<IslandIcon />} defaultOpen={true}>
-        <IslandDetector />
-      </Section>
-
-      {/* Directory Tree */}
-      <Section title="directory" icon={<FolderIcon />} defaultOpen={true}>
-        {/* Tree search */}
-        <div className="flex items-center border border-th-hub-border px-2 py-1 bg-th-surface focus-within:border-th-border-active transition-colors mb-2">
-          <input
-            type="text"
-            placeholder="Filter tree..."
-            value={directoryQuery}
-            onChange={(e) => setDirectoryQuery(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Escape') { setDirectoryQuery(''); (e.target as HTMLInputElement).blur(); } }}
-            className="w-full text-[10px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
-          />
-          {directoryQuery && (
-            <button
-              onClick={() => setDirectoryQuery('')}
-              className="text-th-muted hover:text-th-secondary text-[9px] ml-1 flex-shrink-0"
-            >
-              &times;
-            </button>
-          )}
-        </div>
-
-        {/* Scope indicator */}
-        {directoryScope && (
-          <div className="flex items-center gap-1 mb-2 px-1 py-1 bg-violet-400/10 border border-violet-400/20 text-[9px]">
-            <span className="text-th-muted">scope:</span>
-            <span className="text-violet-400 truncate flex-1">{scopeDisplay}</span>
-            <button
-              onClick={() => setDirectoryScope(null)}
-              className="text-th-muted hover:text-th-secondary flex-shrink-0"
-            >
-              &times;
-            </button>
-          </div>
-        )}
-
-        <div className="space-y-0.5 max-h-60 overflow-y-auto thin-scrollbar hub-scrollbar">
-          {filteredTree.map(node => (
-            <TreeNodeItem
-              key={node.label}
-              node={node}
-              activeScope={directoryScope}
-              onScope={handleScope}
-              onConceptClick={signalDirectoryNav}
-              forceExpanded={directoryQuery.length > 0}
-            />
-          ))}
-        </div>
-      </Section>
-
       {/* Filters */}
-      <Section title="filters" icon={<SlidersIcon />} defaultOpen={false}>
+      <Section
+        title="filters"
+        icon={<SlidersIcon />}
+        defaultOpen={false}
+        forceOpen={hasActiveFilters}
+        headerAction={hasActiveFilters ? (
+          <button
+            onClick={resetFilters}
+            className="text-[9px] text-th-muted hover:text-violet-400 transition-colors"
+          >
+            reset
+          </button>
+        ) : undefined}
+      >
         <div className="space-y-2">
-          {/* Toggle chips */}
           <div className="flex gap-1 flex-wrap">
             <button
               onClick={() => updateFilter('orphans', !filterState.orphans)}
@@ -531,9 +601,20 @@ export const SecondBrainSidebar: React.FC = () => {
             >
               leaf nodes
             </button>
+            <button
+              onClick={() => updateFilter('bridgesOnly', !filterState.bridgesOnly)}
+              className={`text-[9px] px-1.5 py-0.5 transition-colors ${
+                filterState.bridgesOnly
+                  ? 'bg-amber-400/20 text-amber-400 border border-amber-400/30'
+                  : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
+              }`}
+            >
+              bridges only
+            </button>
           </div>
 
-          {/* Depth range */}
+          <TopologyIslandFilter filterState={filterState} updateFilter={updateFilter} />
+
           <div className="flex items-center gap-1.5 text-[10px] text-th-muted">
             <span>depth</span>
             <StepperInput
@@ -558,7 +639,6 @@ export const SecondBrainSidebar: React.FC = () => {
             />
           </div>
 
-          {/* Hub threshold */}
           <div className="flex items-center gap-1.5 text-[10px] text-th-muted">
             <span>hubs &ge;</span>
             <StepperInput
@@ -572,16 +652,208 @@ export const SecondBrainSidebar: React.FC = () => {
             )}
           </div>
 
-          {/* Reset */}
-          {hasActiveFilters && (
+          {/* Scope indicators */}
+          {(directoryScope || filterState.islandId != null) && (
+            <div className="border-t border-th-hub-border pt-2 space-y-1">
+              {directoryScope && (
+                <div className="flex items-center gap-1 px-1 py-1 bg-violet-400/10 border border-violet-400/20 text-[9px]">
+                  <span className="text-th-muted">scope:</span>
+                  <span className="text-violet-400 truncate flex-1">{scopeDisplay}</span>
+                  <button
+                    onClick={() => setDirectoryScope(null)}
+                    className="text-th-muted hover:text-th-secondary flex-shrink-0"
+                  >
+                    &times;
+                  </button>
+                </div>
+              )}
+              {filterState.islandId != null && (
+                <div className="flex items-center gap-1 px-1 py-1 bg-violet-400/10 border border-violet-400/20 text-[9px]">
+                  <span className="text-th-muted">island:</span>
+                  <span className="text-violet-400 truncate flex-1">#{filterState.islandId}</span>
+                  <button
+                    onClick={() => updateFilter('islandId', null)}
+                    className="text-th-muted hover:text-th-secondary flex-shrink-0"
+                  >
+                    &times;
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </Section>
+
+      {/* Stats */}
+      <Section title="stats" icon={<BarChartIcon />} defaultOpen={false} forceOpen={statsScope != null}>
+        {statsScope && (
+          <div className="flex items-center gap-1 px-1 py-1 mb-2 bg-violet-400/10 border border-violet-400/20 text-[9px]">
+            <span className="text-th-muted">stats:</span>
+            <span className="text-violet-400 truncate flex-1">
+              {statsScope.type === 'directory'
+                ? statsScope.path.replace(/\/\//g, ' / ')
+                : `island #${statsScope.id}`}
+            </span>
             <button
-              onClick={resetFilters}
-              className="text-[9px] text-th-muted hover:text-violet-400 transition-colors"
+              onClick={() => setStatsScope(null)}
+              className="text-th-muted hover:text-th-secondary flex-shrink-0"
             >
-              reset filters
+              &times;
+            </button>
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+          <div>
+            <div className="text-[9px] text-th-muted">concepts</div>
+            <div className="text-[11px] text-th-primary tabular-nums">{scopedStats.totalConcepts}</div>
+          </div>
+          <div>
+            <div className="text-[9px] text-th-muted">links</div>
+            <div className="text-[11px] text-th-primary tabular-nums">{scopedStats.totalLinks}</div>
+          </div>
+          <div>
+            <div className="text-[9px] text-th-muted">orphans</div>
+            <div className="text-[11px] text-th-primary tabular-nums">{scopedStats.orphanCount}</div>
+          </div>
+          <div>
+            <div className="text-[9px] text-th-muted">avg refs</div>
+            <div className="text-[11px] text-th-primary tabular-nums">{scopedStats.avgRefs}</div>
+          </div>
+          <div>
+            <div className="text-[9px] text-th-muted">max depth</div>
+            <div className="text-[11px] text-th-primary tabular-nums">{scopedStats.maxDepth}</div>
+          </div>
+          <div>
+            <div className="text-[9px] text-th-muted">density</div>
+            <div className="text-[11px] text-th-primary tabular-nums">{scopedStats.density}%</div>
+          </div>
+        </div>
+        {bonusStats && (
+          <div className="border-t border-th-hub-border mt-2 pt-2 grid grid-cols-2 gap-x-3 gap-y-1.5">
+            {bonusStats.type === 'island' && (
+              <>
+                <div>
+                  <div className="text-[9px] text-th-muted">bridges</div>
+                  <div className="text-[11px] text-th-primary tabular-nums">{bonusStats.bridges}</div>
+                </div>
+                <div>
+                  <div className="text-[9px] text-th-muted">hub</div>
+                  <div className="text-[11px] text-th-primary truncate">{bonusStats.hub}</div>
+                </div>
+              </>
+            )}
+            {bonusStats.type === 'directory' && (
+              <div>
+                <div className="text-[9px] text-th-muted">subtrees</div>
+                <div className="text-[11px] text-th-primary tabular-nums">{bonusStats.subtrees}</div>
+              </div>
+            )}
+          </div>
+        )}
+      </Section>
+
+      {/* Topology */}
+      <Section
+        title="topology"
+        icon={<IslandIcon />}
+        defaultOpen={true}
+        forceOpen={topologyFocus != null}
+        headerAction={topologyHasExpanded ? (
+          <button
+            onClick={() => islandRef.current?.collapseAll()}
+            className="text-th-muted hover:text-th-secondary transition-colors"
+            title="Collapse all"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" x2="18" y1="15" y2="15" />
+              <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+            </svg>
+          </button>
+        ) : undefined}
+      >
+        <IslandDetector
+          ref={islandRef}
+          focusComponentId={topologyFocus?.id ?? null}
+          focusFlash={topologyFocus?.flash ?? false}
+          onFocusHandled={() => setTopologyFocus(null)}
+          activeIslandScope={filterState.islandId}
+          onIslandScope={(id) => updateFilter('islandId', filterState.islandId === id ? null : id)}
+          onStatsScope={(id) => handleStatsScope({ type: 'island', id })}
+          onExpandedChange={setTopologyHasExpanded}
+        />
+      </Section>
+
+      {/* Directory Tree */}
+      <Section title="directory" icon={<FolderIcon />} defaultOpen={true}>
+        {/* Tree search */}
+        <div className="flex items-center border border-th-hub-border px-2 py-1 bg-th-surface focus-within:border-th-border-active transition-colors mb-2">
+          <input
+            type="text"
+            placeholder="Filter tree..."
+            value={directoryQuery}
+            onChange={(e) => setDirectoryQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape') { setDirectoryQuery(''); (e.target as HTMLInputElement).blur(); } }}
+            className="w-full text-[10px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
+          />
+          {directoryQuery && (
+            <button
+              onClick={() => setDirectoryQuery('')}
+              className="text-th-muted hover:text-th-secondary text-[9px] ml-1 flex-shrink-0"
+            >
+              &times;
             </button>
           )}
         </div>
+
+        {(() => {
+          const withChildren = filteredTree.filter(n => n.children.length > 0);
+          const leaves = filteredTree.filter(n => n.children.length === 0);
+          return (
+            <div className="max-h-60 overflow-y-auto thin-scrollbar hub-scrollbar">
+              {withChildren.length > 0 && (
+                <div className="space-y-0.5">
+                  {withChildren.map(node => (
+                    <TreeNodeItem
+                      key={node.label}
+                      node={node}
+                      activeScope={directoryScope}
+                      onScope={handleScope}
+                      onStatsScope={(path) => handleStatsScope({ type: 'directory', path })}
+                      onConceptClick={signalDirectoryNav}
+                      forceExpanded={directoryQuery.length > 0}
+                      activePath={activePost?.address ?? null}
+                      getPercentile={getPercentile}
+                    />
+                  ))}
+                </div>
+              )}
+              {leaves.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 py-1.5">
+                    <div className="flex-1 border-t border-th-hub-border" />
+                    <span className="text-[8px] text-th-muted uppercase tracking-wider leading-none">Standalone</span>
+                    <div className="flex-1 border-t border-th-hub-border" />
+                  </div>
+                  <div>
+                    {leaves.map(node => (
+                      <TreeNodeItem
+                        key={node.label}
+                        node={node}
+                        activeScope={directoryScope}
+                        onScope={handleScope}
+                        onConceptClick={signalDirectoryNav}
+                        forceExpanded={directoryQuery.length > 0}
+                        activePath={activePost?.address ?? null}
+                        getPercentile={getPercentile}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </Section>
     </>
   );
