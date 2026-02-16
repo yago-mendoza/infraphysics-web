@@ -43,7 +43,7 @@ export const InfoPopover: React.FC<InfoPopoverProps> = ({
     if (!trigger) return;
     const rect = trigger.getBoundingClientRect();
     const hasTabs = tabs && tabs.length > 0;
-    const panelW = hasTabs ? 340 : 280;
+    const panelW = Math.min(hasTabs ? 340 : 280, window.innerWidth - 16);
     const panelMaxH = window.innerHeight * 0.6;
 
     let top = rect.bottom + 6;
