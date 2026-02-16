@@ -88,9 +88,9 @@ export const HomeView: React.FC = () => {
     <div className="flex flex-col animate-fade-in font-sans">
 
       {/* Hero */}
-      <section className="pt-8 md:pt-20 pb-20">
+      <section className="pt-12 md:pt-20 pb-12 md:pb-20">
         <div className="max-w-xl">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-3">
+          <h1 className="text-[3.1rem] md:text-5xl font-bold tracking-tight leading-tight mb-3">
             <span className="text-th-heading">From systems to atoms</span>
             <br />
             <span className="text-th-secondary">and back.</span>
@@ -109,7 +109,7 @@ export const HomeView: React.FC = () => {
             This is my <span className="text-th-heading font-semibold">lab</span>, my <span className="text-th-heading font-semibold">notebook</span>, and my <span className="text-th-heading font-semibold">proof of work</span>.
           </p>
 
-          <p className="mt-4 text-sm text-th-tertiary">
+          <p className="mt-3 md:mt-4 text-sm text-th-tertiary">
             by{' '}
             <Link to="/about" className="text-th-secondary hover:text-th-heading transition-colors underline underline-offset-4 decoration-th-border">
               Yago Mendoza
