@@ -54,7 +54,7 @@ export const WikiLinkPreview: React.FC<WikiLinkPreviewProps> = ({
       {description && (
         <div className="wiki-preview-description">{description}</div>
       )}
-      <div className="wiki-preview-hint">click to open in second brain</div>
+      <div className="wiki-preview-hint">open in second brain</div>
     </div>,
     document.body
   );
