@@ -38,8 +38,11 @@ export const useNavigationTrail = ({ activePost, directoryNavRef }: UseNavigatio
 
   const extendTrail = useCallback((item: TrailItem) => {
     setTrail(prev => {
-      const filtered = prev.filter(t => t.id !== item.id);
-      const next = [...filtered, item];
+      // If already in trail, truncate back to that point (like "go back")
+      const idx = prev.findIndex(t => t.id === item.id);
+      if (idx >= 0) return prev.slice(0, idx + 1);
+      // Otherwise append
+      const next = [...prev, item];
       return next.length > MAX_TRAIL ? next.slice(next.length - MAX_TRAIL) : next;
     });
   }, []);
@@ -66,7 +69,15 @@ export const useNavigationTrail = ({ activePost, directoryNavRef }: UseNavigatio
     pendingAction.current = { type: 'extend', post };
   }, []);
 
-  // Sync trail when activePost changes — apply pending action, directory signal, or init.
+  // Track browser back/forward via popstate
+  const popstateFlag = useRef(false);
+  useEffect(() => {
+    const handler = () => { popstateFlag.current = true; };
+    window.addEventListener('popstate', handler);
+    return () => window.removeEventListener('popstate', handler);
+  }, []);
+
+  // Sync trail when activePost changes — apply pending action, directory signal, popstate, or init.
   useEffect(() => {
     if (!activePost) return;
     const action = pendingAction.current;
@@ -74,6 +85,9 @@ export const useNavigationTrail = ({ activePost, directoryNavRef }: UseNavigatio
 
     const fromDirectory = directoryNavRef.current;
     directoryNavRef.current = false;
+
+    const fromPopstate = popstateFlag.current;
+    popstateFlag.current = false;
 
     if (action) {
       if (action.type === 'reset') {
@@ -83,6 +97,13 @@ export const useNavigationTrail = ({ activePost, directoryNavRef }: UseNavigatio
       }
     } else if (fromDirectory) {
       resetTrail(toTrailItem(activePost));
+    } else if (fromPopstate) {
+      // Browser back/forward: truncate to this item if in trail, otherwise reset
+      setTrail(prev => {
+        const idx = prev.findIndex(t => t.id === activePost.id);
+        if (idx >= 0) return prev.slice(0, idx + 1);
+        return [toTrailItem(activePost)];
+      });
     } else {
       initTrail(toTrailItem(activePost));
     }
