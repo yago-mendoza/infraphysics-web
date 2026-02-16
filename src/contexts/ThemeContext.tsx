@@ -65,6 +65,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const next: Theme = current === 'dark' ? 'light' : 'dark';
 
     saveZoneTheme(zoneRef.current, next);
+    try { localStorage.setItem('infraphysics:theme-toggled', '1'); } catch {}
 
     document.documentElement.classList.add('theme-transitioning');
     void document.documentElement.offsetHeight;
