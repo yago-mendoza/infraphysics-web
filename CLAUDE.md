@@ -177,5 +177,8 @@ Related section uses `article-${targetCategory}` but `--art-accent` inherits fro
 ### StatusBadge dark/light split
 `dark:` styles only apply when `theme !== 'light'`. Light variant uses its own class string. Keep both paths in sync when editing.
 
+### YAML date auto-parsing
+YAML parsers (like `gray-matter`) auto-convert bare `date: 2026-02-15` into a JS `Date` object, which stringifies to a full ISO timestamp (`2026-02-15T00:00:00.000Z`). Always **quote dates** in frontmatter (`date: "2026-02-15"`) to keep them as plain strings. The build normalizes with `.slice(0, 10)` as a safety net, but quoting is the correct fix.
+
 ### Blog category list duplicated for OG manifest
 `build-content.js` has a local `BLOG_CATS` set (used to build URL paths for `og-manifest.json`) that mirrors `BLOG_CATEGORIES` in `categories.tsx`. If a new blog category is added, update both. Also add the new route pattern to `public/_routes.json`.

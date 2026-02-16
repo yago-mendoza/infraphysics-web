@@ -64,7 +64,7 @@ Quick check: search `address:` lines in `src/data/pages/fieldnotes/*.md` for the
 
 1. Run the [pre-creation check](#pre-creation-check-segment-collisions) for the proposed address
 2. Create `src/data/pages/fieldnotes/{uid}.md` where `{uid}` is a unique identifier (assigned by migration script or manually generated)
-3. Add frontmatter with `uid` (required), `address` (required), and `date` (required)
+3. Add frontmatter with `uid` (required), `address` (required), and `date` (required, `YYYY-MM-DD` string — never a full ISO timestamp)
 4. Write the body + trailing refs
 5. Run `npm run build` — fix any errors
 6. If the build warns about missing parents, create stub notes for them
