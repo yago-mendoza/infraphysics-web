@@ -115,7 +115,7 @@ export const ContactView: React.FC = () => {
           </button>
 
           <p className="mt-6 text-xs text-th-muted leading-relaxed">
-            Not a form person —{' '}
+            Not a form person? —{' '}
             <a href="mailto:contact@infraphysics.net" className="text-th-tertiary hover:text-th-heading transition-colors">
               contact@infraphysics.net
             </a>
