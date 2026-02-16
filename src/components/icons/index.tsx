@@ -85,7 +85,7 @@ export const ChevronIcon: React.FC<{ isOpen: boolean }> = ({ isOpen }) => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className={isOpen ? 'rotate-90' : ''}
+    className={`transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`}
   >
     <polyline points="9 18 15 12 9 6"></polyline>
   </svg>
