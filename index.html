@@ -250,6 +250,12 @@
       ::-webkit-scrollbar-track { background: transparent; }
       ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); }
 
+      /* Hero pattern — shift right on mobile to show more interesting area */
+      .hero-pattern-bg { background-position: 65% center; }
+      @media (min-width: 768px) {
+        .hero-pattern-bg { background-position: center center; }
+      }
+
       /* Viewport-center main content — compensate for sidebar at md+ */
       @media (min-width: 768px) {
         .main-center-viewport {
