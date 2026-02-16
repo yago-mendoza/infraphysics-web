@@ -38,6 +38,9 @@ export const DriftDetector: React.FC<Props> = ({ entries, noteById, onNoteClick,
               >
                 <span className="text-sm">{noteLabel(note)}</span>
               </Link>
+              {note.address && (
+                <span className="text-xs text-th-muted ml-2">{note.address.replace(/\/\//g, ' / ')}</span>
+              )}
               {viaNames.length > 0 && (
                 <div className="text-xs text-th-tertiary mt-0.5 italic font-sans">
                   via {viaNames.join(', ')}
