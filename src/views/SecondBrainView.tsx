@@ -12,7 +12,8 @@ import { BridgeScoreBadge } from '../components/BridgeScoreBadge';
 
 import { DriftDetector } from '../components/DriftDetector';
 import { useGraphRelevance } from '../hooks/useGraphRelevance';
-import type { SortMode } from '../hooks/useSecondBrainHub';
+import type { SortMode, SearchMode, FilterState } from '../hooks/useSecondBrainHub';
+import { SearchIcon } from '../components/icons';
 import { noteLabel, type FieldNoteMeta } from '../types';
 import type { Connection } from '../lib/brainIndex';
 import { ICON_REF_IN, ICON_REF_OUT } from '../lib/icons';
@@ -34,6 +35,92 @@ const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: 'shuffle', label: 'shuffle' },
 ];
 
+// --- Search Mode Chips ---
+const SEARCH_MODES: { value: SearchMode; label: string }[] = [
+  { value: 'name', label: 'name' },
+  { value: 'content', label: 'content' },
+  { value: 'backlinks', label: 'backlinks' },
+];
+
+// --- Floating Search Overlay ---
+const SearchOverlay: React.FC<{
+  open: boolean;
+  onClose: (keepQuery: boolean) => void;
+  query: string;
+  setQuery: (q: string) => void;
+  searchMode: SearchMode;
+  setSearchMode: (m: SearchMode) => void;
+  resultCount: number;
+  scopeHint: string | null;
+}> = ({ open, onClose, query, setQuery, searchMode, setSearchMode, resultCount, scopeHint }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); onClose(false); }
+      if (e.key === 'Enter') { e.preventDefault(); onClose(true); }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-center" style={{ pointerEvents: 'none' }}>
+      <div className="absolute inset-0" style={{ pointerEvents: 'auto' }} onClick={() => onClose(true)} />
+      <div
+        className="relative mt-16 h-fit w-full max-w-md mx-4 border border-th-hub-border rounded-sm p-3"
+        style={{ backgroundColor: 'var(--hub-sidebar-bg)', pointerEvents: 'auto' }}
+      >
+        <div className="flex items-center border border-th-hub-border px-2 py-1.5 bg-th-surface focus-within:border-th-border-active transition-colors mb-2">
+          <span className="text-th-muted mr-1.5 flex-shrink-0"><SearchIcon /></span>
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder={scopeHint || 'Search...'}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="w-full text-[11px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery('')}
+              className="text-th-muted hover:text-th-secondary text-[10px] ml-1 flex-shrink-0"
+            >
+              &times;
+            </button>
+          )}
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[8px] text-th-muted opacity-50">mode</span>
+            {SEARCH_MODES.map(mode => (
+              <button
+                key={mode.value}
+                onClick={() => setSearchMode(mode.value)}
+                className={`text-[9px] px-1 py-0 transition-colors ${
+                  searchMode === mode.value
+                    ? 'text-violet-400'
+                    : 'text-th-muted hover:text-th-secondary'
+                }`}
+              >
+                {mode.label}
+              </button>
+            ))}
+          </div>
+          <span className="text-[9px] text-th-muted tabular-nums">{resultCount} results</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const SecondBrainView: React.FC = () => {
   const hub = useHub();
 
@@ -54,18 +141,64 @@ export const SecondBrainView: React.FC = () => {
     setQuery,
     searchActive,
     clearSearch,
+    searchMode,
+    setSearchMode,
     directoryScope,
     setDirectoryScope,
+    filterState,
+    setFilterState,
+    hasActiveFilters,
+    resetFilters,
     sortMode,
     setSortMode,
     directoryNavRef,
     isVisited,
+    backlinksMap,
   } = hub;
 
   const navigate = useNavigate();
-  const { getRelevance, getDrift, getPercentile } = useGraphRelevance();
+  const { getRelevance, getDrift, getPercentile, getNoteTopology } = useGraphRelevance();
   const { trail, scheduleReset, scheduleExtend, truncateTrail, clearTrail, isOverflowing } =
     useNavigationTrail({ activePost, directoryNavRef });
+
+  // --- Floating search overlay ---
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  const handleSearchClose = useCallback((keepQuery: boolean) => {
+    setSearchOpen(false);
+    if (!keepQuery) setQuery('');
+  }, [setQuery]);
+
+  // Type-to-search: any printable key or Backspace opens the overlay
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        setSearchOpen(true);
+        return;
+      }
+
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      if (e.key.length === 1 || e.key === 'Backspace') {
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  const updateFilter = useCallback(<K extends keyof FilterState>(key: K, value: FilterState[K]) => {
+    setFilterState(prev => ({ ...prev, [key]: value }));
+  }, [setFilterState]);
+
+  const searchScopeHint = directoryScope
+    ? `Search in ${directoryScope.replace(/\/\//g, ' / ')}...`
+    : filterState.islandId != null
+      ? `Search in island #${filterState.islandId}...`
+      : null;
 
   // Wiki-link click handler — extend trail with the clicked concept
   const handleWikiLinkClick = useCallback((conceptId: string) => {
@@ -141,8 +274,8 @@ export const SecondBrainView: React.FC = () => {
   // "Unvisited only" filter for grid view
   const [unvisitedOnly, setUnvisitedOnly] = useState(false);
 
-  // Right column: graph visibility toggle
-  const [graphVisible, setGraphVisible] = useState(true);
+  // Right column: zone filtering toggle (graph always visible)
+  const [zoneFilter, setZoneFilter] = useState(true);
 
   // Right-column zone + detail navigation
   const [activeZone, setActiveZone] = useState<Zone>(null);
@@ -155,11 +288,11 @@ export const SecondBrainView: React.FC = () => {
     if (neighborhood.parent) items.push({ note: neighborhood.parent, zone: 'parent' });
     neighborhood.siblings.forEach(s => items.push({ note: s, zone: 'siblings' }));
     neighborhood.children.forEach(c => items.push({ note: c, zone: 'children' }));
-    if (graphVisible && activeZone) {
+    if (zoneFilter && activeZone) {
       return items.filter(i => i.zone === activeZone);
     }
     return items;
-  }, [neighborhood, graphVisible, activeZone]);
+  }, [neighborhood, zoneFilter, activeZone]);
 
   // Set default zone when note changes — persist previous zone if still valid
   useEffect(() => {
@@ -462,10 +595,22 @@ export const SecondBrainView: React.FC = () => {
 
   return (
     <div className="animate-fade-in">
+      {/* Floating Search Overlay */}
+      <SearchOverlay
+        open={searchOpen}
+        onClose={handleSearchClose}
+        query={query}
+        setQuery={setQuery}
+        searchMode={searchMode}
+        setSearchMode={setSearchMode}
+        resultCount={sortedResults.length}
+        scopeHint={searchScopeHint}
+      />
+
       {/* Main Content */}
       {showDetail ? (
         /* --- Concept Detail View --- */
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-12">
           {/* Left: Content + Connections + Mentions — fades during note transitions */}
           <div
             className="lg:col-span-3"
@@ -486,6 +631,32 @@ export const SecondBrainView: React.FC = () => {
             <h2 className="text-2xl font-bold mb-1 text-th-heading">
               {noteLabel(activePost!)}
               <BridgeScoreBadge percentile={getPercentile(activePost!.id)} />
+              {(() => {
+                const topo = getNoteTopology(activePost!.id);
+                return (
+                  <>
+                    {topo.componentId != null && !topo.isOrphan && (
+                      <button
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent('topology-focus', { detail: { componentId: topo.componentId } }));
+                        }}
+                        className="ml-2 inline-flex items-center text-[10px] font-normal px-1.5 py-0.5 border border-violet-400/30 text-violet-400/80 hover:text-violet-400 hover:border-violet-400/50 transition-colors rounded-sm align-middle"
+                        title={`Component #${topo.componentId} (${topo.componentSize} notes)`}
+                      >
+                        island #{topo.componentId}
+                      </button>
+                    )}
+                    {topo.isBridge && (
+                      <span className="ml-1.5 inline-flex items-center text-[10px] font-normal px-1.5 py-0.5 border border-amber-400/30 text-amber-400/80 rounded-sm align-middle">
+                        ⚡ bridge {Math.round((topo.bridgeCriticality ?? 0) * 100)}%
+                      </span>
+                    )}
+                    {topo.isOrphan && (
+                      <span className="ml-1.5 text-[10px] font-normal text-th-muted align-middle">(orphan)</span>
+                    )}
+                  </>
+                );
+              })()}
             </h2>
             <div className="text-[11px] text-th-tertiary mb-2">
               {activePost!.addressParts && activePost!.addressParts.length > 1
@@ -554,7 +725,8 @@ export const SecondBrainView: React.FC = () => {
               const hasDrift = driftEntries.length > 0;
               if (connections.length === 0 && !hasDrift) return null;
               return (
-                <div className="mt-6 space-y-4">
+                <div>
+                  <hr className="border-t border-th-border my-6" />
                   {connections.length > 0 && (
                     <div>
                       <h3 className="text-[11px] text-th-tertiary uppercase tracking-wider mb-3">
@@ -587,7 +759,7 @@ export const SecondBrainView: React.FC = () => {
                     </div>
                   )}
                   {connections.length > 0 && hasDrift && (
-                    <hr className="border-t border-th-hub-border" />
+                    <hr className="border-t border-th-border my-6" />
                   )}
                   <DriftDetector
                     entries={driftEntries}
@@ -610,35 +782,33 @@ export const SecondBrainView: React.FC = () => {
               transition: contentReady ? 'opacity 200ms ease-in' : 'none',
             }}
           >
-            <hr className="lg:hidden border-t border-[#2a2a2a] my-8" />
-            {/* Graph toggle checkbox */}
-            <label className="flex items-center gap-1.5 mb-3 cursor-pointer select-none">
+            <hr className="lg:hidden border-t border-th-border my-6" />
+            {/* Graph — always visible */}
+            <NeighborhoodGraph
+              neighborhood={neighborhood}
+              currentNote={activePost!}
+              onNoteClick={handleConnectionClick}
+              isVisited={isVisited}
+              activeZone={zoneFilter ? activeZone : null}
+              onActiveZoneChange={(zone) => { setZoneFilter(true); setActiveZone(zone); }}
+              homonymParents={homonymParents}
+              onHomonymNavigate={(homonym) => {
+                scheduleExtend(homonym);
+                navigate(`/lab/second-brain/${homonym.id}`);
+              }}
+            />
+            {/* Zone filter toggle — below the graph */}
+            <label className="flex items-center gap-1.5 mt-3 mb-1 cursor-pointer select-none">
               <input
                 type="checkbox"
-                checked={graphVisible}
-                onChange={() => setGraphVisible(v => !v)}
+                checked={zoneFilter}
+                onChange={() => setZoneFilter(v => !v)}
                 className="accent-violet-400 w-3 h-3"
               />
               <span className="text-[10px] text-th-muted">filter by zone</span>
             </label>
-            {/* Graph (collapsible) */}
-            {graphVisible && (
-              <NeighborhoodGraph
-                neighborhood={neighborhood}
-                currentNote={activePost!}
-                onNoteClick={handleConnectionClick}
-                isVisited={isVisited}
-                activeZone={activeZone}
-                onActiveZoneChange={setActiveZone}
-                homonymParents={homonymParents}
-                onHomonymNavigate={(homonym) => {
-                  scheduleExtend(homonym);
-                  navigate(`/lab/second-brain/${homonym.id}`);
-                }}
-              />
-            )}
-            {/* Family list — filtered by zone when graph active, all when collapsed */}
-            <div className={graphVisible ? 'mt-4' : ''}>
+            {/* Family list — filtered by zone when toggle on, all when off */}
+            <div className="mt-2">
             <RelevanceLeaderboard
               mode="family"
               familyItems={familyItems}
@@ -649,29 +819,79 @@ export const SecondBrainView: React.FC = () => {
             />
             </div>
           </div>
+          {/* Back to top — mobile only (stacked layout) */}
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="lg:hidden w-full mt-8 mb-4 py-2 text-[10px] uppercase tracking-wider text-th-muted hover:text-violet-400 border border-th-hub-border hover:border-violet-400/30 transition-colors"
+          >
+            Back to top
+          </button>
         </div>
       ) : (
         /* --- Concept List View --- */
         <div>
-          {/* Sort control + scope/search indicators */}
+          {/* Sort control + scope/search/filter indicators */}
           <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
               {directoryScope && (
-                <div className="flex items-center gap-1 text-xs text-th-tertiary">
-                  <span className="text-th-muted">scope:</span>
-                  <span className="text-violet-400">{directoryScope.replace(/\/\//g, ' / ')}</span>
-                  <button
-                    onClick={() => setDirectoryScope(null)}
-                    className="text-th-muted hover:text-th-secondary ml-0.5"
-                  >
-                    &times;
-                  </button>
-                </div>
+                <span className="text-[9px] px-1.5 py-0.5 bg-violet-400/10 text-violet-400 border border-violet-400/20 flex items-center gap-1">
+                  scope: {directoryScope.replace(/\/\//g, ' / ')}
+                  <button onClick={() => setDirectoryScope(null)} className="hover:text-white">&times;</button>
+                </span>
               )}
-              {query && (
-                <div className="text-xs text-th-tertiary">
-                  {sortedResults.length} result{sortedResults.length !== 1 ? 's' : ''} for &ldquo;{query}&rdquo;
-                </div>
+              {filterState.islandId != null && (
+                <span className="text-[9px] px-1.5 py-0.5 bg-violet-400/10 text-violet-400 border border-violet-400/20 flex items-center gap-1">
+                  island #{filterState.islandId}
+                  <button onClick={() => updateFilter('islandId', null)} className="hover:text-white">&times;</button>
+                </span>
+              )}
+              {!searchOpen && query && (
+                <span className="text-[9px] px-1.5 py-0.5 bg-violet-400/10 text-violet-400 border border-violet-400/20 flex items-center gap-1 cursor-pointer" onClick={() => setSearchOpen(true)}>
+                  &ldquo;{query}&rdquo;
+                  <button onClick={(e) => { e.stopPropagation(); setQuery(''); }} className="hover:text-white">&times;</button>
+                </span>
+              )}
+              {filterState.orphans && (
+                <span className="text-[9px] px-1.5 py-0.5 bg-violet-400/20 text-violet-400 border border-violet-400/30 flex items-center gap-1">
+                  orphans
+                  <button onClick={() => updateFilter('orphans', false)} className="hover:text-white">&times;</button>
+                </span>
+              )}
+              {filterState.leaf && (
+                <span className="text-[9px] px-1.5 py-0.5 bg-violet-400/20 text-violet-400 border border-violet-400/30 flex items-center gap-1">
+                  leaf
+                  <button onClick={() => updateFilter('leaf', false)} className="hover:text-white">&times;</button>
+                </span>
+              )}
+              {filterState.bridgesOnly && (
+                <span className="text-[9px] px-1.5 py-0.5 bg-amber-400/20 text-amber-400 border border-amber-400/30 flex items-center gap-1">
+                  bridges
+                  <button onClick={() => updateFilter('bridgesOnly', false)} className="hover:text-white">&times;</button>
+                </span>
+              )}
+              {filterState.depthMin > 1 && (
+                <span className="text-[9px] px-1.5 py-0.5 bg-violet-400/20 text-violet-400 border border-violet-400/30 flex items-center gap-1">
+                  depth &ge; {filterState.depthMin}
+                  <button onClick={() => updateFilter('depthMin', 1)} className="hover:text-white">&times;</button>
+                </span>
+              )}
+              {filterState.depthMax !== Infinity && (
+                <span className="text-[9px] px-1.5 py-0.5 bg-violet-400/20 text-violet-400 border border-violet-400/30 flex items-center gap-1">
+                  depth &le; {filterState.depthMax}
+                  <button onClick={() => updateFilter('depthMax', Infinity)} className="hover:text-white">&times;</button>
+                </span>
+              )}
+              {filterState.hubThreshold > 0 && (
+                <span className="text-[9px] px-1.5 py-0.5 bg-violet-400/20 text-violet-400 border border-violet-400/30 flex items-center gap-1">
+                  hubs &ge; {filterState.hubThreshold}
+                  <button onClick={() => updateFilter('hubThreshold', 0)} className="hover:text-white">&times;</button>
+                </span>
+              )}
+              {!query && !hasActiveFilters && !directoryScope && (
+                <span className="text-[9px] text-th-muted">{sortedResults.length} concepts</span>
+              )}
+              {(query || hasActiveFilters) && (
+                <span className="text-[9px] text-th-muted tabular-nums">{sortedResults.length} results</span>
               )}
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
@@ -704,13 +924,17 @@ export const SecondBrainView: React.FC = () => {
 
           <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {visibleResults.length > 0 ? (
-              visibleResults.map((note, idx) => (
+              visibleResults.map((note, idx) => {
+                const outgoing = note.references?.length || 0;
+                const incoming = (backlinksMap.get(note.id) || []).length;
+                const topo = getNoteTopology(note.id);
+                return (
                 <Link
                   key={note.id}
                   ref={(el) => { if (el) cardRefs.current.set(idx, el); else cardRefs.current.delete(idx); }}
                   to={`/lab/second-brain/${note.id}`}
                   onClick={() => handleGridCardClick(note)}
-                  className={`card-link group p-4${focusedIdx === idx ? ' border-violet-400/50 bg-violet-400/5' : ''}`}
+                  className={`card-link group p-4 flex flex-col${focusedIdx === idx ? ' border-violet-400/50 bg-violet-400/5' : ''}`}
                 >
                   <div className="mb-0.5 flex items-center gap-1.5">
                     <span className={`text-sm font-medium transition-colors group-hover:text-th-primary ${isVisited(note.id) ? 'text-blue-400/70' : 'text-violet-400'}`}>
@@ -727,8 +951,25 @@ export const SecondBrainView: React.FC = () => {
                       {note.description}
                     </div>
                   )}
+                  {/* Card metadata — pinned to bottom */}
+                  <div className="flex items-center gap-2 mt-auto pt-2.5 text-[10px] text-th-tertiary tabular-nums">
+                    <span>{outgoing}↗ {incoming}↙</span>
+                    {topo.componentId != null && !topo.isOrphan && (
+                      <span className="text-violet-400/60">#{topo.componentId}</span>
+                    )}
+                    {topo.isBridge && (
+                      <span className="text-amber-400/80">⚡</span>
+                    )}
+                    {topo.isOrphan && (
+                      <span>orphan</span>
+                    )}
+                    {note.date && (
+                      <span className="ml-auto opacity-60">{note.date}</span>
+                    )}
+                  </div>
                 </Link>
-              ))
+                );
+              })
             ) : (
               <div className="text-xs text-th-tertiary py-8 text-center col-span-3">
                 No concepts match your search
