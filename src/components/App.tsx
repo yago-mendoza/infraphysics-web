@@ -100,7 +100,7 @@ const AppLayout: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex-1 min-w-0 flex flex-col min-h-screen">
         <main className={`flex-grow w-full relative z-10 ${isSecondBrain ? 'max-w-6xl px-4 md:px-10 pt-20 pb-10 md:py-12 mx-auto' : 'max-w-4xl px-6 pt-20 pb-10 md:py-16 main-center-viewport'}`}>
-          <Routes>
+          <Routes key={location.pathname}>
             <Route path="/" element={<Navigate to="/home" replace />} />
             <Route path="/home" element={<HomeView />} />
             <Route path="/about" element={<AboutView />} />
