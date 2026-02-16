@@ -249,6 +249,14 @@
       ::-webkit-scrollbar { width: 6px; }
       ::-webkit-scrollbar-track { background: transparent; }
       ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); }
+
+      /* Viewport-center main content — compensate for sidebar at md+ */
+      @media (min-width: 768px) {
+        .main-center-viewport {
+          margin-left: max(0px, calc(50% - 28.5rem));
+          margin-right: auto;
+        }
+      }
     </style>
   <script type="importmap">
 {
