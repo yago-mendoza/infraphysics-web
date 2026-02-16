@@ -1,6 +1,6 @@
 // Mobile hamburger menu navigation component — theme-aware
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { posts } from '../../data/data';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -25,8 +25,25 @@ import { CATEGORY_ACCENTS } from '../../constants/theme';
 export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch }) => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);   // controls DOM presence
+  const [visible, setVisible] = useState(false);    // controls CSS transition state
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+
+  // Open: mount first, then trigger visible on next frame
+  // Close: remove visible first, then unmount after transition
+  useEffect(() => {
+    if (isOpen) {
+      setMounted(true);
+      requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
+    } else {
+      setVisible(false);
+      const id = setTimeout(() => setMounted(false), 250);
+      return () => clearTimeout(id);
+    }
+  }, [isOpen]);
+
+  const close = useCallback(() => setIsOpen(false), []);
 
 
   const handleRandom = () => {
@@ -34,7 +51,7 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearc
     const randomIndex = Math.floor(Math.random() * posts.length);
     const randomPost = posts[randomIndex];
     navigate(`/${randomPost.category}/${randomPost.id}`);
-    setIsOpen(false);
+    close();
   };
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
@@ -45,7 +62,7 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearc
       <Link
         to={active && basePath ? basePath : to}
         onClick={() => setIsOpen(false)}
-        className={`flex items-center gap-3 py-3 px-4 rounded-sm transition-all ${
+        className={`flex items-center gap-2.5 py-2.5 px-3 rounded-sm text-sm transition-all [&_svg]:w-4 [&_svg]:h-4 ${
           active ? 'bg-th-elevated font-medium' : 'text-th-secondary hover:bg-th-surface-alt'
         }`}
         style={active ? { color: linkAccent } : undefined}
@@ -57,7 +74,7 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearc
   };
 
   const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-    <div className="text-[9px] uppercase tracking-[0.2em] text-th-tertiary px-4 pt-4 pb-1 select-none">
+    <div className="text-[9px] uppercase tracking-[0.2em] text-th-tertiary px-3 pt-3 pb-0.5 select-none">
       {children}
     </div>
   );
@@ -98,14 +115,14 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearc
       </div>
 
       {/* Mobile Menu Overlay */}
-      {isOpen && (
+      {mounted && (
         <>
           <div
-            className="fixed inset-0 bg-th-overlay z-40"
-            onClick={() => setIsOpen(false)}
-          ></div>
-          <div className="absolute top-14 left-0 right-0 bg-th-sidebar border-b border-th-border z-50 shadow-lg animate-fade-in">
-            <nav className="flex flex-col p-4 gap-1">
+            className={`fixed inset-0 bg-th-overlay z-40 transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}
+            onClick={close}
+          />
+          <div className={`absolute top-14 left-0 right-0 bg-th-sidebar border-b border-th-border z-50 shadow-lg transition-all duration-250 ease-out ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>
+            <nav className="flex flex-col p-3 gap-0.5">
               {/* LAB */}
               <SectionLabel>lab</SectionLabel>
               <NavLink to="/lab/projects" basePath="/lab/projects" accent={catAccentVar('projects')} icon={<GearIcon />}>Projects</NavLink>
@@ -127,7 +144,7 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearc
               {/* Random Button */}
               <button
                 onClick={handleRandom}
-                className="flex items-center gap-2 px-4 py-2 text-xs text-th-tertiary hover:text-th-secondary transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 text-xs text-th-tertiary hover:text-th-secondary transition-colors"
               >
                 <span className="w-4 h-4 flex items-center justify-center bg-th-elevated rounded-sm text-[10px]">?</span>
                 Random post
