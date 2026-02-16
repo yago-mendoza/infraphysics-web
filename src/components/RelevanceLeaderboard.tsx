@@ -81,7 +81,7 @@ export const RelevanceLeaderboard: React.FC<Props> = (props) => {
       return <div className="text-xs text-th-tertiary py-6 text-center">No family</div>;
     }
     return (
-      <div className="space-y-1 overflow-y-auto no-scrollbar" style={{ maxHeight: 'calc(100dvh - 8rem)' }}>
+      <div className="space-y-1 overflow-y-auto no-scrollbar max-h-[40vh] lg:max-h-[calc(100dvh-8rem)]">
         {familyItems.map(({ note, zone }) => {
           const visited = isVisited(note.id);
           const display = note.address ? displayAddr(note.address) : noteLabel(note);
