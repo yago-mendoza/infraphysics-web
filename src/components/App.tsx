@@ -1,6 +1,6 @@
 // App shell: provides layout structure and top-level routing
 
-import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useParams } from 'react-router-dom';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { ArticleContextProvider } from '../contexts/ArticleContext';
@@ -9,6 +9,7 @@ import { categoryGroup } from '../config/categories';
 import { Sidebar, MobileNav, Footer, DualGrid, Starfield, SecondBrainSidebar } from './layout';
 import { ErrorBoundary } from './ErrorBoundary';
 import { SearchPalette } from './SearchPalette';
+import { RetentionHints } from './RetentionHints';
 import { HomeView, AboutView, ContactView, ThanksView, SectionView, PostView, SecondBrainView } from '../views';
 import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../constants/layout';
 import { useKeyboardShortcuts, ShortcutDef } from '../hooks/useKeyboardShortcuts';
@@ -25,6 +26,7 @@ const LegacyPostRedirect: React.FC = () => {
 };
 
 const STARFIELD_PAGES = ['/', '/home', '/about', '/contact', '/thanks'];
+const BLOG_SECTION_PAGES = ['/blog/threads', '/blog/bits2bricks'];
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
@@ -57,6 +59,7 @@ const AppLayout: React.FC = () => {
     return () => document.removeEventListener('keydown', handler);
   }, []);
 
+
   // Scroll to top on every route change (standard SPA behavior)
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -68,6 +71,74 @@ const AppLayout: React.FC = () => {
   }, [location.pathname, applyZone]);
 
   const isStarfieldPage = STARFIELD_PAGES.includes(location.pathname);
+  const isPostPage = /^\/lab\/[^/]+\/[^/]+/.test(location.pathname) && !location.pathname.startsWith('/lab/second-brain');
+  const showHeroPattern = isStarfieldPage || BLOG_SECTION_PAGES.includes(location.pathname) || isPostPage;
+
+  // Scroll-based fade for hero pattern
+  // Opacity stays frozen while scrolling. On scroll stop, animates to target at constant speed.
+  const heroPatternRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!showHeroPattern) return;
+    const base = theme === 'dark' ? 0.45 : 0.40;
+
+    // Post pages: fixed opacity, no scroll animation
+    if (isPostPage) {
+      if (heroPatternRef.current) heroPatternRef.current.style.opacity = String(base);
+      return;
+    }
+
+    // Other pages: scroll-based fade with constant-speed animation
+    const SPEED = 0.165; // opacity units per second (constant speed)
+    const SCROLL_RANGE = 1300; // px over which opacity goes 1→0
+    const IDLE_DELAY = 0; // ms after last scroll event to consider "stopped"
+
+    let current = base;
+    let rafId = 0;
+    let idleTimer = 0;
+    let lastFrame = 0;
+
+    const getTarget = () => base * Math.max(0, 1 - window.scrollY / SCROLL_RANGE);
+
+    const animate = (now: number) => {
+      if (!heroPatternRef.current) return;
+      const dt = lastFrame ? (now - lastFrame) / 1000 : 0;
+      lastFrame = now;
+      const target = getTarget();
+      const diff = target - current;
+      if (Math.abs(diff) < 0.005) {
+        current = target;
+        heroPatternRef.current.style.opacity = String(current);
+        rafId = 0;
+        lastFrame = 0;
+        return;
+      }
+      const step = SPEED * dt * Math.sign(diff);
+      current = Math.abs(step) >= Math.abs(diff) ? target : current + step;
+      heroPatternRef.current.style.opacity = String(current);
+      rafId = requestAnimationFrame(animate);
+    };
+
+    const startAnimation = () => {
+      lastFrame = 0;
+      if (!rafId) rafId = requestAnimationFrame(animate);
+    };
+
+    const onScroll = () => {
+      if (rafId) { cancelAnimationFrame(rafId); rafId = 0; lastFrame = 0; }
+      clearTimeout(idleTimer);
+      idleTimer = window.setTimeout(startAnimation, IDLE_DELAY);
+    };
+
+    current = getTarget();
+    if (heroPatternRef.current) heroPatternRef.current.style.opacity = String(current);
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      clearTimeout(idleTimer);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, [showHeroPattern, isPostPage, theme]);
   const showGrid = location.pathname.startsWith('/lab');
   const isBlog = location.pathname.startsWith('/blog');
   const isSecondBrain = location.pathname.startsWith('/lab/second-brain');
@@ -93,6 +164,9 @@ const AppLayout: React.FC = () => {
 
       {/* Search Palette */}
       <SearchPalette isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+
+      {/* Contextual retention hints */}
+      <RetentionHints />
 
       {/* Hub Sidebar (second-brain only, desktop only) */}
       {isSecondBrain && <SecondBrainSidebar />}
