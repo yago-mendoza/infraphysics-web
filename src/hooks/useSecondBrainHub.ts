@@ -17,6 +17,7 @@ export interface FilterState {
   depthMax: number;      // Infinity = no upper bound
   islandId: number | null;  // null = off
   bridgesOnly: boolean;
+  dateFilter: string | null;  // ISO date string e.g. '2026-02-05', null = off
 }
 
 const DEFAULT_FILTER_STATE: FilterState = {
@@ -27,6 +28,7 @@ const DEFAULT_FILTER_STATE: FilterState = {
   depthMax: Infinity,
   islandId: null,
   bridgesOnly: false,
+  dateFilter: null,
 };
 
 export interface TreeNode {
@@ -127,6 +129,8 @@ export const useSecondBrainHub = () => {
     if (!activePost) { setResolvedHtml(''); setContentReadyId(undefined); return; }
     let cancelled = false;
     setContentLoading(true);
+    // Don't clear resolvedHtml — keep previous content visible until new content arrives
+    setContentReadyId(undefined);
     fetchNoteContent(activePost.id).then(html => {
       if (!cancelled) {
         setResolvedHtml(html);
@@ -321,8 +325,8 @@ export const useSecondBrainHub = () => {
 
   // --- Filters ---
   const filteredNotes = useMemo(() => {
-    const { orphans, leaf, hubThreshold, depthMin, depthMax, islandId, bridgesOnly } = filterState;
-    const hasAnyFilter = orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || islandId != null || bridgesOnly;
+    const { orphans, leaf, hubThreshold, depthMin, depthMax, islandId, bridgesOnly, dateFilter } = filterState;
+    const hasAnyFilter = orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || islandId != null || bridgesOnly || dateFilter != null;
     if (!hasAnyFilter) return scopedResults;
 
     const islands = getIslands();
@@ -343,6 +347,15 @@ export const useSecondBrainHub = () => {
         if (islands.nodeToComponent[note.id] !== islandId) return false;
       }
       if (bridgeUids && !bridgeUids.has(note.id)) return false;
+      if (dateFilter) {
+        const nd = (note.date || '').slice(0, 10);
+        if (dateFilter.includes('..')) {
+          const [start, end] = dateFilter.split('..');
+          if (nd < start || nd > end) return false;
+        } else {
+          if (nd !== dateFilter) return false;
+        }
+      }
 
       return true;
     });
@@ -411,8 +424,8 @@ export const useSecondBrainHub = () => {
 
   // Check if any filter is active
   const hasActiveFilters = useMemo(() => {
-    const { orphans, leaf, hubThreshold, depthMin, depthMax, islandId, bridgesOnly } = filterState;
-    return orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || islandId != null || bridgesOnly;
+    const { orphans, leaf, hubThreshold, depthMin, depthMax, islandId, bridgesOnly, dateFilter } = filterState;
+    return orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || islandId != null || bridgesOnly || dateFilter != null;
   }, [filterState]);
 
   // Signal from sidebar directory: "this click should reset the trail"
