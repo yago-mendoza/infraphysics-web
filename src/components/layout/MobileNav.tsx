@@ -17,6 +17,7 @@ import {
   SunIcon,
   MoonIcon,
   SearchIcon,
+  GitHubIcon,
 } from '../icons';
 import { catAccentVar } from '../../config/categories';
 import { CATEGORY_ACCENTS } from '../../constants/theme';
@@ -24,6 +25,7 @@ import { CATEGORY_ACCENTS } from '../../constants/theme';
 
 export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch }) => {
   const location = useLocation();
+  const showGitHub = location.pathname.startsWith('/lab/projects') || location.pathname.startsWith('/lab/second-brain') || location.pathname === '/about';
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);   // controls DOM presence
   const [visible, setVisible] = useState(false);    // controls CSS transition state
@@ -94,6 +96,17 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearc
           >
             {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
           </button>
+          {showGitHub && (
+            <a
+              href="https://github.com/yago-mendoza"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 hover:bg-th-active rounded-sm transition-colors text-th-secondary"
+              aria-label="GitHub"
+            >
+              <GitHubIcon />
+            </a>
+          )}
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="p-2 hover:bg-th-active rounded-sm transition-colors text-th-secondary"

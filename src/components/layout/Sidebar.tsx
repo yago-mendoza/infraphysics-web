@@ -14,6 +14,7 @@ import {
   SunIcon,
   MoonIcon,
   SearchIcon,
+  GitHubIcon,
 } from '../icons';
 import { CATEGORY_ACCENTS } from '../../constants/theme';
 import { catAccentVar } from '../../config/categories';
@@ -22,6 +23,7 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch 
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
+  const showGitHub = location.pathname.startsWith('/lab/projects') || location.pathname.startsWith('/lab/second-brain') || location.pathname === '/about';
 
   const navLink = (
     basePath: string,
@@ -105,7 +107,7 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch 
 
       </div>
 
-      {/* Theme Toggle + Search — pinned to bottom */}
+      {/* Theme Toggle + Search + GitHub — pinned to bottom */}
       <div className="flex justify-center gap-1 pt-4 flex-shrink-0">
         <button
           onClick={onOpenSearch}
@@ -123,6 +125,18 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch 
         >
           {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
         </button>
+        {showGitHub && (
+          <a
+            href="https://github.com/yago-mendoza"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center p-2 rounded-sm transition-all"
+            style={{ color: 'var(--sidebar-icon)' }}
+            aria-label="GitHub"
+          >
+            <GitHubIcon />
+          </a>
+        )}
       </div>
     </aside>
     </>
