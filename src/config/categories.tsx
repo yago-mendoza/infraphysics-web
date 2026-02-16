@@ -1,13 +1,7 @@
 // Category metadata with associated icons and colors — dark theme
 
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { GearIcon, ThreadIcon, GradCapIcon } from '../components/icons';
-
-/** Discrete section link — underline only, inherits text color */
-const sl = (to: string, text: string) => (
-  <Link to={to} className="underline underline-offset-2">{text}</Link>
-);
 
 export interface CategoryDisplayConfig {
   title: string;
@@ -50,7 +44,7 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
   },
   threads: {
     title: 'Threads',
-    description: <>Essays, takes, and personal rants about ideas that won't sit still. When something deserves more depth than an essay can give it, check {sl('/blog/bits2bricks', 'bits2bricks')}.</>,
+    description: <>Essays, takes, and personal rants about ideas that won't sit still. When something deserves more depth than an essay can give it, check bits2bricks.</>,
     icon: <ThreadIcon />,
     color: 'rose-400',
     accent: '#fb7185',
