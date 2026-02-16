@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FieldNoteMeta } from '../types';
 import { initBrainIndex, fetchNoteContent, type BrainIndex, type Connection, type Neighborhood } from '../lib/brainIndex';
+import { useGraphRelevance } from './useGraphRelevance';
 
 export type SearchMode = 'name' | 'content' | 'backlinks';
 export type SortMode = 'a-z' | 'most-links' | 'fewest-links' | 'depth' | 'shuffle' | 'newest' | 'oldest';
@@ -14,6 +15,8 @@ export interface FilterState {
   hubThreshold: number;  // 0 = off
   depthMin: number;      // 1-based
   depthMax: number;      // Infinity = no upper bound
+  islandId: number | null;  // null = off
+  bridgesOnly: boolean;
 }
 
 const DEFAULT_FILTER_STATE: FilterState = {
@@ -22,6 +25,8 @@ const DEFAULT_FILTER_STATE: FilterState = {
   hubThreshold: 0,
   depthMin: 1,
   depthMax: Infinity,
+  islandId: null,
+  bridgesOnly: false,
 };
 
 export interface TreeNode {
@@ -50,6 +55,7 @@ function seededShuffle<T>(arr: T[], seed: number): T[] {
 export const useSecondBrainHub = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { getIslands } = useGraphRelevance();
   const [query, setQuery] = useState('');
 
   // Async index state
@@ -315,9 +321,12 @@ export const useSecondBrainHub = () => {
 
   // --- Filters ---
   const filteredNotes = useMemo(() => {
-    const { orphans, leaf, hubThreshold, depthMin, depthMax } = filterState;
-    const hasAnyFilter = orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity;
+    const { orphans, leaf, hubThreshold, depthMin, depthMax, islandId, bridgesOnly } = filterState;
+    const hasAnyFilter = orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || islandId != null || bridgesOnly;
     if (!hasAnyFilter) return scopedResults;
+
+    const islands = getIslands();
+    const bridgeUids = bridgesOnly && islands ? new Set(islands.cuts.map(c => c.uid)) : null;
 
     return scopedResults.filter(note => {
       const depth = (note.addressParts || [note.title]).length;
@@ -330,10 +339,14 @@ export const useSecondBrainHub = () => {
       if (hubThreshold > 0 && totalConnections < hubThreshold) return false;
       if (depth < depthMin) return false;
       if (depthMax < Infinity && depth > depthMax) return false;
+      if (islandId != null && islands) {
+        if (islands.nodeToComponent[note.id] !== islandId) return false;
+      }
+      if (bridgeUids && !bridgeUids.has(note.id)) return false;
 
       return true;
     });
-  }, [scopedResults, filterState, backlinksMap, parentIds]);
+  }, [scopedResults, filterState, backlinksMap, parentIds, getIslands]);
 
   // --- Sort ---
   const sortedResults = useMemo(() => {
@@ -398,8 +411,8 @@ export const useSecondBrainHub = () => {
 
   // Check if any filter is active
   const hasActiveFilters = useMemo(() => {
-    const { orphans, leaf, hubThreshold, depthMin, depthMax } = filterState;
-    return orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity;
+    const { orphans, leaf, hubThreshold, depthMin, depthMax, islandId, bridgesOnly } = filterState;
+    return orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || islandId != null || bridgesOnly;
   }, [filterState]);
 
   // Signal from sidebar directory: "this click should reset the trail"
@@ -453,6 +466,7 @@ export const useSecondBrainHub = () => {
     // Data
     allFieldNotes,
     noteById,
+    backlinksMap,
     sortedResults,
     stats: globalStats,
 
