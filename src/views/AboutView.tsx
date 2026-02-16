@@ -11,49 +11,65 @@ export const AboutView: React.FC = () => {
       {/* Hero: Photo + Name + Rotating subtitle */}
       <section className="pb-16">
         <div className="relative mb-16 pt-4">
-          {/* Photo + Quote row */}
-          <div className="flex items-center gap-6 mb-6">
-            {/* Photo — large, with subtle glow */}
-            <div className="relative w-28 h-28 md:w-36 md:h-36 shrink-0">
-              <div className="absolute inset-0 rounded-full bg-violet-400/10 blur-2xl scale-125" />
-              <img
-                src="https://avatars.githubusercontent.com/yago-mendoza"
-                alt="Yago Mendoza"
-                className="relative w-full h-full rounded-full border border-th-border object-cover"
-              />
+          {/* Quote above photo on mobile, beside on desktop */}
+          <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-6">
+            {/* Mobile: quote first, then photo+name row */}
+            <div className="md:hidden">
+              <blockquote className="relative pl-6 mb-4">
+                <span
+                  className="absolute -left-1 -top-2 text-5xl leading-none text-th-heading select-none"
+                  style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+                  aria-hidden="true"
+                >&ldquo;</span>
+                <p className="text-th-secondary text-sm leading-relaxed italic">
+                  My competitive advantage is that I'm having fun.
+                  <span className="relative inline-block w-0">
+                    <span className="absolute left-0 -bottom-7 text-5xl leading-none text-th-heading select-none" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }} aria-hidden="true">&rdquo;</span>
+                  </span>
+                </p>
+              </blockquote>
+              <div className="flex items-center gap-4 mt-6">
+                <div className="relative w-16 h-16 shrink-0">
+                  <div className="absolute inset-0 rounded-full bg-violet-400/10 blur-2xl scale-125" />
+                  <img src="https://avatars.githubusercontent.com/yago-mendoza" alt="Yago Mendoza" className="relative w-full h-full rounded-full border border-th-border object-cover" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold tracking-tight text-th-heading">Yago Mendoza</h1>
+                  <p className="text-xs text-th-secondary font-sans"><RotatingTitle /></p>
+                </div>
+              </div>
             </div>
 
-            {/* Quote beside photo */}
-            <blockquote className="relative pl-6 pr-6">
+            {/* Desktop: photo left, quote right */}
+            <div className="relative w-36 h-36 shrink-0 hidden md:block">
+              <div className="absolute inset-0 rounded-full bg-violet-400/10 blur-2xl scale-125" />
+              <img src="https://avatars.githubusercontent.com/yago-mendoza" alt="Yago Mendoza" className="relative w-full h-full rounded-full border border-th-border object-cover" />
+            </div>
+            <blockquote className="relative pl-6 pr-6 hidden md:block">
               <span
                 className="absolute -left-1 -top-2 text-6xl leading-none text-th-heading select-none"
                 style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
                 aria-hidden="true"
-              >
-                &ldquo;
-              </span>
-              <p className="text-th-secondary text-lg md:text-xl leading-relaxed italic">
-                My competitive advantage is<br className="hidden md:inline" /> that I'm having fun.
+              >&ldquo;</span>
+              <p className="text-th-secondary text-xl leading-relaxed italic">
+                My competitive advantage is<br /> that I'm having fun.
                 <span className="relative inline-block w-0">
-                  <span className="absolute left-0 -bottom-9 text-6xl leading-none text-th-heading select-none" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }} aria-hidden="true">&rdquo;
-                  </span>
+                  <span className="absolute left-0 -bottom-9 text-6xl leading-none text-th-heading select-none" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }} aria-hidden="true">&rdquo;</span>
                 </span>
               </p>
             </blockquote>
           </div>
 
-          {/* Name */}
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-th-heading mb-2">
+          {/* Name + subtitle — desktop only (mobile version is in the photo row above) */}
+          <h1 className="hidden md:block text-5xl font-bold tracking-tight text-th-heading mb-2">
             Yago Mendoza
           </h1>
-
-          {/* Rotating subtitle */}
-          <p className="text-base text-th-secondary h-6 mb-5">
+          <p className="hidden md:block text-base text-th-secondary h-6 mb-5 font-sans">
             <RotatingTitle />
           </p>
 
           {/* Tagline */}
-          <p className="text-th-primary leading-relaxed max-w-xl">
+          <p className="text-sm md:text-base text-th-primary leading-relaxed max-w-xl font-sans">
               I'm into building things and making them move faster. I use AI to unlock compute, document everything I learn, and publish it here—because building in public is how I think best, and if it helps make complex topics more approachable along the way, even better.
           </p>
         </div>
