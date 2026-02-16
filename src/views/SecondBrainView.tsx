@@ -7,10 +7,16 @@ import { useNavigationTrail } from '../hooks/useNavigationTrail';
 import { WikiContent } from '../components/WikiContent';
 import { NavigationTrail } from '../components/NavigationTrail';
 import { NeighborhoodGraph, type Zone } from '../components/NeighborhoodGraph';
+import { RelevanceLeaderboard, type FamilyItem } from '../components/RelevanceLeaderboard';
+import { BridgeScoreBadge } from '../components/BridgeScoreBadge';
+
+import { DriftDetector } from '../components/DriftDetector';
+import { useGraphRelevance } from '../hooks/useGraphRelevance';
 import type { SortMode } from '../hooks/useSecondBrainHub';
 import { noteLabel, type FieldNoteMeta } from '../types';
 import type { Connection } from '../lib/brainIndex';
 import { ICON_REF_IN, ICON_REF_OUT } from '../lib/icons';
+import { resolveWikiLinks } from '../lib/wikilinks';
 import { WikiLinkPreview } from '../components/WikiLinkPreview';
 import '../styles/article.css';
 import '../styles/wiki-content.css';
@@ -56,6 +62,8 @@ export const SecondBrainView: React.FC = () => {
     isVisited,
   } = hub;
 
+  const navigate = useNavigate();
+  const { getRelevance, getDrift, getPercentile } = useGraphRelevance();
   const { trail, scheduleReset, scheduleExtend, truncateTrail, clearTrail, isOverflowing } =
     useNavigationTrail({ activePost, directoryNavRef });
 
@@ -86,6 +94,18 @@ export const SecondBrainView: React.FC = () => {
   const handleConnectionClick = useCallback((post: FieldNoteMeta) => {
     scheduleExtend(post);
   }, [scheduleExtend]);
+
+  // Delegated click handler for wiki-ref links inside dangerouslySetInnerHTML regions
+  const handleInlineWikiClick = useCallback((e: React.MouseEvent) => {
+    const link = (e.target as HTMLElement).closest('a.wiki-ref-resolved') as HTMLAnchorElement | null;
+    if (!link) return;
+    e.preventDefault();
+    const href = link.getAttribute('href');
+    if (!href) return;
+    const match = href.match(/^\/lab\/second-brain\/(.+)$/);
+    if (match) handleWikiLinkClick(match[1]);
+    navigate(href);
+  }, [handleWikiLinkClick, navigate]);
 
   // When search is active, force list view even if we're on a detail URL
   const showDetail = activePost && !searchActive;
@@ -121,10 +141,25 @@ export const SecondBrainView: React.FC = () => {
   // "Unvisited only" filter for grid view
   const [unvisitedOnly, setUnvisitedOnly] = useState(false);
 
+  // Right column: graph visibility toggle
+  const [graphVisible, setGraphVisible] = useState(true);
+
   // Right-column zone + detail navigation
   const [activeZone, setActiveZone] = useState<Zone>(null);
   const [focusedDetailIdx, setFocusedDetailIdx] = useState(0);
   const [showDetailFocus, setShowDetailFocus] = useState(false);
+
+  // Build family items for the unified list, filtered by active zone when graph is visible
+  const familyItems = useMemo<FamilyItem[]>(() => {
+    const items: FamilyItem[] = [];
+    if (neighborhood.parent) items.push({ note: neighborhood.parent, zone: 'parent' });
+    neighborhood.siblings.forEach(s => items.push({ note: s, zone: 'siblings' }));
+    neighborhood.children.forEach(c => items.push({ note: c, zone: 'children' }));
+    if (graphVisible && activeZone) {
+      return items.filter(i => i.zone === activeZone);
+    }
+    return items;
+  }, [neighborhood, graphVisible, activeZone]);
 
   // Set default zone when note changes — persist previous zone if still valid
   useEffect(() => {
@@ -180,9 +215,6 @@ export const SecondBrainView: React.FC = () => {
     if (unvisitedOnly) results = results.filter(n => !isVisited(n.id));
     return results;
   }, [sortedResults, visibleCount, searchActive, activePost, unvisitedOnly, isVisited]);
-
-  // --- Grid arrow-key navigation ---
-  const navigate = useNavigate();
 
   // --- Homonyms: other parents that share the same leaf name ---
   const homonymParents = useMemo(() => {
@@ -453,6 +485,7 @@ export const SecondBrainView: React.FC = () => {
             {/* Concept Title */}
             <h2 className="text-2xl font-bold mb-1 text-th-heading">
               {noteLabel(activePost!)}
+              <BridgeScoreBadge percentile={getPercentile(activePost!.id)} />
             </h2>
             <div className="text-[11px] text-th-tertiary mb-2">
               {activePost!.addressParts && activePost!.addressParts.length > 1
@@ -487,7 +520,7 @@ export const SecondBrainView: React.FC = () => {
                     onClick={() => handleConnectionClick(m)}
                     onMouseEnter={(e) => showMentionPreview(m, e)}
                     onMouseLeave={hideMentionPreview}
-                    className={`text-sm font-medium transition-colors no-underline ${isVisited(m.id) ? 'text-blue-400/70 hover:text-blue-400' : 'text-violet-400/70 hover:text-violet-400'}`}
+                    className={`text-sm font-medium transition-colors no-underline ${isVisited(m.id) ? 'text-blue-400 hover:text-blue-300' : 'text-violet-400 hover:text-violet-300'}`}
                   >
                     {noteLabel(m)}<svg className="inline w-[0.85em] h-[0.85em] ml-0.5 opacity-50" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style={{ verticalAlign: '-0.1em' }}><path fillRule="evenodd" clipRule="evenodd" d={ICON_REF_IN}/></svg>
                   </Link>
@@ -515,57 +548,106 @@ export const SecondBrainView: React.FC = () => {
               />
             </div>
 
-            {/* ─── Interactions (bilateral, annotated) ─── */}
-            {connections.length > 0 && (
-              <div className="mt-8">
-                <h3 className="text-[11px] text-th-tertiary uppercase tracking-wider mb-4">
-                  Interactions
-                </h3>
-                <div className="space-y-3">
-                  {connections.map((conn: Connection) => {
-                    const v = isVisited(conn.note.id);
-                    return (
-                      <div key={conn.note.id}>
-                        <Link
-                          to={`/lab/second-brain/${conn.note.id}`}
-                          onClick={() => handleConnectionClick(conn.note)}
-                          className={`inline transition-colors no-underline border-b border-solid cursor-pointer ${v ? 'text-blue-400/70 hover:text-blue-400 border-blue-400/40 hover:border-blue-400' : 'text-violet-400/70 hover:text-violet-400 border-violet-400/40 hover:border-violet-400'}`}
-                        >
-                          <span className="text-sm">{noteLabel(conn.note)}</span><svg className="inline w-[0.85em] h-[0.85em] ml-0.5 opacity-80" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style={{ verticalAlign: '-0.1em' }}><path fillRule="evenodd" clipRule="evenodd" d={ICON_REF_OUT}/></svg>
-                        </Link>
-                        {conn.note.address && (
-                          <span className="text-xs text-th-muted ml-2">{displayAddress(conn.note.address)}</span>
-                        )}
-                        {(conn.annotation || conn.reverseAnnotation) && (
-                          <div className="text-xs text-th-tertiary mt-0.5 italic font-sans">
-                            {conn.annotation || conn.reverseAnnotation}
-                          </div>
-                        )}
+            {/* ─── Interactions + Drift Detector ─── */}
+            {(() => {
+              const driftEntries = getDrift(activePost!.id);
+              const hasDrift = driftEntries.length > 0;
+              if (connections.length === 0 && !hasDrift) return null;
+              return (
+                <div className="mt-6 space-y-4">
+                  {connections.length > 0 && (
+                    <div>
+                      <h3 className="text-[11px] text-th-tertiary uppercase tracking-wider mb-3">
+                        Interactions
+                      </h3>
+                      <div className="space-y-3">
+                        {connections.map((conn: Connection) => {
+                          const v = isVisited(conn.note.id);
+                          return (
+                            <div key={conn.note.id}>
+                              <Link
+                                to={`/lab/second-brain/${conn.note.id}`}
+                                onClick={() => handleConnectionClick(conn.note)}
+                                className={`inline transition-colors no-underline border-b border-solid cursor-pointer ${v ? 'text-blue-400/70 hover:text-blue-400 border-blue-400/40 hover:border-blue-400' : 'text-violet-400/70 hover:text-violet-400 border-violet-400/40 hover:border-violet-400'}`}
+                              >
+                                <span className="text-sm">{noteLabel(conn.note)}</span><svg className="inline w-[0.85em] h-[0.85em] ml-0.5 opacity-80" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style={{ verticalAlign: '-0.1em' }}><path fillRule="evenodd" clipRule="evenodd" d={ICON_REF_OUT}/></svg>
+                              </Link>
+                              {conn.note.address && (
+                                <span className="text-xs text-th-muted ml-2">{displayAddress(conn.note.address)}</span>
+                              )}
+                              {(conn.annotation || conn.reverseAnnotation) && (
+                                <div className="text-xs text-th-tertiary mt-0.5 italic font-sans" onClick={handleInlineWikiClick}>
+                                  <span dangerouslySetInnerHTML={{ __html: resolveWikiLinks(conn.annotation || conn.reverseAnnotation || '', [], noteById).html }} />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
-                    );
-                  })}
+                    </div>
+                  )}
+                  {connections.length > 0 && hasDrift && (
+                    <hr className="border-t border-th-hub-border" />
+                  )}
+                  <DriftDetector
+                    entries={driftEntries}
+                    noteById={noteById}
+                    onNoteClick={handleConnectionClick}
+                    isVisited={isVisited}
+                  />
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
 
-          {/* Right: Context panel (parent/siblings/children) — sticky in viewport */}
-          <div className="lg:col-span-2 lg:sticky lg:top-12 lg:self-start">
-            <NeighborhoodGraph
-              neighborhood={neighborhood}
-              currentNote={activePost!}
+          {/* Right: Context panel (parent/siblings/children) — sticky in viewport.
+              On mobile (single-column), fade in with content to prevent layout-shift blink
+              where the graph briefly flashes at top before body pushes it down. */}
+          <div
+            className="lg:col-span-2 lg:sticky lg:top-12 lg:self-start"
+            style={{
+              opacity: contentReady ? 1 : 0,
+              transition: contentReady ? 'opacity 200ms ease-in' : 'none',
+            }}
+          >
+            <hr className="lg:hidden border-t border-[#2a2a2a] my-8" />
+            {/* Graph toggle checkbox */}
+            <label className="flex items-center gap-1.5 mb-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={graphVisible}
+                onChange={() => setGraphVisible(v => !v)}
+                className="accent-violet-400 w-3 h-3"
+              />
+              <span className="text-[10px] text-th-muted">filter by zone</span>
+            </label>
+            {/* Graph (collapsible) */}
+            {graphVisible && (
+              <NeighborhoodGraph
+                neighborhood={neighborhood}
+                currentNote={activePost!}
+                onNoteClick={handleConnectionClick}
+                isVisited={isVisited}
+                activeZone={activeZone}
+                onActiveZoneChange={setActiveZone}
+                homonymParents={homonymParents}
+                onHomonymNavigate={(homonym) => {
+                  scheduleExtend(homonym);
+                  navigate(`/lab/second-brain/${homonym.id}`);
+                }}
+              />
+            )}
+            {/* Family list — filtered by zone when graph active, all when collapsed */}
+            <div className={graphVisible ? 'mt-4' : ''}>
+            <RelevanceLeaderboard
+              mode="family"
+              familyItems={familyItems}
+              noteById={noteById}
               onNoteClick={handleConnectionClick}
               isVisited={isVisited}
-              activeZone={activeZone}
-              onActiveZoneChange={setActiveZone}
-              focusedDetailIdx={showDetailFocus ? focusedDetailIdx : -1}
-              homonymParents={homonymParents}
-              homonymLeaf={homonymLeaf}
-              onHomonymNavigate={(homonym) => {
-                scheduleExtend(homonym);
-                navigate(`/lab/second-brain/${homonym.id}`);
-              }}
+              getPercentile={getPercentile}
             />
+            </div>
           </div>
         </div>
       ) : (
