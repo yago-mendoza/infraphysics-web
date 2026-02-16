@@ -156,6 +156,23 @@ const AppLayout: React.FC = () => {
         {showGrid && <DualGrid sidebarWidth={gridOffset} />}
       </div>
 
+      {/* Hero pattern — geometric lines behind title area */}
+      {showHeroPattern && (
+        <div
+          ref={heroPatternRef}
+          className="fixed inset-0 pointer-events-none z-[1] hero-pattern-bg"
+          style={{
+            height: '70vh',
+            backgroundImage: 'url(/hero-pattern.jpg)',
+            backgroundSize: 'cover',
+            maskImage: 'linear-gradient(to bottom, black 30%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 30%, transparent 100%)',
+            filter: theme === 'dark' ? 'none' : 'invert(1)',
+            transition: 'filter 0.95s ease',
+          }}
+        />
+      )}
+
       {/* Mobile Navigation */}
       <MobileNav onOpenSearch={openSearch} />
 
