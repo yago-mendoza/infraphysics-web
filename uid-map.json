@@ -1,0 +1,334 @@
+{
+  "ARM": {
+    "uid": "HaT1Oozw",
+    "name": "ARM"
+  },
+  "ARM//Cortex-A": {
+    "uid": "7wngT1lE",
+    "name": "Cortex-A"
+  },
+  "ARM//Cortex-M": {
+    "uid": "OQmzx1Vg",
+    "name": "Cortex-M"
+  },
+  "ARM//Cortex-R": {
+    "uid": "9SciTeo3",
+    "name": "Cortex-R"
+  },
+  "ASIC": {
+    "uid": "6YzJQiig",
+    "name": "ASIC"
+  },
+  "claude-code": {
+    "uid": "gk4wYqzk",
+    "name": "claude-code"
+  },
+  "claude-code//dot-claude": {
+    "uid": "vJBANeek",
+    "name": "dot-claude"
+  },
+  "claude-code//dot-claude//hooks": {
+    "uid": "0C6FXSnp",
+    "name": "hooks"
+  },
+  "claude-code//dot-claude//settings": {
+    "uid": "bnEfAyOH",
+    "name": "settings"
+  },
+  "claude-code//dot-claude//skills": {
+    "uid": "IrqO45BY",
+    "name": "skills"
+  },
+  "compiler": {
+    "uid": "E9olQ6Ox",
+    "name": "compiler"
+  },
+  "compiler//custom syntax": {
+    "uid": "JkzQf7qt",
+    "name": "custom syntax"
+  },
+  "compiler//pipeline": {
+    "uid": "dlBw5GXu",
+    "name": "pipeline"
+  },
+  "compiler//post-processor": {
+    "uid": "JliBK9tM",
+    "name": "post-processor"
+  },
+  "compiler//pre-processor": {
+    "uid": "W16WJgHC",
+    "name": "pre-processor"
+  },
+  "component": {
+    "uid": "funjp65c",
+    "name": "component"
+  },
+  "CPU": {
+    "uid": "OkJJJyxX",
+    "name": "CPU"
+  },
+  "CPU//ALU": {
+    "uid": "egoxqpmC",
+    "name": "ALU"
+  },
+  "CPU//cache": {
+    "uid": "rItXgdUN",
+    "name": "cache"
+  },
+  "CPU//core": {
+    "uid": "Z9W6rweD",
+    "name": "core"
+  },
+  "CPU//Mutex": {
+    "uid": "xESuHo5A",
+    "name": "Mutex"
+  },
+  "CPU//Mutex//Event loop": {
+    "uid": "cgxZ1IJb",
+    "name": "Event loop"
+  },
+  "CPU//Mutex//GIL": {
+    "uid": "azuwblly",
+    "name": "GIL"
+  },
+  "CPU//Register": {
+    "uid": "2S1PZjWY",
+    "name": "Register"
+  },
+  "Electronics//chip": {
+    "uid": "MTfcKkH5",
+    "name": "chip"
+  },
+  "Electronics//chip//MCU": {
+    "uid": "gKR2I1Nu",
+    "name": "MCU"
+  },
+  "Electronics//chip//MPU": {
+    "uid": "Jkr1CFGJ",
+    "name": "MPU"
+  },
+  "Electronics//chip//SoC": {
+    "uid": "trkh9gwv",
+    "name": "SoC"
+  },
+  "GPU": {
+    "uid": "WEUTQwqv",
+    "name": "GPU"
+  },
+  "GPU//Architecture": {
+    "uid": "oInUhOGM",
+    "name": "Architecture"
+  },
+  "GPU//discrete": {
+    "uid": "LxUj37D3",
+    "name": "discrete"
+  },
+  "GPU//integrated": {
+    "uid": "a2FkPabO",
+    "name": "integrated"
+  },
+  "Hardware": {
+    "uid": "ORK3Ok1m",
+    "name": "Hardware"
+  },
+  "I/O": {
+    "uid": "zS3Nqz7G",
+    "name": "I/O"
+  },
+  "I/O//DMA": {
+    "uid": "2p1K1HEC",
+    "name": "DMA"
+  },
+  "I/O//MMIO": {
+    "uid": "Yu2rpig0",
+    "name": "MMIO"
+  },
+  "I/O//syscall": {
+    "uid": "x6yC1n1U",
+    "name": "syscall"
+  },
+  "LAPTOP//UI": {
+    "uid": "MJj4QZ6J",
+    "name": "UI"
+  },
+  "manufacturing": {
+    "uid": "Rk1s9uJq",
+    "name": "manufacturing"
+  },
+  "manufacturing//fab": {
+    "uid": "ZzRsypXy",
+    "name": "fab"
+  },
+  "manufacturing//firmware": {
+    "uid": "sNxMwfUX",
+    "name": "firmware"
+  },
+  "manufacturing//PCB": {
+    "uid": "26t2rDup",
+    "name": "PCB"
+  },
+  "ML": {
+    "uid": "7aLJOACt",
+    "name": "ML"
+  },
+  "ML//alignment": {
+    "uid": "3EKErev3",
+    "name": "alignment"
+  },
+  "ML//alignment//goodharts-curse": {
+    "uid": "Bk7UXmQT",
+    "name": "goodharts-curse"
+  },
+  "ML//GPT": {
+    "uid": "U7ljk7Wf",
+    "name": "GPT"
+  },
+  "ML//inference": {
+    "uid": "Rx5QMqad",
+    "name": "inference"
+  },
+  "ML//inference//sampling": {
+    "uid": "5qpyTXdv",
+    "name": "sampling"
+  },
+  "ML//multimodal": {
+    "uid": "578K1Mhu",
+    "name": "multimodal"
+  },
+  "ML//NPU": {
+    "uid": "1yDGHLLU",
+    "name": "NPU"
+  },
+  "ML//RAG": {
+    "uid": "yK3RLt0K",
+    "name": "RAG"
+  },
+  "ML//RAG//vector-database": {
+    "uid": "TIQNpwbS",
+    "name": "vector-database"
+  },
+  "ML//red-teaming": {
+    "uid": "a0AXrxFY",
+    "name": "red-teaming"
+  },
+  "ML//TinyML": {
+    "uid": "2mR18V1b",
+    "name": "TinyML"
+  },
+  "ML//TPU": {
+    "uid": "t8sPNl54",
+    "name": "TPU"
+  },
+  "ML//training": {
+    "uid": "bNGmRCsR",
+    "name": "training"
+  },
+  "ML//training//constitutional-AI": {
+    "uid": "mCK28lZ6",
+    "name": "constitutional-AI"
+  },
+  "ML//training//DPO": {
+    "uid": "YwfNaR4R",
+    "name": "DPO"
+  },
+  "ML//training//PPO": {
+    "uid": "rxVjxTLA",
+    "name": "PPO"
+  },
+  "ML//training//pre-training": {
+    "uid": "2oNdlB5L",
+    "name": "pre-training"
+  },
+  "ML//training//reward-model": {
+    "uid": "83orykQl",
+    "name": "reward-model"
+  },
+  "ML//training//RLHF": {
+    "uid": "0f5GJDwc",
+    "name": "RLHF"
+  },
+  "ML//training//SFT": {
+    "uid": "qcqxPFA0",
+    "name": "SFT"
+  },
+  "ML//transformer": {
+    "uid": "QtZjVPKo",
+    "name": "transformer"
+  },
+  "ML//transformer//latent-space": {
+    "uid": "RnKMoC3a",
+    "name": "latent-space"
+  },
+  "ML//transformer//LM-head": {
+    "uid": "2GCBLdlB",
+    "name": "LM-head"
+  },
+  "networking": {
+    "uid": "TklVb4w3",
+    "name": "networking"
+  },
+  "networking//cache": {
+    "uid": "Q1kGheNp",
+    "name": "cache"
+  },
+  "peripheral": {
+    "uid": "PrATEjcr",
+    "name": "peripheral"
+  },
+  "peripheral//ESP32": {
+    "uid": "xVyHlNQa",
+    "name": "ESP32"
+  },
+  "peripheral//STM32": {
+    "uid": "LR9wgzYo",
+    "name": "STM32"
+  },
+  "RAM": {
+    "uid": "jBm8Zuu2",
+    "name": "RAM"
+  },
+  "RAM//kernel space": {
+    "uid": "xYh5GUtH",
+    "name": "kernel space"
+  },
+  "RAM//user space": {
+    "uid": "oCOADRq6",
+    "name": "user space"
+  },
+  "semiconductor": {
+    "uid": "hjMUh5ut",
+    "name": "semiconductor"
+  },
+  "sensor": {
+    "uid": "QSPGKDnh",
+    "name": "sensor"
+  },
+  "sensor//smart sensor": {
+    "uid": "uuLCFmtk",
+    "name": "smart sensor"
+  },
+  "storage": {
+    "uid": "QB8hS8Ts",
+    "name": "storage"
+  },
+  "storage//cache": {
+    "uid": "Xgibd7Nl",
+    "name": "cache"
+  },
+  "test": {
+    "uid": "vI91g9Ou",
+    "name": "test"
+  },
+  "test//chip": {
+    "uid": "712DHISk",
+    "name": "chip"
+  },
+  "UI": {
+    "uid": "sda8Dgkj",
+    "name": "UI"
+  },
+  "UI//GUI": {
+    "uid": "PRWiYzcG",
+    "name": "GUI"
+  }
+}
