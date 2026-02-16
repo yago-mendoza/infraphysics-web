@@ -69,3 +69,12 @@
 }
 
 /* Visited wiki-links — variable override cascades automatically via .wiki-ref-visited */
+
+/* Topology flash — brief highlight when scrolling to a component in the sidebar */
+@keyframes topology-flash {
+  0% { background-color: rgba(139, 92, 246, 0.25); }
+  100% { background-color: transparent; }
+}
+.topology-flash {
+  animation: topology-flash 1.2s ease-out;
+}
