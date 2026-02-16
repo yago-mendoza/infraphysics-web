@@ -308,12 +308,12 @@ function run() {
           }
         }
       }
-      sides.push(fragment.length);
+      sides.push({ size: fragment.length, members: fragment });
     }
 
-    sides.sort((a, b) => b - a);
+    sides.sort((a, b) => b.size - a.size);
     const criticality = sides.length > 1
-      ? Math.round((Math.min(...sides) / comp.size) * 10000) / 10000
+      ? Math.round((Math.min(...sides.map(s => s.size)) / comp.size) * 10000) / 10000
       : 0;
 
     cuts.push({
@@ -326,8 +326,19 @@ function run() {
 
   cuts.sort((a, b) => b.criticality - a.criticality);
 
+  // Re-rank components by size descending so #0 = largest island
+  const sorted = [...components].sort((a, b) => b.size - a.size);
+  const oldToNew = {};
+  sorted.forEach((c, i) => { oldToNew[c.id] = i; c.id = i; });
+  for (const uid of Object.keys(nodeToComponent)) {
+    nodeToComponent[uid] = oldToNew[nodeToComponent[uid]];
+  }
+  for (const cut of cuts) {
+    cut.componentId = oldToNew[cut.componentId];
+  }
+
   const islands = {
-    components: components.map(c => ({ id: c.id, size: c.size, cutCount: cuts.filter(ct => ct.componentId === c.id).length })),
+    components: sorted.map(c => ({ id: c.id, size: c.size, members: c.members, cutCount: cuts.filter(ct => ct.componentId === c.id).length })),
     cuts,
     nodeToComponent,
     orphanUids,
