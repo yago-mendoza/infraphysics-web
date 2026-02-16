@@ -54,9 +54,9 @@ const StepperInput: React.FC<{
   max?: number;
 }> = ({ value, displayValue, onDecrement, onIncrement, min = -Infinity, max = Infinity }) => (
   <span className="inline-flex items-center border border-th-hub-border text-[10px] tabular-nums">
-    <button onClick={onDecrement} disabled={value <= min} className="px-1 py-0.5 text-th-muted hover:text-th-secondary disabled:opacity-30 transition-colors">&minus;</button>
-    <span className="px-1 py-0.5 text-th-primary min-w-[20px] text-center">{displayValue ?? value}</span>
-    <button onClick={onIncrement} disabled={value >= max} className="px-1 py-0.5 text-th-muted hover:text-th-secondary disabled:opacity-30 transition-colors">+</button>
+    <button onClick={onDecrement} disabled={value <= min} className="px-2 py-1 text-th-muted hover:text-th-secondary disabled:opacity-30 transition-colors">&minus;</button>
+    <span className="px-1.5 py-1 text-th-primary min-w-[20px] text-center">{displayValue ?? value}</span>
+    <button onClick={onIncrement} disabled={value >= max} className="px-2 py-1 text-th-muted hover:text-th-secondary disabled:opacity-30 transition-colors">+</button>
   </span>
 );
 
@@ -296,7 +296,7 @@ const DockedToolbar: React.FC<{
   return (
     <div className="mb-3 border border-th-hub-border rounded-sm" style={{ backgroundColor: 'var(--hub-sidebar-bg)' }}>
       {/* Row 1: Search + mode chips */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-th-hub-border">
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-th-hub-border min-w-0">
         <span className="text-th-muted flex-shrink-0"><SearchIcon /></span>
         <input
           ref={inputRef}
@@ -317,17 +317,27 @@ const DockedToolbar: React.FC<{
           }}
           autoComplete="off"
           spellCheck={false}
-          className="flex-1 text-[11px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
+          className="flex-1 min-w-0 text-[11px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
         />
         {query && (
-          <button onClick={() => setQuery('')} className="text-th-muted hover:text-th-secondary text-[10px] flex-shrink-0">&times;</button>
+          <button onClick={() => setQuery('')} className="text-th-muted hover:text-th-secondary text-[16px] md:text-[13px] leading-none flex-shrink-0 px-0.5">&times;</button>
         )}
         <span className="text-th-hub-border">|</span>
+        <select
+          value={searchMode}
+          onChange={(e) => setSearchMode(e.target.value as SearchMode)}
+          className="md:hidden border border-th-hub-border text-[10px] text-th-primary px-1 py-0.5 focus:outline-none focus:border-th-border-active"
+          style={{ backgroundColor: 'var(--hub-sidebar-bg)', colorScheme: 'dark' }}
+        >
+          {SEARCH_MODES.map(mode => (
+            <option key={mode.value} value={mode.value}>{mode.label}</option>
+          ))}
+        </select>
         {SEARCH_MODES.map(mode => (
           <button
             key={mode.value}
             onClick={() => setSearchMode(mode.value)}
-            className={`text-[9px] px-1 py-0 transition-colors flex-shrink-0 ${
+            className={`hidden md:inline-block text-[9px] px-1 py-0 transition-colors flex-shrink-0 ${
               searchMode === mode.value ? 'text-violet-400' : 'text-th-muted hover:text-th-secondary'
             }`}
           >
@@ -350,14 +360,15 @@ const DockedToolbar: React.FC<{
 
       {/* Row 2: Filters (collapsible) */}
       <div className="border-b border-th-hub-border">
-        <button
+        <div
+          role="button"
           onClick={() => setFiltersOpen(v => !v)}
-          className="w-full flex items-center gap-1.5 px-3 py-1 text-[9px] text-th-muted hover:text-th-secondary transition-colors"
+          className="w-full flex items-center gap-1.5 px-3 py-1 text-[10px] text-th-secondary hover:text-th-primary transition-colors cursor-pointer select-none"
         >
           <span>{isFiltersVisible ? '\u25BE' : '\u25B8'}</span>
           <span>filters</span>
           {hasActiveFilters && <span className="w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0" />}
-          <span onClick={(e) => e.stopPropagation()}>
+          <span className="inline-flex items-center" onClick={(e) => e.stopPropagation()}>
             <InfoPopover
               size={12}
               title="Filter options"
@@ -382,7 +393,7 @@ const DockedToolbar: React.FC<{
               reset
             </span>
           )}
-        </button>
+        </div>
         {isFiltersVisible && (
           <div className="px-3 pb-2 space-y-2">
             {/* Toggle filters + numeric filters — single row on mobile */}
@@ -477,7 +488,8 @@ const DockedToolbar: React.FC<{
         <select
           value={sortMode}
           onChange={(e) => setSortMode(e.target.value as SortMode)}
-          className="md:hidden bg-th-surface border border-th-hub-border text-[10px] text-th-primary px-1 py-0.5 focus:outline-none focus:border-th-border-active"
+          className="md:hidden border border-th-hub-border text-[10px] text-th-primary px-1 py-0.5 focus:outline-none focus:border-th-border-active"
+          style={{ backgroundColor: 'var(--hub-sidebar-bg)', colorScheme: 'dark' }}
         >
           {SORT_OPTIONS.map(opt => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -514,7 +526,7 @@ const DockedToolbar: React.FC<{
         <span className="flex items-center gap-1.5 ml-auto">
           <span className="text-[9px] text-th-muted tabular-nums">{sortedCount} {hasActiveFilters || query ? 'results' : 'notes'}</span>
           <InfoPopover
-            size={13}
+            size={12}
             title="Sorting & shortcuts"
             tabs={[
               {
@@ -531,9 +543,10 @@ const DockedToolbar: React.FC<{
                 ),
               },
               {
-                label: 'shortcuts',
+                label: 'keyboard',
                 content: (
                   <div className="space-y-2">
+                    <p className="text-th-muted italic">These shortcuts require a physical keyboard.</p>
                     <p><strong className={tipStrong}>Arrow keys</strong> — navigate between cards in the grid.</p>
                     <p><strong className={tipStrong}>Enter</strong> — open the selected card.</p>
                     <p><strong className={tipStrong}>Escape</strong> — clear the search query and deselect.</p>
@@ -618,6 +631,7 @@ export const SecondBrainView: React.FC = () => {
       toolbarInputRef.current.focus();
     }
   }, [searchActive]);
+
 
   const updateFilter = useCallback(<K extends keyof FilterState>(key: K, value: FilterState[K]) => {
     setFilterState(prev => ({ ...prev, [key]: value }));
@@ -1314,8 +1328,8 @@ export const SecondBrainView: React.FC = () => {
                   content={
                     <div className="space-y-2">
                       <p>This graph shows where the current note sits in the <strong className={tipStrong}>naming hierarchy</strong> (its address path), not its link connections.</p>
-                      <p>Three zones: <strong className={tipStrong}>parent</strong> (above), <strong className={tipStrong}>siblings</strong> (same level), <strong className={tipStrong}>children</strong> (below). Click a zone to filter the leaderboard below.</p>
-                      <p><strong className={tipStrong}>Arrow keys</strong> — left/right switches zones, up/down navigates within a zone. Enter to open.</p>
+                      <p>Three zones: <strong className={tipStrong}>parent</strong> (above), <strong className={tipStrong}>siblings</strong> (same level), <strong className={tipStrong}>children</strong> (below). Tap a zone to filter the leaderboard below.</p>
+                      <p><strong className={tipStrong}>Tap a zone</strong> to select it. On desktop, arrow keys also switch zones and navigate within.</p>
                       <p><strong className={tipStrong}>White bar</strong> = current note. <span className="text-blue-400">Blue</span> = visited. <span className={tipAccent}>Purple</span> = not yet visited.</p>
                       <p><strong className={tipStrong}>Ghost dots</strong> — if the same name exists under multiple parents, dots mark the alternatives.</p>
                     </div>
@@ -1395,7 +1409,7 @@ export const SecondBrainView: React.FC = () => {
                       <span>orphan</span>
                     )}
                     {note.date && (
-                      <span className="ml-auto opacity-60">{note.date}</span>
+                      <span className="ml-auto opacity-60">{note.date.slice(0, 10)}</span>
                     )}
                   </div>
                 </Link>
@@ -1424,7 +1438,7 @@ export const SecondBrainView: React.FC = () => {
               toolbarInputRef.current?.focus();
             }, 100);
           }}
-          className="lg:hidden fixed bottom-16 right-4 z-40 w-10 h-10 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+          className="lg:hidden fixed bottom-16 right-4 z-40 w-11 h-11 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
           aria-label="Search concepts"
         >
           <SearchIcon />
