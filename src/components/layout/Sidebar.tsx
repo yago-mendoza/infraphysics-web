@@ -64,9 +64,11 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch 
   );
 
   return (
+    <>
+    {/* Spacer — fixed sidebar is out of flow, this keeps content pushed right */}
+    <div className="hidden md:block w-36 flex-shrink-0" />
     <aside
-      className="hidden md:flex flex-col w-36 flex-shrink-0 sticky top-0 h-screen py-6 px-3 z-40 bg-th-sidebar"
-      style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
+      className="hidden md:flex flex-col w-36 flex-shrink-0 fixed top-0 left-0 h-screen py-6 px-3 z-40 bg-th-sidebar"
     >
       {/* Logo */}
       <Link
@@ -101,26 +103,28 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch 
           {navLink('/contact', <MailIcon />, 'contact', CATEGORY_ACCENTS.meta)}
         </nav>
 
-        {/* Theme Toggle + Search */}
-        <div className="mt-6 flex justify-center gap-1">
-          <button
-            onClick={onOpenSearch}
-            className="flex items-center justify-center p-2 rounded-sm transition-all"
-            style={{ color: 'var(--sidebar-icon)' }}
-            aria-label="Search"
-          >
-            <SearchIcon />
-          </button>
-          <button
-            onClick={toggleTheme}
-            className="flex items-center justify-center p-2 rounded-sm transition-all"
-            style={{ color: 'var(--sidebar-icon)' }}
-            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          >
-            {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-          </button>
-        </div>
+      </div>
+
+      {/* Theme Toggle + Search — pinned to bottom */}
+      <div className="flex justify-center gap-1 pt-4 flex-shrink-0">
+        <button
+          onClick={onOpenSearch}
+          className="flex items-center justify-center p-2 rounded-sm transition-all"
+          style={{ color: 'var(--sidebar-icon)' }}
+          aria-label="Search"
+        >
+          <SearchIcon />
+        </button>
+        <button
+          onClick={toggleTheme}
+          className="flex items-center justify-center p-2 rounded-sm transition-all"
+          style={{ color: 'var(--sidebar-icon)' }}
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        >
+          {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+        </button>
       </div>
     </aside>
+    </>
   );
 };
