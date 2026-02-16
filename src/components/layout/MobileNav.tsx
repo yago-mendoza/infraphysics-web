@@ -13,6 +13,7 @@ import {
   MailIcon,
   MenuIcon,
   CloseIcon,
+  HomeIcon,
   SunIcon,
   MoonIcon,
   SearchIcon,
@@ -98,20 +99,42 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearc
             className="p-2 hover:bg-th-active rounded-sm transition-colors text-th-secondary"
             aria-label="Toggle menu"
           >
-            {isOpen ? <CloseIcon /> : <MenuIcon />}
+            <MenuIcon />
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Panel — slides down from top */}
       {mounted && (
         <>
           <div
-            className={`fixed inset-0 bg-th-overlay z-40 transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}
+            className={`fixed inset-0 bg-th-overlay z-40 transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}
             onClick={close}
           />
-          <div className={`absolute top-14 left-0 right-0 bg-th-sidebar border-b border-th-border z-50 shadow-lg transition-all duration-250 ease-out ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>
+          <div
+            className="fixed top-0 left-0 right-0 z-50 bg-th-sidebar border-b border-th-border shadow-lg transition-transform duration-300 ease-out"
+            style={{ transform: visible ? 'translateY(0)' : 'translateY(-100%)' }}
+          >
+            {/* Close header inside the panel */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-th-border">
+              <Link to="/home" onClick={close} className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-th-active rounded-sm flex items-center justify-center">
+                  <Logo className="w-5 h-5" color="var(--text-primary)" />
+                </div>
+                <span className="font-bold text-sm text-th-primary">InfraPhysics</span>
+              </Link>
+              <button
+                onClick={close}
+                className="p-2 hover:bg-th-active rounded-sm transition-colors text-th-secondary"
+                aria-label="Close menu"
+              >
+                <CloseIcon />
+              </button>
+            </div>
+
             <nav className="flex flex-col p-3 gap-0.5">
+              <NavLink to="/home" accent={CATEGORY_ACCENTS.meta} icon={<HomeIcon />}>Home</NavLink>
+
               {/* LAB */}
               <SectionLabel>lab</SectionLabel>
               <NavLink to="/lab/projects" basePath="/lab/projects" accent={catAccentVar('projects')} icon={<GearIcon />}>Projects</NavLink>
@@ -126,7 +149,6 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearc
               <SectionLabel>meta</SectionLabel>
               <NavLink to="/about" accent={CATEGORY_ACCENTS.meta} icon={<UserIcon />}>About</NavLink>
               <NavLink to="/contact" accent={CATEGORY_ACCENTS.meta} icon={<MailIcon />}>Contact</NavLink>
-
             </nav>
           </div>
         </>
