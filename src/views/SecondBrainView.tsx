@@ -86,7 +86,6 @@ const ActivityHeatmap: React.FC<{
   onDateClick: (date: string | null) => void;
 }> = ({ allNotes, dateFilter, onDateClick }) => {
   const [year, setYear] = useState(() => new Date().getFullYear());
-  const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
 
   // Build date → count map
   const dateCounts = useMemo(() => {
@@ -128,12 +127,23 @@ const ActivityHeatmap: React.FC<{
     return result;
   }, [year, dateCounts]);
 
+  // Max count for the currently viewed year (drives the color scale)
+  const yearMax = useMemo(() => {
+    let max = 0;
+    for (const week of weeks) {
+      for (const day of week) {
+        if (day.inYear && day.count > max) max = day.count;
+      }
+    }
+    return max;
+  }, [weeks]);
+
   const cellColor = (count: number, inYear: boolean) => {
-    if (!inYear) return 'transparent';
-    if (count === 0) return 'var(--border-color)';
-    if (count <= 2) return 'rgba(167, 139, 250, 0.2)';
-    if (count <= 5) return 'rgba(167, 139, 250, 0.4)';
-    return 'rgba(167, 139, 250, 0.6)';
+    if (!inYear || count === 0) return 'transparent';
+    // Linear interpolation: 1 note = 0.15, yearMax notes = 0.7
+    const t = yearMax > 1 ? (count - 1) / (yearMax - 1) : 1;
+    const opacity = 0.15 + t * 0.55;
+    return `rgba(167, 139, 250, ${opacity.toFixed(2)})`;
   };
 
   // Parse dateFilter into single or range for highlighting + click logic
@@ -186,26 +196,28 @@ const ActivityHeatmap: React.FC<{
         <button onClick={() => setYear(y => Math.min(y + 1, currentYear))} disabled={year >= currentYear} className="text-[10px] text-th-muted hover:text-th-secondary disabled:opacity-30 transition-colors">&rsaquo;</button>
       </div>
       {/* Grid */}
-      <div className="overflow-x-auto thin-scrollbar hub-scrollbar pb-1">
-        <div className="flex gap-px" style={{ minWidth: 'fit-content' }}>
+      <div className="overflow-hidden pb-1">
+        <div className="flex gap-[2px]" style={{ width: '100%' }}>
           {/* Day labels */}
-          <div className="flex flex-col gap-px mr-0.5 flex-shrink-0">
+          <div className="flex flex-col gap-[2px] mr-0.5 flex-shrink-0">
             {DAY_NAMES.map((name, i) => (
-              <div key={i} className="text-[6px] text-th-muted leading-none" style={{ width: 8, height: 8, lineHeight: '8px' }}>
+              <div key={i} className="text-[6px] text-th-muted leading-none flex items-center" style={{ width: 8, height: 8 }}>
                 {i % 2 === 1 ? name : ''}
               </div>
             ))}
           </div>
           {weeks.map((week, wi) => (
-            <div key={wi} className="flex flex-col gap-px">
-              {week.map((day, di) => (
+            <div key={wi} className="flex flex-col gap-[2px] flex-1 min-w-0">
+              {week.map((day, di) => {
+                const isEmpty = day.count === 0 && day.inYear;
+                return (
                 <div
                   key={di}
-                  className={`cursor-pointer transition-all ${isSelected(day.date) ? 'ring-1 ring-violet-400' : isInRange(day.date) ? 'ring-1 ring-violet-400/40' : ''}`}
+                  className={`cursor-pointer aspect-square ${isSelected(day.date) ? 'ring-1 ring-violet-400' : isInRange(day.date) ? 'ring-1 ring-violet-400/40' : ''}`}
                   style={{
-                    width: 8,
                     height: 8,
                     backgroundColor: cellColor(day.count, day.inYear),
+                    border: isEmpty ? '1px solid rgba(255, 255, 255, 0.06)' : 'none',
                     borderRadius: 1,
                     opacity: day.inYear ? 1 : 0,
                   }}
@@ -213,36 +225,14 @@ const ActivityHeatmap: React.FC<{
                     if (!day.inYear) return;
                     handleCellClick(day.date);
                   }}
-                  onMouseEnter={(e) => {
-                    if (!day.inYear) return;
-                    const rect = (e.target as HTMLElement).getBoundingClientRect();
-                    setTooltip({
-                      text: `${day.date}: ${day.count} note${day.count !== 1 ? 's' : ''}`,
-                      x: rect.left + rect.width / 2,
-                      y: rect.top,
-                    });
-                  }}
-                  onMouseLeave={() => setTooltip(null)}
+                  title={day.inYear ? `${day.date}${day.count ? ` (${day.count})` : ''}` : undefined}
                 />
-              ))}
+                );
+              })}
             </div>
           ))}
         </div>
       </div>
-      {/* Tooltip */}
-      {tooltip && (
-        <div
-          className="fixed z-50 px-1.5 py-0.5 text-[9px] text-th-primary border border-th-hub-border rounded-sm pointer-events-none"
-          style={{
-            backgroundColor: 'var(--hub-sidebar-bg)',
-            left: tooltip.x,
-            top: tooltip.y - 24,
-            transform: 'translateX(-50%)',
-          }}
-        >
-          {tooltip.text}
-        </div>
-      )}
     </div>
   );
 };
@@ -278,7 +268,7 @@ const DockedToolbar: React.FC<{
   allNotes, stats, inputRef,
 }) => {
   const { getIslands, loaded } = useGraphRelevance();
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(true);
 
   // Auto-expand filters when any filter is active
   const isFiltersVisible = filtersOpen || hasActiveFilters;
@@ -363,10 +353,10 @@ const DockedToolbar: React.FC<{
         <div
           role="button"
           onClick={() => setFiltersOpen(v => !v)}
-          className="w-full flex items-center gap-1.5 px-3 py-1 text-[10px] text-th-secondary hover:text-th-primary transition-colors cursor-pointer select-none"
+          className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[10px] bg-white/[0.03] border-b border-th-hub-border text-th-secondary hover:text-th-primary transition-colors cursor-pointer select-none"
         >
           <span>{isFiltersVisible ? '\u25BE' : '\u25B8'}</span>
-          <span>filters</span>
+          <span className="uppercase tracking-wider text-[9px] font-medium">filters</span>
           {hasActiveFilters && <span className="w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0" />}
           <span className="inline-flex items-center" onClick={(e) => e.stopPropagation()}>
             <InfoPopover
@@ -395,35 +385,8 @@ const DockedToolbar: React.FC<{
           )}
         </div>
         {isFiltersVisible && (
-          <div className="px-3 pb-2 space-y-2">
-            {/* Toggle filters + numeric filters — single row on mobile */}
-            <div className="flex items-center gap-1.5 md:gap-3 flex-wrap">
-              <button
-                onClick={() => updateFilter('orphans', !filterState.orphans)}
-                className={`text-[9px] px-1.5 py-0.5 transition-colors ${
-                  filterState.orphans
-                    ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
-                    : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
-                }`}
-              >orphans</button>
-              <button
-                onClick={() => updateFilter('leaf', !filterState.leaf)}
-                className={`text-[9px] px-1.5 py-0.5 transition-colors ${
-                  filterState.leaf
-                    ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
-                    : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
-                }`}
-              >leaf</button>
-              <button
-                onClick={() => updateFilter('bridgesOnly', !filterState.bridgesOnly)}
-                className={`text-[9px] px-1.5 py-0.5 transition-colors ${
-                  filterState.bridgesOnly
-                    ? 'bg-amber-400/20 text-amber-400 border border-amber-400/30'
-                    : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
-                }`}
-              >bridges</button>
-            </div>
-            {/* Island dropdown + depth + hubs */}
+          <div className="px-3 pb-2 pt-2">
+            {/* All filters in one row: dropdowns + separator + toggle pills */}
             <div className="flex items-center gap-1.5 md:gap-3 flex-wrap">
               {islandOptions.length > 1 && (
                 <div className="flex items-center gap-1 text-[10px] text-th-muted">
@@ -469,9 +432,34 @@ const DockedToolbar: React.FC<{
                   min={0}
                 />
               </div>
+              <span className="text-th-hub-border select-none">|</span>
+              <button
+                onClick={() => updateFilter('orphans', !filterState.orphans)}
+                className={`text-[10px] px-1 py-0.5 transition-colors ${
+                  filterState.orphans
+                    ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
+                    : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
+                }`}
+              >orphans</button>
+              <button
+                onClick={() => updateFilter('leaf', !filterState.leaf)}
+                className={`text-[10px] px-1 py-0.5 transition-colors ${
+                  filterState.leaf
+                    ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
+                    : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
+                }`}
+              >leaf</button>
+              <button
+                onClick={() => updateFilter('bridgesOnly', !filterState.bridgesOnly)}
+                className={`text-[10px] px-1 py-0.5 transition-colors ${
+                  filterState.bridgesOnly
+                    ? 'bg-amber-400/20 text-amber-400 border border-amber-400/30'
+                    : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
+                }`}
+              >bridges</button>
             </div>
-            {/* Heatmap — hidden on mobile (too small for touch) */}
-            <div className="hidden md:block">
+            {/* Heatmap */}
+            <div className="mt-2">
               <ActivityHeatmap
                 allNotes={allNotes}
                 dateFilter={filterState.dateFilter}
@@ -726,6 +714,14 @@ export const SecondBrainView: React.FC = () => {
 
   // "Unvisited only" filter for grid view
   const [unvisitedOnly, setUnvisitedOnly] = useState(false);
+
+  // Mobile "back to top" button — visible when scrolled past threshold
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  useEffect(() => {
+    const handler = () => setShowScrollTop(window.scrollY > 400);
+    window.addEventListener('scroll', handler, { passive: true });
+    return () => window.removeEventListener('scroll', handler);
+  }, []);
 
   // Right column: zone filtering toggle (graph always visible)
   const [zoneFilter, setZoneFilter] = useState(true);
@@ -1094,7 +1090,7 @@ export const SecondBrainView: React.FC = () => {
                 />
               </div>
               <InfoPopover
-                size={13}
+                size={12}
                 title="Navigation & page guide"
                 tabs={[
                   {
@@ -1323,7 +1319,7 @@ export const SecondBrainView: React.FC = () => {
               />
               <span className="absolute top-2 right-2">
                 <InfoPopover
-                  size={13}
+                  size={12}
                   title="Neighborhood graph"
                   content={
                     <div className="space-y-2">
@@ -1442,6 +1438,21 @@ export const SecondBrainView: React.FC = () => {
           aria-label="Search concepts"
         >
           <SearchIcon />
+        </button>,
+        document.body
+      )}
+
+      {/* Mobile floating "back to top" button — grid view, after scrolling past first infinite-scroll batch */}
+      {!showDetail && showScrollTop && visibleCount > BATCH_SIZE && createPortal(
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="lg:hidden fixed bottom-16 right-4 z-40 w-11 h-11 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+          aria-label="Back to top"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 19V5" />
+            <path d="M5 12l7-7 7 7" />
+          </svg>
         </button>,
         document.body
       )}

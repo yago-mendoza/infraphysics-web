@@ -222,14 +222,16 @@ export const SecondBrainSidebar: React.FC = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const { getPercentile, getIslands } = useGraphRelevance();
 
-  // Animate drawer open/close
+  // Animate drawer open/close + lock background scroll
   useEffect(() => {
     if (mobileOpen) {
       setDrawerMounted(true);
+      document.body.style.overflow = 'hidden';
       const id = setTimeout(() => setDrawerVisible(true), 20);
       return () => clearTimeout(id);
     } else {
       setDrawerVisible(false);
+      document.body.style.overflow = '';
       const id = setTimeout(() => setDrawerMounted(false), 250);
       return () => clearTimeout(id);
     }
@@ -305,7 +307,7 @@ export const SecondBrainSidebar: React.FC = () => {
         defaultOpen={false}
         headerAction={
           <InfoPopover
-            size={13}
+            size={12}
             title="What each stat means"
             content={
               <div className="space-y-2">
@@ -357,7 +359,7 @@ export const SecondBrainSidebar: React.FC = () => {
         headerAction={
           <span className="flex items-center gap-1.5">
             <InfoPopover
-              size={13}
+              size={12}
               title="Topology overview"
               content={
                 <div className="space-y-2">
@@ -404,7 +406,7 @@ export const SecondBrainSidebar: React.FC = () => {
         defaultOpen={true}
         headerAction={
           <InfoPopover
-            size={13}
+            size={12}
             title="Directory tree"
             content={
               <div className="space-y-2">
@@ -523,7 +525,7 @@ export const SecondBrainSidebar: React.FC = () => {
                     {stats.totalConcepts} concepts
                   </div>
                 </div>
-                <InfoPopover size={15} content={HEADER_INFO_CONTENT} title="How Second Brain works" />
+                <InfoPopover size={12} content={HEADER_INFO_CONTENT} title="How Second Brain works" />
               </div>
               <button
                 onClick={() => setMobileOpen(false)}
@@ -563,7 +565,7 @@ export const SecondBrainSidebar: React.FC = () => {
               {stats.totalConcepts} concepts
             </div>
           </div>
-          <InfoPopover size={15} content={HEADER_INFO_CONTENT} title="How Second Brain works" className="mt-0.5" />
+          <InfoPopover size={12} content={HEADER_INFO_CONTENT} title="How Second Brain works" className="mt-0.5" />
         </div>
         {/* Scrollable sections */}
         <div className="flex-1 overflow-y-auto thin-scrollbar hub-scrollbar">
