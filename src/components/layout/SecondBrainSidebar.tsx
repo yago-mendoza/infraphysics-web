@@ -11,7 +11,9 @@ import {
   SlidersIcon,
   CloseIcon,
   InfoIcon,
+  IslandIcon,
 } from '../icons';
+import { IslandDetector } from '../IslandDetector';
 import { SECOND_BRAIN_SIDEBAR_WIDTH } from '../../constants/layout';
 import type { TreeNode, SearchMode, FilterState } from '../../hooks/useSecondBrainHub';
 
@@ -98,7 +100,7 @@ const TreeNodeItem: React.FC<{
   const isExpanded = forceExpanded || expanded;
   const isScoped = activeScope === node.path;
   const isConceptAndFolder = node.concept && hasChildren;
-  const isRootLeaf = depth === 0 && !hasChildren;
+  const isRoot = depth === 0;
   const displayLabel = node.label.charAt(0).toUpperCase() + node.label.slice(1);
 
   return (
@@ -106,7 +108,7 @@ const TreeNodeItem: React.FC<{
       <div
         className={`flex items-center gap-1 py-0.5 group ${
           isScoped ? 'bg-violet-400/10' : ''
-        }`}
+        } ${isRoot ? 'border-l-2 border-violet-400/20' : ''}`}
         style={{ paddingLeft: `${depth * 12}px` }}
       >
         {hasChildren ? (
@@ -157,8 +159,13 @@ const TreeNodeItem: React.FC<{
           <span className="text-[11px] text-th-muted truncate flex-1">{displayLabel}</span>
         )}
 
-        {isRootLeaf ? (
-          <span className="text-[8px] text-th-muted opacity-50 flex-shrink-0">root</span>
+        {isRoot && !hasChildren ? (
+          <span className="text-[8px] text-th-muted opacity-50 flex-shrink-0">Root node</span>
+        ) : isRoot && hasChildren ? (
+          <>
+            <span className="text-[8px] text-th-muted opacity-50 flex-shrink-0">Root node</span>
+            <span className="text-[9px] text-th-muted tabular-nums flex-shrink-0">{node.childCount}</span>
+          </>
         ) : hasChildren ? (
           <span className="text-[9px] text-th-muted tabular-nums flex-shrink-0">{node.childCount}</span>
         ) : null}
@@ -194,7 +201,82 @@ const SEARCH_MODES: { value: SearchMode; label: string }[] = [
 
 
 // --- Guide Popup ---
+const GUIDE_TABS = ['commands', 'breadcrumb', 'links', 'interactions', 'illustration', 'topology'] as const;
+
+const GuideTabContent: React.FC<{ tab: number }> = ({ tab }) => {
+  const cls = "space-y-3 text-[11px] text-th-secondary leading-relaxed";
+  const strong = "text-th-primary";
+  const accent = "text-violet-400";
+  const code = "text-violet-400/80";
+
+  switch (tab) {
+    case 0: return (
+      <div className={cls}>
+        <p><strong className={strong}>Just start typing</strong> — any key focuses the search bar. Backspace too. No need to click it.</p>
+        <p><strong className={strong}>Arrow keys</strong> — navigate the grid, move between search results, or step through graph zones in detail view.</p>
+        <p><strong className={strong}>Enter</strong> — open the selected card or search result.</p>
+        <p><strong className={strong}>Escape</strong> — clear search, close detail view, or dismiss popups.</p>
+        <p><strong className={strong}>Ctrl+Shift+F</strong> — focus search bar directly.</p>
+        <p><strong className={strong}>Shift+T</strong> — toggle light/dark theme.</p>
+        <p><strong className={strong}>Unvisited filter</strong> — in the grid toolbar, hide cards you've already opened this session.</p>
+        <p><span className="text-blue-400">Blue</span> = visited this session. <span className={accent}>Purple</span> = not yet. Tracked across grid, links, and graph.</p>
+      </div>
+    );
+    case 1: return (
+      <div className={cls}>
+        <p>The <strong className={strong}>breadcrumb trail</strong> at the top tracks your navigation path through concepts.</p>
+        <p><strong className={strong}>Click any crumb</strong> to jump back to that point in your trail.</p>
+        <p><strong className={strong}>"all concepts"</strong> — the first crumb always returns you to the grid.</p>
+        <p><strong className={strong}>Clicking a body link</strong> extends the trail — you can trace how you got somewhere.</p>
+        <p><strong className={strong}>Clicking a grid card</strong> resets the trail (starts a new navigation path).</p>
+        <p>When the trail gets long, it <strong className={strong}>collapses</strong> — older crumbs are hidden but still accessible.</p>
+      </div>
+    );
+    case 2: return (
+      <div className={cls}>
+        <p className={`text-xs font-semibold ${accent} mb-1`}>Links ↓ <span className="font-normal text-th-muted">(outgoing)</span></p>
+        <p>Wiki-links in a note's body point to other concepts. Clicking one opens that concept and extends your breadcrumb trail.</p>
+
+        <div className="border-t border-th-hub-border my-3" />
+
+        <p className={`text-xs font-semibold ${accent} mb-1`}>Mentioned ↑ <span className="font-normal text-th-muted">(incoming)</span></p>
+        <p>Shown above the body — these are links <em>from other notes</em> that reference the current concept in their body text.</p>
+        <p><span className="text-blue-400">Blue</span> = visited, <span className={accent}>purple</span> = not yet visited.</p>
+      </div>
+    );
+    case 3: return (
+      <div className={cls}>
+        <p><strong className={strong}>Interactions</strong> are explicit relationships between concepts, defined as trailing refs at the bottom of a note.</p>
+        <p>Each interaction has <strong className={strong}>annotation text</strong> that describes the relationship (e.g. "contrast", "depends on", "example of").</p>
+        <p>They are <strong className={strong}>bilateral</strong> — if concept A has an interaction with B, it automatically appears on both sides.</p>
+        <p>Interaction entries can contain <strong className={strong}>clickable links</strong> to navigate directly to the related concept.</p>
+      </div>
+    );
+    case 4: return (
+      <div className={cls}>
+        <p>The <strong className={strong}>neighborhood graph</strong> (right column) shows the current concept's position in the address hierarchy.</p>
+        <p>Addresses use <code className={code}>//</code> as hierarchy separator — <code className={code}>chip//MCU</code> is a child of <code className={code}>chip</code>.</p>
+        <p>Three zones: <strong className={strong}>parent</strong> (above), <strong className={strong}>siblings</strong> (same level), <strong className={strong}>children</strong> (below). Each zone is clickable.</p>
+        <p><strong className={strong}>Arrow keys</strong> navigate between zones when graph is focused.</p>
+        <p><strong className={strong}>White bar</strong> = current concept. <span className="text-blue-400">Blue</span> = visited, <span className={accent}>purple</span> = unvisited.</p>
+      </div>
+    );
+    case 5: return (
+      <div className={cls}>
+        <p>The <strong className={strong}>topology</strong> section (sidebar, below filters) shows the graph's structural fragility.</p>
+        <p><strong className={strong}>Bridges</strong> (⚡) are articulation points — removing one would split a cluster into disconnected islands.</p>
+        <p><strong className={strong}>Side sizes</strong> (e.g. 19 | 1) show how many notes end up on each side if the bridge is removed. Bridges are sorted by criticality.</p>
+        <p><strong className={strong}>Click a bridge</strong> to navigate to that note.</p>
+        <p><strong className={strong}>Orphans</strong> (○) are notes with no connections at all.</p>
+      </div>
+    );
+    default: return null;
+  }
+};
+
 const GuidePopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const [activeTab, setActiveTab] = useState(0);
+
   // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -216,27 +298,25 @@ const GuidePopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <CloseIcon />
         </button>
 
-        <h2 className="text-sm font-semibold text-violet-400 mb-4">Tips</h2>
+        <h2 className="text-sm font-semibold text-violet-400 mb-3">Tips</h2>
 
-        <div className="space-y-3 text-[11px] text-th-secondary leading-relaxed">
-          <p><strong className="text-th-primary">Just start typing</strong> — any key focuses the search bar. Backspace too. No need to click it.</p>
-
-          <p><strong className="text-th-primary">Arrow keys</strong> work everywhere: navigate the grid, jump from search results with <span className="text-violet-400">&darr;</span>, confirm with Enter.</p>
-
-          <p><span className="text-blue-400">Blue</span> = visited this session. Purple = not yet. Tracked across the grid, detail links, and the graph. Closes with the tab.</p>
-
-          <p>The <strong className="text-th-primary">graph</strong> is clickable — each zone (parent, siblings, children) reveals its list below. Sibling-to-sibling navigation animates the white bar.</p>
-
-          <p>Addresses use <code className="text-violet-400/80">//</code> as hierarchy — <code className="text-violet-400/80">chip//MCU</code> is a child of <code className="text-violet-400/80">chip</code>. Parent, siblings, and children are derived from this automatically.</p>
-
-          <p><strong className="text-th-primary">Scoping</strong> — click any folder in the directory tree to filter the entire grid to that subtree.</p>
-
-          <p>The <strong className="text-th-primary">breadcrumb trail</strong> tracks your navigation path. Click any crumb to jump back; it collapses when it gets long.</p>
-
-          <p><strong className="text-th-primary">Content search</strong> scans the full body text of every note, not just the title.</p>
-
-          <p>Use <strong className="text-th-primary">unvisited</strong> in the grid toolbar to hide what you've already seen.</p>
+        <div className="flex gap-1 mb-4 flex-wrap">
+          {GUIDE_TABS.map((label, i) => (
+            <button
+              key={label}
+              onClick={() => setActiveTab(i)}
+              className={`px-2 py-1 text-[10px] font-medium border rounded-sm transition-colors ${
+                activeTab === i
+                  ? 'bg-violet-400/20 text-violet-400 border-violet-400/30'
+                  : 'text-th-muted border-th-hub-border hover:text-th-secondary'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
+
+        <GuideTabContent tab={activeTab} />
       </div>
     </div>
   );
@@ -342,7 +422,7 @@ export const SecondBrainSidebar: React.FC = () => {
       </Section>
 
       {/* Stats */}
-      <Section title="stats" icon={<BarChartIcon />} defaultOpen={true}>
+      <Section title="stats" icon={<BarChartIcon />} defaultOpen={false}>
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
           <div>
             <div className="text-[9px] text-th-muted">concepts</div>
@@ -369,6 +449,11 @@ export const SecondBrainSidebar: React.FC = () => {
             <div className="text-[11px] text-th-primary tabular-nums">{stats.density}%</div>
           </div>
         </div>
+      </Section>
+
+      {/* Topology */}
+      <Section title="topology" icon={<IslandIcon />} defaultOpen={true}>
+        <IslandDetector />
       </Section>
 
       {/* Directory Tree */}
