@@ -56,6 +56,7 @@ infraphysics-web/
       RelevanceLeaderboard.tsx # Unified note list (family/all modes) with centrality indicators
       BridgeScoreBadge.tsx    # Colored dot indicating centrality tier (bridge/connector/peripheral)
       DriftDetector.tsx       # "Missing links?" suggestions based on neighbor overlap
+      InfoPopover.tsx         # Contextual help popovers (singleton, portal-based)
       IslandDetector.tsx      # Topology sidebar: connected components, articulation points (bridges)
       NavigationTrail.tsx     # Breadcrumb trail for concept navigation
       SearchPalette.tsx       # Global search overlay (Cmd+K)
