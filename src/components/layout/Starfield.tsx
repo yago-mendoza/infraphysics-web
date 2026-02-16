@@ -30,7 +30,14 @@ export const Starfield: React.FC<StarfieldProps> = ({ sidebarWidth, visible = tr
   return (
     <div
       className="fixed top-0 bottom-0 right-0 pointer-events-none z-0"
-      style={{ left: sidebarWidth, backgroundColor: '#000', opacity: visible ? 1 : 0, transition: 'opacity 0.95s ease' }}
+      style={{
+        left: sidebarWidth,
+        backgroundColor: '#000',
+        opacity: visible ? 1 : 0,
+        transition: 'opacity 0.95s ease',
+        maskImage: 'linear-gradient(to bottom, transparent 30%, black 60%)',
+        WebkitMaskImage: 'linear-gradient(to bottom, transparent 30%, black 60%)',
+      }}
     >
       {/* Layer 1: bright stars — 1px */}
       <div
