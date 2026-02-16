@@ -466,14 +466,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
             type="text"
             value={query}
             onChange={e => {
-              const val = e.target.value;
-              // Solo "." resets to main menu
-              if (val === '.') {
-                setQuery('');
-                setSelectedIndex(0);
-                return;
-              }
-              setQuery(val);
+              setQuery(e.target.value);
               setSelectedIndex(0);
             }}
             placeholder="Type to search..."
@@ -549,10 +542,6 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
           <span className="flex items-center gap-1.5">
             <kbd className="inline-flex items-center justify-center h-5 px-1.5 rounded bg-th-surface-alt border border-th-border text-[10px] font-mono">↵</kbd>
             <span className="ml-0.5">select</span>
-          </span>
-          <span className="flex items-center gap-1.5">
-            <kbd className="inline-flex items-center justify-center h-5 px-1.5 rounded bg-th-surface-alt border border-th-border text-[10px] font-mono">.</kbd>
-            <span className="ml-0.5">reset</span>
           </span>
           <span className="flex items-center gap-1.5">
             <kbd className="inline-flex items-center justify-center h-5 px-1.5 rounded bg-th-surface-alt border border-th-border text-[10px] font-mono">esc</kbd>
