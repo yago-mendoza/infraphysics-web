@@ -226,7 +226,8 @@ export const SecondBrainSidebar: React.FC = () => {
   useEffect(() => {
     if (mobileOpen) {
       setDrawerMounted(true);
-      requestAnimationFrame(() => requestAnimationFrame(() => setDrawerVisible(true)));
+      const id = setTimeout(() => setDrawerVisible(true), 20);
+      return () => clearTimeout(id);
     } else {
       setDrawerVisible(false);
       const id = setTimeout(() => setDrawerMounted(false), 250);
