@@ -54,8 +54,8 @@ function CentralityIndicator({ percentile }: { percentile: number }) {
         width={CENT_BAR_W}
         height={CENT_BAR_H}
         viewBox={`0 0 ${CENT_BAR_W} ${CENT_BAR_H}`}
-        className="relative z-10 flex-shrink-0 self-center"
-        style={{ overflow: 'visible' }}
+        className="relative z-10 flex-shrink-0 self-center ml-0.5"
+        style={{ overflow: 'visible', marginTop: 1 }}
       >
         <rect x={0} y={0} width={CENT_BAR_W} height={CENT_BAR_H} rx={1} fill="rgba(255,255,255,0.15)" />
         <rect x={segX} y={0} width={segW} height={CENT_BAR_H} rx={1} fill={BAR_FILL} />
@@ -64,7 +64,7 @@ function CentralityIndicator({ percentile }: { percentile: number }) {
           fill={TRI_FILL}
         />
       </svg>
-      <span className="relative z-10 text-[10px] text-th-muted tabular-nums flex-shrink-0 w-7 text-right pr-2">
+      <span className="relative z-10 text-[10px] text-th-muted tabular-nums flex-shrink-0 w-7 text-right pr-2 ml-1">
         {pctLabel}%
       </span>
     </>
@@ -94,7 +94,7 @@ export const RelevanceLeaderboard: React.FC<Props> = (props) => {
               className="group relative flex items-center h-6 rounded-sm no-underline transition-colors hover:bg-white/5 overflow-visible"
               title={note.address || noteLabel(note)}
             >
-              <span className="relative z-10 text-[9px] text-th-muted px-1.5 flex-shrink-0 w-4 text-center">{ZONE_LABELS[zone]}</span>
+              <span className="relative z-10 text-[9px] text-th-muted flex-shrink-0 w-3 text-center mr-1.5">{ZONE_LABELS[zone]}</span>
               <span className={`relative z-10 text-[11px] truncate flex-1 min-w-0 transition-colors ${visited ? 'text-blue-400/70 group-hover:text-blue-400' : 'text-violet-400/70 group-hover:text-violet-400'}`}>
                 {display}
               </span>
