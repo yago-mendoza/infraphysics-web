@@ -14,7 +14,7 @@ import {
 import { InfoPopover, tipStrong, tipAccent, tipCode } from '../InfoPopover';
 import { IslandDetector, type IslandDetectorHandle } from '../IslandDetector';
 import { useGraphRelevance } from '../../hooks/useGraphRelevance';
-import { SECOND_BRAIN_SIDEBAR_WIDTH } from '../../constants/layout';
+import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../../constants/layout';
 import type { FieldNoteMeta } from '../../types';
 import type { TreeNode, FilterState } from '../../hooks/useSecondBrainHub';
 
@@ -29,6 +29,9 @@ const Section: React.FC<{
 }> = ({ title, icon, defaultOpen = true, forceOpen, headerAction, children }) => {
   const [open, setOpen] = useState(defaultOpen);
   const isOpen = forceOpen || open;
+  // Keep content mounted after first open so close animation works
+  const [hasBeenOpen, setHasBeenOpen] = useState(defaultOpen);
+  useEffect(() => { if (isOpen) setHasBeenOpen(true); }, [isOpen]);
   return (
     <div className="border-b border-th-hub-border">
       <div
@@ -45,7 +48,11 @@ const Section: React.FC<{
         )}
         <ChevronIcon isOpen={isOpen} />
       </div>
-      {isOpen && <div className="px-3 pb-3">{children}</div>}
+      <div className={`grid transition-[grid-template-rows] duration-200 ease-out ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+        <div className="overflow-hidden">
+          {hasBeenOpen && <div className="px-3 pb-3">{children}</div>}
+        </div>
+      </div>
     </div>
   );
 };
@@ -54,7 +61,7 @@ const Section: React.FC<{
 const ScopeIcon: React.FC<{ onClick: (e: React.MouseEvent) => void }> = ({ onClick }) => (
   <button
     onClick={onClick}
-    className="opacity-0 group-hover:opacity-100 text-th-muted hover:text-violet-400 transition-all flex-shrink-0"
+    className="hover-reveal text-th-muted hover:text-violet-400 flex-shrink-0"
     title="Scope to this folder"
   >
     <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -91,6 +98,9 @@ const TreeNodeItem: React.FC<{
   // Auto-expand if active note is inside this node's subtree
   const isOnActivePath = !!(activePath && hasChildren && (activePath === node.path || activePath.startsWith(node.path + '//')));
   const isExpanded = forceExpanded || expanded || isOnActivePath;
+  // Keep children mounted after first expand so close animation works
+  const [hasBeenExpanded, setHasBeenExpanded] = useState(false);
+  useEffect(() => { if (isExpanded && hasChildren) setHasBeenExpanded(true); }, [isExpanded, hasChildren]);
   const isScoped = activeScope === node.path;
   const isConceptAndFolder = node.concept && hasChildren;
   const isActive = !!(activePath && node.concept && activePath === node.path);
@@ -110,12 +120,12 @@ const TreeNodeItem: React.FC<{
         {hasChildren ? (
           <button
             onClick={() => setExpanded(!isExpanded)}
-            className="w-3 h-3 flex items-center justify-center text-th-muted hover:text-th-secondary transition-colors flex-shrink-0"
+            className="w-5 h-5 flex items-center justify-center text-th-muted hover:text-th-secondary transition-colors flex-shrink-0"
           >
             <ChevronIcon isOpen={isExpanded} />
           </button>
         ) : (
-          <span className="w-3 h-3 flex-shrink-0" />
+          <span className="w-5 h-5 flex-shrink-0" />
         )}
 
         {node.concept ? (
@@ -168,23 +178,25 @@ const TreeNodeItem: React.FC<{
 
       </div>
 
-      {isExpanded && hasChildren && (
-        <div>
-          {node.children
-            .sort((a, b) => a.label.localeCompare(b.label))
-            .map(child => (
-              <TreeNodeItem
-                key={child.label}
-                node={child}
-                depth={depth + 1}
-                activeScope={activeScope}
-                onScope={onScope}
-                onConceptClick={onConceptClick}
-                forceExpanded={forceExpanded}
-                activePath={activePath}
-                getPercentile={getPercentile}
-              />
-            ))}
+      {hasChildren && (
+        <div className={`grid transition-[grid-template-rows] duration-200 ease-out ${isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+          <div className="overflow-hidden">
+            {hasBeenExpanded && node.children
+              .sort((a, b) => a.label.localeCompare(b.label))
+              .map(child => (
+                <TreeNodeItem
+                  key={child.label}
+                  node={child}
+                  depth={depth + 1}
+                  activeScope={activeScope}
+                  onScope={onScope}
+                  onConceptClick={onConceptClick}
+                  forceExpanded={forceExpanded}
+                  activePath={activePath}
+                  getPercentile={getPercentile}
+                />
+              ))}
+          </div>
         </div>
       )}
     </div>
@@ -198,7 +210,7 @@ const HEADER_INFO_CONTENT = (
     <p><strong className={tipStrong}>Just start typing</strong> — any key opens the search. Results filter live as you type.</p>
     <p><span className="text-blue-400">Blue</span> = visited this session. <span className={tipAccent}>Purple</span> = not yet visited. Tracked across the grid, links, and graph.</p>
     <p>The <strong className={tipStrong}>sidebar sections</strong> below show different views of the same data — each has its own <span className={tipAccent}>?</span> with details.</p>
-    <p><code className={tipCode}>Shift+T</code> — toggle light / dark theme.</p>
+    <p>Use the theme button in the header — or <code className={tipCode}>Shift+T</code> on desktop — to toggle light / dark.</p>
   </div>
 );
 
@@ -206,7 +218,21 @@ const HEADER_INFO_CONTENT = (
 export const SecondBrainSidebar: React.FC = () => {
   const hub = useHub();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [drawerMounted, setDrawerMounted] = useState(false);
+  const [drawerVisible, setDrawerVisible] = useState(false);
   const { getPercentile, getIslands } = useGraphRelevance();
+
+  // Animate drawer open/close
+  useEffect(() => {
+    if (mobileOpen) {
+      setDrawerMounted(true);
+      requestAnimationFrame(() => requestAnimationFrame(() => setDrawerVisible(true)));
+    } else {
+      setDrawerVisible(false);
+      const id = setTimeout(() => setDrawerMounted(false), 250);
+      return () => clearTimeout(id);
+    }
+  }, [mobileOpen]);
 
   // Island detector ref for collapse-all button in header
   const islandRef = useRef<IslandDetectorHandle>(null);
@@ -338,7 +364,7 @@ export const SecondBrainSidebar: React.FC = () => {
                   <p><strong className={tipStrong}>Islands</strong> — clusters of notes reachable from each other through links. Each gets a <span className={tipAccent}>#ID</span>.</p>
                   <p><strong className={tipStrong}>Bridges</strong> (⚡) — notes that hold an island together. Remove one and the cluster splits into separate groups.</p>
                   <p><strong className={tipStrong}>Orphans</strong> (○) — notes with zero connections to anything.</p>
-                  <p><strong className={tipStrong}>Click the chevron</strong> next to any component to see all its members.</p>
+                  <p><strong className={tipStrong}>Tap the chevron</strong> next to any component to see all its members.</p>
                   <p><strong className={tipStrong}>Island badge</strong> — in note detail, each note shows its island <span className={tipAccent}>#ID</span>. Click to scroll here.</p>
                 </div>
               }
@@ -346,7 +372,7 @@ export const SecondBrainSidebar: React.FC = () => {
             {topologyHasExpanded && (
               <button
                 onClick={() => islandRef.current?.collapseAll()}
-                className="text-th-muted hover:text-th-secondary transition-colors p-0 leading-none"
+                className="text-th-muted hover:text-th-secondary transition-colors p-1 leading-none"
                 title="Collapse all"
               >
                 <svg className="block" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -382,7 +408,7 @@ export const SecondBrainSidebar: React.FC = () => {
             content={
               <div className="space-y-2">
                 <p>The directory organizes notes by their <strong className={tipStrong}>address</strong> — a naming path using <code className={tipCode}>//</code> as separator (e.g. <code className={tipCode}>chip//MCU//ARM</code>). This is the note's position in a <em>naming hierarchy</em>, independent of which notes it links to.</p>
-                <p><strong className={tipStrong}>Scope</strong> — click a folder name (or the ⊙ icon) to filter the grid to only notes within that branch.</p>
+                <p><strong className={tipStrong}>Scope</strong> — select a folder name (or the ⊙ icon) to filter the grid to only notes within that branch.</p>
                 <p><strong className={tipStrong}>Auto-expand</strong> — when you open a note, its branch auto-expands here.</p>
                 <p><strong className={tipStrong}>Filter tree</strong> — type in the input above to narrow by name.</p>
                 <p><strong className={tipStrong}>Centrality bars</strong> — small bars on the right show each note's relative importance based on how many links it has.</p>
@@ -415,7 +441,7 @@ export const SecondBrainSidebar: React.FC = () => {
           const withChildren = filteredTree.filter(n => n.children.length > 0);
           const leaves = filteredTree.filter(n => n.children.length === 0);
           return (
-            <div className="max-h-60 overflow-y-auto thin-scrollbar hub-scrollbar">
+            <div>
               {withChildren.length > 0 && (
                 <div className="space-y-0.5">
                   {withChildren.map(node => (
@@ -467,21 +493,21 @@ export const SecondBrainSidebar: React.FC = () => {
       {/* Mobile toggle button */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="md:hidden fixed bottom-4 right-4 z-40 w-10 h-10 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+        className="md:hidden fixed bottom-4 right-4 z-40 w-11 h-11 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
         aria-label="Open manager sidebar"
       >
         <SlidersIcon />
       </button>
 
       {/* Mobile drawer */}
-      {mobileOpen && (
+      {drawerMounted && (
         <div className="md:hidden fixed inset-0 z-50">
           <div
-            className="absolute inset-0 bg-th-overlay"
+            className={`absolute inset-0 bg-th-overlay transition-opacity duration-200 ${drawerVisible ? 'opacity-100' : 'opacity-0'}`}
             onClick={() => setMobileOpen(false)}
           />
           <aside
-            className="absolute left-0 top-0 bottom-0 w-72 flex flex-col overflow-hidden"
+            className={`absolute left-0 top-0 bottom-0 w-72 max-w-[85vw] flex flex-col overflow-hidden transition-transform duration-250 ease-out ${drawerVisible ? 'translate-x-0' : '-translate-x-full'}`}
             style={{ backgroundColor: 'var(--hub-sidebar-bg)' }}
           >
             {/* Header with close */}
@@ -514,10 +540,12 @@ export const SecondBrainSidebar: React.FC = () => {
         </div>
       )}
 
-      {/* Desktop sidebar */}
+      {/* Desktop sidebar — spacer keeps content pushed right */}
+      <div className="hidden md:block flex-shrink-0" style={{ width: SECOND_BRAIN_SIDEBAR_WIDTH }} />
       <aside
-        className="hidden md:flex flex-col sticky top-0 h-screen border-r border-th-hub-border overflow-hidden"
+        className="hidden md:flex flex-col fixed top-0 h-screen border-r border-th-hub-border overflow-hidden"
         style={{
+          left: SIDEBAR_WIDTH,
           width: SECOND_BRAIN_SIDEBAR_WIDTH,
           minWidth: SECOND_BRAIN_SIDEBAR_WIDTH,
           backgroundColor: 'var(--hub-sidebar-bg)',
