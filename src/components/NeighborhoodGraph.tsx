@@ -7,6 +7,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { noteLabel, type FieldNoteMeta } from '../types';
 import type { Neighborhood } from '../lib/brainIndex';
+import { useTheme } from '../contexts/ThemeContext';
 
 export type Zone = 'parent' | 'siblings' | 'children' | null;
 
@@ -37,7 +38,8 @@ const MAX_COL = 10;    // max nodes per center column before splitting
 const COL_GAP = 14;    // horizontal gap between center sub-columns
 
 // Colors
-const COL_CURRENT = 'rgba(255,255,255,0.75)';
+const COL_CURRENT_DARK = 'rgba(255,255,255,0.75)';
+const COL_CURRENT_LIGHT = 'rgba(0,0,0,0.75)';
 const COL_PARENT = 'rgba(139,92,246,0.8)';
 const COL_PARENT_VISITED = 'rgba(96,165,250,0.8)';
 const COL_SIBLING = 'rgba(139,92,246,0.6)';
@@ -106,6 +108,8 @@ function ghostDiamondColumns(n: number): number[] {
 
 export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, onNoteClick, isVisited, activeZone, onActiveZoneChange, homonymParents, onHomonymNavigate }) => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const COL_CURRENT = theme === 'light' ? COL_CURRENT_LIGHT : COL_CURRENT_DARK;
   const [hoveredZone, setHoveredZone] = useState<Zone>(null);
   const [highlightedNoteId, setHighlightedNoteId] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<{ label: string; x: number; y: number } | null>(null);
