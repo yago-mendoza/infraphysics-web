@@ -321,7 +321,10 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
       .map(note => ({
         label: note.name || note.displayTitle || note.title,
         icon: <DiamondIcon />,
-        action: () => executeAndClose(() => navigate(`/lab/second-brain/${note.id}`)),
+        action: () => {
+          try { localStorage.setItem('infraphysics:brain-result-clicked', '1'); } catch {}
+          executeAndClose(() => navigate(`/lab/second-brain/${note.id}`));
+        },
         group: 'concept' as const,
       }));
   }, [query, allFieldNotes, navigate, executeAndClose]);
@@ -338,6 +341,15 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
     // Exact concept matches first, then articles
     return [...matchedActions, ...conceptMatches, ...articleMatches];
   }, [query, actions, articleMatches, conceptMatches]);
+
+  // Track search palette usage for HomeTour hint
+  useEffect(() => {
+    if (!isOpen) return;
+    try {
+      const count = parseInt(localStorage.getItem('infraphysics:search-uses') || '0', 10);
+      localStorage.setItem('infraphysics:search-uses', String(count + 1));
+    } catch {}
+  }, [isOpen]);
 
   // Reset state on open/close
   useEffect(() => {
