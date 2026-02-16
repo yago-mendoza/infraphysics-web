@@ -120,8 +120,8 @@ export const HomeView: React.FC = () => {
       </section>
 
       {/* Categories */}
-      <section className="pb-16 border-t border-th-border pt-12">
-        <h2 className="text-xs text-th-tertiary uppercase tracking-wider mb-8">Explore</h2>
+      <section className="pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
+        <h2 className="text-xs text-th-tertiary uppercase tracking-wider mb-5 md:mb-8">Explore</h2>
 
         {/* Search input */}
         <div className="flex-1 group flex items-center border border-th-border px-3 py-2.5 focus-within:border-th-border-active transition-colors bg-th-surface-alt mb-6">
@@ -247,8 +247,8 @@ export const HomeView: React.FC = () => {
       </section>
 
       {/* Latest Work */}
-      <section className="pb-16 border-t border-th-border pt-12">
-        <h2 className="text-xs text-th-tertiary uppercase tracking-wider mb-8">Latest Work</h2>
+      <section className="pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
+        <h2 className="text-xs text-th-tertiary uppercase tracking-wider mb-5 md:mb-8">Latest Work</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {featuredPosts.map(post => {
@@ -298,7 +298,7 @@ export const HomeView: React.FC = () => {
       </section>
 
       {/* Second Brain */}
-      <section className="pb-16 border-t border-th-border pt-12">
+      <section className="pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
         <Link
           to="/lab/second-brain"
           className="group block rounded-lg border border-violet-500/20 bg-violet-500/[0.03] p-6 md:p-8 hover:border-violet-500/40 hover:bg-violet-500/[0.06] transition-all overflow-hidden"
@@ -359,7 +359,7 @@ export const HomeView: React.FC = () => {
       </section>
 
       {/* CTA */}
-      <section className="pb-16 border-t border-th-border pt-12">
+      <section className="pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
         <p className="text-th-secondary text-sm font-sans">
           Interested in collaborating?{' '}
           <Link
