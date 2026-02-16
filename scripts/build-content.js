@@ -954,6 +954,7 @@ const linkedRegularPosts = regularPosts.map(post => ({
 const linkedFieldnotePosts = fieldnotePosts.map(post => ({
   ...post,
   content: processOutsideCode(post.content, processAllLinks),
+  trailingRefs: (post.trailingRefs || []).map(r => r.annotation ? { ...r, annotation: processAllLinks(r.annotation) } : r),
 }));
 
 const categories = getAllCategoryConfigs(PAGES_DIR);
