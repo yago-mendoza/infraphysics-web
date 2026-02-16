@@ -170,8 +170,8 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
 
       {/* Header */}
       <header className="mb-8 pb-6 border-b border-th-border">
-        <div className="flex items-baseline justify-between gap-4 mb-3">
-          <h1 className={`text-4xl font-bold tracking-tight title-l-frame uppercase ${categoryInfo.colorClass}`}>
+        <div className="flex flex-col md:flex-row md:items-baseline md:justify-between gap-2 md:gap-4 mb-3">
+          <h1 className={`text-2xl md:text-4xl font-bold tracking-tight title-l-frame uppercase ${categoryInfo.colorClass}`}>
             <span className="text-th-heading">{categoryInfo.title}</span>
           </h1>
           <div className="flex items-center gap-4 text-xs text-th-tertiary">
@@ -211,8 +211,9 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
           </button>
         </div>
 
-        {showFilters && (
-          <div className="p-4 bg-th-surface-alt border border-th-border rounded-sm animate-fade-in space-y-4">
+        <div className={`grid transition-[grid-template-rows] duration-200 ease-out ${showFilters ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+          <div className="overflow-hidden">
+          <div className="p-4 bg-th-surface-alt border border-th-border rounded-sm space-y-4">
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-th-tertiary uppercase">Sort by:</span>
@@ -300,7 +301,8 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
               </div>
             )}
           </div>
-        )}
+          </div>
+        </div>
       </div>
 
       {/* Delegated renderer */}
