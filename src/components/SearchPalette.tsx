@@ -81,12 +81,26 @@ const extractSnippet = (text: string, query: string, radius = 40): string => {
 export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { article } = useArticleContext();
   const { theme, toggleTheme } = useTheme();
+
+  // Animate open/close
+  useEffect(() => {
+    if (isOpen) {
+      setMounted(true);
+      requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
+    } else {
+      setVisible(false);
+      const id = setTimeout(() => setMounted(false), 200);
+      return () => clearTimeout(id);
+    }
+  }, [isOpen]);
 
   // Async brain index for concept search
   const [brainIndex, setBrainIndex] = useState<BrainIndex | null>(null);
@@ -330,8 +344,14 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
     if (isOpen) {
       setQuery('');
       setSelectedIndex(0);
-      // Focus input after animation frame so the element is mounted
-      requestAnimationFrame(() => inputRef.current?.focus());
+      // Focus input — double rAF ensures DOM is ready, setTimeout as fallback for mobile keyboards
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          inputRef.current?.focus();
+          // Mobile Safari/Chrome may ignore programmatic focus; retry after short delay
+          setTimeout(() => inputRef.current?.focus(), 100);
+        });
+      });
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -393,7 +413,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
     }
   }, [filtered, selectedIndex, onClose, query, toggleTheme]);
 
-  if (!isOpen) return null;
+  if (!mounted) return null;
 
   // Group labels for visual separation
   const groupLabel = (group?: string) => {
@@ -415,13 +435,13 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-th-overlay"
+        className={`absolute inset-0 bg-th-overlay transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}
         onClick={onClose}
       />
 
       {/* Panel */}
       <div
-        className="relative w-full max-w-lg mx-4 max-h-[70vh] flex flex-col rounded-xl bg-th-sidebar border border-th-border shadow-2xl overflow-hidden"
+        className={`relative w-full max-w-lg mx-4 max-h-[70vh] flex flex-col rounded-xl bg-th-sidebar border border-th-border shadow-2xl overflow-hidden transition-all duration-200 ease-out ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
         onKeyDown={handleKeyDown}
       >
         {/* Search input row */}
@@ -444,7 +464,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
               setQuery(val);
               setSelectedIndex(0);
             }}
-            placeholder="Type to search... | Ctrl+K to toggle"
+            placeholder="Type to search..."
             className="flex-1 bg-transparent text-th-primary placeholder:text-th-muted outline-none text-sm"
           />
           <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-th-tertiary bg-th-surface-alt border border-th-border rounded font-mono">
@@ -507,8 +527,8 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
           )}
         </div>
 
-        {/* Footer — keyboard hints */}
-        <div className="flex items-center gap-4 px-4 py-2 border-t border-th-border text-[11px] text-th-muted">
+        {/* Footer — keyboard hints (hidden on touch/mobile) */}
+        <div className="hidden sm:flex items-center gap-4 px-4 py-2 border-t border-th-border text-[11px] text-th-muted">
           <span className="flex items-center gap-1.5">
             <kbd className="inline-flex items-center justify-center w-5 h-5 rounded bg-th-surface-alt border border-th-border text-[10px] font-mono">↑</kbd>
             <kbd className="inline-flex items-center justify-center w-5 h-5 rounded bg-th-surface-alt border border-th-border text-[10px] font-mono">↓</kbd>
