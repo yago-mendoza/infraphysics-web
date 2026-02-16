@@ -40,6 +40,7 @@ infraphysics-web/
     analyze-pairs.js          # Relationship analyzer for fieldnote pairs
     preflight.js              # Pre-creation briefing (content, refs, collisions)
     move-hierarchy.js         # Cascading rename for address + all descendants
+    compute-graph-relevance.js # Build-time PageRank + proximity → graph-relevance.generated.json
     README.md                 # Build pipeline docs, cache format
   docs/
     validate-fieldnotes-term-err-view.jpg  # Validation output screenshot
@@ -52,6 +53,10 @@ infraphysics-web/
       WikiContent.tsx         # HTML renderer with wiki-link resolution + hover preview
       WikiLinkPreview.tsx     # Floating preview card (portal)
       NeighborhoodGraph.tsx   # SVG graph + detail panel (parent/siblings/children)
+      RelevanceLeaderboard.tsx # Unified note list (family/all modes) with centrality indicators
+      BridgeScoreBadge.tsx    # Colored dot indicating centrality tier (bridge/connector/peripheral)
+      DriftDetector.tsx       # "Missing links?" suggestions based on neighbor overlap
+      IslandDetector.tsx      # Topology sidebar: connected components, articulation points (bridges)
       NavigationTrail.tsx     # Breadcrumb trail for concept navigation
       SearchPalette.tsx       # Global search overlay (Cmd+K)
       HomeTour.tsx            # Guided tour for landing page

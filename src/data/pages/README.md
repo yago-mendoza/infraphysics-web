@@ -240,6 +240,8 @@ The annotation (everything after `::`) explains **why** the connection is worth 
 
 **Bilateral behavior:** If note A has a trailing ref to B, the runtime shows the interaction on **both** A and B's pages. If B also has a trailing ref back to A (with its own annotation), both annotations are displayed. You do not need to add refs on both sides — one is sufficient for bilateral display.
 
+**Annotation examples involving other concepts:** If an annotation uses another concept as an example or illustration (e.g. explaining how Alexa uses an NPU), that cross-concept relationship belongs as a trailing ref **interaction**, not as inline text in the annotation. The interaction section is where concept-to-concept comparisons and examples live.
+
 ### Address format
 
 Addresses use `//` as a hierarchy separator.
