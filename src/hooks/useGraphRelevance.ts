@@ -17,14 +17,28 @@ export type BridgeTier = 'bridge' | 'connector' | 'peripheral';
 export interface IslandComponent {
   id: number;
   size: number;
+  members: string[];
   cutCount: number;
+}
+
+export interface CutSide {
+  size: number;
+  members: string[];
 }
 
 export interface IslandCut {
   uid: string;
   componentId: number;
   criticality: number;
-  sides: number[];
+  sides: CutSide[];
+}
+
+export interface NoteTopology {
+  isOrphan: boolean;
+  componentId: number | null;
+  componentSize: number;
+  isBridge: boolean;
+  bridgeCriticality?: number;
 }
 
 export interface IslandsData {
@@ -119,5 +133,23 @@ export function useGraphRelevance() {
     return cached?.islands ?? null;
   }, []);
 
-  return { getRelevance, getCentrality, getDrift, getBridgeTier, getPercentile, getIslands, loaded: !!cached };
+  const getNoteTopology = useCallback((uid: string): NoteTopology => {
+    const islands = cached?.islands;
+    if (!islands) return { isOrphan: false, componentId: null, componentSize: 0, isBridge: false };
+
+    const isOrphan = islands.orphanUids.includes(uid);
+    const componentId = islands.nodeToComponent[uid] ?? null;
+    const comp = componentId != null ? islands.components.find(c => c.id === componentId) : null;
+    const cut = islands.cuts.find(c => c.uid === uid);
+
+    return {
+      isOrphan,
+      componentId,
+      componentSize: comp?.size ?? 0,
+      isBridge: !!cut,
+      ...(cut ? { bridgeCriticality: cut.criticality } : {}),
+    };
+  }, []);
+
+  return { getRelevance, getCentrality, getDrift, getBridgeTier, getPercentile, getIslands, getNoteTopology, loaded: !!cached };
 }
