@@ -246,7 +246,8 @@
 /* A4. Body */
 
 .article-body {
-  padding: 1.5rem 2rem 2rem;
+  --art-body-px: 2rem;
+  padding: 1.5rem var(--art-body-px) 2rem;
 }
 
 /* A5. Nav row */
@@ -263,8 +264,8 @@
 }
 
 .article-blog .article-nav-row {
-  margin: 0 -2rem;
-  padding: 0.55rem 2rem;
+  margin: 0 calc(-1 * var(--art-body-px));
+  padding: 0.55rem var(--art-body-px);
   border-bottom: 1px solid var(--art-border);
 }
 
@@ -645,7 +646,7 @@
 /* B3. Typed blockquotes {bkqt:type:text} */
 
 .article-content .bkqt {
-  margin: 1.5rem -2rem;
+  margin: 1.5rem calc(-1 * var(--art-body-px));
   border-radius: 0;
   overflow: hidden;
   font-size: 0.875rem;
@@ -655,7 +656,7 @@
 }
 
 .article-content .bkqt-body {
-  padding: 0.75rem 2rem;
+  padding: 0.75rem var(--art-body-px);
   background: var(--bkqt-bg);
 }
 
@@ -1397,10 +1398,9 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 }
 
 .article-feedback-label {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   color: var(--art-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.01em;
   text-align: center;
 }
 
@@ -1574,7 +1574,8 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 @media (max-width: 767px) {
   .article-body {
-    padding: 1rem 1.25rem 1.5rem;
+    --art-body-px: 0.75rem;
+    padding: 1rem var(--art-body-px) 1.5rem;
   }
   .article-title {
     font-size: 2rem;
@@ -1585,20 +1586,6 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   .article-nav-row {
     flex-wrap: wrap;
     gap: 0.75rem;
-  }
-  .article-blog .article-nav-row {
-    margin-left: -1.25rem;
-    margin-right: -1.25rem;
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
-  }
-  .article-content .bkqt {
-    margin-left: -1.25rem;
-    margin-right: -1.25rem;
-  }
-  .article-content .bkqt-body {
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
   }
   .article-content .ctx-note::before {
     display: none;
@@ -1673,7 +1660,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 }
 
 .article-threads .article-content .bkqt-body {
-  padding: 1rem 2rem;
+  padding: 1rem var(--art-body-px);
 }
 
 /* E2d. Threads blockquote label — block above text, bold serif (not inline monospace) */
