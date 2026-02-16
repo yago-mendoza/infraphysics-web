@@ -399,9 +399,13 @@ button:focus {
   color: var(--ac-color);
 }
 
-/* Group-hover variant — parent .group triggers child color change */
-.group:hover .group-hover-accent {
-  color: var(--ac-color);
+/* Group-hover variant — parent .group triggers child color change.
+   On touch devices (no hover), show accent by default so cards aren't flat. */
+@media (hover: hover) {
+  .group:hover .group-hover-accent { color: var(--ac-color); }
+}
+@media (hover: none) {
+  .group-hover-accent { color: var(--ac-color); }
 }
 
 /* Thin sidebar scrollbar — shared base */
