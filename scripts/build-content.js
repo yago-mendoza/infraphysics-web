@@ -1041,3 +1041,6 @@ console.log(`Generated ${linkedRegularPosts.length} posts → ${OUTPUT_FILE}`);
 console.log(`Generated ${linkedFieldnotePosts.length} fieldnotes → ${FIELDNOTES_INDEX_FILE} + public/fieldnotes/`);
 console.log(`Generated ${Object.keys(categories).length} categories → ${CATEGORIES_OUTPUT}`);
 console.log(`Generated ${Object.keys(ogManifest).length} entries → ${OG_MANIFEST_FILE}`);
+
+// Output 6: graph-relevance.generated.json (PageRank + proximity + shared neighbors)
+await import('./compute-graph-relevance.js');
