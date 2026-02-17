@@ -19,6 +19,7 @@ export interface Neighborhood {
 export interface BrainIndex {
   allFieldNotes: FieldNoteMeta[];
   noteById: Map<string, FieldNoteMeta>;
+  addressToNoteId: Map<string, string>;
   backlinksMap: Map<string, FieldNoteMeta[]>;
   connectionsMap: Map<string, Connection[]>;
   mentionsMap: Map<string, FieldNoteMeta[]>;
@@ -172,10 +173,28 @@ export async function initBrainIndex(): Promise<BrainIndex> {
       }
     });
 
-    // Neighborhood: parent, siblings, children for each note
+    // Neighborhood: parent, siblings, children for each note — O(N) via pre-built maps
     const neighborhoodMap = new Map<string, Neighborhood>();
+
+    // Build children-by-parent-address map (single O(N) pass)
+    const childrenByParent = new Map<string, FieldNoteMeta[]>();
+    const rootNotes: FieldNoteMeta[] = [];
+
     allFieldNotes.forEach(note => {
       const parts = note.addressParts || [note.title];
+      if (parts.length === 1) {
+        rootNotes.push(note);
+      } else {
+        const parentAddr = parts.slice(0, -1).join('//');
+        if (!childrenByParent.has(parentAddr)) childrenByParent.set(parentAddr, []);
+        childrenByParent.get(parentAddr)!.push(note);
+      }
+    });
+
+    // O(1) lookups per note
+    allFieldNotes.forEach(note => {
+      const parts = note.addressParts || [note.title];
+      const addr = note.address || '';
 
       // Parent
       let parent: FieldNoteMeta | null = null;
@@ -185,49 +204,22 @@ export async function initBrainIndex(): Promise<BrainIndex> {
         if (parentId) parent = noteById.get(parentId) || null;
       }
 
-      // Siblings: same parent prefix, same depth
-      const siblings: FieldNoteMeta[] = [];
+      // Siblings: other children of the same parent
+      let siblings: FieldNoteMeta[];
       if (parts.length > 1) {
-        const parentPrefix = parts.slice(0, -1).join('//') + '//';
-        allFieldNotes.forEach(other => {
-          if (other.id === note.id) return;
-          const otherParts = other.addressParts || [other.title];
-          if (otherParts.length !== parts.length) return;
-          const otherAddr = other.address || '';
-          if (otherAddr.startsWith(parentPrefix)) {
-            const remainder = otherAddr.slice(parentPrefix.length);
-            if (!remainder.includes('//')) {
-              siblings.push(other);
-            }
-          }
-        });
+        const parentAddr = parts.slice(0, -1).join('//');
+        siblings = (childrenByParent.get(parentAddr) || []).filter(n => n.id !== note.id);
       } else {
-        // Root-level: siblings are other root-level notes
-        allFieldNotes.forEach(other => {
-          if (other.id === note.id) return;
-          const otherParts = other.addressParts || [other.title];
-          if (otherParts.length === 1) siblings.push(other);
-        });
+        siblings = rootNotes.filter(n => n.id !== note.id);
       }
 
-      // Children: notes one level deeper with this note's address as prefix
-      const children: FieldNoteMeta[] = [];
-      const childPrefix = note.address + '//';
-      allFieldNotes.forEach(other => {
-        if (other.id === note.id) return;
-        const otherAddr = other.address || '';
-        if (otherAddr.startsWith(childPrefix)) {
-          const remainder = otherAddr.slice(childPrefix.length);
-          if (!remainder.includes('//')) {
-            children.push(other);
-          }
-        }
-      });
+      // Children: notes one level deeper
+      const children = childrenByParent.get(addr) || [];
 
       siblings.sort((a, b) => (a.address || a.title).localeCompare(b.address || b.title));
-      children.sort((a, b) => (a.address || a.title).localeCompare(b.address || b.title));
+      const sortedChildren = [...children].sort((a, b) => (a.address || a.title).localeCompare(b.address || b.title));
 
-      neighborhoodMap.set(note.id, { parent, siblings, children });
+      neighborhoodMap.set(note.id, { parent, siblings, children: sortedChildren });
     });
 
     // Homonyms: group notes that share the same leaf segment name
@@ -283,6 +275,7 @@ export async function initBrainIndex(): Promise<BrainIndex> {
     _index = {
       allFieldNotes,
       noteById,
+      addressToNoteId,
       backlinksMap,
       connectionsMap,
       mentionsMap,
@@ -307,6 +300,11 @@ export function getBrainIndex(): BrainIndex {
   return _index;
 }
 
+/** Sync cache check — returns null if not cached */
+export function getCachedNoteContent(id: string): string | null {
+  return _contentCache.get(id) ?? null;
+}
+
 /** Fetch + resolve wiki-links for a single note's content. Cached in memory. */
 export async function fetchNoteContent(id: string): Promise<string> {
   const cached = _contentCache.get(id);
@@ -320,4 +318,22 @@ export async function fetchNoteContent(id: string): Promise<string> {
   const { html } = resolveWikiLinks(content, index.allFieldNotes, index.noteById);
   _contentCache.set(id, html);
   return html;
+}
+
+/** Fire-and-forget prefetch — fills cache for future navigations */
+export function prefetchNoteContent(ids: string[]): void {
+  const index = _index;
+  if (!index) return;
+  for (const id of ids) {
+    if (_contentCache.has(id)) continue;
+    fetch(`/fieldnotes/${id}.json`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.content && !_contentCache.has(id)) {
+          const { html } = resolveWikiLinks(data.content, index.allFieldNotes, index.noteById);
+          _contentCache.set(id, html);
+        }
+      })
+      .catch(() => {}); // Silent fail — prefetch is best-effort
+  }
 }
