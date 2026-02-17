@@ -8,7 +8,7 @@
 //   4. Parent hierarchy       (WARN)
 //   5. Circular references    (WARN)
 //   6. Segment collisions     (HIGH / MED / LOW)
-//   7. Orphan notes           (INFO)
+//   7. Isolated notes          (INFO)
 //
 // Returns { errors, warnings, infos, issues } where issues[] is a structured
 // array used by resolve-issues.js for interactive fixing.
@@ -378,10 +378,10 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg) {
     }
   }
 
-  // ── Phase 7: Orphan notes (INFO) ────────────────────────────────
+  // ── Phase 7: Isolated notes (INFO) ──────────────────────────────
   // Notes with no incoming or outgoing references.
 
-  if (cfg.detectOrphans !== false) {
+  if (cfg.detectIsolated !== false) {
     const referenced = new Set();
     for (const post of fieldnotePosts) {
       for (const ref of (post.references || [])) referenced.add(ref);
@@ -391,8 +391,8 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg) {
       const hasOut = (post.references || []).length > 0;
       const hasIn = referenced.has(post.id);
       if (!hasOut && !hasIn) {
-        console.log(`  ${C}INFO ${X}  [ORPHAN_NOTE] "${post.address}" has no connections (orphan)`);
-        issues.push({ code: 'ORPHAN_NOTE', severity: 'INFO', promptable: false, address: post.address });
+        console.log(`  ${C}INFO ${X}  [ISOLATED_NOTE] "${post.address}" has no connections (isolated)`);
+        issues.push({ code: 'ISOLATED_NOTE', severity: 'INFO', promptable: false, address: post.address });
         infos++;
       }
     }
@@ -413,7 +413,7 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg) {
       ALIAS_COLLISION: 'alias collides with a segment name',
       ALIAS_ALIAS_COLLISION: 'same alias on multiple notes',
       STALE_DISTINCT: 'distinct entry points to deleted note',
-      ORPHAN_NOTE: 'no incoming or outgoing references',
+      ISOLATED_NOTE: 'no incoming or outgoing references',
     };
     console.log(`\n  ${D}Legend:${X}`);
     for (const code of codes) {

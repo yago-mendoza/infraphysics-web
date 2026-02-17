@@ -13,7 +13,7 @@ Analyze all uncommitted changes against HEAD and propose independent atomic comm
 2. **Pre-commit hygiene check** — scan the **filesystem** (not just git-tracked files) for debris:
    - Run `ls -la` on the project root to catch ghost folders/files that git doesn't track
    - Empty or near-empty files (0 bytes, only whitespace, placeholder content)
-   - Orphaned documents (READMEs, TODOs, drafts) that aren't referenced anywhere
+   - Stray documents (READMEs, TODOs, drafts) that aren't referenced anywhere
    - Null/undefined-heavy generated files (e.g. entries with missing required fields)
    - Empty directories (especially ones with suspicious names — path-as-name from bad scripts)
    - Test/scratch files (TEST_*, tmp_*, scratch.*)

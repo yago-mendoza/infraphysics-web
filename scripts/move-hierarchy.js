@@ -67,7 +67,7 @@ for (const filename of fieldnoteFiles) {
 // Find root note
 if (!notesByAddress.has(oldPrefix)) {
   console.error(`ERROR: No fieldnote with address "${oldPrefix}"`);
-  console.error('The root note must exist. For orphaned children without a parent, use rename-address.js individually.');
+  console.error('The root note must exist. For detached children without a parent, use rename-address.js individually.');
   process.exit(1);
 }
 

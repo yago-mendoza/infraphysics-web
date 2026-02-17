@@ -237,8 +237,8 @@ function run() {
     components.push({ id: compId, size: members.length, members });
   }
 
-  // Orphans: nodes with no edges
-  const orphanUids = uids.filter(uid => {
+  // Isolated: nodes with no edges
+  const isolatedUids = uids.filter(uid => {
     const neighbors = adj.get(uid);
     return !neighbors || neighbors.size === 0;
   });
@@ -341,7 +341,7 @@ function run() {
     components: sorted.map(c => ({ id: c.id, size: c.size, members: c.members, cutCount: cuts.filter(ct => ct.componentId === c.id).length })),
     cuts,
     nodeToComponent,
-    orphanUids,
+    isolatedUids,
   };
 
   const driftCount = Object.keys(driftSuggestions).length;

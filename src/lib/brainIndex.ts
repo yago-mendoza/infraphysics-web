@@ -28,7 +28,7 @@ export interface BrainIndex {
   globalStats: {
     totalConcepts: number;
     totalLinks: number;
-    orphanCount: number;
+    isolatedCount: number;
     avgRefs: number;
     maxDepth: number;
     density: number;
@@ -253,7 +253,7 @@ export async function initBrainIndex(): Promise<BrainIndex> {
     allFieldNotes.forEach(n => {
       (n.references || []).forEach(refUid => linkedToSet.add(refUid));
     });
-    const orphanCount = allFieldNotes.filter(n => {
+    const isolatedCount = allFieldNotes.filter(n => {
       const hasOutgoing = (n.references?.length || 0) > 0;
       const hasIncoming = linkedToSet.has(n.id);
       return !hasOutgoing && !hasIncoming;
@@ -289,7 +289,7 @@ export async function initBrainIndex(): Promise<BrainIndex> {
       neighborhoodMap,
       homonymsMap,
       parentIds,
-      globalStats: { totalConcepts, totalLinks, orphanCount, avgRefs, maxDepth, density, mostConnectedHub },
+      globalStats: { totalConcepts, totalLinks, isolatedCount, avgRefs, maxDepth, density, mostConnectedHub },
     };
 
     return _index;

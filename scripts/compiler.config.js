@@ -49,7 +49,7 @@ export default {
     validateParentSegments: true,
     detectCircularRefs: false,  // off by default — knowledge graphs naturally have cycles
     detectSegmentCollisions: true,
-    detectOrphans: true,
+    detectIsolated: true,
     // Segment names too generic to flag as collisions (organizational terms)
     segmentCollisionExclusions: [
       'overview', 'intro', 'basics', 'summary', 'notes',

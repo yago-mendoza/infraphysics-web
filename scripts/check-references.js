@@ -4,7 +4,7 @@
 // Usage: node scripts/check-references.js
 //
 // Checks:
-//   1. Orphan notes (no incoming or outgoing references)
+//   1. Isolated notes (no incoming or outgoing references)
 //   2. Weak parents (address segments with no dedicated note)
 //   3. Duplicate trailing refs (A→B and B→A — redundant, keep only one)
 //   4. Redundant trailing refs (also mentioned in body text)
@@ -100,7 +100,7 @@ function parseAllFieldnotes() {
 
 // --- Checks ---
 
-function checkOrphans(notes) {
+function checkIsolated(notes) {
   const referencedUids = new Set();
 
   // Collect all UIDs that are referenced by any note
@@ -110,13 +110,13 @@ function checkOrphans(notes) {
     }
   }
 
-  const orphans = notes.filter(note => {
+  const isolated = notes.filter(note => {
     const hasOutgoing = note.allRefs.length > 0;
     const hasIncoming = referencedUids.has(note.id);
     return !hasOutgoing && !hasIncoming;
   });
 
-  return orphans;
+  return isolated;
 }
 
 function checkWeakParents(notes) {
@@ -350,17 +350,17 @@ console.log(`Scanned ${notes.length} fieldnotes.\n`);
 
 let issues = 0;
 
-// 1. Orphans
-const orphans = checkOrphans(notes);
-if (orphans.length > 0) {
-  console.log(`\x1b[33m[ORPHANS]\x1b[0m ${orphans.length} note${orphans.length !== 1 ? 's' : ''} with no incoming or outgoing references:`);
-  for (const o of orphans) {
+// 1. Isolated notes
+const isolated = checkIsolated(notes);
+if (isolated.length > 0) {
+  console.log(`\x1b[33m[ISOLATED]\x1b[0m ${isolated.length} note${isolated.length !== 1 ? 's' : ''} with no incoming or outgoing references:`);
+  for (const o of isolated) {
     console.log(`  ${o.address}`);
   }
   console.log('');
-  issues += orphans.length;
+  issues += isolated.length;
 } else {
-  console.log(`\x1b[32m[ORPHANS]\x1b[0m None found.\n`);
+  console.log(`\x1b[32m[ISOLATED]\x1b[0m None found.\n`);
 }
 
 // 2. Weak parents

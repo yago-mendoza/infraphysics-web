@@ -342,7 +342,7 @@ const DockedToolbar: React.FC<{
               <p><strong className={tipStrong}>Name</strong> — matches against note names and addresses.</p>
               <p><strong className={tipStrong}>Content</strong> — full-text search across note bodies.</p>
               <p><strong className={tipStrong}>Backlinks</strong> — finds notes that <em>link to</em> a concept matching your query. If note A links to note B, then A is a "backlink" of B.</p>
-              <p><span className="text-blue-400">Blue</span> = visited this session. <span className={tipAccent}>Purple</span> = not yet visited.</p>
+              <p><span style={{ color: 'var(--wiki-link-visited)' }}>Blue</span> = visited this session. <span className={tipAccent}>Purple</span> = not yet visited.</p>
             </div>
           }
         />
@@ -352,7 +352,9 @@ const DockedToolbar: React.FC<{
       <div className="border-b border-th-hub-border">
         <div
           role="button"
+          tabIndex={0}
           onClick={() => setFiltersOpen(v => !v)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFiltersOpen(v => !v); } }}
           className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[10px] bg-white/[0.03] border-b border-th-hub-border text-th-secondary hover:text-th-primary transition-colors cursor-pointer select-none"
         >
           <span>{isFiltersVisible ? '\u25BE' : '\u25B8'}</span>
@@ -364,7 +366,7 @@ const DockedToolbar: React.FC<{
               title="Filter options"
               content={
                 <div className="space-y-2">
-                  <p><strong className={tipStrong}>Orphans</strong> — notes with zero links to or from any other note.</p>
+                  <p><strong className={tipStrong}>Isolated</strong> — notes with zero links to or from any other note.</p>
                   <p><strong className={tipStrong}>Leaf</strong> — notes that have no children in the naming tree (they're at the end of a branch, e.g. <code className={tipCode}>chip//MCU//ARM</code> if ARM has no sub-notes).</p>
                   <p><strong className={tipStrong}>Bridges</strong> — critical connector notes. If you removed one, its island would split in two. (See the topology section in the sidebar.)</p>
                   <p><strong className={tipStrong}>Island</strong> — pick a specific connected group from the dropdown. Islands are clusters of notes linked to each other — see sidebar topology for the full map.</p>
@@ -434,13 +436,13 @@ const DockedToolbar: React.FC<{
               </div>
               <span className="text-th-hub-border select-none">|</span>
               <button
-                onClick={() => updateFilter('orphans', !filterState.orphans)}
+                onClick={() => updateFilter('isolated', !filterState.isolated)}
                 className={`text-[10px] px-1 py-0.5 transition-colors ${
-                  filterState.orphans
+                  filterState.isolated
                     ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
                     : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
                 }`}
-              >orphans</button>
+              >isolated</button>
               <button
                 onClick={() => updateFilter('leaf', !filterState.leaf)}
                 className={`text-[10px] px-1 py-0.5 transition-colors ${
@@ -557,7 +559,7 @@ const DockedToolbar: React.FC<{
           {filterState.dateFilter && (
             <Chip label={filterState.dateFilter.replace('..', ' \u2192 ')} onDismiss={() => updateFilter('dateFilter', null)} />
           )}
-          {filterState.orphans && <Chip label="orphans" onDismiss={() => updateFilter('orphans', false)} />}
+          {filterState.isolated && <Chip label="isolated" onDismiss={() => updateFilter('isolated', false)} />}
           {filterState.leaf && <Chip label="leaf" onDismiss={() => updateFilter('leaf', false)} />}
           {filterState.bridgesOnly && <Chip label="bridges" onDismiss={() => updateFilter('bridgesOnly', false)} color="amber" />}
           {filterState.depthMin > 1 && <Chip label={`depth \u2265 ${filterState.depthMin}`} onDismiss={() => updateFilter('depthMin', 1)} />}
@@ -1130,7 +1132,7 @@ export const SecondBrainView: React.FC = () => {
               const topo = getNoteTopology(activePost!.id);
               const badges = (
                 <>
-                  {topo.componentId != null && !topo.isOrphan && (
+                  {topo.componentId != null && !topo.isIsolated && (
                     <button
                       onClick={() => {
                         window.dispatchEvent(new CustomEvent('topology-focus', { detail: { componentId: topo.componentId } }));
@@ -1146,12 +1148,12 @@ export const SecondBrainView: React.FC = () => {
                       ⚡ bridge {Math.round((topo.bridgeCriticality ?? 0) * 100)}%
                     </span>
                   )}
-                  {topo.isOrphan && (
-                    <span className="text-[10px] font-normal text-th-muted">(orphan)</span>
+                  {topo.isIsolated && (
+                    <span className="text-[10px] font-normal text-th-muted">(isolated)</span>
                   )}
                 </>
               );
-              const hasBadges = topo.componentId != null || topo.isBridge || topo.isOrphan;
+              const hasBadges = topo.componentId != null || topo.isBridge || topo.isIsolated;
               return (
                 <>
                   {/* Mobile: badges above title, left-aligned */}
@@ -1262,7 +1264,8 @@ export const SecondBrainView: React.FC = () => {
                               <Link
                                 to={`/lab/second-brain/${conn.note.id}`}
                                 onClick={() => handleConnectionClick(conn.note)}
-                                className={`inline transition-colors no-underline border-b border-solid cursor-pointer ${v ? 'text-blue-400/70 hover:text-blue-400 border-blue-400/40 hover:border-blue-400' : 'text-violet-400/70 hover:text-violet-400 border-violet-400/40 hover:border-violet-400'}`}
+                                className="wiki-sidelink inline transition-colors no-underline border-b border-solid cursor-pointer"
+                                style={{ '--wl-color': v ? 'var(--wiki-link-visited)' : 'var(--cat-fieldnotes-accent)' } as React.CSSProperties}
                               >
                                 <span className="text-sm">{noteLabel(conn.note)}</span><svg className="inline w-[0.85em] h-[0.85em] ml-0.5 opacity-80" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style={{ verticalAlign: '-0.1em' }}><path fillRule="evenodd" clipRule="evenodd" d={ICON_REF_OUT}/></svg>
                               </Link>
@@ -1326,7 +1329,7 @@ export const SecondBrainView: React.FC = () => {
                       <p>This graph shows where the current note sits in the <strong className={tipStrong}>naming hierarchy</strong> (its address path), not its link connections.</p>
                       <p>Three zones: <strong className={tipStrong}>parent</strong> (above), <strong className={tipStrong}>siblings</strong> (same level), <strong className={tipStrong}>children</strong> (below). Tap a zone to filter the leaderboard below.</p>
                       <p><strong className={tipStrong}>Tap a zone</strong> to select it. On desktop, arrow keys also switch zones and navigate within.</p>
-                      <p><strong className={tipStrong}>White bar</strong> = current note. <span className="text-blue-400">Blue</span> = visited. <span className={tipAccent}>Purple</span> = not yet visited.</p>
+                      <p><strong className={tipStrong}>White bar</strong> = current note. <span style={{ color: 'var(--wiki-link-visited)' }}>Blue</span> = visited. <span className={tipAccent}>Purple</span> = not yet visited.</p>
                       <p><strong className={tipStrong}>Ghost dots</strong> — if the same name exists under multiple parents, dots mark the alternatives.</p>
                     </div>
                   }
@@ -1395,14 +1398,14 @@ export const SecondBrainView: React.FC = () => {
                   {/* Card metadata — pinned to bottom */}
                   <div className="flex items-center gap-2 mt-auto pt-2.5 text-[10px] text-th-tertiary tabular-nums">
                     <span>{outgoing}↗ {incoming}↙</span>
-                    {topo.componentId != null && !topo.isOrphan && (
+                    {topo.componentId != null && !topo.isIsolated && (
                       <span className="text-violet-400/60">#{topo.componentId}</span>
                     )}
                     {topo.isBridge && (
                       <span className="text-amber-400/80">⚡</span>
                     )}
-                    {topo.isOrphan && (
-                      <span>orphan</span>
+                    {topo.isIsolated && (
+                      <span>isolated</span>
                     )}
                     {note.date && (
                       <span className="ml-auto opacity-60">{note.date.slice(0, 10)}</span>

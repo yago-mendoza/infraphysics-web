@@ -312,7 +312,7 @@ The build runs a 7-phase integrity check automatically. Full phase details and e
 | 4 | Full parent paths exist (`CPU//mutex` not just `mutex`) | WARN |
 | 5 | Circular reference detection (opt-in, off by default) | WARN |
 | 6 | **Segment collisions** — same segment at different paths, with tier classification (HIGH/MED/LOW) and `distinct` suppression | WARN |
-| 7 | Orphan notes (no connections) | INFO |
+| 7 | Isolated notes (no connections) | INFO |
 
 For deeper audit (duplicate trailing refs, redundant refs, fuzzy duplicates, segment collisions), run `node scripts/check-references.js`.
 

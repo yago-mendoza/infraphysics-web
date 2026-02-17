@@ -36,7 +36,7 @@ infraphysics-web/
     resolve-issues.js         # Interactive issue resolver (segment collisions, missing parents)
     migrate-to-uids.js        # One-time migration: address-based → UID-based refs
     rename-address.js         # Rename fieldnote address (frontmatter only — refs use stable UIDs)
-    check-references.js       # Detect orphans, weak parents, stale refs
+    check-references.js       # Detect isolated notes, weak parents, stale refs
     analyze-pairs.js          # Relationship analyzer for fieldnote pairs
     preflight.js              # Pre-creation briefing (content, refs, collisions)
     move-hierarchy.js         # Cascading rename for address + all descendants
@@ -148,7 +148,7 @@ A flat knowledge graph of `{uid}.md` files in `fieldnotes/`. Each note has a sta
 
 **Creating fieldnotes:** Use `/create-fieldnote` in Claude Code with raw text, concepts, or notes as input. The skill handles decomposition, dedup, addressing, stubs, and validation automatically.
 
-**Maintenance:** Periodically run `npm run content:fix` to interactively resolve segment collisions and missing parents. Also useful: ask Claude to audit the current state of fieldnotes (address quality, orphans, enrichment opportunities, structural improvements) using `check-references.js` and `analyze-pairs.js`.
+**Maintenance:** Periodically run `npm run content:fix` to interactively resolve segment collisions and missing parents. Also useful: ask Claude to audit the current state of fieldnotes (address quality, isolated notes, enrichment opportunities, structural improvements) using `check-references.js` and `analyze-pairs.js`.
 
 ---
 
@@ -164,7 +164,7 @@ The build pipeline includes a 7-phase integrity checker that catches reference e
 | Parent hierarchy | Missing parent nodes in the address tree | WARN |
 | Circular references | Cycles in the reference graph (opt-in) | WARN |
 | **Segment collisions** | Same concept name at different hierarchy paths — severity tiers (HIGH/MED/LOW), suppressible with `distinct` frontmatter | WARN |
-| Orphan detection | Notes with no connections to the graph | INFO |
+| Isolated note detection | Notes with no connections to the graph | INFO |
 
 When the build reports fixable issues (missing parents, segment collisions), **`npm run content:fix`** runs the same build but launches an interactive resolver: it walks you through each issue, creates stub notes, adds `distinct` entries, and collects merge instructions — all from the terminal. Pending merges are printed at the end as a ready-to-copy Claude instruction block. Full details: **[src/data/pages/fieldnotes/README.md](src/data/pages/fieldnotes/README.md#interactive-mode)**
 

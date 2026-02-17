@@ -34,7 +34,7 @@ When the user gives feedback on article quality (tone, structure, storytelling, 
 
 **Before** creating, renaming, deleting, or restructuring fieldnotes, read **[fieldnotes/README.md](src/data/pages/fieldnotes/README.md)**. It covers available scripts, step-by-step workflows, cascading effects, and the full error reference. Never rename or delete fieldnotes by hand — use the scripts.
 
-**Creating fieldnotes:** Check for segment collisions first — search existing addresses for the last segment of each proposed address (case-insensitive). If it already exists anywhere in the hierarchy, evaluate whether it's the same concept before creating. After creating, run `npm run build`, then `node scripts/check-references.js` for orphans and weak parents, and create stub notes for missing parents.
+**Creating fieldnotes:** Check for segment collisions first — search existing addresses for the last segment of each proposed address (case-insensitive). If it already exists anywhere in the hierarchy, evaluate whether it's the same concept before creating. After creating, run `npm run build`, then `node scripts/check-references.js` for isolated notes and weak parents, and create stub notes for missing parents.
 
 **Renaming fieldnotes:**
 

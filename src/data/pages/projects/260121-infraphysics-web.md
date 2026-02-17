@@ -445,7 +445,7 @@ So I built a {{validation pipeline|runs automatically on every `npm run build`. 
 | 3 | Missing parents — `CPU//ALU` exists but `CPU` doesn't | {#f39c12:WARN} |
 | 4 | Circular references — A→B→C→A cycles (opt-in) | {#f39c12:WARN} |
 | 5 | Segment collisions — same concept name at different paths | {#f39c12:WARN} |
-| 6 | Orphan notes — zero incoming or outgoing connections | {#22d3ee:INFO} |
+| 6 | Isolated notes — zero incoming or outgoing connections | {#22d3ee:INFO} |
 
 Phase 5 is the most interesting. If I create `CPU//cache` and `networking//cache`, the validator flags it: "cache" appears as a leaf in two different hierarchies. Are they the same concept? (Probably — refactor into one note.) Or intentionally different? (Add `distinct: ["CPU//cache"]` to suppress the warning.) This catches a class of errors that no linter or type checker would find — conceptual duplication in a knowledge graph. It's data integrity, but for ideas.
 
@@ -465,24 +465,24 @@ So I built a set of scripts:
 
 - **`rename-address.js`** — renames one address and updates every reference across the entire codebase. Dry-run by default, `--apply` to execute. Atomic: either everything changes or nothing does
 - **`move-hierarchy.js`** — cascading rename. Moves a note and all its descendants to a new address prefix in one operation. `"chip" → "component//chip"` automatically becomes `"chip//MCU" → "component//chip//MCU"` for every child
-- **`check-references.js`** — deep audit: orphans, weak parents, one-way trailing refs, redundant refs, fuzzy duplicates, segment collisions
+- **`check-references.js`** — deep audit: isolated notes, weak parents, one-way trailing refs, redundant refs, fuzzy duplicates, segment collisions
 - **`analyze-pairs.js`** — relationship analyzer. "How are A and B connected?" Checks structural hierarchy, trailing refs, and body mentions
 
 The rename script was born from pain. I once manually renamed a concept that had 23 references across 15 files. I missed three. The build caught two (broken `[[refs]]`). The third was a `distinct` entry in another note — not validated by the build, so it survived as a stale reference until I noticed it weeks later. After that, I wrote the script.
 
 {bkqt/tip|The cascade trap}
-`rename-address.js` renames ONE exact address. It does NOT cascade to children. If `chip` has children like `chip//MCU`, renaming `chip → component//chip` does NOT touch `chip//MCU`. That's why `move-hierarchy.js` exists — it finds every descendant and renames them all. I learned this by orphaning an entire subtree. Twice. The first time was a mistake. The second time was me not believing the first time was real.
+`rename-address.js` renames ONE exact address. It does NOT cascade to children. If `chip` has children like `chip//MCU`, renaming `chip → component//chip` does NOT touch `chip//MCU`. That's why `move-hierarchy.js` exists — it finds every descendant and renames them all. I learned this by isolating an entire subtree. Twice. The first time was a mistake. The second time was me not believing the first time was real.
 {/bkqt}
 
 ## From passive warnings to an interactive resolver
 
 >> 26.02.13 - Came back to the web project after a few days heads-down on something else entirely. Opened the codebase, ran the build, and 6 warnings stared back at me. They'd been there for a while. The validator was catching them — it always does — but I was the one who had to fix them. Every time. Manually. That felt like the obvious next thing to fix.
 
-The validation pipeline I described above already knew how to --identify-- every structural problem in the knowledge graph. Missing parent nodes (a vertex {{_v_ in the hierarchy subgraph _H_|the knowledge graph has two overlapping structures: a directed acyclic graph _H_ encoding the `//`-separated address hierarchy (where `CPU//ALU` means "ALU is a child of CPU"), and a general directed graph _G_ encoding the `[[wiki-link]]` references between notes. A "missing parent" is a vertex implied by _H_ but absent from the vertex set _V_ — the hierarchy says it should exist, but no `.md` file defines it.}} exists in the address path but has no corresponding `.md` file), segment collisions (two vertices in _G_ sharing a terminal label — like `CPU//cache` and `networking//cache` both ending in "cache" — which _might_ mean someone accidentally created the same concept twice under different parents), stale `distinct` entries (a suppression annotation pointing to a vertex that was deleted from _V_), orphan notes (vertices with degree zero — no edges in, no edges out, completely disconnected from the graph).
+The validation pipeline I described above already knew how to --identify-- every structural problem in the knowledge graph. Missing parent nodes (a vertex {{_v_ in the hierarchy subgraph _H_|the knowledge graph has two overlapping structures: a directed acyclic graph _H_ encoding the `//`-separated address hierarchy (where `CPU//ALU` means "ALU is a child of CPU"), and a general directed graph _G_ encoding the `[[wiki-link]]` references between notes. A "missing parent" is a vertex implied by _H_ but absent from the vertex set _V_ — the hierarchy says it should exist, but no `.md` file defines it.}} exists in the address path but has no corresponding `.md` file), segment collisions (two vertices in _G_ sharing a terminal label — like `CPU//cache` and `networking//cache` both ending in "cache" — which _might_ mean someone accidentally created the same concept twice under different parents), stale `distinct` entries (a suppression annotation pointing to a vertex that was deleted from _V_), isolated notes (vertices with degree zero — no edges in, no edges out, completely disconnected from the graph).
 
 The validator printed all of this. Colored, categorized, clearly. And then it stopped. It was my job to open each file, add a `distinct` annotation, or create a stub note (a minimal `.md` file with nothing but an address and a date — just enough to make the parent vertex exist in _V_ so the hierarchy checks pass), or run a rename script to merge two notes that turned out to be the same concept. For a few warnings, that's fine. For six, eight, twelve after a batch of new notes — it's the kind of repetitive task that makes you wonder why you're doing the computer's job.
 
-So I made the validator interactive. The build still runs the same six phases, catches the same problems, prints the same output. But now every issue gets a structured error code — `[BROKEN_REF]`, `[MISSING_PARENT]`, `[SEGMENT_COLLISION]`, `[ORPHAN_NOTE]`, and so on — and each one carries a flag: --promptable-- or not. Broken references can't be auto-fixed (the human has to decide what the link should point to). But missing parents and segment collisions have predictable resolution paths. Those are promptable.
+So I made the validator interactive. The build still runs the same six phases, catches the same problems, prints the same output. But now every issue gets a structured error code — `[BROKEN_REF]`, `[MISSING_PARENT]`, `[SEGMENT_COLLISION]`, `[ISOLATED_NOTE]`, and so on — and each one carries a flag: --promptable-- or not. Broken references can't be auto-fixed (the human has to decide what the link should point to). But missing parents and segment collisions have predictable resolution paths. Those are promptable.
 
 `npm run content:fix` runs the build with `--interactive`. After validation, it walks through every promptable issue and asks what to do:
 

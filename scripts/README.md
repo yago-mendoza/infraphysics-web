@@ -200,7 +200,7 @@ Output uses colored severity labels with bracketed error codes:
 - `ERROR [BROKEN_REF]` / `[BROKEN_WIKILINK]` / `[BARE_TRAILING_REF]` (red) — fails the build
 - `WARN [MISSING_PARENT]` / `[SELF_REF]` / `[STALE_DISTINCT]` / `[CIRCULAR_REF]` (yellow) — logged, build continues
 - `HIGH` / `MED` / `LOW [SEGMENT_COLLISION]` / `[ALIAS_COLLISION]` / `[ALIAS_ALIAS_COLLISION]` (red/yellow/dim) — collision tiers, treated as warnings
-- `INFO [ORPHAN_NOTE]` (cyan) — informational, build continues
+- `INFO [ISOLATED_NOTE]` (cyan) — informational, build continues
 
 A legend of active error codes is printed after the issues. If fixable issues exist, a hint is shown: `(N fixable — run npm run content:fix)`.
 
@@ -217,7 +217,7 @@ All validation flags live in `compiler.config.js` under `validation`:
 | `validateParentSegments` | `true` | Warn if parent address prefixes lack blocks |
 | `detectCircularRefs` | `false` | DFS cycle detection (noisy in knowledge graphs) |
 | `detectSegmentCollisions` | `true` | Shared segments across different hierarchies |
-| `detectOrphans` | `true` | Notes with no connections |
+| `detectIsolated` | `true` | Notes with no connections |
 | `segmentCollisionExclusions` | `[...]` | Segment names too generic to flag |
 
 ---
@@ -265,7 +265,7 @@ node scripts/check-references.js
 
 | # | Check | What it finds |
 |---|---|---|
-| 1 | **Orphans** | Notes with no incoming or outgoing references |
+| 1 | **Isolated** | Notes with no incoming or outgoing references |
 | 2 | **Weak parents** | Address segments without dedicated notes |
 | 3 | **Duplicate trailing refs** | A→B and B→A (redundant; trailing refs should exist on only ONE side) |
 | 4 | **Redundant trailing refs** | `[[ref]]` in both body and trailing section |

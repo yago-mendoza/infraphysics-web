@@ -1,4 +1,4 @@
-// Island Detector — shows graph topology: connected components, articulation points (bridges), orphans
+// Island Detector — shows graph topology: connected components, articulation points (bridges), isolated notes
 
 import React, { useState, useEffect, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { Link } from 'react-router-dom';
@@ -26,10 +26,10 @@ export const IslandDetector = forwardRef<IslandDetectorHandle, {
   const { getIslands, loaded } = useGraphRelevance();
   const hub = useHub();
 
-  // Track which components/bridges/orphans are expanded
+  // Track which components/bridges/isolated notes are expanded
   const [expandedComps, setExpandedComps] = useState<Set<number>>(new Set());
   const [expandedBridges, setExpandedBridges] = useState<Set<string>>(new Set());
-  const [orphansExpanded, setOrphansExpanded] = useState(false);
+  const [isolatedExpanded, setIsolatedExpanded] = useState(false);
 
   const toggleComp = useCallback((id: number) => {
     setExpandedComps(prev => {
@@ -50,15 +50,15 @@ export const IslandDetector = forwardRef<IslandDetectorHandle, {
   const collapseAll = useCallback(() => {
     setExpandedComps(new Set());
     setExpandedBridges(new Set());
-    setOrphansExpanded(false);
+    setIsolatedExpanded(false);
   }, []);
 
-  const hasExpanded = expandedComps.size > 0 || expandedBridges.size > 0 || orphansExpanded;
+  const hasExpanded = expandedComps.size > 0 || expandedBridges.size > 0 || isolatedExpanded;
 
   useImperativeHandle(ref, () => ({
     collapseAll,
-    get hasExpanded() { return expandedComps.size > 0 || expandedBridges.size > 0 || orphansExpanded; },
-  }), [collapseAll, expandedComps, expandedBridges, orphansExpanded]);
+    get hasExpanded() { return expandedComps.size > 0 || expandedBridges.size > 0 || isolatedExpanded; },
+  }), [collapseAll, expandedComps, expandedBridges, isolatedExpanded]);
 
   // Notify parent when expanded state changes
   useEffect(() => {
@@ -93,7 +93,7 @@ export const IslandDetector = forwardRef<IslandDetectorHandle, {
   if (!islands) return null;
 
   const { noteById, isVisited } = hub;
-  const { components, cuts, orphanUids } = islands;
+  const { components, cuts, isolatedUids } = islands;
 
   const significantComponents = components
     .filter(c => c.size > 1)
@@ -189,21 +189,21 @@ export const IslandDetector = forwardRef<IslandDetectorHandle, {
         );
       })}
 
-      {orphanUids.length > 0 && (
+      {isolatedUids.length > 0 && (
         <div>
           <button
-            onClick={() => setOrphansExpanded(!orphansExpanded)}
+            onClick={() => setIsolatedExpanded(!isolatedExpanded)}
             className="flex items-center gap-1.5 text-[10px]"
           >
-            <ChevronIcon isOpen={orphansExpanded} />
+            <ChevronIcon isOpen={isolatedExpanded} />
             <span className="text-th-muted">○</span>
-            <span className="text-th-muted">{orphanUids.length} orphans</span>
+            <span className="text-th-muted">{isolatedUids.length} isolated</span>
           </button>
 
-          {orphansExpanded && (
+          {isolatedExpanded && (
             <div className="ml-3 mt-1">
               <MemberList
-                members={orphanUids}
+                members={isolatedUids}
                 cap={MEMBER_CAP}
                 getName={getName}
                 isVisited={isVisited}

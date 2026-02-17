@@ -34,7 +34,7 @@ export interface IslandCut {
 }
 
 export interface NoteTopology {
-  isOrphan: boolean;
+  isIsolated: boolean;
   componentId: number | null;
   componentSize: number;
   isBridge: boolean;
@@ -45,7 +45,7 @@ export interface IslandsData {
   components: IslandComponent[];
   cuts: IslandCut[];
   nodeToComponent: Record<string, number>;
-  orphanUids: string[];
+  isolatedUids: string[];
 }
 
 interface GraphRelevanceData {
@@ -135,15 +135,15 @@ export function useGraphRelevance() {
 
   const getNoteTopology = useCallback((uid: string): NoteTopology => {
     const islands = cached?.islands;
-    if (!islands) return { isOrphan: false, componentId: null, componentSize: 0, isBridge: false };
+    if (!islands) return { isIsolated: false, componentId: null, componentSize: 0, isBridge: false };
 
-    const isOrphan = islands.orphanUids.includes(uid);
+    const isIsolated = islands.isolatedUids.includes(uid);
     const componentId = islands.nodeToComponent[uid] ?? null;
     const comp = componentId != null ? islands.components.find(c => c.id === componentId) : null;
     const cut = islands.cuts.find(c => c.uid === uid);
 
     return {
-      isOrphan,
+      isIsolated,
       componentId,
       componentSize: comp?.size ?? 0,
       isBridge: !!cut,

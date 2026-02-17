@@ -97,7 +97,7 @@ If creating the new notes reveals that existing notes would be better placed els
 ## Phase 5: Build and validate
 
 1. `npm run build` — must pass with 0 errors
-2. `node scripts/check-references.js` — check for new warnings (orphans, weak parents, one-way refs)
+2. `node scripts/check-references.js` — check for new warnings (isolated notes, weak parents, one-way refs)
 3. `node scripts/analyze-pairs.js "A" "B"` — optionally verify specific relationships between notes if uncertain
 4. Report results to user
 

@@ -208,7 +208,7 @@ const HEADER_INFO_CONTENT = (
   <div className="space-y-2.5">
     <p>A <strong className={tipStrong}>knowledge graph</strong> for exploring interconnected concepts. Each card is a note; links between them form a navigable web.</p>
     <p><strong className={tipStrong}>Just start typing</strong> — any key opens the search. Results filter live as you type.</p>
-    <p><span className="text-blue-400">Blue</span> = visited this session. <span className={tipAccent}>Purple</span> = not yet visited. Tracked across the grid, links, and graph.</p>
+    <p><span style={{ color: 'var(--wiki-link-visited)' }}>Blue</span> = visited this session. <span className={tipAccent}>Purple</span> = not yet visited. Tracked across the grid, links, and graph.</p>
     <p>The <strong className={tipStrong}>sidebar sections</strong> below show different views of the same data — each has its own <span className={tipAccent}>?</span> with details.</p>
     <p>Use the theme button in the header — or <code className={tipCode}>Shift+T</code> on desktop — to toggle light / dark.</p>
   </div>
@@ -313,7 +313,7 @@ export const SecondBrainSidebar: React.FC = () => {
               <div className="space-y-2">
                 <p><strong className={tipStrong}>Concepts</strong> — total number of notes in the knowledge base.</p>
                 <p><strong className={tipStrong}>Links</strong> — total references between notes (wiki-links in the body + explicit interactions).</p>
-                <p><strong className={tipStrong}>Orphans</strong> — notes with zero connections to anything.</p>
+                <p><strong className={tipStrong}>Isolated</strong> — notes with zero connections to anything.</p>
                 <p><strong className={tipStrong}>Avg refs</strong> — average number of links per note.</p>
                 <p><strong className={tipStrong}>Max depth</strong> — deepest level in the naming tree (e.g. <code className={tipCode}>chip//MCU//ARM</code> = depth 3).</p>
                 <p><strong className={tipStrong}>Density</strong> — how interconnected the graph is. 100% would mean every note links to every other note.</p>
@@ -332,8 +332,8 @@ export const SecondBrainSidebar: React.FC = () => {
             <div className="text-[11px] text-th-primary tabular-nums">{stats.totalLinks}</div>
           </div>
           <div>
-            <div className="text-[9px] text-th-muted">orphans</div>
-            <div className="text-[11px] text-th-primary tabular-nums">{stats.orphanCount}</div>
+            <div className="text-[9px] text-th-muted">isolated</div>
+            <div className="text-[11px] text-th-primary tabular-nums">{stats.isolatedCount}</div>
           </div>
           <div>
             <div className="text-[9px] text-th-muted">avg refs</div>
@@ -366,7 +366,7 @@ export const SecondBrainSidebar: React.FC = () => {
                   <p>Topology groups notes by <strong className={tipStrong}>actual connections</strong> (wiki-links and interactions) — not by their name or folder. Two notes in the same directory folder can belong to different islands if they aren't linked.</p>
                   <p><strong className={tipStrong}>Islands</strong> — clusters of notes reachable from each other through links. Each gets a <span className={tipAccent}>#ID</span>.</p>
                   <p><strong className={tipStrong}>Bridges</strong> (⚡) — notes that hold an island together. Remove one and the cluster splits into separate groups.</p>
-                  <p><strong className={tipStrong}>Orphans</strong> (○) — notes with zero connections to anything.</p>
+                  <p><strong className={tipStrong}>Isolated</strong> (○) — notes with zero connections to anything.</p>
                   <p><strong className={tipStrong}>Tap the chevron</strong> next to any component to see all its members.</p>
                   <p><strong className={tipStrong}>Island badge</strong> — in note detail, each note shows its island <span className={tipAccent}>#ID</span>. Click to scroll here.</p>
                 </div>

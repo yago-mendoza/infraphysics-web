@@ -10,7 +10,7 @@ export type SearchMode = 'name' | 'content' | 'backlinks';
 export type SortMode = 'a-z' | 'most-links' | 'fewest-links' | 'depth' | 'shuffle' | 'newest' | 'oldest';
 
 export interface FilterState {
-  orphans: boolean;
+  isolated: boolean;
   leaf: boolean;
   hubThreshold: number;  // 0 = off
   depthMin: number;      // 1-based
@@ -21,7 +21,7 @@ export interface FilterState {
 }
 
 const DEFAULT_FILTER_STATE: FilterState = {
-  orphans: false,
+  isolated: false,
   leaf: false,
   hubThreshold: 0,
   depthMin: 1,
@@ -79,7 +79,7 @@ export const useSecondBrainHub = () => {
   const neighborhoodMap = index?.neighborhoodMap ?? new Map();
   const homonymsMap = index?.homonymsMap ?? new Map();
   const parentIds = index?.parentIds ?? new Set();
-  const globalStats = index?.globalStats ?? { totalConcepts: 0, totalLinks: 0, orphanCount: 0, avgRefs: 0, maxDepth: 0, density: 0, mostConnectedHub: null };
+  const globalStats = index?.globalStats ?? { totalConcepts: 0, totalLinks: 0, isolatedCount: 0, avgRefs: 0, maxDepth: 0, density: 0, mostConnectedHub: null };
 
   // Parse ID from pathname since this hook runs outside <Routes>
   const id = useMemo(() => {
@@ -325,8 +325,8 @@ export const useSecondBrainHub = () => {
 
   // --- Filters ---
   const filteredNotes = useMemo(() => {
-    const { orphans, leaf, hubThreshold, depthMin, depthMax, islandId, bridgesOnly, dateFilter } = filterState;
-    const hasAnyFilter = orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || islandId != null || bridgesOnly || dateFilter != null;
+    const { isolated, leaf, hubThreshold, depthMin, depthMax, islandId, bridgesOnly, dateFilter } = filterState;
+    const hasAnyFilter = isolated || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || islandId != null || bridgesOnly || dateFilter != null;
     if (!hasAnyFilter) return scopedResults;
 
     const islands = getIslands();
@@ -338,7 +338,7 @@ export const useSecondBrainHub = () => {
       const incoming = (backlinksMap.get(note.id) || []).length;
       const totalConnections = outgoing + incoming;
 
-      if (orphans && (outgoing > 0 || incoming > 0)) return false;
+      if (isolated && (outgoing > 0 || incoming > 0)) return false;
       if (leaf && parentIds.has(note.id)) return false;
       if (hubThreshold > 0 && totalConnections < hubThreshold) return false;
       if (depth < depthMin) return false;
@@ -424,8 +424,8 @@ export const useSecondBrainHub = () => {
 
   // Check if any filter is active
   const hasActiveFilters = useMemo(() => {
-    const { orphans, leaf, hubThreshold, depthMin, depthMax, islandId, bridgesOnly, dateFilter } = filterState;
-    return orphans || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || islandId != null || bridgesOnly || dateFilter != null;
+    const { isolated, leaf, hubThreshold, depthMin, depthMax, islandId, bridgesOnly, dateFilter } = filterState;
+    return isolated || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || islandId != null || bridgesOnly || dateFilter != null;
   }, [filterState]);
 
   // Signal from sidebar directory: "this click should reset the trail"
