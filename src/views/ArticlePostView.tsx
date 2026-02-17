@@ -1,6 +1,7 @@
 // Article post view — unified terminal/cyberpunk theme for all article categories
 
 import React, { useMemo, useEffect, useState, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { formatDate, formatDateTerminal, calculateReadingTime } from '../lib';
 import { initBrainIndex, type BrainIndex } from '../lib/brainIndex';
@@ -74,6 +75,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const navigate = useNavigate();
   const catCfg = CATEGORY_CONFIG[post.category];
   const isBlog = isBlogCategory(post.category);
+  const isThreads = post.category === 'threads';
   const [copied, setCopied] = useState(false);
   const { setArticleState, clearArticleState, updateActiveHeading } = useArticleContext();
 
@@ -175,7 +177,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const [tocOpen, setTocOpen] = useState(isBlog);
   const [blinkId, setBlinkId] = useState<string>('');
   const blinkTimer = useRef<ReturnType<typeof setTimeout>>(0 as any);
-
+  const progressRef = useRef<HTMLDivElement>(null);
   // Scroll-based active heading tracking — ref + direct DOM, no React re-renders.
   // This avoids disrupting browser Ctrl+F which breaks when React reconciles during scroll.
   const activeIdRef = useRef<string>('');
@@ -293,6 +295,43 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
     };
   }, []);
 
+  // Mobile reading progress bar
+  useEffect(() => {
+    const el = progressRef.current;
+    if (!el) return;
+
+    // Place inside navbar, flush with its inner bottom edge
+    const nav = document.querySelector('.fixed.top-0.z-50') as HTMLElement | null;
+    if (nav && nav.offsetHeight > 0) {
+      const border = parseFloat(getComputedStyle(nav).borderBottomWidth) || 1;
+      const barH = parseFloat(getComputedStyle(el).height) || 3;
+      el.style.top = `${nav.offsetHeight - border - barH}px`;
+    }
+
+    let rafId = 0;
+    const tick = () => {
+      // 100% when "Have more to say — get in touch" bottom reaches viewport bottom
+      const endMarker = document.querySelector('.article-feedback-alt');
+      if (!endMarker) { rafId = 0; return; }
+      const endAbsBottom = window.scrollY + endMarker.getBoundingClientRect().bottom;
+      const targetScroll = endAbsBottom - window.innerHeight;
+      const progress = targetScroll > 0 ? Math.min(1, Math.max(0, window.scrollY / targetScroll)) : 1;
+      el.style.width = `${progress * 100}%`;
+      rafId = 0;
+    };
+
+    const onScroll = () => {
+      if (!rafId) rafId = requestAnimationFrame(tick);
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    tick();
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, []);
+
   // Push article state to ArticleContext (consumed by SearchPalette)
   useEffect(() => {
     setArticleState({
@@ -388,11 +427,138 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
   return (
     <div className={`article-page-wrapper article-${post.category}${isBlog ? ' article-blog' : ''} animate-fade-in`}>
+      {createPortal(
+        <div ref={progressRef} className="article-progress-bar" style={{ backgroundColor: `var(--cat-${post.category}-accent)` }} />,
+        document.body
+      )}
 
-      {/* ════════════════════════════════════════════
-          THE BOX — .article-container
-          Everything except Related Posts lives here
-          ════════════════════════════════════════════ */}
+      {isThreads ? (
+        <>
+          {/* ── THREADS HEADER CARD ── */}
+          <article className="article-threads-header-card">
+            <div className="article-threads-nav">
+              <nav className="article-breadcrumbs">
+                <Link to="/home" className="article-breadcrumb-link">home</Link>
+                <span className="article-breadcrumb-sep">/</span>
+                <span className="article-breadcrumb-static">blog</span>
+                <span className="article-breadcrumb-sep">/</span>
+                <Link to={sectionPathUrl} className="article-breadcrumb-link">
+                  {catCfg?.breadcrumbLabel || post.category}
+                </Link>
+                <span className="article-breadcrumb-sep">/</span>
+                <span className="article-breadcrumb-current">
+                  {(post.displayTitle || post.title).toLowerCase()}
+                </span>
+              </nav>
+            </div>
+
+            <div className="article-threads-header-content">
+              {(post.tags?.length || post.technologies?.length) ? (
+                <div className="article-hashtags">
+                  {[
+                    ...(post.tags || []).map(t => ({ label: t, tech: false })),
+                    ...(post.technologies || []).map(t => ({ label: t, tech: true })),
+                  ]
+                    .sort((a, b) => a.label.localeCompare(b.label))
+                    .map(({ label, tech }) => (
+                      <span key={label} className={`article-hashtag${tech ? ' article-hashtag-tech' : ''}`}>#{label}</span>
+                    ))}
+                </div>
+              ) : null}
+
+              <div className="article-title-block">
+                <h1 className="article-title">
+                  {post.displayTitle || post.title}
+                </h1>
+                {post.subtitle && (
+                  <p className="article-subtitle">{post.subtitle}</p>
+                )}
+              </div>
+
+              <p className="article-threads-byline">
+                Written by <Link to={authorPath} className="article-threads-byline-link">{authorName}</Link>
+              </p>
+
+              <div className="article-threads-dateline">
+                <span>{formatDate(post.date)}</span>
+                <span className="article-threads-dateline-sep">&middot;</span>
+                <span>{readingTime} min read</span>
+              </div>
+
+              <div className="article-threads-social">
+                <a
+                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="article-share-icon article-social-linkedin"
+                  title="Share on LinkedIn"
+                >
+                  <LinkedInIcon size={18} />
+                </a>
+                <a
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out: ${post.displayTitle || post.title}`)}&url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="article-share-icon article-social-twitter"
+                  title="Share on X"
+                >
+                  <TwitterIcon size={18} />
+                </a>
+                <a
+                  href={`https://reddit.com/submit?url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}&title=${encodeURIComponent(post.displayTitle || post.title)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="article-share-icon article-social-reddit"
+                  title="Share on Reddit"
+                >
+                  <RedditIcon size={18} />
+                </a>
+                <a
+                  href={`https://news.ycombinator.com/submitlink?u=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}&t=${encodeURIComponent(post.displayTitle || post.title)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="article-share-icon article-social-hn"
+                  title="Share on Hacker News"
+                >
+                  <HackerNewsIcon size={18} />
+                </a>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}${location.pathname}`);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="article-share-icon article-social-copy"
+                  title={copied ? 'Copied!' : 'Copy link'}
+                >
+                  {copied ? <CheckIcon size={18} /> : <ClipboardIcon size={18} />}
+                </button>
+              </div>
+            </div>
+
+            {post.thumbnail && (
+              <div className={`article-threads-image thumb-${post.thumbnailAspect || 'full'}`}>
+                <img
+                  src={post.thumbnail}
+                  alt={post.displayTitle || post.title}
+                  loading="lazy"
+                  className="article-blog-image-img"
+                />
+              </div>
+            )}
+          </article>
+
+          {/* ── THREADS BODY CARD ── */}
+          <div className="article-threads-body-card">
+            <WikiContent
+              html={contentWithIds}
+              allFieldNotes={brainIndex?.allFieldNotes}
+              className="article-content"
+            />
+            <FeedbackForm title={post.displayTitle || post.title} category={post.category} />
+          </div>
+        </>
+      ) : (
       <article className="article-container">
 
         {/* ── HEADER BAR (projects only) ── */}
@@ -448,17 +614,15 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                   &lt; {backLabel}
                 </Link>
                 <div className="article-social-icons">
-                  {post.github && (
-                    <a
-                      href={post.github}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="article-social-btn article-social-github"
-                      title="GitHub"
-                    >
-                      <GitHubIcon size={18} />
-                    </a>
-                  )}
+                  <a
+                    href={post.github || 'https://github.com/yago-mendoza'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="article-social-btn article-social-github"
+                    title={post.github ? 'View on GitHub' : 'GitHub'}
+                  >
+                    <GitHubIcon size={18} />
+                  </a>
                   <a
                     href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
                     target="_blank"
@@ -663,6 +827,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
         </div>
       </article>
+      )}
 
       {/* ════════════════════════════════════════════
           RELATED POSTS — OUTSIDE the box
