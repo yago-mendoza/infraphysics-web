@@ -20,7 +20,6 @@ export const DriftDetector: React.FC<Props> = ({ entries, noteById, onNoteClick,
       <h3 className="text-[11px] text-th-tertiary uppercase tracking-wider mb-3 flex items-center gap-1.5">
         Missing links
         <InfoPopover
-          size={12}
           title="About missing links"
           content={
             <div className="space-y-2">
