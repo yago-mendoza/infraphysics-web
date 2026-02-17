@@ -21,8 +21,8 @@ export const IslandDetector = forwardRef<IslandDetectorHandle, {
   onFocusHandled?: () => void;
   activeIslandScope?: number | null;
   onIslandScope?: (id: number) => void;
-  onExpandedChange?: (hasExpanded: boolean) => void;
-}>(({ focusComponentId, focusFlash = true, onFocusHandled, activeIslandScope, onIslandScope, onExpandedChange }, ref) => {
+  filterQuery?: string;
+}>(({ focusComponentId, focusFlash = true, onFocusHandled, activeIslandScope, onIslandScope, filterQuery }, ref) => {
   const { getIslands, loaded } = useGraphRelevance();
   const hub = useHub();
 
@@ -60,18 +60,14 @@ export const IslandDetector = forwardRef<IslandDetectorHandle, {
     get hasExpanded() { return expandedComps.size > 0 || expandedBridges.size > 0 || isolatedExpanded; },
   }), [collapseAll, expandedComps, expandedBridges, isolatedExpanded]);
 
-  // Notify parent when expanded state changes
-  useEffect(() => {
-    onExpandedChange?.(hasExpanded);
-  }, [hasExpanded, onExpandedChange]);
-
   // Focus handling: when focusComponentId is set, expand that component + scroll to it
   const compRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
   useEffect(() => {
     if (focusComponentId == null) return;
-    // Expand the target component
-    setExpandedComps(prev => new Set(prev).add(focusComponentId));
+    // Show only the focused component, close everything else
+    setExpandedComps(new Set([focusComponentId]));
+    setExpandedBridges(new Set());
     // Wait for DOM to update, then optionally scroll + flash
     // Scroll + flash only on direct interaction (chip click), not on passive navigation
     requestAnimationFrame(() => {
@@ -104,14 +100,28 @@ export const IslandDetector = forwardRef<IslandDetectorHandle, {
     return note ? noteLabel(note) : uid.slice(0, 6);
   };
 
+  // Filter by query
+  const lowerQ = (filterQuery || '').toLowerCase();
+  const hasQuery = lowerQ.length > 0;
+
+  const visibleComponents = hasQuery
+    ? significantComponents.filter(c =>
+        c.members.some(uid => getName(uid).toLowerCase().includes(lowerQ))
+      )
+    : significantComponents;
+
+  const visibleIsolated = hasQuery
+    ? isolatedUids.filter(uid => getName(uid).toLowerCase().includes(lowerQ))
+    : isolatedUids;
+
   return (
     <div className="space-y-2">
-      {significantComponents.map(comp => {
+      {visibleComponents.map(comp => {
         const compCuts = cuts
           .filter(c => c.componentId === comp.id)
 
           .sort((a, b) => b.criticality - a.criticality);
-        const isExpanded = expandedComps.has(comp.id);
+        const isExpanded = hasQuery || expandedComps.has(comp.id);
 
         // Detect duplicate display names among bridges to disambiguate
         const bridgeNames = compCuts.map(c => getName(c.uid));
@@ -189,22 +199,22 @@ export const IslandDetector = forwardRef<IslandDetectorHandle, {
         );
       })}
 
-      {isolatedUids.length > 0 && (
+      {visibleIsolated.length > 0 && (
         <div>
           <button
             onClick={() => setIsolatedExpanded(!isolatedExpanded)}
             className="flex items-center gap-1.5 text-[10px]"
           >
-            <ChevronIcon isOpen={isolatedExpanded} />
+            <ChevronIcon isOpen={hasQuery || isolatedExpanded} />
             <span className="text-th-muted">○</span>
-            <span className="text-th-muted">{isolatedUids.length} isolated</span>
+            <span className="text-th-muted">{visibleIsolated.length} isolated</span>
           </button>
 
-          {isolatedExpanded && (
+          {(hasQuery || isolatedExpanded) && (
             <div className="ml-3 mt-1">
               <MemberList
-                members={isolatedUids}
-                cap={MEMBER_CAP}
+                members={visibleIsolated}
+                cap={hasQuery ? visibleIsolated.length : MEMBER_CAP}
                 getName={getName}
                 isVisited={isVisited}
               />

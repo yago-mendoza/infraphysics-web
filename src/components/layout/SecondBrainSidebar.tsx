@@ -92,12 +92,30 @@ const TreeNodeItem: React.FC<{
   forceExpanded?: boolean;
   activePath?: string | null;
   getPercentile?: (uid: string) => number;
-}> = ({ node, depth = 0, activeScope, onScope, onConceptClick, forceExpanded = false, activePath, getPercentile }) => {
+  collapseSignal?: number;
+}> = ({ node, depth = 0, activeScope, onScope, onConceptClick, forceExpanded = false, activePath, getPercentile, collapseSignal = 0 }) => {
   const [expanded, setExpanded] = useState(false);
+  const [manuallyCollapsed, setManuallyCollapsed] = useState(false);
+  const prevSignal = useRef(collapseSignal);
+  useEffect(() => {
+    if (collapseSignal !== prevSignal.current) {
+      prevSignal.current = collapseSignal;
+      setExpanded(false);
+      setManuallyCollapsed(true);
+    }
+  }, [collapseSignal]);
+  // Reset manual collapse when active note changes so new path auto-expands
+  const prevActivePath = useRef(activePath);
+  useEffect(() => {
+    if (activePath !== prevActivePath.current) {
+      prevActivePath.current = activePath;
+      setManuallyCollapsed(false);
+    }
+  }, [activePath]);
   const hasChildren = node.children.length > 0;
   // Auto-expand if active note is inside this node's subtree
   const isOnActivePath = !!(activePath && hasChildren && (activePath === node.path || activePath.startsWith(node.path + '//')));
-  const isExpanded = forceExpanded || expanded || isOnActivePath;
+  const isExpanded = forceExpanded || ((expanded || isOnActivePath) && !manuallyCollapsed);
   // Keep children mounted after first expand so close animation works
   const [hasBeenExpanded, setHasBeenExpanded] = useState(false);
   useEffect(() => { if (isExpanded && hasChildren) setHasBeenExpanded(true); }, [isExpanded, hasChildren]);
@@ -119,7 +137,15 @@ const TreeNodeItem: React.FC<{
       >
         {hasChildren ? (
           <button
-            onClick={() => setExpanded(!isExpanded)}
+            onClick={() => {
+              if (isExpanded) {
+                if (isOnActivePath) setManuallyCollapsed(true);
+                else setExpanded(false);
+              } else {
+                setManuallyCollapsed(false);
+                setExpanded(true);
+              }
+            }}
             className="w-5 h-5 flex items-center justify-center text-th-muted hover:text-th-secondary transition-colors flex-shrink-0"
           >
             <ChevronIcon isOpen={isExpanded} />
@@ -194,6 +220,7 @@ const TreeNodeItem: React.FC<{
                   forceExpanded={forceExpanded}
                   activePath={activePath}
                   getPercentile={getPercentile}
+                  collapseSignal={collapseSignal}
                 />
               ))}
           </div>
@@ -239,7 +266,10 @@ export const SecondBrainSidebar: React.FC = () => {
 
   // Island detector ref for collapse-all button in header
   const islandRef = useRef<IslandDetectorHandle>(null);
-  const [topologyHasExpanded, setTopologyHasExpanded] = useState(false);
+  const [topologyQuery, setTopologyQuery] = useState('');
+
+  // Directory collapse-all: increment to reset all TreeNodeItem expanded state
+  const [dirCollapseGen, setDirCollapseGen] = useState(0);
 
   // Topology focus: { id, flash } — flash=true only from chip click, false from auto-expand
   const [topologyFocus, setTopologyFocus] = useState<{ id: number; flash: boolean } | null>(null);
@@ -307,7 +337,6 @@ export const SecondBrainSidebar: React.FC = () => {
         defaultOpen={false}
         headerAction={
           <InfoPopover
-            size={12}
             title="What each stat means"
             content={
               <div className="space-y-2">
@@ -359,7 +388,6 @@ export const SecondBrainSidebar: React.FC = () => {
         headerAction={
           <span className="flex items-center gap-1.5">
             <InfoPopover
-              size={12}
               title="Topology overview"
               content={
                 <div className="space-y-2">
@@ -372,22 +400,38 @@ export const SecondBrainSidebar: React.FC = () => {
                 </div>
               }
             />
-            {topologyHasExpanded && (
-              <button
-                onClick={() => islandRef.current?.collapseAll()}
-                className="text-th-muted hover:text-th-secondary transition-colors p-1 leading-none"
-                title="Collapse all"
-              >
-                <svg className="block" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" x2="18" y1="15" y2="15" />
-                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                  <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                </svg>
-              </button>
-            )}
+            <button
+              onClick={() => islandRef.current?.collapseAll()}
+              className="text-th-muted hover:text-th-secondary transition-colors p-1 leading-none"
+              title="Collapse all"
+            >
+              <svg className="block" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" x2="18" y1="15" y2="15" />
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+              </svg>
+            </button>
           </span>
         }
       >
+        <div className="flex items-center border border-th-hub-border px-2 py-1 bg-th-surface focus-within:border-th-border-active transition-colors mb-2">
+          <input
+            type="text"
+            placeholder="Filter topology..."
+            value={topologyQuery}
+            onChange={(e) => setTopologyQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape') { setTopologyQuery(''); (e.target as HTMLInputElement).blur(); } }}
+            className="w-full text-[10px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
+          />
+          {topologyQuery && (
+            <button
+              onClick={() => setTopologyQuery('')}
+              className="text-th-muted hover:text-th-secondary text-[9px] ml-1 flex-shrink-0"
+            >
+              &times;
+            </button>
+          )}
+        </div>
         <IslandDetector
           ref={islandRef}
           focusComponentId={topologyFocus?.id ?? null}
@@ -395,7 +439,7 @@ export const SecondBrainSidebar: React.FC = () => {
           onFocusHandled={() => setTopologyFocus(null)}
           activeIslandScope={filterState.islandId}
           onIslandScope={(id) => updateFilter('islandId', filterState.islandId === id ? null : id)}
-          onExpandedChange={setTopologyHasExpanded}
+          filterQuery={topologyQuery}
         />
       </Section>
 
@@ -405,19 +449,31 @@ export const SecondBrainSidebar: React.FC = () => {
         icon={<FolderIcon />}
         defaultOpen={true}
         headerAction={
-          <InfoPopover
-            size={12}
-            title="Directory tree"
-            content={
-              <div className="space-y-2">
-                <p>The directory organizes notes by their <strong className={tipStrong}>address</strong> — a naming path using <code className={tipCode}>//</code> as separator (e.g. <code className={tipCode}>chip//MCU//ARM</code>). This is the note's position in a <em>naming hierarchy</em>, independent of which notes it links to.</p>
-                <p><strong className={tipStrong}>Scope</strong> — select a folder name (or the ⊙ icon) to filter the grid to only notes within that branch.</p>
-                <p><strong className={tipStrong}>Auto-expand</strong> — when you open a note, its branch auto-expands here.</p>
-                <p><strong className={tipStrong}>Filter tree</strong> — type in the input above to narrow by name.</p>
-                <p><strong className={tipStrong}>Centrality bars</strong> — small bars on the right show each note's relative importance based on how many links it has.</p>
-              </div>
-            }
-          />
+          <span className="flex items-center gap-1.5">
+            <InfoPopover
+              title="Directory tree"
+              content={
+                <div className="space-y-2">
+                  <p>The directory organizes notes by their <strong className={tipStrong}>address</strong> — a naming path using <code className={tipCode}>//</code> as separator (e.g. <code className={tipCode}>chip//MCU//ARM</code>). This is the note's position in a <em>naming hierarchy</em>, independent of which notes it links to.</p>
+                  <p><strong className={tipStrong}>Scope</strong> — select a folder name (or the ⊙ icon) to filter the grid to only notes within that branch.</p>
+                  <p><strong className={tipStrong}>Auto-expand</strong> — when you open a note, its branch auto-expands here.</p>
+                  <p><strong className={tipStrong}>Filter tree</strong> — type in the input above to narrow by name.</p>
+                  <p><strong className={tipStrong}>Centrality bars</strong> — small bars on the right show each note's relative importance based on how many links it has.</p>
+                </div>
+              }
+            />
+            <button
+              onClick={() => setDirCollapseGen(g => g + 1)}
+              className="text-th-muted hover:text-th-secondary transition-colors p-1 leading-none"
+              title="Collapse all"
+            >
+              <svg className="block" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" x2="18" y1="15" y2="15" />
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+              </svg>
+            </button>
+          </span>
         }
       >
         {/* Tree search */}
@@ -457,6 +513,8 @@ export const SecondBrainSidebar: React.FC = () => {
                       forceExpanded={directoryQuery.length > 0}
                       activePath={activePost?.address ?? null}
                       getPercentile={getPercentile}
+                      collapseSignal={dirCollapseGen}
+
                     />
                   ))}
                 </div>
@@ -479,6 +537,8 @@ export const SecondBrainSidebar: React.FC = () => {
                         forceExpanded={directoryQuery.length > 0}
                         activePath={activePost?.address ?? null}
                         getPercentile={getPercentile}
+                        collapseSignal={dirCollapseGen}
+  
                       />
                     ))}
                   </div>
@@ -525,7 +585,7 @@ export const SecondBrainSidebar: React.FC = () => {
                     {stats.totalConcepts} concepts
                   </div>
                 </div>
-                <InfoPopover size={12} content={HEADER_INFO_CONTENT} title="How Second Brain works" />
+                <InfoPopover content={HEADER_INFO_CONTENT} title="How Second Brain works" />
               </div>
               <button
                 onClick={() => setMobileOpen(false)}
@@ -565,7 +625,7 @@ export const SecondBrainSidebar: React.FC = () => {
               {stats.totalConcepts} concepts
             </div>
           </div>
-          <InfoPopover size={12} content={HEADER_INFO_CONTENT} title="How Second Brain works" className="mt-0.5" />
+          <InfoPopover content={HEADER_INFO_CONTENT} title="How Second Brain works" className="mt-0.5" />
         </div>
         {/* Scrollable sections */}
         <div className="flex-1 overflow-y-auto thin-scrollbar hub-scrollbar">
