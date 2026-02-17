@@ -139,9 +139,10 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
   const ghostColHeights = useMemo(() => ghostDiamondColumns(ghostParents.length), [ghostParents.length]);
   const maxGhostColHeight = ghostColHeights.length > 0 ? Math.max(...ghostColHeights) : 0;
 
-  // Calculate SVG height — tallest center column is capped at MAX_COL
+  // Calculate SVG height — tallest columns are capped at MAX_COL
   const tallestCenter = Math.min(centerEntries.length, MAX_COL);
-  const maxNodes = Math.max(tallestCenter, children.length, parent ? 1 : 0, maxGhostColHeight);
+  const tallestChildren = Math.min(children.length, MAX_COL);
+  const maxNodes = Math.max(tallestCenter, tallestChildren, parent ? 1 : 0, maxGhostColHeight);
   const svgH = Math.max(H_MIN, maxNodes * H_PER_NODE + 28);
   const centerY = svgH / 2;
 
@@ -210,7 +211,50 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
   }, [centerEntries, centerY]);
 
   const parentPos = parent ? { x: PARENT_X, y: centerY } : null;
-  const childrenYs = useMemo(() => distributeY(children.length, centerY, H_PER_NODE), [children.length, centerY]);
+
+  // Diamond multi-column layout for children (mirrors sibling layout)
+  const childrenPositions = useMemo(() => {
+    const C = children.length;
+    if (C === 0) return [];
+    if (C <= MAX_COL) {
+      const ys = distributeY(C, centerY, H_PER_NODE);
+      return ys.map(y => ({ x: CHILDREN_X, y }));
+    }
+
+    let cols: number[];
+    if (C <= MAX_COL + 8) {
+      cols = [C - MAX_COL, MAX_COL];
+    } else if (C <= MAX_COL + 16) {
+      const rem = C - MAX_COL;
+      cols = [Math.ceil(rem / 2), MAX_COL, Math.floor(rem / 2)];
+    } else {
+      const rem = C - MAX_COL;
+      const innerCap = 8;
+      const innerUsed = Math.min(rem, innerCap * 2);
+      const outerRem = rem - innerUsed;
+      const left = Math.ceil(innerUsed / 2);
+      const right = innerUsed - left;
+      const outerL = Math.ceil(outerRem / 2);
+      const outerR = outerRem - outerL;
+      cols = [outerL, left, MAX_COL, right, outerR].filter(c => c > 0);
+    }
+
+    const centerColIdx = cols.indexOf(Math.max(...cols));
+    const colXs = cols.map((_, i) => CHILDREN_X + (i - centerColIdx) * COL_GAP);
+
+    const positions: { x: number; y: number }[] = [];
+    let idx = 0;
+    for (let c = 0; c < cols.length; c++) {
+      const count = cols[c];
+      const ys = distributeY(count, centerY, H_PER_NODE);
+      for (let j = 0; j < count && idx < C; j++) {
+        positions.push({ x: colXs[c], y: ys[j] });
+        idx++;
+      }
+    }
+
+    return positions;
+  }, [children.length, centerY]);
 
   // Ghost parent positions — diamond formation to the left of the real parent
   const ghostParentPositions = useMemo(() => {
@@ -393,10 +437,10 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
 
           {/* Lines: current → children */}
           <g>
-            {childrenYs.map((cy, i) => (
+            {childrenPositions.map((pos, i) => (
               <path
                 key={`line-child-${children[i].id}`}
-                d={bezierH(currentX + CURRENT_W / 2 + 1, currentY, CHILDREN_X - NODE_R - 1, cy)}
+                d={bezierH(currentX + CURRENT_W / 2 + 1, currentY, pos.x - NODE_R - 1, pos.y)}
                 fill="none"
                 stroke={highlightZone === 'children' ? COL_LINE_CHILD_HOVER : COL_LINE_CHILD}
                 strokeWidth={1}
@@ -480,23 +524,23 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
           })}
 
           {/* Children nodes */}
-          {childrenYs.map((cy, i) => {
+          {childrenPositions.map((pos, i) => {
             const isHighlighted = highlightedNoteId === children[i].id;
             return (
               <g key={`child-${children[i].id}`}>
                 <circle
-                  cx={CHILDREN_X}
-                  cy={cy}
+                  cx={pos.x}
+                  cy={pos.y}
                   r={NODE_R}
                   fill={isHighlighted ? 'rgba(139,92,246,1)' : isVisited?.(children[i].id) ? COL_VISITED : COL_CHILD}
                   filter={isHighlighted ? 'url(#node-glow)' : 'none'}
                   style={{ transition: 'fill 200ms ease' }}
                 />
                 <circle
-                  cx={CHILDREN_X} cy={cy} r={HIT_R}
+                  cx={pos.x} cy={pos.y} r={HIT_R}
                   fill="transparent" style={{ cursor: 'pointer' }}
                   onClick={() => { onNoteClick(children[i]); navigate(`/lab/second-brain/${children[i].id}`); }}
-                  onMouseEnter={() => { setHoveredZone('children'); showTooltip(children[i], CHILDREN_X, cy); }}
+                  onMouseEnter={() => { setHoveredZone('children'); showTooltip(children[i], pos.x, pos.y); }}
                   onMouseLeave={() => { setHoveredZone(null); hideTooltip(); }}
                 />
               </g>
