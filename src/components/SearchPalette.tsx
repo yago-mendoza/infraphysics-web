@@ -104,7 +104,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
 
   // Async brain index for concept search
   const [brainIndex, setBrainIndex] = useState<BrainIndex | null>(null);
-  useEffect(() => { initBrainIndex().then(setBrainIndex); }, []);
+  useEffect(() => { initBrainIndex().then(setBrainIndex).catch(() => {}); }, []);
   const allFieldNotes = brainIndex?.allFieldNotes ?? [];
 
   const executeAndClose = useCallback((fn: () => void) => {

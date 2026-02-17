@@ -41,7 +41,7 @@ export const ContactView: React.FC = () => {
           I typically respond within a few days.
         </p>
         <p className="text-th-secondary text-sm font-sans mb-12 max-w-lg leading-relaxed">
-          I'm especially interested in conversations about distributed systems, complexity science, optimisation and software/hardware projects.
+          I'm especially interested in conversations about distributed systems, complexity science, optimization and software/hardware projects.
         </p>
 
         {/* Contact Form */}

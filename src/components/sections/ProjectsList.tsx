@@ -41,7 +41,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                   <Link to={postPath(post.category, post.id)} className="listing-thumb listing-title-link project-thumb relative w-full md:w-72 h-64 overflow-hidden flex-shrink-0 self-start block">
                     <img
                       src={post.thumbnail}
-                      alt=""
+                      alt={post.displayTitle || post.title}
                       loading="lazy"
                       className="w-full h-full object-cover"
                     />

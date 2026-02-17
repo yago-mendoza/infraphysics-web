@@ -157,9 +157,12 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
         const terminal = copyBtn.closest('.code-terminal');
         const text = terminal ? (terminal.querySelector('code')?.textContent || '') : '';
         navigator.clipboard.writeText(text).then(() => {
-          copyBtn.innerHTML = `${svgIcon} Copiado`;
+          copyBtn.innerHTML = `${svgIcon} Copied`;
           copyBtn.classList.add('copied');
-          setTimeout(() => { copyBtn.innerHTML = `${svgIcon} Copiar`; copyBtn.classList.remove('copied'); }, 1500);
+          setTimeout(() => { copyBtn.innerHTML = `${svgIcon} Copy`; copyBtn.classList.remove('copied'); }, 1500);
+        }).catch(() => {
+          copyBtn.innerHTML = `${svgIcon} Error`;
+          setTimeout(() => { copyBtn.innerHTML = `${svgIcon} Copy`; }, 1500);
         });
         return;
       }

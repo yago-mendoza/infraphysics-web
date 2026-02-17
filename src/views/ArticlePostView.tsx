@@ -79,7 +79,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
   // Async brain index for wiki-link resolution in articles
   const [brainIndex, setBrainIndex] = useState<BrainIndex | null>(null);
-  useEffect(() => { initBrainIndex().then(setBrainIndex); }, []);
+  useEffect(() => { initBrainIndex().then(setBrainIndex).catch(() => {}); }, []);
 
   // Compute next/prev posts within same category sorted by date
   const { nextPost, prevPost } = useMemo(() => {
@@ -684,7 +684,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               <div className="article-related-thumb">
                 <img
                   src={rec.thumbnail || ''}
-                  alt=""
+                  alt={rec.displayTitle || rec.title}
                   loading="lazy"
                   className="w-full h-full object-cover transition-transform scale-[1.03] group-hover:scale-100"
                 />

@@ -38,7 +38,7 @@ export const HomeView: React.FC = () => {
         notes: idx.globalStats.totalConcepts,
         connections: idx.globalStats.totalLinks,
       });
-    });
+    }).catch(() => {});
   }, []);
 
   // Unified search
@@ -263,7 +263,7 @@ export const HomeView: React.FC = () => {
                 <div className="mb-4">
                   <img
                     src={post.thumbnail}
-                    alt=""
+                    alt={post.displayTitle || post.title}
                     loading="lazy"
                     className="w-full h-32 object-cover rounded"
                   />
