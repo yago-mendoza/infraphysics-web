@@ -12,7 +12,7 @@ Developer reference for managing the fieldnotes knowledge graph. This covers the
 4. [Build-Time Validation](#build-time-validation)
 5. [Error Reference](#error-reference)
 6. [Cascading Effects](#cascading-effects)
-7. [Edge Cases](#edge-cases)
+7. [Edge Cases](#edge-cases) — includes [Stub notes](#stub-notes)
 
 ---
 
@@ -32,7 +32,7 @@ All scripts live in `scripts/`. For full parameter docs, output formats, and imp
 
 - **`rename-address.js`** — Renames a single fieldnote address. Does NOT cascade to children. **Always dry-run first** (`node scripts/rename-address.js "old" "new"`), then `--apply`.
 - **`move-hierarchy.js`** — Cascading rename: moves a note and all its descendants to a new address prefix. **Always dry-run first**, then `--apply`. Use this instead of `rename-address.js` when the note has children.
-- **`check-references.js`** — Deep integrity audit (orphans, weak parents, duplicate trailing refs, redundant refs, fuzzy duplicates, segment collisions). Not part of the build — run manually after bulk changes.
+- **`check-references.js`** — Deep integrity audit (isolated notes, weak parents, duplicate trailing refs, redundant refs, fuzzy duplicates, segment collisions). Not part of the build — run manually after bulk changes.
 - **`analyze-pairs.js`** — Relationship analyzer. Answers "how are A and B connected?" via structural, trailing ref, and body mention checks. Supports fuzzy address resolution.
 - **`preflight.js`** — Pre-creation briefing. Takes existing addresses (fuzzy-resolved) and dumps content, trailing refs (with bilateral warnings), interaction candidates, and cross-ref matrix. Use `--new "addr"` to collision-check proposed addresses. Run before creating or enriching notes.
 - **`validate-fieldnotes.js`** — Build-time validator. Called automatically by every build. See [Build-Time Validation](#build-time-validation) below.
@@ -74,7 +74,7 @@ Quick check: search `address:` lines in `src/data/pages/fieldnotes/*.md` for the
 1. Run the [pre-creation check](#pre-creation-check-segment-collisions) for each proposed address
 2. Create all the `.md` files
 3. Run `npm run build` to validate all references at once
-4. Run `node scripts/check-references.js` to catch duplicate trailing refs, orphans, and weak parents
+4. Run `node scripts/check-references.js` to catch duplicate trailing refs, isolated notes, and weak parents
 5. Create stub notes for any missing parents
 6. Review duplicate trailing refs — each connection should exist on only ONE side
 
@@ -105,7 +105,7 @@ Quick check: search `address:` lines in `src/data/pages/fieldnotes/*.md` for the
 <details>
 <summary>Manual fallback (using rename-address.js individually)</summary>
 
-If `move-hierarchy.js` can't be used (e.g. orphaned children without a parent note), rename each note individually:
+If `move-hierarchy.js` can't be used (e.g. detached children without a parent note), rename each note individually:
 
 1. **List all children first** — find every address prefixed with `oldParent//`
 2. **Rename the parent**: `node scripts/rename-address.js "chip" "component//chip" --apply`
@@ -150,7 +150,7 @@ The build runs a 7-phase integrity check automatically. Errors fail the build (e
 | 4. Parent hierarchy | Missing parent notes in the address tree | WARN |
 | 5. Circular references | Cycles in the reference graph (opt-in, off by default) | WARN |
 | 6. Segment collisions | Same concept name at different hierarchy paths (HIGH/MED/LOW tiers) | WARN |
-| 7. Orphan detection | Notes with no connections to the graph | INFO |
+| 7. Isolated note detection | Notes with no connections to the graph | INFO |
 
 ### How to use the validation output
 
@@ -193,7 +193,7 @@ Every validation output line includes a bracketed error code for easy scanning a
 | `ALIAS_COLLISION` | HIGH | Yes | Alias collides with a segment name |
 | `ALIAS_ALIAS_COLLISION` | HIGH | Yes | Same alias on multiple notes |
 | `STALE_DISTINCT` | WARN | No | `distinct` entry points to deleted note |
-| `ORPHAN_NOTE` | INFO | No | No incoming or outgoing references |
+| `ISOLATED_NOTE` | INFO | No | No incoming or outgoing references |
 
 A legend of active codes is printed at the end of each validation run. The "Fixable?" column indicates which issues can be resolved interactively.
 
@@ -297,9 +297,9 @@ Every error and warning you might encounter, where it comes from, and what to do
 
 | Message | Meaning |
 |---|---|
-| `INFO  "{address}" has no connections (orphan)` | Note has zero incoming and outgoing refs — may be new or forgotten |
+| `INFO  "{address}" has no connections (isolated)` | Note has zero incoming and outgoing refs — may be new or forgotten |
 | `Redirect: "{old}" -> "{new}"` | A `supersedes` redirect is active |
-| `Removed stale: {file}` | An orphaned `.json` content file was cleaned up |
+| `Removed stale: {file}` | A stale `.json` content file was cleaned up |
 
 ### Rename script errors
 
@@ -325,7 +325,7 @@ Understanding what changes propagate where prevents subtle breakage.
 ### Deleting a note affects:
 - **Every note that references it**: their `[[refs]]` become broken (build ERROR)
 - **Every post that wiki-links to it**: their `[[wiki-links]]` become broken (build ERROR)
-- **Children**: orphaned from the hierarchy (build WARN for missing parent if they reference upward)
+- **Children**: detached from the hierarchy (build WARN for missing parent if they reference upward)
 - **The graph**: bilateral trailing ref connections disappear from both sides
 
 ### Adding a new note affects:
@@ -385,6 +385,14 @@ You do **not** also need to add `distinct: ["networking//cache"]` to the CPU//ca
 ### Filename convention uses UIDs
 
 Filenames are `{uid}.md` (e.g. `OkJJJyxX.md`), not address-derived. The UID must be unique and stable. The `rename-address.js` script scans frontmatter to find files, not filenames, so no filename convention matching is required.
+
+### Stub notes
+
+Stub notes are minimal placeholders created for parent addresses that don't have their own content yet. They keep the hierarchy intact so child notes aren't flagged as `MISSING_PARENT`. A stub typically contains only frontmatter (`uid`, `address`, `name`, `date`) and a one-liner body like _"This neuron hasn't fired yet."_ or _"Don't panic. It's just an empty note."_
+
+Stubs show up as `ISOLATED_NOTE` in `check-references.js` output — that's expected. They become real notes once you add body content and trailing refs.
+
+**Watch for duplicates.** If two stubs are created for the same address (e.g. during separate bulk-creation sessions), `check-references.js` will list the address twice in the isolated-notes report. Search for duplicate `address:` values and delete the extra file.
 
 ### Cache invalidation
 
