@@ -143,6 +143,9 @@
         --cat-bits2bricks-accent: #3B82F6;
         --cat-fieldnotes-accent:  #A78BFA;
 
+        /* Wiki link state (Second Brain visited/unvisited) */
+        --wiki-link-visited:      #60a5fa;
+
         /* Text on fixed-color accent surfaces (badges, FABs) — always white for contrast */
         --text-on-accent:   #ffffff;
 
@@ -219,6 +222,8 @@
         --cat-bits2bricks-accent: #2563eb;
         --cat-fieldnotes-accent:  #7C3AED;
 
+        --wiki-link-visited:      #2563eb;
+
         --text-on-accent:   #ffffff;
 
         --scrollbar-thumb:  #d1d5db;
@@ -256,10 +261,11 @@
         .hero-pattern-bg { background-position: center center; }
       }
 
-      /* Viewport-center main content — compensate for sidebar at md+ */
+      /* Center main content — content shrinks first, margins stay fixed */
       @media (min-width: 768px) {
         .main-center-viewport {
-          margin-left: max(0px, calc(50% - 28.5rem));
+          max-width: min(64rem, calc(100% - 4rem));
+          margin-left: auto;
           margin-right: auto;
         }
       }

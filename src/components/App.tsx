@@ -71,8 +71,7 @@ const AppLayout: React.FC = () => {
   }, [location.pathname, applyZone]);
 
   const isStarfieldPage = STARFIELD_PAGES.includes(location.pathname);
-  const isPostPage = /^\/lab\/[^/]+\/[^/]+/.test(location.pathname) && !location.pathname.startsWith('/lab/second-brain');
-  const showHeroPattern = isStarfieldPage || BLOG_SECTION_PAGES.includes(location.pathname) || isPostPage;
+  const showHeroPattern = isStarfieldPage || BLOG_SECTION_PAGES.includes(location.pathname);
 
   // Scroll-based fade for hero pattern
   // Opacity stays frozen while scrolling. On scroll stop, animates to target at constant speed.
@@ -81,13 +80,7 @@ const AppLayout: React.FC = () => {
     if (!showHeroPattern) return;
     const base = theme === 'dark' ? 0.45 : 0.40;
 
-    // Post pages: fixed opacity, no scroll animation
-    if (isPostPage) {
-      if (heroPatternRef.current) heroPatternRef.current.style.opacity = String(base);
-      return;
-    }
-
-    // Other pages: scroll-based fade with constant-speed animation
+    // Scroll-based fade with constant-speed animation
     const SPEED = 0.165; // opacity units per second (constant speed)
     const SCROLL_RANGE = 1300; // px over which opacity goes 1→0
     const IDLE_DELAY = 0; // ms after last scroll event to consider "stopped"
@@ -138,7 +131,7 @@ const AppLayout: React.FC = () => {
       clearTimeout(idleTimer);
       if (rafId) cancelAnimationFrame(rafId);
     };
-  }, [showHeroPattern, isPostPage, theme]);
+  }, [showHeroPattern, theme]);
   const showGrid = location.pathname.startsWith('/lab');
   const isBlog = location.pathname.startsWith('/blog');
   const isSecondBrain = location.pathname.startsWith('/lab/second-brain');
@@ -190,7 +183,7 @@ const AppLayout: React.FC = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 min-w-0 flex flex-col min-h-screen">
-        <main className={`flex-grow w-full relative z-10 ${isSecondBrain ? 'max-w-6xl px-4 md:px-10 pt-20 pb-10 md:py-12 mx-auto' : 'max-w-4xl px-6 pt-20 pb-10 md:py-16 main-center-viewport'}`}>
+        <main className={`flex-grow w-full relative z-10 ${isSecondBrain ? 'max-w-6xl px-4 md:px-10 pt-20 pb-10 md:py-12 mx-auto' : 'px-6 pt-20 pb-10 md:py-16 main-center-viewport'}`}>
           <Routes key={location.pathname}>
             <Route path="/" element={<Navigate to="/home" replace />} />
             <Route path="/home" element={<HomeView />} />

@@ -111,6 +111,8 @@
    are resolved BEFORE the color-mix derivations are computed. */
 .article-page-wrapper {
   max-width: 52rem;
+  margin-left: auto;
+  margin-right: auto;
   font-family: 'JetBrains Mono', monospace;
 
   /* Accent derivations (dark defaults) */
@@ -1522,7 +1524,6 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   background: var(--art-surface-card);
   border: 1px solid var(--art-border-card);
   overflow: hidden;
-  background: var(--art-surface-card);
   transition: border-color 0.2s;
   text-decoration: none;
 }
@@ -1840,7 +1841,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 .article-content .ctx-note-text {
   font-family: 'JetBrains Mono', var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   color: var(--art-text-mid);
   line-height: 1.5;
 }
@@ -1851,10 +1852,12 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   margin: 0;
 }
 
-/* E7. Blog TOC — same box as projects, depth-scaled sizing */
+/* E7. Blog TOC — same box as projects, depth-scaled sizing
+   Body is 0.9rem (blog) / 0.95rem (threads); TOC stays below body.
+   Consistent 0.05rem step between depths. */
 .article-toc--blog .article-toc-label {
   font-family: 'Inter', var(--font-sans);
-  font-size: 1rem;
+  font-size: 0.8rem;
 }
 
 .article-toc--blog .article-toc-link {
@@ -1862,11 +1865,11 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   text-transform: none;
 }
 
-.article-toc--blog .article-toc-depth-0 > .article-toc-link { font-size: 1rem; font-weight: 400; }
-.article-toc--blog .article-toc-depth-0 > .article-toc-link > .article-toc-num { font-size: 0.85rem; }
-.article-toc--blog .article-toc-depth-1 > .article-toc-link { font-size: 0.925rem; }
-.article-toc--blog .article-toc-depth-1 > .article-toc-link > .article-toc-num { font-size: 0.8rem; }
-.article-toc--blog .article-toc-depth-2 > .article-toc-link { font-size: 0.85rem; }
-.article-toc--blog .article-toc-depth-2 > .article-toc-link > .article-toc-num { font-size: 0.75rem; }
-.article-toc--blog .article-toc-depth-3 > .article-toc-link { font-size: 0.8rem; }
-.article-toc--blog .article-toc-depth-3 > .article-toc-link > .article-toc-num { font-size: 0.7rem; }
+.article-toc--blog .article-toc-depth-0 > .article-toc-link { font-size: 0.85rem; font-weight: 400; }
+.article-toc--blog .article-toc-depth-0 > .article-toc-link > .article-toc-num { font-size: 0.75rem; }
+.article-toc--blog .article-toc-depth-1 > .article-toc-link { font-size: 0.8rem; }
+.article-toc--blog .article-toc-depth-1 > .article-toc-link > .article-toc-num { font-size: 0.7rem; }
+.article-toc--blog .article-toc-depth-2 > .article-toc-link { font-size: 0.75rem; }
+.article-toc--blog .article-toc-depth-2 > .article-toc-link > .article-toc-num { font-size: 0.65rem; }
+.article-toc--blog .article-toc-depth-3 > .article-toc-link { font-size: 0.7rem; }
+.article-toc--blog .article-toc-depth-3 > .article-toc-link > .article-toc-num { font-size: 0.6rem; }
