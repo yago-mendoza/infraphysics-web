@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FieldNoteMeta } from '../types';
-import { initBrainIndex, fetchNoteContent, type BrainIndex, type Connection, type Neighborhood } from '../lib/brainIndex';
+import { initBrainIndex, fetchNoteContent, getCachedNoteContent, prefetchNoteContent, type BrainIndex, type Connection, type Neighborhood } from '../lib/brainIndex';
 import { useGraphRelevance } from './useGraphRelevance';
 
 export type SearchMode = 'name' | 'content' | 'backlinks';
@@ -73,6 +73,7 @@ export const useSecondBrainHub = () => {
 
   const allFieldNotes = index?.allFieldNotes ?? [];
   const noteById = index?.noteById ?? new Map();
+  const addressToNoteId = index?.addressToNoteId ?? new Map();
   const backlinksMap = index?.backlinksMap ?? new Map();
   const connectionsMap = index?.connectionsMap ?? new Map();
   const mentionsMap = index?.mentionsMap ?? new Map();
@@ -124,12 +125,22 @@ export const useSecondBrainHub = () => {
     }
   }, [activePost]);
 
-  // Fetch content when activePost changes
+  // Fetch content when activePost changes — sync cache check eliminates async gap
   useEffect(() => {
     if (!activePost) { setResolvedHtml(''); setContentReadyId(undefined); return; }
+
+    // Sync path: if content is already cached, set it immediately (no async gap)
+    const cached = getCachedNoteContent(activePost.id);
+    if (cached) {
+      setResolvedHtml(cached);
+      setContentLoading(false);
+      setContentReadyId(activePost.id);
+      return;
+    }
+
+    // Async path: fetch from network
     let cancelled = false;
     setContentLoading(true);
-    // Don't clear resolvedHtml — keep previous content visible until new content arrives
     setContentReadyId(undefined);
     fetchNoteContent(activePost.id).then(html => {
       if (!cancelled) {
@@ -140,6 +151,29 @@ export const useSecondBrainHub = () => {
     });
     return () => { cancelled = true; };
   }, [activePost]);
+
+  // Prefetch content for likely navigation targets
+  useEffect(() => {
+    if (!activePost || !index) return;
+    const ids = new Set<string>();
+
+    // Connections
+    (connectionsMap.get(activePost.id) || []).forEach(c => ids.add(c.note.id));
+    // Mentions (backlinks from body)
+    (mentionsMap.get(activePost.id) || []).forEach(m => ids.add(m.id));
+    // Neighborhood
+    const hood = neighborhoodMap.get(activePost.id);
+    if (hood) {
+      if (hood.parent) ids.add(hood.parent.id);
+      hood.siblings.forEach(s => ids.add(s.id));
+      hood.children.forEach(c => ids.add(c.id));
+    }
+    // Wiki-link targets (from references)
+    (activePost.references || []).forEach(uid => ids.add(uid));
+
+    ids.delete(activePost.id);
+    prefetchNoteContent([...ids]);
+  }, [activePost, index, connectionsMap, mentionsMap, neighborhoodMap]);
 
   // Track which concept we were viewing before searching, so we can return to it
   const savedIdRef = useRef<string | undefined>(undefined);
@@ -443,6 +477,13 @@ export const useSecondBrainHub = () => {
     savedIdRef.current = undefined;
   }, []);
 
+  // Invalidate content readiness — forces opacity: 0 until new content loads.
+  // Used before navigation to prevent a 1-frame flash of old content when
+  // clearSearch commits before React Router updates the URL.
+  const invalidateContent = useCallback(() => {
+    setContentReadyId(undefined);
+  }, []);
+
   return {
     // Loading state
     indexLoading: !index,
@@ -479,6 +520,7 @@ export const useSecondBrainHub = () => {
     // Data
     allFieldNotes,
     noteById,
+    addressToNoteId,
     backlinksMap,
     sortedResults,
     stats: globalStats,
@@ -492,6 +534,7 @@ export const useSecondBrainHub = () => {
     homonyms,
     resolvedHtml,
     contentReadyId,
+    invalidateContent,
 
     // Visited tracking (session-scoped)
     isVisited,
