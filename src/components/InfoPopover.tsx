@@ -26,7 +26,7 @@ interface InfoPopoverProps {
 export const InfoPopover: React.FC<InfoPopoverProps> = ({
   content,
   tabs,
-  size = 13,
+  size = 14,
   className = '',
   title,
 }) => {
@@ -153,7 +153,7 @@ export const InfoPopover: React.FC<InfoPopoverProps> = ({
       <button
         ref={triggerRef}
         onClick={handleToggle}
-        className={`text-violet-400/60 hover:text-violet-400 transition-colors flex-shrink-0 ${className}`}
+        className={`text-violet-400 hover:text-violet-300 transition-colors flex-shrink-0 ${className}`}
         title={title}
         type="button"
       >
