@@ -133,14 +133,24 @@ export function useGraphRelevance() {
     return cached?.islands ?? null;
   }, []);
 
-  const getNoteTopology = useCallback((uid: string): NoteTopology => {
+  // Pre-built Set/Map for O(1) topology lookups
+  const { isolatedSet, componentMap, cutMap } = useMemo(() => {
     const islands = cached?.islands;
-    if (!islands) return { isIsolated: false, componentId: null, componentSize: 0, isBridge: false };
+    if (!islands) return { isolatedSet: new Set<string>(), componentMap: new Map<number, IslandComponent>(), cutMap: new Map<string, IslandCut>() };
+    return {
+      isolatedSet: new Set(islands.isolatedUids),
+      componentMap: new Map(islands.components.map(c => [c.id, c])),
+      cutMap: new Map(islands.cuts.map(c => [c.uid, c])),
+    };
+  }, [cached?.islands]);
 
-    const isIsolated = islands.isolatedUids.includes(uid);
-    const componentId = islands.nodeToComponent[uid] ?? null;
-    const comp = componentId != null ? islands.components.find(c => c.id === componentId) : null;
-    const cut = islands.cuts.find(c => c.uid === uid);
+  const getNoteTopology = useCallback((uid: string): NoteTopology => {
+    if (!cached?.islands) return { isIsolated: false, componentId: null, componentSize: 0, isBridge: false };
+
+    const isIsolated = isolatedSet.has(uid);
+    const componentId = cached.islands.nodeToComponent[uid] ?? null;
+    const comp = componentId != null ? componentMap.get(componentId) : undefined;
+    const cut = cutMap.get(uid);
 
     return {
       isIsolated,
@@ -149,7 +159,7 @@ export function useGraphRelevance() {
       isBridge: !!cut,
       ...(cut ? { bridgeCriticality: cut.criticality } : {}),
     };
-  }, []);
+  }, [isolatedSet, componentMap, cutMap]);
 
   return { getRelevance, getCentrality, getDrift, getBridgeTier, getPercentile, getIslands, getNoteTopology, loaded: !!cached };
 }
