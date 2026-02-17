@@ -804,11 +804,13 @@ function extractFieldnoteMeta(filename, filePath) {
     }
   }
 
-  // Strip trailing refs (and preceding blank lines) from body before compiling
+  // Strip trailing refs (and preceding blank lines / separator) from body before compiling
   let contentMd = bodyMd;
   if (trailingRefStart < bodyLines.length) {
     let cutoff = trailingRefStart;
     while (cutoff > 0 && !bodyLines[cutoff - 1].trim()) cutoff--;
+    // Also skip the --- separator that conventionally precedes trailing refs
+    if (cutoff > 0 && /^-{3,}$/.test(bodyLines[cutoff - 1].trim())) cutoff--;
     contentMd = bodyLines.slice(0, cutoff).join('\n');
   }
 
