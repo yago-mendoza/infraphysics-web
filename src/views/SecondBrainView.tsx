@@ -335,7 +335,6 @@ const DockedToolbar: React.FC<{
           </button>
         ))}
         <InfoPopover
-          size={12}
           title="Search modes"
           content={
             <div className="space-y-2">
@@ -362,8 +361,7 @@ const DockedToolbar: React.FC<{
           {hasActiveFilters && <span className="w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0" />}
           <span className="inline-flex items-center" onClick={(e) => e.stopPropagation()}>
             <InfoPopover
-              size={12}
-              title="Filter options"
+                  title="Filter options"
               content={
                 <div className="space-y-2">
                   <p><strong className={tipStrong}>Isolated</strong> — notes with zero links to or from any other note.</p>
@@ -516,8 +514,7 @@ const DockedToolbar: React.FC<{
         <span className="flex items-center gap-1.5 ml-auto">
           <span className="text-[9px] text-th-muted tabular-nums">{sortedCount} {hasActiveFilters || query ? 'results' : 'notes'}</span>
           <InfoPopover
-            size={12}
-            title="Sorting & shortcuts"
+              title="Sorting & shortcuts"
             tabs={[
               {
                 label: 'sorting',
@@ -604,6 +601,8 @@ export const SecondBrainView: React.FC = () => {
     directoryNavRef,
     isVisited,
     backlinksMap,
+    addressToNoteId,
+    invalidateContent,
     allFieldNotes,
     stats,
   } = hub;
@@ -654,17 +653,14 @@ export const SecondBrainView: React.FC = () => {
 
   // Grid card click — reset trail to single item.
   const handleGridCardClick = useCallback((post: FieldNoteMeta) => {
+    // Invalidate content readiness BEFORE clearing search to prevent flash:
+    // clearSearch commits searchActive=false before React Router updates the URL,
+    // creating a 1-frame window where showDetail=true with old content at opacity 1.
+    // Skip when clicking the same note (content effect won't re-run to restore it).
+    if (activePost?.id !== post.id) invalidateContent();
+    clearSearch();
     scheduleReset(post);
-  }, [scheduleReset]);
-
-  // Clear search AFTER activePost changes (avoids 1-frame flicker of old note)
-  const prevActiveIdRef = useRef(activePost?.id);
-  useEffect(() => {
-    if (activePost && activePost.id !== prevActiveIdRef.current && searchActive) {
-      clearSearch();
-    }
-    prevActiveIdRef.current = activePost?.id;
-  }, [activePost, searchActive, clearSearch]);
+  }, [activePost, invalidateContent, clearSearch, scheduleReset]);
 
   // Connection / mention click — extend trail
   const handleConnectionClick = useCallback((post: FieldNoteMeta) => {
@@ -683,7 +679,7 @@ export const SecondBrainView: React.FC = () => {
     navigate(href);
   }, [handleWikiLinkClick, navigate]);
 
-  // When search is active, force list view even if we're on a detail URL
+  // When search is active, force list view
   const showDetail = activePost && !searchActive;
 
   // Content ready = content loaded for the currently displayed note
@@ -807,11 +803,12 @@ export const SecondBrainView: React.FC = () => {
         const parts = h.addressParts || [h.title];
         if (parts.length < 2) return null;
         const parentAddr = parts.slice(0, -1).join('//');
-        const parentNote = [...noteById.values()].find(n => n.address === parentAddr) || null;
+        const parentId = addressToNoteId.get(parentAddr);
+        const parentNote = parentId ? noteById.get(parentId) || null : null;
         return parentNote ? { parent: parentNote, homonym: h } : null;
       })
       .filter((x): x is { parent: FieldNoteMeta; homonym: FieldNoteMeta } => x !== null);
-  }, [activePost, homonyms, noteById]);
+  }, [activePost, homonyms, noteById, addressToNoteId]);
 
   const homonymLeaf = useMemo(() => {
     if (!activePost || homonyms.length < 2) return '';
@@ -1092,8 +1089,7 @@ export const SecondBrainView: React.FC = () => {
                 />
               </div>
               <InfoPopover
-                size={12}
-                title="Navigation & page guide"
+                      title="Navigation & page guide"
                 tabs={[
                   {
                     label: 'navigation',
@@ -1177,7 +1173,8 @@ export const SecondBrainView: React.FC = () => {
               {activePost!.addressParts && activePost!.addressParts.length > 1
                 ? activePost!.addressParts.map((part, i) => {
                     const pathUpTo = activePost!.addressParts!.slice(0, i + 1).join('//');
-                    const ancestor = [...noteById.values()].find(n => n.address === pathUpTo);
+                    const ancestorId = addressToNoteId.get(pathUpTo);
+                    const ancestor = ancestorId ? noteById.get(ancestorId) : undefined;
                     const isLast = i === activePost!.addressParts!.length - 1;
                     return (
                       <React.Fragment key={i}>
@@ -1245,8 +1242,7 @@ export const SecondBrainView: React.FC = () => {
                       <h3 className="text-[11px] text-th-tertiary uppercase tracking-wider mb-3 flex items-center gap-1.5">
                         Interactions
                         <InfoPopover
-                          size={12}
-                          title="About interactions"
+                                          title="About interactions"
                           content={
                             <div className="space-y-2">
                               <p>Unlike regular body links, <strong className={tipStrong}>interactions</strong> are curated, annotated relationships — each one describes <em>how</em> two concepts relate (e.g. "contrast", "depends on", "example of").</p>
@@ -1306,7 +1302,7 @@ export const SecondBrainView: React.FC = () => {
             }}
           >
             <hr className="lg:hidden border-t border-th-border my-6" />
-            <div className="relative">
+            <div>
               <NeighborhoodGraph
                 neighborhood={neighborhood}
                 currentNote={activePost!}
@@ -1320,9 +1316,17 @@ export const SecondBrainView: React.FC = () => {
                   navigate(`/lab/second-brain/${homonym.id}`);
                 }}
               />
-              <span className="absolute top-2 right-2">
+            </div>
+            <label className="flex items-center gap-1.5 mt-3 mb-1 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={zoneFilter}
+                onChange={() => setZoneFilter(v => !v)}
+                className="accent-violet-400 w-3 h-3"
+              />
+              <span className="text-[10px] text-th-muted">filter by zone</span>
+              <span className="ml-auto" onClick={(e) => e.preventDefault()}>
                 <InfoPopover
-                  size={12}
                   title="Neighborhood graph"
                   content={
                     <div className="space-y-2">
@@ -1335,15 +1339,6 @@ export const SecondBrainView: React.FC = () => {
                   }
                 />
               </span>
-            </div>
-            <label className="flex items-center gap-1.5 mt-3 mb-1 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={zoneFilter}
-                onChange={() => setZoneFilter(v => !v)}
-                className="accent-violet-400 w-3 h-3"
-              />
-              <span className="text-[10px] text-th-muted">filter by zone</span>
             </label>
             <div className="mt-2">
             <RelevanceLeaderboard
