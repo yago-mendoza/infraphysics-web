@@ -47,7 +47,8 @@ export const DriftDetector: React.FC<Props> = ({ entries, noteById, onNoteClick,
               <Link
                 to={`/lab/second-brain/${uid}`}
                 onClick={() => onNoteClick(note)}
-                className={`inline transition-colors no-underline border-b border-solid cursor-pointer ${visited ? 'text-blue-400/70 hover:text-blue-400 border-blue-400/40 hover:border-blue-400' : 'text-violet-400/70 hover:text-violet-400 border-violet-400/40 hover:border-violet-400'}`}
+                className="wiki-sidelink inline transition-colors no-underline border-b border-solid cursor-pointer"
+                style={{ '--wl-color': visited ? 'var(--wiki-link-visited)' : 'var(--cat-fieldnotes-accent)' } as React.CSSProperties}
               >
                 <span className="text-sm">{noteLabel(note)}</span>
               </Link>

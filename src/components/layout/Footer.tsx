@@ -38,7 +38,8 @@ export const Footer: React.FC = () => {
                 href="https://linkedin.com/in/yago-mendoza"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 text-th-tertiary hover:text-blue-400 hover:bg-blue-400/10 rounded-sm transition-all"
+                className="p-2 text-th-tertiary rounded-sm transition-all accent-link"
+                style={{ '--ac-color': '#0A66C2' } as React.CSSProperties}
                 aria-label="LinkedIn"
               >
                 <ExternalLinkIcon />
@@ -62,7 +63,7 @@ export const Footer: React.FC = () => {
               <Link to="/lab/projects" className="text-xs text-th-secondary transition-colors accent-link" style={{ '--ac-color': catAccentVar('projects') } as React.CSSProperties}>Projects</Link>
               <Link to="/blog/threads" className="text-xs text-th-secondary transition-colors accent-link" style={{ '--ac-color': catAccentVar('threads') } as React.CSSProperties}>Threads</Link>
               <Link to="/blog/bits2bricks" className="text-xs text-th-secondary transition-colors accent-link" style={{ '--ac-color': catAccentVar('bits2bricks') } as React.CSSProperties}>Bits2Bricks</Link>
-              <Link to="/lab/second-brain" className="text-xs text-th-secondary hover:text-violet-400 transition-colors">Second Brain</Link>
+              <Link to="/lab/second-brain" className="text-xs text-th-secondary transition-colors accent-link" style={{ '--ac-color': catAccentVar('fieldnotes') } as React.CSSProperties}>Second Brain</Link>
               <Link to="/contact" className="text-xs text-th-secondary hover:text-th-heading transition-colors">Contact</Link>
             </nav>
           </div>

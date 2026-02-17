@@ -91,11 +91,12 @@ export const RelevanceLeaderboard: React.FC<Props> = (props) => {
               key={note.id}
               to={`/lab/second-brain/${note.id}`}
               onClick={() => onNoteClick(note)}
-              className="group relative flex items-center h-6 rounded-sm no-underline transition-colors hover:bg-white/5 overflow-visible"
+              className="wiki-siderow group relative flex items-center h-6 rounded-sm no-underline transition-colors hover:bg-white/5 overflow-visible"
               title={note.address || noteLabel(note)}
+              style={{ '--wl-color': visited ? 'var(--wiki-link-visited)' : 'var(--cat-fieldnotes-accent)' } as React.CSSProperties}
             >
               <span className="relative z-10 text-[9px] text-th-muted flex-shrink-0 w-3 text-center mr-1.5">{ZONE_LABELS[zone]}</span>
-              <span className={`relative z-10 text-[11px] truncate flex-1 min-w-0 transition-colors ${visited ? 'text-blue-400/70 group-hover:text-blue-400' : 'text-violet-400/70 group-hover:text-violet-400'}`}>
+              <span className="wiki-siderow-text relative z-10 text-[11px] truncate flex-1 min-w-0 transition-colors">
                 {display}
               </span>
               <CentralityIndicator percentile={percentile} />
@@ -135,16 +136,17 @@ export const RelevanceLeaderboard: React.FC<Props> = (props) => {
             key={uid}
             to={`/lab/second-brain/${uid}`}
             onClick={() => onNoteClick(note)}
-            className="group relative flex items-center h-6 rounded-sm no-underline transition-colors hover:bg-white/5 overflow-visible"
+            className="wiki-siderow group relative flex items-center h-6 rounded-sm no-underline transition-colors hover:bg-white/5 overflow-visible"
             title={note.address || noteLabel(note)}
+            style={{ '--wl-color': visited ? 'var(--wiki-link-visited)' : 'var(--cat-fieldnotes-accent)' } as React.CSSProperties}
           >
             {/* Relevance bar fill */}
             <div
-              className={`absolute inset-y-0 left-0 rounded-sm transition-all ${visited ? 'bg-blue-400/20 group-hover:bg-blue-400/30' : 'bg-violet-400/20 group-hover:bg-violet-400/30'}`}
+              className="wiki-siderow-bar absolute inset-y-0 left-0 rounded-sm transition-all"
               style={{ width: `${relevanceWidth}%` }}
             />
             {/* Name */}
-            <span className={`relative z-10 text-[11px] truncate px-2 flex-1 min-w-0 transition-colors ${visited ? 'text-blue-400/70 group-hover:text-blue-400' : 'text-violet-400/70 group-hover:text-violet-400'}`}>
+            <span className="wiki-siderow-text relative z-10 text-[11px] truncate px-2 flex-1 min-w-0 transition-colors">
               {display}
             </span>
             {/* Relevance score */}

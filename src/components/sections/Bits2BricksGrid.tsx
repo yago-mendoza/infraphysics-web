@@ -9,7 +9,7 @@ import type { SectionRendererProps } from './index';
 
 export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, getMatchCount, accent }) => {
   if (posts.length === 0) return <EmptyState query={query} />;
-  if (query) return <SearchResultsList posts={posts} query={query} getMatchCount={getMatchCount} accent={accent} tagAccent="#60a5fa" />;
+  if (query) return <SearchResultsList posts={posts} query={query} getMatchCount={getMatchCount} accent={accent} tagAccent={accent} />;
 
   /* ── Default: image card grid ── */
   return (
@@ -25,12 +25,14 @@ export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, 
           >
             {/* Square thumbnail */}
             <div className="aspect-square bg-th-surface-alt overflow-hidden">
-              <img
-                src={post.thumbnail || 'https://via.placeholder.com/400'}
-                alt=""
-                loading="lazy"
-                className="w-full h-full object-cover transition-transform duration-300 scale-[1.03] group-hover:scale-100"
-              />
+              {post.thumbnail && (
+                <img
+                  src={post.thumbnail}
+                  alt={post.displayTitle || post.title}
+                  loading="lazy"
+                  className="w-full h-full object-cover transition-transform duration-300 scale-[1.03] group-hover:scale-100"
+                />
+              )}
             </div>
 
             {/* Content */}
@@ -48,7 +50,7 @@ export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, 
               {tags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {tags.slice(0, 4).map(tag => (
-                    <span key={tag} className="pill pill-sm border-blue-400/30 text-blue-400">
+                    <span key={tag} className="pill pill-sm" style={{ borderColor: `color-mix(in srgb, ${accent} 30%, transparent)`, color: accent }}>
                       {tag}
                     </span>
                   ))}

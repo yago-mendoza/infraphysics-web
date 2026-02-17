@@ -484,3 +484,25 @@ button:focus {
   fill: rgba(96, 165, 250, 0.7) !important;
 }
 
+/* Wiki sidebar links — visited/unvisited state colors */
+.wiki-sidelink {
+  color: color-mix(in srgb, var(--wl-color) 70%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--wl-color) 40%, transparent);
+}
+.wiki-sidelink:hover {
+  color: var(--wl-color);
+  border-bottom-color: var(--wl-color);
+}
+.wiki-siderow-bar {
+  background: color-mix(in srgb, var(--wl-color) 20%, transparent);
+}
+.wiki-siderow:hover .wiki-siderow-bar {
+  background: color-mix(in srgb, var(--wl-color) 30%, transparent);
+}
+.wiki-siderow-text {
+  color: color-mix(in srgb, var(--wl-color) 70%, transparent);
+}
+.wiki-siderow:hover .wiki-siderow-text {
+  color: var(--wl-color);
+}
+

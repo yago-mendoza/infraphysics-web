@@ -11,7 +11,7 @@ import type { SectionRendererProps } from './index';
 
 export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, getMatchCount, accent }) => {
   if (posts.length === 0) return <EmptyState query={query} />;
-  if (query) return <SearchResultsList posts={posts} query={query} getMatchCount={getMatchCount} accent={accent} tagAccent="#94a3b8" />;
+  if (query) return <SearchResultsList posts={posts} query={query} getMatchCount={getMatchCount} accent={accent} tagAccent={accent} />;
 
   /* ── Default: editorial card layout ── */
   return (
@@ -49,7 +49,8 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
                     {tags.map(tag => (
                       <span
                         key={tag}
-                        className="pill border-slate-400/30 text-slate-400"
+                        className="pill"
+                      style={{ borderColor: `color-mix(in srgb, ${accent} 30%, transparent)`, color: accent }}
                       >
                         {tag}
                       </span>
@@ -63,7 +64,7 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
                 <Link to={postPath(post.category, post.id)} className="listing-thumb thread-thumb relative w-full md:w-56 h-36 overflow-hidden flex-shrink-0 self-start block">
                   <img
                     src={post.thumbnail}
-                    alt=""
+                    alt={post.displayTitle || post.title}
                     loading="lazy"
                     className="w-full h-full object-cover"
                   />
