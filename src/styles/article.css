@@ -110,7 +110,7 @@
    overrides on the same element (.article-threads, .article-bits2bricks)
    are resolved BEFORE the color-mix derivations are computed. */
 .article-page-wrapper {
-  max-width: 52rem;
+  max-width: 100rem;
   margin-left: auto;
   margin-right: auto;
   font-family: 'JetBrains Mono', monospace;
@@ -1596,6 +1596,24 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   }
 }
 
+/* D2. Reading progress bar — mobile only, below fixed navbar */
+.article-progress-bar {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .article-progress-bar {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 3px;
+    z-index: 51;
+    pointer-events: none;
+  }
+}
+
 
 /* ─────────────────────────────────────────────────
    E. BLOG LAYOUT (.article-blog)
@@ -1873,3 +1891,108 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 .article-toc--blog .article-toc-depth-2 > .article-toc-link > .article-toc-num { font-size: 0.65rem; }
 .article-toc--blog .article-toc-depth-3 > .article-toc-link { font-size: 0.7rem; }
 .article-toc--blog .article-toc-depth-3 > .article-toc-link > .article-toc-num { font-size: 0.6rem; }
+
+
+/* ─────────────────────────────────────────────────
+   F. THREADS TWO-PANEL LAYOUT
+   Header card (wider) + body card (offset right)
+   ───────────────────────────────────────────────── */
+
+/* F1. Card bases */
+.article-threads-header-card {
+  background: var(--art-surface);
+  border: 1px solid var(--art-border);
+  overflow: hidden;
+}
+
+/* F2. Body card — offset to create header-wider effect */
+.article-threads-body-card {
+  background: var(--art-surface);
+  border: 1px solid var(--art-border);
+  margin-left: 10rem;
+  margin-top: 2.5rem;
+  --art-body-px: 2rem;
+  padding: 2rem;
+}
+
+
+/* F3. Header nav bar */
+.article-threads-nav {
+  padding: 0.55rem 2rem;
+  border-bottom: 1px solid var(--art-border);
+}
+
+/* F4. Header content area */
+.article-threads-header-content {
+  padding: 1.5rem 2rem 2rem;
+}
+
+/* F5. Byline */
+.article-threads-byline {
+  font-family: 'Source Serif 4', var(--font-serif);
+  font-size: 0.85rem;
+  color: var(--art-text-mid);
+  margin: 0 0 0.25rem;
+}
+
+.article-threads-byline-link {
+  color: var(--art-text-mid);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.article-threads-byline-link:hover {
+  color: var(--art-text-title);
+}
+
+/* F6. Dateline */
+.article-threads-dateline {
+  font-family: 'JetBrains Mono', var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--art-text-dim);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.article-threads-dateline-sep {
+  color: var(--art-text-muted);
+}
+
+/* F7. Social share row */
+.article-threads-social {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* F8. Image — flush to card edges */
+.article-threads-image {
+  border-top: 1px solid var(--art-border);
+  overflow: hidden;
+}
+
+.article-threads-image img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+/* F9. Responsive */
+@media (max-width: 767px) {
+  .article-threads-body-card {
+    margin-left: 0;
+    --art-body-px: 0.75rem;
+    padding: 1rem 0.75rem 1.5rem;
+  }
+
+
+  .article-threads-nav {
+    padding: 0.55rem 0.75rem;
+  }
+
+  .article-threads-header-content {
+    padding: 1rem 0.75rem;
+  }
+}
