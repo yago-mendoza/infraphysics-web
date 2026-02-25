@@ -41,13 +41,13 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({ posts, que
             to={postPath(post.category, post.id)}
             className={`group flex items-center gap-4 py-3 px-2 hover:bg-th-surface-alt transition-colors`}
           >
-            <span className="text-[11px] text-th-tertiary font-mono w-14 flex-shrink-0">{formatDate(post.date)}</span>
+            <span className="text-[11px] text-th-tertiary font-sans w-14 flex-shrink-0">{formatDate(post.date)}</span>
 
             <div className="flex-grow min-w-0">
-              <span className="text-sm text-th-primary group-hover-accent transition-colors truncate block" style={{ '--ac-color': accent } as React.CSSProperties}>
+              <span className="text-sm text-th-primary font-sans group-hover-accent transition-colors truncate block" style={{ '--ac-color': accent } as React.CSSProperties}>
                 <Highlight text={post.displayTitle || post.title} query={query} />
               </span>
-              <span className="text-[11px] text-th-tertiary truncate block">
+              <span className="text-[11px] text-th-tertiary font-sans truncate block">
                 <Highlight text={post.description} query={query} />
               </span>
             </div>

@@ -433,123 +433,119 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
       )}
 
       {isThreads ? (
-        <>
-          {/* ── THREADS HEADER CARD ── */}
-          <article className="article-threads-header-card">
-            <div className="article-threads-nav">
-              <nav className="article-breadcrumbs">
-                <Link to="/home" className="article-breadcrumb-link">home</Link>
-                <span className="article-breadcrumb-sep">/</span>
-                <span className="article-breadcrumb-static">blog</span>
-                <span className="article-breadcrumb-sep">/</span>
-                <Link to={sectionPathUrl} className="article-breadcrumb-link">
-                  {catCfg?.breadcrumbLabel || post.category}
-                </Link>
-                <span className="article-breadcrumb-sep">/</span>
-                <span className="article-breadcrumb-current">
-                  {(post.displayTitle || post.title).toLowerCase()}
-                </span>
-              </nav>
+        <article className="article-threads-card">
+          <div className="article-threads-nav">
+            <nav className="article-breadcrumbs">
+              <Link to="/home" className="article-breadcrumb-link">home</Link>
+              <span className="article-breadcrumb-sep">/</span>
+              <span className="article-breadcrumb-static">blog</span>
+              <span className="article-breadcrumb-sep">/</span>
+              <Link to={sectionPathUrl} className="article-breadcrumb-link">
+                {catCfg?.breadcrumbLabel || post.category}
+              </Link>
+              <span className="article-breadcrumb-sep">/</span>
+              <span className="article-breadcrumb-current">
+                {(post.displayTitle || post.title).toLowerCase()}
+              </span>
+            </nav>
+          </div>
+
+          <div className="article-threads-header-content">
+            {(post.tags?.length || post.technologies?.length) ? (
+              <div className="article-hashtags">
+                {[
+                  ...(post.tags || []).map(t => ({ label: t, tech: false })),
+                  ...(post.technologies || []).map(t => ({ label: t, tech: true })),
+                ]
+                  .sort((a, b) => a.label.localeCompare(b.label))
+                  .map(({ label, tech }) => (
+                    <span key={label} className={`article-hashtag${tech ? ' article-hashtag-tech' : ''}`}>#{label}</span>
+                  ))}
+              </div>
+            ) : null}
+
+            <div className="article-title-block">
+              <h1 className="article-title">
+                {post.displayTitle || post.title}
+              </h1>
+              {post.subtitle && (
+                <p className="article-subtitle">{post.subtitle}</p>
+              )}
             </div>
 
-            <div className="article-threads-header-content">
-              {(post.tags?.length || post.technologies?.length) ? (
-                <div className="article-hashtags">
-                  {[
-                    ...(post.tags || []).map(t => ({ label: t, tech: false })),
-                    ...(post.technologies || []).map(t => ({ label: t, tech: true })),
-                  ]
-                    .sort((a, b) => a.label.localeCompare(b.label))
-                    .map(({ label, tech }) => (
-                      <span key={label} className={`article-hashtag${tech ? ' article-hashtag-tech' : ''}`}>#{label}</span>
-                    ))}
-                </div>
-              ) : null}
+            <p className="article-threads-byline">
+              Written by <Link to={authorPath} className="article-threads-byline-link">{authorName}</Link>
+            </p>
 
-              <div className="article-title-block">
-                <h1 className="article-title">
-                  {post.displayTitle || post.title}
-                </h1>
-                {post.subtitle && (
-                  <p className="article-subtitle">{post.subtitle}</p>
-                )}
-              </div>
-
-              <p className="article-threads-byline">
-                Written by <Link to={authorPath} className="article-threads-byline-link">{authorName}</Link>
-              </p>
-
-              <div className="article-threads-dateline">
-                <span>{formatDate(post.date)}</span>
-                <span className="article-threads-dateline-sep">&middot;</span>
-                <span>{readingTime} min read</span>
-              </div>
-
-              <div className="article-threads-social">
-                <a
-                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="article-share-icon article-social-linkedin"
-                  title="Share on LinkedIn"
-                >
-                  <LinkedInIcon size={18} />
-                </a>
-                <a
-                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out: ${post.displayTitle || post.title}`)}&url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="article-share-icon article-social-twitter"
-                  title="Share on X"
-                >
-                  <TwitterIcon size={18} />
-                </a>
-                <a
-                  href={`https://reddit.com/submit?url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}&title=${encodeURIComponent(post.displayTitle || post.title)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="article-share-icon article-social-reddit"
-                  title="Share on Reddit"
-                >
-                  <RedditIcon size={18} />
-                </a>
-                <a
-                  href={`https://news.ycombinator.com/submitlink?u=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}&t=${encodeURIComponent(post.displayTitle || post.title)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="article-share-icon article-social-hn"
-                  title="Share on Hacker News"
-                >
-                  <HackerNewsIcon size={18} />
-                </a>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}${location.pathname}`);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  }}
-                  className="article-share-icon article-social-copy"
-                  title={copied ? 'Copied!' : 'Copy link'}
-                >
-                  {copied ? <CheckIcon size={18} /> : <ClipboardIcon size={18} />}
-                </button>
-              </div>
+            <div className="article-threads-dateline">
+              <span>{formatDate(post.date)}</span>
+              <span className="article-threads-dateline-sep">&middot;</span>
+              <span>{readingTime} min read</span>
             </div>
 
-            {post.thumbnail && (
-              <div className={`article-threads-image thumb-${post.thumbnailAspect || 'full'}`}>
-                <img
-                  src={post.thumbnail}
-                  alt={post.displayTitle || post.title}
-                  loading="lazy"
-                  className="article-blog-image-img"
-                />
-              </div>
-            )}
-          </article>
+            <div className="article-threads-social">
+              <a
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="article-share-icon article-social-linkedin"
+                title="Share on LinkedIn"
+              >
+                <LinkedInIcon size={18} />
+              </a>
+              <a
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out: ${post.displayTitle || post.title}`)}&url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="article-share-icon article-social-twitter"
+                title="Share on X"
+              >
+                <TwitterIcon size={18} />
+              </a>
+              <a
+                href={`https://reddit.com/submit?url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}&title=${encodeURIComponent(post.displayTitle || post.title)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="article-share-icon article-social-reddit"
+                title="Share on Reddit"
+              >
+                <RedditIcon size={18} />
+              </a>
+              <a
+                href={`https://news.ycombinator.com/submitlink?u=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}&t=${encodeURIComponent(post.displayTitle || post.title)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="article-share-icon article-social-hn"
+                title="Share on Hacker News"
+              >
+                <HackerNewsIcon size={18} />
+              </a>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}${location.pathname}`);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                className="article-share-icon article-social-copy"
+                title={copied ? 'Copied!' : 'Copy link'}
+              >
+                {copied ? <CheckIcon size={18} /> : <ClipboardIcon size={18} />}
+              </button>
+            </div>
+          </div>
 
-          {/* ── THREADS BODY CARD ── */}
-          <div className="article-threads-body-card">
+          {post.thumbnail && (
+            <div className={`article-threads-image thumb-${post.thumbnailAspect || 'full'}`}>
+              <img
+                src={post.thumbnail}
+                alt={post.displayTitle || post.title}
+                loading="lazy"
+                className="article-blog-image-img"
+              />
+            </div>
+          )}
+
+          <div className="article-threads-body">
             <WikiContent
               html={contentWithIds}
               allFieldNotes={brainIndex?.allFieldNotes}
@@ -557,7 +553,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
             />
             <FeedbackForm title={post.displayTitle || post.title} category={post.category} />
           </div>
-        </>
+        </article>
       ) : (
       <article className="article-container">
 

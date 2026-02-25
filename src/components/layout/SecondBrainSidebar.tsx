@@ -1,6 +1,6 @@
 // Second Brain Manager Sidebar — data exploration dashboard for /second-brain* routes
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useHub } from '../../contexts/SecondBrainHubContext';
 import {
@@ -16,7 +16,7 @@ import { IslandDetector, type IslandDetectorHandle } from '../IslandDetector';
 import { useGraphRelevance } from '../../hooks/useGraphRelevance';
 import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../../constants/layout';
 import type { FieldNoteMeta } from '../../types';
-import type { TreeNode, FilterState } from '../../hooks/useSecondBrainHub';
+import type { TreeNode, FilterState, DirectorySortMode } from '../../hooks/useSecondBrainHub';
 
 // --- Collapsible Section ---
 const Section: React.FC<{
@@ -207,9 +207,7 @@ const TreeNodeItem: React.FC<{
       {hasChildren && (
         <div className={`grid transition-[grid-template-rows] duration-200 ease-out ${isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
           <div className="overflow-hidden">
-            {hasBeenExpanded && node.children
-              .sort((a, b) => a.label.localeCompare(b.label))
-              .map(child => (
+            {hasBeenExpanded && node.children.map(child => (
                 <TreeNodeItem
                   key={child.label}
                   node={child}
@@ -231,15 +229,218 @@ const TreeNodeItem: React.FC<{
 };
 
 // --- Sidebar header help content ---
-const HEADER_INFO_CONTENT = (
-  <div className="space-y-2.5">
-    <p>A <strong className={tipStrong}>knowledge graph</strong> for exploring interconnected concepts. Each card is a note; links between them form a navigable web.</p>
-    <p><strong className={tipStrong}>Just start typing</strong> — any key opens the search. Results filter live as you type.</p>
-    <p><span style={{ color: 'var(--wiki-link-visited)' }}>Blue</span> = visited this session. <span className={tipAccent}>Purple</span> = not yet visited. Tracked across the grid, links, and graph.</p>
-    <p>The <strong className={tipStrong}>sidebar sections</strong> below show different views of the same data — each has its own <span className={tipAccent}>?</span> with details.</p>
-    <p>Use the theme button in the header — or <code className={tipCode}>Shift+T</code> on desktop — to toggle light / dark.</p>
-  </div>
-);
+const HEADER_INFO_TABS = [
+  {
+    label: 'overview',
+    content: (
+      <div className="space-y-2">
+        <p>A <strong className={tipStrong}>knowledge graph</strong> for exploring interconnected concepts. Each card is a note; links between them form a navigable web.</p>
+        <p><strong className={tipStrong}>Just start typing</strong> — any key opens the search. Results filter live as you type.</p>
+        <p><span style={{ color: 'var(--wiki-link-visited)' }}>Blue</span> = visited this session. <span className={tipAccent}>Purple</span> = not yet visited. Tracked across the grid, links, and graph.</p>
+        <p>Use the theme button in the header — or <code className={tipCode}>Shift+T</code> on desktop — to toggle light / dark.</p>
+      </div>
+    ),
+  },
+  {
+    label: 'stats',
+    content: (
+      <div className="space-y-2">
+        <p><strong className={tipStrong}>Concepts</strong> — total number of notes in the knowledge base.</p>
+        <p><strong className={tipStrong}>Links</strong> — total references between notes (wiki-links in the body + explicit interactions).</p>
+        <p><strong className={tipStrong}>Isolated</strong> — notes with zero connections to anything.</p>
+        <p><strong className={tipStrong}>Avg refs</strong> — average number of links per note.</p>
+        <p><strong className={tipStrong}>Max depth</strong> — deepest level in the naming tree (e.g. <code className={tipCode}>chip//MCU//ARM</code> = depth 3).</p>
+        <p><strong className={tipStrong}>Density</strong> — how interconnected the graph is. 100% would mean every note links to every other note.</p>
+      </div>
+    ),
+  },
+  {
+    label: 'directory',
+    content: (
+      <div className="space-y-2">
+        <p>The directory organizes notes by their <strong className={tipStrong}>address</strong> — a naming path using <code className={tipCode}>//</code> as separator (e.g. <code className={tipCode}>chip//MCU//ARM</code>). This is the note's position in a <em>naming hierarchy</em>, independent of which notes it links to.</p>
+        <p><strong className={tipStrong}>Scope</strong> — select a folder name (or the ⊙ icon) to filter the grid to only notes within that branch.</p>
+        <p><strong className={tipStrong}>Auto-expand</strong> — when you open a note, its branch auto-expands here.</p>
+        <p><strong className={tipStrong}>Filter tree</strong> — type in the input above to narrow by name.</p>
+        <p><strong className={tipStrong}>Centrality bars</strong> — small bars on the right show each note's relative importance based on how many links it has.</p>
+        <p><strong className={tipStrong}>Auto-prune</strong> — when filters, search, or scope are active, branches with zero matching notes disappear temporarily.</p>
+      </div>
+    ),
+  },
+  {
+    label: 'topology',
+    content: (
+      <div className="space-y-2">
+        <p>Topology groups notes by <strong className={tipStrong}>actual connections</strong> (wiki-links and interactions) — not by their name or folder. Two notes in the same directory folder can belong to different islands if they aren't linked.</p>
+        <p><strong className={tipStrong}>Islands</strong> — clusters of notes reachable from each other through links. Each gets a <span className={tipAccent}>#ID</span>.</p>
+        <p><strong className={tipStrong}>Bridges</strong> (⚡) — notes that hold an island together. Remove one and the cluster splits into separate groups.</p>
+        <p><strong className={tipStrong}>Isolated</strong> (○) — notes with zero connections to anything.</p>
+        <p><strong className={tipStrong}>Tap the chevron</strong> next to any component to see all its members.</p>
+        <p><strong className={tipStrong}>Island badge</strong> — in note detail, each note shows its island <span className={tipAccent}>#ID</span>. Click to scroll here.</p>
+        <p><strong className={tipStrong}>Auto-prune</strong> — when filters, search, or scope are active, islands with zero matching notes disappear temporarily.</p>
+      </div>
+    ),
+  },
+];
+
+// --- Word Count Histogram ---
+const WordCountHistogram: React.FC<{
+  notes: FieldNoteMeta[];
+  wordCountMin: number;
+  wordCountMax: number;
+  onFilter: (min: number, max: number) => void;
+}> = ({ notes, wordCountMin, wordCountMax, onFilter }) => {
+  const BUCKET_COUNT = 10;
+  const MAX_BAR_HEIGHT = 30;
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const { buckets, maxCount, maxWc } = useMemo(() => {
+    const counts = notes.map(n => (n.searchText || '').split(/\s+/).filter(Boolean).length);
+    const maxWc = Math.max(...counts, 1);
+    const binWidth = Math.ceil(maxWc / BUCKET_COUNT) || 1;
+    const bucketCount = Math.ceil(maxWc / binWidth);
+    const buckets: { min: number; max: number; count: number }[] = [];
+    for (let i = 0; i < bucketCount; i++) {
+      buckets.push({ min: i * binWidth, max: (i + 1) * binWidth - 1, count: 0 });
+    }
+    counts.forEach(wc => {
+      const idx = Math.min(Math.floor(wc / binWidth), bucketCount - 1);
+      buckets[idx].count++;
+    });
+    const maxCount = Math.max(...buckets.map(b => b.count), 1);
+    return { buckets, maxCount, maxWc };
+  }, [notes]);
+
+  const hasSelection = wordCountMin > 0 || wordCountMax < Infinity;
+  const effectiveMax = wordCountMax === Infinity ? maxWc : wordCountMax;
+
+  const isInSelection = (bucket: { min: number; max: number }) => {
+    if (!hasSelection) return true;
+    return bucket.max >= wordCountMin && bucket.min <= effectiveMax;
+  };
+
+  // Mirrors heatmap click logic:
+  // nothing selected → select single; range selected → reset to single;
+  // single + same → deselect; single + after → extend range; single + before → replace
+  const isSingleBucket = hasSelection && wordCountMin === effectiveMax
+    ? true  // degenerate: one-bucket range
+    : hasSelection && buckets.some(b => b.min === wordCountMin && b.max === effectiveMax);
+  const isRange = hasSelection && !isSingleBucket;
+
+  const handleBarClick = (bucket: { min: number; max: number }) => {
+    if (!hasSelection) {
+      // Nothing selected → select single
+      onFilter(bucket.min, bucket.max);
+    } else if (isRange) {
+      // Range selected → reset to this single bucket
+      onFilter(bucket.min, bucket.max);
+    } else {
+      // Single bucket selected
+      if (bucket.min === wordCountMin && bucket.max === effectiveMax) {
+        // Same bucket → deselect
+        onFilter(0, Infinity);
+      } else if (bucket.min > effectiveMax) {
+        // After → extend to range
+        onFilter(wordCountMin, bucket.max);
+      } else {
+        // Before or non-adjacent → replace with new single
+        onFilter(bucket.min, bucket.max);
+      }
+    }
+  };
+
+  // Touch drag: resolve bucket index from clientX
+  const bucketFromX = (clientX: number): number | null => {
+    const el = containerRef.current;
+    if (!el || buckets.length === 0) return null;
+    const rect = el.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const gap = 2;
+    const colWidth = (rect.width - (buckets.length - 1) * gap) / buckets.length;
+    const colStep = colWidth + gap;
+    const idx = Math.min(Math.max(Math.floor(x / colStep), 0), buckets.length - 1);
+    return idx;
+  };
+
+  // Touch drag state
+  const dragRef = useRef<{ startIdx: number; lastIdx: number } | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const idx = bucketFromX(e.touches[0].clientX);
+    if (idx == null) return;
+    dragRef.current = { startIdx: idx, lastIdx: idx };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!dragRef.current) return;
+    const idx = bucketFromX(e.touches[0].clientX);
+    if (idx == null || idx === dragRef.current.lastIdx) return;
+    dragRef.current.lastIdx = idx;
+    // Live preview: set range from startIdx..currentIdx
+    const lo = Math.min(dragRef.current.startIdx, idx);
+    const hi = Math.max(dragRef.current.startIdx, idx);
+    onFilter(buckets[lo].min, buckets[hi].max);
+  };
+
+  const handleTouchEnd = () => {
+    if (!dragRef.current) return;
+    const { startIdx, lastIdx } = dragRef.current;
+    dragRef.current = null;
+    if (startIdx === lastIdx) {
+      // Single tap — use normal click logic
+      handleBarClick(buckets[startIdx]);
+    }
+    // Range already committed during touchMove
+  };
+
+  const selectionLabel = hasSelection
+    ? `${wordCountMin}\u2013${effectiveMax} words`
+    : null;
+
+  return (
+    <div className="mt-2">
+      <div className="flex items-center gap-1.5 mb-1">
+        <span className="text-[9px] text-th-muted">word count</span>
+        {selectionLabel && (
+          <span className="text-[9px] text-violet-400 tabular-nums ml-auto">{selectionLabel}</span>
+        )}
+      </div>
+      <div
+        ref={containerRef}
+        className="flex items-end gap-[2px] cursor-pointer"
+        style={{ height: MAX_BAR_HEIGHT + 2 }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {buckets.map((bucket, i) => {
+          const barH = bucket.count > 0 ? Math.max((bucket.count / maxCount) * MAX_BAR_HEIGHT, 2) : 1;
+          const inSelection = isInSelection(bucket);
+          return (
+            <div
+              key={i}
+              className="flex-1 min-w-0 flex items-end"
+              style={{ height: MAX_BAR_HEIGHT + 2 }}
+              onClick={() => handleBarClick(bucket)}
+              title={`${bucket.min}\u2013${bucket.max} words: ${bucket.count} notes`}
+            >
+              <div
+                className="w-full"
+                style={{
+                  height: barH,
+                  backgroundColor: inSelection
+                    ? 'rgba(167, 139, 250, 0.5)'
+                    : 'rgba(167, 139, 250, 0.15)',
+                  borderRadius: 1,
+                }}
+              />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 // --- Main Sidebar ---
 export const SecondBrainSidebar: React.FC = () => {
@@ -311,13 +512,37 @@ export const SecondBrainSidebar: React.FC = () => {
     filterState, setFilterState,
     directoryScope, setDirectoryScope,
     directoryQuery, setDirectoryQuery,
+    directorySortMode, setDirectorySortMode,
     filteredTree,
     stats,
     allFieldNotes,
     backlinksMap,
     signalDirectoryNav,
     activePost,
+    sortedResults,
+    histogramNotes,
+    hasActiveFilters,
+    searchActive,
   } = hub;
+
+  // Prune sidebar sections when any filter/scope/search is active
+  const isFiltering = hasActiveFilters || !!directoryScope || searchActive;
+  const resultIdSet = useMemo(() => {
+    if (!isFiltering) return null;
+    return new Set(sortedResults.map(n => n.id));
+  }, [sortedResults, isFiltering]);
+
+  const visibleTree = useMemo(() => {
+    if (!resultIdSet) return filteredTree;
+    const prune = (nodes: TreeNode[]): TreeNode[] =>
+      nodes.reduce<TreeNode[]>((acc, node) => {
+        const hit = node.concept && resultIdSet.has(node.concept.id);
+        const kids = prune(node.children);
+        if (hit || kids.length > 0) acc.push({ ...node, children: kids });
+        return acc;
+      }, []);
+    return prune(filteredTree);
+  }, [filteredTree, resultIdSet]);
 
   const handleScope = (path: string) => {
     // Toggle: clicking already-scoped folder clears scope
@@ -335,21 +560,6 @@ export const SecondBrainSidebar: React.FC = () => {
         title="graph stats"
         icon={<BarChartIcon />}
         defaultOpen={false}
-        headerAction={
-          <InfoPopover
-            title="What each stat means"
-            content={
-              <div className="space-y-2">
-                <p><strong className={tipStrong}>Concepts</strong> — total number of notes in the knowledge base.</p>
-                <p><strong className={tipStrong}>Links</strong> — total references between notes (wiki-links in the body + explicit interactions).</p>
-                <p><strong className={tipStrong}>Isolated</strong> — notes with zero connections to anything.</p>
-                <p><strong className={tipStrong}>Avg refs</strong> — average number of links per note.</p>
-                <p><strong className={tipStrong}>Max depth</strong> — deepest level in the naming tree (e.g. <code className={tipCode}>chip//MCU//ARM</code> = depth 3).</p>
-                <p><strong className={tipStrong}>Density</strong> — how interconnected the graph is. 100% would mean every note links to every other note.</p>
-              </div>
-            }
-          />
-        }
       >
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
           <div>
@@ -377,69 +587,13 @@ export const SecondBrainSidebar: React.FC = () => {
             <div className="text-[11px] text-th-primary tabular-nums">{stats.density}%</div>
           </div>
         </div>
-      </Section>
-
-      {/* Topology */}
-      <Section
-        title="topology"
-        icon={<IslandIcon />}
-        defaultOpen={true}
-        forceOpen={topologyFocus != null}
-        headerAction={
-          <span className="flex items-center gap-1.5">
-            <InfoPopover
-              title="Topology overview"
-              content={
-                <div className="space-y-2">
-                  <p>Topology groups notes by <strong className={tipStrong}>actual connections</strong> (wiki-links and interactions) — not by their name or folder. Two notes in the same directory folder can belong to different islands if they aren't linked.</p>
-                  <p><strong className={tipStrong}>Islands</strong> — clusters of notes reachable from each other through links. Each gets a <span className={tipAccent}>#ID</span>.</p>
-                  <p><strong className={tipStrong}>Bridges</strong> (⚡) — notes that hold an island together. Remove one and the cluster splits into separate groups.</p>
-                  <p><strong className={tipStrong}>Isolated</strong> (○) — notes with zero connections to anything.</p>
-                  <p><strong className={tipStrong}>Tap the chevron</strong> next to any component to see all its members.</p>
-                  <p><strong className={tipStrong}>Island badge</strong> — in note detail, each note shows its island <span className={tipAccent}>#ID</span>. Click to scroll here.</p>
-                </div>
-              }
-            />
-            <button
-              onClick={() => islandRef.current?.collapseAll()}
-              className="text-th-muted hover:text-th-secondary transition-colors p-1 leading-none"
-              title="Collapse all"
-            >
-              <svg className="block" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" x2="18" y1="15" y2="15" />
-                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-              </svg>
-            </button>
-          </span>
-        }
-      >
-        <div className="flex items-center border border-th-hub-border px-2 py-1 bg-th-surface focus-within:border-th-border-active transition-colors mb-2">
-          <input
-            type="text"
-            placeholder="Filter topology..."
-            value={topologyQuery}
-            onChange={(e) => setTopologyQuery(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Escape') { setTopologyQuery(''); (e.target as HTMLInputElement).blur(); } }}
-            className="w-full text-[10px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
-          />
-          {topologyQuery && (
-            <button
-              onClick={() => setTopologyQuery('')}
-              className="text-th-muted hover:text-th-secondary text-[9px] ml-1 flex-shrink-0"
-            >
-              &times;
-            </button>
-          )}
-        </div>
-        <IslandDetector
-          ref={islandRef}
-          focusComponentId={topologyFocus?.id ?? null}
-          focusFlash={topologyFocus?.flash ?? false}
-          onFocusHandled={() => setTopologyFocus(null)}
-          activeIslandScope={filterState.islandId}
-          onIslandScope={(id) => updateFilter('islandId', filterState.islandId === id ? null : id)}
-          filterQuery={topologyQuery}
+        <WordCountHistogram
+          notes={histogramNotes}
+          wordCountMin={filterState.wordCountMin}
+          wordCountMax={filterState.wordCountMax}
+          onFilter={(min, max) => {
+            setFilterState(prev => ({ ...prev, wordCountMin: min, wordCountMax: max }));
+          }}
         />
       </Section>
 
@@ -449,19 +603,21 @@ export const SecondBrainSidebar: React.FC = () => {
         icon={<FolderIcon />}
         defaultOpen={true}
         headerAction={
-          <span className="flex items-center gap-1.5">
-            <InfoPopover
-              title="Directory tree"
-              content={
-                <div className="space-y-2">
-                  <p>The directory organizes notes by their <strong className={tipStrong}>address</strong> — a naming path using <code className={tipCode}>//</code> as separator (e.g. <code className={tipCode}>chip//MCU//ARM</code>). This is the note's position in a <em>naming hierarchy</em>, independent of which notes it links to.</p>
-                  <p><strong className={tipStrong}>Scope</strong> — select a folder name (or the ⊙ icon) to filter the grid to only notes within that branch.</p>
-                  <p><strong className={tipStrong}>Auto-expand</strong> — when you open a note, its branch auto-expands here.</p>
-                  <p><strong className={tipStrong}>Filter tree</strong> — type in the input above to narrow by name.</p>
-                  <p><strong className={tipStrong}>Centrality bars</strong> — small bars on the right show each note's relative importance based on how many links it has.</p>
-                </div>
-              }
-            />
+          <span className="flex items-center gap-0.5">
+            {([
+              ['children', 'Sort by children count', <svg key="ch" className="block" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v8"/><path d="M4 14h16"/><circle cx="6" cy="19" r="3"/><circle cx="12" cy="19" r="3"/><circle cx="18" cy="19" r="3"/></svg>],
+              ['alpha', 'Sort alphabetically', <svg key="az" className="block" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h8"/><path d="M3 12h5"/><path d="M3 18h3"/><path d="M16 6l4 12"/><path d="M13 18h6"/></svg>],
+              ['depth', 'Sort by depth', <svg key="dp" className="block" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18"/><path d="M7 8h4"/><path d="M7 16h8"/><path d="M7 12h12"/></svg>],
+            ] as [DirectorySortMode, string, React.ReactNode][]).map(([mode, title, icon]) => (
+              <button
+                key={mode}
+                onClick={() => setDirectorySortMode(mode)}
+                className={`p-1 leading-none transition-colors ${directorySortMode === mode ? 'text-th-secondary' : 'text-th-muted hover:text-th-secondary'}`}
+                title={title}
+              >
+                {icon}
+              </button>
+            ))}
             <button
               onClick={() => setDirCollapseGen(g => g + 1)}
               className="text-th-muted hover:text-th-secondary transition-colors p-1 leading-none"
@@ -497,10 +653,15 @@ export const SecondBrainSidebar: React.FC = () => {
         </div>
 
         {(() => {
-          const withChildren = filteredTree.filter(n => n.children.length > 0);
-          const leaves = filteredTree.filter(n => n.children.length === 0);
+          const withChildren = visibleTree.filter(n => n.children.length > 0);
+          const leaves = visibleTree.filter(n => n.children.length === 0);
           return (
             <div>
+              {withChildren.length === 0 && leaves.length === 0 && isFiltering && (
+                <div className="text-[10px] text-th-muted py-2 text-center">
+                  No branches match current filters
+                </div>
+              )}
               {withChildren.length > 0 && (
                 <div className="space-y-0.5">
                   {withChildren.map(node => (
@@ -548,6 +709,58 @@ export const SecondBrainSidebar: React.FC = () => {
           );
         })()}
       </Section>
+
+      {/* Topology */}
+      <Section
+        title="topology"
+        icon={<IslandIcon />}
+        defaultOpen={true}
+        forceOpen={topologyFocus != null}
+        headerAction={
+          <span className="flex items-center gap-1.5">
+            <button
+              onClick={() => islandRef.current?.collapseAll()}
+              className="text-th-muted hover:text-th-secondary transition-colors p-1 leading-none"
+              title="Collapse all"
+            >
+              <svg className="block" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" x2="18" y1="15" y2="15" />
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+              </svg>
+            </button>
+          </span>
+        }
+      >
+        <div className="flex items-center border border-th-hub-border px-2 py-1 bg-th-surface focus-within:border-th-border-active transition-colors mb-2">
+          <input
+            type="text"
+            placeholder="Filter topology..."
+            value={topologyQuery}
+            onChange={(e) => setTopologyQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape') { setTopologyQuery(''); (e.target as HTMLInputElement).blur(); } }}
+            className="w-full text-[10px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
+          />
+          {topologyQuery && (
+            <button
+              onClick={() => setTopologyQuery('')}
+              className="text-th-muted hover:text-th-secondary text-[9px] ml-1 flex-shrink-0"
+            >
+              &times;
+            </button>
+          )}
+        </div>
+        <IslandDetector
+          ref={islandRef}
+          focusComponentId={topologyFocus?.id ?? null}
+          focusFlash={topologyFocus?.flash ?? false}
+          onFocusHandled={() => setTopologyFocus(null)}
+          activeIslandScope={filterState.islandId}
+          onIslandScope={(id) => updateFilter('islandId', filterState.islandId === id ? null : id)}
+          filterQuery={topologyQuery}
+          visibleIds={resultIdSet}
+        />
+      </Section>
     </>
   );
 
@@ -576,16 +789,16 @@ export const SecondBrainSidebar: React.FC = () => {
             {/* Header with close */}
             <div className="px-3 py-3 border-b border-th-hub-border flex-shrink-0 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div>
+                <Link to="/lab/second-brain" className="group" onClick={() => setMobileOpen(false)}>
                   <div className="text-[11px] lowercase tracking-wide">
-                    <span className="font-semibold text-violet-400">second brain</span>{' '}
+                    <span className="font-semibold text-violet-400 group-hover:text-violet-300 transition-colors">second brain</span>{' '}
                     <span className="text-th-muted font-normal">manager</span>
                   </div>
                   <div className="text-[9px] text-th-muted mt-0.5">
                     {stats.totalConcepts} concepts
                   </div>
-                </div>
-                <InfoPopover content={HEADER_INFO_CONTENT} title="How Second Brain works" />
+                </Link>
+                <InfoPopover tabs={HEADER_INFO_TABS} title="How Second Brain works" />
               </div>
               <button
                 onClick={() => setMobileOpen(false)}
@@ -616,16 +829,16 @@ export const SecondBrainSidebar: React.FC = () => {
       >
         {/* Header */}
         <div className="px-3 py-3 border-b border-th-hub-border flex-shrink-0 flex items-start justify-between">
-          <div>
+          <Link to="/lab/second-brain" className="group">
             <div className="text-[11px] lowercase tracking-wide">
-              <span className="font-semibold text-violet-400">second brain</span>{' '}
+              <span className="font-semibold text-violet-400 group-hover:text-violet-300 transition-colors">second brain</span>{' '}
               <span className="text-th-muted font-normal">manager</span>
             </div>
             <div className="text-[9px] text-th-muted mt-0.5">
               {stats.totalConcepts} concepts
             </div>
-          </div>
-          <InfoPopover content={HEADER_INFO_CONTENT} title="How Second Brain works" className="mt-0.5" />
+          </Link>
+          <InfoPopover tabs={HEADER_INFO_TABS} title="How Second Brain works" className="mt-0.5" />
         </div>
         {/* Scrollable sections */}
         <div className="flex-1 overflow-y-auto thin-scrollbar hub-scrollbar">

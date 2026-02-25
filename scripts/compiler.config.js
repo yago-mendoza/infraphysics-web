@@ -34,6 +34,7 @@ export default {
     { name: 'subscript',        pattern: /\{v:([^}]+)\}/g,                              replace: '<sub>$1</sub>' },
     { name: 'keyboard',         pattern: /\{kbd:([^}]+)\}/g,                            replace: '<kbd>$1</kbd>' },
     { name: 'shout',            pattern: /\{shout:([^}]+)\}/g,                          replace: '<p class="shout">$1</p>' },
+    { name: 'dots',             pattern: /^\{dots\}$/gm,                                replace: '<p class="dots-sep">\u00b7 \u00b7 \u00b7</p>' },
     { name: 'underline',        pattern: /(?<!\w)_([^_\n]+?)_(?!\w)/g,                  replace: '<span style="text-decoration:underline">$1</span>' },
     { name: 'accent-text',      pattern: /(?<!-)--((?:(?!--)[^\n])+?)--(?!-)/g,                  replace: '<span class="accent-text">$1</span>' },
   ],

@@ -1018,7 +1018,17 @@
   margin: 2.5rem 0;
 }
 
-/* B5d. Alphabetical ordered lists */
+/* B5d. Dots separator — Medium-style centered · · · */
+
+.article-page-wrapper .article-content p.dots-sep {
+  text-align: center;
+  font-size: 2rem;
+  letter-spacing: 0.15em;
+  color: var(--art-text-mid);
+  margin: 2.5rem 0;
+}
+
+/* B5e. Alphabetical ordered lists */
 
 .article-content ol[type="a"],
 .article-content ol[type="A"] {
@@ -1620,20 +1630,35 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
    Scoped overrides for threads + bits2bricks
    ───────────────────────────────────────────────── */
 
-/* E1. Body font override — Inter for prose */
+/* E1. Body font override — Source Serif 4 italic for prose */
 .article-blog .article-content p,
 .article-blog .article-content li,
 .article-blog .article-content td,
 .article-blog .article-content .small-text p,
 .article-blog .article-content .ann-note {
-  font-family: 'Inter', var(--font-sans);
-  font-size: 0.9rem;
-  line-height: 1.45;
+  font-family: 'Source Serif 4', var(--font-serif);
+  font-weight: 400;
+  font-style: italic;
+  font-size: 0.95rem;
+  line-height: 1.55;
 }
 
-/* E2. Blog typography — Inter, no uppercase, lighter weight */
-.article-blog .article-title,
-.article-blog .article-subtitle,
+/* E2. Blog typography — Geologica for titles, Source Serif 4 italic for subtitles, Inter for subheadings */
+.article-blog .article-title {
+  font-family: 'Geologica', var(--font-sans);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.article-blog .article-subtitle {
+  font-family: 'Source Serif 4', var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
 .article-blog .article-content h1,
 .article-blog .article-content h2,
 .article-blog .article-content h3,
@@ -1647,35 +1672,61 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 /* E2b. Feedback form — Inter for blog */
 .article-blog .article-feedback {
   font-family: 'Inter', var(--font-sans);
+  font-style: normal;
 }
 
-/* E2c. Threads typography — serif (Source Serif 4) for prose + headings */
+/* E2e. Blog chrome — Inter for breadcrumbs, hashtags, meta */
+.article-blog .article-breadcrumbs {
+  font-family: 'Inter', var(--font-sans);
+  font-weight: 400;
+}
+
+.article-blog .article-hashtag {
+  font-family: 'Inter', var(--font-sans);
+  font-weight: 400;
+}
+
+.article-blog .article-meta {
+  font-family: 'Inter', var(--font-sans);
+  font-weight: 400;
+}
+
+/* E2c. Threads typography — Source Serif 4 italic for prose */
 .article-threads .article-content p,
 .article-threads .article-content li,
 .article-threads .article-content td,
 .article-threads .article-content .small-text p,
 .article-threads .article-content .ann-note {
   font-family: 'Source Serif 4', var(--font-serif);
+  font-weight: 400;
+  font-style: italic;
   font-size: 0.95rem;
   line-height: 1.55;
 }
 
-.article-threads .article-title,
-.article-threads .article-subtitle,
+.article-threads .article-title {
+  font-family: 'Geologica', var(--font-sans);
+  font-weight: 500;
+}
+
 .article-threads .article-content h1,
 .article-threads .article-content h2,
 .article-threads .article-content h3,
 .article-threads .article-content h4 {
   font-family: 'Source Serif 4', var(--font-serif);
+  font-style: normal;
+  font-weight: 600;
 }
 
 .article-threads .article-feedback {
   font-family: 'Source Serif 4', var(--font-serif);
+  font-style: normal;
 }
 
 .article-threads .article-toc-label,
 .article-threads .article-toc-link {
   font-family: 'Source Serif 4', var(--font-serif);
+  font-style: normal;
 }
 
 .article-threads .article-content .bkqt-body {
@@ -1688,6 +1739,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   font-family: 'Source Serif 4', var(--font-serif);
   font-size: 0.95rem;
   font-weight: 700;
+  font-style: normal;
   text-transform: none;
   letter-spacing: normal;
   margin-right: 0;
@@ -1898,19 +1950,15 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
    Header card (wider) + body card (offset right)
    ───────────────────────────────────────────────── */
 
-/* F1. Card bases */
-.article-threads-header-card {
+/* F1. Unified card */
+.article-threads-card {
   background: var(--art-surface);
   border: 1px solid var(--art-border);
   overflow: hidden;
 }
 
-/* F2. Body card — offset to create header-wider effect */
-.article-threads-body-card {
-  background: var(--art-surface);
-  border: 1px solid var(--art-border);
-  margin-left: 10rem;
-  margin-top: 2.5rem;
+/* F2. Body section — inside the card, same padding as header */
+.article-threads-body {
   --art-body-px: 2rem;
   padding: 2rem;
 }
@@ -1918,6 +1966,8 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 /* F3. Header nav bar */
 .article-threads-nav {
+  font-family: 'Inter', var(--font-sans);
+  font-weight: 400;
   padding: 0.55rem 2rem;
   border-bottom: 1px solid var(--art-border);
 }
@@ -1930,6 +1980,8 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 /* F5. Byline */
 .article-threads-byline {
   font-family: 'Source Serif 4', var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
   font-size: 0.85rem;
   color: var(--art-text-mid);
   margin: 0 0 0.25rem;
@@ -1947,7 +1999,8 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 /* F6. Dateline */
 .article-threads-dateline {
-  font-family: 'JetBrains Mono', var(--font-mono);
+  font-family: 'Inter', var(--font-sans);
+  font-weight: 400;
   font-size: 0.7rem;
   color: var(--art-text-dim);
   display: flex;
@@ -1981,12 +2034,10 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 /* F9. Responsive */
 @media (max-width: 767px) {
-  .article-threads-body-card {
-    margin-left: 0;
+  .article-threads-body {
     --art-body-px: 0.75rem;
     padding: 1rem 0.75rem 1.5rem;
   }
-
 
   .article-threads-nav {
     padding: 0.55rem 0.75rem;

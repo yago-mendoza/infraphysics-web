@@ -47,6 +47,7 @@ const ALL_FIXED_PX = 122;
 const AVG_CHAR_PX = 7; // conservative avg char width at text-[11px]
 
 function CentralityIndicator({ percentile }: { percentile: number }) {
+  if (percentile === 0) return null;
   const isTop = percentile >= 50;
   const pctLabel = isTop ? Math.max(1, 100 - percentile) : Math.max(1, percentile);
   const segX = isTop ? (percentile / 100) * CENT_BAR_W : 0;

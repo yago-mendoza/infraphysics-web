@@ -35,7 +35,7 @@ const PAGE_SIZE = 3;
 export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
   const [query, setQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title'>('newest');
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(category === 'projects');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [selectedTechs, setSelectedTechs] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
@@ -53,6 +53,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
     setSelectedTechs([]);
     setSelectedStatuses([]);
     setSortBy('newest');
+    setShowFilters(category === 'projects');
     setVisibleCount(PAGE_SIZE);
   }, [category]);
 
@@ -171,10 +172,13 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
       {/* Header */}
       <header className="mb-8 pb-6 border-b border-th-border">
         <div className="flex flex-col md:flex-row md:items-baseline md:justify-between gap-2 md:gap-4 mb-3">
-          <h1 className={`text-2xl md:text-4xl font-bold tracking-tight title-l-frame uppercase ${categoryInfo.colorClass}`}>
+          <h1
+            className={`text-2xl md:text-4xl font-bold tracking-tight title-l-frame uppercase ${categoryInfo.colorClass}`}
+            style={category !== 'projects' ? { fontFamily: "'Geologica', sans-serif", fontWeight: 500, textTransform: 'none' as const } : undefined}
+          >
             <span className="text-th-heading">{categoryInfo.title}</span>
           </h1>
-          <div className="flex items-center gap-4 text-xs text-th-tertiary">
+          <div className={`flex items-center gap-4 text-xs text-th-tertiary ${category !== 'projects' ? 'font-sans' : ''}`}>
             <span>{filteredPosts.length} {filteredPosts.length === 1 ? 'entry' : 'entries'}</span>
             <span className="text-th-muted">&middot;</span>
             <span>{filteredPosts.reduce((acc, p) => acc + calculateReadingTime(p.content), 0)} min total</span>

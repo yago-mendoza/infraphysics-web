@@ -130,7 +130,7 @@ the reason every pipe system discovers buffering is that variable demand plus fi
 
 these aren't design choices. they're --theorems--. any engineer building any pipe system will rediscover them, because they are properties of the *problem space*, not the solution space. the Romans didn't *choose* to invent buffering. buffering *chose* to be necessary. evolution didn't *design* vasoconstriction. physics demanded it.
 
----
+{dots}
 
 i keep coming back to a line that sits on the front page of this site: *engineering is engineering — the substrate doesn't matter.*
 

@@ -37,9 +37,9 @@ export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, 
 
             {/* Content */}
             <div className="p-4 space-y-2.5">
-              <span className="text-[11px] text-th-tertiary font-mono">{formatDate(post.date)}</span>
+              <span className="text-[11px] text-th-tertiary font-sans">{formatDate(post.date)}</span>
 
-              <h3 className="font-bold text-base text-th-primary group-hover-accent transition-colors leading-tight line-clamp-2" style={{ '--ac-color': accent } as React.CSSProperties}>
+              <h3 className="font-bold text-base text-th-primary group-hover-accent transition-colors leading-tight line-clamp-2" style={{ '--ac-color': accent, fontFamily: "'Geologica', sans-serif", fontWeight: 500 } as React.CSSProperties}>
                 {post.displayTitle || post.title}
               </h3>
 

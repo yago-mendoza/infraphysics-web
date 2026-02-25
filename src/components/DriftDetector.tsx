@@ -17,7 +17,7 @@ export const DriftDetector: React.FC<Props> = ({ entries, noteById, onNoteClick,
 
   return (
     <div>
-      <h3 className="text-[11px] text-th-tertiary uppercase tracking-wider mb-3 flex items-center gap-1.5">
+      <h3 className="text-xs text-th-secondary uppercase tracking-wider mb-3 flex items-center gap-1.5">
         Missing links
         <InfoPopover
           title="About missing links"
@@ -52,10 +52,10 @@ export const DriftDetector: React.FC<Props> = ({ entries, noteById, onNoteClick,
                 <span className="text-sm">{noteLabel(note)}</span>
               </Link>
               {note.address && (
-                <span className="text-xs text-th-muted ml-2">{note.address.replace(/\/\//g, ' / ')}</span>
+                <span className="text-sm text-th-secondary ml-2">{note.address.replace(/\/\//g, ' / ')}</span>
               )}
               {viaNames.length > 0 && (
-                <div className="text-xs text-th-tertiary mt-0.5 italic font-sans">
+                <div className="text-sm text-th-secondary mt-0.5 font-sans">
                   via {viaNames.join(', ')}
                 </div>
               )}

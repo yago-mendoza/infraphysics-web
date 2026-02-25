@@ -54,9 +54,9 @@ const StepperInput: React.FC<{
   max?: number;
 }> = ({ value, displayValue, onDecrement, onIncrement, min = -Infinity, max = Infinity }) => (
   <span className="inline-flex items-center border border-th-hub-border text-[10px] tabular-nums">
-    <button onClick={onDecrement} disabled={value <= min} className="px-2 py-1 text-th-muted hover:text-th-secondary disabled:opacity-30 transition-colors">&minus;</button>
+    <button onClick={onDecrement} disabled={value <= min} className="px-2 py-1 text-th-tertiary hover:text-th-secondary disabled:opacity-30 transition-colors">&minus;</button>
     <span className="px-1.5 py-1 text-th-primary min-w-[20px] text-center">{displayValue ?? value}</span>
-    <button onClick={onIncrement} disabled={value >= max} className="px-2 py-1 text-th-muted hover:text-th-secondary disabled:opacity-30 transition-colors">+</button>
+    <button onClick={onIncrement} disabled={value >= max} className="px-2 py-1 text-th-tertiary hover:text-th-secondary disabled:opacity-30 transition-colors">+</button>
   </span>
 );
 
@@ -66,19 +66,32 @@ const Chip: React.FC<{
   onDismiss: () => void;
   color?: 'violet' | 'amber';
 }> = ({ label, onDismiss, color = 'violet' }) => {
-  const cls = color === 'amber'
+  const base = color === 'amber'
     ? 'bg-amber-400/20 text-amber-400 border-amber-400/30'
     : 'bg-violet-400/10 text-violet-400 border-violet-400/20';
+  const dismissBg = color === 'amber'
+    ? 'bg-amber-400/10 hover:bg-amber-400/30'
+    : 'bg-violet-400/5 hover:bg-violet-400/20';
   return (
-    <span className={`text-[9px] px-1.5 py-0.5 border flex items-center gap-1 ${cls}`}>
-      {label}
-      <button onClick={onDismiss} className="hover:text-white">&times;</button>
+    <span className={`text-[9px] border flex items-center ${base}`}>
+      <span className="px-1.5 py-0.5">{label}</span>
+      <button
+        onClick={onDismiss}
+        className={`self-stretch flex items-center justify-center w-5 border-l transition-colors ${dismissBg} ${
+          color === 'amber' ? 'border-amber-400/30 hover:text-white' : 'border-violet-400/20 hover:text-white'
+        }`}
+      >
+        <svg width="7" height="7" viewBox="0 0 7 7" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+          <line x1="1" y1="1" x2="6" y2="6" /><line x1="6" y1="1" x2="1" y2="6" />
+        </svg>
+      </button>
     </span>
   );
 };
 
 // --- Activity Heatmap (GitHub-style) ---
 const DAY_NAMES = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const MONTH_LABELS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
 
 const ActivityHeatmap: React.FC<{
   allNotes: FieldNoteMeta[];
@@ -187,17 +200,66 @@ const ActivityHeatmap: React.FC<{
 
   const currentYear = new Date().getFullYear();
 
+  const handleMonthClick = (monthIndex: number) => {
+    const m = String(monthIndex + 1).padStart(2, '0');
+    const firstDay = `${year}-${m}-01`;
+    const lastDay = new Date(year, monthIndex + 1, 0).getDate();
+    const lastDayStr = `${year}-${m}-${String(lastDay).padStart(2, '0')}`;
+    const range = `${firstDay}..${lastDayStr}`;
+    if (dateFilter === range) {
+      onDateClick(null);
+    } else {
+      onDateClick(range);
+    }
+  };
+
+  const activeMonth = useMemo(() => {
+    if (!dateFilter || !dateFilter.includes('..')) return -1;
+    const [start, end] = dateFilter.split('..');
+    if (start.slice(0, 7) !== end.slice(0, 7)) return -1;
+    if (!start.endsWith('-01')) return -1;
+    const m = parseInt(start.slice(5, 7), 10) - 1;
+    const lastDay = new Date(year, m + 1, 0).getDate();
+    if (end.endsWith(`-${String(lastDay).padStart(2, '0')}`)) return m;
+    return -1;
+  }, [dateFilter, year]);
+
+  // --- Grid click handler (eliminates dead-zone gaps) ---
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  const handleGridClick = (e: React.MouseEvent) => {
+    const grid = gridRef.current;
+    if (!grid || grid.children.length < 2) return;
+    const rect = grid.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const firstWeekRect = (grid.children[1] as HTMLElement).getBoundingClientRect();
+    const gridStartX = firstWeekRect.left - rect.left;
+    const gridX = x - gridStartX;
+    if (gridX < 0) return;
+    const n = weeks.length;
+    const gridWidth = rect.width - gridStartX;
+    const gap = 2;
+    const colWidth = (gridWidth - (n - 1) * gap) / n;
+    const colStep = colWidth + gap;
+    const wi = Math.min(Math.max(Math.floor(gridX / colStep), 0), n - 1);
+    const rowPitch = 10; // 8px cell + 2px gap
+    const di = Math.min(Math.max(Math.floor(y / rowPitch), 0), 6);
+    const day = weeks[wi]?.[di];
+    if (day?.inYear) handleCellClick(day.date);
+  };
+
   return (
     <div className="relative">
       {/* Year selector */}
       <div className="flex items-center gap-2 mb-1.5">
         <button onClick={() => setYear(y => y - 1)} className="text-[10px] text-th-muted hover:text-th-secondary transition-colors">&lsaquo;</button>
-        <span className="text-[10px] text-th-tertiary tabular-nums">{year}</span>
+        <span className="text-[10px] text-th-muted tabular-nums">{year}</span>
         <button onClick={() => setYear(y => Math.min(y + 1, currentYear))} disabled={year >= currentYear} className="text-[10px] text-th-muted hover:text-th-secondary disabled:opacity-30 transition-colors">&rsaquo;</button>
       </div>
       {/* Grid */}
       <div className="overflow-hidden pb-1">
-        <div className="flex gap-[2px]" style={{ width: '100%' }}>
+        <div ref={gridRef} className="flex gap-[2px] cursor-pointer" style={{ width: '100%' }} onClick={handleGridClick}>
           {/* Day labels */}
           <div className="flex flex-col gap-[2px] mr-0.5 flex-shrink-0">
             {DAY_NAMES.map((name, i) => (
@@ -213,17 +275,13 @@ const ActivityHeatmap: React.FC<{
                 return (
                 <div
                   key={di}
-                  className={`cursor-pointer aspect-square ${isSelected(day.date) ? 'ring-1 ring-violet-400' : isInRange(day.date) ? 'ring-1 ring-violet-400/40' : ''}`}
+                  className={`aspect-square ${isSelected(day.date) ? 'ring-1 ring-violet-400' : isInRange(day.date) ? 'ring-1 ring-violet-400/40' : ''}`}
                   style={{
                     height: 8,
                     backgroundColor: cellColor(day.count, day.inYear),
                     border: isEmpty ? '1px solid rgba(255, 255, 255, 0.06)' : 'none',
                     borderRadius: 1,
                     opacity: day.inYear ? 1 : 0,
-                  }}
-                  onClick={() => {
-                    if (!day.inYear) return;
-                    handleCellClick(day.date);
                   }}
                   title={day.inYear ? `${day.date}${day.count ? ` (${day.count})` : ''}` : undefined}
                 />
@@ -232,6 +290,32 @@ const ActivityHeatmap: React.FC<{
             </div>
           ))}
         </div>
+      </div>
+      {/* Month tap targets */}
+      <div className="flex gap-[1px] mt-1.5">
+        {MONTH_LABELS.map((label, i) => {
+          const active = activeMonth === i;
+          const isCurrent = i === new Date().getMonth() && year === new Date().getFullYear();
+          return (
+            <button
+              key={i}
+              onClick={() => handleMonthClick(i)}
+              className={`flex-1 flex items-center justify-center text-[8px] rounded-sm transition-colors ${
+                active ? 'text-violet-300'
+                : isCurrent ? 'text-th-secondary'
+                : 'text-th-muted'
+              }`}
+              style={{
+                height: 24,
+                border: active ? '1px solid rgba(167, 139, 250, 0.5)'
+                  : isCurrent ? '1.5px solid rgba(255, 255, 255, 0.18)'
+                  : '1px solid transparent',
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -270,8 +354,8 @@ const DockedToolbar: React.FC<{
   const { getIslands, loaded } = useGraphRelevance();
   const [filtersOpen, setFiltersOpen] = useState(true);
 
-  // Auto-expand filters when any filter is active
-  const isFiltersVisible = filtersOpen || hasActiveFilters;
+  // Auto-expand filters when any filter is active or scope is set
+  const isFiltersVisible = filtersOpen || hasActiveFilters || !!directoryScope;
 
   // Island options
   const islandOptions = useMemo(() => {
@@ -283,11 +367,38 @@ const DockedToolbar: React.FC<{
       .sort((a, b) => b.size - a.size);
   }, [getIslands, loaded]);
 
+  // Scope picker state
+  const [scopeInput, setScopeInput] = useState('');
+  const [scopeOpen, setScopeOpen] = useState(false);
+  const scopeBlurRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const scopeOptions = useMemo(() => {
+    const counts = new Map<string, number>();
+    allNotes.forEach(note => {
+      const parts = note.addressParts || [note.title];
+      for (let i = 1; i <= parts.length; i++) {
+        const prefix = parts.slice(0, i).join('//');
+        counts.set(prefix, (counts.get(prefix) || 0) + 1);
+      }
+    });
+    // Only paths that contain >1 note (actual folders)
+    return [...counts.entries()]
+      .filter(([, c]) => c > 1)
+      .map(([path, c]) => ({ path, count: c }))
+      .sort((a, b) => a.path.localeCompare(b.path));
+  }, [allNotes]);
+
+  const filteredScopeOptions = useMemo(() => {
+    if (!scopeInput) return scopeOptions.slice(0, 12);
+    const q = scopeInput.toLowerCase();
+    return scopeOptions.filter(o => o.path.toLowerCase().includes(q)).slice(0, 12);
+  }, [scopeOptions, scopeInput]);
+
   return (
     <div className="mb-3 border border-th-hub-border rounded-sm" style={{ backgroundColor: 'var(--hub-sidebar-bg)' }}>
       {/* Row 1: Search + mode chips */}
       <div className="flex items-center gap-2 px-3 py-2 border-b border-th-hub-border min-w-0">
-        <span className="text-th-muted flex-shrink-0"><SearchIcon /></span>
+        <span className="text-th-tertiary flex-shrink-0"><SearchIcon /></span>
         <input
           ref={inputRef}
           type="text"
@@ -310,7 +421,7 @@ const DockedToolbar: React.FC<{
           className="flex-1 min-w-0 text-[11px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
         />
         {query && (
-          <button onClick={() => setQuery('')} className="text-th-muted hover:text-th-secondary text-[16px] md:text-[13px] leading-none flex-shrink-0 px-0.5">&times;</button>
+          <button onClick={() => setQuery('')} className="text-th-tertiary hover:text-th-secondary text-[16px] md:text-[13px] leading-none flex-shrink-0 px-0.5">&times;</button>
         )}
         <span className="text-th-hub-border">|</span>
         <select
@@ -328,22 +439,66 @@ const DockedToolbar: React.FC<{
             key={mode.value}
             onClick={() => setSearchMode(mode.value)}
             className={`hidden md:inline-block text-[9px] px-1 py-0 transition-colors flex-shrink-0 ${
-              searchMode === mode.value ? 'text-violet-400' : 'text-th-muted hover:text-th-secondary'
+              searchMode === mode.value ? 'text-violet-400' : 'text-th-tertiary hover:text-th-secondary'
             }`}
           >
             {mode.label}
           </button>
         ))}
         <InfoPopover
-          title="Search modes"
-          content={
-            <div className="space-y-2">
-              <p><strong className={tipStrong}>Name</strong> — matches against note names and addresses.</p>
-              <p><strong className={tipStrong}>Content</strong> — full-text search across note bodies.</p>
-              <p><strong className={tipStrong}>Backlinks</strong> — finds notes that <em>link to</em> a concept matching your query. If note A links to note B, then A is a "backlink" of B.</p>
-              <p><span style={{ color: 'var(--wiki-link-visited)' }}>Blue</span> = visited this session. <span className={tipAccent}>Purple</span> = not yet visited.</p>
-            </div>
-          }
+          title="Search & filters"
+          tabs={[
+            {
+              label: 'search',
+              content: (
+                <div className="space-y-2">
+                  <p><strong className={tipStrong}>Name</strong> — matches against note names and addresses.</p>
+                  <p><strong className={tipStrong}>Content</strong> — full-text search across note bodies.</p>
+                  <p><strong className={tipStrong}>Backlinks</strong> — finds notes that <em>link to</em> a concept matching your query. If note A links to note B, then A is a "backlink" of B.</p>
+                  <p><span style={{ color: 'var(--wiki-link-visited)' }}>Blue</span> = visited this session. <span className={tipAccent}>Purple</span> = not yet visited.</p>
+                </div>
+              ),
+            },
+            {
+              label: 'filters',
+              content: (
+                <div className="space-y-2">
+                  <p><strong className={tipStrong}>Isolated</strong> — notes with zero links to or from any other note.</p>
+                  <p><strong className={tipStrong}>Leaf</strong> — notes that have no children in the naming tree (they're at the end of a branch, e.g. <code className={tipCode}>chip//MCU//ARM</code> if ARM has no sub-notes).</p>
+                  <p><strong className={tipStrong}>Bridges</strong> — critical connector notes. If you removed one, its island would split in two. (See the topology section in the sidebar.)</p>
+                  <p><strong className={tipStrong}>Island</strong> — pick a specific connected group from the dropdown. Islands are clusters of notes linked to each other — see sidebar topology for the full map.</p>
+                  <p><strong className={tipStrong}>Depth</strong> — filter by position in the naming tree (<code className={tipCode}>a</code>=1, <code className={tipCode}>a//b</code>=2, <code className={tipCode}>a//b//c</code>=3).</p>
+                  <p><strong className={tipStrong}>Hubs &ge;</strong> — show only notes with at least N connections.</p>
+                  <p><strong className={tipStrong}>Heatmap</strong> — click a day to filter by creation date. Click two days to select a range.</p>
+                </div>
+              ),
+            },
+            {
+              label: 'sorting',
+              content: (
+                <div className="space-y-2">
+                  <p><strong className={tipStrong}>A–Z</strong> — alphabetical by name.</p>
+                  <p><strong className={tipStrong}>Newest / oldest</strong> — by creation date.</p>
+                  <p><strong className={tipStrong}>Most / fewest links</strong> — by total connection count (outgoing + incoming).</p>
+                  <p><strong className={tipStrong}>Depth</strong> — by address hierarchy depth (how deep the note sits in the naming tree).</p>
+                  <p><strong className={tipStrong}>Shuffle</strong> — random order. Click again to reshuffle.</p>
+                  <p><strong className={tipStrong}>Unvisited</strong> — hide cards you've already opened this session.</p>
+                </div>
+              ),
+            },
+            {
+              label: 'keyboard',
+              content: (
+                <div className="space-y-2">
+                  <p className="text-th-muted italic">These shortcuts require a physical keyboard.</p>
+                  <p><strong className={tipStrong}>Arrow keys</strong> — navigate between cards in the grid.</p>
+                  <p><strong className={tipStrong}>Enter</strong> — open the selected card.</p>
+                  <p><strong className={tipStrong}>Escape</strong> — clear the search query and deselect.</p>
+                  <p><strong className={tipStrong}>Any letter key</strong> — starts typing in the search bar instantly.</p>
+                </div>
+              ),
+            },
+          ]}
         />
       </div>
 
@@ -354,33 +509,24 @@ const DockedToolbar: React.FC<{
           tabIndex={0}
           onClick={() => setFiltersOpen(v => !v)}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFiltersOpen(v => !v); } }}
-          className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[10px] bg-white/[0.03] border-b border-th-hub-border text-th-secondary hover:text-th-primary transition-colors cursor-pointer select-none"
+          className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[10px] bg-white/[0.03] border-b border-th-hub-border text-th-secondary transition-colors cursor-pointer select-none"
         >
           <span>{isFiltersVisible ? '\u25BE' : '\u25B8'}</span>
           <span className="uppercase tracking-wider text-[9px] font-medium">filters</span>
-          {hasActiveFilters && <span className="w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0" />}
-          <span className="inline-flex items-center" onClick={(e) => e.stopPropagation()}>
-            <InfoPopover
-                  title="Filter options"
-              content={
-                <div className="space-y-2">
-                  <p><strong className={tipStrong}>Isolated</strong> — notes with zero links to or from any other note.</p>
-                  <p><strong className={tipStrong}>Leaf</strong> — notes that have no children in the naming tree (they're at the end of a branch, e.g. <code className={tipCode}>chip//MCU//ARM</code> if ARM has no sub-notes).</p>
-                  <p><strong className={tipStrong}>Bridges</strong> — critical connector notes. If you removed one, its island would split in two. (See the topology section in the sidebar.)</p>
-                  <p><strong className={tipStrong}>Island</strong> — pick a specific connected group from the dropdown. Islands are clusters of notes linked to each other — see sidebar topology for the full map.</p>
-                  <p><strong className={tipStrong}>Depth</strong> — filter by position in the naming tree (<code className={tipCode}>a</code>=1, <code className={tipCode}>a//b</code>=2, <code className={tipCode}>a//b//c</code>=3).</p>
-                  <p><strong className={tipStrong}>Hubs &ge;</strong> — show only notes with at least N connections.</p>
-                  <p><strong className={tipStrong}>Heatmap</strong> — click a day to filter by creation date. Click two days to select a range.</p>
-                </div>
-              }
-            />
-          </span>
-          {hasActiveFilters && (
-            <span
-              className="ml-auto text-th-muted hover:text-violet-400"
-              onClick={(e) => { e.stopPropagation(); resetFilters(); }}
-            >
-              reset
+          {(hasActiveFilters || !!directoryScope) && (
+            <span className="text-[9px] text-violet-400 tabular-nums">
+              ({[
+                filterState.isolated,
+                filterState.leaf,
+                filterState.bridgesOnly,
+                filterState.hubThreshold > 0,
+                filterState.depthMin > 1,
+                filterState.depthMax !== Infinity,
+                filterState.islandId != null,
+                filterState.dateFilter != null,
+                filterState.wordCountMin > 0 || filterState.wordCountMax < Infinity,
+                !!directoryScope,
+              ].filter(Boolean).length})
             </span>
           )}
         </div>
@@ -388,13 +534,54 @@ const DockedToolbar: React.FC<{
           <div className="px-3 pb-2 pt-2">
             {/* All filters in one row: dropdowns + separator + toggle pills */}
             <div className="flex items-center gap-1.5 md:gap-3 flex-wrap">
+              <div className="flex items-center gap-1 text-[10px] text-th-tertiary relative">
+                <span>scope</span>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder={directoryScope ? directoryScope.replace(/\/\//g, ' / ') : 'all'}
+                    value={scopeInput}
+                    onChange={(e) => { setScopeInput(e.target.value); setScopeOpen(true); }}
+                    onFocus={() => { if (scopeBlurRef.current) clearTimeout(scopeBlurRef.current); setScopeOpen(true); }}
+                    onBlur={() => { scopeBlurRef.current = setTimeout(() => setScopeOpen(false), 150); }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') { setScopeInput(''); setScopeOpen(false); (e.target as HTMLElement).blur(); }
+                      if (e.key === 'Enter' && filteredScopeOptions.length > 0) {
+                        setDirectoryScope(filteredScopeOptions[0].path);
+                        setScopeInput(''); setScopeOpen(false); (e.target as HTMLElement).blur();
+                      }
+                    }}
+                    className={`bg-th-surface border text-[10px] text-th-primary px-1.5 py-0.5 w-24 focus:outline-none transition-colors ${
+                      directoryScope ? 'border-violet-400/40' : 'border-th-hub-border'
+                    } focus:border-th-border-active`}
+                  />
+                  {scopeOpen && filteredScopeOptions.length > 0 && (
+                    <div
+                      className="absolute top-full left-0 mt-0.5 border border-th-hub-border max-h-40 overflow-y-auto z-20 w-52 thin-scrollbar"
+                      style={{ backgroundColor: 'var(--hub-sidebar-bg)' }}
+                    >
+                      {filteredScopeOptions.map(opt => (
+                        <button
+                          key={opt.path}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => { setDirectoryScope(opt.path); setScopeInput(''); setScopeOpen(false); }}
+                          className="block w-full text-left px-2 py-1 text-[10px] text-th-secondary hover:bg-violet-400/10 hover:text-violet-400 transition-colors truncate"
+                        >
+                          {opt.path.replace(/\/\//g, ' / ')} <span className="text-th-muted">({opt.count})</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
               {islandOptions.length > 1 && (
-                <div className="flex items-center gap-1 text-[10px] text-th-muted">
+                <div className="flex items-center gap-1 text-[10px] text-th-tertiary">
                   <span>island</span>
                   <select
                     value={filterState.islandId ?? ''}
                     onChange={(e) => updateFilter('islandId', e.target.value === '' ? null : Number(e.target.value))}
                     className="bg-th-surface border border-th-hub-border text-[10px] text-th-primary px-1 py-0.5 focus:outline-none focus:border-th-border-active"
+                    style={{ colorScheme: 'dark' }}
                   >
                     <option value="">all</option>
                     {islandOptions.map(c => (
@@ -403,7 +590,7 @@ const DockedToolbar: React.FC<{
                   </select>
                 </div>
               )}
-              <div className="flex items-center gap-1 text-[10px] text-th-muted">
+              <div className="flex items-center gap-1 text-[10px] text-th-tertiary">
                 <span>depth</span>
                 <StepperInput
                   value={filterState.depthMin}
@@ -423,7 +610,7 @@ const DockedToolbar: React.FC<{
                   }}
                 />
               </div>
-              <div className="flex items-center gap-1 text-[10px] text-th-muted">
+              <div className="flex items-center gap-1 text-[10px] text-th-tertiary">
                 <span>hubs&ge;</span>
                 <StepperInput
                   value={filterState.hubThreshold}
@@ -438,7 +625,7 @@ const DockedToolbar: React.FC<{
                 className={`text-[10px] px-1 py-0.5 transition-colors ${
                   filterState.isolated
                     ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
-                    : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
+                    : 'text-th-tertiary border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
                 }`}
               >isolated</button>
               <button
@@ -446,7 +633,7 @@ const DockedToolbar: React.FC<{
                 className={`text-[10px] px-1 py-0.5 transition-colors ${
                   filterState.leaf
                     ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
-                    : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
+                    : 'text-th-tertiary border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
                 }`}
               >leaf</button>
               <button
@@ -454,7 +641,7 @@ const DockedToolbar: React.FC<{
                 className={`text-[10px] px-1 py-0.5 transition-colors ${
                   filterState.bridgesOnly
                     ? 'bg-amber-400/20 text-amber-400 border border-amber-400/30'
-                    : 'text-th-muted border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
+                    : 'text-th-tertiary border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
                 }`}
               >bridges</button>
             </div>
@@ -490,7 +677,7 @@ const DockedToolbar: React.FC<{
             className={`hidden md:inline-block text-[10px] px-1.5 py-0.5 rounded-sm transition-colors ${
               sortMode === opt.value
                 ? 'text-violet-400 bg-violet-400/10'
-                : 'text-th-muted hover:text-th-secondary'
+                : 'text-th-tertiary hover:text-th-secondary'
             }`}
           >
             {opt.label}
@@ -502,7 +689,7 @@ const DockedToolbar: React.FC<{
             <button
               onClick={() => setUnvisitedOnly((v: boolean) => !v)}
               className={`text-[10px] px-1.5 py-0.5 rounded-sm transition-colors ${
-                unvisitedOnly ? 'text-blue-400' : 'text-th-muted hover:text-blue-400'
+                unvisitedOnly ? 'text-blue-400' : 'text-th-tertiary hover:text-blue-400'
               }`}
             >
               unvisited
@@ -512,41 +699,19 @@ const DockedToolbar: React.FC<{
 
         {/* Count + info — pushed to the right */}
         <span className="flex items-center gap-1.5 ml-auto">
-          <span className="text-[9px] text-th-muted tabular-nums">{sortedCount} {hasActiveFilters || query ? 'results' : 'notes'}</span>
-          <InfoPopover
-              title="Sorting & shortcuts"
-            tabs={[
-              {
-                label: 'sorting',
-                content: (
-                  <div className="space-y-2">
-                    <p><strong className={tipStrong}>A–Z</strong> — alphabetical by name.</p>
-                    <p><strong className={tipStrong}>Newest / oldest</strong> — by creation date.</p>
-                    <p><strong className={tipStrong}>Most / fewest links</strong> — by total connection count (outgoing + incoming).</p>
-                    <p><strong className={tipStrong}>Depth</strong> — by address hierarchy depth (how deep the note sits in the naming tree).</p>
-                    <p><strong className={tipStrong}>Shuffle</strong> — random order. Click again to reshuffle.</p>
-                    <p><strong className={tipStrong}>Unvisited</strong> — hide cards you've already opened this session.</p>
-                  </div>
-                ),
-              },
-              {
-                label: 'keyboard',
-                content: (
-                  <div className="space-y-2">
-                    <p className="text-th-muted italic">These shortcuts require a physical keyboard.</p>
-                    <p><strong className={tipStrong}>Arrow keys</strong> — navigate between cards in the grid.</p>
-                    <p><strong className={tipStrong}>Enter</strong> — open the selected card.</p>
-                    <p><strong className={tipStrong}>Escape</strong> — clear the search query and deselect.</p>
-                    <p><strong className={tipStrong}>Any letter key</strong> — starts typing in the search bar instantly.</p>
-                  </div>
-                ),
-              },
-            ]}
-          />
+          <span className="text-[9px] text-th-secondary tabular-nums">{sortedCount} {hasActiveFilters || query || directoryScope ? 'results' : 'notes'}</span>
         </span>
 
-        {/* Active chips */}
+        {/* Reset + active chips */}
         <div className="flex items-center gap-1 flex-wrap">
+          {(hasActiveFilters || !!directoryScope) && (
+            <button
+              className="text-[9px] px-1.5 py-0.5 border border-th-hub-border text-th-tertiary hover:text-violet-400 hover:border-violet-400/30 active:bg-violet-400/10 transition-colors"
+              onClick={() => { resetFilters(); setDirectoryScope(null); }}
+            >
+              reset
+            </button>
+          )}
           {directoryScope && (
             <Chip label={`scope: ${directoryScope.replace(/\/\//g, ' / ')}`} onDismiss={() => setDirectoryScope(null)} />
           )}
@@ -562,11 +727,69 @@ const DockedToolbar: React.FC<{
           {filterState.depthMin > 1 && <Chip label={`depth \u2265 ${filterState.depthMin}`} onDismiss={() => updateFilter('depthMin', 1)} />}
           {filterState.depthMax !== Infinity && <Chip label={`depth \u2264 ${filterState.depthMax}`} onDismiss={() => updateFilter('depthMax', Infinity)} />}
           {filterState.hubThreshold > 0 && <Chip label={`hubs \u2265 ${filterState.hubThreshold}`} onDismiss={() => updateFilter('hubThreshold', 0)} />}
+          {(filterState.wordCountMin > 0 || filterState.wordCountMax < Infinity) && (
+            <Chip
+              label={`${filterState.wordCountMin}\u2013${filterState.wordCountMax === Infinity ? '\u221e' : filterState.wordCountMax} words`}
+              onDismiss={() => { updateFilter('wordCountMin', 0); updateFilter('wordCountMax', Infinity); }}
+            />
+          )}
         </div>
       </div>
     </div>
   );
 };
+
+// --- Memoized Grid Card — only re-renders when its own data changes ---
+const GridCard = React.memo<{
+  note: FieldNoteMeta;
+  idx: number;
+  focused: boolean;
+  visited: boolean;
+  onCardClick: (note: FieldNoteMeta) => void;
+  incoming: number;
+  outgoing: number;
+  componentId: number | null;
+  isIsolated: boolean;
+  isBridge: boolean;
+}>(({ note, idx, focused, visited, onCardClick, incoming, outgoing, componentId, isIsolated, isBridge }) => (
+  <Link
+    data-idx={idx}
+    to={`/lab/second-brain/${note.id}`}
+    onClick={() => onCardClick(note)}
+    className={`card-link group p-4 flex flex-col${focused ? ' border-violet-400/50 bg-violet-400/5' : ''}`}
+  >
+    <div className="mb-0.5 flex items-center gap-1.5">
+      <span className={`text-sm font-medium transition-colors group-hover:text-th-primary ${visited ? 'text-blue-400/70' : 'text-violet-400'}`}>
+        {noteLabel(note)}
+      </span>
+    </div>
+    {note.addressParts && note.addressParts.length > 1 && (
+      <div className="text-[10px] text-th-tertiary mb-1">
+        {displayAddress(note.address!)}
+      </div>
+    )}
+    {note.description && (
+      <div className="text-xs text-th-secondary line-clamp-2 font-sans">
+        {note.description}
+      </div>
+    )}
+    <div className="flex items-center gap-2 mt-auto pt-2.5 text-[10px] text-th-tertiary tabular-nums">
+      <span>{outgoing}↗ {incoming}↙</span>
+      {componentId != null && !isIsolated && (
+        <span className="text-violet-400/60">#{componentId}</span>
+      )}
+      {isBridge && (
+        <span className="text-amber-400/80">⚡</span>
+      )}
+      {isIsolated && (
+        <span>isolated</span>
+      )}
+      {note.date && (
+        <span className="ml-auto opacity-60">{note.date.slice(0, 10)}</span>
+      )}
+    </div>
+  </Link>
+));
 
 export const SecondBrainView: React.FC = () => {
   const hub = useHub();
@@ -649,18 +872,19 @@ export const SecondBrainView: React.FC = () => {
   const handleWikiLinkClick = useCallback((conceptId: string) => {
     const concept = noteById.get(conceptId);
     if (concept) scheduleExtend(concept);
-  }, [scheduleExtend]);
+  }, [noteById, scheduleExtend]);
 
   // Grid card click — reset trail to single item.
+  // Uses ref to avoid re-creating the callback when activePost changes,
+  // which would defeat React.memo on grid cards.
+  const activePostRef = useRef(activePost);
+  activePostRef.current = activePost;
+
   const handleGridCardClick = useCallback((post: FieldNoteMeta) => {
-    // Invalidate content readiness BEFORE clearing search to prevent flash:
-    // clearSearch commits searchActive=false before React Router updates the URL,
-    // creating a 1-frame window where showDetail=true with old content at opacity 1.
-    // Skip when clicking the same note (content effect won't re-run to restore it).
-    if (activePost?.id !== post.id) invalidateContent();
+    if (activePostRef.current?.id !== post.id) invalidateContent();
     clearSearch();
     scheduleReset(post);
-  }, [activePost, invalidateContent, clearSearch, scheduleReset]);
+  }, [invalidateContent, clearSearch, scheduleReset]);
 
   // Connection / mention click — extend trail
   const handleConnectionClick = useCallback((post: FieldNoteMeta) => {
@@ -712,6 +936,15 @@ export const SecondBrainView: React.FC = () => {
 
   // "Unvisited only" filter for grid view
   const [unvisitedOnly, setUnvisitedOnly] = useState(false);
+
+  // Welcome banner — dismissed once via localStorage
+  const [welcomeDismissed, setWelcomeDismissed] = useState(() =>
+    localStorage.getItem('sb-welcome-dismissed') === '1'
+  );
+  const dismissWelcome = useCallback(() => {
+    setWelcomeDismissed(true);
+    localStorage.setItem('sb-welcome-dismissed', '1');
+  }, []);
 
   // Mobile "back to top" button — visible when scrolled past threshold
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -859,7 +1092,6 @@ export const SecondBrainView: React.FC = () => {
 
   const [focusedIdx, setFocusedIdx] = useState(0);
   const gridRef = useRef<HTMLDivElement>(null);
-  const cardRefs = useRef<Map<number, HTMLAnchorElement>>(new Map());
 
   // Auto-select first result when results change
   useEffect(() => {
@@ -961,7 +1193,7 @@ export const SecondBrainView: React.FC = () => {
       }
 
       setFocusedIdx(next);
-      const card = cardRefs.current.get(next);
+      const card = gridRef.current?.querySelector(`[data-idx="${next}"]`) as HTMLElement | null;
       if (card) card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     };
 
@@ -1066,18 +1298,40 @@ export const SecondBrainView: React.FC = () => {
         />
       </div>
 
-      {/* Main Content */}
-      {showDetail ? (
-        /* --- Concept Detail View --- */
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-12">
-          {/* Left: Content + Connections + Mentions — fades during note transitions */}
-          <div
-            className="lg:col-span-3"
-            style={{
-              opacity: contentReady ? 1 : 0,
-              transition: contentReady ? 'opacity 200ms ease-in' : 'none',
-            }}
-          >
+      {/* Welcome screen — first visit only, portaled to body to escape transform stacking context */}
+      {!welcomeDismissed && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="max-w-lg mx-4 border border-violet-500/25 rounded-xl px-8 py-10 bg-th-surface/95 shadow-2xl">
+            <p className="text-[15px] text-th-secondary leading-relaxed">
+              <strong className="text-violet-400">This is a personal knowledge graph</strong> — a
+              working reference I maintain as I study and build. It's not polished for consumption,
+              but if you work with systems, infrastructure, or low-level computing, you might find
+              useful things here.
+            </p>
+            <p className="text-[15px] text-th-secondary leading-relaxed mt-4">
+              Concepts link to each other, so instead of reading top-to-bottom, you{' '}
+              <strong className="text-violet-400">follow connections</strong>. Click any card, then
+              follow the links in the body or the reference panel to keep going. The breadcrumb
+              trail tracks where you've been.
+            </p>
+            <p className="text-sm text-th-muted mt-5 italic">Long learning.</p>
+            <button
+              onClick={dismissWelcome}
+              className="mt-8 w-full py-2.5 text-xs uppercase tracking-widest border border-violet-500/40 rounded-lg text-violet-400 hover:bg-violet-500/10 hover:border-violet-500/60 transition-colors"
+            >
+              I understand
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Detail view — conditional so it doesn't render during search.
+           Grid below stays always-mounted for instant search entry. */}
+      {showDetail && (
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-10">
+          {/* Left: metadata always visible, body fades when content loads */}
+          <div className="lg:col-span-3">
             {/* Navigation Trail */}
             <div className="flex items-center gap-2 mb-3">
               <div className="flex-1 min-w-0">
@@ -1203,7 +1457,7 @@ export const SecondBrainView: React.FC = () => {
                     onClick={() => handleConnectionClick(m)}
                     onMouseEnter={(e) => showMentionPreview(m, e)}
                     onMouseLeave={hideMentionPreview}
-                    className={`text-sm font-medium transition-colors no-underline ${isVisited(m.id) ? 'text-blue-400 hover:text-blue-300' : 'text-violet-400 hover:text-violet-300'}`}
+                    className={`text-sm font-normal transition-colors no-underline ${isVisited(m.id) ? 'text-blue-400 hover:text-blue-300' : 'text-violet-400 hover:text-violet-300'}`}
                   >
                     {noteLabel(m)}<svg className="inline w-[0.85em] h-[0.85em] ml-0.5 opacity-50" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style={{ verticalAlign: '-0.1em' }}><path fillRule="evenodd" clipRule="evenodd" d={ICON_REF_IN}/></svg>
                   </Link>
@@ -1219,14 +1473,21 @@ export const SecondBrainView: React.FC = () => {
               <span>mentioned {'\u2191'} {mentions.length}</span>
             </div>
 
-            {/* Content */}
-            <div className="article-page-wrapper article-wiki">
-              <WikiContent
-                html={resolvedHtml}
-                className="article-content"
-                onWikiLinkClick={handleWikiLinkClick}
-                isVisited={isVisited}
-              />
+            {/* Content — only this section fades during note transitions */}
+            <div
+              style={{
+                opacity: contentReady ? 1 : 0,
+                transition: contentReady ? 'opacity 150ms ease-in' : 'none',
+              }}
+            >
+              <div className="article-page-wrapper article-wiki">
+                <WikiContent
+                  html={resolvedHtml}
+                  className="article-content"
+                  onWikiLinkClick={handleWikiLinkClick}
+                  isVisited={isVisited}
+                />
+              </div>
             </div>
 
             {/* ─── Interactions + Drift Detector ─── */}
@@ -1239,7 +1500,7 @@ export const SecondBrainView: React.FC = () => {
                   <hr className="border-t border-th-border my-6" />
                   {connections.length > 0 && (
                     <div>
-                      <h3 className="text-[11px] text-th-tertiary uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                      <h3 className="text-xs text-th-secondary uppercase tracking-wider mb-3 flex items-center gap-1.5">
                         Interactions
                         <InfoPopover
                                           title="About interactions"
@@ -1266,10 +1527,10 @@ export const SecondBrainView: React.FC = () => {
                                 <span className="text-sm">{noteLabel(conn.note)}</span><svg className="inline w-[0.85em] h-[0.85em] ml-0.5 opacity-80" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style={{ verticalAlign: '-0.1em' }}><path fillRule="evenodd" clipRule="evenodd" d={ICON_REF_OUT}/></svg>
                               </Link>
                               {conn.note.address && (
-                                <span className="text-xs text-th-muted ml-2">{displayAddress(conn.note.address)}</span>
+                                <span className="text-sm text-th-secondary ml-2">{displayAddress(conn.note.address)}</span>
                               )}
                               {(conn.annotation || conn.reverseAnnotation) && (
-                                <div className="text-xs text-th-tertiary mt-0.5 italic font-sans" onClick={handleInlineWikiClick}>
+                                <div className="text-sm text-th-secondary mt-0.5 font-sans" onClick={handleInlineWikiClick}>
                                   <span dangerouslySetInnerHTML={{ __html: resolveWikiLinks(conn.annotation || conn.reverseAnnotation || '', [], noteById).html }} />
                                 </div>
                               )}
@@ -1293,14 +1554,8 @@ export const SecondBrainView: React.FC = () => {
             })()}
           </div>
 
-          {/* Right: Context panel */}
-          <div
-            className="lg:col-span-2 lg:sticky lg:top-12 lg:self-start"
-            style={{
-              opacity: contentReady ? 1 : 0,
-              transition: contentReady ? 'opacity 200ms ease-in' : 'none',
-            }}
-          >
+          {/* Right: Context panel — index data, always visible */}
+          <div className="lg:col-span-2 lg:sticky lg:top-12 lg:self-start">
             <hr className="lg:hidden border-t border-th-border my-6" />
             <div>
               <NeighborhoodGraph
@@ -1358,69 +1613,41 @@ export const SecondBrainView: React.FC = () => {
             Back to top
           </button>
         </div>
-      ) : (
-        /* --- Concept List View --- */
-        <div>
-          <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {visibleResults.length > 0 ? (
-              visibleResults.map((note, idx) => {
-                const outgoing = note.references?.length || 0;
-                const incoming = (backlinksMap.get(note.id) || []).length;
-                const topo = getNoteTopology(note.id);
-                return (
-                <Link
+      )}
+
+      {/* --- Concept List View (always mounted, hidden when detail is shown) --- */}
+      <div style={showDetail ? { display: 'none' } : undefined}>
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {visibleResults.length > 0 ? (
+            visibleResults.map((note, idx) => {
+              const topo = getNoteTopology(note.id);
+              return (
+                <GridCard
                   key={note.id}
-                  ref={(el) => { if (el) cardRefs.current.set(idx, el); else cardRefs.current.delete(idx); }}
-                  to={`/lab/second-brain/${note.id}`}
-                  onClick={() => handleGridCardClick(note)}
-                  className={`card-link group p-4 flex flex-col${focusedIdx === idx ? ' border-violet-400/50 bg-violet-400/5' : ''}`}
-                >
-                  <div className="mb-0.5 flex items-center gap-1.5">
-                    <span className={`text-sm font-medium transition-colors group-hover:text-th-primary ${isVisited(note.id) ? 'text-blue-400/70' : 'text-violet-400'}`}>
-                      {noteLabel(note)}
-                    </span>
-                  </div>
-                  {note.addressParts && note.addressParts.length > 1 && (
-                    <div className="text-[10px] text-th-tertiary mb-1">
-                      {displayAddress(note.address!)}
-                    </div>
-                  )}
-                  {note.description && (
-                    <div className="text-xs text-th-secondary line-clamp-2 font-sans">
-                      {note.description}
-                    </div>
-                  )}
-                  {/* Card metadata — pinned to bottom */}
-                  <div className="flex items-center gap-2 mt-auto pt-2.5 text-[10px] text-th-tertiary tabular-nums">
-                    <span>{outgoing}↗ {incoming}↙</span>
-                    {topo.componentId != null && !topo.isIsolated && (
-                      <span className="text-violet-400/60">#{topo.componentId}</span>
-                    )}
-                    {topo.isBridge && (
-                      <span className="text-amber-400/80">⚡</span>
-                    )}
-                    {topo.isIsolated && (
-                      <span>isolated</span>
-                    )}
-                    {note.date && (
-                      <span className="ml-auto opacity-60">{note.date.slice(0, 10)}</span>
-                    )}
-                  </div>
-                </Link>
-                );
-              })
-            ) : (
-              <div className="text-xs text-th-tertiary py-8 text-center col-span-3">
-                No concepts match your search
-              </div>
-            )}
-          </div>
-          {/* Infinite scroll sentinel */}
-          {visibleCount < sortedResults.length && (
-            <div ref={sentinelRef} className="h-1" />
+                  note={note}
+                  idx={idx}
+                  focused={focusedIdx === idx}
+                  visited={isVisited(note.id)}
+                  onCardClick={handleGridCardClick}
+                  outgoing={note.references?.length || 0}
+                  incoming={(backlinksMap.get(note.id) || []).length}
+                  componentId={topo.componentId}
+                  isIsolated={topo.isIsolated}
+                  isBridge={topo.isBridge}
+                />
+              );
+            })
+          ) : (
+            <div className="text-xs text-th-tertiary py-8 text-center col-span-3">
+              No concepts match your search
+            </div>
           )}
         </div>
-      )}
+        {/* Infinite scroll sentinel */}
+        {visibleCount < sortedResults.length && (
+          <div ref={sentinelRef} className="h-1" />
+        )}
+      </div>
 
       {/* Mobile floating search button — portal to body to escape animate-fade-in transform stacking context */}
       {showDetail && createPortal(

@@ -22,7 +22,8 @@ export const IslandDetector = forwardRef<IslandDetectorHandle, {
   activeIslandScope?: number | null;
   onIslandScope?: (id: number) => void;
   filterQuery?: string;
-}>(({ focusComponentId, focusFlash = true, onFocusHandled, activeIslandScope, onIslandScope, filterQuery }, ref) => {
+  visibleIds?: Set<string> | null;
+}>(({ focusComponentId, focusFlash = true, onFocusHandled, activeIslandScope, onIslandScope, filterQuery, visibleIds }, ref) => {
   const { getIslands, loaded } = useGraphRelevance();
   const hub = useHub();
 
@@ -91,9 +92,15 @@ export const IslandDetector = forwardRef<IslandDetectorHandle, {
   const { noteById, isVisited } = hub;
   const { components, cuts, isolatedUids } = islands;
 
+  // Narrow by visibleIds (active filters/scope/search) before query filtering
   const significantComponents = components
     .filter(c => c.size > 1)
+    .filter(c => !visibleIds || c.members.some(uid => visibleIds.has(uid)))
     .sort((a, b) => b.size - a.size);
+
+  const narrowedIsolated = visibleIds
+    ? isolatedUids.filter(uid => visibleIds.has(uid))
+    : isolatedUids;
 
   const getName = (uid: string): string => {
     const note = noteById.get(uid);
@@ -111,8 +118,8 @@ export const IslandDetector = forwardRef<IslandDetectorHandle, {
     : significantComponents;
 
   const visibleIsolated = hasQuery
-    ? isolatedUids.filter(uid => getName(uid).toLowerCase().includes(lowerQ))
-    : isolatedUids;
+    ? narrowedIsolated.filter(uid => getName(uid).toLowerCase().includes(lowerQ))
+    : narrowedIsolated;
 
   return (
     <div className="space-y-2">
@@ -141,7 +148,7 @@ export const IslandDetector = forwardRef<IslandDetectorHandle, {
               >
                 <ChevronIcon isOpen={isExpanded} />
                 <span className="text-violet-400">●</span>
-                <span className="text-th-muted tabular-nums">#{comp.id}</span>
+                <span className="text-violet-400 tabular-nums">#{comp.id}</span>
                 <span className="text-th-secondary">
                   {comp.size} notes
                 </span>
@@ -198,6 +205,12 @@ export const IslandDetector = forwardRef<IslandDetectorHandle, {
           </div>
         );
       })}
+
+      {visibleComponents.length === 0 && visibleIsolated.length === 0 && visibleIds && (
+        <div className="text-[10px] text-th-muted py-2 text-center">
+          No islands match current filters
+        </div>
+      )}
 
       {visibleIsolated.length > 0 && (
         <div>

@@ -1,6 +1,6 @@
 // Second Brain Hub hook — tree building, multi-mode search, filters, sorts, stats
 
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect, useLayoutEffect, useDeferredValue } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FieldNoteMeta } from '../types';
 import { initBrainIndex, fetchNoteContent, getCachedNoteContent, prefetchNoteContent, type BrainIndex, type Connection, type Neighborhood } from '../lib/brainIndex';
@@ -8,6 +8,7 @@ import { useGraphRelevance } from './useGraphRelevance';
 
 export type SearchMode = 'name' | 'content' | 'backlinks';
 export type SortMode = 'a-z' | 'most-links' | 'fewest-links' | 'depth' | 'shuffle' | 'newest' | 'oldest';
+export type DirectorySortMode = 'children' | 'alpha' | 'depth';
 
 export interface FilterState {
   isolated: boolean;
@@ -18,6 +19,8 @@ export interface FilterState {
   islandId: number | null;  // null = off
   bridgesOnly: boolean;
   dateFilter: string | null;  // ISO date string e.g. '2026-02-05', null = off
+  wordCountMin: number;   // 0 = no lower bound
+  wordCountMax: number;   // Infinity = no upper bound
 }
 
 const DEFAULT_FILTER_STATE: FilterState = {
@@ -29,6 +32,8 @@ const DEFAULT_FILTER_STATE: FilterState = {
   islandId: null,
   bridgesOnly: false,
   dateFilter: null,
+  wordCountMin: 0,
+  wordCountMax: Infinity,
 };
 
 export interface TreeNode {
@@ -59,6 +64,9 @@ export const useSecondBrainHub = () => {
   const navigate = useNavigate();
   const { getIslands } = useGraphRelevance();
   const [query, setQuery] = useState('');
+  // Deferred query — React keeps the input responsive while the filter
+  // pipeline uses the trailing value, allowing concurrent interruption.
+  const deferredQuery = useDeferredValue(query);
 
   // Async index state
   const [index, setIndex] = useState<BrainIndex | null>(null);
@@ -92,6 +100,7 @@ export const useSecondBrainHub = () => {
   const [filterState, setFilterState] = useState<FilterState>(DEFAULT_FILTER_STATE);
   const [directoryScope, setDirectoryScope] = useState<string | null>(null); // tree path
   const [directoryQuery, setDirectoryQuery] = useState('');
+  const [directorySortMode, setDirectorySortMode] = useState<DirectorySortMode>('alpha');
   const [shuffleSeed, setShuffleSeed] = useState(() => Math.floor(Math.random() * 0xffffffff));
 
   // Session-scoped visited set (survives navigation, cleared on tab close)
@@ -125,20 +134,20 @@ export const useSecondBrainHub = () => {
     }
   }, [activePost]);
 
-  // Fetch content when activePost changes — sync cache check eliminates async gap
-  useEffect(() => {
-    if (!activePost) { setResolvedHtml(''); setContentReadyId(undefined); return; }
-
-    // Sync path: if content is already cached, set it immediately (no async gap)
+  // Sync content resolution — runs before paint so cached notes show with zero flash.
+  useLayoutEffect(() => {
+    if (!activePost) { setResolvedHtml(''); setContentLoading(false); setContentReadyId(undefined); return; }
     const cached = getCachedNoteContent(activePost.id);
     if (cached) {
       setResolvedHtml(cached);
       setContentLoading(false);
       setContentReadyId(activePost.id);
-      return;
     }
+  }, [activePost]);
 
-    // Async path: fetch from network
+  // Async content fetch — only fires when cache misses.
+  useEffect(() => {
+    if (!activePost || getCachedNoteContent(activePost.id)) return;
     let cancelled = false;
     setContentLoading(true);
     setContentReadyId(undefined);
@@ -278,10 +287,28 @@ export const useSecondBrainHub = () => {
     };
 
     roots.forEach(countDescendants);
-    roots.sort((a, b) => a.label.localeCompare(b.label));
 
-    return roots;
-  }, [allFieldNotes]);
+    const sortTree = (nodes: TreeNode[], mode: DirectorySortMode): TreeNode[] => {
+      const sorted = [...nodes];
+      switch (mode) {
+        case 'children':
+          sorted.sort((a, b) => b.childCount - a.childCount || a.label.localeCompare(b.label));
+          break;
+        case 'depth': {
+          const maxDepth = (n: TreeNode): number =>
+            n.children.length === 0 ? 0 : 1 + Math.max(...n.children.map(maxDepth));
+          sorted.sort((a, b) => maxDepth(b) - maxDepth(a) || a.label.localeCompare(b.label));
+          break;
+        }
+        default: // 'alpha'
+          sorted.sort((a, b) => a.label.localeCompare(b.label));
+      }
+      sorted.forEach(n => { if (n.children.length > 0) n.children = sortTree(n.children, mode); });
+      return sorted;
+    };
+
+    return sortTree(roots, directorySortMode);
+  }, [allFieldNotes, directorySortMode]);
 
   // --- Filtered tree (by directoryQuery) ---
   const filteredTree = useMemo(() => {
@@ -308,8 +335,8 @@ export const useSecondBrainHub = () => {
 
   // --- Multi-mode search ---
   const searchResults = useMemo(() => {
-    if (!query) return allFieldNotes;
-    const q = query.toLowerCase();
+    if (!deferredQuery) return allFieldNotes;
+    const q = deferredQuery.toLowerCase();
 
     if (searchMode === 'name') {
       return allFieldNotes.filter(note => {
@@ -344,7 +371,7 @@ export const useSecondBrainHub = () => {
     }
 
     return allFieldNotes;
-  }, [query, searchMode, allFieldNotes, backlinksMap]);
+  }, [deferredQuery, searchMode, allFieldNotes, backlinksMap]);
 
   // --- Directory scope filter ---
   const scopedResults = useMemo(() => {
@@ -357,8 +384,9 @@ export const useSecondBrainHub = () => {
     });
   }, [searchResults, directoryScope]);
 
-  // --- Filters ---
-  const filteredNotes = useMemo(() => {
+  // --- Filters (split pipeline: core filters → word count) ---
+  // coreFilteredNotes: all filters EXCEPT word count — used by histogram
+  const coreFilteredNotes = useMemo(() => {
     const { isolated, leaf, hubThreshold, depthMin, depthMax, islandId, bridgesOnly, dateFilter } = filterState;
     const hasAnyFilter = isolated || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || islandId != null || bridgesOnly || dateFilter != null;
     if (!hasAnyFilter) return scopedResults;
@@ -394,6 +422,16 @@ export const useSecondBrainHub = () => {
       return true;
     });
   }, [scopedResults, filterState, backlinksMap, parentIds, getIslands]);
+
+  // filteredNotes: apply word count filter on top of core filters
+  const filteredNotes = useMemo(() => {
+    const { wordCountMin, wordCountMax } = filterState;
+    if (wordCountMin <= 0 && wordCountMax >= Infinity) return coreFilteredNotes;
+    return coreFilteredNotes.filter(note => {
+      const wc = (note.searchText || '').split(/\s+/).filter(Boolean).length;
+      return wc >= wordCountMin && wc <= wordCountMax;
+    });
+  }, [coreFilteredNotes, filterState]);
 
   // --- Sort ---
   const sortedResults = useMemo(() => {
@@ -458,8 +496,8 @@ export const useSecondBrainHub = () => {
 
   // Check if any filter is active
   const hasActiveFilters = useMemo(() => {
-    const { isolated, leaf, hubThreshold, depthMin, depthMax, islandId, bridgesOnly, dateFilter } = filterState;
-    return isolated || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || islandId != null || bridgesOnly || dateFilter != null;
+    const { isolated, leaf, hubThreshold, depthMin, depthMax, islandId, bridgesOnly, dateFilter, wordCountMin, wordCountMax } = filterState;
+    return isolated || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || islandId != null || bridgesOnly || dateFilter != null || wordCountMin > 0 || wordCountMax < Infinity;
   }, [filterState]);
 
   // Signal from sidebar directory: "this click should reset the trail"
@@ -468,7 +506,9 @@ export const useSecondBrainHub = () => {
     directoryNavRef.current = true;
   }, []);
 
-  // Search is active = has query text (used to force list view in the main view)
+  // Immediate — drives the detail↔grid view switch with zero delay.
+  // The filter pipeline uses deferredQuery separately, so the grid appears
+  // instantly and card filtering catches up 1-2 frames later.
   const searchActive = query.length > 0;
 
   // Lightweight clear — just wipe the query without the restore-navigate logic
@@ -515,6 +555,8 @@ export const useSecondBrainHub = () => {
     setDirectoryScope,
     directoryQuery,
     setDirectoryQuery,
+    directorySortMode,
+    setDirectorySortMode,
     filteredTree,
 
     // Data
@@ -523,6 +565,7 @@ export const useSecondBrainHub = () => {
     addressToNoteId,
     backlinksMap,
     sortedResults,
+    histogramNotes: coreFilteredNotes,
     stats: globalStats,
 
     // Detail view data

@@ -12,6 +12,7 @@ const BAR_FILL = 'rgba(167,139,250,0.45)';
 const TRI_FILL = 'rgba(167,139,250,0.7)';
 
 export const BridgeScoreBadge: React.FC<Props> = ({ percentile }) => {
+  if (percentile === 0) return null;
   const isTop = percentile >= 50;
   const pctLabel = isTop ? Math.max(1, 100 - percentile) : Math.max(1, percentile);
   const prefix = isTop ? 'top' : 'bottom';

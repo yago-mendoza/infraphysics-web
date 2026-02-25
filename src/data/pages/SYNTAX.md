@@ -17,6 +17,7 @@ For frontmatter schemas, content types, editorial rules, and the compilation pip
 | Subscript | `{v:text}` |
 | Keyboard key | `{kbd:Ctrl+C}` |
 | Shout callout | `{shout:text}` |
+| Dot separator | `{dots}` |
 | Underline | `_text_` |
 | Accent color | `--text--` |
 | Note callout | `{bkqt/note}` ... `{/bkqt}` |
@@ -111,6 +112,14 @@ Write `{shout:text}`. Produces a centered, uppercase line in body text color. Us
 - `{shout:there is no cloud}`
 
 The text is centered on the page, rendered in uppercase with subtle letter-spacing and the same color as normal body text. It stands on its own as a block element with generous vertical margin.
+
+### Dot separator
+
+Write `{dots}` on its own line. Produces a centered `· · ·` divider — the same section-break pattern Medium uses. No content, just three spaced middle dots.
+
+- `{dots}`
+
+Use it between sections or ideas when a horizontal rule (`---`) feels too heavy but you still want a visual pause.
 
 ### Underline
 
