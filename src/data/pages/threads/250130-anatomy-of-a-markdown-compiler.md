@@ -5,6 +5,7 @@ category: threads
 date: 2025-01-30
 thumbnail: https://images.unsplash.com/photo-1516116216517-838c2b4c4e8e?q=80&w=400&auto=format&fit=crop
 description: how custom syntax coexists with standard markdown.
+lead: "The trick isn't writing a parser. It's knowing when each transformation runs."
 tags: [compilers, syntax, markdown]
 ---
 

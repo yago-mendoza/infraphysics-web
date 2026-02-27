@@ -8,6 +8,7 @@ date: 2026-02-09
 thumbnail: https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?q=80&w=800&auto=format&fit=crop
 thumbnailAspect: banner
 description: The real AI bubble isn't in the stocks. It's in the takes.
+lead: "Everyone suddenly has a take on AI. Most of them cancel each other out."
 tags: [ai, bubble, speculation, hype, economy]
 featured: true
 related: [transformers-and-the-data-wall, alignment-is-not-a-vibe-check]

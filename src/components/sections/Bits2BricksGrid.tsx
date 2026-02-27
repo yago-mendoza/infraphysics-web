@@ -37,20 +37,20 @@ export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, 
 
             {/* Content */}
             <div className="p-4 space-y-2.5">
-              <span className="text-[11px] text-th-tertiary font-sans">{formatDate(post.date)}</span>
+              <span className="text-[11px] text-th-tertiary" style={{ fontFamily: "'Roboto Slab', Georgia, serif" }}>{formatDate(post.date)}</span>
 
-              <h3 className="font-bold text-base text-th-primary group-hover-accent transition-colors leading-tight line-clamp-2" style={{ '--ac-color': accent, fontFamily: "'Geologica', sans-serif", fontWeight: 500 } as React.CSSProperties}>
+              <h3 className="font-bold text-base group-hover-accent transition-colors leading-tight line-clamp-2" style={{ '--ac-color': accent, color: accent, fontFamily: "'Roboto Slab', Georgia, serif", fontWeight: 600 } as React.CSSProperties}>
                 {post.displayTitle || post.title}
               </h3>
 
-              <p className="text-sm text-th-secondary font-sans leading-relaxed line-clamp-2">
+              <p className="text-sm text-th-secondary leading-relaxed line-clamp-2" style={{ fontFamily: "'Roboto Slab', Georgia, serif" }}>
                 {post.description}
               </p>
 
               {tags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {tags.slice(0, 4).map(tag => (
-                    <span key={tag} className="pill pill-sm" style={{ borderColor: `color-mix(in srgb, ${accent} 30%, transparent)`, color: accent }}>
+                    <span key={tag} className="pill pill-sm" style={{ borderColor: `color-mix(in srgb, ${accent} 30%, transparent)`, color: accent, fontFamily: "'Roboto Slab', Georgia, serif" }}>
                       {tag}
                     </span>
                   ))}

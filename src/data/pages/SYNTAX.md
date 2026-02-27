@@ -185,7 +185,7 @@ These replace the role that admonitions or callouts play in other systems. The o
 
 ### Types
 
-| Type | Default label | Color | Use case |
+| Type | Default label | Color (projects) | Use case |
 |---|---|---|---|
 | `note` | Note | Category accent | Supplementary information |
 | `tip` | Tip | Green | Practical actions or shortcuts |
@@ -194,6 +194,8 @@ These replace the role that admonitions or callouts play in other systems. The o
 | `keyconcept` | Key concept | Purple | Core ideas to retain |
 | `quote` | *(none)* | Category accent | Styled quotation with left bar and quotation mark icon |
 | `pullquote` | *(none)* | Category accent | Same as `quote` but half-width (stops mid-screen) |
+
+> **Blog articles (threads, bits2bricks):** All blockquote types render in the category accent color — there is no per-type color distinction. The types still work (labels, structure) but the visual color is always the section accent. Only projects uses the per-type color palette (green, amber, red, purple).
 
 ### Quote and pullquote blockquotes
 
@@ -329,7 +331,9 @@ Write `[[uid]]` to link to a fieldnote concept, where `uid` is the note's stable
 
 **Display text rule:** Without a pipe, the note's `name` field becomes the visible text. With a pipe, you control it explicitly.
 
-**Resolution:** If the address maps to an existing fieldnote, the link becomes clickable with a violet dashed underline and a diamond icon (`◇`). Hovering shows a preview card with the concept's title, address path, and description. If unresolved, the link is greyed out with a question mark (`?`) and is not clickable.
+**Resolution:** If the address maps to an existing fieldnote, the link becomes clickable with a dashed underline and a diamond icon (`◇`). Hovering shows a preview card with the concept's title, address path, and description. If unresolved, the link is greyed out with a question mark (`?`) and is not clickable.
+
+**Color:** In projects, wiki-links use the default violet/purple color. In blog articles (threads, bits2bricks), wiki-links use the category accent color (rose/blue) instead of purple.
 
 **Validation:** The build script validates that every wiki-link in regular posts (threads, bits2bricks, projects) points to an existing fieldnote. Broken references cause build errors.
 

@@ -174,17 +174,17 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
         <div className="flex flex-col md:flex-row md:items-baseline md:justify-between gap-2 md:gap-4 mb-3">
           <h1
             className={`text-2xl md:text-4xl font-bold tracking-tight title-l-frame uppercase ${categoryInfo.colorClass}`}
-            style={category !== 'projects' ? { fontFamily: "'Geologica', sans-serif", fontWeight: 500, textTransform: 'none' as const } : undefined}
+            style={category !== 'projects' ? { fontFamily: "'Roboto Slab', Georgia, serif", fontWeight: 700, textTransform: 'none' as const } : undefined}
           >
             <span className="text-th-heading">{categoryInfo.title}</span>
           </h1>
-          <div className={`flex items-center gap-4 text-xs text-th-tertiary ${category !== 'projects' ? 'font-sans' : ''}`}>
+          <div className="flex items-center gap-4 text-xs text-th-tertiary" style={category !== 'projects' ? { fontFamily: "'Roboto Slab', Georgia, serif" } : undefined}>
             <span>{filteredPosts.length} {filteredPosts.length === 1 ? 'entry' : 'entries'}</span>
             <span className="text-th-muted">&middot;</span>
             <span>{filteredPosts.reduce((acc, p) => acc + calculateReadingTime(p.content), 0)} min total</span>
           </div>
         </div>
-        <p className={`text-sm text-th-secondary leading-relaxed max-w-2xl ${category === 'projects' ? 'font-mono' : 'font-sans'}`}>
+        <p className="text-sm text-th-secondary leading-relaxed max-w-2xl" style={category !== 'projects' ? { fontFamily: "'Roboto Slab', Georgia, serif" } : { fontFamily: "'JetBrains Mono', monospace" }}>
           {categoryInfo.description}
         </p>
       </header>

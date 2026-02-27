@@ -5,11 +5,12 @@
  */
 export const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', {
+  const str = date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
   });
+  return str.replace(/^[A-Za-z]+/, m => m.toUpperCase());
 };
 
 /**

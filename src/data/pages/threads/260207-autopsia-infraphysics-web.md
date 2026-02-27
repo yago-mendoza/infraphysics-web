@@ -6,6 +6,7 @@ category: threads
 date: 2026-02-07
 thumbnail: https://images.unsplash.com/photo-1504639725590-34d0984388bd?q=80&w=400&auto=format&fit=crop
 description: "un análisis brutal del artículo del proyecto infraphysics-web: qué suena a IA, qué aburre, qué está desequilibrado, y cómo volverlo humano."
+lead: "si no puedes distinguir tu propia voz de la de una máquina, el problema no es la máquina."
 tags: [writing, editorial, self-critique, ai, voice]
 related: [infraphysics-web]
 ---

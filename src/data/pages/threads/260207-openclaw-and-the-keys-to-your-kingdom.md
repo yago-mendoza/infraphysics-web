@@ -7,6 +7,7 @@ date: 2026-02-07
 thumbnail: https://images.unsplash.com/photo-1510511459019-5dda7724fd87?q=80&w=1200&auto=format&fit=crop
 thumbnailAspect: wide
 description: "An AI agent with full access to your computer sounds amazing until you think about it for five minutes. This is about what that phrase actually means."
+lead: "You gave an AI agent root access to your machine. What could possibly go wrong?"
 tags: [ai, security, agents, openclaw, privacy, networking]
 featured: true
 related: [openclaw-containment-playbook, alignment-is-not-a-vibe-check, transformers-and-the-data-wall]

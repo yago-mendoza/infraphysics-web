@@ -8,9 +8,10 @@ import { catAccentVar } from '../../config/categories';
 export const Footer: React.FC = () => {
   const { pathname } = useLocation();
   const isBlog = pathname.startsWith('/blog');
+  const isBlogArticle = /^\/blog\/[^/]+\/[^/]+/.test(pathname);
 
   return (
-    <footer className={`w-full py-14 mt-18 border-t border-th-border relative z-20 ${isBlog ? 'bg-th-blog' : 'bg-th-base'}`}>
+    <footer className={`w-full py-14 mt-18 relative z-20 ${isBlogArticle ? '' : 'border-t border-th-border'} ${isBlog ? 'bg-th-blog' : 'bg-th-base'}`}>
       <div className="max-w-4xl mx-auto px-6">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">

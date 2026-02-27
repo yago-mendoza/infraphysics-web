@@ -6,6 +6,7 @@ category: threads
 date: 2026-02-05
 thumbnail: https://images.unsplash.com/photo-1504639725590-34d0984388bd?q=80&w=400&auto=format&fit=crop
 description: ownership, borrowing, and the compiler that won't let you hurt yourself.
+lead: "Every language makes trade-offs. Rust made one that sounds insane until you understand what it prevents."
 tags: [rust, systems-programming, memory-safety, languages]
 featured: false
 ---

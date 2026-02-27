@@ -652,6 +652,7 @@ function processMarkdownFile(filePath) {
     featured: frontmatter.featured || null,
     author: frontmatter.author || null,
     subtitle: frontmatter.subtitle || null,
+    lead: frontmatter.lead || null,
     tldr: frontmatter.tldr || null,
     related: frontmatter.related || null,
   };

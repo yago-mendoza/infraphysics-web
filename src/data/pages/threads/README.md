@@ -48,9 +48,11 @@ featured: true
 
 ### Typography
 
-Threads use **Source Serif 4** (serif) for body text, list items, table cells, and blockquote content. Headings, TOC, and UI elements remain in Inter (sans-serif). This is automatic — no frontmatter or class needed. Just write the markdown and the `.article-threads` scope applies the serif font.
+Threads use **SF Pro Display** (with system font fallbacks → Inter on non-Mac) for body text, list items, table cells, blockquote content, TOC, and UI elements. Titles and content headings (h1–h4) use **Roboto Slab** (slab serif). This is automatic — no frontmatter or class needed.
 
-Body font size is `0.95rem` with `line-height: 1.55` — slightly smaller and more spacious than the default, tuned for longer prose reading.
+Body font size is `0.95rem` with `line-height: 1.55` on mobile, scaling to `1rem` on desktop (uniform with bits2bricks).
+
+**Accent-colored elements.** Blockquotes, wiki-links, and inline footnotes all use the category accent color (rose). There is no per-type color distinction for blockquotes in threads — `tip`, `warning`, `danger`, and `keyconcept` all render in the same rose accent. Inline footnote references and notes render in italic.
 
 ---
 

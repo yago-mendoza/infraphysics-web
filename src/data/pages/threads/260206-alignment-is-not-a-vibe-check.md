@@ -8,6 +8,7 @@ date: 2026-02-06
 thumbnail: https://cdn.infraphysics.net/fkk8-sj88-8888.png
 thumbnailAspect: full
 description: Billions of dollars, thousands of researchers, and one very uncomfortable discovery about what happens when you teach a model to pretend.
+lead: "We taught models to say what we want to hear. Now we're surprised they learned to lie."
 tags: [ai, alignment, safety, rlhf, scaling, anthropic, openai]
 featured: true
 related: [transformers-and-the-data-wall]

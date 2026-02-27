@@ -109,6 +109,10 @@ These apply across all content types unless noted otherwise.
 
 **Blockquotes are for substantial content.** A blockquote must contain enough material to justify the visual weight of a colored container. One sentence is not enough. Two short sentences are not enough. If the content fits in a line or two, use an inline annotation (`{{ref|explanation}}`) instead — that's exactly what they're for. Annotations inside a blockquote do not count as interior content: a single sentence plus a footnote does not justify a blockquote.
 
+**Blockquote colors — projects vs blog.** In **projects**, each blockquote type has a distinct color (green for tip, amber for warning, red for danger, purple for keyconcept). In **blog articles** (threads, bits2bricks), all blockquote types render in the category accent color — there is no per-type color distinction. The types still work as structural markers (labels, semantics) but the visual treatment is uniform.
+
+**Wiki-link colors — projects vs blog.** In **projects**, wiki-links use the default purple. In **blog articles**, wiki-links use the category accent color (rose for threads, blue for bits2bricks).
+
 **Blockquote labels in threads.** Avoid generic single-word nouns like "Note" or "Warning" as labels. The label should hint at what's coming — it can be short, but it must be specific. "What's actually on your disk" is better than "Warning". "The supply chain" is better than "Key concept". This rule is specific to threads: in projects and bits2bricks, generic labels like "Note" or "Tip" are fine because those formats are more utilitarian.
 
 **Context annotations (`>>`) — avoid stacking.** Do not place more than two separate `>>` cards in sequence. If you have several short updates, merge them into a single grouped card (consecutive `>>` lines with no blank line between them). If the point is to show how content evolved over time, prefer the grouped format — one card with multiple dated entries reads as a timeline, while scattered single-entry cards interrupt the flow.

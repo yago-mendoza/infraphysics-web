@@ -6,3 +6,4 @@ export * from './Sidebar';
 export * from './SecondBrainSidebar';
 export * from './MobileNav';
 export * from './Footer';
+export * from './ArticleFloatingBar';

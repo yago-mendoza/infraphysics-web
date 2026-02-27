@@ -110,7 +110,7 @@
    overrides on the same element (.article-threads, .article-bits2bricks)
    are resolved BEFORE the color-mix derivations are computed. */
 .article-page-wrapper {
-  max-width: 100rem;
+  max-width: 52rem;
   margin-left: auto;
   margin-right: auto;
   font-family: 'JetBrains Mono', monospace;
@@ -157,6 +157,10 @@
   border: 1px solid var(--art-border);
   border-radius: 2px;
   overflow: hidden;
+}
+.article-blog .article-container {
+  background: none;
+  border: none;
 }
 
 /* A2. Header bar */
@@ -333,6 +337,72 @@
   color: var(--art-accent);
 }
 
+/* A6b. Share dropdown button */
+
+.article-share-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 1px solid var(--art-border);
+  background: none;
+  color: var(--art-text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  position: relative;
+  padding: 0;
+}
+.article-share-btn:hover {
+  color: var(--art-accent);
+  border-color: var(--art-accent-dim);
+}
+
+.article-share-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background: var(--art-surface);
+  border: 1px solid var(--art-border);
+  border-radius: 4px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  z-index: 20;
+  min-width: 10rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.article-share-dropdown a,
+.article-share-dropdown button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.7rem;
+  color: var(--art-text-mid);
+  text-decoration: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+  font-family: inherit;
+}
+.article-share-dropdown a:hover,
+.article-share-dropdown button:hover {
+  color: var(--art-text-title);
+  background: var(--art-accent-bg);
+}
+.article-share-dropdown-sep {
+  height: 1px;
+  background: var(--art-border);
+  margin: 0.25rem 0;
+}
+
 /* A7. Tag pills — two rows: topics (purple) + technologies (accent) */
 
 .article-pills {
@@ -377,7 +447,7 @@
 }
 
 .article-title {
-  font-size: 2.75rem;
+  font-size: 2rem;
   font-weight: 800;
   line-height: 1.1;
   color: var(--art-text-title);
@@ -399,7 +469,7 @@
 
 @media (min-width: 768px) {
   .article-title {
-    font-size: 3.5rem;
+    font-size: 2.75rem;
   }
   .article-subtitle {
     font-size: 1.25rem;
@@ -589,6 +659,235 @@
   scroll-margin-top: 1.5rem;
 }
 
+/* A13. Floating article bar (blog immersive mode) */
+
+.article-floating-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1.5rem;
+  background: color-mix(in srgb, var(--art-surface) 85%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--art-border);
+}
+.article-floating-bar--visible {
+  /* kept for potential future show/hide toggle */
+}
+
+.article-bar-back {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--art-text-mid);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.article-bar-back:hover {
+  color: var(--art-text-title);
+}
+.article-bar-back-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.01em;
+}
+
+.article-bar-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.article-bar-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 6px;
+  border: none;
+  background: none;
+  color: var(--art-text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+  padding: 0;
+}
+.article-bar-btn:hover {
+  color: var(--art-text-title);
+  background: color-mix(in srgb, var(--art-text-dim) 10%, transparent);
+}
+
+/* Share dropdown positioning when inside floating bar */
+.article-bar-share-dropdown {
+  top: calc(100% + 0.5rem);
+  right: 0;
+}
+
+/* A14. Lateral TOC panel (blog immersive mode) */
+
+.article-lateral-toc {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 24rem;
+  max-width: 85vw;
+  background: var(--art-surface);
+  border-right: 1px solid var(--art-border);
+  z-index: 60;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+.article-lateral-toc--open {
+  transform: translateX(0);
+}
+
+.article-lateral-toc-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: rgba(0, 0, 0, 0.4);
+}
+[data-theme="light"] .article-lateral-toc-backdrop {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.article-lateral-toc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.article-lateral-toc-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--art-text-mid);
+  font-weight: 600;
+}
+
+.article-lateral-toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.article-lateral-toc-row {
+  display: flex;
+  align-items: center;
+}
+
+.article-lateral-toc-link {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  background: none;
+  color: var(--art-text-body);
+  font-size: 0.8rem;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+  line-height: 1.4;
+}
+.article-lateral-toc-link:hover {
+  color: var(--art-text-title);
+  background: var(--art-accent-bg);
+}
+
+.article-lateral-toc-link--child {
+  font-size: 0.75rem;
+  color: var(--art-text-mid);
+  padding: 0.35rem 0.6rem 0.35rem 2.35rem;
+}
+
+.article-lateral-toc-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  color: var(--art-text-muted);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.article-lateral-toc-chevron:hover {
+  color: var(--art-text-body);
+  background: color-mix(in srgb, var(--art-text-dim) 8%, transparent);
+}
+
+.article-lateral-toc-children {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.article-lateral-toc-num {
+  color: var(--art-accent);
+  font-size: 0.7rem;
+  font-weight: 600;
+  min-width: 1.25rem;
+  flex-shrink: 0;
+}
+
+/* A15. Left-side TOC indicator (blog immersive mode, desktop only) */
+
+.article-toc-indicator {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .article-toc-indicator {
+    position: fixed;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 10px 8px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+  .article-toc-indicator:hover {
+    background: color-mix(in srgb, var(--art-text-dim) 8%, transparent);
+  }
+  .article-toc-indicator-line {
+    display: block;
+    height: 2px;
+    width: 18px;
+    background: var(--art-text-muted);
+    border-radius: 1px;
+    transition: background 0.2s;
+  }
+  .article-toc-indicator:hover .article-toc-indicator-line {
+    background: var(--art-text-mid);
+  }
+}
+
 
 /* ─────────────────────────────────────────────────
    B. ARTICLE CONTENT (.article-content)
@@ -601,9 +900,16 @@
 .article-content h2,
 .article-content h3,
 .article-content h4 {
+  font-family: 'Roboto Slab', Georgia, 'Times New Roman', serif;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-weight: 700;
+}
+
+.heading-section-num {
+  color: var(--art-accent);
+  opacity: 0.6;
+  font-weight: 600;
 }
 
 .article-content h1 {
@@ -634,6 +940,9 @@
 
 .heading-toc-link {
   cursor: pointer;
+}
+.article-blog .heading-toc-link {
+  cursor: default;
 }
 
 /* B2. Paragraphs */
@@ -883,14 +1192,15 @@
 /* B3b. Small text (> markdown blocks) */
 
 .article-content .small-text {
-  margin: 1rem 0;
+  margin-bottom: 1rem;
 }
 
 .article-content .small-text p {
-  font-size: 0.7rem;
+  font-size: 0.875rem;
+  font-style: italic;
   color: var(--art-text-mid);
-  line-height: 1.6;
-  margin-bottom: 0.4rem;
+  line-height: 1.4;
+  margin-bottom: 1rem;
 }
 
 /* B3c. Inline annotations (WORD{{explanation}} → superscript + notes) */
@@ -904,20 +1214,21 @@
   color: var(--art-accent);
   font-size: 0.75em;
   font-weight: 600;
+  font-style: italic;
   cursor: default;
   margin-left: 0.25em;
 }
 
 .article-content .annotations {
   padding-left: 3.0rem;
-  margin-top: -0.25rem;
   margin-bottom: 1rem;
 }
 
 .article-content .ann-note {
-  font-size: 0.8rem;
+  font-size: 0.875rem;
+  font-style: italic;
   color: var(--art-text-mid);
-  line-height: 1.5;
+  line-height: 1.4;
   margin-bottom: 1rem;
 }
 
@@ -925,8 +1236,8 @@
   color: var(--art-accent);
   font-size: 0.75em;
   font-weight: 600;
+  font-style: italic;
   margin-right: 0.4em;
-  vertical-align: super;
 }
 
 .article-content .bkqt .annotations {
@@ -1301,8 +1612,8 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 /* B15. Wiki refs */
 
-/* Wiki-ref styling lives in index.css (with !important for theme-awareness).
-   article.css does not override it — the wiki-link vars handle both themes. */
+/* Base wiki-ref styling lives in index.css (with !important for theme-awareness).
+   Blog articles override --wiki-link to the category accent in section E2g. */
 
 /* B16. Inline code inside colored spans adapts bg/border to parent color */
 
@@ -1398,6 +1709,13 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
+}
+.article-blog .article-feedback {
+  background: var(--art-surface);
+  border: 1px solid var(--art-border);
+  border-radius: 2px;
+  padding: 2rem;
+  margin-top: 3rem;
 }
 
 .article-feedback-heading {
@@ -1589,7 +1907,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
     padding: 1rem var(--art-body-px) 1.5rem;
   }
   .article-title {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
   .article-subtitle {
     font-size: 0.95rem;
@@ -1630,102 +1948,97 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
    Scoped overrides for threads + bits2bricks
    ───────────────────────────────────────────────── */
 
-/* E1. Body font override — Source Serif 4 italic for prose */
-.article-blog .article-content p,
-.article-blog .article-content li,
-.article-blog .article-content td,
-.article-blog .article-content .small-text p,
-.article-blog .article-content .ann-note {
-  font-family: 'Source Serif 4', var(--font-serif);
-  font-weight: 400;
-  font-style: italic;
-  font-size: 0.95rem;
-  line-height: 1.55;
+/* E1. Blog body — monospace (inherits from .article-page-wrapper) */
+
+/* E2. Blog typography — Roboto Slab for titles/headings, SF Pro Display for body */
+.article-blog .article-title-block {
+  margin-bottom: 0.5rem;
 }
 
-/* E2. Blog typography — Geologica for titles, Source Serif 4 italic for subtitles, Inter for subheadings */
 .article-blog .article-title {
-  font-family: 'Geologica', var(--font-sans);
-  font-weight: 500;
+  font-family: var(--font-blog-heading);
+  font-weight: 700;
   text-transform: none;
   letter-spacing: normal;
 }
 
 .article-blog .article-subtitle {
-  font-family: 'Source Serif 4', var(--font-serif);
-  font-style: italic;
+  font-family: var(--font-blog-heading);
+  font-style: normal;
   font-weight: 400;
   text-transform: none;
   letter-spacing: normal;
+  margin-top: 0.25rem;
 }
 
 .article-blog .article-content h1,
 .article-blog .article-content h2,
 .article-blog .article-content h3,
 .article-blog .article-content h4 {
-  font-family: 'Inter', var(--font-sans);
+  font-family: var(--font-blog-heading);
   text-transform: none;
   letter-spacing: normal;
   font-weight: 600;
 }
 
-/* E2b. Feedback form — Inter for blog */
-.article-blog .article-feedback {
-  font-family: 'Inter', var(--font-sans);
-  font-style: normal;
-}
+/* E2b. Feedback form — monospace (inherits) */
 
-/* E2e. Blog chrome — Inter for breadcrumbs, hashtags, meta */
+/* E2e. Blog chrome — SF Pro Display stack for breadcrumbs, hashtags, meta */
 .article-blog .article-breadcrumbs {
-  font-family: 'Inter', var(--font-sans);
+  font-family: var(--font-blog-body);
   font-weight: 400;
 }
 
 .article-blog .article-hashtag {
-  font-family: 'Inter', var(--font-sans);
+  font-family: var(--font-blog-heading);
   font-weight: 400;
 }
 
 .article-blog .article-meta {
-  font-family: 'Inter', var(--font-sans);
+  font-family: var(--font-blog-heading);
   font-weight: 400;
 }
 
-/* E2c. Threads typography — Source Serif 4 italic for prose */
-.article-threads .article-content p,
-.article-threads .article-content li,
-.article-threads .article-content td,
-.article-threads .article-content .small-text p,
-.article-threads .article-content .ann-note {
-  font-family: 'Source Serif 4', var(--font-serif);
-  font-weight: 400;
-  font-style: italic;
-  font-size: 0.95rem;
-  line-height: 1.55;
+/* E2f. Blog blockquotes — uniform accent color (no type-specific colors).
+   In blog articles all blockquote types use the category accent color.
+   Projects keeps the per-type colors (green/amber/red/purple). */
+.article-blog .article-content .bkqt-note,
+.article-blog .article-content .bkqt-tip,
+.article-blog .article-content .bkqt-warning,
+.article-blog .article-content .bkqt-danger,
+.article-blog .article-content .bkqt-keyconcept {
+  --bkqt-color: var(--art-accent);
 }
+
+/* E2g. Blog wiki-links — accent color instead of purple.
+   Override the --wiki-link variable so all cascading rules (color, border,
+   hover, visited) resolve to the category accent automatically. */
+.article-blog .wiki-ref-resolved {
+  --wiki-link: var(--art-accent) !important;
+  --wiki-link-hover: var(--art-accent) !important;
+}
+
+/* E2c. Threads body — monospace (inherits from .article-page-wrapper) */
 
 .article-threads .article-title {
-  font-family: 'Geologica', var(--font-sans);
-  font-weight: 500;
+  font-family: var(--font-blog-heading);
+  font-weight: 700;
 }
 
 .article-threads .article-content h1,
 .article-threads .article-content h2,
 .article-threads .article-content h3,
 .article-threads .article-content h4 {
-  font-family: 'Source Serif 4', var(--font-serif);
+  font-family: var(--font-blog-heading);
   font-style: normal;
   font-weight: 600;
 }
 
-.article-threads .article-feedback {
-  font-family: 'Source Serif 4', var(--font-serif);
-  font-style: normal;
-}
+/* Threads feedback — monospace (inherits) */
 
 .article-threads .article-toc-label,
 .article-threads .article-toc-link {
-  font-family: 'Source Serif 4', var(--font-serif);
+  font-family: var(--font-blog-body);
   font-style: normal;
 }
 
@@ -1733,10 +2046,10 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   padding: 1rem var(--art-body-px);
 }
 
-/* E2d. Threads blockquote label — block above text, bold serif (not inline monospace) */
+/* E2d. Threads blockquote label — block above text, bold sans (not inline monospace) */
 .article-threads .article-content .bkqt-label {
   display: block;
-  font-family: 'Source Serif 4', var(--font-serif);
+  font-family: var(--font-blog-body);
   font-size: 0.95rem;
   font-weight: 700;
   font-style: normal;
@@ -1787,15 +2100,15 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .article-hashtag {
-  font-size: 0.6rem;
+  font-size: 0.7rem;
   color: var(--art-purple);
   letter-spacing: 0.03em;
   border: 1px solid color-mix(in srgb, var(--art-purple) 30%, transparent);
-  padding: 0.15rem 0.5rem;
+  padding: 0.2rem 0.55rem;
   border-radius: 2px;
 }
 
@@ -1810,19 +2123,110 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   border-color: color-mix(in srgb, var(--art-accent) 30%, transparent);
 }
 
-/* E4b. Blog separator — neutral line between subtitle and image */
-.article-blog-sep {
-  border: none;
+/* E4b. Blog meta bar — author, date, reading time between two lines */
+.article-blog-metabar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  margin: 0.75rem 0 0;
   border-top: 1px solid var(--art-border);
-  margin: 1.25rem 0 0;
+  border-bottom: 1px solid var(--art-border);
+  font-family: var(--font-blog-heading);
+  font-size: 0.85rem;
+  color: var(--art-text-mid);
 }
 
-/* E5. Blog image (natural color, below title) */
-.article-blog-image {
-  margin: 1.5rem 0 2rem;
-  overflow: hidden;
-  border-radius: 2px;
+.article-blog-metabar-left {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.article-blog-metabar-sep {
+  color: var(--art-text-muted);
+}
+
+.article-blog-metabar-author {
+  color: var(--art-text-mid);
+}
+
+.article-blog-metabar-link {
+  color: var(--art-text-body);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.article-blog-metabar-link:hover {
+  color: var(--art-text-title);
+}
+
+/* E4c. Blog lead — italic intro text below metabar, border-bottom before body */
+.article-blog-lead {
+  padding: 0.6rem 0 0.75rem;
+  margin: 0;
+  border-bottom: 1px solid var(--art-border);
+}
+
+.article-blog-lead p {
+  margin: 0;
+  font-style: italic;
+  color: var(--art-text-body);
+  line-height: 1.6;
+}
+
+/* E4d. Blog share button — pill shape with label */
+.article-blog .article-share-btn {
+  width: auto;
+  height: auto;
+  border-radius: 9999px;
   border: 1px solid var(--art-border);
+  background: none;
+  color: var(--art-text-mid);
+  padding: 0.3rem 0.85rem;
+  gap: 0.35rem;
+  font-family: var(--font-blog-heading);
+  font-size: 0.75rem;
+}
+.article-blog .article-share-btn:hover {
+  color: var(--art-accent);
+  border-color: var(--art-accent-dim);
+}
+
+/* E4e. Blog title/subtitle — reduced sizes */
+.article-blog .article-title {
+  font-size: 1.8rem;
+}
+.article-blog .article-subtitle {
+  font-size: 1rem;
+}
+
+@media (min-width: 768px) {
+  .article-blog .article-title {
+    font-size: 2.5rem;
+  }
+  .article-blog .article-subtitle {
+    font-size: 1rem;
+  }
+}
+@media (max-width: 767px) {
+  .article-blog .article-title {
+    font-size: 1.6rem;
+  }
+  .article-blog .article-subtitle {
+    font-size: 0.9rem;
+  }
+}
+
+/* E5. Blog image (natural color, edge-to-edge within box) */
+.article-blog-image {
+  margin: 0 calc(-1 * var(--art-body-px)) 1rem;
+  overflow: hidden;
+  border-radius: 0;
+  border: none;
+  border-top: 1px solid var(--art-border);
+  border-bottom: 1px solid var(--art-border);
 }
 
 .article-blog-image-img {
@@ -1926,12 +2330,12 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
    Body is 0.9rem (blog) / 0.95rem (threads); TOC stays below body.
    Consistent 0.05rem step between depths. */
 .article-toc--blog .article-toc-label {
-  font-family: 'Inter', var(--font-sans);
+  font-family: var(--font-blog-body);
   font-size: 0.8rem;
 }
 
 .article-toc--blog .article-toc-link {
-  font-family: 'Inter', var(--font-sans);
+  font-family: var(--font-blog-body);
   text-transform: none;
 }
 
@@ -1956,6 +2360,10 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   border: 1px solid var(--art-border);
   overflow: hidden;
 }
+.article-blog .article-threads-card {
+  background: none;
+  border: none;
+}
 
 /* F2. Body section — inside the card, same padding as header */
 .article-threads-body {
@@ -1966,7 +2374,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 /* F3. Header nav bar */
 .article-threads-nav {
-  font-family: 'Inter', var(--font-sans);
+  font-family: var(--font-blog-body);
   font-weight: 400;
   padding: 0.55rem 2rem;
   border-bottom: 1px solid var(--art-border);
@@ -1974,12 +2382,12 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 /* F4. Header content area */
 .article-threads-header-content {
-  padding: 1.5rem 2rem 2rem;
+  padding: 1rem 2rem 1.25rem;
 }
 
 /* F5. Byline */
 .article-threads-byline {
-  font-family: 'Source Serif 4', var(--font-serif);
+  font-family: var(--font-blog-heading);
   font-style: italic;
   font-weight: 400;
   font-size: 0.85rem;
@@ -1999,7 +2407,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 /* F6. Dateline */
 .article-threads-dateline {
-  font-family: 'Inter', var(--font-sans);
+  font-family: var(--font-blog-heading);
   font-weight: 400;
   font-size: 0.7rem;
   color: var(--art-text-dim);
@@ -2013,16 +2421,11 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   color: var(--art-text-muted);
 }
 
-/* F7. Social share row */
-.article-threads-social {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
+/* F7. (removed — share icons consolidated into dropdown) */
 
-/* F8. Image — flush to card edges */
+/* F8. Image — flush to card edges, above header content */
 .article-threads-image {
-  border-top: 1px solid var(--art-border);
+  border-bottom: 1px solid var(--art-border);
   overflow: hidden;
 }
 
@@ -2045,5 +2448,138 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
   .article-threads-header-content {
     padding: 1rem 0.75rem;
+  }
+}
+
+
+/* ─────────────────────────────────────────────────
+   G. DESKTOP CONTENT SIZING
+   Placed AFTER all category overrides so it wins the cascade.
+   Uniform font sizes across projects, threads, bits2bricks.
+   Only font-family differs between categories.
+   ───────────────────────────────────────────────── */
+@media (min-width: 768px) {
+  /* Body text */
+  .article-content p,
+  .article-blog .article-content p,
+  .article-threads .article-content p {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  /* Lists */
+  .article-content li,
+  .article-blog .article-content li,
+  .article-threads .article-content li {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  /* Tables */
+  .article-content td,
+  .article-blog .article-content td,
+  .article-threads .article-content td {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  /* Definitions & shouts */
+  .article-content .defn {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+  .article-content .shout {
+    font-size: 1rem;
+  }
+
+  /* Small text — same size as body */
+  .article-content .small-text p,
+  .article-blog .article-content .small-text p,
+  .article-threads .article-content .small-text p {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  /* Footnotes (annotations) — same size as body */
+  .article-content .ann-note,
+  .article-blog .article-content .ann-note,
+  .article-threads .article-content .ann-note {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  /* Context annotations */
+  .article-content .ctx-note-text {
+    font-size: 0.75rem;
+  }
+  .article-content .ctx-note-date {
+    font-size: 0.65rem;
+  }
+  .article-content .ctx-note-relative {
+    font-size: 0.6rem;
+  }
+
+  /* Headings */
+  .article-content h1 {
+    font-size: 2rem;
+  }
+  .article-content h2 {
+    font-size: 1.5rem;
+  }
+  .article-content h3 {
+    font-size: 1.15rem;
+  }
+  .article-content h4 {
+    font-size: 1rem;
+  }
+
+  /* Blockquotes */
+  .article-content .bkqt,
+  .article-blog .article-content .bkqt,
+  .article-threads .article-content .bkqt {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  /* Blockquote label — uniform across categories */
+  .article-content .bkqt-label,
+  .article-threads .article-content .bkqt-label {
+    font-size: 0.8rem;
+  }
+
+  /* Pullquote */
+  .article-content .bkqt-pullquote p {
+    font-size: 0.95rem;
+  }
+  .article-content .bkqt-attrib {
+    font-size: 0.78rem;
+  }
+
+  /* Figcaption */
+  .article-content figcaption {
+    font-size: 0.75rem;
+  }
+
+  /* Table header */
+  .article-content th {
+    font-size: 0.75rem;
+  }
+
+  /* G2. Projects — smaller monospace body */
+  .article-projects .article-content p,
+  .article-projects .article-content li,
+  .article-projects .article-content td,
+  .article-projects .article-content .defn,
+  .article-projects .article-content .shout {
+    font-size: 0.85rem;
+  }
+  .article-projects .article-content .bkqt {
+    font-size: 0.85rem;
+  }
+  .article-projects .article-content .small-text p {
+    font-size: 0.85rem;
+  }
+  .article-projects .article-content .ann-note {
+    font-size: 0.85rem;
   }
 }

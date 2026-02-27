@@ -8,6 +8,7 @@ date: 2026-02-03
 thumbnail: https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=400&auto=format&fit=crop
 thumbnailAspect: banner
 description: Why the transformer architecture refuses to stop getting smarter — and what stands in its way.
+lead: "The architecture that changed everything is running out of the one thing it needs most."
 tags: [ai, deep-learning, scaling, language-models]
 featured: true
 notes:

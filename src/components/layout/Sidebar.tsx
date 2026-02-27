@@ -81,8 +81,8 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch 
         </div>
       </Link>
 
-      {/* Nav + theme toggle — scrollable when viewport is short (e.g. browser zoom) */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain thin-scrollbar sidebar-scrollbar">
+      {/* Nav — overflow hidden by default, scrollable only on very short viewports */}
+      <div className="flex-1 overflow-hidden overflow-x-hidden">
         {/* LAB */}
         {sectionLabel('lab')}
         <nav className="flex flex-col gap-1">

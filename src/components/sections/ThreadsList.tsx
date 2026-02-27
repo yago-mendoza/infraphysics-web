@@ -27,18 +27,18 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
               <div className="flex-grow min-w-0">
                 {/* Reading time + date */}
                 <div className="flex flex-wrap items-center gap-3 mb-3">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-sans px-2 py-0.5 border rounded-sm" style={{ borderColor: `color-mix(in srgb, ${accent} 30%, transparent)`, color: accent }}>
+                  <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 border rounded-sm" style={{ borderColor: `color-mix(in srgb, ${accent} 30%, transparent)`, color: accent, fontFamily: "'Roboto Slab', Georgia, serif" }}>
                     <ClockIcon /> {readTime} MIN READ
                   </span>
-                  <span className="text-xs text-th-tertiary font-sans">{formatDate(post.date)}</span>
+                  <span className="text-xs text-th-tertiary" style={{ fontFamily: "'Roboto Slab', Georgia, serif" }}>{formatDate(post.date)}</span>
                 </div>
 
                 {/* Title + Description — both clickable */}
                 <Link to={postPath(post.category, post.id)} className="listing-title-link thread-title-link group block mb-3">
-                  <h3 className="listing-card-title thread-card-title text-xl font-bold text-th-primary transition-colors leading-tight mb-2" style={{ fontFamily: "'Geologica', sans-serif", fontWeight: 500 }}>
+                  <h3 className="listing-card-title thread-card-title text-xl font-bold transition-colors leading-tight mb-2" style={{ fontFamily: "'Roboto Slab', Georgia, serif", fontWeight: 600, color: accent }}>
                     {post.displayTitle || post.title}
                   </h3>
-                  <p className="text-sm text-th-secondary font-sans leading-relaxed">
+                  <p className="text-sm text-th-secondary leading-relaxed" style={{ fontFamily: "'Roboto Slab', Georgia, serif" }}>
                     {post.description}
                   </p>
                 </Link>
@@ -50,7 +50,7 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
                       <span
                         key={tag}
                         className="pill"
-                      style={{ borderColor: `color-mix(in srgb, ${accent} 30%, transparent)`, color: accent }}
+                      style={{ borderColor: `color-mix(in srgb, ${accent} 30%, transparent)`, color: accent, fontFamily: "'Roboto Slab', Georgia, serif" }}
                       >
                         {tag}
                       </span>

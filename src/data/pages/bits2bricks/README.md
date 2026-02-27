@@ -85,6 +85,8 @@ Bits2Bricks lean heavily on:
 
 Generic blockquote labels ("Note", "Tip", "Warning") are fine in bits2bricks — the format is utilitarian.
 
+**Accent-colored elements.** All blockquote types render in the category accent color (blue) — there is no per-type color distinction. Wiki-links also use the blue accent instead of the default purple. Inline footnote references and notes render in italic. This behavior is shared with threads; only projects uses the per-type blockquote color palette.
+
 ---
 
 ### What not to do
