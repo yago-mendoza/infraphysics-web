@@ -1,7 +1,7 @@
 // Second Brain Manager Sidebar — data exploration dashboard for /second-brain* routes
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useHub } from '../../contexts/SecondBrainHubContext';
 import {
   ChevronIcon,
@@ -10,13 +10,15 @@ import {
   SlidersIcon,
   CloseIcon,
   IslandIcon,
+  InfoIcon,
 } from '../icons';
-import { InfoPopover, tipStrong, tipAccent, tipCode } from '../InfoPopover';
+import { SecondBrainGuide } from '../SecondBrainGuide';
 import { IslandDetector, type IslandDetectorHandle } from '../IslandDetector';
 import { useGraphRelevance } from '../../hooks/useGraphRelevance';
+import { useIsLocalhost } from '../../hooks/useIsLocalhost';
 import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../../constants/layout';
 import type { FieldNoteMeta } from '../../types';
-import type { TreeNode, FilterState, DirectorySortMode } from '../../hooks/useSecondBrainHub';
+import type { TreeNode, FilterState, DirectorySortMode, ViewMode } from '../../hooks/useSecondBrainHub';
 
 // --- Collapsible Section ---
 const Section: React.FC<{
@@ -228,61 +230,6 @@ const TreeNodeItem: React.FC<{
   );
 };
 
-// --- Sidebar header help content ---
-const HEADER_INFO_TABS = [
-  {
-    label: 'overview',
-    content: (
-      <div className="space-y-2">
-        <p>A <strong className={tipStrong}>knowledge graph</strong> for exploring interconnected concepts. Each card is a note; links between them form a navigable web.</p>
-        <p><strong className={tipStrong}>Just start typing</strong> — any key opens the search. Results filter live as you type.</p>
-        <p><span style={{ color: 'var(--wiki-link-visited)' }}>Blue</span> = visited this session. <span className={tipAccent}>Purple</span> = not yet visited. Tracked across the grid, links, and graph.</p>
-        <p>Use the theme button in the header — or <code className={tipCode}>Shift+T</code> on desktop — to toggle light / dark.</p>
-      </div>
-    ),
-  },
-  {
-    label: 'stats',
-    content: (
-      <div className="space-y-2">
-        <p><strong className={tipStrong}>Concepts</strong> — total number of notes in the knowledge base.</p>
-        <p><strong className={tipStrong}>Links</strong> — total references between notes (wiki-links in the body + explicit interactions).</p>
-        <p><strong className={tipStrong}>Isolated</strong> — notes with zero connections to anything.</p>
-        <p><strong className={tipStrong}>Avg refs</strong> — average number of links per note.</p>
-        <p><strong className={tipStrong}>Max depth</strong> — deepest level in the naming tree (e.g. <code className={tipCode}>chip//MCU//ARM</code> = depth 3).</p>
-        <p><strong className={tipStrong}>Density</strong> — how interconnected the graph is. 100% would mean every note links to every other note.</p>
-      </div>
-    ),
-  },
-  {
-    label: 'directory',
-    content: (
-      <div className="space-y-2">
-        <p>The directory organizes notes by their <strong className={tipStrong}>address</strong> — a naming path using <code className={tipCode}>//</code> as separator (e.g. <code className={tipCode}>chip//MCU//ARM</code>). This is the note's position in a <em>naming hierarchy</em>, independent of which notes it links to.</p>
-        <p><strong className={tipStrong}>Scope</strong> — select a folder name (or the ⊙ icon) to filter the grid to only notes within that branch.</p>
-        <p><strong className={tipStrong}>Auto-expand</strong> — when you open a note, its branch auto-expands here.</p>
-        <p><strong className={tipStrong}>Filter tree</strong> — type in the input above to narrow by name.</p>
-        <p><strong className={tipStrong}>Centrality bars</strong> — small bars on the right show each note's relative importance based on how many links it has.</p>
-        <p><strong className={tipStrong}>Auto-prune</strong> — when filters, search, or scope are active, branches with zero matching notes disappear temporarily.</p>
-      </div>
-    ),
-  },
-  {
-    label: 'topology',
-    content: (
-      <div className="space-y-2">
-        <p>Topology groups notes by <strong className={tipStrong}>actual connections</strong> (wiki-links and interactions) — not by their name or folder. Two notes in the same directory folder can belong to different islands if they aren't linked.</p>
-        <p><strong className={tipStrong}>Islands</strong> — clusters of notes reachable from each other through links. Each gets a <span className={tipAccent}>#ID</span>.</p>
-        <p><strong className={tipStrong}>Bridges</strong> (⚡) — notes that hold an island together. Remove one and the cluster splits into separate groups.</p>
-        <p><strong className={tipStrong}>Isolated</strong> (○) — notes with zero connections to anything.</p>
-        <p><strong className={tipStrong}>Tap the chevron</strong> next to any component to see all its members.</p>
-        <p><strong className={tipStrong}>Island badge</strong> — in note detail, each note shows its island <span className={tipAccent}>#ID</span>. Click to scroll here.</p>
-        <p><strong className={tipStrong}>Auto-prune</strong> — when filters, search, or scope are active, islands with zero matching notes disappear temporarily.</p>
-      </div>
-    ),
-  },
-];
-
 // --- Word Count Histogram ---
 const WordCountHistogram: React.FC<{
   notes: FieldNoteMeta[];
@@ -445,6 +392,9 @@ const WordCountHistogram: React.FC<{
 // --- Main Sidebar ---
 export const SecondBrainSidebar: React.FC = () => {
   const hub = useHub();
+  const navigate = useNavigate();
+  const isLocalhost = useIsLocalhost();
+  const [guideOpen, setGuideOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [drawerMounted, setDrawerMounted] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
@@ -523,7 +473,11 @@ export const SecondBrainSidebar: React.FC = () => {
     histogramNotes,
     hasActiveFilters,
     searchActive,
+    viewMode,
+    setViewMode,
   } = hub;
+
+  const isSimplified = viewMode === 'simplified';
 
   // Prune sidebar sections when any filter/scope/search is active
   const isFiltering = hasActiveFilters || !!directoryScope || searchActive;
@@ -553,10 +507,26 @@ export const SecondBrainSidebar: React.FC = () => {
     setFilterState(prev => ({ ...prev, [key]: value }));
   };
 
+  const modeToggle = (
+    <button
+      onClick={() => setViewMode(isSimplified ? 'technical' : 'simplified')}
+      className="flex items-center gap-1.5 text-[9px] text-violet-400/70 hover:text-violet-400 transition-colors whitespace-nowrap"
+      title={isSimplified ? 'Switch to technical view' : 'Switch to simple view'}
+    >
+      <span className="relative w-[22px] h-[12px] rounded-full bg-violet-400/20 flex-shrink-0">
+        <span
+          className="absolute top-[2px] w-[8px] h-[8px] rounded-full bg-violet-400 transition-[left] duration-200 ease-out"
+          style={{ left: isSimplified ? 2 : 12 }}
+        />
+      </span>
+      {isSimplified ? 'simple view' : 'technical view'}
+    </button>
+  );
+
   const sections = (
     <>
-      {/* Graph Stats — always global */}
-      <Section
+      {/* Graph Stats — always global, technical only */}
+      {!isSimplified && <Section
         title="graph stats"
         icon={<BarChartIcon />}
         defaultOpen={false}
@@ -595,14 +565,14 @@ export const SecondBrainSidebar: React.FC = () => {
             setFilterState(prev => ({ ...prev, wordCountMin: min, wordCountMax: max }));
           }}
         />
-      </Section>
+      </Section>}
 
       {/* Directory Tree */}
       <Section
         title="directory"
         icon={<FolderIcon />}
         defaultOpen={true}
-        headerAction={
+        headerAction={isSimplified ? undefined :
           <span className="flex items-center gap-0.5">
             {([
               ['children', 'Sort by children count', <svg key="ch" className="block" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v8"/><path d="M4 14h16"/><circle cx="6" cy="19" r="3"/><circle cx="12" cy="19" r="3"/><circle cx="18" cy="19" r="3"/></svg>],
@@ -673,7 +643,7 @@ export const SecondBrainSidebar: React.FC = () => {
                       onConceptClick={signalDirectoryNav}
                       forceExpanded={directoryQuery.length > 0}
                       activePath={activePost?.address ?? null}
-                      getPercentile={getPercentile}
+                      getPercentile={isSimplified ? undefined : getPercentile}
                       collapseSignal={dirCollapseGen}
 
                     />
@@ -697,7 +667,7 @@ export const SecondBrainSidebar: React.FC = () => {
                         onConceptClick={signalDirectoryNav}
                         forceExpanded={directoryQuery.length > 0}
                         activePath={activePost?.address ?? null}
-                        getPercentile={getPercentile}
+                        getPercentile={isSimplified ? undefined : getPercentile}
                         collapseSignal={dirCollapseGen}
   
                       />
@@ -710,8 +680,8 @@ export const SecondBrainSidebar: React.FC = () => {
         })()}
       </Section>
 
-      {/* Topology */}
-      <Section
+      {/* Topology — technical only */}
+      {!isSimplified && <Section
         title="topology"
         icon={<IslandIcon />}
         defaultOpen={true}
@@ -760,7 +730,7 @@ export const SecondBrainSidebar: React.FC = () => {
           filterQuery={topologyQuery}
           visibleIds={resultIdSet}
         />
-      </Section>
+      </Section>}
     </>
   );
 
@@ -787,26 +757,33 @@ export const SecondBrainSidebar: React.FC = () => {
             style={{ backgroundColor: 'var(--hub-sidebar-bg)' }}
           >
             {/* Header with close */}
-            <div className="px-3 py-3 border-b border-th-hub-border flex-shrink-0 flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            <div className="px-3 py-3 border-b border-th-hub-border flex-shrink-0">
+              <div className="flex items-center justify-between">
                 <Link to="/lab/second-brain" className="group" onClick={() => setMobileOpen(false)}>
-                  <div className="text-[11px] lowercase tracking-wide">
-                    <span className="font-semibold text-violet-400 group-hover:text-violet-300 transition-colors">second brain</span>{' '}
-                    <span className="text-th-muted font-normal">manager</span>
-                  </div>
-                  <div className="text-[9px] text-th-muted mt-0.5">
-                    {stats.totalConcepts} concepts
-                  </div>
+                  <span className="text-[11px] lowercase tracking-wide font-semibold text-violet-400 group-hover:text-violet-300 transition-colors">second brain</span>{' '}
+                  <span className="text-[11px] lowercase tracking-wide text-th-muted font-normal">manager</span>
                 </Link>
-                <InfoPopover tabs={HEADER_INFO_TABS} title="How Second Brain works" />
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setGuideOpen(true)}
+                    className="text-violet-400 hover:text-violet-300 transition-colors flex-shrink-0 leading-[0]"
+                    title="How Second Brain works"
+                  >
+                    <InfoIcon size={11} />
+                  </button>
+                  <button
+                    onClick={() => setMobileOpen(false)}
+                    className="p-1 text-th-muted hover:text-th-secondary transition-colors"
+                    aria-label="Close sidebar"
+                  >
+                    <CloseIcon />
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={() => setMobileOpen(false)}
-                className="p-1 text-th-muted hover:text-th-secondary transition-colors"
-                aria-label="Close sidebar"
-              >
-                <CloseIcon />
-              </button>
+              <div className="flex items-center justify-between mt-0.5">
+                {modeToggle}
+                <span className="text-[9px] text-th-muted">{stats.totalConcepts} concepts</span>
+              </div>
             </div>
             {/* Scrollable sections */}
             <div className="flex-1 overflow-y-auto thin-scrollbar hub-scrollbar">
@@ -827,24 +804,33 @@ export const SecondBrainSidebar: React.FC = () => {
           backgroundColor: 'var(--hub-sidebar-bg)',
         }}
       >
-        {/* Header */}
-        <div className="px-3 py-3 border-b border-th-hub-border flex-shrink-0 flex items-start justify-between">
-          <Link to="/lab/second-brain" className="group">
-            <div className="text-[11px] lowercase tracking-wide">
-              <span className="font-semibold text-violet-400 group-hover:text-violet-300 transition-colors">second brain</span>{' '}
-              <span className="text-th-muted font-normal">manager</span>
-            </div>
-            <div className="text-[9px] text-th-muted mt-0.5">
-              {stats.totalConcepts} concepts
-            </div>
-          </Link>
-          <InfoPopover tabs={HEADER_INFO_TABS} title="How Second Brain works" className="mt-0.5" />
+        {/* Header — h-7 first row aligns with the editing upbar */}
+        <div className="border-b border-th-hub-border flex-shrink-0">
+          <div className="px-3 h-7 flex items-center justify-between">
+            <Link to="/lab/second-brain" className="group">
+              <span className="text-[11px] lowercase tracking-wide font-semibold text-violet-400 group-hover:text-violet-300 transition-colors">second brain</span>{' '}
+              <span className="text-[11px] lowercase tracking-wide text-th-muted font-normal">manager</span>
+            </Link>
+            <button
+              onClick={() => setGuideOpen(true)}
+              className="text-violet-400 hover:text-violet-300 transition-colors flex-shrink-0 leading-[0]"
+              title="How Second Brain works"
+            >
+              <InfoIcon size={11} />
+            </button>
+          </div>
+          <div className="px-3 pb-1.5 flex items-center justify-between">
+            {modeToggle}
+            <span className="text-[9px] text-th-muted">{stats.totalConcepts} concepts</span>
+          </div>
         </div>
         {/* Scrollable sections */}
         <div className="flex-1 overflow-y-auto thin-scrollbar hub-scrollbar">
           {sections}
         </div>
       </aside>
+
+      <SecondBrainGuide isOpen={guideOpen} onClose={() => setGuideOpen(false)} isLocalhost={isLocalhost} />
     </>
   );
 };
