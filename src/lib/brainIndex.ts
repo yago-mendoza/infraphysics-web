@@ -43,12 +43,13 @@ let _initPromise: Promise<BrainIndex> | null = null;
 // Content cache: id → resolved HTML (with wiki-links)
 const _contentCache = new Map<string, string>();
 
-export async function initBrainIndex(): Promise<BrainIndex> {
-  if (_index) return _index;
-  if (_initPromise) return _initPromise;
+export async function initBrainIndex(freshData?: FieldNoteMeta[]): Promise<BrainIndex> {
+  if (!freshData && _index) return _index;
+  if (!freshData && _initPromise) return _initPromise;
 
   _initPromise = (async () => {
-    const indexData: FieldNoteMeta[] = await import('../data/fieldnotes-index.generated.json').then(m => m.default as unknown as FieldNoteMeta[]);
+    const indexData: FieldNoteMeta[] = freshData ??
+      await import('../data/fieldnotes-index.generated.json').then(m => m.default as unknown as FieldNoteMeta[]);
 
     const allFieldNotes = indexData;
     const noteById = new Map(allFieldNotes.map(n => [n.id, n]));
@@ -306,12 +307,15 @@ export function getCachedNoteContent(id: string): string | null {
 }
 
 /** Fetch + resolve wiki-links for a single note's content. Cached in memory. */
-export async function fetchNoteContent(id: string): Promise<string> {
-  const cached = _contentCache.get(id);
-  if (cached) return cached;
+export async function fetchNoteContent(id: string, bustCache = false): Promise<string> {
+  if (!bustCache) {
+    const cached = _contentCache.get(id);
+    if (cached) return cached;
+  }
 
   const index = getBrainIndex();
-  const resp = await fetch(`/fieldnotes/${id}.json`);
+  const url = bustCache ? `/fieldnotes/${id}.json?t=${Date.now()}` : `/fieldnotes/${id}.json`;
+  const resp = await fetch(url);
   if (!resp.ok) return '<p>Content unavailable.</p>';
 
   const { content } = await resp.json();
@@ -336,4 +340,46 @@ export function prefetchNoteContent(ids: string[]): void {
       })
       .catch(() => {}); // Silent fail — prefetch is best-effort
   }
+}
+
+/**
+ * Force-refresh the brain index by re-importing the generated JSON.
+ * Clears the content cache for the specified UID (or all if not specified).
+ * Dispatches a 'fieldnote-hmr' custom event so views can react.
+ */
+export async function refreshBrainIndex(uid?: string): Promise<BrainIndex> {
+  // Invalidate content cache
+  if (uid) {
+    _contentCache.delete(uid);
+  } else {
+    _contentCache.clear();
+  }
+
+  // Force re-init by clearing the cached index
+  _index = null;
+  _initPromise = null;
+
+  // In dev, fetch fresh data from the API (import() cache is stale)
+  let freshData: FieldNoteMeta[] | undefined;
+  try {
+    const resp = await fetch('/api/fieldnotes/index');
+    if (resp.ok) {
+      const { notes } = await resp.json();
+      freshData = notes;
+    }
+  } catch { /* fall back to import */ }
+
+  const newIndex = await initBrainIndex(freshData);
+
+  // Notify React views
+  window.dispatchEvent(new CustomEvent('fieldnote-hmr', { detail: { uid } }));
+
+  return newIndex;
+}
+
+// HMR listener — auto-refresh when the Vite plugin notifies of changes
+if (import.meta.hot) {
+  import.meta.hot.on('fieldnote-update', (data: { uid: string; action: string }) => {
+    refreshBrainIndex(data.uid);
+  });
 }
