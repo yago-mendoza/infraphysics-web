@@ -443,7 +443,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
   let lastGroup: string | undefined;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center">
+    <div className="fixed inset-0 z-[100] flex items-start pt-3 sm:items-center sm:pt-0 justify-center">
       {/* Backdrop */}
       <div
         className={`absolute inset-0 bg-th-overlay transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}
