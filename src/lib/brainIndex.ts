@@ -40,8 +40,21 @@ export interface BrainIndex {
 let _index: BrainIndex | null = null;
 let _initPromise: Promise<BrainIndex> | null = null;
 
-// Content cache: id → resolved HTML (with wiki-links)
+// Content cache: id → resolved HTML (with wiki-links).
+// Capped at MAX_CACHE entries — oldest inserted entries are evicted first.
 const _contentCache = new Map<string, string>();
+const MAX_CACHE = 150;
+
+function _cacheSet(id: string, html: string) {
+  // Delete first so re-insertion moves it to the end (Map preserves insertion order)
+  _contentCache.delete(id);
+  _contentCache.set(id, html);
+  // Evict oldest entries if over limit
+  if (_contentCache.size > MAX_CACHE) {
+    const first = _contentCache.keys().next().value!;
+    _contentCache.delete(first);
+  }
+}
 
 export async function initBrainIndex(freshData?: FieldNoteMeta[]): Promise<BrainIndex> {
   if (!freshData && _index) return _index;
@@ -49,7 +62,7 @@ export async function initBrainIndex(freshData?: FieldNoteMeta[]): Promise<Brain
 
   _initPromise = (async () => {
     const indexData: FieldNoteMeta[] = freshData ??
-      await import('../data/fieldnotes-index.generated.json').then(m => m.default as unknown as FieldNoteMeta[]);
+      await fetch('/fieldnotes-index.json').then(r => r.json());
 
     const allFieldNotes = indexData;
     const noteById = new Map(allFieldNotes.map(n => [n.id, n]));
@@ -320,7 +333,7 @@ export async function fetchNoteContent(id: string, bustCache = false): Promise<s
 
   const { content } = await resp.json();
   const { html } = resolveWikiLinks(content, index.allFieldNotes, index.noteById);
-  _contentCache.set(id, html);
+  _cacheSet(id, html);
   return html;
 }
 
@@ -335,7 +348,7 @@ export function prefetchNoteContent(ids: string[]): void {
       .then(data => {
         if (data?.content && !_contentCache.has(id)) {
           const { html } = resolveWikiLinks(data.content, index.allFieldNotes, index.noteById);
-          _contentCache.set(id, html);
+          _cacheSet(id, html);
         }
       })
       .catch(() => {}); // Silent fail — prefetch is best-effort
@@ -347,9 +360,12 @@ export function prefetchNoteContent(ids: string[]): void {
  * Clears the content cache for the specified UID (or all if not specified).
  * Dispatches a 'fieldnote-hmr' custom event so views can react.
  */
-export async function refreshBrainIndex(uid?: string): Promise<BrainIndex> {
-  // Invalidate content cache
-  if (uid) {
+export async function refreshBrainIndex(uid?: string, action?: string): Promise<BrainIndex> {
+  // Invalidate content cache — on delete/stub, clear ALL cached HTML
+  // because any note referencing the target has stale rendered links.
+  if (action === 'delete' || action === 'stub') {
+    _contentCache.clear();
+  } else if (uid) {
     _contentCache.delete(uid);
   } else {
     _contentCache.clear();
@@ -372,14 +388,17 @@ export async function refreshBrainIndex(uid?: string): Promise<BrainIndex> {
   const newIndex = await initBrainIndex(freshData);
 
   // Notify React views
-  window.dispatchEvent(new CustomEvent('fieldnote-hmr', { detail: { uid } }));
+  window.dispatchEvent(new CustomEvent('fieldnote-hmr', { detail: { uid, action } }));
 
   return newIndex;
 }
 
-// HMR listener — auto-refresh when the Vite plugin notifies of changes
+// HMR listener — auto-refresh when the Vite plugin notifies of changes.
+// refreshBrainIndex fetches fresh data via the dev API, bypassing the
+// static JSON file entirely.
 if (import.meta.hot) {
+  import.meta.hot.accept();
   import.meta.hot.on('fieldnote-update', (data: { uid: string; action: string }) => {
-    refreshBrainIndex(data.uid);
+    refreshBrainIndex(data.uid, data.action);
   });
 }
