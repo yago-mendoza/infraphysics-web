@@ -7,11 +7,15 @@ import { formatDate, formatDateTerminal, calculateReadingTime } from '../lib';
 import { initBrainIndex, type BrainIndex } from '../lib/brainIndex';
 import { WikiContent } from '../components/WikiContent';
 import { CATEGORY_CONFIG, STATUS_CONFIG, sectionPath as getSectionPath, postPath, isBlogCategory } from '../config/categories';
-import { ArrowRightIcon, GitHubIcon, LinkedInIcon, TwitterIcon, RedditIcon, HackerNewsIcon, ClipboardIcon, CheckIcon, ShareIcon } from '../components/icons';
+import { ArrowRightIcon, GitHubIcon, LinkedInIcon, TwitterIcon, RedditIcon, HackerNewsIcon, ClipboardIcon, CheckIcon, ShareIcon, HeartIcon, EyeIcon } from '../components/icons';
 import { posts } from '../data/data';
 import { Post } from '../types';
 import { useArticleContext } from '../contexts/ArticleContext';
 import { useKeyboardShortcuts, ShortcutDef } from '../hooks/useKeyboardShortcuts';
+import { useViewCount } from '../hooks/useViewCount';
+import { useReaction } from '../hooks/useReaction';
+import { useTheme } from '../contexts/ThemeContext';
+import Giscus from '@giscus/react';
 import '../styles/article.css';
 
 interface ArticlePostViewProps {
@@ -69,6 +73,28 @@ const FeedbackForm: React.FC<{ title: string; category: string }> = ({ title, ca
   );
 };
 
+const GiscusComments: React.FC = () => {
+  const { theme } = useTheme();
+  return (
+    <div className="article-comments">
+      <Giscus
+        repo="yago-mendoza/infraphysics-comments"
+        repoId="R_kgDORbJE3A"
+        category="Comments"
+        categoryId="DIC_kwDORbJE3M4C3Z8Y"
+        mapping="pathname"
+        strict="1"
+        reactionsEnabled="1"
+        emitMetadata="0"
+        inputPosition="top"
+        theme={theme === 'light' ? 'light' : 'transparent_dark'}
+        lang="es"
+        loading="lazy"
+      />
+    </div>
+  );
+};
+
 export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const sectionPathUrl = getSectionPath(post.category);
   const location = useLocation();
@@ -115,6 +141,8 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
   const formattedDate = useMemo(() => formatDateTerminal(post.date), [post.date]);
   const readingTime = useMemo(() => calculateReadingTime(post.content), [post.content]);
+  const { views } = useViewCount(location.pathname);
+  const { hearts, hearted, toggle: toggleHeart } = useReaction(location.pathname);
 
   const authorName = post.author || 'Yago Mendoza';
   const authorPath = authorName.toLowerCase() === 'yago mendoza' ? '/about' : '/contact';
@@ -188,17 +216,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
       return { ...h, number: parts.join('.'), depth };
     });
 
-    // Inject "SX:" / "SX.Y:" prefix into heading HTML
-    let numbered = finalProcessed;
-    for (const h of headings) {
-      const prefix = `<span class="heading-section-num">S${h.number}:</span> `;
-      numbered = numbered.replace(
-        `id="${h.id}" data-toc-id="${h.id}" class="heading-toc-link">`,
-        `id="${h.id}" data-toc-id="${h.id}" class="heading-toc-link">${prefix}`
-      );
-    }
-
-    return { headings, contentWithIds: numbered };
+    return { headings, contentWithIds: finalProcessed };
   }, [post.content, isBlog]);
 
   const [tocOpen, setTocOpen] = useState(isBlog);
@@ -463,8 +481,8 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
         onClick={() => setShareOpen(o => !o)}
         title="Share"
       >
-        <ShareIcon size={14} />
-        {isBlog && <span>Share</span>}
+        {!isBlog && <ShareIcon size={14} />}
+        {isBlog && 'Share'}
       </button>
       {shareOpen && (
         <div className="article-share-dropdown">
@@ -571,6 +589,20 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                 <span className="article-blog-metabar-author">Written by <Link to={authorPath} className="article-blog-metabar-link">{authorName}</Link></span>
                 <span className="article-blog-metabar-sep">&middot;</span>
                 <span>{readingTime} min read</span>
+                {views != null && (
+                  <>
+                    <span className="article-blog-metabar-sep">&middot;</span>
+                    <span className="inline-flex items-center gap-1"><EyeIcon size={13} /> {views}</span>
+                  </>
+                )}
+                {hearts != null && (
+                  <>
+                    <span className="article-blog-metabar-sep">&middot;</span>
+                    <button onClick={toggleHeart} className="article-heart-btn" title={hearted ? 'Unlike' : 'Like'}>
+                      <HeartIcon size={13} filled={hearted} /> {hearts}
+                    </button>
+                  </>
+                )}
               </div>
               {shareDropdown}
             </div>
@@ -589,6 +621,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               className="article-content"
             />
             <FeedbackForm title={post.displayTitle || post.title} category={post.category} />
+            <GiscusComments />
           </div>
         </article>
       ) : (
@@ -725,6 +758,14 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
             <div className="article-meta">
               <span className="article-meta-date">{formattedDate}</span>
               <span className="article-meta-reading-time">{readingTime} min read</span>
+              {views != null && (
+                <span className="article-meta-views inline-flex items-center gap-1"><EyeIcon size={13} /> {views}</span>
+              )}
+              {hearts != null && (
+                <button onClick={toggleHeart} className="article-heart-btn" title={hearted ? 'Unlike' : 'Like'}>
+                  <HeartIcon size={13} filled={hearted} /> {hearts}
+                </button>
+              )}
               <Link to={authorPath} className="article-meta-author">{authorName}</Link>
             </div>
           )}
@@ -738,6 +779,20 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                 <span className="article-blog-metabar-author">Written by <Link to={authorPath} className="article-blog-metabar-link">{authorName}</Link></span>
                 <span className="article-blog-metabar-sep">&middot;</span>
                 <span>{readingTime} min read</span>
+                {views != null && (
+                  <>
+                    <span className="article-blog-metabar-sep">&middot;</span>
+                    <span className="inline-flex items-center gap-1"><EyeIcon size={13} /> {views}</span>
+                  </>
+                )}
+                {hearts != null && (
+                  <>
+                    <span className="article-blog-metabar-sep">&middot;</span>
+                    <button onClick={toggleHeart} className="article-heart-btn" title={hearted ? 'Unlike' : 'Like'}>
+                      <HeartIcon size={13} filled={hearted} /> {hearts}
+                    </button>
+                  </>
+                )}
               </div>
               {shareDropdown}
             </div>
@@ -770,33 +825,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
             </>
           )}
 
-          {/* Table of Contents — collapsible (projects only; blog uses lateral TOC in floating bar) */}
-          {!isBlog && headings.length > 1 && (
-            <nav className={`article-toc${post.category === 'threads' ? ' article-toc--blog' : ''}`} id="article-toc">
-              <button
-                type="button"
-                className="article-toc-toggle"
-                onClick={() => setTocOpen(o => !o)}
-                aria-expanded={tocOpen}
-              >
-                <span className="article-toc-label">{post.category === 'threads' ? 'CONTENTS' : '// CONTENTS'}</span>
-                <svg
-                  className={`article-toc-chevron${tocOpen ? ' article-toc-chevron--open' : ''}`}
-                  viewBox="0 0 12 12"
-                  width="12"
-                  height="12"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M3 4.5L6 7.5L9 4.5" />
-                </svg>
-              </button>
-              {tocOpen && tocList}
-            </nav>
-          )}
+          {/* Table of Contents — projects uses lateral TOC in floating bar (same as blog) */}
 
           {/* Article content */}
           <WikiContent
@@ -807,6 +836,9 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
           {/* Feedback form — categories with FEEDBACK_COPY */}
           <FeedbackForm title={post.displayTitle || post.title} category={post.category} />
+
+          {/* Comments — Giscus (GitHub Discussions) */}
+          <GiscusComments />
 
           {/* Share bar — reader perspective (projects only; blog uses floating bar) */}
           {!isBlog && (
