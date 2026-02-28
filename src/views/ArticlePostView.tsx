@@ -5,9 +5,13 @@ import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { formatDate, formatDateTerminal, calculateReadingTime } from '../lib';
 import { initBrainIndex, type BrainIndex } from '../lib/brainIndex';
+import { getActiveChain, ACTIVE_HEADING_THRESHOLD } from '../lib/headings';
 import { WikiContent } from '../components/WikiContent';
 import { CATEGORY_CONFIG, STATUS_CONFIG, sectionPath as getSectionPath, postPath, isBlogCategory } from '../config/categories';
 import { ArrowRightIcon, GitHubIcon, LinkedInIcon, TwitterIcon, RedditIcon, HackerNewsIcon, ClipboardIcon, CheckIcon, ShareIcon, HeartIcon, EyeIcon } from '../components/icons';
+import { ArticleBreadcrumbs } from '../components/article/ArticleBreadcrumbs';
+import { ArticleHashtags } from '../components/article/ArticleHashtags';
+import { BlogMetabar } from '../components/article/BlogMetabar';
 import { posts } from '../data/data';
 import { Post } from '../types';
 import { useArticleContext } from '../contexts/ArticleContext';
@@ -227,24 +231,6 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   // This avoids disrupting browser Ctrl+F which breaks when React reconciles during scroll.
   const activeIdRef = useRef<string>('');
 
-  // Compute ancestor chain for a heading (parent sections at shallower depths)
-  const getActiveChain = useCallback((id: string) => {
-    const ids = new Set<string>();
-    if (!id || headings.length < 2) return ids;
-    const idx = headings.findIndex(h => h.id === id);
-    if (idx === -1) return ids;
-    ids.add(id);
-    let depth = headings[idx].depth;
-    for (let i = idx - 1; i >= 0; i--) {
-      if (headings[i].depth < depth) {
-        ids.add(headings[i].id);
-        depth = headings[i].depth;
-        if (depth === 0) break;
-      }
-    }
-    return ids;
-  }, [headings]);
-
   useEffect(() => {
     if (headings.length < 2) return;
 
@@ -257,7 +243,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
         const el = document.getElementById(h.id);
         if (el) {
           const rect = el.getBoundingClientRect();
-          if (rect.top <= 120) {
+          if (rect.top <= ACTIVE_HEADING_THRESHOLD) {
             newActiveId = h.id;
           }
         }
@@ -269,7 +255,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
         // Direct DOM manipulation — no React re-render
         const tocEl = document.getElementById('article-toc');
         if (tocEl) {
-          const activeSet = getActiveChain(newActiveId);
+          const activeSet = getActiveChain(headings, newActiveId);
           tocEl.querySelectorAll('.article-toc-link').forEach(link => {
             const href = link.getAttribute('href');
             const id = href?.startsWith('#') ? href.slice(1) : '';
@@ -291,7 +277,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
       window.removeEventListener('scroll', handleScroll);
       if (rafId) cancelAnimationFrame(rafId);
     };
-  }, [headings, getActiveChain]);
+  }, [headings]);
 
   // Click handler for headings — opens TOC, scrolls to it, blinks entry (projects only; blog uses lateral TOC)
   useEffect(() => {
@@ -382,7 +368,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   useEffect(() => {
     setArticleState({
       post,
-      headings: headings as any,
+      headings,
       activeHeadingId: activeIdRef.current,
       nextPost,
       prevPost,
@@ -423,7 +409,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const targetCategory = catCfg?.relatedCategory || post.category;
   const targetCatCfg = CATEGORY_CONFIG[targetCategory];
   const relatedSectionPath = getSectionPath(targetCategory);
-  const relatedHoverColor = targetCatCfg?.colorClass || 'text-th-secondary';
+  const relatedAccent = targetCatCfg?.accentVar || 'var(--text-secondary)';
 
   const recommendedPosts = useMemo(() => {
     const pool = posts.filter(p => p.category === targetCategory && p.id !== post.id);
@@ -533,19 +519,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
       {isThreads ? (
         <article className="article-threads-card">
           <div className="article-threads-nav">
-            <nav className="article-breadcrumbs">
-              <Link to="/home" className="article-breadcrumb-link">home</Link>
-              <span className="article-breadcrumb-sep">/</span>
-              <span className="article-breadcrumb-static">blog</span>
-              <span className="article-breadcrumb-sep">/</span>
-              <Link to={sectionPathUrl} className="article-breadcrumb-link">
-                {catCfg?.breadcrumbLabel || post.category}
-              </Link>
-              <span className="article-breadcrumb-sep">/</span>
-              <span className="article-breadcrumb-current">
-                {(post.displayTitle || post.title).toLowerCase()}
-              </span>
-            </nav>
+            <ArticleBreadcrumbs sectionPath={sectionPathUrl} breadcrumbLabel={catCfg?.breadcrumbLabel || post.category} title={post.displayTitle || post.title} />
           </div>
 
           {post.thumbnail && (
@@ -560,18 +534,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
           )}
 
           <div className="article-threads-header-content">
-            {(post.tags?.length || post.technologies?.length) ? (
-              <div className="article-hashtags">
-                {[
-                  ...(post.tags || []).map(t => ({ label: t, tech: false })),
-                  ...(post.technologies || []).map(t => ({ label: t, tech: true })),
-                ]
-                  .sort((a, b) => a.label.localeCompare(b.label))
-                  .map(({ label, tech }) => (
-                    <span key={label} className={`article-hashtag${tech ? ' article-hashtag-tech' : ''}`}>#{label}</span>
-                  ))}
-              </div>
-            ) : null}
+            <ArticleHashtags tags={post.tags} technologies={post.technologies} />
 
             <div className="article-title-block">
               <h1 className="article-title">
@@ -582,30 +545,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               )}
             </div>
 
-            <div className="article-blog-metabar">
-              <div className="article-blog-metabar-left">
-                <span>{formatDate(post.date)}</span>
-                <span className="article-blog-metabar-sep">&middot;</span>
-                <span className="article-blog-metabar-author">Written by <Link to={authorPath} className="article-blog-metabar-link">{authorName}</Link></span>
-                <span className="article-blog-metabar-sep">&middot;</span>
-                <span>{readingTime} min read</span>
-                {views != null && (
-                  <>
-                    <span className="article-blog-metabar-sep">&middot;</span>
-                    <span className="inline-flex items-center gap-1"><EyeIcon size={13} /> {views}</span>
-                  </>
-                )}
-                {hearts != null && (
-                  <>
-                    <span className="article-blog-metabar-sep">&middot;</span>
-                    <button onClick={toggleHeart} className="article-heart-btn" title={hearted ? 'Unlike' : 'Like'}>
-                      <HeartIcon size={13} filled={hearted} /> {hearts}
-                    </button>
-                  </>
-                )}
-              </div>
-              {shareDropdown}
-            </div>
+            <BlogMetabar date={post.date} authorName={authorName} authorPath={authorPath} readingTime={readingTime} views={views} hearts={hearts} hearted={hearted} toggleHeart={toggleHeart} shareDropdown={shareDropdown} formatDate={formatDate} />
 
             {post.lead && (
               <div className="article-blog-lead">
@@ -661,19 +601,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
           {/* Nav row: return link / breadcrumbs + social icons */}
           <div className="article-nav-row">
             {isBlog ? (
-              <nav className="article-breadcrumbs">
-                <Link to="/home" className="article-breadcrumb-link">home</Link>
-                <span className="article-breadcrumb-sep">/</span>
-                <span className="article-breadcrumb-static">blog</span>
-                <span className="article-breadcrumb-sep">/</span>
-                <Link to={sectionPathUrl} className="article-breadcrumb-link">
-                  {catCfg?.breadcrumbLabel || post.category}
-                </Link>
-                <span className="article-breadcrumb-sep">/</span>
-                <span className="article-breadcrumb-current">
-                  {(post.displayTitle || post.title).toLowerCase()}
-                </span>
-              </nav>
+              <ArticleBreadcrumbs sectionPath={sectionPathUrl} breadcrumbLabel={catCfg?.breadcrumbLabel || post.category} title={post.displayTitle || post.title} />
             ) : (
               <>
                 <Link to={sectionPathUrl} className="article-back-link">
@@ -730,18 +658,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
           {/* META — above title for blog (moved to metabar below title), below for projects */}
 
           {/* Tag pills — below meta, above title (blog only) */}
-          {isBlog && (post.tags?.length || post.technologies?.length) ? (
-            <div className="article-hashtags">
-              {[
-                ...(post.tags || []).map(t => ({ label: t, tech: false })),
-                ...(post.technologies || []).map(t => ({ label: t, tech: true })),
-              ]
-                .sort((a, b) => a.label.localeCompare(b.label))
-                .map(({ label, tech }) => (
-                  <span key={label} className={`article-hashtag${tech ? ' article-hashtag-tech' : ''}`}>#{label}</span>
-                ))}
-            </div>
-          ) : null}
+          {isBlog && <ArticleHashtags tags={post.tags} technologies={post.technologies} />}
 
           {/* TITLE — displayTitle large + subtitle below smaller/gray */}
           <div className="article-title-block">
@@ -772,30 +689,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
           {/* Meta bar (blog non-threads only — threads has its own in header card) */}
           {isBlog && post.category !== 'threads' && (
-            <div className="article-blog-metabar">
-              <div className="article-blog-metabar-left">
-                <span>{formatDate(post.date)}</span>
-                <span className="article-blog-metabar-sep">&middot;</span>
-                <span className="article-blog-metabar-author">Written by <Link to={authorPath} className="article-blog-metabar-link">{authorName}</Link></span>
-                <span className="article-blog-metabar-sep">&middot;</span>
-                <span>{readingTime} min read</span>
-                {views != null && (
-                  <>
-                    <span className="article-blog-metabar-sep">&middot;</span>
-                    <span className="inline-flex items-center gap-1"><EyeIcon size={13} /> {views}</span>
-                  </>
-                )}
-                {hearts != null && (
-                  <>
-                    <span className="article-blog-metabar-sep">&middot;</span>
-                    <button onClick={toggleHeart} className="article-heart-btn" title={hearted ? 'Unlike' : 'Like'}>
-                      <HeartIcon size={13} filled={hearted} /> {hearts}
-                    </button>
-                  </>
-                )}
-              </div>
-              {shareDropdown}
-            </div>
+            <BlogMetabar date={post.date} authorName={authorName} authorPath={authorPath} readingTime={readingTime} views={views} hearts={hearts} hearted={hearted} toggleHeart={toggleHeart} shareDropdown={shareDropdown} formatDate={formatDate} />
           )}
 
           {/* Lead text (blog non-threads only — threads has its own in header card) */}
@@ -840,60 +734,6 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
           {/* Comments — Giscus (GitHub Discussions) */}
           <GiscusComments />
 
-          {/* Share bar — reader perspective (projects only; blog uses floating bar) */}
-          {!isBlog && (
-            <div className="article-actions">
-              <div className="article-share-icons">
-                <a
-                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out: ${post.displayTitle || post.title}`)}&url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="article-share-icon article-social-twitter"
-                  title="Share on X"
-                >
-                  <TwitterIcon size={18} />
-                </a>
-                <a
-                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="article-share-icon article-social-linkedin"
-                  title="Share on LinkedIn"
-                >
-                  <LinkedInIcon size={18} />
-                </a>
-                <a
-                  href={`https://reddit.com/submit?url=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}&title=${encodeURIComponent(post.displayTitle || post.title)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="article-share-icon article-social-reddit"
-                  title="Share on Reddit"
-                >
-                  <RedditIcon size={18} />
-                </a>
-                <a
-                  href={`https://news.ycombinator.com/submitlink?u=${encodeURIComponent(`${window.location.origin}${location.pathname}`)}&t=${encodeURIComponent(post.displayTitle || post.title)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="article-share-icon article-social-hn"
-                  title="Share on Hacker News"
-                >
-                  <HackerNewsIcon size={18} />
-                </a>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}${location.pathname}`);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  }}
-                  className="article-share-icon article-social-copy"
-                  title={copied ? 'Copied!' : 'Copy link'}
-                >
-                  {copied ? <CheckIcon size={18} /> : <ClipboardIcon size={18} />}
-                </button>
-              </div>
-            </div>
-          )}
 
         </div>
       </article>
@@ -926,7 +766,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               </div>
               <div className="article-related-info">
                 <div className="article-related-meta">
-                  <span className={`text-[10px] uppercase ${relatedHoverColor}`}>{rec.category}</span>
+                  <span className="text-[10px] uppercase" style={{ color: relatedAccent }}>{rec.category}</span>
                   <span className="text-[10px] text-th-tertiary">{formatDate(rec.date)}</span>
                 </div>
                 <h4 className="article-related-name">

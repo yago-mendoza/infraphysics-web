@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Post } from '../types';
 
-interface HeadingInfo {
+export interface HeadingInfo {
   level: number;
   text: string;
   id: string;

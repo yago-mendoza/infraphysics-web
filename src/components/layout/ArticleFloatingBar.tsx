@@ -14,6 +14,7 @@ import {
   ChevronDownIcon,
 } from '../icons';
 import { sectionPath } from '../../config/categories';
+import { getActiveChain, ACTIVE_HEADING_THRESHOLD } from '../../lib/headings';
 
 interface ArticleFloatingBarProps {
   onOpenSearch: () => void;
@@ -37,24 +38,6 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
   // Active heading tracking for TOC highlight
   const [activeChain, setActiveChain] = useState<Set<string>>(new Set());
 
-  // Compute ancestor chain for a heading (parent sections at shallower depths)
-  const getActiveChain = useCallback((id: string) => {
-    const ids = new Set<string>();
-    if (!id || headings.length < 2) return ids;
-    const idx = headings.findIndex(h => h.id === id);
-    if (idx === -1) return ids;
-    ids.add(id);
-    let depth = headings[idx].depth;
-    for (let i = idx - 1; i >= 0; i--) {
-      if (headings[i].depth < depth) {
-        ids.add(headings[i].id);
-        depth = headings[i].depth;
-        if (depth === 0) break;
-      }
-    }
-    return ids;
-  }, [headings]);
-
   // Snapshot active heading when TOC opens + track scroll while open
   useEffect(() => {
     if (!tocOpen || headings.length < 2) return;
@@ -63,9 +46,9 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
       let activeId = '';
       for (const h of headings) {
         const el = document.getElementById(h.id);
-        if (el && el.getBoundingClientRect().top <= 120) activeId = h.id;
+        if (el && el.getBoundingClientRect().top <= ACTIVE_HEADING_THRESHOLD) activeId = h.id;
       }
-      setActiveChain(getActiveChain(activeId));
+      setActiveChain(getActiveChain(headings, activeId));
     };
 
     computeActive();
@@ -74,9 +57,9 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
     let activeId = '';
     for (const h of headings) {
       const el = document.getElementById(h.id);
-      if (el && el.getBoundingClientRect().top <= 120) activeId = h.id;
+      if (el && el.getBoundingClientRect().top <= ACTIVE_HEADING_THRESHOLD) activeId = h.id;
     }
-    const chain = getActiveChain(activeId);
+    const chain = getActiveChain(headings, activeId);
     const parentIds = headings.filter(h => h.depth === 0 && chain.has(h.id)).map(h => h.id);
     if (parentIds.length > 0) {
       setExpandedSections(prev => {
@@ -88,7 +71,7 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
 
     window.addEventListener('scroll', computeActive, { passive: true });
     return () => window.removeEventListener('scroll', computeActive);
-  }, [tocOpen, headings, getActiveChain]);
+  }, [tocOpen, headings]);
 
   // Navigation
   const category = article?.post?.category || '';
@@ -178,7 +161,7 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
       {/* Left-side TOC indicator — desktop only */}
       {hasToc && (
         <button
-          className="article-toc-indicator"
+          className={`article-toc-indicator article-${category}`}
           onClick={() => setTocOpen(o => !o)}
           title="Table of contents"
           aria-label="Table of contents"
@@ -260,6 +243,21 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
 
         {/* Right: controls */}
         <div className="article-bar-controls">
+          {hasToc && (
+            <button
+              className="article-bar-btn"
+              onClick={() => setTocOpen(o => !o)}
+              title="Table of contents"
+              aria-label="Table of contents"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="17" y2="12" />
+                <line x1="3" y1="18" x2="13" y2="18" />
+              </svg>
+            </button>
+          )}
           <button
             className="article-bar-btn"
             onClick={onOpenSearch}
@@ -287,7 +285,7 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
             className="article-lateral-toc-backdrop"
             onClick={() => setTocOpen(false)}
           />
-          <div className="article-lateral-toc article-lateral-toc--open">
+          <div className={`article-lateral-toc article-lateral-toc--open article-${category}`}>
             <div className="article-lateral-toc-header">
               <span className="article-lateral-toc-title">{category === 'projects' ? '// CONTENTS' : 'CONTENTS'}</span>
               <button

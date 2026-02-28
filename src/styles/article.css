@@ -94,6 +94,11 @@
 /* Bits2Bricks — blue */
 .article-bits2bricks { --art-accent: var(--cat-bits2bricks-accent); }
 
+/* TOC panel & indicator — rendered outside .article-page-wrapper, re-scope accent */
+.article-lateral-toc.article-projects    { --art-accent: var(--cat-projects-accent); }
+.article-lateral-toc.article-threads     { --art-accent: var(--cat-threads-accent); }
+.article-lateral-toc.article-bits2bricks { --art-accent: var(--cat-bits2bricks-accent); }
+
 /* Related section — re-scope accent so it follows targetCategory, not page category */
 .article-related.article-projects    { --art-accent: var(--cat-projects-accent); }
 .article-related.article-threads     { --art-accent: var(--cat-threads-accent); }
@@ -315,48 +320,27 @@
   background: var(--art-accent-hover-bg);
 }
 
-.article-social-linkedin:hover {
-  color: #0A66C2;
-  border-color: rgba(10, 102, 194, 0.4);
-  background: rgba(10, 102, 194, 0.05);
-}
-
-.article-social-twitter:hover {
-  color: var(--art-text-title);
-}
-
-.article-social-reddit:hover {
-  color: #FF4500;
-}
-
-.article-social-hn:hover {
-  color: #FF6600;
-}
-
-.article-social-copy:hover {
-  color: var(--art-accent);
-}
-
 /* A6b. Share dropdown button */
 
 .article-share-btn {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  border-radius: 2px;
   border: 1px solid var(--art-border);
-  background: none;
-  color: var(--art-text-dim);
+  background: var(--art-surface);
+  color: var(--art-text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: color 0.2s, border-color 0.2s;
+  transition: all 0.2s ease;
   position: relative;
   padding: 0;
 }
 .article-share-btn:hover {
   color: var(--art-accent);
-  border-color: var(--art-accent-dim);
+  border-color: var(--art-accent-hover-border);
+  background: var(--art-accent-hover-bg);
 }
 
 .article-share-dropdown {
@@ -862,6 +846,12 @@
   transition: transform 0.3s ease;
   padding: 1.5rem;
   overflow-y: auto;
+
+  /* Derivation needed here — panel is outside .article-page-wrapper */
+  --art-accent-dim: color-mix(in srgb, var(--art-accent) 30%, transparent);
+}
+[data-theme="light"] .article-lateral-toc {
+  --art-accent-dim: color-mix(in srgb, var(--art-accent) 40%, transparent);
 }
 .article-lateral-toc--open {
   transform: translateX(0);
@@ -1343,6 +1333,14 @@
   margin-bottom: 1rem;
 }
 
+/* When small-text interrupts a list, the gap to the next list should match
+   normal bullet spacing (0.5rem), not the default 1rem block margin.
+   Negative margin-top avoids collapse: 1rem + (-0.5rem) = 0.5rem. */
+.article-content .small-text + ul,
+.article-content .small-text + ol {
+  margin-top: -0.5rem;
+}
+
 /* B3c. Inline annotations (WORD{{explanation}} → superscript + notes) */
 
 .article-content .ann-ref-text {
@@ -1807,37 +1805,6 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 /* ─────────────────────────────────────────────────
    C. BOTTOM SECTIONS
    ───────────────────────────────────────────────── */
-
-/* C1. Actions bar (inside box) */
-
-.article-actions {
-  margin-top: 3rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--art-border);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
-.article-share-icons {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.article-share-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--art-text-muted);
-  transition: color 0.2s ease;
-  text-decoration: none;
-  background: none;
-  border: none;
-  padding: 0.25rem;
-  cursor: pointer;
-}
 
 /* C1b. Project feedback form (inside box, above share) */
 
