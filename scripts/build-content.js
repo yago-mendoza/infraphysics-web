@@ -123,7 +123,7 @@ function processMarkdownFile(filePath) {
     title: frontmatter.title || frontmatter.id,
     displayTitle: frontmatter.displayTitle,
     category: frontmatter.category,
-    date: frontmatter.date ? String(frontmatter.date).slice(0, 10) : '',
+    date: frontmatter.date ? (frontmatter.date instanceof Date ? frontmatter.date.toISOString().slice(0, 10) : String(frontmatter.date).slice(0, 10)) : '',
     thumbnail: frontmatter.thumbnail || null,
     thumbnailAspect: frontmatter.thumbnailAspect || null,
     thumbnailShading: frontmatter.thumbnailShading || null,
@@ -209,7 +209,7 @@ function extractFieldnoteMeta(filename, filePath) {
     return null;
   }
 
-  const date = frontmatter.date ? String(frontmatter.date).slice(0, 10) : '';
+  const date = frontmatter.date ? (frontmatter.date instanceof Date ? frontmatter.date.toISOString().slice(0, 10) : String(frontmatter.date).slice(0, 10)) : '';
   const id = uid;
   const addressParts = address.split('//').map(s => s.trim());
   const name = frontmatter.name || addressParts[addressParts.length - 1];
@@ -481,6 +481,7 @@ for (const post of linkedRegularPosts) {
     d: post.description || '',
     img: post.thumbnail || null,
     cat: post.category,
+    date: post.date || null,
   };
 }
 for (const note of fieldnotesIndex) {
@@ -490,16 +491,53 @@ for (const note of fieldnotesIndex) {
     d: note.description || '',
     img: null,
     cat: 'fieldnotes',
+    date: note.date || null,
   };
 }
 
 const OG_MANIFEST_FILE = path.join(__dirname, '../public/og-manifest.json');
 fs.writeFileSync(OG_MANIFEST_FILE, JSON.stringify(ogManifest));
 
+// Output 6b: public/fieldnotes-index.json (HTTP-fetchable copy of the index)
+const FIELDNOTES_INDEX_PUBLIC = path.join(__dirname, '../public/fieldnotes-index.json');
+fs.writeFileSync(FIELDNOTES_INDEX_PUBLIC, JSON.stringify(fieldnotesIndex));
+
+// Output 7: public/sitemap.xml
+const SITE_URL = 'https://infraphysics.net';
+const SITEMAP_FILE = path.join(__dirname, '../public/sitemap.xml');
+const staticPages = [
+  { loc: '/home', priority: '1.0', changefreq: 'weekly' },
+  { loc: '/about', priority: '0.8', changefreq: 'monthly' },
+  { loc: '/contact', priority: '0.5', changefreq: 'yearly' },
+  { loc: '/lab/projects', priority: '0.9', changefreq: 'weekly' },
+  { loc: '/lab/second-brain', priority: '0.8', changefreq: 'daily' },
+  { loc: '/blog/threads', priority: '0.9', changefreq: 'weekly' },
+  { loc: '/blog/bits2bricks', priority: '0.9', changefreq: 'weekly' },
+];
+
+const sitemapEntries = [];
+for (const page of staticPages) {
+  sitemapEntries.push(`  <url><loc>${SITE_URL}${page.loc}</loc><changefreq>${page.changefreq}</changefreq><priority>${page.priority}</priority></url>`);
+}
+for (const post of linkedRegularPosts) {
+  const urlPath = `/${catGroup(post.category)}/${post.category}/${post.id}`;
+  const lastmod = post.date ? `<lastmod>${post.date.slice(0, 10)}</lastmod>` : '';
+  sitemapEntries.push(`  <url><loc>${SITE_URL}${urlPath}</loc>${lastmod}<changefreq>monthly</changefreq><priority>0.7</priority></url>`);
+}
+for (const note of fieldnotesIndex) {
+  const urlPath = `/lab/second-brain/${note.id}`;
+  const lastmod = note.date ? `<lastmod>${note.date.slice(0, 10)}</lastmod>` : '';
+  sitemapEntries.push(`  <url><loc>${SITE_URL}${urlPath}</loc>${lastmod}<changefreq>weekly</changefreq><priority>0.5</priority></url>`);
+}
+
+const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapEntries.join('\n')}\n</urlset>\n`;
+fs.writeFileSync(SITEMAP_FILE, sitemapXml);
+
 console.log(`Generated ${linkedRegularPosts.length} posts → ${OUTPUT_FILE}`);
 console.log(`Generated ${linkedFieldnotePosts.length} fieldnotes → ${FIELDNOTES_INDEX_FILE} + public/fieldnotes/`);
 console.log(`Generated ${Object.keys(categories).length} categories → ${CATEGORIES_OUTPUT}`);
 console.log(`Generated ${Object.keys(ogManifest).length} entries → ${OG_MANIFEST_FILE}`);
+console.log(`Generated sitemap (${sitemapEntries.length} URLs) → ${SITEMAP_FILE}`);
 
 // Output 6: graph-relevance.generated.json (PageRank + proximity + shared neighbors)
 await import('./compute-graph-relevance.js');

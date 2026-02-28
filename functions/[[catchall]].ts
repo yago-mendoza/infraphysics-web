@@ -6,6 +6,7 @@ interface OgEntry {
   d: string;   // description
   img: string | null;
   cat: string;
+  date: string | null;
 }
 
 type OgManifest = Record<string, OgEntry>;
@@ -76,9 +77,12 @@ export const onRequest: PagesFunction = async (context) => {
     .on('meta[name^="twitter:"]', {
       element(el) { el.remove(); },
     })
-    // Append new OG + Twitter tags to <head>
+    // Append new OG + Twitter tags + JSON-LD to <head>
     .on('head', {
       element(el) {
+        const datePart = entry.date
+          ? `"datePublished": "${escapeHtml(entry.date)}",`
+          : '';
         el.append(`
     <meta property="og:type" content="article" />
     <meta property="og:site_name" content="InfraPhysics" />
@@ -89,7 +93,20 @@ export const onRequest: PagesFunction = async (context) => {
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${fullTitle}" />
     <meta name="twitter:description" content="${description}" />
-    <meta name="twitter:image" content="${image}" />`, { html: true });
+    <meta name="twitter:image" content="${image}" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "${title}",
+      "description": "${description}",
+      ${datePart}
+      "image": "${image}",
+      "url": "${canonicalUrl}",
+      "author": { "@type": "Person", "name": "Yago Mendoza" },
+      "publisher": { "@type": "Organization", "name": "InfraPhysics", "url": "https://infraphysics.net" }
+    }
+    </script>`, { html: true });
       },
     });
 
