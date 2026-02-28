@@ -13,7 +13,7 @@ type OgManifest = Record<string, OgEntry>;
 
 const CRAWLERS = /facebookexternalhit|Facebot|WhatsApp|Twitterbot|LinkedInBot|Discordbot|TelegramBot|Slackbot/i;
 
-const FALLBACK_IMAGE = 'https://cdn.infraphysics.net/og-image.png';
+const FALLBACK_IMAGE = 'https://cdn.infraphysics.net/og-image.jpg';
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
