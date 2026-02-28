@@ -12,6 +12,18 @@ export interface Diagnostic {
   actions?: Array<{ label: string; style: 'accept' | 'dismiss'; onAction: () => void }>;
 }
 
+export interface DeleteAnalysis {
+  noteAddress: string;
+  noteName: string;
+  bodyRefs: Array<{ uid: string; address: string; name: string; filename: string }>;
+  trailingRefs: Array<{ uid: string; address: string; name: string; filename: string; annotation: string }>;
+  children: Array<{ uid: string; address: string; name: string }>;
+  ownTrailingRefs: Array<{ uid: string; address: string; name: string; annotation: string }>;
+  isReferenced: boolean;
+  isParent: boolean;
+  totalImpact: number;
+}
+
 export interface EditorState {
   isEditing: boolean;
   editingUid: string | null;
@@ -24,6 +36,15 @@ export interface EditorState {
   openEditor: (uid: string) => Promise<void>;
   closeEditor: () => void;
   save: () => Promise<void>;
+  deleteStatus: 'idle' | 'analyzing' | 'confirming' | 'confirming-permanent' | 'deleting' | 'deleted' | 'stubbing' | 'error';
+  deleteAnalysis: DeleteAnalysis | null;
+  deleteError: string | null;
+  analyzeForDelete: () => Promise<void>;
+  confirmDelete: (cleanupTrailingRefs: boolean, trailingRefUids: string[], unlinkBodyRefs: boolean) => Promise<void>;
+  convertToStub: () => Promise<void>;
+  enterPermanentDelete: () => void;
+  backToOverview: () => void;
+  cancelDelete: () => void;
 }
 
 export function useFieldnoteEditor(): EditorState {
@@ -33,6 +54,10 @@ export function useFieldnoteEditor(): EditorState {
   const [diagnostics, setDiagnostics] = useState<Diagnostic[]>([]);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [isDirty, setIsDirty] = useState(false);
+
+  const [deleteStatus, setDeleteStatus] = useState<'idle' | 'analyzing' | 'confirming' | 'confirming-permanent' | 'deleting' | 'deleted' | 'stubbing' | 'error'>('idle');
+  const [deleteAnalysis, setDeleteAnalysis] = useState<DeleteAnalysis | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const originalContent = useRef('');
   const validateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -75,6 +100,15 @@ export function useFieldnoteEditor(): EditorState {
   }, [editingUid]);
 
   const openEditor = useCallback(async (uid: string) => {
+    // Set editing state immediately — prevents flash when switching notes
+    setEditingUid(uid);
+    setIsEditing(true);
+    setDiagnostics([]);
+    setIsDirty(false);
+    setSaveStatus('idle');
+    setDeleteStatus('idle');
+    setDeleteAnalysis(null);
+    setDeleteError(null);
     try {
       const resp = await fetch(`/api/fieldnotes/${uid}/raw`);
       if (!resp.ok) throw new Error('Failed to fetch');
@@ -83,11 +117,6 @@ export function useFieldnoteEditor(): EditorState {
       const normalized = raw.replace(/\r\n/g, '\n');
       originalContent.current = normalized;
       setRawContentState(normalized);
-      setEditingUid(uid);
-      setIsEditing(true);
-      setDiagnostics([]);
-      setIsDirty(false);
-      setSaveStatus('idle');
     } catch (err) {
       console.error('Failed to open editor:', err);
     }
@@ -100,6 +129,9 @@ export function useFieldnoteEditor(): EditorState {
     setDiagnostics([]);
     setIsDirty(false);
     setSaveStatus('idle');
+    setDeleteStatus('idle');
+    setDeleteAnalysis(null);
+    setDeleteError(null);
     if (validateTimer.current) clearTimeout(validateTimer.current);
     if (savedTimer.current) clearTimeout(savedTimer.current);
   }, []);
@@ -136,6 +168,94 @@ export function useFieldnoteEditor(): EditorState {
     }
   }, [editingUid, isDirty, rawContent]);
 
+  const analyzeForDelete = useCallback(async () => {
+    if (!editingUid) return;
+    setDeleteStatus('analyzing');
+    setDeleteError(null);
+    try {
+      const resp = await fetch('/api/fieldnotes/analyze-refs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: editingUid }),
+      });
+      if (!resp.ok) throw new Error('Analysis failed');
+      const analysis = await resp.json();
+      setDeleteAnalysis(analysis);
+      setDeleteStatus('confirming');
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Analysis failed');
+      setDeleteStatus('error');
+    }
+  }, [editingUid]);
+
+  const confirmDelete = useCallback(async (cleanupTrailingRefs: boolean, trailingRefUids: string[], unlinkBodyRefs: boolean) => {
+    if (!editingUid) return;
+    setDeleteStatus('deleting');
+    try {
+      const resp = await fetch('/api/fieldnotes/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: editingUid, cleanupTrailingRefs, trailingRefUids, unlinkBodyRefs }),
+      });
+      if (!resp.ok) throw new Error('Delete failed');
+      setDeleteStatus('deleted');
+      // Clear dirty flag so auto-save-on-switch doesn't try to save the deleted file
+      setIsDirty(false);
+      // Close editor immediately — HMR handler navigates away separately
+      setIsEditing(false);
+      setEditingUid(null);
+      setRawContentState('');
+      setDiagnostics([]);
+      if (validateTimer.current) clearTimeout(validateTimer.current);
+      if (savedTimer.current) clearTimeout(savedTimer.current);
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Delete failed');
+      setDeleteStatus('error');
+    }
+  }, [editingUid]);
+
+  const convertToStub = useCallback(async () => {
+    if (!editingUid) return;
+    setDeleteStatus('stubbing');
+    try {
+      const resp = await fetch('/api/fieldnotes/convert-to-stub', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: editingUid }),
+      });
+      if (!resp.ok) throw new Error('Stub conversion failed');
+      // Re-fetch the note's raw content (it changed on disk)
+      const rawResp = await fetch(`/api/fieldnotes/${editingUid}/raw`);
+      if (rawResp.ok) {
+        const { raw } = await rawResp.json();
+        const normalized = raw.replace(/\r\n/g, '\n');
+        originalContent.current = normalized;
+        setRawContentState(normalized);
+        setIsDirty(false);
+      }
+      setDeleteStatus('idle');
+      setDeleteAnalysis(null);
+      setDeleteError(null);
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Stub conversion failed');
+      setDeleteStatus('error');
+    }
+  }, [editingUid]);
+
+  const enterPermanentDelete = useCallback(() => {
+    setDeleteStatus('confirming-permanent');
+  }, []);
+
+  const backToOverview = useCallback(() => {
+    setDeleteStatus('confirming');
+  }, []);
+
+  const cancelDelete = useCallback(() => {
+    setDeleteStatus('idle');
+    setDeleteAnalysis(null);
+    setDeleteError(null);
+  }, []);
+
   // Live trailing refs parsed from raw content — for real-time preview on left side
   const liveTrailingRefs = useMemo((): ConnectionRef[] => {
     if (!rawContent || !isEditing) return [];
@@ -165,5 +285,14 @@ export function useFieldnoteEditor(): EditorState {
     openEditor,
     closeEditor,
     save,
+    deleteStatus,
+    deleteAnalysis,
+    deleteError,
+    analyzeForDelete,
+    confirmDelete,
+    convertToStub,
+    enterPermanentDelete,
+    backToOverview,
+    cancelDelete,
   };
 }

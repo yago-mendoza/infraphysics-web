@@ -5,8 +5,8 @@ import React, { useEffect, useRef, useCallback, useImperativeHandle, forwardRef 
 import { EditorView, keymap, Decoration, type DecorationSet, ViewPlugin, WidgetType, tooltips } from '@codemirror/view';
 import { EditorState, StateEffect, StateField, Prec } from '@codemirror/state';
 import { markdown } from '@codemirror/lang-markdown';
-import { autocompletion, completionKeymap, acceptCompletion, startCompletion } from '@codemirror/autocomplete';
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import { autocompletion, completionKeymap, acceptCompletion, startCompletion, selectedCompletion, completionStatus } from '@codemirror/autocomplete';
+import { defaultKeymap, history, historyKeymap, indentMore, indentLess } from '@codemirror/commands';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { createWikiAutocomplete } from './WikiAutocomplete';
 import { createAtAutocomplete } from './AtAutocomplete';
@@ -319,9 +319,36 @@ const CodeMirrorEditor = forwardRef<CodeMirrorHandle, Props>(({ value, onChange,
         }),
         // Completion keymap at highest precedence — Enter/arrows/Escape
         // are captured by the dropdown when open, fall through when closed.
+        // Tab: drill into children if selected item is a parent, otherwise accept.
         Prec.highest(keymap.of([
           ...completionKeymap,
-          { key: 'Tab', run: acceptCompletion },
+          { key: 'Tab', run: (view) => {
+            // If autocomplete is not active, just indent
+            if (!completionStatus(view.state)) return indentMore(view);
+            const sel = selectedCompletion(view.state);
+            if (!sel) return acceptCompletion(view) || indentMore(view);
+            // If the selected item is a parent (type='class'), drill into children
+            if (sel.type === 'class' && sel.detail) {
+              // Replace query text after [[ with address//
+              const line = view.state.doc.lineAt(view.state.selection.main.head);
+              const textBefore = line.text.slice(0, view.state.selection.main.head - line.from);
+              const bracketIdx = textBefore.lastIndexOf('[[');
+              if (bracketIdx !== -1) {
+                const replaceFrom = line.from + bracketIdx + 2; // after [[
+                const replaceTo = view.state.selection.main.head;
+                const drillText = sel.detail + '//';
+                view.dispatch({
+                  changes: { from: replaceFrom, to: replaceTo, insert: drillText },
+                  selection: { anchor: replaceFrom + drillText.length },
+                });
+                // Autocomplete re-triggers automatically (activateOnTyping: true)
+                return true;
+              }
+            }
+            // Leaf node or no address — accept normally
+            return acceptCompletion(view) || indentMore(view);
+          }},
+          { key: 'Shift-Tab', run: indentLess },
         ])),
         keymap.of([...defaultKeymap, ...historyKeymap]),
         highlightField,

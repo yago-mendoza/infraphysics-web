@@ -5,6 +5,7 @@ import React, { Suspense, useState, useCallback, useMemo, useRef, useEffect } fr
 import { DiagnosticsTerminal } from './DiagnosticsTerminal';
 import { SyntaxCheatsheet } from './SyntaxCheatsheet';
 import { NewNotePanel } from './NewNotePanel';
+import { DeleteConfirmModal } from './DeleteConfirmModal';
 import { useTermSuggestions } from './useTermSuggestions';
 import type { EditorState, Diagnostic } from './useFieldnoteEditor';
 import type { CodeMirrorHandle } from './CodeMirrorEditor';
@@ -237,6 +238,18 @@ export const EditorPanel: React.FC<Props> = ({
           >
             Save
           </button>
+          <button
+            onClick={editor.analyzeForDelete}
+            disabled={editor.deleteStatus === 'analyzing'}
+            className={`text-[10px] px-2 py-0.5 border transition-colors ${
+              editor.deleteStatus === 'analyzing'
+                ? 'border-transparent text-th-muted/40 cursor-default'
+                : 'border-red-400/30 text-red-400/70 hover:text-red-400 hover:bg-red-400/10 hover:border-red-400/50'
+            }`}
+            title="Delete this fieldnote"
+          >
+            {editor.deleteStatus === 'analyzing' ? '...' : 'delete'}
+          </button>
         </div>
       </div>
 
@@ -368,6 +381,25 @@ export const EditorPanel: React.FC<Props> = ({
                 document.body.style.userSelect = 'none';
               }}
             />
+            {/* Delete error banner */}
+            {editor.deleteStatus === 'error' && editor.deleteError && (
+              <div className="flex items-center gap-2 px-3 py-1.5 text-[11px] bg-red-400/10 border-b" style={{ borderColor: 'var(--editor-border)' }}>
+                <span className="text-red-400">Delete failed: {editor.deleteError}</span>
+                <span className="flex-1" />
+                <button
+                  onClick={editor.cancelDelete}
+                  className="text-red-400/70 hover:text-red-400 transition-colors"
+                >
+                  Dismiss
+                </button>
+                <button
+                  onClick={editor.analyzeForDelete}
+                  className="text-red-400/70 hover:text-red-400 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
             {/* Console */}
             <DiagnosticsTerminal
               diagnostics={mergedDiagnostics}
@@ -386,6 +418,18 @@ export const EditorPanel: React.FC<Props> = ({
           <SyntaxCheatsheet />
         )}
       </div>
+      {(editor.deleteStatus === 'confirming' || editor.deleteStatus === 'confirming-permanent' || editor.deleteStatus === 'deleting' || editor.deleteStatus === 'stubbing') && editor.deleteAnalysis && (
+        <DeleteConfirmModal
+          analysis={editor.deleteAnalysis}
+          phase={editor.deleteStatus === 'confirming-permanent' || editor.deleteStatus === 'deleting' ? 'permanent' : 'overview'}
+          busy={editor.deleteStatus === 'deleting' || editor.deleteStatus === 'stubbing'}
+          onStub={editor.convertToStub}
+          onPermanent={editor.enterPermanentDelete}
+          onConfirmDelete={editor.confirmDelete}
+          onBack={editor.backToOverview}
+          onCancel={editor.cancelDelete}
+        />
+      )}
     </div>
     </div>
   );

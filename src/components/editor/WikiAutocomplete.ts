@@ -72,13 +72,27 @@ export function createWikiAutocomplete(
 
     scored.sort((a, b) => b.score - a.score || (a.note.name || '').localeCompare(b.note.name || ''));
 
+    // Precompute parent set — notes that have at least one child (O(n) via address prefixes)
+    const allAddresses = new Set(notes.map(n => n.address).filter(Boolean));
+    const parentSet = new Set<string>();
+    for (const addr of allAddresses) {
+      // Walk up the address hierarchy, marking each ancestor as a parent
+      const parts = addr!.split('//');
+      for (let i = 1; i < parts.length; i++) {
+        const ancestor = parts.slice(0, i).join('//');
+        if (allAddresses.has(ancestor)) parentSet.add(ancestor);
+      }
+    }
+
     const options: Completion[] = scored.slice(0, 50).map(({ note }) => {
       const name = note.name || note.displayTitle || note.id;
       const address = note.address || '';
+      const isParent = parentSet.has(address);
 
       return {
         label: name,
         detail: address !== name ? address : undefined,
+        type: isParent ? 'class' : 'variable', // 'class' = parent (has children)
         apply: (view: EditorView, _completion: Completion, _from: number, to: number) => {
           // Insert wiki-link: replace [[query with [[uid|name]]
           const wikiLink = `[[${note.id}|${name}]]`;

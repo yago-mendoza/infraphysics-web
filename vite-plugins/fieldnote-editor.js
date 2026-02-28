@@ -2,10 +2,13 @@
 // Only active during `vite dev`, never in production builds.
 //
 // Endpoints:
-//   GET  /api/fieldnotes/:uid/raw   → raw markdown + mtime
-//   POST /api/fieldnotes/save       → write to disk, incremental rebuild
-//   POST /api/fieldnotes/create     → create new note, rebuild
-//   POST /api/fieldnotes/validate   → parse + validate without saving
+//   GET  /api/fieldnotes/:uid/raw     → raw markdown + mtime
+//   POST /api/fieldnotes/save         → write to disk, incremental rebuild
+//   POST /api/fieldnotes/create       → create new note, rebuild
+//   POST /api/fieldnotes/validate     → parse + validate without saving
+//   POST /api/fieldnotes/analyze-refs    → pre-delete impact analysis
+//   POST /api/fieldnotes/convert-to-stub → clear body, preserve frontmatter + trailing refs
+//   POST /api/fieldnotes/delete          → delete note + optional trailing ref cleanup
 
 import fs from 'fs';
 import path from 'path';
@@ -24,6 +27,7 @@ import {
   parseTrailingRefs,
   extractDescription,
   stripTrailingRefs,
+  serializeFieldnote,
 } from '../src/lib/content/fieldnote-parser.js';
 import {
   checkReferenceIntegrity,
@@ -305,6 +309,19 @@ function validateRaw(raw, allFieldnotes) {
   return issues;
 }
 
+/**
+ * Replace all [[uid]] and [[uid|display]] wiki-links with plain text.
+ * [[uid]] → deletedName, [[uid|custom text]] → custom text.
+ */
+function unlinkWikiRefs(text, uid, deletedName) {
+  // [[uid|display text]] → display text
+  // [[uid]]              → deletedName
+  return text.replace(
+    new RegExp(`\\[\\[${uid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\|([^\\]]+))?\\]\\]`, 'g'),
+    (_, display) => display || deletedName
+  );
+}
+
 // Helper to parse JSON body from request
 async function readBody(req) {
   return new Promise((resolve, reject) => {
@@ -474,6 +491,243 @@ export function fieldnoteEditorPlugin() {
               collisions: newCollisions,
               missingParents,
             });
+          } catch (err) {
+            return sendJson(res, { error: err.message }, 500);
+          }
+        }
+
+        // ── POST /api/fieldnotes/analyze-refs ──
+        // Pre-delete impact analysis: who references this note?
+        if (req.url === '/api/fieldnotes/analyze-refs' && req.method === 'POST') {
+          try {
+            const { uid } = await readBody(req);
+            if (!uid) return sendJson(res, { error: 'Missing uid' }, 400);
+
+            if (!cachedFieldnotes) {
+              const { fieldnotePosts, uidToMeta } = loadAllFieldnotes();
+              cachedFieldnotes = { posts: fieldnotePosts, uidToMeta };
+            }
+
+            const targetPost = cachedFieldnotes.posts.find(p => p.id === uid);
+            if (!targetPost) return sendJson(res, { error: 'Note not found' }, 404);
+
+            const bodyRefs = [];     // notes that reference this uid in body text
+            const trailingRefs = []; // notes that have trailing refs pointing to this uid
+            const children = [];     // notes whose address starts with target's address + '//'
+
+            for (const post of cachedFieldnotes.posts) {
+              if (post.id === uid) continue;
+
+              // Read raw file to distinguish body refs from trailing refs
+              const filePath = path.join(FIELDNOTES_DIR, `${post.id}.md`);
+              if (!fs.existsSync(filePath)) continue;
+              const raw = fs.readFileSync(filePath, 'utf-8');
+              const parsed = parseFrontmatter(raw);
+              if (!parsed) continue;
+
+              const { body } = parsed;
+              const { trailingRefs: tRefs, trailingRefStart } = parseTrailingRefs(body);
+              const contentBody = stripTrailingRefs(body, trailingRefStart);
+              const bodyReferences = parseReferences(contentBody);
+
+              // Body references (inline [[uid]] in content)
+              if (bodyReferences.includes(uid)) {
+                bodyRefs.push({
+                  uid: post.id,
+                  address: post.address,
+                  name: post.name,
+                  filename: `${post.id}.md`,
+                });
+              }
+
+              // Trailing refs pointing to this uid
+              const matchingTrailing = tRefs.filter(r => r.uid === uid);
+              for (const tr of matchingTrailing) {
+                trailingRefs.push({
+                  uid: post.id,
+                  address: post.address,
+                  name: post.name,
+                  filename: `${post.id}.md`,
+                  annotation: tr.annotation || '',
+                });
+              }
+
+              // Children (address hierarchy)
+              if (post.address.startsWith(targetPost.address + '//')) {
+                children.push({
+                  uid: post.id,
+                  address: post.address,
+                  name: post.name,
+                });
+              }
+            }
+
+            // Own trailing refs — interactions declared BY this note
+            const ownTrailingRefs = [];
+            const targetFile = path.join(FIELDNOTES_DIR, `${uid}.md`);
+            if (fs.existsSync(targetFile)) {
+              const targetRaw = fs.readFileSync(targetFile, 'utf-8');
+              const targetParsed = parseFrontmatter(targetRaw);
+              if (targetParsed) {
+                const { trailingRefs: ownTRefs } = parseTrailingRefs(targetParsed.body);
+                for (const tr of ownTRefs) {
+                  const meta = cachedFieldnotes.uidToMeta.get(tr.uid);
+                  ownTrailingRefs.push({
+                    uid: tr.uid,
+                    address: meta?.address || tr.uid,
+                    name: meta?.name || tr.uid,
+                    annotation: tr.annotation || '',
+                  });
+                }
+              }
+            }
+
+            return sendJson(res, {
+              noteAddress: targetPost.address,
+              noteName: targetPost.name,
+              bodyRefs,
+              trailingRefs,
+              children,
+              ownTrailingRefs,
+              isReferenced: bodyRefs.length > 0 || trailingRefs.length > 0,
+              isParent: children.length > 0,
+              totalImpact: bodyRefs.length + trailingRefs.length + children.length + ownTrailingRefs.length,
+            });
+          } catch (err) {
+            return sendJson(res, { error: err.message }, 500);
+          }
+        }
+
+        // ── POST /api/fieldnotes/delete ──
+        if (req.url === '/api/fieldnotes/delete' && req.method === 'POST') {
+          try {
+            const { uid, cleanupTrailingRefs, trailingRefUids, unlinkBodyRefs } = await readBody(req);
+            if (!uid) return sendJson(res, { error: 'Missing uid' }, 400);
+
+            const sourceFile = path.join(FIELDNOTES_DIR, `${uid}.md`);
+            if (!fs.existsSync(sourceFile)) {
+              return sendJson(res, { error: 'File not found' }, 404);
+            }
+
+            // Resolve the deleted note's name for unlink fallback text
+            const deletedName = cachedFieldnotes?.uidToMeta?.get(uid)?.name || uid;
+
+            // 1. Clean up trailing refs in other notes that point to this uid
+            if (cleanupTrailingRefs && trailingRefUids && trailingRefUids.length > 0) {
+              for (const otherUid of trailingRefUids) {
+                const otherFile = path.join(FIELDNOTES_DIR, `${otherUid}.md`);
+                if (!fs.existsSync(otherFile)) continue;
+
+                const raw = fs.readFileSync(otherFile, 'utf-8');
+                const parsed = parseFrontmatter(raw);
+                if (!parsed) continue;
+
+                const { frontmatter, body } = parsed;
+                const { trailingRefs: tRefs, trailingRefStart } = parseTrailingRefs(body);
+                let contentBody = stripTrailingRefs(body, trailingRefStart);
+
+                // Also unlink body refs in these files if requested
+                if (unlinkBodyRefs) {
+                  contentBody = unlinkWikiRefs(contentBody, uid, deletedName);
+                }
+
+                // Filter out refs to the deleted uid
+                const filteredRefs = tRefs.filter(r => r.uid !== uid);
+
+                // Serialize back using clean reconstruction
+                const newRaw = serializeFieldnote(frontmatter, contentBody, filteredRefs);
+                fs.writeFileSync(otherFile, newRaw, 'utf-8');
+              }
+            }
+
+            // 2. Unlink body refs in notes that only have body refs (not in trailingRefUids)
+            if (unlinkBodyRefs) {
+              const allFieldnotes = cachedFieldnotes?.posts || [];
+              const alreadyProcessed = new Set(trailingRefUids || []);
+              for (const post of allFieldnotes) {
+                if (post.id === uid || alreadyProcessed.has(post.id)) continue;
+                const otherFile = path.join(FIELDNOTES_DIR, `${post.id}.md`);
+                if (!fs.existsSync(otherFile)) continue;
+                const raw = fs.readFileSync(otherFile, 'utf-8');
+                // Quick check — skip files that don't mention the uid at all
+                if (!raw.includes(uid)) continue;
+                const parsed = parseFrontmatter(raw);
+                if (!parsed) continue;
+                const { frontmatter, body } = parsed;
+                const { trailingRefs: tRefs, trailingRefStart } = parseTrailingRefs(body);
+                const contentBody = stripTrailingRefs(body, trailingRefStart);
+                const unlinked = unlinkWikiRefs(contentBody, uid, deletedName);
+                if (unlinked !== contentBody) {
+                  const newRaw = serializeFieldnote(frontmatter, unlinked, tRefs);
+                  fs.writeFileSync(otherFile, newRaw, 'utf-8');
+                }
+              }
+            }
+
+            // 3. Delete source file
+            fs.unlinkSync(sourceFile);
+
+            // 3. Delete compiled output
+            const compiledFile = path.join(FIELDNOTES_CONTENT_DIR, `${uid}.json`);
+            if (fs.existsSync(compiledFile)) {
+              fs.unlinkSync(compiledFile);
+            }
+
+            // 4. Full rebuild
+            const { fieldnotePosts, uidToMeta } = fullRebuild();
+            cachedFieldnotes = { posts: fieldnotePosts, uidToMeta };
+
+            // 5. HMR notification
+            server.ws.send({
+              type: 'custom',
+              event: 'fieldnote-update',
+              data: { uid, action: 'delete' },
+            });
+
+            return sendJson(res, { ok: true });
+          } catch (err) {
+            return sendJson(res, { error: err.message }, 500);
+          }
+        }
+
+        // ── POST /api/fieldnotes/convert-to-stub ──
+        // Clears body content but preserves frontmatter + trailing refs
+        if (req.url === '/api/fieldnotes/convert-to-stub' && req.method === 'POST') {
+          try {
+            const { uid } = await readBody(req);
+            if (!uid) return sendJson(res, { error: 'Missing uid' }, 400);
+
+            const filePath = path.join(FIELDNOTES_DIR, `${uid}.md`);
+            if (!fs.existsSync(filePath)) {
+              return sendJson(res, { error: 'File not found' }, 404);
+            }
+
+            const raw = fs.readFileSync(filePath, 'utf-8');
+            const parsed = parseFrontmatter(raw);
+            if (!parsed) {
+              return sendJson(res, { error: 'Invalid frontmatter' }, 400);
+            }
+
+            const { frontmatter, body } = parsed;
+            const { trailingRefs: tRefs } = parseTrailingRefs(body);
+
+            // Replace body with a random stub phrase, keep trailing refs
+            const stubBody = randomStubPhrase();
+            const newRaw = serializeFieldnote(frontmatter, stubBody, tRefs);
+            fs.writeFileSync(filePath, newRaw, 'utf-8');
+
+            // Full rebuild
+            const { fieldnotePosts, uidToMeta } = fullRebuild();
+            cachedFieldnotes = { posts: fieldnotePosts, uidToMeta };
+
+            // HMR notification
+            server.ws.send({
+              type: 'custom',
+              event: 'fieldnote-update',
+              data: { uid, action: 'stub' },
+            });
+
+            return sendJson(res, { ok: true });
           } catch (err) {
             return sendJson(res, { error: err.message }, 500);
           }

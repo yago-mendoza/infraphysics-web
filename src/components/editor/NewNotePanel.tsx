@@ -74,6 +74,39 @@ export const NewNotePanel: React.FC<Props> = ({ allNotes, onCreated, onCancel, i
     inputRef.current?.focus();
   }, [ac.completionPrefix, existingAddresses]);
 
+  const canCreate = cleanAddress && autoName && !isDuplicate && !creating;
+
+  const handleCreate = useCallback(async () => {
+    if (!canCreate) return;
+    setCreating(true);
+    setError(null);
+
+    try {
+      const resp = await fetch('/api/fieldnotes/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: cleanAddress,
+          name: autoName,
+          date: new Date().toISOString().slice(0, 10),
+        }),
+      });
+
+      if (!resp.ok) {
+        const data = await resp.json();
+        setError(data.error || 'Creation failed');
+        return;
+      }
+
+      const { uid } = await resp.json();
+      onCreated(uid);
+    } catch (err) {
+      setError(String(err));
+    } finally {
+      setCreating(false);
+    }
+  }, [canCreate, cleanAddress, autoName, onCreated]);
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Tab') {
       if (!ac.isOpen) return; // let normal Tab behavior through
@@ -108,7 +141,7 @@ export const NewNotePanel: React.FC<Props> = ({ allNotes, onCreated, onCancel, i
           acceptSuggestion(ac.suggestions[ac.selectedIndex]);
           return;
         }
-        // selectedIndex === -1: dropdown is visually deselected, let Enter fall through
+        // No suggestion selected — fall through to create
       }
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -122,40 +155,13 @@ export const NewNotePanel: React.FC<Props> = ({ allNotes, onCreated, onCancel, i
         return;
       }
     }
-  }, [ac, acceptSuggestion, onCancel, address, existingAddresses]);
 
-  const canCreate = cleanAddress && autoName && !isDuplicate && !creating;
-
-  const handleCreate = useCallback(async () => {
-    if (!canCreate) return;
-    setCreating(true);
-    setError(null);
-
-    try {
-      const resp = await fetch('/api/fieldnotes/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          address: cleanAddress,
-          name: autoName,
-          date: new Date().toISOString().slice(0, 10),
-        }),
-      });
-
-      if (!resp.ok) {
-        const data = await resp.json();
-        setError(data.error || 'Creation failed');
-        return;
-      }
-
-      const { uid } = await resp.json();
-      onCreated(uid);
-    } catch (err) {
-      setError(String(err));
-    } finally {
-      setCreating(false);
+    // Enter with no dropdown selection → create if ready
+    if (e.key === 'Enter' && canCreate) {
+      e.preventDefault();
+      handleCreate();
     }
-  }, [canCreate, cleanAddress, autoName, onCreated]);
+  }, [ac, acceptSuggestion, onCancel, canCreate, handleCreate]);
 
   return (
     <div
