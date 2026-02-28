@@ -50,6 +50,9 @@ FILES=(
   "src/hooks/useKeyboardShortcuts.ts"
   "src/hooks/useNavigationTrail.ts"
   "src/hooks/useSecondBrainHub.ts"
+  "src/hooks/useViewCount.ts"
+  "src/hooks/useReaction.ts"
+  "src/hooks/useArticleStats.ts"
 
   # --- Lib / Utilities ---
   "src/lib/index.ts"
@@ -57,9 +60,11 @@ FILES=(
   "src/lib/date.ts"
   "src/lib/addressToId.ts"
   "src/lib/brainIndex.ts"
+  "src/lib/exportNotes.ts"
   "src/lib/wikilinks.ts"
   "src/lib/color.ts"
   "src/lib/search.ts"
+  "src/lib/headings.ts"
   "src/lib/icons.ts"
 
   # --- Data ---
@@ -79,6 +84,11 @@ FILES=(
   "src/components/ui/Highlight.tsx"
   "src/components/ui/StatusBadge.tsx"
 
+  # --- Components: Article ---
+  "src/components/article/ArticleBreadcrumbs.tsx"
+  "src/components/article/ArticleHashtags.tsx"
+  "src/components/article/BlogMetabar.tsx"
+
   # --- Components: Sections ---
   "src/components/sections/index.ts"
   "src/components/sections/SearchResultsList.tsx"
@@ -96,6 +106,7 @@ FILES=(
   "src/components/RotatingTitle.tsx"
   "src/components/WikiContent.tsx"
   "src/components/WikiLinkPreview.tsx"
+  "src/components/CopyExportModal.tsx"
   "src/components/icons/index.tsx"
 
   # --- Views ---
@@ -127,7 +138,7 @@ FILES=(
   "src/data/pages/fieldnotes/README.md"
 
   # --- Contenido representativo (1 por categoría + 1 fieldnote, para mostrar frontmatter) ---
-  "src/data/pages/threads/anatomy-of-a-markdown-compiler.md"
+  "src/data/pages/threads/260205-why-rust-exists.md"
   "src/data/pages/bits2bricks/custom-syntax-pcb.md"
   # Fieldnote files are now named {uid}.md — pick a representative one
   # Check uid-map.json or ls src/data/pages/fieldnotes/ for current filenames
