@@ -97,6 +97,17 @@ const SECTIONS: Section[] = [
           </div>
         ),
       },
+      {
+        label: 'Copy for context',
+        content: (
+          <div className="space-y-3">
+            <p>Next to the result count in the toolbar you'll see a <strong className={tipStrong}>clipboard icon</strong>. It copies all current search results as structured markdown — ready to paste into an LLM prompt as context.</p>
+            <p>The small <strong className={tipStrong}>meta/full</strong> toggle next to it controls how much detail is included. <strong className={tipStrong}>Meta</strong> exports just the address, date, and one-line description for each note — fast and compact. <strong className={tipStrong}>Full</strong> fetches the actual body text and annotated interactions — more context but takes a moment.</p>
+            <p>This works with any combination of search, scope, and filters — so you can narrow down to exactly the subset of knowledge you want to share with an LLM.</p>
+            <p>On a <strong className={tipStrong}>note detail page</strong>, a separate clipboard icon appears on the metadata line. This opens a <strong className={tipStrong}>scope selector</strong> where you can pick which related notes to include: parent, siblings, children, trailing refs (interactions), and backlinks. Toggle zones on and off to build exactly the context window you need.</p>
+          </div>
+        ),
+      },
     ],
   },
   {
@@ -278,6 +289,14 @@ export const SecondBrainGuide: React.FC<Props> = ({ isOpen, onClose, isLocalhost
     return () => window.removeEventListener('keydown', handler, true);
   }, [isOpen, onClose]);
 
+  // Lock background scroll while modal is open
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [isOpen]);
+
   const selectSection = useCallback((idx: number, subIdx = 0) => {
     setActiveSection(idx);
     setActiveSub(subIdx);
@@ -311,20 +330,71 @@ export const SecondBrainGuide: React.FC<Props> = ({ isOpen, onClose, isLocalhost
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4"
       onClick={onClose}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/40" />
 
       {/* Modal */}
       <div
-        className="relative flex w-full max-w-3xl h-[85vh] border border-violet-500/20 rounded-sm shadow-2xl overflow-hidden"
+        className="relative flex flex-col md:flex-row w-full max-w-3xl h-[80vh] md:h-[70vh] border border-violet-500/20 rounded-lg md:rounded-sm shadow-2xl overflow-hidden"
         style={{ backgroundColor: 'var(--hub-sidebar-bg)' }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Left nav */}
-        <nav className="w-48 flex-shrink-0 border-r border-th-hub-border overflow-y-auto hub-scrollbar py-3">
+        {/* Header — always on top (mobile + desktop) */}
+        <div className="flex items-center justify-between px-4 md:px-5 py-3 border-b border-th-hub-border flex-shrink-0 md:hidden">
+          <h2 className="text-sm font-semibold text-th-primary truncate">{title}</h2>
+          <button
+            onClick={onClose}
+            className="text-th-muted hover:text-th-secondary transition-colors flex-shrink-0 ml-3"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Mobile nav — horizontal chips */}
+        <div className="md:hidden flex-shrink-0 border-b border-th-hub-border py-3 space-y-2">
+          {/* Section chips */}
+          <div className="flex gap-2 overflow-x-auto px-4 sb-guide-chips">
+            {visibleSections.map((sec, i) => (
+              <button
+                key={sec.label}
+                onClick={() => selectSection(i, 0)}
+                className={`flex-shrink-0 px-3 py-1.5 text-[11px] font-medium rounded transition-colors ${
+                  activeSection === i
+                    ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
+                    : 'text-th-tertiary border border-th-hub-border hover:text-th-secondary'
+                }`}
+              >
+                {sec.label}
+              </button>
+            ))}
+          </div>
+          {/* Subsection chips (if section has subs) */}
+          {section?.subsections && (
+            <div className="flex gap-1.5 overflow-x-auto px-4 sb-guide-chips">
+              {section.subsections.map((sub, j) => (
+                <button
+                  key={sub.label}
+                  onClick={() => selectSection(activeSection, j)}
+                  className={`flex-shrink-0 px-2.5 py-1 text-[10px] rounded transition-colors ${
+                    activeSub === j
+                      ? 'bg-violet-400/15 text-violet-400 border border-violet-400/25'
+                      : 'text-th-muted border border-transparent hover:text-th-tertiary'
+                  }`}
+                >
+                  {sub.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop left nav — hidden on mobile */}
+        <nav className="hidden md:block w-48 flex-shrink-0 border-r border-th-hub-border overflow-y-auto hub-scrollbar py-3">
           {visibleSections.map((sec, i) => {
             const isActive = activeSection === i;
             const isExpanded = expandedSections.has(i);
@@ -381,10 +451,10 @@ export const SecondBrainGuide: React.FC<Props> = ({ isOpen, onClose, isLocalhost
           })}
         </nav>
 
-        {/* Right panel */}
+        {/* Right panel / content */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Header */}
-          <div className="flex items-center justify-between px-5 py-3 border-b border-th-hub-border flex-shrink-0">
+          {/* Desktop header — hidden on mobile (shown above instead) */}
+          <div className="hidden md:flex items-center justify-between px-5 py-3 border-b border-th-hub-border flex-shrink-0">
             <h2 className="text-sm font-semibold text-th-primary truncate">{title}</h2>
             <button
               onClick={onClose}
@@ -399,7 +469,7 @@ export const SecondBrainGuide: React.FC<Props> = ({ isOpen, onClose, isLocalhost
           {/* Content */}
           <div
             ref={contentRef}
-            className="flex-1 overflow-y-auto hub-scrollbar px-5 py-4 text-[11px] text-th-secondary leading-relaxed"
+            className="flex-1 overflow-y-auto hub-scrollbar px-4 md:px-5 py-4 text-[11px] text-th-secondary leading-relaxed"
           >
             {body}
           </div>

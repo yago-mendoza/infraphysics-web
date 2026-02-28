@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect, useLayoutEffect, useDeferredValue } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FieldNoteMeta } from '../types';
+import { secondBrainPath } from '../config/categories';
 import { initBrainIndex, fetchNoteContent, getCachedNoteContent, prefetchNoteContent, type BrainIndex, type Connection, type Neighborhood } from '../lib/brainIndex';
 import { useGraphRelevance } from './useGraphRelevance';
 
@@ -69,6 +70,18 @@ export const useSecondBrainHub = () => {
   // Deferred query — React keeps the input responsive while the filter
   // pipeline uses the trailing value, allowing concurrent interruption.
   const deferredQuery = useDeferredValue(query);
+
+  // Content search gets an extra 150ms debounce on top of useDeferredValue
+  // because it scans searchText across all notes (heavier than name matching).
+  const [debouncedContentQuery, setDebouncedContentQuery] = useState('');
+  useEffect(() => {
+    if (searchMode !== 'content') {
+      setDebouncedContentQuery(query);
+      return;
+    }
+    const timer = setTimeout(() => setDebouncedContentQuery(query), 150);
+    return () => clearTimeout(timer);
+  }, [query, searchMode]);
 
   // Async index state
   const [index, setIndex] = useState<BrainIndex | null>(null);
@@ -224,7 +237,7 @@ export const useSecondBrainHub = () => {
     if (!q && query && savedIdRef.current) {
       const restoreId = savedIdRef.current;
       savedIdRef.current = undefined;
-      navigate(`/lab/second-brain/${restoreId}`);
+      navigate(secondBrainPath(restoreId));
     }
     if (!q) {
       savedIdRef.current = undefined;
@@ -365,8 +378,9 @@ export const useSecondBrainHub = () => {
 
   // --- Multi-mode search ---
   const searchResults = useMemo(() => {
-    if (!deferredQuery) return allFieldNotes;
-    const q = deferredQuery.toLowerCase();
+    const effectiveQuery = searchMode === 'content' ? debouncedContentQuery : deferredQuery;
+    if (!effectiveQuery) return allFieldNotes;
+    const q = effectiveQuery.toLowerCase();
 
     if (searchMode === 'name') {
       return allFieldNotes.filter(note => {
@@ -401,7 +415,7 @@ export const useSecondBrainHub = () => {
     }
 
     return allFieldNotes;
-  }, [deferredQuery, searchMode, allFieldNotes, backlinksMap]);
+  }, [deferredQuery, debouncedContentQuery, searchMode, allFieldNotes, backlinksMap]);
 
   // --- Directory scope filter ---
   const scopedResults = useMemo(() => {
@@ -594,6 +608,8 @@ export const useSecondBrainHub = () => {
     noteById,
     addressToNoteId,
     backlinksMap,
+    connectionsMap,
+    neighborhoodMap,
     sortedResults,
     histogramNotes: coreFilteredNotes,
     stats: globalStats,

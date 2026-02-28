@@ -2,7 +2,8 @@
 
 import React, { Suspense, useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { secondBrainPath } from '../config/categories';
 import { useHub } from '../contexts/SecondBrainHubContext';
 import { useNavigationTrail } from '../hooks/useNavigationTrail';
 import { WikiContent } from '../components/WikiContent';
@@ -14,10 +15,12 @@ import { BridgeScoreBadge } from '../components/BridgeScoreBadge';
 import { DriftDetector } from '../components/DriftDetector';
 import { useGraphRelevance } from '../hooks/useGraphRelevance';
 import type { SortMode, SearchMode, FilterState, ViewMode } from '../hooks/useSecondBrainHub';
-import { SearchIcon, PencilIcon, DiceIcon } from '../components/icons';
+import { SearchIcon, PencilIcon, DiceIcon, ClipboardIcon, CheckIcon } from '../components/icons';
 import { noteLabel, type FieldNoteMeta } from '../types';
 import { refreshBrainIndex, type Connection } from '../lib/brainIndex';
 import { ICON_REF_IN, ICON_REF_OUT } from '../lib/icons';
+import { exportNotesAsMarkdown } from '../lib/exportNotes';
+import { CopyExportModal } from '../components/CopyExportModal';
 import { resolveWikiLinks } from '../lib/wikilinks';
 import { WikiLinkPreview } from '../components/WikiLinkPreview';
 import { useIsLocalhost } from '../hooks/useIsLocalhost';
@@ -294,13 +297,18 @@ const ActivityHeatmap: React.FC<{
                 return (
                   <div
                     key={di}
-                    className={`aspect-square ${isSelected(day.date) ? 'ring-1 ring-violet-400' : isInRange(day.date) ? 'ring-1 ring-violet-400/40' : ''}`}
+                    className="aspect-square"
                     style={{
                       height: 8,
                       backgroundColor: cellColor(day.count, day.inYear),
                       border: isEmpty ? '1px solid rgba(255, 255, 255, 0.06)' : 'none',
                       borderRadius: 1,
                       opacity: day.inYear ? 1 : 0,
+                      boxShadow: isSelected(day.date)
+                        ? 'inset 0 0 0 1px rgba(167, 139, 250, 0.9)'
+                        : isInRange(day.date)
+                          ? 'inset 0 0 0 1px rgba(167, 139, 250, 0.35)'
+                          : 'none',
                     }}
                     title={day.inYear ? `${day.date}${day.count ? ` (${day.count})` : ''}` : undefined}
                   />
@@ -362,6 +370,8 @@ const DockedToolbar: React.FC<{
   stats: { maxDepth: number };
   inputRef: React.RefObject<HTMLInputElement | null>;
   viewMode: ViewMode;
+  sortedResults: FieldNoteMeta[];
+  connectionsMap: Map<string, Connection[]>;
 }> = ({
   query, setQuery, searchMode, setSearchMode,
   sortMode, setSortMode,
@@ -369,6 +379,7 @@ const DockedToolbar: React.FC<{
   directoryScope, setDirectoryScope,
   sortedCount, unvisitedOnly, setUnvisitedOnly, hasVisited,
   allNotes, stats, inputRef, viewMode,
+  sortedResults, connectionsMap,
 }) => {
     const isSimplified = viewMode === 'simplified';
     const { getIslands, loaded } = useGraphRelevance();
@@ -386,6 +397,32 @@ const DockedToolbar: React.FC<{
         .filter(c => c.size > 1)
         .sort((a, b) => b.size - a.size);
     }, [getIslands, loaded]);
+
+    // --- Bulk copy state ---
+    const [bulkCopyState, setBulkCopyState] = useState<'idle' | 'copying' | 'copied'>('idle');
+    const [bulkCopyMode, setBulkCopyMode] = useState(false); // false = metadata, true = full
+
+    const handleBulkCopy = useCallback(async () => {
+      if (sortedResults.length === 0) return;
+      setBulkCopyState('copying');
+      try {
+        const parts: string[] = [];
+        if (query) parts.push(`"${query}"`);
+        if (directoryScope) parts.push(`scope: ${directoryScope.replace(/\/\//g, ' / ')}`);
+        if (hasActiveFilters) parts.push('filtered');
+        const header = parts.length > 0 ? `Second Brain — ${parts.join(', ')}` : 'Second Brain export';
+
+        const result = await exportNotesAsMarkdown(sortedResults, connectionsMap, {
+          fullMode: bulkCopyMode,
+          header,
+        });
+        await navigator.clipboard.writeText(result.markdown);
+        setBulkCopyState('copied');
+        setTimeout(() => setBulkCopyState('idle'), 2000);
+      } catch {
+        setBulkCopyState('idle');
+      }
+    }, [sortedResults, connectionsMap, bulkCopyMode, query, directoryScope, hasActiveFilters]);
 
     // Scope picker state
     const [scopeInput, setScopeInput] = useState('');
@@ -500,9 +537,9 @@ const DockedToolbar: React.FC<{
             )}
           </div>
           {isFiltersVisible && (
-            <div className="px-3 pb-2 pt-2">
+            <div className="pb-2 pt-2">
               {/* All filters in one row: dropdowns + separator + toggle pills */}
-              <div className="flex items-center gap-1.5 md:gap-3 flex-wrap">
+              <div className="flex items-center gap-1.5 md:gap-3 md:flex-wrap overflow-x-auto md:overflow-visible px-3 hub-scrollbar sb-filter-row">
                 <div className="flex items-center gap-1 text-[10px] text-th-tertiary relative">
                   <span>scope</span>
                   <div className="relative">
@@ -611,7 +648,7 @@ const DockedToolbar: React.FC<{
                 >bridges</button>
               </div>
               {/* Heatmap */}
-              <div className="mt-2">
+              <div className="mt-2 px-3">
                 <ActivityHeatmap
                   allNotes={allNotes}
                   dateFilter={filterState.dateFilter}
@@ -668,9 +705,32 @@ const DockedToolbar: React.FC<{
             </>
           )}
 
-          {/* Count + info — pushed to the right */}
+          {/* Count + copy — pushed to the right */}
           <span className="flex items-center gap-1.5 ml-auto">
             <span className="text-[9px] text-th-secondary tabular-nums">{sortedCount} {hasActiveFilters || query || directoryScope ? 'results' : 'notes'}</span>
+            {(hasActiveFilters || query || directoryScope) && allNotes.length > 0 && (
+              <>
+                <span className="text-[9px] text-th-muted tabular-nums">{Math.round((sortedCount / allNotes.length) * 100)}%</span>
+                <span className="inline-block w-10 h-1 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}>
+                  <span className="block h-full rounded-full" style={{ width: `${Math.min((sortedCount / allNotes.length) * 100, 100)}%`, backgroundColor: 'rgba(139,92,246,0.6)' }} />
+                </span>
+              </>
+            )}
+            <button
+              onClick={() => setBulkCopyMode(m => !m)}
+              className="text-[9px] text-th-muted hover:text-th-secondary transition-colors"
+              title={bulkCopyMode ? 'Full mode (fetches content)' : 'Metadata mode (fast)'}
+            >
+              {bulkCopyMode ? 'full' : 'meta'}
+            </button>
+            <button
+              onClick={handleBulkCopy}
+              disabled={bulkCopyState === 'copying' || sortedCount === 0}
+              className="text-th-tertiary hover:text-violet-400 transition-colors disabled:opacity-30"
+              title="Copy all results for LLM context"
+            >
+              {bulkCopyState === 'copied' ? <CheckIcon size={12} /> : bulkCopyState === 'copying' ? <span className="text-[9px]">...</span> : <ClipboardIcon size={12} />}
+            </button>
           </span>
 
           {/* Reset + active chips — technical only */}
@@ -728,7 +788,7 @@ const GridCard = React.memo<{
 }>(({ note, idx, focused, visited, onCardClick, incoming, outgoing, componentId, isIsolated, isBridge, viewMode }) => (
   <Link
     data-idx={idx}
-    to={`/lab/second-brain/${note.id}`}
+    to={secondBrainPath(note.id)}
     onClick={() => onCardClick(note)}
     className={`card-link group p-4 flex flex-col${focused ? ' border-violet-400/50 bg-violet-400/5' : ''}`}
   >
@@ -798,6 +858,8 @@ export const SecondBrainView: React.FC = () => {
     directoryNavRef,
     isVisited,
     backlinksMap,
+    connectionsMap,
+    neighborhoodMap,
     addressToNoteId,
     invalidateContent,
     allFieldNotes,
@@ -815,6 +877,15 @@ export const SecondBrainView: React.FC = () => {
   const { trail, scheduleReset, scheduleExtend, truncateTrail, clearTrail, isOverflowing } =
     useNavigationTrail({ activePost, directoryNavRef });
   const isLocalhost = useIsLocalhost();
+  const { id: urlId } = useParams<{ id: string }>();
+
+  // Redirect invalid UIDs to grid
+  useEffect(() => {
+    if (urlId && !activePost && !indexLoading) {
+      navigate(secondBrainPath(), { replace: true });
+    }
+  }, [urlId, activePost, indexLoading, navigate]);
+
   const fieldnoteEditor = useFieldnoteEditor();
   const { previewHtml } = useLivePreview(fieldnoteEditor.rawContent, allFieldNotes, noteById);
 
@@ -884,6 +955,11 @@ export const SecondBrainView: React.FC = () => {
     }
   }, [activePost]);
 
+  // Close new note modal when navigating to a different note
+  useEffect(() => {
+    if (showNewNote) setShowNewNote(false);
+  }, [activePost?.id]);
+
   // Simplified mode: force name-only search and clear filters on switch
   useEffect(() => {
     if (isSimplified && searchMode !== 'name') setSearchMode('name');
@@ -908,15 +984,23 @@ export const SecondBrainView: React.FC = () => {
   }, [setFilterState]);
 
   // Type-to-search: any printable key focuses toolbar input
-  // Disabled while editing (CodeMirror = contenteditable div) or creating a new note
+  // Disabled while focused in CodeMirror, inputs, or creating a new note
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (fieldnoteEditor.isEditing || showNewNote) return;
+      if (showNewNote) return;
       const el = e.target as HTMLElement;
       const tag = el.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-      if (el.isContentEditable) return;
+      if (el.closest('.cm-editor') || el.isContentEditable) return;
       if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+
+      // Backspace: delete last character from query
+      if (e.key === 'Backspace' && query) {
+        e.preventDefault();
+        setQuery(query.slice(0, -1));
+        toolbarInputRef.current?.focus();
+        return;
+      }
 
       if (e.key.length === 1) {
         e.preventDefault();
@@ -928,7 +1012,7 @@ export const SecondBrainView: React.FC = () => {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [query, setQuery, fieldnoteEditor.isEditing, showNewNote]);
+  }, [query, setQuery, showNewNote]);
 
   // Wiki-link click handler — extend trail with the clicked concept
   const handleWikiLinkClick = useCallback((conceptId: string) => {
@@ -1003,10 +1087,24 @@ export const SecondBrainView: React.FC = () => {
   const [welcomeDismissed, setWelcomeDismissed] = useState(() =>
     localStorage.getItem('sb-welcome-dismissed') === '1'
   );
-  const dismissWelcome = useCallback(() => {
+  const dismissWelcome = useCallback((mode?: 'simplified' | 'technical') => {
+    if (mode) setViewMode(mode);
     setWelcomeDismissed(true);
     localStorage.setItem('sb-welcome-dismissed', '1');
-  }, []);
+  }, [setViewMode]);
+
+  // Escape to dismiss welcome banner
+  useEffect(() => {
+    if (welcomeDismissed) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        dismissWelcome('technical');
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [welcomeDismissed, dismissWelcome]);
 
   // Mobile "back to top" button — visible when scrolled past threshold
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -1023,6 +1121,29 @@ export const SecondBrainView: React.FC = () => {
     window.addEventListener('fieldnote-hmr', handler);
     return () => window.removeEventListener('fieldnote-hmr', handler);
   }, []);
+
+  // Navigate to previous note when the currently-viewed note is deleted
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.action === 'delete' && detail?.uid === activePost?.id) {
+        // Close editor before navigating away
+        fieldnoteEditor.closeEditor();
+        // Find the previous note in the trail (skip the deleted one)
+        const prev = trail.slice().reverse().find(t => t.id !== activePost.id);
+        if (prev) {
+          navigate(secondBrainPath(prev.id));
+        } else {
+          navigate(secondBrainPath());
+        }
+      }
+    };
+    window.addEventListener('fieldnote-hmr', handler);
+    return () => window.removeEventListener('fieldnote-hmr', handler);
+  }, [activePost?.id, navigate, trail, fieldnoteEditor]);
+
+  // Copy export modal state
+  const [showCopyModal, setShowCopyModal] = useState(false);
 
   // Right column: zone filtering toggle (graph always visible)
   const [zoneFilter, setZoneFilter] = useState(true);
@@ -1132,7 +1253,7 @@ export const SecondBrainView: React.FC = () => {
     const target = homonymParents[next].homonym;
     setHomonymIdx(next);
     scheduleExtend(target);
-    navigate(`/lab/second-brain/${target.id}`);
+    navigate(secondBrainPath(target.id));
   }, [homonymParents, homonymIdx, scheduleExtend, navigate]);
 
   // Available zones in left→right order (matches SVG layout)
@@ -1209,7 +1330,7 @@ export const SecondBrainView: React.FC = () => {
           if (idx < total) {
             const note = visibleResults[idx];
             handleGridCardClick(note);
-            navigate(`/lab/second-brain/${note.id}`);
+            navigate(secondBrainPath(note.id));
           }
           return;
         }
@@ -1252,7 +1373,7 @@ export const SecondBrainView: React.FC = () => {
             e.preventDefault();
             const note = visibleResults[focusedIdx];
             handleGridCardClick(note);
-            navigate(`/lab/second-brain/${note.id}`);
+            navigate(secondBrainPath(note.id));
           }
           return;
         case 'Escape':
@@ -1321,7 +1442,7 @@ export const SecondBrainView: React.FC = () => {
             e.preventDefault();
             const item = detailItems[focusedDetailIdx];
             handleConnectionClick(item);
-            navigate(`/lab/second-brain/${item.id}`);
+            navigate(secondBrainPath(item.id));
           }
           break;
         default:
@@ -1332,6 +1453,21 @@ export const SecondBrainView: React.FC = () => {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [showDetail, detailItems, focusedDetailIdx, handleConnectionClick, navigate, availableZones, activeZone, fieldnoteEditor.isEditing]);
+
+  // Escape in detail view — navigate back to grid
+  useEffect(() => {
+    if (!showDetail) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (fieldnoteEditor.isEditing) return; // don't close detail while editing
+      const el = e.target as HTMLElement;
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable) return;
+      e.preventDefault();
+      navigate(secondBrainPath());
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [showDetail, navigate, fieldnoteEditor.isEditing]);
 
   // Hide detail focus highlight on mouse click (re-shown on next arrow key)
   useEffect(() => {
@@ -1372,12 +1508,17 @@ export const SecondBrainView: React.FC = () => {
           stats={stats}
           inputRef={toolbarInputRef}
           viewMode={viewMode}
+          sortedResults={sortedResults}
+          connectionsMap={connectionsMap}
         />
       </div>
 
       {/* Welcome screen — first visit only, portaled to body to escape transform stacking context */}
       {!welcomeDismissed && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onMouseDown={(e) => { if (e.target === e.currentTarget) dismissWelcome('technical'); }}
+        >
           <div className="max-w-lg mx-4 border border-violet-500/25 rounded-xl px-8 py-10 bg-th-surface/95 shadow-2xl">
             <p className="text-[15px] text-th-secondary leading-relaxed">
               <strong className="text-violet-400">This is a personal knowledge graph</strong> — a
@@ -1394,20 +1535,26 @@ export const SecondBrainView: React.FC = () => {
             <p className="text-sm text-th-muted mt-5 italic">Long learning.</p>
             <div className="mt-8 grid grid-cols-2 gap-3">
               <button
-                onClick={() => { setViewMode('simplified'); dismissWelcome(); }}
+                onClick={() => dismissWelcome('simplified')}
                 className="py-4 px-3 border border-violet-500/30 rounded-lg hover:bg-violet-500/10 hover:border-violet-500/50 transition-colors text-left"
               >
                 <div className="text-sm font-semibold text-violet-400 mb-1">Simplified</div>
                 <div className="text-[11px] text-th-secondary leading-relaxed">Clean browsing. Search, read, follow links.</div>
               </button>
               <button
-                onClick={() => { setViewMode('technical'); dismissWelcome(); }}
+                onClick={() => dismissWelcome('technical')}
                 className="py-4 px-3 border border-violet-500/30 rounded-lg hover:bg-violet-500/10 hover:border-violet-500/50 transition-colors text-left"
               >
                 <div className="text-sm font-semibold text-violet-400 mb-1">Technical</div>
                 <div className="text-[11px] text-th-secondary leading-relaxed">Full power: topology, filters, graphs, analytics.</div>
               </button>
             </div>
+            <button
+              onClick={() => dismissWelcome('technical')}
+              className="mt-4 w-full text-center text-[11px] text-th-muted hover:text-th-secondary transition-colors"
+            >
+              Skip &mdash; you can change this later in settings.
+            </button>
           </div>
         </div>,
         document.body
@@ -1492,7 +1639,7 @@ export const SecondBrainView: React.FC = () => {
                       {isLast
                         ? <span>{part}</span>
                         : ancestor
-                          ? <Link to={`/lab/second-brain/${ancestor.id}`} className="hover:text-violet-400 transition-colors" onClick={() => {
+                          ? <Link to={secondBrainPath(ancestor.id)} className="hover:text-violet-400 transition-colors" onClick={() => {
                             scheduleReset(ancestor);
                           }}>{part}</Link>
                           : <span>{part}</span>
@@ -1509,7 +1656,7 @@ export const SecondBrainView: React.FC = () => {
                 {mentions.map((m) => (
                   <Link
                     key={m.id}
-                    to={`/lab/second-brain/${m.id}`}
+                    to={secondBrainPath(m.id)}
                     onClick={() => handleConnectionClick(m)}
                     onMouseEnter={(e) => showMentionPreview(m, e)}
                     onMouseLeave={hideMentionPreview}
@@ -1527,6 +1674,13 @@ export const SecondBrainView: React.FC = () => {
               <span>links {'\u2193'} {outgoingRefCount}</span>
               <span>&middot;</span>
               <span>mentioned {'\u2191'} {mentions.length}</span>
+              <button
+                onClick={() => setShowCopyModal(true)}
+                className="ml-auto text-th-tertiary hover:text-violet-400 transition-colors"
+                title="Copy for context"
+              >
+                <ClipboardIcon size={13} />
+              </button>
             </div>
 
             {/* Body + Interactions box */}
@@ -1562,7 +1716,7 @@ export const SecondBrainView: React.FC = () => {
                         return (
                           <div key={conn.note.id}>
                             <Link
-                              to={`/lab/second-brain/${conn.note.id}`}
+                              to={secondBrainPath(conn.note.id)}
                               onClick={() => handleConnectionClick(conn.note)}
                               className="wiki-sidelink inline transition-colors no-underline border-b border-solid cursor-pointer"
                               style={{ '--wl-color': v ? 'var(--wiki-link-visited)' : 'var(--cat-fieldnotes-accent)' } as React.CSSProperties}
@@ -1663,7 +1817,7 @@ export const SecondBrainView: React.FC = () => {
                             homonymParents={homonymParents}
                             onHomonymNavigate={(homonym) => {
                               scheduleExtend(homonym);
-                              navigate(`/lab/second-brain/${homonym.id}`);
+                              navigate(secondBrainPath(homonym.id));
                             }}
                           />
                         </div>
@@ -1698,7 +1852,7 @@ export const SecondBrainView: React.FC = () => {
                     homonymParents={homonymParents}
                     onHomonymNavigate={(homonym) => {
                       scheduleExtend(homonym);
-                      navigate(`/lab/second-brain/${homonym.id}`);
+                      navigate(secondBrainPath(homonym.id));
                     }}
                   />
                 </div>
@@ -1804,7 +1958,7 @@ export const SecondBrainView: React.FC = () => {
                     const candidates = allFieldNotes.filter(n => n.id !== activePost?.id);
                     if (candidates.length === 0) return;
                     const random = candidates[Math.floor(Math.random() * candidates.length)];
-                    navigate(`/lab/second-brain/${random.id}`);
+                    navigate(secondBrainPath(random.id));
                   }}
                   className="w-6 h-6 flex items-center justify-center text-violet-400/60 hover:text-violet-400 transition-colors"
                   title="Random note"
@@ -1851,7 +2005,7 @@ export const SecondBrainView: React.FC = () => {
           {showDetail && createPortal(
             <button
               onClick={() => {
-                navigate('/lab/second-brain');
+                navigate(secondBrainPath());
                 setTimeout(() => {
                   toolbarInputRef.current?.scrollIntoView({ block: 'nearest' });
                   toolbarInputRef.current?.focus();
@@ -1882,6 +2036,21 @@ export const SecondBrainView: React.FC = () => {
 
 
 
+          {/* Copy export modal */}
+          {showCopyModal && activePost && (
+            <CopyExportModal
+              note={activePost}
+              neighborhood={neighborhood}
+              connections={connections}
+              backlinks={backlinks}
+              connectionsMap={connectionsMap}
+              neighborhoodMap={neighborhoodMap}
+              noteById={noteById}
+              totalNotes={allFieldNotes.length}
+              onClose={() => setShowCopyModal(false)}
+            />
+          )}
+
           {/* New note modal — portaled, works from any view (menu or detail) */}
           {showNewNote && isLocalhost && createPortal(
             <div
@@ -1896,7 +2065,7 @@ export const SecondBrainView: React.FC = () => {
                     _pendingEditUid = uid;
                     setGlobalEditMode(true);
                     await refreshBrainIndex(uid);
-                    navigate(`/lab/second-brain/${uid}`);
+                    navigate(secondBrainPath(uid));
                   }}
                   onCancel={() => setShowNewNote(false)}
                 />

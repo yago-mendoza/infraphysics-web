@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { secondBrainPath } from '../../config/categories';
 import { useHub } from '../../contexts/SecondBrainHubContext';
 import {
   ChevronIcon,
@@ -161,7 +162,7 @@ const TreeNodeItem: React.FC<{
             // Concept + folder: label links to detail, scope icon on hover
             <>
               <Link
-                to={`/lab/second-brain/${node.concept.id}`}
+                to={secondBrainPath(node.concept.id)}
                 onClick={onConceptClick}
                 className="text-[11px] text-th-secondary hover:text-violet-400 transition-colors truncate"
               >
@@ -176,7 +177,7 @@ const TreeNodeItem: React.FC<{
             // Pure concept leaf: link to detail
             <>
               <Link
-                to={`/lab/second-brain/${node.concept.id}`}
+                to={secondBrainPath(node.concept.id)}
                 onClick={onConceptClick}
                 className="text-[11px] text-th-secondary hover:text-violet-400 transition-colors truncate"
               >
@@ -759,7 +760,7 @@ export const SecondBrainSidebar: React.FC = () => {
             {/* Header with close */}
             <div className="px-3 py-3 border-b border-th-hub-border flex-shrink-0">
               <div className="flex items-center justify-between">
-                <Link to="/lab/second-brain" className="group" onClick={() => setMobileOpen(false)}>
+                <Link to={secondBrainPath()} className="group" onClick={() => setMobileOpen(false)}>
                   <span className="text-[11px] lowercase tracking-wide font-semibold text-violet-400 group-hover:text-violet-300 transition-colors">second brain</span>{' '}
                   <span className="text-[11px] lowercase tracking-wide text-th-muted font-normal">manager</span>
                 </Link>
@@ -807,7 +808,7 @@ export const SecondBrainSidebar: React.FC = () => {
         {/* Header — h-7 first row aligns with the editing upbar */}
         <div className="border-b border-th-hub-border flex-shrink-0">
           <div className="px-3 h-7 flex items-center justify-between">
-            <Link to="/lab/second-brain" className="group">
+            <Link to={secondBrainPath()} className="group">
               <span className="text-[11px] lowercase tracking-wide font-semibold text-violet-400 group-hover:text-violet-300 transition-colors">second brain</span>{' '}
               <span className="text-[11px] lowercase tracking-wide text-th-muted font-normal">manager</span>
             </Link>

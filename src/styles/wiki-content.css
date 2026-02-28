@@ -78,3 +78,16 @@
 .topology-flash {
   animation: topology-flash 1.2s ease-out;
 }
+
+/* Mobile horizontal scroll rows — fade edges, hidden scrollbar */
+@media (max-width: 767px) {
+  .sb-filter-row,
+  .sb-guide-chips {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .sb-filter-row::-webkit-scrollbar,
+  .sb-guide-chips::-webkit-scrollbar {
+    display: none;
+  }
+}
