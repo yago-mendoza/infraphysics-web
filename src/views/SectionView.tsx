@@ -8,6 +8,7 @@ import { calculateReadingTime, stripHtml, accentChipStyle } from '../lib';
 import { getSearchExcerpt, countMatches } from '../lib/search';
 import { CATEGORY_CONFIG, STATUS_CONFIG, catAccentVar, type CategoryDisplayConfig } from '../config/categories';
 import { useTheme } from '../contexts/ThemeContext';
+import { useArticleStats } from '../hooks/useArticleStats';
 import {
   SearchIcon,
   FilterIcon,
@@ -58,6 +59,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
   }, [category]);
 
   const sectionPosts = useMemo(() => posts.filter(p => p.category === category), [category]);
+  const stats = useArticleStats(sectionPosts);
 
   const allTopics = useMemo(() => [...new Set(sectionPosts.flatMap(p => p.tags || []))].sort(), [sectionPosts]);
   const allTechs = useMemo(() => [...new Set(sectionPosts.flatMap(p => p.technologies || []))].sort(), [sectionPosts]);
@@ -150,9 +152,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
 
   const categoryInfo = CATEGORY_CONFIG[category] ?? {
     title: category, description: '', icon: null,
-    color: 'gray-400', colorClass: 'text-th-secondary', bgClass: 'bg-th-surface',
-    borderClass: 'border-th-border', accent: '#9ca3af', accentVar: '#9ca3af',
-    darkBadge: 'text-th-secondary border-th-border bg-th-surface',
+    accentVar: '#9ca3af',
     backLabel: 'RETURN', relatedLabel: 'Related', relatedCategory: '',
   } satisfies CategoryDisplayConfig;
   const accent = catAccentVar(category);
@@ -173,7 +173,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
       <header className="mb-8 pb-6 border-b border-th-border">
         <div className="flex flex-col md:flex-row md:items-baseline md:justify-between gap-2 md:gap-4 mb-3">
           <h1
-            className={`text-2xl md:text-4xl font-bold tracking-tight title-l-frame uppercase ${categoryInfo.colorClass}`}
+            className="text-2xl md:text-4xl font-bold tracking-tight title-l-frame uppercase"
             style={category !== 'projects' ? { fontFamily: "'Roboto Slab', Georgia, serif", fontWeight: 700, textTransform: 'none' as const } : undefined}
           >
             <span className="text-th-heading">{categoryInfo.title}</span>
@@ -310,7 +310,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
       </div>
 
       {/* Delegated renderer */}
-      <Renderer posts={visiblePosts} query={query} getExcerpt={getExcerpt} getMatchCount={getMatchCount} accent={accent} />
+      <Renderer posts={visiblePosts} query={query} getExcerpt={getExcerpt} getMatchCount={getMatchCount} accent={accent} stats={stats} />
 
       {/* Infinite scroll sentinel */}
       {hasMore && (

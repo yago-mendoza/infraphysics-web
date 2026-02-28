@@ -3,11 +3,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { formatDate } from '../../lib/date';
+import { EyeIcon, HeartIcon } from '../icons';
 import { postPath } from '../../config/categories';
 import { EmptyState, SearchResultsList } from './SearchResultsList';
 import type { SectionRendererProps } from './index';
 
-export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, getMatchCount, accent }) => {
+export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, getMatchCount, accent, stats }) => {
   if (posts.length === 0) return <EmptyState query={query} />;
   if (query) return <SearchResultsList posts={posts} query={query} getMatchCount={getMatchCount} accent={accent} tagAccent={accent} />;
 
@@ -37,7 +38,19 @@ export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, 
 
             {/* Content */}
             <div className="p-4 space-y-2.5">
-              <span className="text-[11px] text-th-tertiary" style={{ fontFamily: "'Roboto Slab', Georgia, serif" }}>{formatDate(post.date)}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-th-tertiary" style={{ fontFamily: "'Roboto Slab', Georgia, serif" }}>{formatDate(post.date)}</span>
+                {(() => {
+                  const s = stats?.[postPath(post.category, post.id)];
+                  if (!s) return null;
+                  return (
+                    <>
+                      {s.views > 0 && <span className="inline-flex items-center gap-0.5 text-[11px] text-th-tertiary"><EyeIcon size={11} /> {s.views}</span>}
+                      {s.hearts > 0 && <span className="inline-flex items-center gap-0.5 text-[11px] text-th-tertiary"><HeartIcon size={11} /> {s.hearts}</span>}
+                    </>
+                  );
+                })()}
+              </div>
 
               <h3 className="font-bold text-base group-hover-accent transition-colors leading-tight line-clamp-2" style={{ '--ac-color': accent, color: accent, fontFamily: "'Roboto Slab', Georgia, serif", fontWeight: 600 } as React.CSSProperties}>
                 {post.displayTitle || post.title}

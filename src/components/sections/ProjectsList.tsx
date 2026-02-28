@@ -4,12 +4,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { formatDateTimeline } from '../../lib/date';
 import { Highlight, StatusBadge } from '../ui';
-import { GitHubIcon, FileTextIcon, PlayCircleIcon } from '../icons';
+import { GitHubIcon, FileTextIcon, PlayCircleIcon, EyeIcon, HeartIcon } from '../icons';
 import { postPath, STATUS_CONFIG } from '../../config/categories';
+import type { ArticleStats } from '../../hooks/useArticleStats';
 import { EmptyState } from './SearchResultsList';
 import type { SectionRendererProps } from './index';
 
-export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, getMatchCount, accent }) => {
+export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, getMatchCount, accent, stats }) => {
   if (posts.length === 0) return <EmptyState query={query} />;
 
   return (
@@ -50,10 +51,20 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
 
                 {/* Text */}
                 <div className="flex-grow min-w-0">
-                  {/* Status + date */}
+                  {/* Status + date + stats */}
                   <div className="flex flex-wrap items-center gap-3 mb-3">
                     {post.status && <StatusBadge status={post.status} label={statusLabel || undefined} />}
                     <span className="text-xs text-th-tertiary font-mono">{formatDateTimeline(post.date)}</span>
+                    {(() => {
+                      const s = stats?.[postPath(post.category, post.id)];
+                      if (!s) return null;
+                      return (
+                        <span className="inline-flex items-center gap-3 text-xs text-th-tertiary font-mono">
+                          {s.views > 0 && <span className="inline-flex items-center gap-1"><EyeIcon size={12} /> {s.views}</span>}
+                          {s.hearts > 0 && <span className="inline-flex items-center gap-1"><HeartIcon size={12} /> {s.hearts}</span>}
+                        </span>
+                      );
+                    })()}
                   </div>
 
                   {/* Title */}

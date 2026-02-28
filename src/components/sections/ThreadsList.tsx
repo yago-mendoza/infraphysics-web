@@ -4,12 +4,12 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { formatDate } from '../../lib/date';
 import { calculateReadingTime } from '../../lib/content';
-import { ClockIcon } from '../icons';
+import { ClockIcon, EyeIcon, HeartIcon } from '../icons';
 import { postPath } from '../../config/categories';
 import { EmptyState, SearchResultsList } from './SearchResultsList';
 import type { SectionRendererProps } from './index';
 
-export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, getMatchCount, accent }) => {
+export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, getMatchCount, accent, stats }) => {
   if (posts.length === 0) return <EmptyState query={query} />;
   if (query) return <SearchResultsList posts={posts} query={query} getMatchCount={getMatchCount} accent={accent} tagAccent={accent} />;
 
@@ -31,6 +31,16 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
                     <ClockIcon /> {readTime} MIN READ
                   </span>
                   <span className="text-xs text-th-tertiary" style={{ fontFamily: "'Roboto Slab', Georgia, serif" }}>{formatDate(post.date)}</span>
+                  {(() => {
+                    const s = stats?.[postPath(post.category, post.id)];
+                    if (!s) return null;
+                    return (
+                      <>
+                        {s.views > 0 && <span className="inline-flex items-center gap-1 text-xs text-th-tertiary"><EyeIcon size={12} /> {s.views}</span>}
+                        {s.hearts > 0 && <span className="inline-flex items-center gap-1 text-xs text-th-tertiary"><HeartIcon size={12} /> {s.hearts}</span>}
+                      </>
+                    );
+                  })()}
                 </div>
 
                 {/* Title + Description — both clickable */}

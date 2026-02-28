@@ -1,6 +1,7 @@
 // Section renderer barrel exports + shared types
 
 import { Post } from '../../types';
+import type { ArticleStats } from '../../hooks/useArticleStats';
 
 export interface SectionRendererProps {
   posts: Post[];
@@ -8,6 +9,7 @@ export interface SectionRendererProps {
   getExcerpt: (content: string, query: string) => string | null;
   getMatchCount: (content: string, query: string) => number;
   accent: string;
+  stats?: Record<string, ArticleStats>;
 }
 
 export { Bits2BricksGrid } from './Bits2BricksGrid';
