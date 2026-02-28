@@ -16,7 +16,7 @@ import {
   SearchIcon,
 } from '../icons';
 import { CATEGORY_ACCENTS } from '../../constants/theme';
-import { catAccentVar } from '../../config/categories';
+import { catAccentVar, secondBrainPath } from '../../config/categories';
 
 export const Sidebar: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch }) => {
   const location = useLocation();
@@ -87,7 +87,7 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch 
         {sectionLabel('lab')}
         <nav className="flex flex-col gap-1">
           {navLink('/lab/projects', <GearIcon />, 'projects', catAccentVar('projects'))}
-          {navLink('/lab/second-brain', <DiamondIcon />, <span>2<sup>nd</sup> brain</span>, CATEGORY_ACCENTS.secondBrain)}
+          {navLink(secondBrainPath(), <DiamondIcon />, <span>2<sup>nd</sup> brain</span>, CATEGORY_ACCENTS.secondBrain)}
         </nav>
 
         {/* BLOG */}

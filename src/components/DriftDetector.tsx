@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { noteLabel, type FieldNoteMeta } from '../types';
+import { secondBrainPath } from '../config/categories';
 import type { DriftEntry } from '../hooks/useGraphRelevance';
 
 interface Props {
@@ -32,7 +33,7 @@ export const DriftDetector: React.FC<Props> = ({ entries, noteById, onNoteClick,
           return (
             <div key={uid}>
               <Link
-                to={`/lab/second-brain/${uid}`}
+                to={secondBrainPath(uid)}
                 onClick={() => onNoteClick(note)}
                 className="wiki-sidelink inline transition-colors no-underline border-b border-solid cursor-pointer"
                 style={{ '--wl-color': visited ? 'var(--wiki-link-visited)' : 'var(--cat-fieldnotes-accent)' } as React.CSSProperties}

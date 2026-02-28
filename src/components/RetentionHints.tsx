@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
+import { secondBrainPath } from '../config/categories';
 
 const FADE_MS = 1200;
 const SHOW_MS = 7000;
@@ -42,7 +43,7 @@ const hints: HintDef[] = [
     shouldShow: (pathname) => {
       if (lsInt('infraphysics:wikilink-clicks') >= 2) return false;
       // Only on article pages
-      return /^\/(lab|blog)\/[^/]+\/[^/]+/.test(pathname) && !pathname.startsWith('/lab/second-brain');
+      return /^\/(lab|blog)\/[^/]+\/[^/]+/.test(pathname) && !pathname.startsWith(secondBrainPath());
     },
     setup: (show) => {
       // Wait for article to render, then check for wiki-links
@@ -59,7 +60,7 @@ const hints: HintDef[] = [
     text: 'Liked this? There\'s more — threads, tutorials, and 200+ connected notes.',
     shouldShow: (pathname) => {
       if (!/^\/(lab|blog)\/[^/]+\/[^/]+/.test(pathname)) return false;
-      if (pathname.startsWith('/lab/second-brain')) return false;
+      if (pathname.startsWith(secondBrainPath())) return false;
       // Check unique categories in history
       try {
         const raw = ls('infraphysics:article-history');

@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useMemo, useState, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FieldNoteMeta } from '../types';
 import { resolveWikiLinks } from '../lib/wikilinks';
+import { secondBrainPath } from '../config/categories';
 import { WikiLinkPreview } from './WikiLinkPreview';
 
 interface PreviewState {
@@ -68,7 +69,7 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
       const noteId = m[1];
       if (!seen.has(noteId) && isVisited(noteId)) {
         seen.add(noteId);
-        selectors.push(`a.wiki-ref-resolved[href="/lab/second-brain/${noteId}"]`);
+        selectors.push(`a.wiki-ref-resolved[href="${secondBrainPath(noteId)}"]`);
       }
     }
     if (selectors.length === 0) return '';

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { posts } from '../data/data';
-import { postPath, sectionPath } from '../config/categories';
+import { postPath, sectionPath, secondBrainPath } from '../config/categories';
 import { initBrainIndex, type BrainIndex } from '../lib/brainIndex';
 import { useArticleContext } from '../contexts/ArticleContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -186,7 +186,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
       { label: 'View Threads', icon: <ThreadIcon />, path: sectionPath('threads'), hideWhen: () => currentCategory === 'threads' },
       { label: 'View Bits2Bricks', icon: <GradCapIcon />, path: sectionPath('bits2bricks'), hideWhen: () => currentCategory === 'bits2bricks' },
       { label: 'Open Source / GitHub', icon: <GitHubIcon size={22} />, path: 'https://github.com/infraphysics', external: true },
-      { label: 'Second Brain', icon: <DiamondIcon />, path: '/lab/second-brain' },
+      { label: 'Second Brain', icon: <DiamondIcon />, path: secondBrainPath() },
       { label: 'Contact', icon: <MailIcon />, path: '/contact' },
     ];
 
@@ -303,7 +303,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
     });
   }, [query, currentCategory, navigate, executeAndClose]);
 
-  // Second Brain concept matches — only exact final-segment matches
+  // Second Brain concept matches — substring matching (name, last segment, aliases)
   const conceptMatches = useMemo<QuickAction[]>(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
@@ -313,9 +313,8 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
         const name = (note.name || '').toLowerCase();
         const addr = (note.address || '').toLowerCase();
         const aliases = (note.aliases || []).map(a => a.toLowerCase());
-        // Match name, last address segment, or any alias
         const lastSeg = addr.includes('//') ? addr.split('//').pop()! : addr;
-        return name === q || lastSeg === q || aliases.includes(q);
+        return name.includes(q) || lastSeg.includes(q) || aliases.some(a => a.includes(q));
       })
       .slice(0, 5)
       .map(note => ({
@@ -323,7 +322,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
         icon: <DiamondIcon />,
         action: () => {
           try { localStorage.setItem('infraphysics:brain-result-clicked', '1'); } catch {}
-          executeAndClose(() => navigate(`/lab/second-brain/${note.id}`));
+          executeAndClose(() => navigate(secondBrainPath(note.id)));
         },
         group: 'concept' as const,
       }));

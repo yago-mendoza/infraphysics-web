@@ -7,6 +7,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { noteLabel, type FieldNoteMeta } from '../types';
 import type { Neighborhood } from '../lib/brainIndex';
+import { secondBrainPath } from '../config/categories';
 import { useTheme } from '../contexts/ThemeContext';
 
 export type Zone = 'parent' | 'siblings' | 'children' | null;
@@ -465,7 +466,7 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
                 <circle
                   cx={parentPos.x} cy={parentPos.y} r={HIT_R}
                   fill="transparent" style={{ cursor: 'pointer' }}
-                  onClick={() => { onNoteClick(parent!); navigate(`/lab/second-brain/${parent!.id}`); }}
+                  onClick={() => { onNoteClick(parent!); navigate(secondBrainPath(parent!.id)); }}
                   onMouseEnter={() => { setHoveredZone('parent'); showTooltip(parent!, parentPos.x, parentPos.y); }}
                   onMouseLeave={() => { setHoveredZone(null); hideTooltip(); }}
                 />
@@ -515,7 +516,7 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
                 <circle
                   cx={pos.x} cy={pos.y} r={HIT_R}
                   fill="transparent" style={{ cursor: isCur ? 'default' : 'pointer' }}
-                  onClick={() => { if (!isCur) { onNoteClick(pos.entry.note); navigate(`/lab/second-brain/${pos.entry.note.id}`); } }}
+                  onClick={() => { if (!isCur) { onNoteClick(pos.entry.note); navigate(secondBrainPath(pos.entry.note.id)); } }}
                   onMouseEnter={() => { if (!isCur) setHoveredZone('siblings'); showTooltip(pos.entry.note, pos.x, pos.y); }}
                   onMouseLeave={() => { setHoveredZone(null); hideTooltip(); }}
                 />
@@ -539,7 +540,7 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
                 <circle
                   cx={pos.x} cy={pos.y} r={HIT_R}
                   fill="transparent" style={{ cursor: 'pointer' }}
-                  onClick={() => { onNoteClick(children[i]); navigate(`/lab/second-brain/${children[i].id}`); }}
+                  onClick={() => { onNoteClick(children[i]); navigate(secondBrainPath(children[i].id)); }}
                   onMouseEnter={() => { setHoveredZone('children'); showTooltip(children[i], pos.x, pos.y); }}
                   onMouseLeave={() => { setHoveredZone(null); hideTooltip(); }}
                 />

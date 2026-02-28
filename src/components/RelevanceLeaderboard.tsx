@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { noteLabel, type FieldNoteMeta } from '../types';
+import { secondBrainPath } from '../config/categories';
 
 interface RelevanceEntry {
   uid: string;
@@ -130,7 +131,7 @@ export const RelevanceLeaderboard: React.FC<Props> = (props) => {
           return (
             <Link
               key={note.id}
-              to={`/lab/second-brain/${note.id}`}
+              to={secondBrainPath(note.id)}
               onClick={() => onNoteClick(note)}
               className="wiki-siderow group relative flex items-center h-6 rounded-sm no-underline transition-colors hover:bg-white/5 overflow-visible"
               title={note.address || noteLabel(note)}
@@ -176,7 +177,7 @@ export const RelevanceLeaderboard: React.FC<Props> = (props) => {
         return (
           <Link
             key={uid}
-            to={`/lab/second-brain/${uid}`}
+            to={secondBrainPath(uid)}
             onClick={() => onNoteClick(note)}
             className="wiki-siderow group relative flex items-center h-6 rounded-sm no-underline transition-colors hover:bg-white/5 overflow-visible"
             title={note.address || noteLabel(note)}

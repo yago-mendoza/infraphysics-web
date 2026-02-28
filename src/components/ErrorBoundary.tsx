@@ -1,4 +1,5 @@
 import React from 'react';
+import { secondBrainPath } from '../config/categories';
 
 interface Props {
   children: React.ReactNode;
@@ -29,7 +30,7 @@ export class ErrorBoundary extends (React.Component as new (props: Props) => {
     if (!this.state.hasError) return this.props.children;
 
     const handleReset = () => this.setState({ hasError: false, error: null });
-    const isSecondBrain = window.location.pathname.startsWith('/lab/second-brain');
+    const isSecondBrain = window.location.pathname.startsWith(secondBrainPath());
     const accent = isSecondBrain ? 'var(--cat-fieldnotes-accent)' : 'var(--text-secondary)';
 
     return (

@@ -7,26 +7,11 @@ export interface CategoryDisplayConfig {
   title: string;
   description: React.ReactNode;
   icon: React.ReactNode;
-  color: string;
-  colorClass: string;
-  bgClass: string;
-  borderClass: string;
-  accent: string;
   accentVar: string;          // CSS var reference, e.g. 'var(--cat-projects-accent)'
-  darkBadge: string;
   backLabel: string;
   relatedLabel: string;
   relatedCategory: string; // Target category for "Related" section
   breadcrumbLabel?: string;
-}
-
-function categoryColors(color: string) {
-  return {
-    colorClass: `text-${color}`,
-    bgClass: `bg-${color}/10`,
-    borderClass: `border-${color}/20`,
-    darkBadge: `text-${color} border-${color}/30 bg-${color}/10`,
-  };
 }
 
 export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
@@ -34,39 +19,30 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
     title: 'Projects',
     description: <>Things I build. Design decisions, dead ends and what stuck as it actually happened.</>,
     icon: <GearIcon />,
-    color: 'lime-400',
-    accent: '#a3e635',
     accentVar: 'var(--cat-projects-accent)',
     backLabel: 'RETURN_TO_ARCHIVES',
     relatedLabel: 'Related Lessons',
     relatedCategory: 'bits2bricks',
-    ...categoryColors('lime-400'),
   },
   threads: {
     title: 'Threads',
     description: <>Essays, takes, and personal rants about ideas that won't sit still. When something deserves more depth than an essay can give it, check bits2bricks.</>,
     icon: <ThreadIcon />,
-    color: 'rose-400',
-    accent: '#fb7185',
     accentVar: 'var(--cat-threads-accent)',
     backLabel: 'RETURN_TO_THREADS',
     relatedLabel: 'Related Threads',
     relatedCategory: 'threads',
     breadcrumbLabel: 'threads',
-    ...categoryColors('rose-400'),
   },
   bits2bricks: {
     title: 'Bits2Bricks',
     description: "Subjects I needed to understand, explained the way I wish someone had explained them to me. One topic at a time, taken apart until it clicks.",
     icon: <GradCapIcon />,
-    color: 'blue-400',
-    accent: '#3B82F6',
     accentVar: 'var(--cat-bits2bricks-accent)',
     backLabel: 'RETURN_TO_BITS2BRICKS',
     relatedLabel: 'Related Projects',
     relatedCategory: 'projects',
     breadcrumbLabel: 'bits2bricks',
-    ...categoryColors('blue-400'),
   },
 };
 
@@ -90,6 +66,10 @@ export const sectionPath = (category: string): string =>
 /** CSS var reference for a category accent. Falls back to neutral gray. */
 export const catAccentVar = (cat: string): string =>
   CATEGORY_CONFIG[cat]?.accentVar ?? '#9ca3af';
+
+/** Path to a Second Brain page, or the index if no uid provided */
+export const secondBrainPath = (uid?: string): string =>
+  uid ? `/lab/second-brain/${uid}` : '/lab/second-brain';
 
 /* ── Status metadata (shared across SectionView filters + ArticlePostView header) ── */
 

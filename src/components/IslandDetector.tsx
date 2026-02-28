@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { useGraphRelevance, type IslandsData } from '../hooks/useGraphRelevance';
 import { useHub } from '../contexts/SecondBrainHubContext';
 import { noteLabel } from '../types';
+import { secondBrainPath } from '../config/categories';
 import { ChevronIcon } from './icons';
 
 const MEMBER_CAP = 10;
@@ -266,7 +267,7 @@ const BridgeRow: React.FC<{
         </button>
         <span className="text-amber-400/70">⚡</span>
         <Link
-          to={`/lab/second-brain/${cut.uid}`}
+          to={secondBrainPath(cut.uid)}
           className="text-th-secondary hover:text-violet-400 transition-colors truncate"
         >
           {label}
@@ -318,7 +319,7 @@ const MemberList: React.FC<{
         return (
           <Link
             key={uid}
-            to={`/lab/second-brain/${uid}`}
+            to={secondBrainPath(uid)}
             className={`text-[10px] transition-colors hover:text-violet-400 ${
               v ? 'text-blue-400/70' : 'text-violet-400/70'
             }`}

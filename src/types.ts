@@ -1,6 +1,8 @@
+import { STATUS_CONFIG } from './config/categories';
+
 export type Category = 'projects' | 'threads' | 'bits2bricks' | 'fieldnotes';
 
-export type PostStatus = 'ongoing' | 'implemented' | 'active' | 'in-progress' | 'completed' | 'archived';
+export type PostStatus = keyof typeof STATUS_CONFIG;
 
 /* ── Base fields shared by every content type ── */
 

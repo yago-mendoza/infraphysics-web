@@ -6,7 +6,7 @@ import { posts } from '../data/data';
 import { Post } from '../types';
 import { initBrainIndex, type BrainIndex } from '../lib/brainIndex';
 import { ArrowRightIcon, SearchIcon } from '../components/icons';
-import { CATEGORY_CONFIG, catAccentVar, postPath, sectionPath } from '../config/categories';
+import { CATEGORY_CONFIG, catAccentVar, postPath, sectionPath, secondBrainPath } from '../config/categories';
 import { getSearchExcerpt, countMatches } from '../lib';
 import { Highlight } from '../components/ui';
 import { HomeTour } from '../components/HomeTour';
@@ -300,7 +300,7 @@ export const HomeView: React.FC = () => {
       {/* Second Brain */}
       <section className="pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
         <Link
-          to="/lab/second-brain"
+          to={secondBrainPath()}
           className="group block rounded-lg border border-violet-500/20 bg-violet-500/[0.03] p-6 md:p-8 hover:border-violet-500/40 hover:bg-violet-500/[0.06] transition-all overflow-hidden"
         >
           <div className="flex items-start justify-between gap-8">

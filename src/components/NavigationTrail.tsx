@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { secondBrainPath } from '../config/categories';
 import type { TrailItem } from '../hooks/useNavigationTrail';
 
 interface NavigationTrailProps {
@@ -24,7 +25,7 @@ export const NavigationTrail: React.FC<NavigationTrailProps> = ({
       {/* "all concepts" — link when trail has items, plain span on list view */}
       {hasTrail ? (
         <Link
-          to="/lab/second-brain"
+          to={secondBrainPath()}
           onClick={onAllConceptsClick}
           className="text-violet-400 hover:text-violet-300 transition-colors"
         >
@@ -52,7 +53,7 @@ export const NavigationTrail: React.FC<NavigationTrailProps> = ({
               <span className="text-violet-400">{item.label}</span>
             ) : (
               <Link
-                to={`/lab/second-brain/${item.id}`}
+                to={secondBrainPath(item.id)}
                 onClick={() => onItemClick(i)}
                 className="text-th-tertiary hover:text-violet-400 transition-colors"
               >

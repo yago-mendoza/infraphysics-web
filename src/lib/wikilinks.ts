@@ -2,6 +2,7 @@
 
 import { FieldNoteMeta } from '../types';
 import { WIKI_REF_ICON_HTML } from './icons';
+import { secondBrainPath } from '../config/categories';
 
 export function resolveWikiLinks(
   html: string,
@@ -21,10 +22,10 @@ export function resolveWikiLinks(
         const title = encodeURIComponent(target.name || target.displayTitle || displayText);
         const desc = encodeURIComponent(target.description || '');
         const address = encodeURIComponent(target.address || '');
-        return `<a class="wiki-ref wiki-ref-resolved" href="/lab/second-brain/${target.id}" data-uid="${uid}" data-title="${title}" data-description="${desc}" data-address="${address}">${displayText}${WIKI_REF_ICON_HTML}</a>`;
+        return `<a class="wiki-ref wiki-ref-resolved" href="${secondBrainPath(target.id)}" data-uid="${uid}" data-title="${title}" data-description="${desc}" data-address="${address}">${displayText}${WIKI_REF_ICON_HTML}</a>`;
       } else {
         unresolvedRefs.push(uid);
-        return `<span class="wiki-ref wiki-ref-unresolved" data-uid="${uid}">${displayText}<sup class="wiki-ref-icon">?</sup></span>`;
+        return `<span class="wiki-ref wiki-ref-unresolved" data-uid="${uid}" title="Note does not exist">${displayText}<sup class="wiki-ref-icon">?</sup></span>`;
       }
     }
   );

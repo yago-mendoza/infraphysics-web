@@ -19,13 +19,13 @@ import {
   SearchIcon,
   GitHubIcon,
 } from '../icons';
-import { catAccentVar } from '../../config/categories';
+import { catAccentVar, secondBrainPath } from '../../config/categories';
 import { CATEGORY_ACCENTS } from '../../constants/theme';
 
 
 export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch }) => {
   const location = useLocation();
-  const showGitHub = location.pathname.startsWith('/lab/projects') || location.pathname.startsWith('/lab/second-brain') || location.pathname === '/about';
+  const showGitHub = location.pathname.startsWith('/lab/projects') || location.pathname.startsWith(secondBrainPath()) || location.pathname === '/about';
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);   // controls DOM presence
   const [visible, setVisible] = useState(false);    // controls CSS transition state
@@ -151,7 +151,7 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearc
               {/* LAB */}
               <SectionLabel>lab</SectionLabel>
               <NavLink to="/lab/projects" basePath="/lab/projects" accent={catAccentVar('projects')} icon={<GearIcon />}>Projects</NavLink>
-              <NavLink to="/lab/second-brain" accent={CATEGORY_ACCENTS.secondBrain} icon={<DiamondIcon />}>2<sup>nd</sup> brain</NavLink>
+              <NavLink to={secondBrainPath()} accent={CATEGORY_ACCENTS.secondBrain} icon={<DiamondIcon />}>2<sup>nd</sup> brain</NavLink>
 
               {/* BLOG */}
               <SectionLabel>blog</SectionLabel>
