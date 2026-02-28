@@ -6,18 +6,25 @@ import { load as loadYaml } from 'js-yaml';
 import { fileURLToPath } from 'url';
 import { createHash } from 'crypto';
 import { createHighlighter } from 'shiki';
-import { validateFieldnotes } from './validate-fieldnotes.js';
+import { validateFieldnotes } from '../src/lib/content/validate.js';
+import {
+  compileMarkdown as _compileMarkdown,
+  processAllLinks as _processAllLinks,
+  processOutsideCode,
+  LANG_THEMES,
+  DEFAULT_THEMES,
+} from '../src/lib/content/compile.js';
 import { resolveIssues } from './resolve-issues.js';
 import compilerConfig from './compiler.config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Custom renderer for images with positioning (center/full only - left/right handled by preprocessor)
+// ── marked configuration (renderer stays here — it uses compilerConfig) ──
+
 const customRenderer = new Renderer();
 const { titlePattern, classMap } = compilerConfig.imagePositions;
 
-// Override blockquote renderer — > produces small text, not blockquotes
 customRenderer.blockquote = function(token) {
   const body = this.parser.parse(token.tokens);
   return `<div class="small-text">${body}</div>\n`;
@@ -39,7 +46,6 @@ customRenderer.image = function({ href, title, text }) {
     }
   }
 
-  // Figcaption support: ![alt|Caption text](url "position")
   let alt = text || '';
   let caption = '';
   if (alt.includes('|')) {
@@ -67,549 +73,8 @@ marked.setOptions({
   ...compilerConfig.marked,
 });
 
-// Strip all inline formatting from headings in parsed HTML.
-// Headings must be plain text — no <code>, <em>, <strong>, <span>, etc.
-function stripHeadingFormatting(html) {
-  return html.replace(/<(h[1-4])(\s[^>]*)?>(.+?)<\/\1>/gi, (match, tag, attrs, inner) => {
-    const plain = inner.replace(/<[^>]*>/g, '');
-    return `<${tag}${attrs || ''}>${plain}</${tag}>`;
-  });
-}
+// ── Shiki highlighter ──
 
-// Auto-number <h1> headings sequentially (1. Title, 2. Title, ...)
-function numberH1Headings(html) {
-  let counter = 0;
-  return html.replace(/<h1(\s[^>]*)?>(.+?)<\/h1>/gi, (match, attrs, inner) => {
-    counter++;
-    return `<h1${attrs || ''}>${counter}. ${inner}</h1>`;
-  });
-}
-
-// Apply pre-processors (before marked.parse, on raw markdown)
-// Heading lines (# …) are protected so no inline effect touches them.
-function applyPreProcessors(markdown) {
-  const headings = [];
-  let result = markdown.replace(/^(#{1,4}\s+.*)$/gm, (line) => {
-    headings.push(line);
-    return `%%HEADING_${headings.length - 1}%%`;
-  });
-  for (const rule of compilerConfig.preProcessors) {
-    result = result.replace(rule.pattern, rule.replace);
-  }
-  result = result.replace(/%%HEADING_(\d+)%%/g, (_, idx) => headings[parseInt(idx)]);
-  return result;
-}
-
-// ── Backtick protection ──
-// Shields inline code and fenced code blocks from pre-processors
-
-function protectBackticks(markdown) {
-  const placeholders = [];
-
-  // 1. Fenced code blocks (``` ... ```)
-  let result = markdown.replace(/```[\s\S]*?```/g, (match) => {
-    placeholders.push(match);
-    return `%%CBLK_${placeholders.length - 1}%%`;
-  });
-
-  // 2. Inline code — double backticks then single
-  result = result.replace(/``[^`]+``|`[^`\n]+`/g, (match) => {
-    placeholders.push(match);
-    return `%%CBLK_${placeholders.length - 1}%%`;
-  });
-
-  return { text: result, placeholders };
-}
-
-function restoreBackticks(text, placeholders) {
-  return text.replace(/%%CBLK_(\d+)%%/g, (_, idx) => placeholders[parseInt(idx)]);
-}
-
-// ── Copy button icon ──
-
-const COPY_ICON = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
-const COPY_BTN = `<button class="copy-btn" aria-label="Copy">${COPY_ICON} Copy</button>`;
-
-// ── Typed blockquotes {bkqt/TYPE}...{/bkqt} ──
-
-const BKQT_TYPES = {
-  note:       { label: 'Note' },
-  tip:        { label: 'Tip' },
-  warning:    { label: 'Warning' },
-  danger:     { label: 'Danger' },
-  keyconcept: { label: 'Key concept' },
-  quote:      { label: null, isQuote: true },
-  pullquote:  { label: null, isQuote: true },
-};
-
-function processBlockquoteContent(content, placeholders) {
-  const paragraphs = content.split(/\n\n+/);
-  const htmlParts = [];
-
-  for (const para of paragraphs) {
-    const trimmed = para.trim();
-    if (!trimmed) continue;
-
-    const restored = restoreBackticks(trimmed, placeholders);
-
-    // Definition list: all "- " lines with ":: "
-    if (/^- /.test(restored)) {
-      const listLines = restored.split('\n').filter(l => l.trim());
-      const allDefs = listLines.every(l => /^- .+?:: /.test(l));
-      if (allDefs) {
-        htmlParts.push('<div class="defn-list">' + listLines.map(line => {
-          const m = line.match(/^- (.+?):: (.+)$/);
-          if (!m) return `<p>${marked.parseInline(line)}</p>`;
-          return `<p class="defn"><strong>${marked.parseInline(m[1].trim())}</strong> — ${marked.parseInline(m[2].trim())}</p>`;
-        }).join('\n') + '</div>');
-        continue;
-      }
-      htmlParts.push(marked.parse(restored));
-      continue;
-    }
-
-    // Alphabetical list
-    const alphaMatch = restored.match(/^([aA])\. /);
-    if (alphaMatch) {
-      const alphaLines = restored.split('\n').filter(l => l.trim());
-      const isUpper = alphaMatch[1] === 'A';
-      const startCode = (isUpper ? 'A' : 'a').charCodeAt(0);
-      let sequential = true;
-      for (let i = 0; i < alphaLines.length; i++) {
-        if (!alphaLines[i].startsWith(String.fromCharCode(startCode + i) + '. ')) { sequential = false; break; }
-      }
-      if (sequential) {
-        const type = isUpper ? 'A' : 'a';
-        const items = alphaLines.map(l => `<li>${marked.parseInline(l.replace(/^[a-zA-Z]\. /, ''))}</li>`).join('');
-        htmlParts.push(`<ol type="${type}">${items}</ol>`);
-        continue;
-      }
-    }
-
-    // Regular numbered list
-    if (/^\d+\. /.test(restored)) {
-      htmlParts.push(marked.parse(restored));
-      continue;
-    }
-
-    const lines = restored.split('\n');
-
-    if (lines.length === 1) {
-      // Single line → normal paragraph
-      htmlParts.push(marked.parse(restored));
-    } else {
-      // Multiple lines (single \n between them) → first line <p>, rest <p class="bkqt-cont">
-      htmlParts.push(`<p>${marked.parseInline(lines[0])}</p>`);
-      for (let i = 1; i < lines.length; i++) {
-        htmlParts.push(`<p class="bkqt-cont">${marked.parseInline(lines[i])}</p>`);
-      }
-    }
-  }
-
-  return htmlParts.join('\n');
-}
-
-function processCustomBlockquotes(markdown, placeholders) {
-  const typePattern = Object.keys(BKQT_TYPES).join('|');
-  const regex = new RegExp(
-    `^\\{bkqt\\/(${typePattern})(?:\\|([^}]*))?\\}\\s*\\n([\\s\\S]*?)\\n\\s*\\{\\/bkqt\\}`,
-    'gm'
-  );
-  return markdown.replace(regex, (_, type, customLabel, content) => {
-    const config = BKQT_TYPES[type];
-    const body = processBlockquoteContent(content, placeholders);
-    if (config.isQuote) {
-      const attrib = customLabel ? `<span class="bkqt-attrib">${customLabel.trim()}</span>` : '';
-      return `<div class="bkqt bkqt-${type}"><div class="bkqt-body">${body}${attrib}</div></div>`;
-    }
-    const label = customLabel ? customLabel.trim() : config.label;
-    return `<div class="bkqt bkqt-${type}"><div class="bkqt-body"><span class="bkqt-label">${label}</span>${body}</div></div>`;
-  });
-}
-
-// ── HTML code-segment protection ──
-// Wraps a processing function so it skips <pre> and <code> content
-
-function processOutsideCode(html, fn) {
-  const segments = [];
-  let safe = html.replace(/<pre[\s\S]*?<\/pre>|<code[\s\S]*?<\/code>/g, (match) => {
-    segments.push(match);
-    return `%%CSEG_${segments.length - 1}%%`;
-  });
-  safe = fn(safe);
-  return safe.replace(/%%CSEG_(\d+)%%/g, (_, idx) => segments[parseInt(idx)]);
-}
-
-// ── External URL links [[https://...|text]] ──
-// Processed BEFORE marked.parse to prevent URL auto-linking corruption
-
-const EXTERNAL_LINK_ICON = `<svg class="doc-ref-icon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
-
-function processExternalUrls(markdown) {
-  return markdown.replace(/\[\[(https?:\/\/[^\]|]+)(?:\|([^\]]+))?\]\]/g, (_, url, displayText) => {
-    const href = url.trim();
-    const display = displayText ? displayText.trim() : href;
-    return `<a class="doc-ref doc-ref-external" href="${href}" target="_blank" rel="noopener noreferrer">${display} ${EXTERNAL_LINK_ICON}</a>`;
-  });
-}
-
-// ── Unified [[link]] processing ──
-// All [[...]] links are processed in a single pass.
-// Address pattern determines the type:
-//   projects/slug, threads/slug, bits2bricks/slug → cross-doc link (display text required)
-//   anything else (word, parent//child)           → second-brain wiki-ref
-
-const buildErrors = [];
-
-const CROSS_DOC_CATEGORIES = {
-  projects:    { path: '/lab/projects' },
-  threads:     { path: '/blog/threads' },
-  bits2bricks: { path: '/blog/bits2bricks' },
-};
-
-const CROSS_DOC_ICONS = {
-  projects: `<svg class="doc-ref-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
-  threads: `<svg class="doc-ref-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
-  bits2bricks: `<svg class="doc-ref-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5"/></svg>`,
-};
-
-// uidToMeta map is set in main() before link processing runs
-let _uidToMeta = new Map(); // uid → { address, name }
-
-function processAllLinks(html) {
-  if (!compilerConfig.wikiLinks.enabled) return html;
-
-  return html.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (match, ref, displayText) => {
-    const crossDocMatch = ref.match(/^(projects|threads|bits2bricks)\/(.*)/);
-
-    if (crossDocMatch) {
-      const [, category, slug] = crossDocMatch;
-      const config = CROSS_DOC_CATEGORIES[category];
-      if (!config) return match;
-
-      if (!displayText) {
-        const msg = `cross-doc link [[${ref.trim()}]] missing display text — use [[${ref.trim()}|Display Text]]`;
-        console.error(`  \x1b[31mERROR: ${msg}\x1b[0m`);
-        buildErrors.push(msg);
-        return match;
-      }
-
-      const href = `${config.path}/${slug.trim()}`;
-      return `<a class="doc-ref doc-ref-${category}" href="${href}" target="_blank" rel="noopener noreferrer">${category}/${displayText.trim()}</a>`;
-    }
-
-    // UID-based wiki-ref
-    // Pipe text is a readability hint when it matches meta.name — build always
-    // uses the current name so renames propagate. Only truly different pipe text
-    // (e.g. [[uid|other methods]]) is treated as a display override.
-    const uid = ref.trim();
-    const meta = _uidToMeta.get(uid);
-    const currentName = meta ? meta.name : uid;
-    const pipeText = displayText ? displayText.trim() : null;
-    const display = pipeText && pipeText !== currentName ? pipeText : currentName;
-    return `<a class="wiki-ref" data-uid="${uid}">${display}</a>`;
-  });
-}
-
-// ── Inline annotations {{ref|explanation}} ──
-// Runs on final HTML. Uses balanced-bracket parsing to handle nesting.
-// First pass: <p> tags. Then loops over ann-note divs for sub-annotations.
-
-function extractAnnotations(content) {
-  const annotations = [];
-  let counter = 0;
-  let result = '';
-  let i = 0;
-
-  while (i < content.length) {
-    if (content[i] === '{' && i + 1 < content.length && content[i + 1] === '{') {
-      // Track depth to find the matching }}
-      let depth = 1;
-      let j = i + 2;
-      let pipePos = -1;
-      while (j < content.length && depth > 0) {
-        if (content[j] === '{' && j + 1 < content.length && content[j + 1] === '{') {
-          depth++;
-          j += 2;
-        } else if (content[j] === '}' && j + 1 < content.length && content[j + 1] === '}') {
-          depth--;
-          if (depth === 0) break;
-          j += 2;
-        } else {
-          if (content[j] === '|' && depth === 1 && pipePos === -1) pipePos = j;
-          j++;
-        }
-      }
-      if (depth === 0 && pipePos !== -1) {
-        counter++;
-        const ref = content.substring(i + 2, pipePos);
-        const explanation = content.substring(pipePos + 1, j);
-        annotations.push({ num: counter, text: explanation.trim() });
-        result += `<em class="ann-ref-text">${ref.trim()}</em><sup class="ann-ref">${counter}</sup>`;
-        i = j + 2;
-      } else {
-        result += content[i];
-        i++;
-      }
-    } else {
-      result += content[i];
-      i++;
-    }
-  }
-
-  return { processed: result, annotations };
-}
-
-function processAnnotations(html) {
-  // First pass: <p>, <li>, and <td> tags (outermost annotations extracted, inner ones stay in explanation text)
-  let result = html.replace(/<(p|li|td)>([\s\S]*?)<\/\1>/g, (match, tag, inner) => {
-    if (!inner.includes('{{')) return match;
-    const { processed, annotations } = extractAnnotations(inner);
-    if (annotations.length === 0) return match;
-    const notesHtml = annotations.map(a =>
-      `<div class="ann-note"><sup>${a.num}</sup>${a.text}</div>`
-    ).join('');
-    return `<${tag}>${processed}</${tag}>\n<div class="annotations">${notesHtml}</div>`;
-  });
-
-  // Nested passes: peel annotations inside ann-note divs level by level
-  let changed = true;
-  while (changed) {
-    changed = false;
-    result = result.replace(
-      /<div class="ann-note">(<sup>\d+<\/sup>)((?:(?!<\/div>)[\s\S])*)<\/div>/g,
-      (match, sup, content) => {
-        if (!content.includes('{{')) return match;
-        const { processed, annotations } = extractAnnotations(content);
-        if (annotations.length === 0) return match;
-        changed = true;
-        const notesHtml = annotations.map(a =>
-          `<div class="ann-note"><sup>${a.num}</sup>${a.text}</div>`
-        ).join('');
-        return `<div class="ann-note">${sup}${processed}</div>\n<div class="annotations annotations-nested">${notesHtml}</div>`;
-      }
-    );
-  }
-
-  return result;
-}
-
-// Apply post-processors (after marked.parse, on HTML)
-function applyPostProcessors(html) {
-  let result = html;
-  for (const rule of compilerConfig.postProcessors) {
-    result = result.replace(rule.pattern, rule.replace);
-  }
-  return result;
-}
-
-// Preprocess markdown to handle side-by-side image layouts
-// Pattern: ![alt](src "left|right:width") followed by text lines until empty line
-function preprocessSideImages(markdown) {
-  const blocks = markdown.split(/\n\n+/);
-  const result = [];
-
-  for (const block of blocks) {
-    // Match image with left/right position at start of block
-    const match = block.match(/^!\[([^\]]*)\]\(([^\s)]+)(?:\s+"(left|right):?(\d+px)?")?\)([\s\S]*)/);
-
-    if (match && (match[3] === 'left' || match[3] === 'right')) {
-      const [, alt, src, position, width, restOfBlock] = match;
-      const widthStyle = width ? `width: ${width};` : '';
-
-      // Get text lines after the image (same block = no empty line between)
-      const textLines = restOfBlock.trim().split('\n').filter(l => l.trim());
-
-      if (textLines.length > 0) {
-        // Process each line through marked for inline formatting (bold, italic, links, etc.)
-        const paragraphs = textLines.map(line => {
-          const processed = marked.parseInline(line);
-          return `<p>${processed}</p>`;
-        }).join('\n');
-
-        // Create flexbox container with image and text side by side
-        result.push(`<div class="img-side-layout img-side-${position}">
-<img src="${src}" alt="${alt}" class="img-side-img" style="${widthStyle}" loading="lazy">
-<div class="img-side-content">
-${paragraphs}
-</div>
-</div>`);
-      } else {
-        // No text after image, let marked handle it normally
-        result.push(block);
-      }
-    } else {
-      result.push(block);
-    }
-  }
-
-  return result.join('\n\n');
-}
-
-// ── Definition lists (- TERM:: description) ──
-
-function processDefinitionLists(markdown) {
-  return markdown.replace(
-    /^(- .+(?:\n- .+)*)/gm,
-    (block) => {
-      const lines = block.split('\n');
-      const allDefs = lines.every(line => /^- .+?:: /.test(line));
-      if (!allDefs) return block;
-
-      return '<div class="defn-list">' + lines.map(line => {
-        const match = line.match(/^- (.+?):: (.+)$/);
-        if (!match) return line;
-        const term = marked.parseInline(match[1].trim());
-        const desc = marked.parseInline(match[2].trim());
-        return `<p class="defn"><strong>${term}</strong> — ${desc}</p>`;
-      }).join('\n') + '</div>';
-    }
-  );
-}
-
-// ── Alphabetical lists (a. / A.) ──
-
-function processAlphabeticalLists(markdown) {
-  return markdown.replace(
-    /^([a-zA-Z])\. .+(?:\n[a-zA-Z]\. .+)*/gm,
-    (block) => {
-      const lines = block.split('\n');
-      const firstChar = lines[0][0];
-      const isUpper = firstChar >= 'A' && firstChar <= 'Z';
-      const startCode = (isUpper ? 'A' : 'a').charCodeAt(0);
-
-      if (firstChar !== 'a' && firstChar !== 'A') return block;
-      for (let i = 0; i < lines.length; i++) {
-        const expected = String.fromCharCode(startCode + i);
-        if (!lines[i].startsWith(expected + '. ')) return block;
-      }
-
-      const type = isUpper ? 'A' : 'a';
-      const items = lines.map(l => {
-        const content = l.replace(/^[a-zA-Z]\. /, '');
-        return `<li>${marked.parseInline(content)}</li>`;
-      }).join('');
-      return `<ol type="${type}">${items}</ol>`;
-    }
-  );
-}
-
-// ── Context annotations (>> YY.MM.DD - text) ──
-
-const MONTH_NAMES = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
-
-function computeRelativeTime(articleDateStr, yy, mm, dd) {
-  if (!articleDateStr) return null;
-  const articleDate = new Date(articleDateStr);
-  if (isNaN(articleDate.getTime())) return null;
-  const annotDate = new Date(2000 + parseInt(yy, 10), parseInt(mm, 10) - 1, parseInt(dd, 10));
-
-  const diffMs = annotDate.getTime() - articleDate.getTime();
-
-  // Same day (within 24h to account for timezone construction differences)
-  if (Math.abs(diffMs) < 86400000) return '(day zero)';
-
-  // Determine direction and compute from→to diff
-  const isLater = diffMs > 0;
-  const [from, to] = isLater ? [articleDate, annotDate] : [annotDate, articleDate];
-
-  let years = to.getFullYear() - from.getFullYear();
-  let months = to.getMonth() - from.getMonth();
-  let days = to.getDate() - from.getDate();
-  if (days < 0) { months--; days += new Date(to.getFullYear(), to.getMonth(), 0).getDate(); }
-  if (months < 0) { years--; months += 12; }
-  const parts = [];
-  if (years > 0) parts.push(`${years}y`);
-  if (months > 0) parts.push(`${months}m`);
-  if (days > 0) parts.push(`${days}d`);
-  if (parts.length === 0) return null;
-  return `(${parts.join(' ')} ${isLater ? 'later' : 'earlier'})`;
-}
-
-function processContextAnnotations(markdown, articleDate) {
-  return markdown.replace(
-    /^(>> \d{2}\.\d{2}\.\d{2} - .+(?:\n>> \d{2}\.\d{2}\.\d{2} - .+)*)/gm,
-    (block) => {
-      const lines = block.split('\n');
-      const entries = lines.map(line => {
-        const m = line.match(/^>> (\d{2})\.(\d{2})\.(\d{2}) - (.+)$/);
-        if (!m) return '';
-        const [, yy, mm, dd, text] = m;
-        const monthIdx = parseInt(mm, 10) - 1;
-        const monthName = MONTH_NAMES[monthIdx] || mm;
-        const dateDisplay = `${yy} · ${monthName} ${dd}`;
-        const relative = computeRelativeTime(articleDate, yy, mm, dd);
-        const relativeHtml = relative ? `<span class="ctx-note-relative">${relative}</span>` : '';
-        const parsedText = marked.parseInline(text.trim());
-        return `<div class="ctx-note-entry"><div class="ctx-note-date-row"><span class="ctx-note-date">${dateDisplay}</span>${relativeHtml}</div><span class="ctx-note-text">${parsedText}</span></div>`;
-      });
-      const html = entries.filter(Boolean).join('<hr class="ctx-note-divider">');
-      return `<div class="ctx-note"><img src="https://avatars.githubusercontent.com/yago-mendoza" alt="" class="ctx-note-avatar" /><div class="ctx-note-body">${html}</div></div>`;
-    }
-  );
-}
-
-// ── Shiki syntax highlighting ──
-
-// Per-language theme pairs (dark key → --shiki-dark, light key → --shiki-light)
-const LANG_THEMES = {
-  typescript: { dark: 'one-dark-pro',      light: 'one-light'        },
-  javascript: { dark: 'one-dark-pro',      light: 'one-light'        },
-  python:     { dark: 'catppuccin-mocha',  light: 'catppuccin-latte' },
-  rust:       { dark: 'rose-pine',         light: 'rose-pine-dawn'   },
-  go:         { dark: 'min-dark',          light: 'min-light'        },
-  yaml:       { dark: 'github-dark',       light: 'github-light'     },
-  json:       { dark: 'github-dark',       light: 'github-light'     },
-};
-const DEFAULT_THEMES = { dark: 'vitesse-dark', light: 'vitesse-light' };
-
-function decodeHtmlEntities(str) {
-  return str
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
-}
-
-function highlightCodeBlocks(html, highlighter) {
-  // Code blocks with language tag
-  html = html.replace(
-    /<pre><code class="language-(\w+)">([\s\S]*?)<\/code><\/pre>/g,
-    (_match, lang, escapedCode) => {
-      const rawCode = decodeHtmlEntities(escapedCode).replace(/\n$/, '');
-      const langLabel = lang.toUpperCase();
-      const themes = LANG_THEMES[lang] || DEFAULT_THEMES;
-
-      let codeContent;
-      try {
-        const highlighted = highlighter.codeToHtml(rawCode, {
-          lang,
-          themes,
-          defaultColor: false,
-        });
-        const inner = highlighted.match(/<code>([\s\S]*?)<\/code>/);
-        codeContent = inner ? inner[1] : escapedCode;
-      } catch {
-        codeContent = escapedCode;
-      }
-
-      return `<div class="code-terminal"><div class="code-terminal-bar"><div class="code-terminal-dots"><span></span><span></span><span></span></div><div class="code-terminal-right"><span class="code-terminal-lang">${langLabel}</span>${COPY_BTN}</div></div><pre><code class="language-${lang}">${codeContent}</code></pre></div>`;
-    }
-  );
-
-  // Code blocks without language tag
-  html = html.replace(
-    /<pre><code(?!\s+class="language-)>([\s\S]*?)<\/code><\/pre>/g,
-    (_match, code) => {
-      return `<div class="code-terminal"><div class="code-terminal-bar"><div class="code-terminal-dots"><span></span><span></span><span></span></div><div class="code-terminal-right"><span class="code-terminal-lang"></span>${COPY_BTN}</div></div><pre><code>${code}</code></pre></div>`;
-    }
-  );
-
-  return html;
-}
-
-// Collect all themes needed and create highlighter
 const allThemes = new Set([DEFAULT_THEMES.dark, DEFAULT_THEMES.light]);
 for (const t of Object.values(LANG_THEMES)) {
   allThemes.add(t.dark);
@@ -620,6 +85,28 @@ const highlighter = await createHighlighter({
   themes: [...allThemes],
   langs: ['typescript', 'javascript', 'python', 'rust', 'go', 'yaml', 'json', 'html', 'css', 'bash'],
 });
+
+// ── Build errors ──
+const buildErrors = [];
+
+// ── Local wrappers that bind the shared functions to this build's config ──
+
+function compileMarkdown(rawMd, articleDate) {
+  return _compileMarkdown(rawMd, articleDate, {
+    markedInstance: marked,
+    compilerConfig,
+    highlighter,
+  });
+}
+
+// uidToMeta is set in main() before link processing runs
+let _uidToMeta = new Map();
+
+function processAllLinks(html) {
+  return _processAllLinks(html, _uidToMeta, compilerConfig.wikiLinks, buildErrors);
+}
+
+// ── File I/O ──
 
 const PAGES_DIR = path.join(__dirname, '../src/data/pages');
 const OUTPUT_FILE = path.join(__dirname, '../src/data/posts.generated.json');
@@ -672,8 +159,6 @@ function getAllMarkdownFiles(dir, isRoot = false) {
     const stat = fs.statSync(fullPath);
 
     if (stat.isDirectory()) {
-      // Skip fieldnotes/ — handled separately by processFieldnotesDir()
-      // Skip FinBoard/ — source material, not content
       if (item === 'fieldnotes' || item === 'FinBoard') continue;
       files.push(...getAllMarkdownFiles(fullPath));
     } else if (!isRoot && item.endsWith('.md') && !item.startsWith('_') && item !== 'README.md') {
@@ -704,28 +189,6 @@ function getAllCategoryConfigs(dir) {
   return configs;
 }
 
-// ── Shared compilation pipeline ──
-// Both regular posts and fieldnotes use this exact 14-step pipeline.
-
-function compileMarkdown(rawMd, articleDate) {
-  rawMd = rawMd.replace(/\r\n/g, '\n');
-  const { text, placeholders } = protectBackticks(rawMd);
-  const withSyntax = applyPreProcessors(text);
-  const withBkqt = processCustomBlockquotes(withSyntax, placeholders);
-  const restored = restoreBackticks(withBkqt, placeholders);
-  const withUrls = processExternalUrls(restored);
-  const withSide = preprocessSideImages(withUrls);
-  const withDefs = processDefinitionLists(withSide);
-  const withAlpha = processAlphabeticalLists(withDefs);
-  const withCtx = processContextAnnotations(withAlpha, articleDate);
-  const parsed = marked.parse(withCtx);
-  const clean = stripHeadingFormatting(parsed);
-  const numbered = numberH1Headings(clean);
-  const highlighted = highlightCodeBlocks(numbered, highlighter);
-  const postProcessed = applyPostProcessors(highlighted);
-  return processOutsideCode(postProcessed, processAnnotations);
-}
-
 // --- Fieldnotes: read individual .md files ---
 
 function extractFieldnoteMeta(filename, filePath) {
@@ -752,7 +215,6 @@ function extractFieldnoteMeta(filename, filePath) {
   const name = frontmatter.name || addressParts[addressParts.length - 1];
   const displayTitle = name;
 
-  // Optional frontmatter fields
   const aliases = frontmatter.aliases || null;
   const supersedes = frontmatter.supersedes || null;
   const distinct = frontmatter.distinct || null;
@@ -770,14 +232,12 @@ function extractFieldnoteMeta(filename, filePath) {
   const refsSet = new Set();
   let match;
   while ((match = refRegex.exec(bodyMd)) !== null) {
-    // Strip pipe display text (e.g. [[uid|custom text]] → uid)
     const raw = match[1];
     const pipeIdx = raw.indexOf('|');
     refsSet.add(pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw);
   }
   const references = [...refsSet];
 
-  // Trailing refs — support annotated form: [[uid]] :: annotation
   const trailingRefs = [];
   const singleRefAnnotated = /^\s*\[\[([^\]]+)\]\]\s*::\s*(.+)\s*$/;
   const multiRefLine = /^\s*(\[\[[^\]]+\]\]\s*)+$/;
@@ -805,12 +265,10 @@ function extractFieldnoteMeta(filename, filePath) {
     }
   }
 
-  // Strip trailing refs (and preceding blank lines / separator) from body before compiling
   let contentMd = bodyMd;
   if (trailingRefStart < bodyLines.length) {
     let cutoff = trailingRefStart;
     while (cutoff > 0 && !bodyLines[cutoff - 1].trim()) cutoff--;
-    // Also skip the --- separator that conventionally precedes trailing refs
     if (cutoff > 0 && /^-{3,}$/.test(bodyLines[cutoff - 1].trim())) cutoff--;
     contentMd = bodyLines.slice(0, cutoff).join('\n');
   }
@@ -949,7 +407,6 @@ for (const post of fieldnotePosts) {
 _uidToMeta = uidToMeta;
 
 // Apply unified [[link]] processing to all content (skipping <code> blocks)
-// This always runs on all content — link targets may change when notes are added/removed
 const linkedRegularPosts = regularPosts.map(post => ({
   ...post,
   content: processOutsideCode(post.content, processAllLinks),
@@ -976,7 +433,6 @@ if (totalErrors > 0) {
 if (interactive && validation.issues.some(i => i.promptable)) {
   const { filesModified } = await resolveIssues(validation.issues);
   if (filesModified > 0) {
-    // Files were modified — stale data in memory, skip writing outputs
     console.log('Skipping output generation — rebuild needed after fixes.');
     process.exit(0);
   }
