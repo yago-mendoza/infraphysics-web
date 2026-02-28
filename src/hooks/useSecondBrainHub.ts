@@ -9,6 +9,7 @@ import { useGraphRelevance } from './useGraphRelevance';
 export type SearchMode = 'name' | 'content' | 'backlinks';
 export type SortMode = 'a-z' | 'most-links' | 'fewest-links' | 'depth' | 'shuffle' | 'newest' | 'oldest';
 export type DirectorySortMode = 'children' | 'alpha' | 'depth';
+export type ViewMode = 'simplified' | 'technical';
 
 export interface FilterState {
   isolated: boolean;
@@ -64,6 +65,7 @@ export const useSecondBrainHub = () => {
   const navigate = useNavigate();
   const { getIslands } = useGraphRelevance();
   const [query, setQuery] = useState('');
+  const [showNewNote, setShowNewNote] = useState(false);
   // Deferred query — React keeps the input responsive while the filter
   // pipeline uses the trailing value, allowing concurrent interruption.
   const deferredQuery = useDeferredValue(query);
@@ -74,9 +76,12 @@ export const useSecondBrainHub = () => {
   const [contentLoading, setContentLoading] = useState(false);
   const [contentReadyId, setContentReadyId] = useState<string | undefined>();
 
-  // Load index on mount
+  // Load index on mount + reload on HMR/refresh events
   useEffect(() => {
     initBrainIndex().then(setIndex);
+    const handler = () => initBrainIndex().then(setIndex);
+    window.addEventListener('fieldnote-hmr', handler);
+    return () => window.removeEventListener('fieldnote-hmr', handler);
   }, []);
 
   const allFieldNotes = index?.allFieldNotes ?? [];
@@ -102,6 +107,17 @@ export const useSecondBrainHub = () => {
   const [directoryQuery, setDirectoryQuery] = useState('');
   const [directorySortMode, setDirectorySortMode] = useState<DirectorySortMode>('alpha');
   const [shuffleSeed, setShuffleSeed] = useState(() => Math.floor(Math.random() * 0xffffffff));
+
+  // View mode: simplified vs technical (persisted in localStorage)
+  const [viewMode, setViewModeState] = useState<ViewMode>(() => {
+    const stored = localStorage.getItem('sb-view-mode');
+    if (stored === 'simplified' || stored === 'technical') return stored;
+    return 'technical';
+  });
+  const setViewMode = useCallback((mode: ViewMode) => {
+    setViewModeState(mode);
+    localStorage.setItem('sb-view-mode', mode);
+  }, []);
 
   // Session-scoped visited set (survives navigation, cleared on tab close)
   const visitedRef = useRef<Set<string>>(() => {
@@ -159,6 +175,20 @@ export const useSecondBrainHub = () => {
       }
     });
     return () => { cancelled = true; };
+  }, [activePost]);
+
+  // Re-fetch content when HMR fires for the active note (e.g. after editor save)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const uid = (e as CustomEvent).detail?.uid;
+      if (!uid || !activePost || uid !== activePost.id) return;
+      fetchNoteContent(activePost.id, true).then(html => {
+        setResolvedHtml(html);
+        setContentReadyId(activePost.id);
+      });
+    };
+    window.addEventListener('fieldnote-hmr', handler);
+    return () => window.removeEventListener('fieldnote-hmr', handler);
   }, [activePost]);
 
   // Prefetch content for likely navigation targets
@@ -585,5 +615,13 @@ export const useSecondBrainHub = () => {
     // Directory nav signal (sidebar → view trail reset)
     directoryNavRef,
     signalDirectoryNav,
+
+    // New note creation
+    showNewNote,
+    setShowNewNote,
+
+    // View mode
+    viewMode,
+    setViewMode,
   };
 };
