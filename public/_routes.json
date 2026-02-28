@@ -1,6 +1,9 @@
 {
   "version": 1,
   "include": [
+    "/api/views/*",
+    "/api/reactions/*",
+    "/api/stats",
     "/lab/projects/*",
     "/lab/second-brain/*",
     "/blog/threads/*",
