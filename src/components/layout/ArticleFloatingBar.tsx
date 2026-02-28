@@ -1,15 +1,17 @@
-// Fixed top bar for immersive blog article reading — replaces sidebar/mobile nav
+// Fixed top bar for immersive article reading — replaces sidebar/mobile nav
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useArticleContext } from '../../contexts/ArticleContext';
+import { useArticleSearch } from '../../hooks/useArticleSearch';
 import {
-  Logo,
   SearchIcon,
   SunIcon,
   MoonIcon,
   CloseIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
 } from '../icons';
 import { sectionPath } from '../../config/categories';
 
@@ -21,6 +23,8 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
   const { theme, toggleTheme } = useTheme();
   const { article } = useArticleContext();
   const location = useLocation();
+  const search = useArticleSearch();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const [tocOpen, setTocOpen] = useState(false);
 
@@ -30,11 +34,91 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
   const hasToc = headings.length >= 2;
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
 
+  // Active heading tracking for TOC highlight
+  const [activeChain, setActiveChain] = useState<Set<string>>(new Set());
+
+  // Compute ancestor chain for a heading (parent sections at shallower depths)
+  const getActiveChain = useCallback((id: string) => {
+    const ids = new Set<string>();
+    if (!id || headings.length < 2) return ids;
+    const idx = headings.findIndex(h => h.id === id);
+    if (idx === -1) return ids;
+    ids.add(id);
+    let depth = headings[idx].depth;
+    for (let i = idx - 1; i >= 0; i--) {
+      if (headings[i].depth < depth) {
+        ids.add(headings[i].id);
+        depth = headings[i].depth;
+        if (depth === 0) break;
+      }
+    }
+    return ids;
+  }, [headings]);
+
+  // Snapshot active heading when TOC opens + track scroll while open
+  useEffect(() => {
+    if (!tocOpen || headings.length < 2) return;
+
+    const computeActive = () => {
+      let activeId = '';
+      for (const h of headings) {
+        const el = document.getElementById(h.id);
+        if (el && el.getBoundingClientRect().top <= 120) activeId = h.id;
+      }
+      setActiveChain(getActiveChain(activeId));
+    };
+
+    computeActive();
+
+    // Auto-expand the section containing the active heading
+    let activeId = '';
+    for (const h of headings) {
+      const el = document.getElementById(h.id);
+      if (el && el.getBoundingClientRect().top <= 120) activeId = h.id;
+    }
+    const chain = getActiveChain(activeId);
+    const parentIds = headings.filter(h => h.depth === 0 && chain.has(h.id)).map(h => h.id);
+    if (parentIds.length > 0) {
+      setExpandedSections(prev => {
+        const next = new Set(prev);
+        parentIds.forEach(id => next.add(id));
+        return next;
+      });
+    }
+
+    window.addEventListener('scroll', computeActive, { passive: true });
+    return () => window.removeEventListener('scroll', computeActive);
+  }, [tocOpen, headings, getActiveChain]);
+
   // Navigation
   const category = article?.post?.category || '';
   const backUrl = category ? sectionPath(category) : '/home';
 
-  // Close TOC on Escape
+  // Focus input when search opens
+  useEffect(() => {
+    if (search.isOpen) {
+      requestAnimationFrame(() => searchInputRef.current?.focus());
+    }
+  }, [search.isOpen]);
+
+  // Intercept Ctrl+F / Cmd+F → open in-page search
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        if (!search.isOpen) {
+          search.openSearch();
+        } else {
+          searchInputRef.current?.focus();
+          searchInputRef.current?.select();
+        }
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [search.isOpen, search.openSearch]);
+
+  // Close TOC on Escape (when search is not open)
   useEffect(() => {
     if (!tocOpen) return;
     const handler = (e: KeyboardEvent) => {
@@ -50,7 +134,6 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
   }, [location.pathname]);
 
   const handleTocClick = useCallback((id: string) => {
-    setTocOpen(false);
     requestAnimationFrame(() => {
       document.getElementById(id)?.scrollIntoView({ behavior: 'instant', block: 'start' });
     });
@@ -77,6 +160,19 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
     return sections;
   }, [headings]);
 
+  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      search.closeSearch();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (e.shiftKey) {
+        search.goToPrev();
+      } else {
+        search.goToNext();
+      }
+    }
+  }, [search]);
+
   return (
     <>
       {/* Left-side TOC indicator — desktop only */}
@@ -97,12 +193,70 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
       <div className="article-floating-bar article-floating-bar--visible">
         {/* Left: back to section */}
         <Link to={backUrl} className="article-bar-back" title="Back to menu">
-          <Logo className="w-5 h-5" />
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
           <span className="article-bar-back-label">Back to menu</span>
         </Link>
 
-        {/* Middle: spacer */}
-        <div className="flex-1" />
+        {/* Center: page search */}
+        <div className="flex-1 flex justify-center">
+          {search.isOpen ? (
+            <div className="article-page-search">
+              <input
+                ref={searchInputRef}
+                type="text"
+                className="article-page-search-input"
+                placeholder="Find in page..."
+                value={search.query}
+                onChange={(e) => search.setQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+              />
+              {search.query.length >= 2 && (
+                <span className="article-page-search-count">
+                  {search.matchCount > 0
+                    ? `${search.currentMatch} of ${search.matchCount}`
+                    : 'No matches'}
+                </span>
+              )}
+              <button
+                className="article-bar-btn article-page-search-btn"
+                onClick={search.goToPrev}
+                disabled={search.matchCount === 0}
+                title="Previous match (Shift+Enter)"
+                aria-label="Previous match"
+              >
+                <ChevronUpIcon />
+              </button>
+              <button
+                className="article-bar-btn article-page-search-btn"
+                onClick={search.goToNext}
+                disabled={search.matchCount === 0}
+                title="Next match (Enter)"
+                aria-label="Next match"
+              >
+                <ChevronDownIcon />
+              </button>
+              <button
+                className="article-bar-btn article-page-search-btn"
+                onClick={search.closeSearch}
+                title="Close search (Escape)"
+                aria-label="Close search"
+              >
+                <CloseIcon />
+              </button>
+            </div>
+          ) : (
+            <button
+              className="article-bar-find-prompt"
+              onClick={search.openSearch}
+              title="Find in page (Ctrl+F)"
+            >
+              <SearchIcon />
+              <span>Find in page</span>
+            </button>
+          )}
+        </div>
 
         {/* Right: controls */}
         <div className="article-bar-controls">
@@ -135,7 +289,7 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
           />
           <div className="article-lateral-toc article-lateral-toc--open">
             <div className="article-lateral-toc-header">
-              <span className="article-lateral-toc-title">Contents</span>
+              <span className="article-lateral-toc-title">{category === 'projects' ? '// CONTENTS' : 'CONTENTS'}</span>
               <button
                 className="article-bar-btn"
                 onClick={() => setTocOpen(false)}
@@ -152,7 +306,7 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
                   <li key={section.parent.id}>
                     <div className="article-lateral-toc-row">
                       <button
-                        className="article-lateral-toc-link article-lateral-toc-link--parent"
+                        className={`article-lateral-toc-link article-lateral-toc-link--parent${activeChain.has(section.parent.id) ? ' article-lateral-toc-link--active' : ''}`}
                         onClick={() => handleTocClick(section.parent.id)}
                       >
                         <span className="article-lateral-toc-num">{i + 1}.</span>
@@ -180,7 +334,7 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
                         {section.children.map(child => (
                           <li key={child.id}>
                             <button
-                              className="article-lateral-toc-link article-lateral-toc-link--child"
+                              className={`article-lateral-toc-link article-lateral-toc-link--child${activeChain.has(child.id) ? ' article-lateral-toc-link--active' : ''}`}
                               onClick={() => handleTocClick(child.id)}
                             >
                               {child.text}
