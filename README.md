@@ -14,8 +14,12 @@ Personal website and knowledge system. Articles, projects, field notes, and a se
 - **marked** + **Shiki** (markdown compilation + syntax highlighting, build-time)
 - **gray-matter** (frontmatter parsing)
 - **Tailwind CSS via CDN** (utility styles, runtime-generated) + vanilla CSS (content styling)
-- **Formspree** (contact form)
+- **Cloudflare Pages** (hosting + serverless functions)
+- **Cloudflare KV** (view counts, heart reactions — IP-deduped)
 - **Cloudflare R2** (image hosting)
+- **Giscus** (GitHub Discussions-backed comments on articles)
+- **Formspree** (contact form)
+- **CodeMirror 6** (in-browser fieldnote editor, localhost only)
 
 ---
 
@@ -27,11 +31,16 @@ infraphysics-web/
     skills/
       commit/SKILL.md             # /commit — atomic commit proposal workflow
       create-fieldnote/SKILL.md   # /create-fieldnote — process raw input into fieldnotes
+  .github/
+    workflows/
+      validate.yml              # CI: build + type check + fieldnote reference validation
   functions/
-    [[catchall]].ts           # Cloudflare Pages Function (dynamic OG tags for social crawlers)
-    api/views/[[slug]].ts     # View counter API (KV-backed, IP-deduped)
-    api/reactions/[[slug]].ts  # Heart reaction toggle API (KV-backed)
-    api/stats.ts               # Bulk stats endpoint (views + hearts)
+    [[catchall]].ts             # Cloudflare Pages Function (dynamic OG tags + JSON-LD for social crawlers)
+    api/views/[[slug]].ts       # View counter API (KV-backed, IP-deduped per 24h)
+    api/reactions/[[slug]].ts   # Heart reaction toggle API (KV-backed, IP-deduped)
+    api/stats.ts                # Bulk stats endpoint (POST slugs → views + hearts)
+  vite-plugins/
+    fieldnote-editor.js         # Dev server plugin: fieldnote CRUD API (localhost only, 6 endpoints)
   scripts/
     compiler.config.js        # Centralized compiler configuration
     build-content.js          # Markdown → JSON pipeline (triple output)
@@ -62,15 +71,18 @@ infraphysics-web/
       InfoPopover.tsx         # Contextual help popovers (singleton, portal-based)
       SecondBrainGuide.tsx   # Consolidated guide modal for Second Brain (replaces scattered InfoPopovers)
       IslandDetector.tsx      # Topology sidebar: connected components, articulation points (bridges)
+      CopyExportModal.tsx     # Scope-selector modal for exporting note context to clipboard (LLM-friendly)
       NavigationTrail.tsx     # Breadcrumb trail for concept navigation
       SearchPalette.tsx       # Global search overlay (Cmd+K)
+      RetentionHints.tsx      # Contextual nudges for undiscovered features (scroll depth, wikilinks, search)
       HomeTour.tsx            # Guided tour for landing page
       RotatingTitle.tsx       # Animated header widget
+      article/                # ArticleBreadcrumbs, ArticleHashtags, BlogMetabar
       sections/               # SearchResultsList, ProjectsList, ThreadsList, Bits2BricksGrid
-      layout/                 # Sidebar, MobileNav, Footer, Starfield, DualGrid
+      layout/                 # Sidebar, MobileNav, Footer, ArticleFloatingBar, Starfield, DualGrid
       ui/                     # SearchBar, StatusBadge, Highlight
       icons/                  # SVG icon components
-      editor/                 # Fieldnote editor (localhost only): CodeMirror, diagnostics, term detection, navigation, trailing refs, new note panel
+      editor/                 # Fieldnote editor (localhost only): CodeMirror, diagnostics, term detection, navigation, trailing refs, new note panel, delete confirmation
     views/
       HomeView.tsx            # Landing page
       SectionView.tsx         # Category listing (projects, threads, bits2bricks)
@@ -97,20 +109,36 @@ infraphysics-web/
       data.ts                 # Runtime data loader
     public/
       fieldnotes/             # {uid}.json content files (served as static assets)
+      fieldnotes-index.json   # Generated: fieldnote metadata index (HTTP-fetched at runtime)
       og-manifest.json        # Generated: URL path → OG metadata for social previews
+      sitemap.xml             # Generated: XML sitemap for search engines (322+ URLs)
+      robots.txt              # Crawler directives + sitemap reference
       _routes.json            # Cloudflare Pages routing (which paths invoke the Function)
     lib/
+      headings.ts             # Shared heading utilities (getActiveChain, ACTIVE_HEADING_THRESHOLD)
       wikilinks.ts            # Runtime wiki-link resolver
       content.ts              # Content utilities
       color.ts                # Color utilities (accentChipStyle)
       date.ts                 # Date formatting
       search.ts               # Search utilities
-      brainIndex.ts           # Fieldnotes index helpers
-      addressToId.ts          # Address → slug conversion
+      brainIndex.ts           # Fieldnotes index (singleton, lazy init, 7 in-memory Maps, HMR-aware)
+      exportNotes.ts          # Export fieldnotes as LLM-friendly markdown (htmlToText, batch export)
+      addressToId.ts          # Address → slug conversion (deprecated)
       icons.ts                # Centralized SVG icon paths (Heroicons)
+      content/                # Shared compile/parse library (used by build scripts + Vite plugin)
+    hooks/
+      useSecondBrainHub.ts    # Core hub hook: index, search, sort, filter, tree, prefetch (628 lines)
+      useNavigationTrail.ts   # Breadcrumb trail with popstate tracking
+      useGraphRelevance.ts    # PageRank + proximity data (module-level singleton, lazy import)
+      useArticleSearch.ts     # In-page search with DOM tree walker + highlight
+      useArticleStats.ts      # Bulk view/heart stats fetch for section listings
+      useViewCount.ts         # Per-article view counter (POST on mount, IP-deduped)
+      useReaction.ts          # Heart toggle with optimistic update + revert
+      useIsLocalhost.ts       # Localhost detection for editor gating
     styles/
       article.css             # Article post view styles (terminal/cyberpunk theme)
       wiki-content.css        # Wiki/second-brain content delta overrides
+      editor.css              # CodeMirror overrides for fieldnote editor
     config/                   # Categories config
     constants/                # Layout, theme constants
     types.ts                  # TypeScript interfaces (Post, Category, etc.)
@@ -149,9 +177,9 @@ All colors flow through a three-layer cascade: CSS custom properties in `index.h
 
 ### Second Brain
 
-A flat knowledge graph of `{uid}.md` files in `fieldnotes/`. Each note has a stable 8-char UID (for references and URLs) and an `address` (hierarchical, `//`-separated, for display and neighborhood). Notes link to each other via `[[uid]]` wiki-links — renaming an address changes only one file's frontmatter. Build produces three outputs: a posts JSON (no fieldnotes), a metadata index (no content), and individual `{uid}.json` content files served as static assets. At runtime, the index loads eagerly while content is fetched on demand per note. For managing fieldnotes, see **[src/data/pages/fieldnotes/README.md](src/data/pages/fieldnotes/README.md)**.
+A flat knowledge graph of `{uid}.md` files in `fieldnotes/`. Each note has a stable 8-char UID (for references and URLs) and an `address` (hierarchical, `//`-separated, for display and neighborhood). Notes link to each other via `[[uid]]` wiki-links — renaming an address changes only one file's frontmatter. Build produces three outputs: a posts JSON (no fieldnotes), a metadata index (no content), and individual `{uid}.json` content files served as static assets. At runtime, the metadata index is fetched via HTTP (cached by CDN, separate from the JS bundle) while note content is fetched on demand. For managing fieldnotes, see **[src/data/pages/fieldnotes/README.md](src/data/pages/fieldnotes/README.md)**.
 
-**In-browser editor** (localhost only): Click a note's edit button to open a CodeMirror editor panel. Features: `[[` navigation dropdown (arrow keys + Enter to jump between notes, filters as you type), smart term detection (highlights unlinked mentions of known notes in purple, offers Yes/No to convert to wiki-links), missing-parent stub creation from diagnostics, uid protection (read-only, restored on save), resizable diagnostics panel, trailing refs widget, and auto-reload after save via HMR.
+**In-browser editor** (localhost only): Click a note's edit button to open a CodeMirror editor panel. Features: `[[` navigation dropdown (arrow keys + Enter to jump between notes, Tab to drill into children, filters as you type), smart term detection (highlights unlinked mentions of known notes in purple, offers Yes/No to convert to wiki-links), missing-parent stub creation from diagnostics, delete workflow with impact analysis (shows inbound refs, children, trailing refs — offers stub conversion or permanent delete with ref cleanup), uid protection (read-only, restored on save), resizable diagnostics panel, trailing refs widget, and auto-reload after save via HMR. The editor runs live validation on every keystroke, catching broken references, missing parents, and formatting issues before they reach the build — so most errors are fixed in real time without needing to run the full pipeline.
 
 **Creating fieldnotes:** Use `/create-fieldnote` in Claude Code with raw text, concepts, or notes as input. The skill handles decomposition, dedup, addressing, stubs, and validation automatically.
 
@@ -179,9 +207,67 @@ There is also an optional deep audit script (`node scripts/check-references.js`)
 
 ---
 
+### Platform and deployment
+
+Hosted on **Cloudflare Pages** (SPA + serverless functions). No `wrangler.toml` — configuration lives in the Cloudflare dashboard.
+
+**Required bindings:**
+
+| Binding | Type | Used by |
+|---|---|---|
+| `VIEWS` | KV Namespace | `functions/api/views/`, `functions/api/reactions/`, `functions/api/stats.ts` |
+
+The `VIEWS` KV namespace stores all engagement data: view counts (`views:{slug}`), heart counts (`hearts:{slug}`), and IP dedup keys (`seen:{hash}`, `heart:{hash}` with 24h TTL). All API functions share this single namespace.
+
+**Routing:** `public/_routes.json` controls which paths invoke the Pages Function vs serve static assets. API paths (`/api/*`) and article paths (for OG tags) route to the Function; everything else is served directly from the build output.
+
+**Deploy:** Push to `main` triggers automatic deployment via Cloudflare Pages GitHub integration. No manual deploy step.
+
+---
+
+### API
+
+Serverless endpoints running as Cloudflare Pages Functions. All responses include CORS headers (`Access-Control-Allow-Origin: *`).
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/views/{slug}` | `GET` | Return view count |
+| `/api/views/{slug}` | `POST` | Increment view count (IP-deduped per 24h via SHA-256 hash) and return new count |
+| `/api/reactions/{slug}` | `GET` | Return heart count + whether caller's IP has hearted |
+| `/api/reactions/{slug}` | `POST` | Toggle heart for caller's IP, return new count + hearted status |
+| `/api/stats` | `POST` | Bulk fetch: `{ slugs: [...] }` → `{ [slug]: { views, hearts } }` (capped at 50) |
+
+**Dev-only API** (served by `vite-plugins/fieldnote-editor.js`, never deployed):
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/fieldnotes/:uid/raw` | `GET` | Raw markdown + mtime for a fieldnote |
+| `/api/fieldnotes/save` | `POST` | Write to disk + incremental rebuild |
+| `/api/fieldnotes/create` | `POST` | Create new note + rebuild |
+| `/api/fieldnotes/validate` | `POST` | Parse + validate without saving |
+| `/api/fieldnotes/analyze-refs` | `POST` | Pre-delete impact analysis (inbound refs, children) |
+| `/api/fieldnotes/delete` | `POST` | Delete note + optional trailing ref cleanup |
+
+---
+
+### Article features
+
+Articles include engagement and navigation features layered on top of the base content view:
+
+- **View count + hearts** — POST on mount (IP-deduped), displayed in article header and section listings. Hearts are toggleable per IP.
+- **Giscus comments** — GitHub Discussions-backed comment widget at article footer. Config: `yago-mendoza/infraphysics-comments` repo.
+- **In-page search** — `Ctrl+F` inside articles highlights matches in the rendered content via DOM TreeWalker. Match count in floating bar.
+- **Floating bar** — Sticky bar with TOC dropdown, active heading indicator, search toggle, reading progress, and share button. Visible on all article types.
+- **Reading progress** — Horizontal progress bar at top of viewport, driven by scroll position via RAF.
+- **Active TOC tracking** — Scroll listener marks the current heading + its ancestor chain in the TOC. Shared algorithm between ArticlePostView and ArticleFloatingBar.
+- **Share dropdown** — Copy link, email feedback, Twitter/X share.
+- **Retention hints** — Contextual nudges for undiscovered features (wiki-link clicks, search usage, scroll depth, theme toggle). Triggered by usage counters in localStorage, shown as timed toasts.
+
+---
+
 ### Social previews
 
-Article URLs return dynamic OG meta tags for social crawlers (WhatsApp, Twitter, Discord, etc.) via a Cloudflare Pages Function (`functions/[[catchall]].ts`). The build generates `public/og-manifest.json` mapping every article and fieldnote URL to its title, description, and thumbnail. Routing (`public/_routes.json`) limits the Function to article paths only — static assets and section listings are served directly.
+Article URLs return dynamic OG meta tags and JSON-LD structured data for social crawlers and search engines (WhatsApp, Twitter, Discord, Google, etc.) via a Cloudflare Pages Function (`functions/[[catchall]].ts`). The build generates `public/og-manifest.json` mapping every article and fieldnote URL to its title, description, thumbnail, and date. Routing (`public/_routes.json`) limits the Function to article paths only — static assets and section listings are served directly. A `public/sitemap.xml` (generated at build time) and `public/robots.txt` complete the SEO setup.
 
 ---
 
@@ -201,6 +287,35 @@ All images and media assets are hosted on **Cloudflare R2** — never commit bin
 
 ```bash
 npm install          # install dependencies
-npm run dev          # build content + start vite dev server
+npm run dev          # build content + start vite dev server (includes editor API on localhost)
 npm run build        # build content + production build
 ```
+
+**Local editor:** The Vite dev server automatically loads `vite-plugins/fieldnote-editor.js`, which exposes the fieldnote CRUD API at `/api/fieldnotes/*`. No extra setup — just `npm run dev` and the editor UI appears on Second Brain note pages.
+
+**KV APIs in dev:** The view count and reaction endpoints (`/api/views/*`, `/api/reactions/*`) only work when deployed to Cloudflare Pages with the `VIEWS` KV binding. In local dev, these calls fail silently — articles render without engagement data.
+
+---
+
+### CI/CD
+
+A GitHub Actions workflow (`.github/workflows/validate.yml`) runs on every push to `main`:
+
+1. **Install** — `npm ci` with dependency cache
+2. **Build** — `npm run build` (compiles content + Vite production build)
+3. **Type check** — `tsc --noEmit` (non-blocking — reports issues without failing the pipeline)
+4. **Validate references** — `node scripts/check-references.js` (fieldnote integrity)
+
+**Deploy** is handled separately by the **Cloudflare Pages GitHub integration** — it triggers automatically on push to `main`, runs its own `npm run build`, and publishes the output. The GitHub Action validates; Cloudflare deploys.
+
+**To deploy:** Just push to `main`. Both the validation workflow and Cloudflare deploy run in parallel. If validation fails, check the Actions tab — the site may already be live but with issues flagged.
+
+---
+
+### Roadmap
+
+Future features under consideration:
+
+- [ ] **LLM Conversational Assistant** — AI-powered search/Q&A over site content. MVP: Cloudflare Worker proxy to Claude Haiku API with system prompt + post summaries. Future: RAG with vector embeddings for semantic search. Includes "Ask Yago" persona mode.
+- [ ] **Stripe Donations** — One-time support via Stripe Payment Link (zero backend). Button in footer or `/about`. No memberships or auth initially.
+- [ ] **Global Graph View** — Force-directed visualization of the entire Second Brain knowledge graph (D3.js). Nodes sized by backlink count, clusters emerge from connection density. Accessible from `/lab/second-brain/graph` or as a modal.

@@ -26,6 +26,11 @@ dist-ssr
 *.generated.json
 .content-cache.json
 public/fieldnotes/
+public/fieldnotes-index.json
+public/sitemap.xml
+
+# Private generation tools
+_generation/
 
 # Editor directories and files
 .vscode/*
