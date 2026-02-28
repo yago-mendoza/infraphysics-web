@@ -153,7 +153,7 @@ export const InfoPopover: React.FC<InfoPopoverProps> = ({
       <button
         ref={triggerRef}
         onClick={handleToggle}
-        className={`text-violet-400 hover:text-violet-300 transition-colors flex-shrink-0 ${className}`}
+        className={`text-violet-400 hover:text-violet-300 transition-colors flex-shrink-0 leading-[0] ${className}`}
         title={title}
         type="button"
       >
