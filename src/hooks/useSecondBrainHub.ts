@@ -71,18 +71,6 @@ export const useSecondBrainHub = () => {
   // pipeline uses the trailing value, allowing concurrent interruption.
   const deferredQuery = useDeferredValue(query);
 
-  // Content search gets an extra 150ms debounce on top of useDeferredValue
-  // because it scans searchText across all notes (heavier than name matching).
-  const [debouncedContentQuery, setDebouncedContentQuery] = useState('');
-  useEffect(() => {
-    if (searchMode !== 'content') {
-      setDebouncedContentQuery(query);
-      return;
-    }
-    const timer = setTimeout(() => setDebouncedContentQuery(query), 150);
-    return () => clearTimeout(timer);
-  }, [query, searchMode]);
-
   // Async index state
   const [index, setIndex] = useState<BrainIndex | null>(null);
   const [resolvedHtml, setResolvedHtml] = useState('');
@@ -114,6 +102,19 @@ export const useSecondBrainHub = () => {
     return match ? match[1] : undefined;
   }, [location.pathname]);
   const [searchMode, setSearchMode] = useState<SearchMode>('name');
+
+  // Content search gets an extra 150ms debounce on top of useDeferredValue
+  // because it scans searchText across all notes (heavier than name matching).
+  const [debouncedContentQuery, setDebouncedContentQuery] = useState('');
+  useEffect(() => {
+    if (searchMode !== 'content') {
+      setDebouncedContentQuery(query);
+      return;
+    }
+    const timer = setTimeout(() => setDebouncedContentQuery(query), 150);
+    return () => clearTimeout(timer);
+  }, [query, searchMode]);
+
   const [sortMode, setSortMode] = useState<SortMode>('a-z');
   const [filterState, setFilterState] = useState<FilterState>(DEFAULT_FILTER_STATE);
   const [directoryScope, setDirectoryScope] = useState<string | null>(null); // tree path
