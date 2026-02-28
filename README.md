@@ -29,6 +29,9 @@ infraphysics-web/
       create-fieldnote/SKILL.md   # /create-fieldnote — process raw input into fieldnotes
   functions/
     [[catchall]].ts           # Cloudflare Pages Function (dynamic OG tags for social crawlers)
+    api/views/[[slug]].ts     # View counter API (KV-backed, IP-deduped)
+    api/reactions/[[slug]].ts  # Heart reaction toggle API (KV-backed)
+    api/stats.ts               # Bulk stats endpoint (views + hearts)
   scripts/
     compiler.config.js        # Centralized compiler configuration
     build-content.js          # Markdown → JSON pipeline (triple output)
@@ -57,6 +60,7 @@ infraphysics-web/
       BridgeScoreBadge.tsx    # Colored dot indicating centrality tier (bridge/connector/peripheral)
       DriftDetector.tsx       # "Missing links?" suggestions based on neighbor overlap
       InfoPopover.tsx         # Contextual help popovers (singleton, portal-based)
+      SecondBrainGuide.tsx   # Consolidated guide modal for Second Brain (replaces scattered InfoPopovers)
       IslandDetector.tsx      # Topology sidebar: connected components, articulation points (bridges)
       NavigationTrail.tsx     # Breadcrumb trail for concept navigation
       SearchPalette.tsx       # Global search overlay (Cmd+K)
@@ -66,6 +70,7 @@ infraphysics-web/
       layout/                 # Sidebar, MobileNav, Footer, Starfield, DualGrid
       ui/                     # SearchBar, StatusBadge, Highlight
       icons/                  # SVG icon components
+      editor/                 # Fieldnote editor (localhost only): CodeMirror, diagnostics, term detection, navigation, trailing refs, new note panel
     views/
       HomeView.tsx            # Landing page
       SectionView.tsx         # Category listing (projects, threads, bits2bricks)
@@ -145,6 +150,8 @@ All colors flow through a three-layer cascade: CSS custom properties in `index.h
 ### Second Brain
 
 A flat knowledge graph of `{uid}.md` files in `fieldnotes/`. Each note has a stable 8-char UID (for references and URLs) and an `address` (hierarchical, `//`-separated, for display and neighborhood). Notes link to each other via `[[uid]]` wiki-links — renaming an address changes only one file's frontmatter. Build produces three outputs: a posts JSON (no fieldnotes), a metadata index (no content), and individual `{uid}.json` content files served as static assets. At runtime, the index loads eagerly while content is fetched on demand per note. For managing fieldnotes, see **[src/data/pages/fieldnotes/README.md](src/data/pages/fieldnotes/README.md)**.
+
+**In-browser editor** (localhost only): Click a note's edit button to open a CodeMirror editor panel. Features: `[[` navigation dropdown (arrow keys + Enter to jump between notes, filters as you type), smart term detection (highlights unlinked mentions of known notes in purple, offers Yes/No to convert to wiki-links), missing-parent stub creation from diagnostics, uid protection (read-only, restored on save), resizable diagnostics panel, trailing refs widget, and auto-reload after save via HMR.
 
 **Creating fieldnotes:** Use `/create-fieldnote` in Claude Code with raw text, concepts, or notes as input. The skill handles decomposition, dedup, addressing, stubs, and validation automatically.
 
