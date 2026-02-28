@@ -285,8 +285,26 @@ export const ShareIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
   </svg>
 );
 
-export const DiceIcon: React.FC = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
+export const ChevronUpIcon: React.FC = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="18 15 12 9 6 15"></polyline>
+  </svg>
+);
+
+export const ChevronDownIcon: React.FC = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="6 9 12 15 18 9"></polyline>
+  </svg>
+);
+
+export const PencilIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+  </svg>
+);
+
+export const DiceIcon: React.FC<{ size?: number }> = ({ size = 22 }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="3" width="18" height="18" rx="3"></rect>
     <circle cx="8.5" cy="8.5" r="1.25" fill="currentColor" stroke="none"></circle>
     <circle cx="15.5" cy="8.5" r="1.25" fill="currentColor" stroke="none"></circle>
@@ -296,4 +314,111 @@ export const DiceIcon: React.FC = () => (
   </svg>
 );
 
+// --- Editor toolbar icons (14×14, currentColor) ---
+
+export const SuperscriptIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 14 14" fill="currentColor">
+    <text x="0" y="12" fontSize="11" fontFamily="sans-serif">x</text>
+    <text x="8" y="6" fontSize="7" fontFamily="sans-serif">2</text>
+  </svg>
+);
+
+export const SubscriptIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 14 14" fill="currentColor">
+    <text x="0" y="11" fontSize="11" fontFamily="sans-serif">x</text>
+    <text x="8" y="14" fontSize="7" fontFamily="sans-serif">2</text>
+  </svg>
+);
+
+export const KbdIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 14 14" fill="currentColor" stroke="currentColor">
+    <rect x="1" y="2" width="12" height="10" rx="2" fill="none" strokeWidth="1.2" />
+    <text x="7" y="10" fontSize="8" fontFamily="sans-serif" textAnchor="middle" stroke="none">K</text>
+  </svg>
+);
+
+export const AccentIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 14 14" fill="currentColor">
+    <text x="7" y="12" fontSize="13" fontWeight="bold" fontFamily="sans-serif" textAnchor="middle">A</text>
+  </svg>
+);
+
+export const FootnoteIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 14 14" fill="currentColor">
+    <text x="0" y="12" fontSize="11" fontFamily="sans-serif">n</text>
+    <text x="8" y="6" fontSize="7" fontFamily="sans-serif">1</text>
+  </svg>
+);
+
+export const DotsIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 14 14" fill="currentColor">
+    <circle cx="3" cy="7" r="1.2" />
+    <circle cx="7" cy="7" r="1.2" />
+    <circle cx="11" cy="7" r="1.2" />
+  </svg>
+);
+
+export const ShoutIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2 5.5 L2 8.5 L4 8.5 L7.5 11 L7.5 3 L4 5.5 Z" />
+    <path d="M10 5 Q11.5 7 10 9" />
+    <path d="M11.5 3.5 Q13.5 7 11.5 10.5" />
+  </svg>
+);
+
+export const BlockquoteIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+    <line x1="2" y1="3" x2="2" y2="11" />
+    <line x1="5" y1="5" x2="12" y2="5" strokeWidth="1.2" />
+    <line x1="5" y1="9" x2="10" y2="9" strokeWidth="1.2" />
+  </svg>
+);
+
+export const ContextIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="1" width="10" height="12" rx="1" />
+    <line x1="3" y1="3.5" x2="1" y2="3.5" />
+    <line x1="3" y1="7" x2="1" y2="7" />
+    <line x1="3" y1="10.5" x2="1" y2="10.5" />
+  </svg>
+);
+
+export const DefinitionIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 14 14" fill="currentColor" stroke="currentColor" strokeLinecap="round">
+    <circle cx="2.5" cy="4" r="1.2" stroke="none" />
+    <line x1="5.5" y1="4" x2="12" y2="4" strokeWidth="1.2" fill="none" />
+    <circle cx="2.5" cy="7.5" r="1.2" stroke="none" />
+    <line x1="5.5" y1="7.5" x2="11" y2="7.5" strokeWidth="1.2" fill="none" />
+    <circle cx="2.5" cy="11" r="1.2" stroke="none" />
+    <line x1="5.5" y1="11" x2="10" y2="11" strokeWidth="1.2" fill="none" />
+  </svg>
+);
+
+export const AtRefIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 14 14" fill="currentColor">
+    <text x="7" y="11.5" fontSize="12" fontWeight="bold" fontFamily="sans-serif" textAnchor="middle">@</text>
+  </svg>
+);
+
+export const InteractionIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2 9.5 L6 5.5" />
+    <polyline points="3.5 5.5 6 5.5 6 8" />
+    <path d="M12 4.5 L8 8.5" />
+    <polyline points="10.5 8.5 8 8.5 8 6" />
+  </svg>
+);
+
+export const HeartIcon: React.FC<{ size?: number; filled?: boolean }> = ({ size = 14, filled = false }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+  </svg>
+);
+
+export const EyeIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
 
