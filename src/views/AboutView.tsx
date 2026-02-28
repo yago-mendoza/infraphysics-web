@@ -15,19 +15,23 @@ export const AboutView: React.FC = () => {
           <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-6">
             {/* Mobile: quote first, then photo+name row */}
             <div className="md:hidden">
-              <blockquote className="relative pl-6 mb-4">
-                <span
-                  className="absolute -left-1 -top-2 text-5xl leading-none text-th-heading select-none"
-                  style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
-                  aria-hidden="true"
-                >&ldquo;</span>
-                <p className="text-th-secondary text-sm leading-relaxed italic">
-                  My competitive advantage is that I'm having fun.
-                  <span className="relative inline-block w-0">
-                    <span className="absolute left-0 -bottom-7 text-5xl leading-none text-th-heading select-none" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }} aria-hidden="true">&rdquo;</span>
-                  </span>
-                </p>
-              </blockquote>
+              <div className="flex justify-end mb-4">
+                <blockquote className="relative max-w-[75%] pl-5 pr-1">
+                  <span
+                    className="absolute left-10 -top-2 text-4xl leading-none text-th-heading/40 select-none"
+                    style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+                    aria-hidden="true"
+                  >&ldquo;</span>
+                  <p className="text-th-secondary text-sm leading-relaxed italic text-right">
+                    My competitive advantage is that I'm having fun.
+                  </p>
+                  <span
+                    className="absolute -right-2 -bottom-2 text-4xl leading-none text-th-heading/40 select-none"
+                    style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+                    aria-hidden="true"
+                  >&rdquo;</span>
+                </blockquote>
+              </div>
               <div className="flex items-center gap-4 mt-6">
                 <div className="relative w-16 h-16 shrink-0">
                   <div className="absolute inset-0 rounded-full bg-violet-400/10 blur-2xl scale-125" />
