@@ -1,6 +1,6 @@
 // Second Brain / Concept Wiki view component — theme-aware
 
-import React, { useCallback, useState, useEffect, useRef, useMemo } from 'react';
+import React, { Suspense, useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { useHub } from '../contexts/SecondBrainHubContext';
@@ -13,19 +13,34 @@ import { BridgeScoreBadge } from '../components/BridgeScoreBadge';
 
 import { DriftDetector } from '../components/DriftDetector';
 import { useGraphRelevance } from '../hooks/useGraphRelevance';
-import type { SortMode, SearchMode, FilterState } from '../hooks/useSecondBrainHub';
-import { SearchIcon } from '../components/icons';
-import { InfoPopover, tipStrong, tipAccent, tipCode } from '../components/InfoPopover';
+import type { SortMode, SearchMode, FilterState, ViewMode } from '../hooks/useSecondBrainHub';
+import { SearchIcon, PencilIcon, DiceIcon } from '../components/icons';
 import { noteLabel, type FieldNoteMeta } from '../types';
-import type { Connection } from '../lib/brainIndex';
+import { refreshBrainIndex, type Connection } from '../lib/brainIndex';
 import { ICON_REF_IN, ICON_REF_OUT } from '../lib/icons';
 import { resolveWikiLinks } from '../lib/wikilinks';
 import { WikiLinkPreview } from '../components/WikiLinkPreview';
+import { useIsLocalhost } from '../hooks/useIsLocalhost';
+import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../constants/layout';
+import { useFieldnoteEditor } from '../components/editor/useFieldnoteEditor';
+import { useLivePreview } from '../components/editor/useLivePreview';
+import { NewNotePanel } from '../components/editor/NewNotePanel';
+import { posts } from '../data/data';
+
+// Lazy-load EditorPanel — never imported on public site, zero bundle impact
+const EditorPanel = React.lazy(() => import('../components/editor/EditorPanel').then(m => ({ default: m.EditorPanel })));
 import '../styles/article.css';
 import '../styles/wiki-content.css';
 
 /** Display-friendly address: `//` → `/` */
 const displayAddress = (addr: string) => addr.replace(/\/\//g, ' / ');
+
+/** Module-level flag: open editor after note creation (survives route remounts) */
+let _pendingEditUid: string | null = null;
+
+/** Module-level: global edit mode survives route remounts (grid ↔ detail) */
+let _globalEditMode = false;
+let _autoSaveOnSwitch = true;
 
 const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: 'a-z', label: 'A\u2013Z' },
@@ -35,6 +50,11 @@ const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: 'fewest-links', label: 'fewest links' },
   { value: 'depth', label: 'depth' },
   { value: 'shuffle', label: 'shuffle' },
+];
+
+const SIMPLIFIED_SORT_OPTIONS: { value: SortMode; label: string }[] = [
+  { value: 'a-z', label: 'A\u2013Z' },
+  { value: 'newest', label: 'newest' },
 ];
 
 // --- Search Mode Chips ---
@@ -77,9 +97,8 @@ const Chip: React.FC<{
       <span className="px-1.5 py-0.5">{label}</span>
       <button
         onClick={onDismiss}
-        className={`self-stretch flex items-center justify-center w-5 border-l transition-colors ${dismissBg} ${
-          color === 'amber' ? 'border-amber-400/30 hover:text-white' : 'border-violet-400/20 hover:text-white'
-        }`}
+        className={`self-stretch flex items-center justify-center w-5 border-l transition-colors ${dismissBg} ${color === 'amber' ? 'border-amber-400/30 hover:text-white' : 'border-violet-400/20 hover:text-white'
+          }`}
       >
         <svg width="7" height="7" viewBox="0 0 7 7" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
           <line x1="1" y1="1" x2="6" y2="6" /><line x1="6" y1="1" x2="1" y2="6" />
@@ -273,18 +292,18 @@ const ActivityHeatmap: React.FC<{
               {week.map((day, di) => {
                 const isEmpty = day.count === 0 && day.inYear;
                 return (
-                <div
-                  key={di}
-                  className={`aspect-square ${isSelected(day.date) ? 'ring-1 ring-violet-400' : isInRange(day.date) ? 'ring-1 ring-violet-400/40' : ''}`}
-                  style={{
-                    height: 8,
-                    backgroundColor: cellColor(day.count, day.inYear),
-                    border: isEmpty ? '1px solid rgba(255, 255, 255, 0.06)' : 'none',
-                    borderRadius: 1,
-                    opacity: day.inYear ? 1 : 0,
-                  }}
-                  title={day.inYear ? `${day.date}${day.count ? ` (${day.count})` : ''}` : undefined}
-                />
+                  <div
+                    key={di}
+                    className={`aspect-square ${isSelected(day.date) ? 'ring-1 ring-violet-400' : isInRange(day.date) ? 'ring-1 ring-violet-400/40' : ''}`}
+                    style={{
+                      height: 8,
+                      backgroundColor: cellColor(day.count, day.inYear),
+                      border: isEmpty ? '1px solid rgba(255, 255, 255, 0.06)' : 'none',
+                      borderRadius: 1,
+                      opacity: day.inYear ? 1 : 0,
+                    }}
+                    title={day.inYear ? `${day.date}${day.count ? ` (${day.count})` : ''}` : undefined}
+                  />
                 );
               })}
             </div>
@@ -300,16 +319,15 @@ const ActivityHeatmap: React.FC<{
             <button
               key={i}
               onClick={() => handleMonthClick(i)}
-              className={`flex-1 flex items-center justify-center text-[8px] rounded-sm transition-colors ${
-                active ? 'text-violet-300'
+              className={`flex-1 flex items-center justify-center text-[8px] rounded-sm transition-colors ${active ? 'text-violet-300'
                 : isCurrent ? 'text-th-secondary'
-                : 'text-th-muted'
-              }`}
+                  : 'text-th-muted'
+                }`}
               style={{
                 height: 24,
                 border: active ? '1px solid rgba(167, 139, 250, 0.5)'
                   : isCurrent ? '1.5px solid rgba(255, 255, 255, 0.18)'
-                  : '1px solid transparent',
+                    : '1px solid transparent',
               }}
             >
               {label}
@@ -343,401 +361,356 @@ const DockedToolbar: React.FC<{
   allNotes: FieldNoteMeta[];
   stats: { maxDepth: number };
   inputRef: React.RefObject<HTMLInputElement | null>;
+  viewMode: ViewMode;
 }> = ({
   query, setQuery, searchMode, setSearchMode,
   sortMode, setSortMode,
   filterState, updateFilter, hasActiveFilters, resetFilters,
   directoryScope, setDirectoryScope,
   sortedCount, unvisitedOnly, setUnvisitedOnly, hasVisited,
-  allNotes, stats, inputRef,
+  allNotes, stats, inputRef, viewMode,
 }) => {
-  const { getIslands, loaded } = useGraphRelevance();
-  const [filtersOpen, setFiltersOpen] = useState(true);
+    const isSimplified = viewMode === 'simplified';
+    const { getIslands, loaded } = useGraphRelevance();
+    const [filtersOpen, setFiltersOpen] = useState(true);
 
-  // Auto-expand filters when any filter is active or scope is set
-  const isFiltersVisible = filtersOpen || hasActiveFilters || !!directoryScope;
+    // Auto-expand filters when any filter is active or scope is set
+    const isFiltersVisible = filtersOpen || hasActiveFilters || !!directoryScope;
 
-  // Island options
-  const islandOptions = useMemo(() => {
-    if (!loaded) return [];
-    const islands = getIslands();
-    if (!islands) return [];
-    return islands.components
-      .filter(c => c.size > 1)
-      .sort((a, b) => b.size - a.size);
-  }, [getIslands, loaded]);
+    // Island options
+    const islandOptions = useMemo(() => {
+      if (!loaded) return [];
+      const islands = getIslands();
+      if (!islands) return [];
+      return islands.components
+        .filter(c => c.size > 1)
+        .sort((a, b) => b.size - a.size);
+    }, [getIslands, loaded]);
 
-  // Scope picker state
-  const [scopeInput, setScopeInput] = useState('');
-  const [scopeOpen, setScopeOpen] = useState(false);
-  const scopeBlurRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Scope picker state
+    const [scopeInput, setScopeInput] = useState('');
+    const [scopeOpen, setScopeOpen] = useState(false);
+    const scopeBlurRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const scopeOptions = useMemo(() => {
-    const counts = new Map<string, number>();
-    allNotes.forEach(note => {
-      const parts = note.addressParts || [note.title];
-      for (let i = 1; i <= parts.length; i++) {
-        const prefix = parts.slice(0, i).join('//');
-        counts.set(prefix, (counts.get(prefix) || 0) + 1);
-      }
-    });
-    // Only paths that contain >1 note (actual folders)
-    return [...counts.entries()]
-      .filter(([, c]) => c > 1)
-      .map(([path, c]) => ({ path, count: c }))
-      .sort((a, b) => a.path.localeCompare(b.path));
-  }, [allNotes]);
+    const scopeOptions = useMemo(() => {
+      const counts = new Map<string, number>();
+      allNotes.forEach(note => {
+        const parts = note.addressParts || [note.title];
+        for (let i = 1; i <= parts.length; i++) {
+          const prefix = parts.slice(0, i).join('//');
+          counts.set(prefix, (counts.get(prefix) || 0) + 1);
+        }
+      });
+      // Only paths that contain >1 note (actual folders)
+      return [...counts.entries()]
+        .filter(([, c]) => c > 1)
+        .map(([path, c]) => ({ path, count: c }))
+        .sort((a, b) => a.path.localeCompare(b.path));
+    }, [allNotes]);
 
-  const filteredScopeOptions = useMemo(() => {
-    if (!scopeInput) return scopeOptions.slice(0, 12);
-    const q = scopeInput.toLowerCase();
-    return scopeOptions.filter(o => o.path.toLowerCase().includes(q)).slice(0, 12);
-  }, [scopeOptions, scopeInput]);
+    const filteredScopeOptions = useMemo(() => {
+      if (!scopeInput) return scopeOptions.slice(0, 12);
+      const q = scopeInput.toLowerCase();
+      return scopeOptions.filter(o => o.path.toLowerCase().includes(q)).slice(0, 12);
+    }, [scopeOptions, scopeInput]);
 
-  return (
-    <div className="mb-3 border border-th-hub-border rounded-sm" style={{ backgroundColor: 'var(--hub-sidebar-bg)' }}>
-      {/* Row 1: Search + mode chips */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-th-hub-border min-w-0">
-        <span className="text-th-tertiary flex-shrink-0"><SearchIcon /></span>
-        <input
-          ref={inputRef}
-          type="text"
-          placeholder={
-            directoryScope ? `Search in ${directoryScope.replace(/\/\//g, ' / ')}...`
-            : filterState.islandId != null ? `Search in island #${filterState.islandId}...`
-            : 'Search...'
-          }
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              e.preventDefault();
-              setQuery('');
-              (e.target as HTMLElement).blur();
+    return (
+      <div className="mb-3 border border-th-hub-border rounded-sm" style={{ backgroundColor: 'var(--hub-sidebar-bg)' }}>
+        {/* Row 1: Search + mode chips */}
+        <div className="flex items-center gap-2 px-3 py-2 border-b border-th-hub-border min-w-0">
+          <span className="text-th-tertiary flex-shrink-0"><SearchIcon /></span>
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder={
+              directoryScope ? `Search in ${directoryScope.replace(/\/\//g, ' / ')}...`
+                : filterState.islandId != null ? `Search in island #${filterState.islandId}...`
+                  : 'Search...'
             }
-          }}
-          autoComplete="off"
-          spellCheck={false}
-          className="flex-1 min-w-0 text-[11px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
-        />
-        {query && (
-          <button onClick={() => setQuery('')} className="text-th-tertiary hover:text-th-secondary text-[16px] md:text-[13px] leading-none flex-shrink-0 px-0.5">&times;</button>
-        )}
-        <span className="text-th-hub-border">|</span>
-        <select
-          value={searchMode}
-          onChange={(e) => setSearchMode(e.target.value as SearchMode)}
-          className="md:hidden border border-th-hub-border text-[10px] text-th-primary px-1 py-0.5 focus:outline-none focus:border-th-border-active"
-          style={{ backgroundColor: 'var(--hub-sidebar-bg)', colorScheme: 'dark' }}
-        >
-          {SEARCH_MODES.map(mode => (
-            <option key={mode.value} value={mode.value}>{mode.label}</option>
-          ))}
-        </select>
-        {SEARCH_MODES.map(mode => (
-          <button
-            key={mode.value}
-            onClick={() => setSearchMode(mode.value)}
-            className={`hidden md:inline-block text-[9px] px-1 py-0 transition-colors flex-shrink-0 ${
-              searchMode === mode.value ? 'text-violet-400' : 'text-th-tertiary hover:text-th-secondary'
-            }`}
-          >
-            {mode.label}
-          </button>
-        ))}
-        <InfoPopover
-          title="Search & filters"
-          tabs={[
-            {
-              label: 'search',
-              content: (
-                <div className="space-y-2">
-                  <p><strong className={tipStrong}>Name</strong> — matches against note names and addresses.</p>
-                  <p><strong className={tipStrong}>Content</strong> — full-text search across note bodies.</p>
-                  <p><strong className={tipStrong}>Backlinks</strong> — finds notes that <em>link to</em> a concept matching your query. If note A links to note B, then A is a "backlink" of B.</p>
-                  <p><span style={{ color: 'var(--wiki-link-visited)' }}>Blue</span> = visited this session. <span className={tipAccent}>Purple</span> = not yet visited.</p>
-                </div>
-              ),
-            },
-            {
-              label: 'filters',
-              content: (
-                <div className="space-y-2">
-                  <p><strong className={tipStrong}>Isolated</strong> — notes with zero links to or from any other note.</p>
-                  <p><strong className={tipStrong}>Leaf</strong> — notes that have no children in the naming tree (they're at the end of a branch, e.g. <code className={tipCode}>chip//MCU//ARM</code> if ARM has no sub-notes).</p>
-                  <p><strong className={tipStrong}>Bridges</strong> — critical connector notes. If you removed one, its island would split in two. (See the topology section in the sidebar.)</p>
-                  <p><strong className={tipStrong}>Island</strong> — pick a specific connected group from the dropdown. Islands are clusters of notes linked to each other — see sidebar topology for the full map.</p>
-                  <p><strong className={tipStrong}>Depth</strong> — filter by position in the naming tree (<code className={tipCode}>a</code>=1, <code className={tipCode}>a//b</code>=2, <code className={tipCode}>a//b//c</code>=3).</p>
-                  <p><strong className={tipStrong}>Hubs &ge;</strong> — show only notes with at least N connections.</p>
-                  <p><strong className={tipStrong}>Heatmap</strong> — click a day to filter by creation date. Click two days to select a range.</p>
-                </div>
-              ),
-            },
-            {
-              label: 'sorting',
-              content: (
-                <div className="space-y-2">
-                  <p><strong className={tipStrong}>A–Z</strong> — alphabetical by name.</p>
-                  <p><strong className={tipStrong}>Newest / oldest</strong> — by creation date.</p>
-                  <p><strong className={tipStrong}>Most / fewest links</strong> — by total connection count (outgoing + incoming).</p>
-                  <p><strong className={tipStrong}>Depth</strong> — by address hierarchy depth (how deep the note sits in the naming tree).</p>
-                  <p><strong className={tipStrong}>Shuffle</strong> — random order. Click again to reshuffle.</p>
-                  <p><strong className={tipStrong}>Unvisited</strong> — hide cards you've already opened this session.</p>
-                </div>
-              ),
-            },
-            {
-              label: 'keyboard',
-              content: (
-                <div className="space-y-2">
-                  <p className="text-th-muted italic">These shortcuts require a physical keyboard.</p>
-                  <p><strong className={tipStrong}>Arrow keys</strong> — navigate between cards in the grid.</p>
-                  <p><strong className={tipStrong}>Enter</strong> — open the selected card.</p>
-                  <p><strong className={tipStrong}>Escape</strong> — clear the search query and deselect.</p>
-                  <p><strong className={tipStrong}>Any letter key</strong> — starts typing in the search bar instantly.</p>
-                </div>
-              ),
-            },
-          ]}
-        />
-      </div>
-
-      {/* Row 2: Filters (collapsible) */}
-      <div className="border-b border-th-hub-border">
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => setFiltersOpen(v => !v)}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFiltersOpen(v => !v); } }}
-          className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[10px] bg-white/[0.03] border-b border-th-hub-border text-th-secondary transition-colors cursor-pointer select-none"
-        >
-          <span>{isFiltersVisible ? '\u25BE' : '\u25B8'}</span>
-          <span className="uppercase tracking-wider text-[9px] font-medium">filters</span>
-          {(hasActiveFilters || !!directoryScope) && (
-            <span className="text-[9px] text-violet-400 tabular-nums">
-              ({[
-                filterState.isolated,
-                filterState.leaf,
-                filterState.bridgesOnly,
-                filterState.hubThreshold > 0,
-                filterState.depthMin > 1,
-                filterState.depthMax !== Infinity,
-                filterState.islandId != null,
-                filterState.dateFilter != null,
-                filterState.wordCountMin > 0 || filterState.wordCountMax < Infinity,
-                !!directoryScope,
-              ].filter(Boolean).length})
-            </span>
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                setQuery('');
+                (e.target as HTMLElement).blur();
+              }
+            }}
+            autoComplete="off"
+            spellCheck={false}
+            className="flex-1 min-w-0 text-[11px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
+          />
+          {query && (
+            <button onClick={() => setQuery('')} className="text-th-tertiary hover:text-th-secondary text-[16px] md:text-[13px] leading-none flex-shrink-0 px-0.5">&times;</button>
+          )}
+          {!isSimplified && (
+            <>
+              <span className="text-th-hub-border">|</span>
+              <select
+                value={searchMode}
+                onChange={(e) => setSearchMode(e.target.value as SearchMode)}
+                className="md:hidden border border-th-hub-border text-[10px] text-th-primary px-1 py-0.5 focus:outline-none focus:border-th-border-active"
+                style={{ backgroundColor: 'var(--hub-sidebar-bg)', colorScheme: 'dark' }}
+              >
+                {SEARCH_MODES.map(mode => (
+                  <option key={mode.value} value={mode.value}>{mode.label}</option>
+                ))}
+              </select>
+              {SEARCH_MODES.map(mode => (
+                <button
+                  key={mode.value}
+                  onClick={() => setSearchMode(mode.value)}
+                  className={`hidden md:inline-block text-[9px] px-1 py-0 transition-colors flex-shrink-0 ${searchMode === mode.value ? 'text-violet-400' : 'text-th-tertiary hover:text-th-secondary'
+                    }`}
+                >
+                  {mode.label}
+                </button>
+              ))}
+            </>
           )}
         </div>
-        {isFiltersVisible && (
-          <div className="px-3 pb-2 pt-2">
-            {/* All filters in one row: dropdowns + separator + toggle pills */}
-            <div className="flex items-center gap-1.5 md:gap-3 flex-wrap">
-              <div className="flex items-center gap-1 text-[10px] text-th-tertiary relative">
-                <span>scope</span>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder={directoryScope ? directoryScope.replace(/\/\//g, ' / ') : 'all'}
-                    value={scopeInput}
-                    onChange={(e) => { setScopeInput(e.target.value); setScopeOpen(true); }}
-                    onFocus={() => { if (scopeBlurRef.current) clearTimeout(scopeBlurRef.current); setScopeOpen(true); }}
-                    onBlur={() => { scopeBlurRef.current = setTimeout(() => setScopeOpen(false), 150); }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Escape') { setScopeInput(''); setScopeOpen(false); (e.target as HTMLElement).blur(); }
-                      if (e.key === 'Enter' && filteredScopeOptions.length > 0) {
-                        setDirectoryScope(filteredScopeOptions[0].path);
-                        setScopeInput(''); setScopeOpen(false); (e.target as HTMLElement).blur();
-                      }
-                    }}
-                    className={`bg-th-surface border text-[10px] text-th-primary px-1.5 py-0.5 w-24 focus:outline-none transition-colors ${
-                      directoryScope ? 'border-violet-400/40' : 'border-th-hub-border'
-                    } focus:border-th-border-active`}
-                  />
-                  {scopeOpen && filteredScopeOptions.length > 0 && (
-                    <div
-                      className="absolute top-full left-0 mt-0.5 border border-th-hub-border max-h-40 overflow-y-auto z-20 w-52 thin-scrollbar"
-                      style={{ backgroundColor: 'var(--hub-sidebar-bg)' }}
+
+        {/* Row 2: Filters (collapsible) — technical mode only */}
+        {!isSimplified && (
+        <div className="border-b border-th-hub-border">
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => setFiltersOpen(v => !v)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFiltersOpen(v => !v); } }}
+            className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[10px] bg-white/[0.03] border-b border-th-hub-border text-th-secondary transition-colors cursor-pointer select-none"
+          >
+            <span>{isFiltersVisible ? '\u25BE' : '\u25B8'}</span>
+            <span className="uppercase tracking-wider text-[9px] font-medium">filters</span>
+            {(hasActiveFilters || !!directoryScope) && (
+              <span className="text-[9px] text-violet-400 tabular-nums">
+                ({[
+                  filterState.isolated,
+                  filterState.leaf,
+                  filterState.bridgesOnly,
+                  filterState.hubThreshold > 0,
+                  filterState.depthMin > 1,
+                  filterState.depthMax !== Infinity,
+                  filterState.islandId != null,
+                  filterState.dateFilter != null,
+                  filterState.wordCountMin > 0 || filterState.wordCountMax < Infinity,
+                  !!directoryScope,
+                ].filter(Boolean).length})
+              </span>
+            )}
+          </div>
+          {isFiltersVisible && (
+            <div className="px-3 pb-2 pt-2">
+              {/* All filters in one row: dropdowns + separator + toggle pills */}
+              <div className="flex items-center gap-1.5 md:gap-3 flex-wrap">
+                <div className="flex items-center gap-1 text-[10px] text-th-tertiary relative">
+                  <span>scope</span>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder={directoryScope ? directoryScope.replace(/\/\//g, ' / ') : 'all'}
+                      value={scopeInput}
+                      onChange={(e) => { setScopeInput(e.target.value); setScopeOpen(true); }}
+                      onFocus={() => { if (scopeBlurRef.current) clearTimeout(scopeBlurRef.current); setScopeOpen(true); }}
+                      onBlur={() => { scopeBlurRef.current = setTimeout(() => setScopeOpen(false), 150); }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') { setScopeInput(''); setScopeOpen(false); (e.target as HTMLElement).blur(); }
+                        if (e.key === 'Enter' && filteredScopeOptions.length > 0) {
+                          setDirectoryScope(filteredScopeOptions[0].path);
+                          setScopeInput(''); setScopeOpen(false); (e.target as HTMLElement).blur();
+                        }
+                      }}
+                      className={`bg-th-surface border text-[10px] text-th-primary px-1.5 py-0.5 w-24 focus:outline-none transition-colors ${directoryScope ? 'border-violet-400/40' : 'border-th-hub-border'
+                        } focus:border-th-border-active`}
+                    />
+                    {scopeOpen && filteredScopeOptions.length > 0 && (
+                      <div
+                        className="absolute top-full left-0 mt-0.5 border border-th-hub-border max-h-40 overflow-y-auto z-20 w-52 thin-scrollbar"
+                        style={{ backgroundColor: 'var(--hub-sidebar-bg)' }}
+                      >
+                        {filteredScopeOptions.map(opt => (
+                          <button
+                            key={opt.path}
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => { setDirectoryScope(opt.path); setScopeInput(''); setScopeOpen(false); }}
+                            className="block w-full text-left px-2 py-1 text-[10px] text-th-secondary hover:bg-violet-400/10 hover:text-violet-400 transition-colors truncate"
+                          >
+                            {opt.path.replace(/\/\//g, ' / ')} <span className="text-th-muted">({opt.count})</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {islandOptions.length > 1 && (
+                  <div className="flex items-center gap-1 text-[10px] text-th-tertiary">
+                    <span>island</span>
+                    <select
+                      value={filterState.islandId ?? ''}
+                      onChange={(e) => updateFilter('islandId', e.target.value === '' ? null : Number(e.target.value))}
+                      className="bg-th-surface border border-th-hub-border text-[10px] text-th-primary px-1 py-0.5 focus:outline-none focus:border-th-border-active"
+                      style={{ colorScheme: 'dark' }}
                     >
-                      {filteredScopeOptions.map(opt => (
-                        <button
-                          key={opt.path}
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => { setDirectoryScope(opt.path); setScopeInput(''); setScopeOpen(false); }}
-                          className="block w-full text-left px-2 py-1 text-[10px] text-th-secondary hover:bg-violet-400/10 hover:text-violet-400 transition-colors truncate"
-                        >
-                          {opt.path.replace(/\/\//g, ' / ')} <span className="text-th-muted">({opt.count})</span>
-                        </button>
+                      <option value="">all</option>
+                      {islandOptions.map(c => (
+                        <option key={c.id} value={c.id}>#{c.id} ({c.size})</option>
                       ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-              {islandOptions.length > 1 && (
+                    </select>
+                  </div>
+                )}
                 <div className="flex items-center gap-1 text-[10px] text-th-tertiary">
-                  <span>island</span>
-                  <select
-                    value={filterState.islandId ?? ''}
-                    onChange={(e) => updateFilter('islandId', e.target.value === '' ? null : Number(e.target.value))}
-                    className="bg-th-surface border border-th-hub-border text-[10px] text-th-primary px-1 py-0.5 focus:outline-none focus:border-th-border-active"
-                    style={{ colorScheme: 'dark' }}
-                  >
-                    <option value="">all</option>
-                    {islandOptions.map(c => (
-                      <option key={c.id} value={c.id}>#{c.id} ({c.size})</option>
-                    ))}
-                  </select>
+                  <span>depth</span>
+                  <StepperInput
+                    value={filterState.depthMin}
+                    onDecrement={() => updateFilter('depthMin', Math.max(1, filterState.depthMin - 1))}
+                    onIncrement={() => updateFilter('depthMin', filterState.depthMin + 1)}
+                    min={1}
+                  />
+                  <span>&ndash;</span>
+                  <StepperInput
+                    value={filterState.depthMax}
+                    displayValue={filterState.depthMax === Infinity ? '\u221e' : String(filterState.depthMax)}
+                    onDecrement={() => updateFilter('depthMax', filterState.depthMax === Infinity ? stats.maxDepth : Math.max(1, filterState.depthMax - 1))}
+                    onIncrement={() => {
+                      if (filterState.depthMax === Infinity) return;
+                      if (filterState.depthMax >= stats.maxDepth) updateFilter('depthMax', Infinity);
+                      else updateFilter('depthMax', filterState.depthMax + 1);
+                    }}
+                  />
                 </div>
-              )}
-              <div className="flex items-center gap-1 text-[10px] text-th-tertiary">
-                <span>depth</span>
-                <StepperInput
-                  value={filterState.depthMin}
-                  onDecrement={() => updateFilter('depthMin', Math.max(1, filterState.depthMin - 1))}
-                  onIncrement={() => updateFilter('depthMin', filterState.depthMin + 1)}
-                  min={1}
-                />
-                <span>&ndash;</span>
-                <StepperInput
-                  value={filterState.depthMax}
-                  displayValue={filterState.depthMax === Infinity ? '\u221e' : String(filterState.depthMax)}
-                  onDecrement={() => updateFilter('depthMax', filterState.depthMax === Infinity ? stats.maxDepth : Math.max(1, filterState.depthMax - 1))}
-                  onIncrement={() => {
-                    if (filterState.depthMax === Infinity) return;
-                    if (filterState.depthMax >= stats.maxDepth) updateFilter('depthMax', Infinity);
-                    else updateFilter('depthMax', filterState.depthMax + 1);
-                  }}
-                />
-              </div>
-              <div className="flex items-center gap-1 text-[10px] text-th-tertiary">
-                <span>hubs&ge;</span>
-                <StepperInput
-                  value={filterState.hubThreshold}
-                  onDecrement={() => updateFilter('hubThreshold', Math.max(0, filterState.hubThreshold - 1))}
-                  onIncrement={() => updateFilter('hubThreshold', filterState.hubThreshold + 1)}
-                  min={0}
-                />
-              </div>
-              <span className="text-th-hub-border select-none">|</span>
-              <button
-                onClick={() => updateFilter('isolated', !filterState.isolated)}
-                className={`text-[10px] px-1 py-0.5 transition-colors ${
-                  filterState.isolated
+                <div className="flex items-center gap-1 text-[10px] text-th-tertiary">
+                  <span>hubs&ge;</span>
+                  <StepperInput
+                    value={filterState.hubThreshold}
+                    onDecrement={() => updateFilter('hubThreshold', Math.max(0, filterState.hubThreshold - 1))}
+                    onIncrement={() => updateFilter('hubThreshold', filterState.hubThreshold + 1)}
+                    min={0}
+                  />
+                </div>
+                <span className="text-th-hub-border select-none">|</span>
+                <button
+                  onClick={() => updateFilter('isolated', !filterState.isolated)}
+                  className={`text-[10px] px-1 py-0.5 transition-colors ${filterState.isolated
                     ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
                     : 'text-th-tertiary border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
-                }`}
-              >isolated</button>
-              <button
-                onClick={() => updateFilter('leaf', !filterState.leaf)}
-                className={`text-[10px] px-1 py-0.5 transition-colors ${
-                  filterState.leaf
+                    }`}
+                >isolated</button>
+                <button
+                  onClick={() => updateFilter('leaf', !filterState.leaf)}
+                  className={`text-[10px] px-1 py-0.5 transition-colors ${filterState.leaf
                     ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
                     : 'text-th-tertiary border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
-                }`}
-              >leaf</button>
-              <button
-                onClick={() => updateFilter('bridgesOnly', !filterState.bridgesOnly)}
-                className={`text-[10px] px-1 py-0.5 transition-colors ${
-                  filterState.bridgesOnly
+                    }`}
+                >leaf</button>
+                <button
+                  onClick={() => updateFilter('bridgesOnly', !filterState.bridgesOnly)}
+                  className={`text-[10px] px-1 py-0.5 transition-colors ${filterState.bridgesOnly
                     ? 'bg-amber-400/20 text-amber-400 border border-amber-400/30'
                     : 'text-th-tertiary border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
-                }`}
-              >bridges</button>
+                    }`}
+                >bridges</button>
+              </div>
+              {/* Heatmap */}
+              <div className="mt-2">
+                <ActivityHeatmap
+                  allNotes={allNotes}
+                  dateFilter={filterState.dateFilter}
+                  onDateClick={(d) => updateFilter('dateFilter', d)}
+                />
+              </div>
             </div>
-            {/* Heatmap */}
-            <div className="mt-2">
-              <ActivityHeatmap
-                allNotes={allNotes}
-                dateFilter={filterState.dateFilter}
-                onDateClick={(d) => updateFilter('dateFilter', d)}
+          )}
+        </div>
+        )}
+
+        {/* Row 3: Sort + unvisited + count + active chips */}
+        <div className="flex items-center gap-1.5 px-3 py-1.5 flex-wrap">
+          {/* Sort: compact dropdown on mobile, inline buttons on desktop */}
+          {(() => {
+            const sortOptions = isSimplified ? SIMPLIFIED_SORT_OPTIONS : SORT_OPTIONS;
+            return (
+              <>
+                <select
+                  value={sortMode}
+                  onChange={(e) => setSortMode(e.target.value as SortMode)}
+                  className="md:hidden border border-th-hub-border text-[10px] text-th-primary px-1 py-0.5 focus:outline-none focus:border-th-border-active"
+                  style={{ backgroundColor: 'var(--hub-sidebar-bg)', colorScheme: 'dark' }}
+                >
+                  {sortOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                {sortOptions.map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setSortMode(opt.value)}
+                    className={`hidden md:inline-block text-[10px] px-1.5 py-0.5 rounded-sm transition-colors ${sortMode === opt.value
+                      ? 'text-violet-400 bg-violet-400/10'
+                      : 'text-th-tertiary hover:text-th-secondary'
+                      }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </>
+            );
+          })()}
+          {!isSimplified && hasVisited && (
+            <>
+              <span className="text-th-hub-border">|</span>
+              <button
+                onClick={() => setUnvisitedOnly((v: boolean) => !v)}
+                className={`text-[10px] px-1.5 py-0.5 rounded-sm transition-colors ${unvisitedOnly ? 'text-blue-400' : 'text-th-tertiary hover:text-blue-400'
+                  }`}
+              >
+                unvisited
+              </button>
+            </>
+          )}
+
+          {/* Count + info — pushed to the right */}
+          <span className="flex items-center gap-1.5 ml-auto">
+            <span className="text-[9px] text-th-secondary tabular-nums">{sortedCount} {hasActiveFilters || query || directoryScope ? 'results' : 'notes'}</span>
+          </span>
+
+          {/* Reset + active chips — technical only */}
+          {!isSimplified && (
+          <div className="flex items-center gap-1 flex-wrap">
+            {(hasActiveFilters || !!directoryScope) && (
+              <button
+                className="text-[9px] px-1.5 py-0.5 border border-th-hub-border text-th-tertiary hover:text-violet-400 hover:border-violet-400/30 active:bg-violet-400/10 transition-colors"
+                onClick={() => { resetFilters(); setDirectoryScope(null); }}
+              >
+                reset
+              </button>
+            )}
+            {directoryScope && (
+              <Chip label={`scope: ${directoryScope.replace(/\/\//g, ' / ')}`} onDismiss={() => setDirectoryScope(null)} />
+            )}
+            {filterState.islandId != null && (
+              <Chip label={`island #${filterState.islandId}`} onDismiss={() => updateFilter('islandId', null)} />
+            )}
+            {filterState.dateFilter && (
+              <Chip label={filterState.dateFilter.replace('..', ' \u2192 ')} onDismiss={() => updateFilter('dateFilter', null)} />
+            )}
+            {filterState.isolated && <Chip label="isolated" onDismiss={() => updateFilter('isolated', false)} />}
+            {filterState.leaf && <Chip label="leaf" onDismiss={() => updateFilter('leaf', false)} />}
+            {filterState.bridgesOnly && <Chip label="bridges" onDismiss={() => updateFilter('bridgesOnly', false)} color="amber" />}
+            {filterState.depthMin > 1 && <Chip label={`depth \u2265 ${filterState.depthMin}`} onDismiss={() => updateFilter('depthMin', 1)} />}
+            {filterState.depthMax !== Infinity && <Chip label={`depth \u2264 ${filterState.depthMax}`} onDismiss={() => updateFilter('depthMax', Infinity)} />}
+            {filterState.hubThreshold > 0 && <Chip label={`hubs \u2265 ${filterState.hubThreshold}`} onDismiss={() => updateFilter('hubThreshold', 0)} />}
+            {(filterState.wordCountMin > 0 || filterState.wordCountMax < Infinity) && (
+              <Chip
+                label={`${filterState.wordCountMin}\u2013${filterState.wordCountMax === Infinity ? '\u221e' : filterState.wordCountMax} words`}
+                onDismiss={() => { updateFilter('wordCountMin', 0); updateFilter('wordCountMax', Infinity); }}
               />
-            </div>
+            )}
           </div>
-        )}
-      </div>
-
-      {/* Row 3: Sort + unvisited + count + active chips */}
-      <div className="flex items-center gap-1.5 px-3 py-1.5 flex-wrap">
-        {/* Sort: compact dropdown on mobile, inline buttons on desktop */}
-        <select
-          value={sortMode}
-          onChange={(e) => setSortMode(e.target.value as SortMode)}
-          className="md:hidden border border-th-hub-border text-[10px] text-th-primary px-1 py-0.5 focus:outline-none focus:border-th-border-active"
-          style={{ backgroundColor: 'var(--hub-sidebar-bg)', colorScheme: 'dark' }}
-        >
-          {SORT_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
-        {SORT_OPTIONS.map(opt => (
-          <button
-            key={opt.value}
-            onClick={() => setSortMode(opt.value)}
-            className={`hidden md:inline-block text-[10px] px-1.5 py-0.5 rounded-sm transition-colors ${
-              sortMode === opt.value
-                ? 'text-violet-400 bg-violet-400/10'
-                : 'text-th-tertiary hover:text-th-secondary'
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
-        {hasVisited && (
-          <>
-            <span className="text-th-hub-border">|</span>
-            <button
-              onClick={() => setUnvisitedOnly((v: boolean) => !v)}
-              className={`text-[10px] px-1.5 py-0.5 rounded-sm transition-colors ${
-                unvisitedOnly ? 'text-blue-400' : 'text-th-tertiary hover:text-blue-400'
-              }`}
-            >
-              unvisited
-            </button>
-          </>
-        )}
-
-        {/* Count + info — pushed to the right */}
-        <span className="flex items-center gap-1.5 ml-auto">
-          <span className="text-[9px] text-th-secondary tabular-nums">{sortedCount} {hasActiveFilters || query || directoryScope ? 'results' : 'notes'}</span>
-        </span>
-
-        {/* Reset + active chips */}
-        <div className="flex items-center gap-1 flex-wrap">
-          {(hasActiveFilters || !!directoryScope) && (
-            <button
-              className="text-[9px] px-1.5 py-0.5 border border-th-hub-border text-th-tertiary hover:text-violet-400 hover:border-violet-400/30 active:bg-violet-400/10 transition-colors"
-              onClick={() => { resetFilters(); setDirectoryScope(null); }}
-            >
-              reset
-            </button>
-          )}
-          {directoryScope && (
-            <Chip label={`scope: ${directoryScope.replace(/\/\//g, ' / ')}`} onDismiss={() => setDirectoryScope(null)} />
-          )}
-          {filterState.islandId != null && (
-            <Chip label={`island #${filterState.islandId}`} onDismiss={() => updateFilter('islandId', null)} />
-          )}
-          {filterState.dateFilter && (
-            <Chip label={filterState.dateFilter.replace('..', ' \u2192 ')} onDismiss={() => updateFilter('dateFilter', null)} />
-          )}
-          {filterState.isolated && <Chip label="isolated" onDismiss={() => updateFilter('isolated', false)} />}
-          {filterState.leaf && <Chip label="leaf" onDismiss={() => updateFilter('leaf', false)} />}
-          {filterState.bridgesOnly && <Chip label="bridges" onDismiss={() => updateFilter('bridgesOnly', false)} color="amber" />}
-          {filterState.depthMin > 1 && <Chip label={`depth \u2265 ${filterState.depthMin}`} onDismiss={() => updateFilter('depthMin', 1)} />}
-          {filterState.depthMax !== Infinity && <Chip label={`depth \u2264 ${filterState.depthMax}`} onDismiss={() => updateFilter('depthMax', Infinity)} />}
-          {filterState.hubThreshold > 0 && <Chip label={`hubs \u2265 ${filterState.hubThreshold}`} onDismiss={() => updateFilter('hubThreshold', 0)} />}
-          {(filterState.wordCountMin > 0 || filterState.wordCountMax < Infinity) && (
-            <Chip
-              label={`${filterState.wordCountMin}\u2013${filterState.wordCountMax === Infinity ? '\u221e' : filterState.wordCountMax} words`}
-              onDismiss={() => { updateFilter('wordCountMin', 0); updateFilter('wordCountMax', Infinity); }}
-            />
           )}
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
 // --- Memoized Grid Card — only re-renders when its own data changes ---
 const GridCard = React.memo<{
@@ -751,7 +724,8 @@ const GridCard = React.memo<{
   componentId: number | null;
   isIsolated: boolean;
   isBridge: boolean;
-}>(({ note, idx, focused, visited, onCardClick, incoming, outgoing, componentId, isIsolated, isBridge }) => (
+  viewMode: ViewMode;
+}>(({ note, idx, focused, visited, onCardClick, incoming, outgoing, componentId, isIsolated, isBridge, viewMode }) => (
   <Link
     data-idx={idx}
     to={`/lab/second-brain/${note.id}`}
@@ -775,13 +749,13 @@ const GridCard = React.memo<{
     )}
     <div className="flex items-center gap-2 mt-auto pt-2.5 text-[10px] text-th-tertiary tabular-nums">
       <span>{outgoing}↗ {incoming}↙</span>
-      {componentId != null && !isIsolated && (
+      {viewMode === 'technical' && componentId != null && !isIsolated && (
         <span className="text-violet-400/60">#{componentId}</span>
       )}
-      {isBridge && (
+      {viewMode === 'technical' && isBridge && (
         <span className="text-amber-400/80">⚡</span>
       )}
-      {isIsolated && (
+      {viewMode === 'technical' && isIsolated && (
         <span>isolated</span>
       )}
       {note.date && (
@@ -828,12 +802,96 @@ export const SecondBrainView: React.FC = () => {
     invalidateContent,
     allFieldNotes,
     stats,
+    showNewNote,
+    setShowNewNote,
+    viewMode,
+    setViewMode,
   } = hub;
+
+  const isSimplified = viewMode === 'simplified';
 
   const navigate = useNavigate();
   const { getRelevance, getDrift, getPercentile, getNoteTopology } = useGraphRelevance();
   const { trail, scheduleReset, scheduleExtend, truncateTrail, clearTrail, isOverflowing } =
     useNavigationTrail({ activePost, directoryNavRef });
+  const isLocalhost = useIsLocalhost();
+  const fieldnoteEditor = useFieldnoteEditor();
+  const { previewHtml } = useLivePreview(fieldnoteEditor.rawContent, allFieldNotes, noteById);
+
+  // Live interactions preview — override compiled connections with editor's live trailing refs
+  const effectiveConnections = useMemo((): Connection[] => {
+    if (!fieldnoteEditor.isEditing || !activePost) return connections;
+    const liveRefs = fieldnoteEditor.liveTrailingRefs;
+    const seen = new Set<string>();
+    const result: Connection[] = [];
+
+    // From live trailing refs (editor's current state)
+    for (const ref of liveRefs) {
+      const target = noteById.get(ref.uid);
+      if (!target || ref.uid === activePost.id) continue;
+      seen.add(ref.uid);
+      // Check if target has a compiled trailing ref pointing back
+      const reverseRef = (target.trailingRefs || []).find(r => r.uid === activePost.id);
+      result.push({ note: target, annotation: ref.annotation, reverseAnnotation: reverseRef?.annotation ?? null });
+    }
+
+    // Keep reverse-only connections (other notes pointing to this note, not in live refs)
+    for (const conn of connections) {
+      if (!seen.has(conn.note.id)) result.push(conn);
+    }
+
+    return result;
+  }, [fieldnoteEditor.isEditing, fieldnoteEditor.liveTrailingRefs, activePost, connections, noteById]);
+
+  // Global edit mode — once toggled, every note auto-opens in the editor
+  const [globalEditMode, _setGlobalEditMode] = useState(_globalEditMode);
+  const setGlobalEditMode = useCallback((v: boolean | ((prev: boolean) => boolean)) => {
+    _setGlobalEditMode(prev => {
+      const next = typeof v === 'function' ? v(prev) : v;
+      _globalEditMode = next;
+      return next;
+    });
+  }, []);
+  const [autoSaveOnSwitch, _setAutoSaveOnSwitch] = useState(_autoSaveOnSwitch);
+  const setAutoSaveOnSwitch = useCallback((v: boolean | ((prev: boolean) => boolean)) => {
+    _setAutoSaveOnSwitch(prev => {
+      const next = typeof v === 'function' ? v(prev) : v;
+      _autoSaveOnSwitch = next;
+      return next;
+    });
+  }, []);
+
+  // Auto-open editor when globalEditMode is ON and activePost changes
+  useEffect(() => {
+    if (!globalEditMode || !activePost?.id || !isLocalhost) return;
+    if (activePost.id === fieldnoteEditor.editingUid) return; // already editing this one
+
+    const switchTo = async () => {
+      if (fieldnoteEditor.isDirty && autoSaveOnSwitch) {
+        await fieldnoteEditor.save();
+      }
+      fieldnoteEditor.openEditor(activePost.id);
+    };
+    switchTo();
+  }, [activePost?.id, globalEditMode]);
+
+  // Open editor after note creation (module-level flag survives route remounts)
+  useEffect(() => {
+    if (_pendingEditUid && activePost?.id === _pendingEditUid) {
+      const uid = _pendingEditUid;
+      _pendingEditUid = null;
+      fieldnoteEditor.openEditor(uid);
+    }
+  }, [activePost]);
+
+  // Simplified mode: force name-only search and clear filters on switch
+  useEffect(() => {
+    if (isSimplified && searchMode !== 'name') setSearchMode('name');
+  }, [isSimplified]);
+
+  useEffect(() => {
+    if (isSimplified) resetFilters();
+  }, [isSimplified]);
 
   const toolbarInputRef = useRef<HTMLInputElement>(null);
 
@@ -850,10 +908,14 @@ export const SecondBrainView: React.FC = () => {
   }, [setFilterState]);
 
   // Type-to-search: any printable key focuses toolbar input
+  // Disabled while editing (CodeMirror = contenteditable div) or creating a new note
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement).tagName;
+      if (fieldnoteEditor.isEditing || showNewNote) return;
+      const el = e.target as HTMLElement;
+      const tag = el.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (el.isContentEditable) return;
       if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
 
       if (e.key.length === 1) {
@@ -866,7 +928,7 @@ export const SecondBrainView: React.FC = () => {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [query, setQuery]);
+  }, [query, setQuery, fieldnoteEditor.isEditing, showNewNote]);
 
   // Wiki-link click handler — extend trail with the clicked concept
   const handleWikiLinkClick = useCallback((conceptId: string) => {
@@ -952,6 +1014,14 @@ export const SecondBrainView: React.FC = () => {
     const handler = () => setShowScrollTop(window.scrollY > 400);
     window.addEventListener('scroll', handler, { passive: true });
     return () => window.removeEventListener('scroll', handler);
+  }, []);
+
+  // Listen for HMR fieldnote updates — force re-render after brainIndex refresh
+  const [, forceUpdate] = useState(0);
+  useEffect(() => {
+    const handler = () => forceUpdate(n => n + 1);
+    window.addEventListener('fieldnote-hmr', handler);
+    return () => window.removeEventListener('fieldnote-hmr', handler);
   }, []);
 
   // Right column: zone filtering toggle (graph always visible)
@@ -1122,7 +1192,10 @@ export const SecondBrainView: React.FC = () => {
     if (showDetail) return; // Only active in list view
 
     const handler = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement).tagName;
+      if (fieldnoteEditor.isEditing) return;
+      const el = e.target as HTMLElement;
+      const tag = el.tagName;
+      if (el.isContentEditable) return;
       const isInput = tag === 'INPUT' || tag === 'TEXTAREA';
 
       // Any arrow key or Enter from input → transfer focus to grid
@@ -1199,15 +1272,18 @@ export const SecondBrainView: React.FC = () => {
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [showDetail, focusedIdx, visibleResults, getColCount, handleGridCardClick, navigate, searchActive, activePost, clearSearch]);
+  }, [showDetail, focusedIdx, visibleResults, getColCount, handleGridCardClick, navigate, searchActive, activePost, clearSearch, fieldnoteEditor.isEditing]);
 
   // --- Detail-view arrow-key navigation (right column boxes) ---
   useEffect(() => {
     if (!showDetail) return;
 
     const handler = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement).tagName;
+      if (fieldnoteEditor.isEditing) return;
+      const el = e.target as HTMLElement;
+      const tag = el.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (el.isContentEditable) return;
 
       if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && availableZones.length > 1) {
         e.preventDefault();
@@ -1255,7 +1331,7 @@ export const SecondBrainView: React.FC = () => {
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [showDetail, detailItems, focusedDetailIdx, handleConnectionClick, navigate, availableZones, activeZone]);
+  }, [showDetail, detailItems, focusedDetailIdx, handleConnectionClick, navigate, availableZones, activeZone, fieldnoteEditor.isEditing]);
 
   // Hide detail focus highlight on mouse click (re-shown on next arrow key)
   useEffect(() => {
@@ -1295,6 +1371,7 @@ export const SecondBrainView: React.FC = () => {
           allNotes={allFieldNotes}
           stats={stats}
           inputRef={toolbarInputRef}
+          viewMode={viewMode}
         />
       </div>
 
@@ -1315,12 +1392,22 @@ export const SecondBrainView: React.FC = () => {
               trail tracks where you've been.
             </p>
             <p className="text-sm text-th-muted mt-5 italic">Long learning.</p>
-            <button
-              onClick={dismissWelcome}
-              className="mt-8 w-full py-2.5 text-xs uppercase tracking-widest border border-violet-500/40 rounded-lg text-violet-400 hover:bg-violet-500/10 hover:border-violet-500/60 transition-colors"
-            >
-              I understand
-            </button>
+            <div className="mt-8 grid grid-cols-2 gap-3">
+              <button
+                onClick={() => { setViewMode('simplified'); dismissWelcome(); }}
+                className="py-4 px-3 border border-violet-500/30 rounded-lg hover:bg-violet-500/10 hover:border-violet-500/50 transition-colors text-left"
+              >
+                <div className="text-sm font-semibold text-violet-400 mb-1">Simplified</div>
+                <div className="text-[11px] text-th-secondary leading-relaxed">Clean browsing. Search, read, follow links.</div>
+              </button>
+              <button
+                onClick={() => { setViewMode('technical'); dismissWelcome(); }}
+                className="py-4 px-3 border border-violet-500/30 rounded-lg hover:bg-violet-500/10 hover:border-violet-500/50 transition-colors text-left"
+              >
+                <div className="text-sm font-semibold text-violet-400 mb-1">Technical</div>
+                <div className="text-[11px] text-th-secondary leading-relaxed">Full power: topology, filters, graphs, analytics.</div>
+              </button>
+            </div>
           </div>
         </div>,
         document.body
@@ -1329,9 +1416,9 @@ export const SecondBrainView: React.FC = () => {
       {/* Detail view — conditional so it doesn't render during search.
            Grid below stays always-mounted for instant search entry. */}
       {showDetail && (
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-10">
+        <div className={globalEditMode && isLocalhost ? 'flex gap-6 items-start' : isSimplified ? 'max-w-3xl' : 'grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-10'}>
           {/* Left: metadata always visible, body fades when content loads */}
-          <div className="lg:col-span-3">
+          <div className={globalEditMode && isLocalhost ? 'flex-1 min-w-0' : 'lg:col-span-3'}>
             {/* Navigation Trail */}
             <div className="flex items-center gap-2 mb-3">
               <div className="flex-1 min-w-0">
@@ -1342,45 +1429,12 @@ export const SecondBrainView: React.FC = () => {
                   isOverflowing={isOverflowing}
                 />
               </div>
-              <InfoPopover
-                      title="Navigation & page guide"
-                tabs={[
-                  {
-                    label: 'navigation',
-                    content: (
-                      <div className="space-y-2">
-                        <p>The <strong className={tipStrong}>breadcrumb trail</strong> tracks your navigation path through concepts.</p>
-                        <p><strong className={tipStrong}>Click any crumb</strong> to jump back to that point in your trail.</p>
-                        <p><strong className={tipStrong}>"all concepts"</strong> — the first crumb always returns you to the grid.</p>
-                        <p><strong className={tipStrong}>Clicking a body link</strong> extends the trail — you can trace how you got somewhere.</p>
-                        <p><strong className={tipStrong}>Clicking a grid card</strong> resets the trail (starts a new navigation path).</p>
-                        <p>When the trail gets long, it <strong className={tipStrong}>collapses</strong> — older crumbs are hidden but still accessible.</p>
-                      </div>
-                    ),
-                  },
-                  {
-                    label: 'page layout',
-                    content: (
-                      <div className="space-y-2">
-                        <p className={`text-xs font-semibold ${tipAccent} mb-1`}>Mentioned ↑ <span className="font-normal text-th-muted">(incoming links)</span></p>
-                        <p>Colored names below the title — these are <em>other notes that link here</em>. Click to visit them.</p>
-                        <div className="border-t border-th-hub-border my-2" />
-                        <p className={`text-xs font-semibold ${tipAccent} mb-1`}>Links ↓ <span className="font-normal text-th-muted">(outgoing links)</span></p>
-                        <p>Highlighted words inside the note body are links to other concepts. Click to follow them.</p>
-                        <div className="border-t border-th-hub-border my-2" />
-                        <p><strong className={tipStrong}>Address path</strong> — the line below the title (e.g. <code className={tipCode}>chip / MCU / ARM</code>) shows where this note sits in the naming tree. Click an ancestor to go up.</p>
-                        <p><strong className={tipStrong}>Metadata line</strong> — <code className={tipCode}>links ↓ N</code> = how many notes this one links to. <code className={tipCode}>mentioned ↑ N</code> = how many notes link here.</p>
-                      </div>
-                    ),
-                  },
-                ]}
-              />
             </div>
 
             {/* Topology badges + Concept Title */}
             {(() => {
               const topo = getNoteTopology(activePost!.id);
-              const badges = (
+              const badges = !isSimplified ? (
                 <>
                   {topo.componentId != null && !topo.isIsolated && (
                     <button
@@ -1402,23 +1456,25 @@ export const SecondBrainView: React.FC = () => {
                     <span className="text-[10px] font-normal text-th-muted">(isolated)</span>
                   )}
                 </>
-              );
-              const hasBadges = topo.componentId != null || topo.isBridge || topo.isIsolated;
+              ) : null;
+              const hasBadges = !isSimplified && (topo.componentId != null || topo.isBridge || topo.isIsolated);
               return (
                 <>
                   {/* Mobile: badges above title, left-aligned */}
                   {hasBadges && (
-                    <div className="flex items-center gap-1.5 mb-1 lg:hidden">
+                    <div className="flex items-center gap-2 mb-1 lg:hidden">
                       {badges}
                     </div>
                   )}
                   <h2 className="text-2xl font-bold mb-1 text-th-heading">
                     {noteLabel(activePost!)}
-                    <BridgeScoreBadge percentile={getPercentile(activePost!.id)} />
+                    {!isSimplified && <BridgeScoreBadge percentile={getPercentile(activePost!.id)} />}
                     {/* Desktop: badges inline after title */}
-                    <span className="hidden lg:inline ml-2 align-middle">
-                      {badges}
-                    </span>
+                    {hasBadges && (
+                      <span className="hidden lg:inline-flex items-center gap-2 ml-3 align-middle">
+                        {badges}
+                      </span>
+                    )}
                   </h2>
                 </>
               );
@@ -1426,24 +1482,24 @@ export const SecondBrainView: React.FC = () => {
             <div className="text-[11px] text-th-tertiary mb-2">
               {activePost!.addressParts && activePost!.addressParts.length > 1
                 ? activePost!.addressParts.map((part, i) => {
-                    const pathUpTo = activePost!.addressParts!.slice(0, i + 1).join('//');
-                    const ancestorId = addressToNoteId.get(pathUpTo);
-                    const ancestor = ancestorId ? noteById.get(ancestorId) : undefined;
-                    const isLast = i === activePost!.addressParts!.length - 1;
-                    return (
-                      <React.Fragment key={i}>
-                        {i > 0 && <span className="mx-0.5 text-th-muted">/</span>}
-                        {isLast
-                          ? <span>{part}</span>
-                          : ancestor
-                            ? <Link to={`/lab/second-brain/${ancestor.id}`} className="hover:text-violet-400 transition-colors" onClick={() => {
-                                scheduleReset(ancestor);
-                              }}>{part}</Link>
-                            : <span>{part}</span>
-                        }
-                      </React.Fragment>
-                    );
-                  })
+                  const pathUpTo = activePost!.addressParts!.slice(0, i + 1).join('//');
+                  const ancestorId = addressToNoteId.get(pathUpTo);
+                  const ancestor = ancestorId ? noteById.get(ancestorId) : undefined;
+                  const isLast = i === activePost!.addressParts!.length - 1;
+                  return (
+                    <React.Fragment key={i}>
+                      {i > 0 && <span className="mx-0.5 text-th-muted">/</span>}
+                      {isLast
+                        ? <span>{part}</span>
+                        : ancestor
+                          ? <Link to={`/lab/second-brain/${ancestor.id}`} className="hover:text-violet-400 transition-colors" onClick={() => {
+                            scheduleReset(ancestor);
+                          }}>{part}</Link>
+                          : <span>{part}</span>
+                      }
+                    </React.Fragment>
+                  );
+                })
                 : <span>Root node</span>}
             </div>
 
@@ -1459,7 +1515,7 @@ export const SecondBrainView: React.FC = () => {
                     onMouseLeave={hideMentionPreview}
                     className={`text-sm font-normal transition-colors no-underline ${isVisited(m.id) ? 'text-blue-400 hover:text-blue-300' : 'text-violet-400 hover:text-violet-300'}`}
                   >
-                    {noteLabel(m)}<svg className="inline w-[0.85em] h-[0.85em] ml-0.5 opacity-50" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style={{ verticalAlign: '-0.1em' }}><path fillRule="evenodd" clipRule="evenodd" d={ICON_REF_IN}/></svg>
+                    {noteLabel(m)}<svg className="inline w-[0.85em] h-[0.85em] ml-0.5 opacity-50" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style={{ verticalAlign: '-0.1em' }}><path fillRule="evenodd" clipRule="evenodd" d={ICON_REF_IN} /></svg>
                   </Link>
                 ))}
                 <WikiLinkPreview {...mentionPreview} variant="blue" />
@@ -1473,214 +1529,381 @@ export const SecondBrainView: React.FC = () => {
               <span>mentioned {'\u2191'} {mentions.length}</span>
             </div>
 
-            {/* Content — only this section fades during note transitions */}
-            <div
-              style={{
-                opacity: contentReady ? 1 : 0,
-                transition: contentReady ? 'opacity 150ms ease-in' : 'none',
-              }}
-            >
-              <div className="article-page-wrapper article-wiki">
-                <WikiContent
-                  html={resolvedHtml}
-                  className="article-content"
-                  onWikiLinkClick={handleWikiLinkClick}
-                  isVisited={isVisited}
-                />
-              </div>
-            </div>
-
-            {/* ─── Interactions + Drift Detector ─── */}
-            {(() => {
-              const driftEntries = getDrift(activePost!.id);
-              const hasDrift = driftEntries.length > 0;
-              if (connections.length === 0 && !hasDrift) return null;
-              return (
-                <div>
-                  <hr className="border-t border-th-border my-6" />
-                  {connections.length > 0 && (
-                    <div>
-                      <h3 className="text-xs text-th-secondary uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                        Interactions
-                        <InfoPopover
-                                          title="About interactions"
-                          content={
-                            <div className="space-y-2">
-                              <p>Unlike regular body links, <strong className={tipStrong}>interactions</strong> are curated, annotated relationships — each one describes <em>how</em> two concepts relate (e.g. "contrast", "depends on", "example of").</p>
-                              <p>They are <strong className={tipStrong}>bilateral</strong> — if note A interacts with B, it appears on both sides automatically.</p>
-                              <p>Click the name to navigate to the related concept.</p>
-                            </div>
-                          }
-                        />
-                      </h3>
-                      <div className="space-y-3">
-                        {connections.map((conn: Connection) => {
-                          const v = isVisited(conn.note.id);
-                          return (
-                            <div key={conn.note.id}>
-                              <Link
-                                to={`/lab/second-brain/${conn.note.id}`}
-                                onClick={() => handleConnectionClick(conn.note)}
-                                className="wiki-sidelink inline transition-colors no-underline border-b border-solid cursor-pointer"
-                                style={{ '--wl-color': v ? 'var(--wiki-link-visited)' : 'var(--cat-fieldnotes-accent)' } as React.CSSProperties}
-                              >
-                                <span className="text-sm">{noteLabel(conn.note)}</span><svg className="inline w-[0.85em] h-[0.85em] ml-0.5 opacity-80" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style={{ verticalAlign: '-0.1em' }}><path fillRule="evenodd" clipRule="evenodd" d={ICON_REF_OUT}/></svg>
-                              </Link>
-                              {conn.note.address && (
-                                <span className="text-sm text-th-secondary ml-2">{displayAddress(conn.note.address)}</span>
-                              )}
-                              {(conn.annotation || conn.reverseAnnotation) && (
-                                <div className="text-sm text-th-secondary mt-0.5 font-sans" onClick={handleInlineWikiClick}>
-                                  <span dangerouslySetInnerHTML={{ __html: resolveWikiLinks(conn.annotation || conn.reverseAnnotation || '', [], noteById).html }} />
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                  {connections.length > 0 && hasDrift && (
-                    <hr className="border-t border-th-border my-6" />
-                  )}
-                  <DriftDetector
-                    entries={driftEntries}
-                    noteById={noteById}
-                    onNoteClick={handleConnectionClick}
+            {/* Body + Interactions box */}
+            <div className="wiki-content-box">
+              {/* Content — only this section fades during note transitions */}
+              <div
+                style={{
+                  opacity: contentReady ? 1 : 0,
+                  transition: contentReady ? 'opacity 150ms ease-in' : 'none',
+                }}
+              >
+                <div className="article-page-wrapper article-wiki">
+                  <WikiContent
+                    html={fieldnoteEditor.isEditing ? previewHtml : resolvedHtml}
+                    className="article-content"
+                    onWikiLinkClick={handleWikiLinkClick}
                     isVisited={isVisited}
                   />
                 </div>
-              );
-            })()}
+              </div>
+
+              {/* ─── Interactions + Drift Detector ─── */}
+              {(() => {
+                const driftEntries = isSimplified ? [] : getDrift(activePost!.id);
+                const hasDrift = driftEntries.length > 0;
+                if (effectiveConnections.length === 0 && !hasDrift) return null;
+                return (
+                  <div>
+                    <hr className="border-t border-th-border my-6" />
+                    {effectiveConnections.length > 0 && (() => {
+                      const renderItem = (conn: Connection, icon: string, annotationText: string | null) => {
+                        const v = isVisited(conn.note.id);
+                        return (
+                          <div key={conn.note.id}>
+                            <Link
+                              to={`/lab/second-brain/${conn.note.id}`}
+                              onClick={() => handleConnectionClick(conn.note)}
+                              className="wiki-sidelink inline transition-colors no-underline border-b border-solid cursor-pointer"
+                              style={{ '--wl-color': v ? 'var(--wiki-link-visited)' : 'var(--cat-fieldnotes-accent)' } as React.CSSProperties}
+                            >
+                              <span className="text-sm">{noteLabel(conn.note)}</span><svg className="inline w-[0.85em] h-[0.85em] ml-0.5 opacity-80" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style={{ verticalAlign: '-0.1em' }}><path fillRule="evenodd" clipRule="evenodd" d={icon} /></svg>
+                            </Link>
+                            {conn.note.address && (
+                              <span className="text-sm text-th-secondary ml-2">{displayAddress(conn.note.address)}</span>
+                            )}
+                            {annotationText && (
+                              <div className="text-sm text-th-secondary mt-0.5 font-sans" onClick={handleInlineWikiClick}>
+                                <span dangerouslySetInnerHTML={{ __html: resolveWikiLinks(annotationText, [], noteById).html }} />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      };
+
+                      if (isSimplified) {
+                        // Flat list — no outgoing/incoming split
+                        return (
+                          <div>
+                            <h3 className="text-xs text-th-secondary uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                              Interactions
+                            </h3>
+                            <div className="space-y-3">
+                              {effectiveConnections.map((conn: Connection) => {
+                                const icon = conn.annotation !== null ? ICON_REF_OUT : ICON_REF_IN;
+                                const text = conn.annotation ?? conn.reverseAnnotation;
+                                return renderItem(conn, icon, text);
+                              })}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      const outgoing = effectiveConnections.filter((c: Connection) => c.annotation !== null);
+                      const incoming = effectiveConnections.filter((c: Connection) => c.annotation === null);
+                      return (
+                        <div>
+                          <h3 className="text-xs text-th-secondary uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                            Interactions
+                          </h3>
+                          {outgoing.length > 0 && (
+                            <div className="mb-4">
+                              <div className="text-[10px] text-th-muted uppercase tracking-wider mb-2">{'\u2197'} Outgoing ({outgoing.length})</div>
+                              <div className="space-y-3">
+                                {outgoing.map((conn: Connection) => renderItem(conn, ICON_REF_OUT, conn.annotation))}
+                              </div>
+                            </div>
+                          )}
+                          {incoming.length > 0 && (
+                            <div>
+                              <div className="text-[10px] text-th-muted uppercase tracking-wider mb-2">{'\u2199'} Incoming ({incoming.length})</div>
+                              <div className="space-y-3">
+                                {incoming.map((conn: Connection) => renderItem(conn, ICON_REF_IN, conn.reverseAnnotation))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                    {!isSimplified && effectiveConnections.length > 0 && hasDrift && (
+                      <hr className="border-t border-th-border my-6" />
+                    )}
+                    {!isSimplified && (
+                      <DriftDetector
+                        entries={driftEntries}
+                        noteById={noteById}
+                        onNoteClick={handleConnectionClick}
+                        isVisited={isVisited}
+                      />
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
           </div>
 
-          {/* Right: Context panel — index data, always visible */}
-          <div className="lg:col-span-2 lg:sticky lg:top-12 lg:self-start">
-            <hr className="lg:hidden border-t border-th-border my-6" />
-            <div>
-              <NeighborhoodGraph
-                neighborhood={neighborhood}
-                currentNote={activePost!}
-                onNoteClick={handleConnectionClick}
-                isVisited={isVisited}
-                activeZone={zoneFilter ? activeZone : null}
-                onActiveZoneChange={(zone) => { setZoneFilter(true); setActiveZone(zone); }}
-                homonymParents={homonymParents}
-                onHomonymNavigate={(homonym) => {
-                  scheduleExtend(homonym);
-                  navigate(`/lab/second-brain/${homonym.id}`);
-                }}
-              />
-            </div>
-            <label className="flex items-center gap-1.5 mt-3 mb-1 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={zoneFilter}
-                onChange={() => setZoneFilter(v => !v)}
-                className="accent-violet-400 w-3 h-3"
-              />
-              <span className="text-[10px] text-th-muted">filter by zone</span>
-              <span className="ml-auto" onClick={(e) => e.preventDefault()}>
-                <InfoPopover
-                  title="Neighborhood graph"
-                  content={
-                    <div className="space-y-2">
-                      <p>This graph shows where the current note sits in the <strong className={tipStrong}>naming hierarchy</strong> (its address path), not its link connections.</p>
-                      <p>Three zones: <strong className={tipStrong}>parent</strong> (above), <strong className={tipStrong}>siblings</strong> (same level), <strong className={tipStrong}>children</strong> (below). Tap a zone to filter the leaderboard below.</p>
-                      <p><strong className={tipStrong}>Tap a zone</strong> to select it. On desktop, arrow keys also switch zones and navigate within.</p>
-                      <p><strong className={tipStrong}>White bar</strong> = current note. <span style={{ color: 'var(--wiki-link-visited)' }}>Blue</span> = visited. <span className={tipAccent}>Purple</span> = not yet visited.</p>
-                      <p><strong className={tipStrong}>Ghost dots</strong> — if the same name exists under multiple parents, dots mark the alternatives.</p>
-                    </div>
-                  }
-                />
-              </span>
-            </label>
-            <div className="mt-2">
-            <RelevanceLeaderboard
-              mode="family"
-              familyItems={familyItems}
-              noteById={noteById}
-              onNoteClick={handleConnectionClick}
-              isVisited={isVisited}
-              getPercentile={getPercentile}
-            />
-            </div>
+          {/* Right panel: Editor (when editing) or Context (zone panels) */}
+            {globalEditMode && isLocalhost ? (
+              fieldnoteEditor.isEditing ? (
+                <Suspense fallback={<div className="flex items-center justify-center text-th-muted text-xs" style={{ width: 550, flexShrink: 0 }}>Loading editor...</div>}>
+                  <EditorPanel
+                    editor={fieldnoteEditor}
+                    allNotes={allFieldNotes}
+                    allPosts={posts}
+                    contextContent={
+                      <>
+                        <div>
+                          <NeighborhoodGraph
+                            neighborhood={neighborhood}
+                            currentNote={activePost!}
+                            onNoteClick={handleConnectionClick}
+                            isVisited={isVisited}
+                            activeZone={zoneFilter ? activeZone : null}
+                            onActiveZoneChange={(zone) => { setZoneFilter(true); setActiveZone(zone); }}
+                            homonymParents={homonymParents}
+                            onHomonymNavigate={(homonym) => {
+                              scheduleExtend(homonym);
+                              navigate(`/lab/second-brain/${homonym.id}`);
+                            }}
+                          />
+                        </div>
+                        <label className="flex items-center gap-1.5 mt-3 mb-1 cursor-pointer select-none">
+                          <input type="checkbox" checked={zoneFilter} onChange={() => setZoneFilter(v => !v)} className="accent-violet-400 w-3 h-3" />
+                          <span className="text-[10px] text-th-muted">filter by zone</span>
+                        </label>
+                        <div className="mt-2">
+                          <RelevanceLeaderboard mode="family" familyItems={familyItems} noteById={noteById} onNoteClick={handleConnectionClick} isVisited={isVisited} getPercentile={getPercentile} />
+                        </div>
+                      </>
+                    }
+                  />
+                </Suspense>
+              ) : (
+                /* Editor loading — reserve space with same width to prevent layout jump */
+                <div className="flex items-center justify-center text-th-muted text-xs" style={{ width: 550, flexShrink: 0 }}>
+                  Loading editor...
+                </div>
+              )
+            ) : !isSimplified ? (
+              <div className="lg:col-span-2 lg:sticky lg:top-12 lg:self-start">
+                <hr className="lg:hidden border-t border-th-border my-6" />
+                <div>
+                  <NeighborhoodGraph
+                    neighborhood={neighborhood}
+                    currentNote={activePost!}
+                    onNoteClick={handleConnectionClick}
+                    isVisited={isVisited}
+                    activeZone={zoneFilter ? activeZone : null}
+                    onActiveZoneChange={(zone) => { setZoneFilter(true); setActiveZone(zone); }}
+                    homonymParents={homonymParents}
+                    onHomonymNavigate={(homonym) => {
+                      scheduleExtend(homonym);
+                      navigate(`/lab/second-brain/${homonym.id}`);
+                    }}
+                  />
+                </div>
+                <label className="flex items-center gap-1.5 mt-3 mb-1 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={zoneFilter}
+                    onChange={() => setZoneFilter(v => !v)}
+                    className="accent-violet-400 w-3 h-3"
+                  />
+                  <span className="text-[10px] text-th-muted">filter by zone</span>
+                </label>
+                <div className="mt-2">
+                  <RelevanceLeaderboard
+                    mode="family"
+                    familyItems={familyItems}
+                    noteById={noteById}
+                    onNoteClick={handleConnectionClick}
+                    isVisited={isVisited}
+                    getPercentile={getPercentile}
+                  />
+                </div>
+              </div>
+            ) : null}
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="lg:hidden w-full mt-8 mb-4 py-2 text-[10px] uppercase tracking-wider text-th-muted hover:text-violet-400 border border-th-hub-border hover:border-violet-400/30 transition-colors"
+            >
+              Back to top
+            </button>
           </div>
-          <button
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="lg:hidden w-full mt-8 mb-4 py-2 text-[10px] uppercase tracking-wider text-th-muted hover:text-violet-400 border border-th-hub-border hover:border-violet-400/30 transition-colors"
-          >
-            Back to top
-          </button>
-        </div>
       )}
 
-      {/* --- Concept List View (always mounted, hidden when detail is shown) --- */}
-      <div style={showDetail ? { display: 'none' } : undefined}>
-        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {visibleResults.length > 0 ? (
-            visibleResults.map((note, idx) => {
-              const topo = getNoteTopology(note.id);
-              return (
-                <GridCard
-                  key={note.id}
-                  note={note}
-                  idx={idx}
-                  focused={focusedIdx === idx}
-                  visited={isVisited(note.id)}
-                  onCardClick={handleGridCardClick}
-                  outgoing={note.references?.length || 0}
-                  incoming={(backlinksMap.get(note.id) || []).length}
-                  componentId={topo.componentId}
-                  isIsolated={topo.isIsolated}
-                  isBridge={topo.isBridge}
-                />
-              );
-            })
-          ) : (
-            <div className="text-xs text-th-tertiary py-8 text-center col-span-3">
-              No concepts match your search
+          {/* --- Concept List View (always mounted, hidden when detail is shown) --- */}
+          <div style={showDetail ? { display: 'none' } : undefined}>
+            <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {visibleResults.length > 0 ? (
+                visibleResults.map((note, idx) => {
+                  const topo = getNoteTopology(note.id);
+                  return (
+                    <GridCard
+                      key={note.id}
+                      note={note}
+                      idx={idx}
+                      focused={focusedIdx === idx}
+                      visited={isVisited(note.id)}
+                      onCardClick={handleGridCardClick}
+                      outgoing={note.references?.length || 0}
+                      incoming={(backlinksMap.get(note.id) || []).length}
+                      componentId={topo.componentId}
+                      isIsolated={topo.isIsolated}
+                      isBridge={topo.isBridge}
+                      viewMode={viewMode}
+                    />
+                  );
+                })
+              ) : (
+                <div className="text-xs text-th-tertiary py-8 text-center col-span-3">
+                  No concepts match your search
+                </div>
+              )}
             </div>
+            {/* Infinite scroll sentinel */}
+            {visibleCount < sortedResults.length && (
+              <div ref={sentinelRef} className="h-1" />
+            )}
+          </div>
+
+          {/* Editing upbar — fixed at top, localhost only */}
+          {isLocalhost && createPortal(
+            <div
+              className="hidden lg:flex fixed top-0 right-0 z-[35] h-7 items-center justify-between px-3 border-b border-violet-400/10"
+              style={{ left: SIDEBAR_WIDTH + SECOND_BRAIN_SIDEBAR_WIDTH, backgroundColor: 'var(--hub-sidebar-bg)' }}
+            >
+              {/* Left — editing label + auto-save */}
+              <div className="flex items-center gap-2">
+                {globalEditMode && (
+                  <>
+                    <div className="flex items-center gap-1.5">
+                      <PencilIcon size={11} />
+                      <span className="text-[10px] text-violet-400 font-medium">editing</span>
+                    </div>
+                    <span className="w-px h-3.5 bg-th-hub-border" />
+                    <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={autoSaveOnSwitch}
+                        onChange={() => setAutoSaveOnSwitch(v => !v)}
+                        className="accent-violet-400 w-3 h-3"
+                      />
+                      <span className="text-[9px] text-th-muted">auto-save</span>
+                    </label>
+                  </>
+                )}
+              </div>
+              {/* Right — action icons */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={async () => {
+                    if (fieldnoteEditor.isDirty) {
+                      if (!window.confirm('You have unsaved changes. Discard and navigate?')) return;
+                    }
+                    const candidates = allFieldNotes.filter(n => n.id !== activePost?.id);
+                    if (candidates.length === 0) return;
+                    const random = candidates[Math.floor(Math.random() * candidates.length)];
+                    navigate(`/lab/second-brain/${random.id}`);
+                  }}
+                  className="w-6 h-6 flex items-center justify-center text-violet-400/60 hover:text-violet-400 transition-colors"
+                  title="Random note"
+                >
+                  <DiceIcon size={13} />
+                </button>
+                <span className="w-px h-3.5 bg-th-hub-border" />
+                <button
+                  onClick={() => {
+                    setShowNewNote(true);
+                  }}
+                  className="w-6 h-6 flex items-center justify-center text-violet-400/60 hover:text-violet-400 transition-colors"
+                  title="New note"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                </button>
+                <span className="w-px h-3.5 bg-th-hub-border" />
+                <button
+                  onClick={async () => {
+                    if (globalEditMode) {
+                      if (fieldnoteEditor.isDirty) await fieldnoteEditor.save();
+                      fieldnoteEditor.closeEditor();
+                      setGlobalEditMode(false);
+                    } else {
+                      setGlobalEditMode(true);
+                    }
+                  }}
+                  className={`w-6 h-6 flex items-center justify-center transition-colors ${globalEditMode
+                    ? 'text-violet-400'
+                    : 'text-violet-400/60 hover:text-violet-400'
+                    }`}
+                  title={globalEditMode ? 'Exit editing mode' : 'Enter editing mode'}
+                >
+                  <PencilIcon size={13} />
+                </button>
+              </div>
+            </div>,
+            document.body
+          )}
+
+          {/* Mobile floating search button — portal to body to escape animate-fade-in transform stacking context */}
+          {showDetail && createPortal(
+            <button
+              onClick={() => {
+                navigate('/lab/second-brain');
+                setTimeout(() => {
+                  toolbarInputRef.current?.scrollIntoView({ block: 'nearest' });
+                  toolbarInputRef.current?.focus();
+                }, 100);
+              }}
+              className="lg:hidden fixed bottom-16 right-4 z-40 w-11 h-11 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+              aria-label="Search concepts"
+            >
+              <SearchIcon />
+            </button>,
+            document.body
+          )}
+
+          {/* Mobile floating "back to top" button — grid view, after scrolling past first infinite-scroll batch */}
+          {!showDetail && showScrollTop && visibleCount > BATCH_SIZE && createPortal(
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="lg:hidden fixed bottom-16 right-4 z-40 w-11 h-11 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+              aria-label="Back to top"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 19V5" />
+                <path d="M5 12l7-7 7 7" />
+              </svg>
+            </button>,
+            document.body
+          )}
+
+
+
+          {/* New note modal — portaled, works from any view (menu or detail) */}
+          {showNewNote && isLocalhost && createPortal(
+            <div
+              className="fixed inset-0 z-50 flex items-start justify-center pt-16 bg-black/70 backdrop-blur-sm"
+              onMouseDown={(e) => { if (e.target === e.currentTarget) setShowNewNote(false); }}
+            >
+              <div className="w-full max-w-md mx-4">
+                <NewNotePanel
+                  allNotes={allFieldNotes}
+                  onCreated={async (uid) => {
+                    setShowNewNote(false);
+                    _pendingEditUid = uid;
+                    setGlobalEditMode(true);
+                    await refreshBrainIndex(uid);
+                    navigate(`/lab/second-brain/${uid}`);
+                  }}
+                  onCancel={() => setShowNewNote(false)}
+                />
+              </div>
+            </div>,
+            document.body
           )}
         </div>
-        {/* Infinite scroll sentinel */}
-        {visibleCount < sortedResults.length && (
-          <div ref={sentinelRef} className="h-1" />
-        )}
-      </div>
-
-      {/* Mobile floating search button — portal to body to escape animate-fade-in transform stacking context */}
-      {showDetail && createPortal(
-        <button
-          onClick={() => {
-            navigate('/lab/second-brain');
-            setTimeout(() => {
-              toolbarInputRef.current?.scrollIntoView({ block: 'nearest' });
-              toolbarInputRef.current?.focus();
-            }, 100);
-          }}
-          className="lg:hidden fixed bottom-16 right-4 z-40 w-11 h-11 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
-          aria-label="Search concepts"
-        >
-          <SearchIcon />
-        </button>,
-        document.body
-      )}
-
-      {/* Mobile floating "back to top" button — grid view, after scrolling past first infinite-scroll batch */}
-      {!showDetail && showScrollTop && visibleCount > BATCH_SIZE && createPortal(
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="lg:hidden fixed bottom-16 right-4 z-40 w-11 h-11 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
-          aria-label="Back to top"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 19V5" />
-            <path d="M5 12l7-7 7 7" />
-          </svg>
-        </button>,
-        document.body
-      )}
-    </div>
-  );
+      );
 };
