@@ -135,11 +135,11 @@ const AppLayout: React.FC = () => {
   const showGrid = location.pathname.startsWith('/lab');
   const isBlog = location.pathname.startsWith('/blog');
   const isSecondBrain = location.pathname.startsWith('/lab/second-brain');
-  const isBlogArticle = /^\/blog\/[^/]+\/[^/]+/.test(location.pathname);
+  const isArticlePage = /^\/(blog|lab)\/[^/]+\/[^/]+/.test(location.pathname) && !isSecondBrain;
 
   const gridOffset = isSecondBrain
     ? SIDEBAR_WIDTH + SECOND_BRAIN_SIDEBAR_WIDTH
-    : SIDEBAR_WIDTH;
+    : isArticlePage ? 0 : SIDEBAR_WIDTH;
 
   const content = (
     <ErrorBoundary>
@@ -168,7 +168,7 @@ const AppLayout: React.FC = () => {
       )}
 
       {/* Navigation: floating bar for blog articles, sidebar+mobile nav for everything else */}
-      {isBlogArticle ? (
+      {isArticlePage ? (
         <ArticleFloatingBar onOpenSearch={openSearch} />
       ) : (
         <>
@@ -188,7 +188,7 @@ const AppLayout: React.FC = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 min-w-0 flex flex-col min-h-screen">
-        <main className={`flex-grow w-full relative z-10 ${isSecondBrain ? 'max-w-6xl px-4 md:px-10 pt-20 pb-10 md:py-12 mx-auto' : isBlogArticle ? 'px-6 pt-16 pb-10 md:pt-20 md:pb-16 main-center-viewport' : 'px-6 pt-20 pb-10 md:py-16 main-center-viewport'}`}>
+        <main className={`flex-grow w-full relative z-10 ${isSecondBrain ? 'max-w-6xl px-4 md:px-10 pt-20 pb-10 md:py-12 mx-auto' : isArticlePage ? 'px-6 pt-16 pb-10 md:pt-20 md:pb-16 main-center-viewport' : 'px-6 pt-20 pb-10 md:py-16 main-center-viewport'}`}>
           <Routes key={location.pathname}>
             <Route path="/" element={<Navigate to="/home" replace />} />
             <Route path="/home" element={<HomeView />} />
