@@ -1888,7 +1888,7 @@ export const SecondBrainView: React.FC = () => {
 
           {/* --- Concept List View (always mounted, hidden when detail is shown) --- */}
           <div style={showDetail ? { display: 'none' } : undefined}>
-            <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div ref={gridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {visibleResults.length > 0 ? (
                 visibleResults.map((note, idx) => {
                   const topo = getNoteTopology(note.id);

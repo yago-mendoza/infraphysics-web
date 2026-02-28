@@ -9,7 +9,7 @@ import { getActiveChain, ACTIVE_HEADING_THRESHOLD } from '../lib/headings';
 import { WikiContent } from '../components/WikiContent';
 import { CATEGORY_CONFIG, STATUS_CONFIG, sectionPath as getSectionPath, postPath, isBlogCategory } from '../config/categories';
 import { ArrowRightIcon, GitHubIcon, LinkedInIcon, TwitterIcon, RedditIcon, HackerNewsIcon, ClipboardIcon, CheckIcon, ShareIcon, HeartIcon, EyeIcon } from '../components/icons';
-import { ArticleBreadcrumbs } from '../components/article/ArticleBreadcrumbs';
+
 import { ArticleHashtags } from '../components/article/ArticleHashtags';
 import { BlogMetabar } from '../components/article/BlogMetabar';
 import { posts } from '../data/data';
@@ -519,7 +519,17 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
       {isThreads ? (
         <article className="article-threads-card">
           <div className="article-threads-nav">
-            <ArticleBreadcrumbs sectionPath={sectionPathUrl} breadcrumbLabel={catCfg?.breadcrumbLabel || post.category} title={post.displayTitle || post.title} />
+            <div className="article-engagement-row">
+              {views != null && (
+                <span className="article-meta-views"><EyeIcon size={15} /> {views}</span>
+              )}
+              {hearts != null && (
+                <button onClick={toggleHeart} className="article-heart-btn" title={hearted ? 'Unlike' : 'Like'}>
+                  <HeartIcon size={15} filled={hearted} /> {hearts}
+                </button>
+              )}
+              {shareDropdown}
+            </div>
           </div>
 
           {post.thumbnail && (
@@ -545,7 +555,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               )}
             </div>
 
-            <BlogMetabar date={post.date} authorName={authorName} authorPath={authorPath} readingTime={readingTime} views={views} hearts={hearts} hearted={hearted} toggleHeart={toggleHeart} shareDropdown={shareDropdown} formatDate={formatDate} />
+            <BlogMetabar date={post.date} authorName={authorName} authorPath={authorPath} readingTime={readingTime} views={null} hearts={null} hearted={hearted} toggleHeart={toggleHeart} shareDropdown={null} formatDate={formatDate} />
 
             {post.lead && (
               <div className="article-blog-lead">
@@ -598,29 +608,33 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
         {/* ── BODY ── */}
         <div className="article-body">
 
-          {/* Nav row: return link / breadcrumbs + social icons */}
+          {/* Nav row: back link + engagement buttons */}
           <div className="article-nav-row">
-            {isBlog ? (
-              <ArticleBreadcrumbs sectionPath={sectionPathUrl} breadcrumbLabel={catCfg?.breadcrumbLabel || post.category} title={post.displayTitle || post.title} />
-            ) : (
-              <>
-                <Link to={sectionPathUrl} className="article-back-link">
-                  &lt; {backLabel}
-                </Link>
-                <div className="article-social-icons">
-                  <a
-                    href={post.github || 'https://github.com/yago-mendoza'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="article-social-btn article-social-github"
-                    title={post.github ? 'View on GitHub' : 'GitHub'}
-                  >
-                    <GitHubIcon size={18} />
-                  </a>
-                  {shareDropdown}
-                </div>
-              </>
-            )}
+            <Link to={sectionPathUrl} className="article-back-link">
+              &lt; {backLabel}
+            </Link>
+            <div className="article-engagement-row">
+              {views != null && (
+                <span className="article-meta-views"><EyeIcon size={15} /> {views}</span>
+              )}
+              {hearts != null && (
+                <button onClick={toggleHeart} className="article-heart-btn" title={hearted ? 'Unlike' : 'Like'}>
+                  <HeartIcon size={15} filled={hearted} /> {hearts}
+                </button>
+              )}
+              {!isBlog && (
+                <a
+                  href={post.github || 'https://github.com/yago-mendoza'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="article-social-btn article-social-github"
+                  title={post.github ? 'View on GitHub' : 'GitHub'}
+                >
+                  <GitHubIcon size={18} />
+                </a>
+              )}
+              {shareDropdown}
+            </div>
           </div>
 
           {/* Blog image — above meta/title (blog only) */}
@@ -675,21 +689,13 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
             <div className="article-meta">
               <span className="article-meta-date">{formattedDate}</span>
               <span className="article-meta-reading-time">{readingTime} min read</span>
-              {views != null && (
-                <span className="article-meta-views inline-flex items-center gap-1"><EyeIcon size={13} /> {views}</span>
-              )}
-              {hearts != null && (
-                <button onClick={toggleHeart} className="article-heart-btn" title={hearted ? 'Unlike' : 'Like'}>
-                  <HeartIcon size={13} filled={hearted} /> {hearts}
-                </button>
-              )}
               <Link to={authorPath} className="article-meta-author">{authorName}</Link>
             </div>
           )}
 
           {/* Meta bar (blog non-threads only — threads has its own in header card) */}
           {isBlog && post.category !== 'threads' && (
-            <BlogMetabar date={post.date} authorName={authorName} authorPath={authorPath} readingTime={readingTime} views={views} hearts={hearts} hearted={hearted} toggleHeart={toggleHeart} shareDropdown={shareDropdown} formatDate={formatDate} />
+            <BlogMetabar date={post.date} authorName={authorName} authorPath={authorPath} readingTime={readingTime} views={null} hearts={null} hearted={hearted} toggleHeart={toggleHeart} shareDropdown={null} formatDate={formatDate} />
           )}
 
           {/* Lead text (blog non-threads only — threads has its own in header card) */}

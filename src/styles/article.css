@@ -293,6 +293,14 @@
   opacity: 0.7;
 }
 
+/* A5b. Engagement row (views, hearts, share — inline) */
+
+.article-engagement-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 /* A6. Social icon buttons */
 
 .article-social-icons {
@@ -480,25 +488,44 @@
 }
 
 .article-meta-views {
-  color: var(--art-text-mid);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.6rem;
+  height: 34px;
+  border-radius: 2px;
+  border: 1px solid var(--art-border);
+  background: var(--art-surface);
+  color: var(--art-text-muted);
+  font-size: 0.75rem;
+}
+
+.article-meta-views:hover {
+  color: var(--art-accent);
+  border-color: var(--art-accent-hover-border);
+  background: var(--art-accent-hover-bg);
 }
 
 .article-heart-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  background: none;
-  border: none;
-  padding: 0;
+  gap: 0.35rem;
+  padding: 0 0.6rem;
+  height: 34px;
+  border-radius: 2px;
+  border: 1px solid var(--art-border);
+  background: var(--art-surface);
+  color: var(--art-text-muted);
+  font-size: 0.75rem;
   cursor: pointer;
-  color: var(--art-text-mid);
   font: inherit;
-  font-size: inherit;
-  transition: color 0.2s;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
 }
 
 .article-heart-btn:hover {
   color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.06);
 }
 
 .article-heart-btn svg {
@@ -2018,7 +2045,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 @media (max-width: 767px) {
   .article-body {
-    --art-body-px: 0.75rem;
+    --art-body-px: 0.5rem;
     padding: 1rem var(--art-body-px) 1.5rem;
   }
   .article-title {
@@ -2030,6 +2057,19 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   .article-nav-row {
     flex-wrap: wrap;
     gap: 0.75rem;
+  }
+  /* Body text — bump size + line-height to match blog lead density */
+  .article-content p {
+    font-size: 0.9375rem;
+    line-height: 1.55;
+  }
+  .article-content li {
+    font-size: 0.9375rem;
+    line-height: 1.55;
+  }
+  .article-content td {
+    font-size: 0.9375rem;
+    line-height: 1.55;
   }
   .article-content .ctx-note::before {
     display: none;
@@ -2327,6 +2367,16 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   border-color: var(--art-accent-dim);
 }
 
+.article-blog .article-meta-views,
+.article-blog .article-heart-btn {
+  height: auto;
+  border-radius: 9999px;
+  background: none;
+  padding: 0.35rem 0.75rem;
+  font-family: var(--font-blog-heading);
+  font-size: 0.8rem;
+}
+
 /* E4e. Blog title/subtitle — reduced sizes */
 .article-blog .article-title {
   font-size: 1.8rem;
@@ -2575,16 +2625,16 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 /* F9. Responsive */
 @media (max-width: 767px) {
   .article-threads-body {
-    --art-body-px: 0.75rem;
-    padding: 0 0.75rem 1.5rem;
+    --art-body-px: 0.5rem;
+    padding: 0 0.5rem 1.5rem;
   }
 
   .article-threads-nav {
-    padding: 0.55rem 0.75rem;
+    padding: 0.55rem 0.5rem;
   }
 
   .article-threads-header-content {
-    padding: 1rem 0.75rem 0;
+    padding: 1rem 0.5rem 0;
   }
 }
 

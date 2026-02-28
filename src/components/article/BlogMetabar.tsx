@@ -30,14 +30,14 @@ export const BlogMetabar: React.FC<BlogMetabarProps> = ({
       {views != null && (
         <>
           <span className="article-blog-metabar-sep">&middot;</span>
-          <span className="inline-flex items-center gap-1"><EyeIcon size={13} /> {views}</span>
+          <span className="article-meta-views"><EyeIcon size={15} /> {views}</span>
         </>
       )}
       {hearts != null && (
         <>
           <span className="article-blog-metabar-sep">&middot;</span>
           <button onClick={toggleHeart} className="article-heart-btn" title={hearted ? 'Unlike' : 'Like'}>
-            <HeartIcon size={13} filled={hearted} /> {hearts}
+            <HeartIcon size={15} filled={hearted} /> {hearts}
           </button>
         </>
       )}
