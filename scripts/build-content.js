@@ -68,6 +68,22 @@ customRenderer.image = function({ href, title, text }) {
   return imgTag;
 };
 
+customRenderer.table = function(token) {
+  let headerCells = '';
+  for (const cell of token.header) headerCells += this.tablecell(cell);
+  const headerRow = this.tablerow({ text: headerCells });
+
+  let bodyRows = '';
+  for (const row of token.rows) {
+    let rowCells = '';
+    for (const cell of row) rowCells += this.tablecell(cell);
+    bodyRows += this.tablerow({ text: rowCells });
+  }
+
+  const body = bodyRows ? `<tbody>${bodyRows}</tbody>` : '';
+  return `<div class="table-wrapper"><table><thead>${headerRow}</thead>${body}</table></div>\n`;
+};
+
 marked.setOptions({
   renderer: customRenderer,
   ...compilerConfig.marked,

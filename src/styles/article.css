@@ -1716,11 +1716,17 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 /* B11. Tables */
 
+.article-content .table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 1.5rem 0;
+}
+
 .article-content table {
   width: 100%;
   border-collapse: collapse;
-  margin: 1.5rem 0;
   font-size: 0.8rem;
+  min-width: 28rem;
 }
 
 .article-content th {
@@ -2045,7 +2051,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 @media (max-width: 767px) {
   .article-body {
-    --art-body-px: 0.5rem;
+    --art-body-px: 0.15rem;
     padding: 1rem var(--art-body-px) 1.5rem;
   }
   .article-title {
@@ -2559,19 +2565,52 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 }
 
 
-/* F3. Engagement row — sits below metabar in header-content */
-.article-threads-engagement {
-  padding-top: 0.5rem;
-}
-
+/* F3. Meta + engagement wrapper */
 .article-engagement-left {
   display: flex;
   align-items: center;
   gap: 0.4rem;
 }
 
+/* Desktop: metabar and engagement on same line */
+@media (min-width: 768px) {
+  .article-threads-meta-engagement {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-top: 1px solid var(--art-border);
+    border-bottom: 1px solid var(--art-border);
+    padding: 0.75rem 0;
+  }
+
+  .article-threads-meta-engagement .article-blog-metabar {
+    flex: 1;
+    border: none;
+    padding: 0;
+  }
+
+  .article-threads-engagement {
+    padding: 0;
+  }
+}
+
+/* Mobile: wrapper disappears, engagement floats to top via order */
+@media (max-width: 767px) {
+  .article-threads-meta-engagement {
+    display: contents;
+  }
+
+  .article-threads-engagement {
+    order: -1;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+  }
+}
+
 /* F4. Header content area */
 .article-threads-header-content {
+  display: flex;
+  flex-direction: column;
   padding: 1.5rem 2rem 0;
 }
 
@@ -2627,17 +2666,17 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 /* F9. Responsive */
 @media (max-width: 767px) {
+  .article-threads-card {
+    margin-top: 0.5rem;
+  }
+
   .article-threads-body {
-    --art-body-px: 0.5rem;
-    padding: 0 0.5rem 1.5rem;
+    --art-body-px: 0.15rem;
+    padding: 0 0.15rem 1.5rem;
   }
 
   .article-threads-header-content {
-    padding: 1rem 0.5rem 0;
-  }
-
-  .article-threads-engagement {
-    justify-content: space-between;
+    padding: 1rem 0.15rem 0;
   }
 }
 
