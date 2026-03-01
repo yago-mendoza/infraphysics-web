@@ -2559,12 +2559,15 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 }
 
 
-/* F3. Header nav bar */
-.article-threads-nav {
-  font-family: var(--font-blog-body);
-  font-weight: 400;
-  padding: 0.55rem 2rem;
-  border-bottom: 1px solid var(--art-border);
+/* F3. Engagement row — sits below metabar in header-content */
+.article-threads-engagement {
+  padding-top: 0.5rem;
+}
+
+.article-engagement-left {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 /* F4. Header content area */
@@ -2629,12 +2632,12 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
     padding: 0 0.5rem 1.5rem;
   }
 
-  .article-threads-nav {
-    padding: 0.55rem 0.5rem;
-  }
-
   .article-threads-header-content {
     padding: 1rem 0.5rem 0;
+  }
+
+  .article-threads-engagement {
+    justify-content: space-between;
   }
 }
 

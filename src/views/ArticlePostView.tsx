@@ -518,20 +518,6 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
       {isThreads ? (
         <article className="article-threads-card">
-          <div className="article-threads-nav">
-            <div className="article-engagement-row">
-              {views != null && (
-                <span className="article-meta-views"><EyeIcon size={15} /> {views}</span>
-              )}
-              {hearts != null && (
-                <button onClick={toggleHeart} className="article-heart-btn" title={hearted ? 'Unlike' : 'Like'}>
-                  <HeartIcon size={15} filled={hearted} /> {hearts}
-                </button>
-              )}
-              {shareDropdown}
-            </div>
-          </div>
-
           {post.thumbnail && (
             <div className={`article-threads-image thumb-${post.thumbnailAspect || 'full'}`}>
               <img
@@ -556,6 +542,20 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
             </div>
 
             <BlogMetabar date={post.date} authorName={authorName} authorPath={authorPath} readingTime={readingTime} views={null} hearts={null} hearted={hearted} toggleHeart={toggleHeart} shareDropdown={null} formatDate={formatDate} />
+
+            <div className="article-engagement-row article-threads-engagement">
+              <div className="article-engagement-left">
+                {views != null && (
+                  <span className="article-meta-views"><EyeIcon size={15} /> {views}</span>
+                )}
+                {hearts != null && (
+                  <button onClick={toggleHeart} className="article-heart-btn" title={hearted ? 'Unlike' : 'Like'}>
+                    <HeartIcon size={15} filled={hearted} /> {hearts}
+                  </button>
+                )}
+              </div>
+              {shareDropdown}
+            </div>
 
             {post.lead && (
               <div className="article-blog-lead">
