@@ -16,20 +16,20 @@ export const AboutView: React.FC = () => {
             {/* Mobile: quote first, then photo+name row */}
             <div className="md:hidden">
               <div className="flex justify-end mb-4">
-                <blockquote className="relative max-w-[75%] pl-5 pr-1">
-                  <span
-                    className="absolute left-10 -top-2 text-4xl leading-none text-th-heading/40 select-none"
-                    style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
-                    aria-hidden="true"
-                  >&ldquo;</span>
+                <blockquote className="max-w-[75%] pl-5 pr-1">
                   <p className="text-th-secondary text-sm leading-relaxed italic text-right">
+                    <span
+                      className="relative top-2 text-4xl leading-[0] align-top text-th-heading/40 select-none mr-1"
+                      style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+                      aria-hidden="true"
+                    >&ldquo;</span>
                     My competitive advantage is that I'm having fun.
+                    <span
+                      className="relative -top-2 text-4xl leading-[0] align-bottom text-th-heading/40 select-none ml-0.5"
+                      style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+                      aria-hidden="true"
+                    >&rdquo;</span>
                   </p>
-                  <span
-                    className="absolute -right-2 -bottom-2 text-4xl leading-none text-th-heading/40 select-none"
-                    style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
-                    aria-hidden="true"
-                  >&rdquo;</span>
                 </blockquote>
               </div>
               <div className="flex items-center gap-4 mt-6">
