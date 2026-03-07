@@ -4,7 +4,7 @@ displayTitle: Trabajar con IA engancha. Y no en sentido figurado.
 category: threads
 date: "2026-07-03"
 description: El mismo circuito que las tragamonedas, pero con resultados reales. Eso cambia cómo se siente trabajar — y cómo se siente parar.
-lead: "Últimamente le he echado más horas a esto que a ninguna otra cosa en mi vida. Todo el montón de ideas que llevaba acumulando de repente tiene salida — apuntar, probar, montar, desplegar, revisar fallos, razonar sobre lo que hago para hacerlo mejor. Engancha, claro. Y no quiero ser aguafiestas, pero trae lo suyo, y no me quedo tranquilo si no dejo las líneas claras. Así que de eso va esto. Para hacer las paces con esa vocecita preventiva, lavarme las manos, y poder volver a quemar tokens como un desgraciado."
+lead: "Últimamente le he echado más horas a esto que a ninguna otra cosa en mi vida. Todo el montón de ideas que llevaba acumulando de repente tiene tracción — apuntar, probar, montar, desplegar, revisar fallos, razonar sobre lo que hago para hacerlo mejor. Engancha, claro. Y no quiero ser aguafiestas, pero trae lo suyo, y no me quedo tranquilo si no dejo las líneas claras. Así que de eso va esto. Para hacer las paces con esa vocecita preventiva, lavarme las manos, y poder volver a quemar tokens como un desgraciado."
 tags: [ai, productivity, psychology, dopamine]
 lang: es
 ---

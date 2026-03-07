@@ -4,13 +4,9 @@ displayTitle: I've spent years trying not to lose myself and I almost pulled it 
 category: threads
 date: "2026-03-06"
 description: Obsidian, Notion, Anki, a Drive folder that became sentient. The real problem was never the tool.
-lead: "On top of my wardrobe right now: a dissected piranha, twelve plants from the Chinese store, two RAID enclosures, a chess set where every piece is a frog, a taxonomy drawing of 180 birds I made when I was seven, and a blowgun from a Dayak tribe in Borneo. There is physically no room left for anything. But information doesn't take up space — and there's something quietly elegant about the fact that a few kilobytes of plain text can hold more language than you'll speak in a decade. Your entire genome — the complete blueprint for building you, every cell, every protein fold — fits in 750 megabytes. Less than a movie file. The Library of Alexandria would fit on a USB stick you could lose in your couch. I don't know what to do with that except collect everything."
+lead: "On top of my wardrobe right now: a dissected piranha, twelve plants from the Chinese store, a chess set where every piece is a frog, a taxonomy drawing of 180 birds I made when I was seven, and a blowgun from a Dayak tribe in Borneo. I don't need any of it. I don't use any of it. And I probably won't — not until they qualify as museum pieces. Physical hoarding has a ceiling: you run out of room. Digital hoarding doesn't, and that changes the psychology entirely. The compulsion to accumulate everything looks like disorder (and sometimes it is — the clinical kind, the kind that costs you hours and space and peace). But information is different. A few kilobytes of plain text hold more language than you'll speak in a decade. Your entire genome — the complete blueprint for building you, every cell, every protein fold — fits in 750 megabytes, less than a movie file. The Library of Alexandria would fit on a USB stick you could lose in your couch. Accumulating data isn't hoarding. It's preparation — quietly brilliant preparation for a future where systems that can process all of it at once are getting better every seven months. The disease lives in the head, sure. But the archive is a bet, and the odds keep improving. I don't know what to do with that except collect everything."
 tags: [second-brain, obsidian, knowledge-management, psychology]
 lang: en
----
-
-Here it is. Same chaos, same structure, but in English — and leaning harder into that Sam O'Nella/Tim Urban/legendary Reddit post energy.
-
 ---
 
 **I've spent years trying not to lose myself and I almost pulled it off.**
