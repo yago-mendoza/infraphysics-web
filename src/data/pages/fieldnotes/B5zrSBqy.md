@@ -10,6 +10,6 @@ date: "2025-06-14"
 - Same seed string → same deterministic key pair (`keccak256(utf8Bytes(seed))`) — useful for reproducible test environments
 - Two nodes sharing the same private key = irreconcilable conflict (duplicate nonces, indistinguishable signatures)
 
----
-[[kQcY7a5n|HD Wallet]] :: HD wallets generate an entire tree of key pairs from a single master seed
+## Interactions
 
+- [[kQcY7a5n|HD Wallet]] : : HD wallets generate an entire tree of key pairs from a single master seed

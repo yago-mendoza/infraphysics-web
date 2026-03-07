@@ -11,5 +11,7 @@ date: "2026-02-15"
 - Even if we could scale oversight forever, we'd still need to answer: "good according to what, exactly?"
 - Every rule has edge cases, every value conflicts with another (freedom vs safety, honesty vs kindness)
 - The gap between "what we wrote" and "what we meant" is where catastrophic misalignment lives (the value specification problem)
----
-[[mCK28lZ6|constitutional AI]] :: Constitutional AI formalizes values into constitutions — Goodhart's curse says those constitutions will always be leaky approximations
+
+## Interactions
+
+- [[mCK28lZ6|constitutional AI]] : : Constitutional AI formalizes values into constitutions — Goodhart's curse says those constitutions will always be leaky approximations

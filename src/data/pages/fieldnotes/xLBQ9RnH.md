@@ -10,6 +10,6 @@ date: "2025-02-03"
 - Volume mapping is bidirectional and live — changes on either side are immediately visible on the other
 - `--data-path=/data/n1` tells Besu where to write inside the container; `-v` ensures it reaches the host
 
----
-[[FlMHYCjo|Docker]] :: volumes solve the fundamental tension between container ephemerality and blockchain persistence
+## Interactions
 
+- [[FlMHYCjo|Docker]] : : volumes solve the fundamental tension between container ephemerality and blockchain persistence

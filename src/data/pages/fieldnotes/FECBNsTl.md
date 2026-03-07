@@ -10,6 +10,6 @@ date: "2025-05-18"
 - `node -e "..."` pattern: inline JS execution from bash — keeps the script self-contained and portable
 - Silent failures: never redirect stderr to `/dev/null` — hides critical errors like missing npm packages
 
----
-[[C3w8sWpi|Besu]] :: automation scripts are the glue between [[FlMHYCjo|Docker]], Besu, and the frontend application
+## Interactions
 
+- [[C3w8sWpi|Besu]] : : automation scripts are the glue between [[FlMHYCjo|Docker]], Besu, and the frontend application

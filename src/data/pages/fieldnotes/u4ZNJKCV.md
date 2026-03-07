@@ -9,6 +9,6 @@ date: "2025-09-07"
 - Even without private keys, an attacker can spam zero-cost transactions to fill blocks on a private network
 - Defense in layers: CORS restrictions, selective port mapping, validator/RPC role separation
 
----
-[[1gCBEfat|Minimum Privilege]] :: the single most impactful security principle for node deployment
+## Interactions
 
+- [[1gCBEfat|Minimum Privilege]] : : the single most impactful security principle for node deployment

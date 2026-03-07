@@ -10,5 +10,6 @@ date: "2026-02-17"
 - One node can wear multiple hats (bootnode + validator + RPC), but separation is more secure
 - Ideal: dedicated validator with no RPC exposed — reduces attack surface to zero from outside
 
----
-[[1gCBEfat]] :: validators should never expose RPC — minimum privilege applied to block signers
+## Interactions
+
+- [[1gCBEfat]] : : validators should never expose RPC — minimum privilege applied to block signers

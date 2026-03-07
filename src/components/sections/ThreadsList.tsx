@@ -3,33 +3,24 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { formatDate } from '../../lib/date';
-import { calculateReadingTime } from '../../lib/content';
-import { ClockIcon, EyeIcon, HeartIcon } from '../icons';
+import { EyeIcon, HeartIcon } from '../icons';
 import { postPath } from '../../config/categories';
-import { EmptyState, SearchResultsList } from './SearchResultsList';
+import { EmptyState } from './SearchResultsList';
 import type { SectionRendererProps } from './index';
 
 export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getExcerpt, getMatchCount, accent, stats }) => {
   if (posts.length === 0) return <EmptyState query={query} />;
-  if (query) return <SearchResultsList posts={posts} query={query} getMatchCount={getMatchCount} accent={accent} tagAccent={accent} />;
 
   /* ── Default: editorial card layout ── */
   return (
     <div className="max-w-3xl mx-auto">
       {posts.map((post, index) => {
-        const readTime = calculateReadingTime(post.content);
-        const tags = post.tags || [];
-
         return (
           <div key={post.id} className={`listing-card thread-card ${index < posts.length - 1 ? 'border-b border-th-border pb-8 mb-8' : ''}`}>
-            <div className="flex flex-col md:flex-row gap-6">
-              {/* Text — left */}
+            <div className="flex flex-col">
               <div className="flex-grow min-w-0">
-                {/* Reading time + date */}
+                {/* Date + stats */}
                 <div className="flex flex-wrap items-center gap-3 mb-3">
-                  <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 border rounded-sm" style={{ borderColor: `color-mix(in srgb, ${accent} 30%, transparent)`, color: accent, fontFamily: "'Roboto Slab', Georgia, serif" }}>
-                    <ClockIcon /> {readTime} MIN READ
-                  </span>
                   <span className="text-xs text-th-tertiary" style={{ fontFamily: "'Roboto Slab', Georgia, serif" }}>{formatDate(post.date)}</span>
                   {(() => {
                     const s = stats?.[postPath(post.category, post.id)];
@@ -45,41 +36,14 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
 
                 {/* Title + Description — both clickable */}
                 <Link to={postPath(post.category, post.id)} className="listing-title-link thread-title-link group block mb-3">
-                  <h3 className="listing-card-title thread-card-title text-xl font-bold transition-colors leading-tight mb-2" style={{ fontFamily: "'Roboto Slab', Georgia, serif", fontWeight: 600, color: accent }}>
+                  <h3 className="listing-card-title thread-card-title text-lg transition-colors leading-tight mb-2" style={{ fontFamily: "'Roboto Slab', Georgia, serif", fontWeight: 400, color: 'var(--cat-threads-accent)' }}>
                     {post.displayTitle || post.title}
                   </h3>
                   <p className="text-sm text-th-secondary leading-relaxed" style={{ fontFamily: "'Roboto Slab', Georgia, serif" }}>
                     {post.description}
                   </p>
                 </Link>
-
-                {/* Tag pills */}
-                {tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {tags.map(tag => (
-                      <span
-                        key={tag}
-                        className="pill"
-                      style={{ borderColor: `color-mix(in srgb, ${accent} 30%, transparent)`, color: accent, fontFamily: "'Roboto Slab', Georgia, serif" }}
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
-
-              {/* Photo — right, rose-tinted */}
-              {post.thumbnail && (
-                <Link to={postPath(post.category, post.id)} className="listing-thumb thread-thumb relative w-full md:w-56 h-36 overflow-hidden flex-shrink-0 self-start block">
-                  <img
-                    src={post.thumbnail}
-                    alt={post.displayTitle || post.title}
-                    loading="lazy"
-                    className="w-full h-full object-cover"
-                  />
-                </Link>
-              )}
             </div>
           </div>
         );

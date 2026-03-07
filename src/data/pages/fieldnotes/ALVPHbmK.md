@@ -9,6 +9,6 @@ date: "2025-05-03"
 - Parser is strict: a syntax error on one line can make Besu fail to recognize options on later lines
 - `rpc-http-cors-origins=["*"]` allows any web page to call the RPC — convenient for dev, dangerous in production
 
----
-[[3kmFrjfS|CORS]] :: the CORS setting controls which web origins can access the RPC endpoint
+## Interactions
 
+- [[3kmFrjfS|CORS]] : : the CORS setting controls which web origins can access the RPC endpoint

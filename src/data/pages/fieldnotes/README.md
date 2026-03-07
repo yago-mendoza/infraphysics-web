@@ -13,6 +13,7 @@ Developer reference for managing the fieldnotes knowledge graph. This covers the
 5. [Error Reference](#error-reference)
 6. [Cascading Effects](#cascading-effects)
 7. [Edge Cases](#edge-cases) — includes [Stub notes](#stub-notes)
+8. [Obsidian Sync](#obsidian-sync)
 
 ---
 
@@ -146,7 +147,7 @@ The build runs a 7-phase integrity check automatically. Errors fail the build (e
 |---|---|---|
 | 1. Reference integrity | Broken `[[wiki-links]]` in fieldnotes and posts | **ERROR** |
 | 2. Self-references | Notes linking to themselves in trailing refs | WARN |
-| 3. Bare trailing refs | Trailing refs without `::` annotation | **ERROR** |
+| 3. Bare trailing refs | Trailing refs without ` : : ` annotation | **ERROR** |
 | 4. Parent hierarchy | Missing parent notes in the address tree | WARN |
 | 5. Circular references | Cycles in the reference graph (opt-in, off by default) | WARN |
 | 6. Segment collisions | Same concept name at different hierarchy paths (HIGH/MED/LOW tiers) | WARN |
@@ -186,7 +187,7 @@ Every validation output line includes a bracketed error code for easy scanning a
 | `BROKEN_REF` | ERROR | No | Inline `[[ref]]` to nonexistent fieldnote |
 | `BROKEN_WIKILINK` | ERROR | No | `[[wiki-link]]` in post to nonexistent fieldnote |
 | `SELF_REF` | WARN | No | Note trails a ref to itself |
-| `BARE_TRAILING_REF` | ERROR | No | Trailing ref without `::` annotation |
+| `BARE_TRAILING_REF` | ERROR | No | Trailing ref without ` : : ` annotation |
 | `MISSING_PARENT` | WARN | Yes | Parent address has no dedicated note |
 | `CIRCULAR_REF` | WARN | No | Cycle in reference graph |
 | `SEGMENT_COLLISION` | HIGH/MED/LOW | Yes | Same segment name at different hierarchy paths |
@@ -362,14 +363,14 @@ Some text here.      ← this line breaks the trailing ref sequence
 [[RAM]]              ← this is now a body wiki-link (mention), NOT a trailing ref
 ```
 
-### Trailing ref annotations use `::`, not `|`
+### Trailing ref annotations use ` : : `, not `|`
 
 ```markdown
-[[CPU//core]] :: shares execution resources    ← correct (annotation)
-[[CPU//core | custom display text]]            ← wrong context — | is for inline display text
+- [[CPU//core]] : : shares execution resources    ← correct (annotation)
+- [[CPU//core | custom display text]]             ← wrong context — | is for inline display text
 ```
 
-`|` in trailing refs sets display text (which is stripped for connections anyway). `::` sets the annotation that appears in the UI as an "Interaction" description.
+`|` in trailing refs sets display text (which is stripped for connections anyway). ` : : ` sets the annotation that appears in the UI as an "Interaction" description. Trailing refs live under a `## Interactions` heading as list items.
 
 ### `distinct` is bilateral
 
@@ -403,3 +404,51 @@ npm run content -- --force
 ```
 
 The cache is also fully invalidated when `compiler.config.js` changes.
+
+---
+
+## Obsidian Sync
+
+> **Status: available but not the primary workflow.** Fieldnotes are authored and edited via the localhost editor (Second Brain UI). Obsidian is a separate thinking space — not a mirror of this system. These scripts exist for one-off exports or if the workflow changes in the future. See the vault's `README.md` for the philosophical boundary between the two systems.
+
+Bidirectional sync between infraphysics fieldnotes and an Obsidian vault.
+
+### Export: `npm run obsidian:export [output-dir]`
+
+Reads all fieldnotes → writes an Obsidian vault structure (default: `./obsidian-vault`).
+
+| Conversion | Example |
+|---|---|
+| Address → folders | `ML//Training//DPO` → `ML/Training/DPO.md` |
+| `/` in segment → `_` | `TCP/IP` → `TCP_IP.md` |
+| `[[uid\|display]]` → `[[name\|display]]` | resolved via uid-to-name map |
+| Frontmatter | `name`, `infraphysics-uid`, `date` (+ aliases, distinct, supersedes) |
+| `^[exp]` | already Obsidian-compatible |
+| `## Interactions` | already Obsidian-compatible (wikilinks converted to names) |
+
+### Import: `npm run obsidian:import [vault-dir]`
+
+Reads Obsidian vault → syncs back to fieldnotes (default: `./obsidian-vault`).
+
+- Notes with `infraphysics-uid` → update existing fieldnote
+- Notes without → generate new UID, create new fieldnote
+- `[[name]]` → resolved to `[[uid\|name]]` (ambiguities reported, left unresolved)
+- `> [!TYPE]` callouts → `{bkqt/TYPE}...{/bkqt}`
+- Deletions → detected and reported only (not auto-deleted)
+- Transfer report written to `src/data/pages/fieldnotes/transfers/`
+
+### Workflow
+
+```bash
+npm run obsidian:export          # export to ./obsidian-vault
+# ... edit in Obsidian ...
+npm run obsidian:import          # import back
+npm run build                    # compile
+node scripts/check-references.js # audit
+```
+
+### Known limitations
+
+- **Name ambiguity:** Multiple notes can share the same `name`. Import reports ambiguous links and leaves them unresolved. Fix manually after import.
+- **Path characters:** Note names with `:`, `?`, `*` are sanitized to `_` during export. The original names are preserved in frontmatter.
+- **Custom syntax:** `{bkqt}`, `{#hex:text}`, `{kbd:key}` etc. are left as-is during export (Obsidian won't render them, but they survive the roundtrip).

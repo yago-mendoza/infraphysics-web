@@ -9,6 +9,6 @@ date: "2025-10-11"
 - Volume mapping (`-v`) was critical: keystore files must persist outside the container
 - Now largely replaced by [[kQcY7a5n|HD wallets]] — signing delegated to Metamask instead of the node
 
----
-[[kQcY7a5n|HD Wallet]] :: HD wallets replaced per-file keystore management with a single seed phrase for all accounts
+## Interactions
 
+- [[kQcY7a5n|HD Wallet]] : : HD wallets replaced per-file keystore management with a single seed phrase for all accounts

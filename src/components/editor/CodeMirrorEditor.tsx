@@ -238,34 +238,33 @@ const CodeMirrorEditor = forwardRef<CodeMirrorHandle, Props>(({ value, onChange,
       const lines = doc.split('\n');
 
       // Check if trailing ref section already exists:
-      // Look for a `---` line followed by at least one `[[...]] ::` line
-      let hasSeparator = false;
+      // Look for `## Interactions` heading or legacy `---` separator followed by ref lines
+      let hasSection = false;
       for (let i = lines.length - 1; i >= 0; i--) {
         const trimmed = lines[i].trim();
         if (!trimmed) continue; // skip empty trailing lines
-        if (/^\[\[.*\]\]\s*::/.test(trimmed)) {
-          // This is a trailing ref line — keep scanning for ---
+        if (/^-\s*\[\[.*\]\]\s*:\s*:/.test(trimmed) || /^\[\[.*\]\]\s*::/.test(trimmed)) {
           continue;
         }
-        if (trimmed === '---') {
-          hasSeparator = true;
+        if (/^#{1,2}\s*interactions\s*$/i.test(trimmed) || trimmed === '---') {
+          hasSection = true;
           break;
         }
-        break; // hit a non-ref, non-separator line → no trailing section
+        break;
       }
 
       let insert: string;
       let cursorOffset: number;
-      if (hasSeparator) {
+      if (hasSection) {
         // Append new ref line at end
         const endsWithNewline = doc.endsWith('\n');
-        insert = (endsWithNewline ? '' : '\n') + '[[ :: ';
-        cursorOffset = (endsWithNewline ? 0 : 1) + 2; // position after [[
+        insert = (endsWithNewline ? '' : '\n') + '- [[ : : ';
+        cursorOffset = (endsWithNewline ? 0 : 1) + 4; // `- [[` = 4
       } else {
-        // Add separator + first ref line
+        // Add ## Interactions heading + first ref line
         const endsWithNewline = doc.endsWith('\n');
-        insert = (endsWithNewline ? '' : '\n') + '---\n[[ :: ';
-        cursorOffset = (endsWithNewline ? 0 : 1) + 4 + 2; // `---\n` = 4, then `[[` = 2
+        insert = (endsWithNewline ? '' : '\n') + '\n## Interactions\n\n- [[ : : ';
+        cursorOffset = (endsWithNewline ? 0 : 1) + 1 + 16 + 2 + 4; // `\n` + `## Interactions\n` + `\n` + `- [[`
       }
 
       const end = doc.length;

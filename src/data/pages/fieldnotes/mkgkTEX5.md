@@ -10,6 +10,6 @@ date: "2025-05-18"
 - RPC still responds to read queries, but write operations (transactions) never confirm
 - Diagnosis: check peer count on each validator, verify P2P connectivity between them
 
----
-[[gpJAZA70|Quorum]] :: quorum is the first thing to check when a Clique network stalls
+## Interactions
 
+- [[gpJAZA70|Quorum]] : : quorum is the first thing to check when a Clique network stalls

@@ -11,6 +11,8 @@ date: "2026-02-15"
 - Safety training: like benchmarks but for the 500 known danger categories instead of intelligence
 - Guardrails: pure system prompt injection, no training — faster than SFT/DPO but most brittle
 - Few-shot learning: no training at all, weights stay frozen — shove examples into the prompt to narrow down the [[RnKMoC3a|latent space]]
----
-[[3EKErev3|Alignment]] :: red-teaming is empirical alignment — finding the failures that theoretical frameworks miss
-[[YwfNaR4R|DPO]] :: red-teaming discoveries feed the contrastive pairs for deeper DPO training cycles
+
+## Interactions
+
+- [[3EKErev3|Alignment]] : : red-teaming is empirical alignment — finding the failures that theoretical frameworks miss
+- [[YwfNaR4R|DPO]] : : red-teaming discoveries feed the contrastive pairs for deeper DPO training cycles

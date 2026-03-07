@@ -32,7 +32,8 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
   // Headings from article context
   const headings = article?.headings ?? [];
   const topHeadings = headings.filter(h => h.depth === 0);
-  const hasToc = headings.length >= 2;
+  const isThreads = article?.post?.category === 'threads';
+  const hasToc = isThreads ? topHeadings.length >= 4 : headings.length >= 2;
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
 
   // Active heading tracking for TOC highlight

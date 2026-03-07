@@ -9,7 +9,7 @@ date: "2025-04-14"
 - PoA ([[chH7mwPq|Clique]]): authorized signers take turns — fast, efficient, permissioned
 - PoS ([[7xWE1VgH|PoS]]): stake ETH, get randomly selected — energy efficient, open participation
 
----
-[[chH7mwPq|Clique]] :: PoA for private/consortium networks
-[[7xWE1VgH|PoS]] :: PoS for public networks like Ethereum Mainnet
+## Interactions
 
+- [[chH7mwPq|Clique]] : : PoA for private/consortium networks
+- [[7xWE1VgH|PoS]] : : PoS for public networks like Ethereum Mainnet

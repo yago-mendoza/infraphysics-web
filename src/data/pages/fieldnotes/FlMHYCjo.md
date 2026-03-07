@@ -10,6 +10,6 @@ date: "2025-02-03"
 - The containerization model trades a little overhead for massive portability and reproducibility
 - In blockchain: eliminates "works on my machine" — everyone runs the exact same Besu binary
 
----
-[[pduX6oJa|Docker Network]] :: containers live in isolated network namespaces by default — Docker networking bridges the gap
+## Interactions
 
+- [[pduX6oJa|Docker Network]] : : containers live in isolated network namespaces by default — Docker networking bridges the gap

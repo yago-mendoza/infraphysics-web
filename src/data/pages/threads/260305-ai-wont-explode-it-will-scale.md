@@ -8,12 +8,15 @@ thumbnail: https://cdn.infraphysics.net/d8kk-c0a8-ldsa.jpeg
 thumbnailAspect: full
 thumbnailShading: heavy
 description: I don't know when ASI arrives. That's the honest part of this post.
+lead: "Each year I shorten the prediction. This year I stopped predicting altogether — not because I gave up, but because the question changed."
 tags: [ai, scaling, bitter-lesson, reinforcement-learning, engineering]
 featured: true
 related: [transformers-and-the-data-wall, everybody-has-an-opinion-on-ai]
 ---
 
-In 2020 I was doing something I was fairly sure counted as cheating. I had a problem — loading algorithm for cargo ships, luxury vehicles across the Atlantic, combinatorial optimization with enough interdependencies to make it genuinely unpleasant — and I was using a language model to draft the documentation. Not to solve the problem. The models couldn't do that. But I'd found something: if you embedded a question inside a text block and engineered the surrounding context carefully enough, the most probable completion was the answer you wanted. It wasn't a conversation. It was distribution engineering. And I used a regex filter to make sure the outputs varied enough that nobody would notice the pattern, because I was reasonably convinced that if anyone looked closely enough, they would know.
+In 2020 I was doing something I was fairly sure counted as cheating. I had a problem (loading algorithm for cargo ships, luxury vehicles across the Atlantic, combinatorial optimization with enough interdependencies to make it genuinely unpleasant) and I was using a language model to draft the documentation.
+
+Not to solve the problem. The models couldn't do that. But I'd found something: if you embedded a question inside a text block and engineered the surrounding context carefully enough, the most probable completion was the answer you wanted. It wasn't a conversation. It was distribution engineering. And I used a regex filter to make sure the outputs varied enough that nobody would notice the pattern, because I was reasonably convinced that if anyone looked closely enough, they would know.
 
 I didn't have a name for what I was doing. I know now it was reward hacking — optimizing the output distribution of a system that had no reward model, before the alignment field had a name. It's not that alignment hadn't been solved yet. It's that nobody had framed it as a solvable problem. At the time it just felt like a trick that worked more often than it should.
 
@@ -23,13 +26,13 @@ Working like that, fighting a base model every day, you develop a certain intuit
 
 Six years later I told Claude Code to restructure a build pipeline with 14 compilation steps. It did it in one shot. I didn't touch anything. That's a task that would have been my entire afternoon and now it's something I kick off and go make coffee.
 
-I've been wrong about ceilings for six years straight. Every time I thought we were near the limit, I wasn't. And I want to explain why I think that's going to continue — not as a belief, but as a measurement.
+Every year I've shortened my prediction for when things get serious. First it was decades. Then years. This year the prediction collapsed entirely — not because I lost confidence, but because I realized I was asking the wrong question. It's not *when* it happens. It's *how* it scales when it does. Because whatever this is, it's not going to arrive as a single moment. It's going to arrive as a slope that was already steep before anyone noticed the incline. And that slope is what I want to explain — not as a belief, but as a measurement.
 
 ---
 
 **Pretrain gives you knowledge. Post-train gives you reasoning.**
 
-A base LLM out of pretraining has compressed an absurd amount of information into its weights. It knows things. But it reasons badly — no mechanism for step-by-step deliberation, no internal scratchpad, no way to pause and reconsider. What reasoning models do, the o1, o3, DeepSeek-R1 family, is add extended chain-of-thought between prompt and response. Every intermediate reasoning token is one more chance to verify, correct, backtrack. This converts inference-time compute into output quality, which scales very differently from just making the model bigger.
+A base LLM out of pretraining has compressed an absurd amount of information into its weights. It knows things. But it reasons badly — no mechanism for step-by-step deliberation, no internal scratchpad, no way to pause and reconsider. What reasoning models do, the o1, o3, DeepSeek-R1 family, is add extended chain-of-thought between prompt and response. Every intermediate reasoning token is one more chance to verify, correct, backtrack. This converts inference-time compute into output quality, which scales very differently from just making the model bigger. OpenAI already drew that conclusion. GPT-5.4 ships without instant mode — extended thinking only, back to the o1 family by default. That's not a architectural choice. It's a bet on where the returns are.
 
 But the real story isn't the architecture. It's what happens when you combine this with RL.
 
@@ -45,7 +48,7 @@ Math is the other self-verifiable domain. In January 2026, an AI system solved E
 
 DeepSeek-R1 showed you can train a competitive reasoning model with pure RL — no supervised fine-tuning, no human labels, just a base model and a reward signal. Qwen 3.5 has the highest GPQA Diamond score of any public model: 88.4, PhD-level research questions in physics, chemistry, biology. Cursor crossed $1B in annual revenue. Cognition's Devin went from 34% merged PRs to 67% in a year while getting 4x faster. These companies aren't competitive because they have bigger models. They're competitive because they run RL on the real interactions happening on their platforms. Every accepted suggestion, every merged PR, is a preference signal. They're converting usage into training data, and the models are getting better specifically at the tasks their users actually do.
 
-This is Richard Sutton's argument from 2019, the year before I was wrestling with davinci. The Bitter Lesson: the biggest lesson from 70 years of AI research is that general methods leveraging computation win, by a large margin. Not clever tricks. Not hand-crafted domain knowledge. The method you can feed with more compute and get better results. Every time, in every subfield, over seven decades, the brute-force scalable approach won. RL with automatic verification *is* that method.
+DeepSeek-R1 is The Bitter Lesson running live. RL with automatic verification *is* that method.
 
 ---
 
@@ -55,11 +58,11 @@ And I'm not even talking about diffusion. Not image generation, not video, not a
 
 METR's data, published March 2025: the duration of tasks an AI agent can autonomously complete doubles every seven months. In 2020, models could reliably complete tasks that took a human nine seconds. By late 2024, forty minutes. On SWE-bench, models went from 4.4% to 71.7% in a single year.
 
-I've been wrong about ceilings for six years. The first few were slow enough that being wrong didn't feel costly. Now the doubling time on the verified SWE-bench subset is under three months. Being wrong about ceilings is getting more expensive.
+Six years of shortening my timeline. The first few corrections were gentle — off by years, not by category. Now the doubling time on the verified SWE-bench subset is under three months. The corrections aren't gentle anymore. They're fast enough that predicting a specific date has become less useful than watching the rate itself. The rate is the story now.
 
 ---
 
-I don't know when superintelligence arrives. There will be bottlenecks — we'll get into those in other threads. What I know is that the exponential isn't a narrative. It's a measurement. Seven months. And the distance between ada and what we have today sits on the same curve that's going to keep going — not because I believe it, but because the data shows it, and I've watched it long enough to stop being surprised when I'm wrong about where it ends.
+I stopped trying to predict when superintelligence arrives. Not out of humility — out of irrelevance. The question assumes a discrete event, a threshold you cross, a date someone could circle on a calendar. But that's not what the data looks like. What the data looks like is a slope that keeps steepening, and at some point the slope *is* the thing. There is no moment. There is only the rate. Seven-month doublings. And the distance between ada and what we have today sits on the same curve that's going to keep compounding — not because I believe it, but because the data shows it, and I've spent enough years watching the curve to know that the interesting part was never where it ends. It's that it doesn't end. It scales. And when it does, it will scale itself — the models improving the training runs that improve the models — which means the prediction isn't "when does ASI arrive" but "at what point does the scaling loop close." Maybe it already has and we just haven't named it yet.
 
 AI won't explode. It will scale. And the difference between those two sentences is the difference between a headline and an engineering trajectory.
 

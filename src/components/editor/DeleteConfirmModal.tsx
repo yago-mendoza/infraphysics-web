@@ -241,7 +241,7 @@ export const DeleteConfirmModal: React.FC<Props> = ({
                         />
                         <div className="min-w-0">
                           <span className="text-th-secondary group-hover:text-th-heading transition-colors">{r.name}</span>
-                          <span className="text-th-muted"> :: {r.annotation}</span>
+                          <span className="text-th-muted"> : : {r.annotation}</span>
                         </div>
                       </label>
                     ))}
@@ -261,7 +261,7 @@ export const DeleteConfirmModal: React.FC<Props> = ({
                   <div className="space-y-0.5">
                     {analysis.ownTrailingRefs.map(r => (
                       <div key={r.uid} className="text-[11px] text-th-secondary pl-2 border-l border-red-400/30">
-                        {r.name} <span className="text-th-muted"> :: {r.annotation}</span>
+                        {r.name} <span className="text-th-muted"> : : {r.annotation}</span>
                       </div>
                     ))}
                   </div>

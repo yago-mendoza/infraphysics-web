@@ -8,5 +8,7 @@ date: "2026-02-26"
 - Redmon et al. (2016). Now up to YOLOv11, lineage fragmented across maintainers post-v5
 - Still the default for real-time production: robotics, surveillance, autonomous driving
 - DETR (transformer-based) catches up academically but YOLO dominates deployment
----
-[[G1JW8o79|CNN]] :: YOLO is fundamentally a CNN architecture — single-shot detection via convolutional feature maps, though newer versions incorporate transformer components
+
+## Interactions
+
+- [[G1JW8o79|CNN]] : : YOLO is fundamentally a CNN architecture — single-shot detection via convolutional feature maps, though newer versions incorporate transformer components

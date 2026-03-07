@@ -10,7 +10,7 @@ date: "2025-04-14"
 - Adding/removing validators requires on-chain voting via `clique_propose` — majority needed
 - Single malicious validator can censor transactions during their turn — but other validators will include them next
 
----
-[[gpJAZA70|Quorum]] :: Clique's safety depends on the quorum rule: floor(N/2)+1 validators must agree
-[[H7v6Q9oF|Voting]] :: validator set changes through on-chain governance, not by editing genesis.json
+## Interactions
 
+- [[gpJAZA70|Quorum]] : : Clique's safety depends on the quorum rule: floor(N/2)+1 validators must agree
+- [[H7v6Q9oF|Voting]] : : validator set changes through on-chain governance, not by editing genesis.json

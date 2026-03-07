@@ -9,6 +9,6 @@ date: "2025-09-07"
 - Gotcha: if Docker mounts a stale genesis.json from a cached path, nodes get the old version without balances
 - Admin Faucet: a backend that signs funding transactions with a pre-funded private key stored in `.env`
 
----
-[[UFgfX2Jv|Besu Genesis]] :: the `alloc` section is where you pre-fund accounts to bootstrap the network economy
+## Interactions
 
+- [[UFgfX2Jv|Besu Genesis]] : : the `alloc` section is where you pre-fund accounts to bootstrap the network economy

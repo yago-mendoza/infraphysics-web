@@ -8,5 +8,7 @@ date: "2026-02-15"
 - Trained using "Bx > By" preference pairs from [[0f5GJDwc|RLHF]] or [[mCK28lZ6|RLAIF]]
 - Used by [[rxVjxTLA|PPO]] to provide reward signal during training
 - The quality ceiling of PPO is the quality ceiling of the reward model
----
-[[YwfNaR4R|DPO]] :: DPO skips the reward model entirely — maps preferences directly to token gradients
+
+## Interactions
+
+- [[YwfNaR4R|DPO]] : : DPO skips the reward model entirely — maps preferences directly to token gradients

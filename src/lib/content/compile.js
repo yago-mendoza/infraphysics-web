@@ -218,7 +218,7 @@ export function processAllLinks(html, uidToMeta, wikiLinksConfig, buildErrors) {
   });
 }
 
-// ── Inline annotations {{ref|explanation}} ──
+// ── Inline annotations ^[explanation] ──
 
 export function extractAnnotations(content) {
   const annotations = [];
@@ -227,30 +227,21 @@ export function extractAnnotations(content) {
   let i = 0;
 
   while (i < content.length) {
-    if (content[i] === '{' && i + 1 < content.length && content[i + 1] === '{') {
+    if (content[i] === '^' && i + 1 < content.length && content[i + 1] === '[') {
+      // Find matching ] with bracket balancing
       let depth = 1;
       let j = i + 2;
-      let pipePos = -1;
       while (j < content.length && depth > 0) {
-        if (content[j] === '{' && j + 1 < content.length && content[j + 1] === '{') {
-          depth++;
-          j += 2;
-        } else if (content[j] === '}' && j + 1 < content.length && content[j + 1] === '}') {
-          depth--;
-          if (depth === 0) break;
-          j += 2;
-        } else {
-          if (content[j] === '|' && depth === 1 && pipePos === -1) pipePos = j;
-          j++;
-        }
+        if (content[j] === '[') depth++;
+        else if (content[j] === ']') depth--;
+        if (depth > 0) j++;
       }
-      if (depth === 0 && pipePos !== -1) {
+      if (depth === 0) {
         counter++;
-        const ref = content.substring(i + 2, pipePos);
-        const explanation = content.substring(pipePos + 1, j);
+        const explanation = content.substring(i + 2, j);
         annotations.push({ num: counter, text: explanation.trim() });
-        result += `<em class="ann-ref-text">${ref.trim()}</em><sup class="ann-ref">${counter}</sup>`;
-        i = j + 2;
+        result += `<sup class="ann-ref">${counter}</sup>`;
+        i = j + 1;
       } else {
         result += content[i];
         i++;
@@ -265,8 +256,8 @@ export function extractAnnotations(content) {
 }
 
 export function processAnnotations(html) {
-  let result = html.replace(/<(p|li|td)>([\s\S]*?)<\/\1>/g, (match, tag, inner) => {
-    if (!inner.includes('{{')) return match;
+  return html.replace(/<(p|li|td)>([\s\S]*?)<\/\1>/g, (match, tag, inner) => {
+    if (!inner.includes('^[')) return match;
     const { processed, annotations } = extractAnnotations(inner);
     if (annotations.length === 0) return match;
     const notesHtml = annotations.map(a =>
@@ -274,26 +265,6 @@ export function processAnnotations(html) {
     ).join('');
     return `<${tag}>${processed}</${tag}>\n<div class="annotations">${notesHtml}</div>`;
   });
-
-  let changed = true;
-  while (changed) {
-    changed = false;
-    result = result.replace(
-      /<div class="ann-note">(<sup>\d+<\/sup>)((?:(?!<\/div>)[\s\S])*)<\/div>/g,
-      (match, sup, content) => {
-        if (!content.includes('{{')) return match;
-        const { processed, annotations } = extractAnnotations(content);
-        if (annotations.length === 0) return match;
-        changed = true;
-        const notesHtml = annotations.map(a =>
-          `<div class="ann-note"><sup>${a.num}</sup>${a.text}</div>`
-        ).join('');
-        return `<div class="ann-note">${sup}${processed}</div>\n<div class="annotations annotations-nested">${notesHtml}</div>`;
-      }
-    );
-  }
-
-  return result;
 }
 
 // ── Post-processors ──

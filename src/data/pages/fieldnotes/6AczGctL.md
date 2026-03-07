@@ -10,6 +10,6 @@ date: "2025-03-08"
 - [[Wp2y5eP8|Bootnode]] initiates the cascade by introducing new nodes to a subset of peers
 - Fully decentralized — no central broadcaster, no single point of failure
 
----
-[[Wp2y5eP8|Bootnode]] :: the bootnode seeds the initial gossip connections — after that, peers discover each other organically
+## Interactions
 
+- [[Wp2y5eP8|Bootnode]] : : the bootnode seeds the initial gossip connections — after that, peers discover each other organically

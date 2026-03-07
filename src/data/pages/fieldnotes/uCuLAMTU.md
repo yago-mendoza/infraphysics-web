@@ -10,6 +10,6 @@ date: "2025-07-06"
 - Password encrypts the seed phrase in browser local storage — unlock = decrypt → derive keys on the fly
 - Switching networks = changing RPC URL + chainId — tells Metamask where to send and what chain to sign for
 
----
-[[PYsPVUGS|Signing]] :: Metamask handles all signing locally — the private key never leaves the extension
+## Interactions
 
+- [[PYsPVUGS|Signing]] : : Metamask handles all signing locally — the private key never leaves the extension

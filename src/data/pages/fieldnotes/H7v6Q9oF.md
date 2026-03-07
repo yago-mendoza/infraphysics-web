@@ -10,6 +10,6 @@ date: "2025-04-14"
 - Three validators: need 2 votes (>50% of 3) to approve any change
 - Voting is on-chain — no need to modify genesis.json or restart nodes
 
----
-[[chH7mwPq|Clique]] :: Clique's governance is fully on-chain and dynamic — no downtime for validator changes
+## Interactions
 
+- [[chH7mwPq|Clique]] : : Clique's governance is fully on-chain and dynamic — no downtime for validator changes

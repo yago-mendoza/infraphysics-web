@@ -288,7 +288,7 @@ function validateRaw(raw, allFieldnotes) {
       issues.push({ source: 'VALIDATE', severity: 'WARN', message: 'Self-reference in trailing refs' });
     }
     if (!ref.annotation || ref.annotation.trim() === '') {
-      issues.push({ source: 'VALIDATE', severity: 'ERROR', message: `Bare trailing ref [[${ref.uid}]] — needs :: annotation` });
+      issues.push({ source: 'VALIDATE', severity: 'ERROR', message: `Bare trailing ref [[${ref.uid}]] — needs : : annotation` });
     }
   }
 

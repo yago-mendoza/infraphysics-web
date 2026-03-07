@@ -10,6 +10,6 @@ date: "2025-03-22"
 - Immutable after network launch — changing chainId in genesis.json after the first block breaks everything
 - Part of the P2P handshake: nodes reject peers with different chain IDs during initial connection
 
----
-[[u55brDFI|Replay Attack]] :: chainId is the primary defense against cross-chain replay attacks (EIP-155)
+## Interactions
 
+- [[u55brDFI|Replay Attack]] : : chainId is the primary defense against cross-chain replay attacks (EIP-155)

@@ -10,6 +10,6 @@ date: "2025-02-03"
 - `-it` (interactive + tty): attaches your terminal to the container — opposite of `-d`
 - Persistent nodes use `-d` without `--rm`; tooling uses `--rm` without `-d`
 
----
-[[x0YktUDc|Besu Docker Path]] :: the "Docker-only" workflow relies entirely on ephemeral containers for Besu tooling
+## Interactions
 
+- [[x0YktUDc|Besu Docker Path]] : : the "Docker-only" workflow relies entirely on ephemeral containers for Besu tooling

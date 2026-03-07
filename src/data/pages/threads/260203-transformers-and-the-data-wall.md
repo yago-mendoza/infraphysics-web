@@ -8,13 +8,10 @@ date: 2026-02-03
 thumbnail: https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=400&auto=format&fit=crop
 thumbnailAspect: banner
 description: Why the transformer architecture refuses to stop getting smarter — and what stands in its way.
-lead: "The architecture that changed everything is running out of the one thing it needs most."
+lead: "This is the ABC. Attention, embeddings, tokenization, scaling laws — the whole stack that everything else is built on. Unless a Terence Tao decides to get serious about AI, or Ilya Sutskever walks out of SSI with a new paradigm, or someone at Sakana AI actually cracks nature-inspired architectures — unless that happens, these concepts are the long runway of brute-force scaling. Bitter. But a lesson."
 tags: [ai, deep-learning, scaling, language-models]
 featured: true
-notes:
-  - Shipped in ~4 hours as a weekend experiment.
-  - Built to understand load balancing internals at the OS level.
-  - Written with zero external dependencies beyond Express.
+related: [the-bitter-lesson]
 ---
 
 >> 26.02.05 - Rewrote from scratch after reading the Chinchilla paper. The first draft was embarrassingly wrong about scaling laws.
@@ -31,7 +28,7 @@ To understand why the transformer is a big deal, you need to understand what it 
 
 For decades, the way computers "understood" language was through statistics. Pure, brute-force counting. The technical term is --n-gram models--, and they worked like this: you fed the machine a mountain of text, and it counted how often certain words appeared next to other words. That's it. That was the whole thing.
 
-If the machine saw "the cat sat on the" a thousand times followed by "mat" and only twice followed by "refrigerator," it would predict "mat." Not because it *understood* cats, mats, sitting, or the {{spatial relationship|in NLP this is called semantic role labeling — understanding *who* did *what* to *whom* and *where*. Early statistical models had zero access to this kind of structure.}} between a feline and a floor covering. It just {{counted|these were called {{HMMs|Hidden Markov Models — a class of probabilistic graphical models where the system being modeled is assumed to follow a Markov process with hidden states.}} and later n-gram language models. Google Translate in 2006? Pure statistics. It didn't "know" French — it had just seen enough French-English sentence pairs to fake it convincingly.}}.
+If the machine saw "the cat sat on the" a thousand times followed by "mat" and only twice followed by "refrigerator," it would predict "mat." Not because it *understood* cats, mats, sitting, or the ^[in NLP this is called semantic role labeling — understanding *who* did *what* to *whom* and *where*. Early statistical models had zero access to this kind of structure.] between a feline and a floor covering. It just ^[these were called HMMs (Hidden Markov Models — a class of probabilistic graphical models where the system being modeled is assumed to follow a Markov process with hidden states.) and later n-gram language models. Google Translate in 2006? Pure statistics. It didn't "know" French — it had just seen enough French-English sentence pairs to fake it convincingly.].
 
 Then came recurrent neural networks — RNNs — and their fancier cousin, the LSTM (Long Short-Term Memory). These were better. They could, in theory, remember context. The word "bank" could mean different things in "river bank" vs. "bank account," and LSTMs could sometimes figure that out.
 
@@ -348,6 +345,10 @@ No revolution happens in a vacuum. Here are the people whose work made the trans
 **Dario and Daniela Amodei** — left OpenAI to found Anthropic. Their bet: that the most important AI work isn't making models more powerful, but making them more safe, interpretable, and aligned with human values. They're building Claude — the model you might be reading this on.
 
 **Sam Altman** — CEO of OpenAI, the most prominent face of the AI revolution. Polarizing. Either the person responsibly shepherding humanity toward AGI, or a Silicon Valley executive moving too fast with godlike technology. Probably some of both.
+
+**[[https://terrytao.wordpress.com|Terence Tao]]** — Fields Medal, possibly the greatest living mathematician. Co-founded [[https://www.renaissancephilanthropy.org|SAIR]] alongside Nobel and Turing laureates to accelerate AI for science. Uses AI as a research tool — not for deep ideas yet, but for scanning literature, testing conjectures, running simulations. If Tao ever turns his full attention to architecture research, the landscape shifts overnight.
+
+**[[https://sakana.ai|Sakana AI]]** — Tokyo-based lab founded by Llion Jones (co-author of "Attention Is All You Need") and David Ha. Their bet: nature-inspired methods — evolutionary model merging, collective intelligence, swarm optimization — can produce competitive models without brute-force scaling. If they're right, the Bitter Lesson has an asterisk.
 
 ---
 

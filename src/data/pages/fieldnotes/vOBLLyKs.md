@@ -9,6 +9,6 @@ date: "2025-10-11"
 - Light clients (like [[uCuLAMTU|Metamask]]) skip all this: trust an already-synced RPC node for instant access
 - Archive sync: even slower and larger — stores the full state after every block, not just the latest
 
----
-[[N8SypUVq|Node]] :: sync mode determines the tradeoff between trustlessness, storage, and startup time
+## Interactions
 
+- [[N8SypUVq|Node]] : : sync mode determines the tradeoff between trustlessness, storage, and startup time

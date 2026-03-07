@@ -10,6 +10,6 @@ distinct: ["Docker//Network"]
 - Connecting to local Besu: add custom network with `http://localhost:9999` + the genesis chainId
 - DApps like Uniswap fail on local networks: the smart contracts don't exist there (different chain)
 
----
-[[8mybr8ae|Chain ID]] :: chainId tells Metamask which blockchain to sign for — crucial for [[u55brDFI|replay protection]]
+## Interactions
 
+- [[8mybr8ae|Chain ID]] : : chainId tells Metamask which blockchain to sign for — crucial for [[u55brDFI|replay protection]]

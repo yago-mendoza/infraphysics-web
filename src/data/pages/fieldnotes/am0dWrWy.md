@@ -9,6 +9,6 @@ date: "2025-06-14"
 - Ensures Bitcoin and Ethereum keys never overlap even from the same seed
 - "Add Account" in Metamask simply increments x (0→1→2→...) — regenerates deterministically, no new randomness
 
----
-[[kQcY7a5n|HD Wallet]] :: the derivation path is why HD wallets can regenerate the exact same accounts from a seed phrase
+## Interactions
 
+- [[kQcY7a5n|HD Wallet]] : : the derivation path is why HD wallets can regenerate the exact same accounts from a seed phrase

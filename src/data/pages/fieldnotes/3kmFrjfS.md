@@ -9,6 +9,6 @@ date: "2025-08-19"
 - Dangerous in production if the port is internet-accessible — any malicious page could interact with your node
 - Restrict to specific origins (`["http://localhost:3000"]`) for any non-development deployment
 
----
-[[1gCBEfat|Security: Minimum Privilege]] :: restricting CORS is part of the minimum-privilege principle for RPC nodes
+## Interactions
 
+- [[1gCBEfat|Security: Minimum Privilege]] : : restricting CORS is part of the minimum-privilege principle for RPC nodes

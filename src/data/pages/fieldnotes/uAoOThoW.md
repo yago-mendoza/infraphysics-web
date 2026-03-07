@@ -10,6 +10,6 @@ date: "2025-02-04"
 - Inside a Docker container, `localhost` refers to the container itself, not the host
 - Each container has its own loopback — `ping localhost` inside a container hits the container
 
----
-[[T0U5VL9d|Docker Port Mapping]] :: `-p` bridges the gap between the host's localhost and a container's internal port
+## Interactions
 
+- [[T0U5VL9d|Docker Port Mapping]] : : `-p` bridges the gap between the host's localhost and a container's internal port

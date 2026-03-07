@@ -9,6 +9,6 @@ date: "2025-02-22"
 - Same Chain ID → same blockchain, regardless of physical infrastructure (different machines, different Docker networks)
 - Every node independently verifies every transaction — trust through verification, not authority
 
----
-[[N8SypUVq|Blockchain Node]] :: nodes are the participants that store, verify, and propagate the ledger
+## Interactions
 
+- [[N8SypUVq|Blockchain Node]] : : nodes are the participants that store, verify, and propagate the ledger

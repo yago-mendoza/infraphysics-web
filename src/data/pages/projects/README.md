@@ -70,7 +70,7 @@ related: [quantum-interference-visualizer]
 
 ### Flow tools
 
-- **Footnotes `{{visible|explanation}}`** — for parenthetical material that would break the sentence rhythm. Better than actual parentheses.
+- **Footnotes `^[explanation]`** — for parenthetical material that would break the sentence rhythm. Better than actual parentheses.
 - **Small text `> ...`** — for dispensable technical details (keybindings, exact class names, implementation minutiae). If removing it doesn't hurt the story, it belongs in small text.
 - **Context annotations `>> date - text`** — story beats, not documentation. Keep them short and human. See dedicated section below.
 

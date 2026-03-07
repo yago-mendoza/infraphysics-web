@@ -65,7 +65,7 @@ All types share the same compiler and the same 16 custom syntax features (see **
 
 **Projects** — Technical case studies. Structure: intro (what/why), implementation sections, results/learnings. Heavy use of code blocks, definition lists, `technologies` and `status` frontmatter. The `>>` annotations are useful for logging progress over time. The `github` and `demo` fields link to live resources. See **[projects/README.md](projects/README.md)**.
 
-**Threads** — Essays and analysis. Structure: intro (thesis), argument sections, conclusion. Heavy use of accent text (`--key claims--`), inline footnotes (`{{ref|explanation}}`), typed blockquotes for key concepts, and `>>` annotations for post-publication corrections. Threads tend to be longer and more prose-heavy. See **[threads/README.md](threads/README.md)**.
+**Threads** — Essays and analysis. Structure: intro (thesis), argument sections, conclusion. Heavy use of accent text (`--key claims--`), inline footnotes (`^[explanation]`), typed blockquotes for key concepts, and `>>` annotations for post-publication corrections. Threads tend to be longer and more prose-heavy. See **[threads/README.md](threads/README.md)**.
 
 **Bits2Bricks** — Tutorials and hardware/software build logs. Structure: intro (what we're building), step-by-step sections, results. Heavy use of code blocks, alphabetical lists for ordered steps, definition lists for terminology, images with side-by-side layouts. More instructional tone than threads. See **[bits2bricks/README.md](bits2bricks/README.md)**.
 
@@ -91,7 +91,7 @@ Content flows between sections without repeating itself. When a topic spans mult
 |---|---|---|
 | Article → companion in another category | Cross-doc link | `[[bits2bricks/slug\|display text]]` or `[[threads/slug\|display text]]` |
 | Article → atomic concept | Wiki-link | `[[concept]]` or `[[parent//child]]` |
-| Inline definition of a term | Inline footnote | `{{term\|brief explanation of what it means}}` |
+| Inline definition of a term | Inline footnote | `^[brief explanation of what it means]` |
 | Brief theory aside (3+ sentences) | Typed blockquote | `{bkqt/keyconcept\|label}...{/bkqt}` or `{bkqt/note\|label}...{/bkqt}` |
 | Post-publication update with cross-ref | Context annotation | `>> 26.03.10 - built this into a prototype: [[projects/slug\|link]]` |
 
@@ -107,7 +107,7 @@ These apply across all content types unless noted otherwise.
 
 **Capitalization.** Always use standard sentence case — capitalize the first word and proper nouns only. Never use title case where every word is capitalized ("The Architecture Of Modern Compilers"). This applies to headings, blockquote labels, table headers, and any user-facing text.
 
-**Blockquotes are for substantial content.** A blockquote must contain enough material to justify the visual weight of a colored container. One sentence is not enough. Two short sentences are not enough. If the content fits in a line or two, use an inline annotation (`{{ref|explanation}}`) instead — that's exactly what they're for. Annotations inside a blockquote do not count as interior content: a single sentence plus a footnote does not justify a blockquote.
+**Blockquotes are for substantial content.** A blockquote must contain enough material to justify the visual weight of a colored container. One sentence is not enough. Two short sentences are not enough. If the content fits in a line or two, use an inline annotation (`^[explanation]`) instead — that's exactly what they're for. Annotations inside a blockquote do not count as interior content: a single sentence plus a footnote does not justify a blockquote.
 
 **Blockquote colors — projects vs blog.** In **projects**, each blockquote type has a distinct color (green for tip, amber for warning, red for danger, purple for keyconcept). In **blog articles** (threads, bits2bricks), all blockquote types render in the category accent color — there is no per-type color distinction. The types still work as structural markers (labels, semantics) but the visual treatment is uniform.
 
@@ -162,7 +162,7 @@ raw markdown
 Two additional passes run on the combined output of ALL files (not per-file):
 
 - **`processAllLinks`** — resolves `[[wiki-refs]]`, `[[category/slug|text]]` cross-doc links, and unresolved markers. Runs on every post every build because link targets change when notes are added/removed. Protected by `processOutsideCode` which shields `<pre>` and `<code>` segments.
-- **`processAnnotations`** — converts `{{ref|explanation}}` inline footnotes into numbered markers + annotation blocks. Works inside `<p>`, `<li>`, and `<td>` elements. Also protected by `processOutsideCode`.
+- **`processAnnotations`** — converts `^[explanation]` inline footnotes into numbered markers + annotation blocks. Works inside `<p>`, `<li>`, and `<td>` elements. Also protected by `processOutsideCode`.
 
 ### Build outputs
 
@@ -218,8 +218,8 @@ Each fieldnote file is named `{uid}.md` (e.g. `OkJJJyxX.md`). The UID is the sta
 Each file contains:
 1. **Frontmatter:** See table above.
 2. **Body** — standard markdown plus all custom inline syntax. Wiki-links in the body are extracted as references.
-3. **`---` separator** (only if trailing refs follow).
-4. **Trailing references** — standalone `[[uid]] :: annotation` lines at the end. These create intentional **interactions** between concepts.
+3. **`## Interactions`** heading (only if trailing refs follow).
+4. **Trailing references** — `- [[uid]] : : annotation` list items under the Interactions heading. These create intentional **interactions** between concepts.
 
 ### Wiki-linking strategy
 
@@ -229,18 +229,20 @@ When authoring, also look for **non-literal connections** (e.g. "the reward sign
 
 ### Trailing refs: contrastive interactions only
 
-Trailing refs are **not** for listing related concepts — body `[[wiki-links]]` already do that. A trailing ref should only exist when you have a **contrastive or non-obvious insight** to explain between two concepts. If you can't write a `::` annotation that reveals something surprising or counterintuitive, the connection belongs in the body text, not in trailing refs.
+Trailing refs are **not** for listing related concepts — body `[[wiki-links]]` already do that. A trailing ref should only exist when you have a **contrastive or non-obvious insight** to explain between two concepts. If you can't write a ` : : ` annotation that reveals something surprising or counterintuitive, the connection belongs in the body text, not in trailing refs.
 
-**Every trailing ref MUST have a `::` annotation.** Bare `[[uid]]` refs without annotations add no value — the relationship is already visible through body links and the hierarchy. The annotation is the entire point.
+**Every trailing ref MUST have a ` : : ` annotation.** Bare `[[uid]]` refs without annotations add no value — the relationship is already visible through body links and the hierarchy. The annotation is the entire point.
 
 ```
-[[vtSgUEG3]] :: shares execution resources but cache is per-core — a miss stalls one core, not the whole chip
-[[8P7MMv9C]] :: coordinates shared-state access across the cache-coherence boundary
+## Interactions
+
+- [[vtSgUEG3]] : : shares execution resources but cache is per-core — a miss stalls one core, not the whole chip
+- [[8P7MMv9C]] : : coordinates shared-state access across the cache-coherence boundary
 ```
 
-The annotation (everything after `::`) explains **why** the connection is worth calling out. It appears in the UI as an "Interaction."
+The annotation (everything after ` : : `) explains **why** the connection is worth calling out. It appears in the UI as an "Interaction." This format is Obsidian-compatible: the `## Interactions` heading and list items render natively in Obsidian.
 
-**Important:** Do not use `|` for annotations in trailing refs. The pipe `|` is reserved for display text in inline wiki-links (`[[address|display text]]`). Use `::` exclusively for trailing ref annotations.
+**Important:** Do not use `|` for annotations in trailing refs. The pipe `|` is reserved for display text in inline wiki-links (`[[address|display text]]`). Use ` : : ` exclusively for trailing ref annotations.
 
 **Bilateral behavior:** If note A has a trailing ref to B, the runtime shows the interaction on **both** A and B's pages. If B also has a trailing ref back to A (with its own annotation), both annotations are displayed. You do not need to add refs on both sides — one is sufficient for bilateral display.
 

@@ -9,6 +9,6 @@ date: "2025-02-04"
 - 1024–49151: registered ports (8545=Besu RPC, 30303=Besu P2P, 3000=dev servers)
 - Besu uses two main ports: `p2pPort` (30303) for horizontal node↔node, `rpcPort` (8545) for vertical app→node
 
----
-[[T0U5VL9d|Docker Port Mapping]] :: `-p 9999:8545` remaps the container's internal port to a different host port — avoids conflicts
+## Interactions
 
+- [[T0U5VL9d|Docker Port Mapping]] : : `-p 9999:8545` remaps the container's internal port to a different host port — avoids conflicts

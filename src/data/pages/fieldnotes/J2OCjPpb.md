@@ -10,6 +10,7 @@ distinct: ["Blockchain//Bootnode"]
 - One node can wear multiple hats (bootnode + validator + RPC), but separation is more secure
 - Ideal: dedicated bootnode with no RPC — only P2P connectivity, minimal attack surface
 
----
-[[Wp2y5eP8]] :: general bootnode concept — discovery mechanics, gossip protocol, resilience patterns
-[[1gCBEfat]] :: bootnodes should not expose RPC — minimum privilege applied to discovery nodes
+## Interactions
+
+- [[Wp2y5eP8]] : : general bootnode concept — discovery mechanics, gossip protocol, resilience patterns
+- [[1gCBEfat]] : : bootnodes should not expose RPC — minimum privilege applied to discovery nodes

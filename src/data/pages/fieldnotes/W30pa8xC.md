@@ -9,6 +9,6 @@ date: "2025-05-03"
 - Multiple validators: concatenate their addresses back-to-back in the middle section
 - The 65-byte seal at the end is reserved for the block signature — left as zeros in genesis
 
----
-[[UFgfX2Jv|Besu Genesis]] :: extraData is a critical field — wrong format means the chain stalls at block 0
+## Interactions
 
+- [[UFgfX2Jv|Besu Genesis]] : : extraData is a critical field — wrong format means the chain stalls at block 0

@@ -9,6 +9,6 @@ date: "2025-03-08"
 - Validators pull from their own mempool to build blocks
 - If the network stalls (no new blocks), transactions sit in mempool indefinitely — accepted but never confirmed
 
----
-[[6AczGctL|Gossip]] :: mempools synchronize across the network through the gossip protocol
+## Interactions
 
+- [[6AczGctL|Gossip]] : : mempools synchronize across the network through the gossip protocol

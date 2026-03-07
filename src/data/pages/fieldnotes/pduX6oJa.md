@@ -11,6 +11,6 @@ distinct: ["Blockchain//Wallet//Network"]
 - `http://nodo-besu:8545` works inside Docker — most robust way for inter-container communication
 - Docker network ≠ blockchain network: Docker is the transport layer (the road), blockchain is the application layer (the club rules)
 
----
-[[N5TGil9j|Docker Subnet]] :: each network gets its own subnet — Docker assigns IPs from that range
+## Interactions
 
+- [[N5TGil9j|Docker Subnet]] : : each network gets its own subnet — Docker assigns IPs from that range

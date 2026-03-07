@@ -518,19 +518,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
       {isThreads ? (
         <article className="article-threads-card">
-          {post.thumbnail && (
-            <div className={`article-threads-image thumb-${post.thumbnailAspect || 'full'}`}>
-              <img
-                src={post.thumbnail}
-                alt={post.displayTitle || post.title}
-                loading="lazy"
-                className="article-blog-image-img"
-              />
-            </div>
-          )}
-
           <div className="article-threads-header-content">
-            <ArticleHashtags tags={post.tags} technologies={post.technologies} />
 
             <div className="article-title-block">
               <h1 className="article-title">
@@ -542,7 +530,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
             </div>
 
             <div className="article-threads-meta-engagement">
-              <BlogMetabar date={post.date} authorName={authorName} authorPath={authorPath} readingTime={readingTime} views={null} hearts={null} hearted={hearted} toggleHeart={toggleHeart} shareDropdown={null} formatDate={formatDate} />
+              <BlogMetabar date={post.date} authorName={authorName} authorPath={authorPath} readingTime={readingTime} showReadingTime={false} views={null} hearts={null} hearted={hearted} toggleHeart={toggleHeart} shareDropdown={null} formatDate={formatDate} />
 
               <div className="article-engagement-row article-threads-engagement">
                 <div className="article-engagement-left">
@@ -572,6 +560,16 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               allFieldNotes={brainIndex?.allFieldNotes}
               className="article-content"
             />
+            {post.thumbnail && (
+              <div className={`article-threads-end-image thumb-${post.thumbnailAspect || 'full'}`}>
+                <img
+                  src={post.thumbnail}
+                  alt={post.displayTitle || post.title}
+                  loading="lazy"
+                  className="article-blog-image-img"
+                />
+              </div>
+            )}
             <FeedbackForm title={post.displayTitle || post.title} category={post.category} />
             <GiscusComments />
           </div>

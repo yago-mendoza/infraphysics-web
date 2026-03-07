@@ -59,23 +59,58 @@ export function parseReferences(body) {
 export function parseTrailingRefs(body) {
   const bodyLines = body.split('\n');
   const trailingRefs = [];
-  const singleRefAnnotated = /^\s*\[\[([^\]]+)\]\]\s*::\s*(.*?)\s*$/;
-  const multiRefLine = /^\s*(\[\[[^\]]+\]\]\s*)+$/;
+  const listRefAnnotated = /^\s*-\s*\[\[([^\]]+)\]\]\s*:\s*:\s*(.*?)\s*$/;
+  const listRefBare = /^\s*-\s*\[\[([^\]]+)\]\]\s*$/;
+  // Legacy format support: [[uid]] :: annotation (no list marker)
+  const legacySingleRef = /^\s*\[\[([^\]]+)\]\]\s*::\s*(.*?)\s*$/;
+  const legacyMultiRef = /^\s*(\[\[[^\]]+\]\]\s*)+$/;
   let trailingRefStart = bodyLines.length;
 
   for (let i = bodyLines.length - 1; i >= 0; i--) {
     const line = bodyLines[i].trim();
     if (!line) continue;
-    const annotatedMatch = singleRefAnnotated.exec(line);
-    if (annotatedMatch) {
-      const raw = annotatedMatch[1].trim();
+
+    // New format: - [[uid]] : : annotation
+    const listAnnotatedMatch = listRefAnnotated.exec(line);
+    if (listAnnotatedMatch) {
+      const raw = listAnnotatedMatch[1].trim();
       const pipeIdx = raw.indexOf('|');
       trailingRefs.push({
         uid: pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw,
-        annotation: annotatedMatch[2].trim(),
+        annotation: listAnnotatedMatch[2].trim(),
       });
       trailingRefStart = i;
-    } else if (multiRefLine.test(line)) {
+      continue;
+    }
+
+    // New format: - [[uid]] (bare)
+    const listBareMatch = listRefBare.exec(line);
+    if (listBareMatch) {
+      const raw = listBareMatch[1].trim();
+      const pipeIdx = raw.indexOf('|');
+      trailingRefs.push({
+        uid: pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw,
+        annotation: null,
+      });
+      trailingRefStart = i;
+      continue;
+    }
+
+    // Legacy format: [[uid]] :: annotation
+    const legacyMatch = legacySingleRef.exec(line);
+    if (legacyMatch) {
+      const raw = legacyMatch[1].trim();
+      const pipeIdx = raw.indexOf('|');
+      trailingRefs.push({
+        uid: pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw,
+        annotation: legacyMatch[2].trim(),
+      });
+      trailingRefStart = i;
+      continue;
+    }
+
+    // Legacy format: bare multi-ref line
+    if (legacyMultiRef.test(line)) {
       const lineRefRegex = /\[\[([^\]]+)\]\]/g;
       let lineMatch;
       while ((lineMatch = lineRefRegex.exec(line)) !== null) {
@@ -87,9 +122,16 @@ export function parseTrailingRefs(body) {
         });
       }
       trailingRefStart = i;
-    } else {
-      break;
+      continue;
     }
+
+    // ## Interactions heading — part of the trailing section
+    if (/^#{1,2}\s*interactions\s*$/i.test(line)) {
+      trailingRefStart = i;
+      continue;
+    }
+
+    break;
   }
 
   return { trailingRefs, trailingRefStart };
@@ -125,7 +167,7 @@ export function stripTrailingRefs(body, trailingRefStart) {
 
   let cutoff = trailingRefStart;
   while (cutoff > 0 && !bodyLines[cutoff - 1].trim()) cutoff--;
-  // Also skip the --- separator that conventionally precedes trailing refs
+  // Legacy: skip --- separator that preceded trailing refs in old format
   if (cutoff > 0 && /^-{3,}$/.test(bodyLines[cutoff - 1].trim())) cutoff--;
   return bodyLines.slice(0, cutoff).join('\n');
 }
@@ -208,13 +250,13 @@ export function serializeFieldnote(frontmatter, bodyContent, trailingRefs) {
 
   if (trailingRefs.length > 0) {
     lines.push('');
-    lines.push('---');
+    lines.push('## Interactions');
     lines.push('');
     for (const ref of trailingRefs) {
       if (ref.annotation) {
-        lines.push(`[[${ref.uid}]] :: ${ref.annotation}`);
+        lines.push(`- [[${ref.uid}]] : : ${ref.annotation}`);
       } else {
-        lines.push(`[[${ref.uid}]]`);
+        lines.push(`- [[${ref.uid}]]`);
       }
     }
   }

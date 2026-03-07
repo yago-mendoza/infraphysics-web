@@ -9,6 +9,6 @@ date: "2025-10-11"
 - Empty blocks maintain the chain's heartbeat — validators take turns, timestamps advance
 - The block number keeps incrementing regardless of transaction activity
 
----
-[[UFgfX2Jv|Besu Genesis]] :: `blockPeriodSeconds` in the Clique config of genesis.json controls the block creation rhythm
+## Interactions
 
+- [[UFgfX2Jv|Besu Genesis]] : : `blockPeriodSeconds` in the Clique config of genesis.json controls the block creation rhythm

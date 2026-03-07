@@ -38,8 +38,8 @@ And what the OS --does-- protect, even from same-user processes:
 
 | What | Why it's protected |
 |---|---|
-| macOS Keychain passwords | Encrypted by {{Secure Enclave|a physically separate chip that holds encryption keys and never releases them to software. First-time access from a new app triggers a system prompt.}} hardware. |
-| Chrome saved passwords (macOS/Windows) | Encryption key lives in Keychain or {{DPAPI|Windows Data Protection API. Binds encryption to the user account. Chrome adds "App-Bound Encryption" on top since version 127.}}. |
+| macOS Keychain passwords | Encrypted by ^[a physically separate chip that holds encryption keys and never releases them to software. First-time access from a new app triggers a system prompt.] hardware. |
+| Chrome saved passwords (macOS/Windows) | Encryption key lives in Keychain or ^[Windows Data Protection API. Binds encryption to the user account. Chrome adds "App-Bound Encryption" on top since version 127.]. |
 | Kernel operations | Installing drivers or extensions requires admin password elevation. |
 | Hardware-backed keys | TPM / Secure Enclave — physically cannot be extracted by software. |
 
@@ -51,7 +51,7 @@ The containment goal: keep the agent's access to the green table. Block its acce
 
 ## Why Docker is the sweet spot
 
-Running the agent in a {{Docker container|a tool that creates isolated environments called containers. The program inside gets its own filesystem, its own process list, and its own network. It cannot see the host's files or network unless you explicitly mount a path or expose a port.}} gives you filesystem isolation, network isolation, and capability restriction in a single command. For most threat models — a misbehaving agent, a malicious skill, accidental data exfiltration — it's enough.
+Running the agent in a ^[a tool that creates isolated environments called containers. The program inside gets its own filesystem, its own process list, and its own network. It cannot see the host's files or network unless you explicitly mount a path or expose a port.] gives you filesystem isolation, network isolation, and capability restriction in a single command. For most threat models — a misbehaving agent, a malicious skill, accidental data exfiltration — it's enough.
 
 ## The locked-down command
 
@@ -74,7 +74,7 @@ Flag-by-flag:
 - `--network=none` — --zero network access--. No DNS, no HTTP, no LAN scanning. The container only has a loopback interface. This single flag blocks all exfiltration vectors.
 - `--read-only` — container's root filesystem is read-only. The agent can't install packages, modify system files, or write outside the mounted output directory.
 - `--tmpfs /tmp:rw,noexec,nosuid,size=512m` — writable temp space in RAM only (512 MB max), no executable binaries allowed.
-- `--cap-drop=ALL` — drops all 14 default Linux {{capabilities|special privileges containers get by default: CHOWN (change file ownership), DAC_OVERRIDE (bypass file read/write checks), FOWNER, FSETID, KILL, SETGID, SETUID, SETPCAP, NET_BIND_SERVICE, NET_RAW, SYS_CHROOT, MKNOD, AUDIT_WRITE, SETFCAP. Dropping them all means the process has zero special permissions.}}.
+- `--cap-drop=ALL` — drops all 14 default Linux ^[special privileges containers get by default: CHOWN (change file ownership), DAC_OVERRIDE (bypass file read/write checks), FOWNER, FSETID, KILL, SETGID, SETUID, SETPCAP, NET_BIND_SERVICE, NET_RAW, SYS_CHROOT, MKNOD, AUDIT_WRITE, SETFCAP. Dropping them all means the process has zero special permissions.].
 - `--security-opt=no-new-privileges` — prevents privilege escalation via setuid/setgid binaries. Even if the agent finds a SUID binary, it can't use it.
 - `--memory=4g --cpus=2` — resource limits so the agent can't OOM the host or fork-bomb.
 - `-v /path/to/project:/workspace:ro` — mount --only-- the directory you want the agent to work on, --read-only--.
@@ -88,7 +88,7 @@ One thing I learned the hard way: `--network=none` means *none*. The first time 
 
 `--network=none` is the safest option, but many agent tasks require internet access (API calls, web browsing, fetching dependencies). The problem: Docker's default bridge network gives internet access --and-- LAN access. The agent can reach the internet but also scan every device on your home network.
 
-The fix: a custom network with {{iptables|the Linux firewall. Rules that filter network traffic based on source, destination, port, and protocol. We use them to block traffic to private IP ranges while allowing everything else.}} rules that block LAN access:
+The fix: a custom network with ^[the Linux firewall. Rules that filter network traffic based on source, destination, port, and protocol. We use them to block traffic to private IP ranges while allowing everything else.] rules that block LAN access:
 
 ```bash
 # create a custom network
@@ -127,7 +127,7 @@ The agent gets internet. It cannot see your NAS, your partner's laptop, or your 
 
 Docker containers share the host's kernel. All 300+ Linux syscalls go directly to the host. A kernel exploit inside the container = root on the host. This has happened (CVE-2019-5736, Dirty COW).
 
-Google's {{gVisor|an open-source container runtime that interposes a user-space kernel (called Sentry) between the container and the host. Instead of 300+ syscalls hitting the host kernel, gVisor intercepts them and re-implements ~200 of them in user space. Only ~60 vetted syscalls ever reach the real kernel.}} dramatically reduces this attack surface:
+Google's ^[an open-source container runtime that interposes a user-space kernel (called Sentry) between the container and the host. Instead of 300+ syscalls hitting the host kernel, gVisor intercepts them and re-implements ~200 of them in user space. Only ~60 vetted syscalls ever reach the real kernel.] dramatically reduces this attack surface:
 
 ```bash
 # install gVisor's runsc runtime, then:
@@ -296,7 +296,7 @@ This isn't as robust as VLANs (no per-port control, no granular firewall rules, 
 
 ## VLANs (half a day to a weekend)
 
-{{VLANs|802.1Q virtual LANs. They carve one physical network into multiple isolated virtual segments. Devices on VLAN 10 cannot talk to devices on VLAN 20 unless you create an explicit firewall rule allowing it.}} give you real network segmentation with firewall rules between zones.
+^[802.1Q virtual LANs. They carve one physical network into multiple isolated virtual segments. Devices on VLAN 10 cannot talk to devices on VLAN 20 unless you create an explicit firewall rule allowing it.] give you real network segmentation with firewall rules between zones.
 
 A practical home layout:
 

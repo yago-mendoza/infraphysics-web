@@ -9,6 +9,6 @@ date: "2025-03-08"
 - `blockPeriodSeconds` controls creation interval — even empty blocks if configured (Clique)
 - If a transaction fills the gas limit, remaining transactions wait in the [[WVcyM3Sp|mempool]] for the next block
 
----
-[[WVcyM3Sp|Mempool]] :: transactions that don't fit in the current block stay in the mempool for the next
+## Interactions
 
+- [[WVcyM3Sp|Mempool]] : : transactions that don't fit in the current block stay in the mempool for the next

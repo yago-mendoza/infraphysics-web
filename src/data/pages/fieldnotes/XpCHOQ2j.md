@@ -8,5 +8,7 @@ date: "2026-02-26"
 - Direct: user writes "ignore previous instructions" in their query
 - Indirect: malicious instructions hidden in retrieved documents, web pages, emails — the model follows them
 - Unsolved problem. Defenses (input filtering, output guards) reduce risk but no reliable fix exists
----
-[[EEUGaAWQ|jailbreak]] :: different attack surfaces — jailbreaks target the model's alignment training, prompt injection targets the application's context and instructions
+
+## Interactions
+
+- [[EEUGaAWQ|jailbreak]] : : different attack surfaces — jailbreaks target the model's alignment training, prompt injection targets the application's context and instructions

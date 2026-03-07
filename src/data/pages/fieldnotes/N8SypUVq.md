@@ -10,6 +10,6 @@ date: "2025-02-22"
 - Full nodes re-execute every transaction in each received block to verify the state hash matches
 - If computed state hash ≠ proposer's claimed hash → block rejected, discarded, wait for a valid one
 
----
-[[vOBLLyKs|Blockchain Sync]] :: sync mode determines the tradeoff between trust, storage, and startup time
+## Interactions
 
+- [[vOBLLyKs|Blockchain Sync]] : : sync mode determines the tradeoff between trust, storage, and startup time

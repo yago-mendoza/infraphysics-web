@@ -11,7 +11,7 @@ date: "2025-05-02"
 - Immutable foundation: the chainId and consensus rules cannot be changed after launch
 - Must be created AFTER generating node keys — needs at least one validator address for [[W30pa8xC|extraData]]
 
----
-[[W30pa8xC|ExtraData]] :: the extraData field encodes the initial validator set
-[[4ZR2Fcfz|Deployment]] :: genesis creation is step 3 of the deployment sequence — after keys, before launch
+## Interactions
 
+- [[W30pa8xC|ExtraData]] : : the extraData field encodes the initial validator set
+- [[4ZR2Fcfz|Deployment]] : : genesis creation is step 3 of the deployment sequence — after keys, before launch

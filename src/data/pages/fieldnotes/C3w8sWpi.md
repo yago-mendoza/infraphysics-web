@@ -9,7 +9,7 @@ date: "2025-05-02"
 - Node identity = Ethereum account (key pair + address)
 - Configuration layers: [[UFgfX2Jv|genesis.json]] (network rules) + [[ALVPHbmK|config.toml]] (node behavior) + CLI flags
 
----
-[[UFgfX2Jv|Besu Genesis]] :: genesis.json defines the blockchain's birth certificate
-[[ALVPHbmK|Besu Config]] :: config.toml tunes individual node behavior
+## Interactions
 
+- [[UFgfX2Jv|Besu Genesis]] : : genesis.json defines the blockchain's birth certificate
+- [[ALVPHbmK|Besu Config]] : : config.toml tunes individual node behavior

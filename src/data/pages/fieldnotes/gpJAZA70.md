@@ -10,6 +10,6 @@ date: "2025-04-14"
 - 4 validators → quorum = 3 → still only tolerates 1 failure
 - Key insight: 2-validator networks have NO high availability — both must be online at all times
 
----
-[[mkgkTEX5|Besu Stall]] :: quorum failure is the #1 cause of network stalls in small Clique networks
+## Interactions
 
+- [[mkgkTEX5|Besu Stall]] : : quorum failure is the #1 cause of network stalls in small Clique networks

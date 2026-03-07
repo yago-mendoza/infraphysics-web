@@ -52,6 +52,8 @@ infraphysics-web/
     analyze-pairs.js          # Relationship analyzer for fieldnote pairs
     preflight.js              # Pre-creation briefing (content, refs, collisions)
     move-hierarchy.js         # Cascading rename for address + all descendants
+    obsidian-export.js        # Export fieldnotes to Obsidian vault structure
+    obsidian-import.js        # Import Obsidian vault back to fieldnotes
     compute-graph-relevance.js # Build-time PageRank + proximity → graph-relevance.generated.json
     README.md                 # Build pipeline docs, cache format
   docs/
@@ -158,6 +160,8 @@ infraphysics-web/
 | `npm run dev` | Build content + start Vite dev server |
 | `npm run build` | Build content + production build |
 | `npm run preview` | Preview production build locally |
+| `npm run obsidian:export` | Export fieldnotes to Obsidian vault structure |
+| `npm run obsidian:import` | Import Obsidian vault back to fieldnotes |
 
 The build pipeline compiles posts and fieldnotes through a shared 14-step transformation (backtick protection, custom syntax preprocessors, blockquotes, marked, Shiki highlighting, link resolution). Results are cached in `.content-cache.json` by file mtime — subsequent builds only recompile files that changed. Full pipeline and cache details: **[scripts/README.md](scripts/README.md)**
 

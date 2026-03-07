@@ -12,7 +12,9 @@ date: "2026-02-05"
 - SoC [[OQmzx1Vg|Cortex-M]] ⟶ very smart [[uuLCFmtk|sensor]]s
 - [[xVyHlNQa|ESP32]] as SoC: [[QSPGKDnh|sensor]] + [[gKR2I1Nu|MCU]] + radio + antenna; could communicate by itself (floating dark box), but needs electricity ⟶ power ⟶ [[26t2rDup|PCB]] + [[nlro5GOJ|capacitor]]s
 - General-purpose like [[gKR2I1Nu|MCU]]: can be a toaster, a drone, a watch
----
-[[gKR2I1Nu|MCU]] :: MCUs trade integration breadth for determinism and cost — SoCs pack more IP but need an OS
-[[Jkr1CFGJ|MPU]] :: SoCs evolved from MPUs by integrating GPU, modem, and memory controller on-die
-[[LxUj37D3|discrete]] :: discrete GPUs offer higher throughput but consume far more power and board space
+
+## Interactions
+
+- [[gKR2I1Nu|MCU]] : : MCUs trade integration breadth for determinism and cost — SoCs pack more IP but need an OS
+- [[Jkr1CFGJ|MPU]] : : SoCs evolved from MPUs by integrating GPU, modem, and memory controller on-die
+- [[LxUj37D3|discrete]] : : discrete GPUs offer higher throughput but consume far more power and board space

@@ -81,7 +81,7 @@ I tried sketching it out. It didn't survive the first afternoon. The things I ne
 | Wiki-links | `[[address]]` | Bidirectional resolution across hundreds of files — a build-time graph operation |
 | Typed blockquotes | `{bkqt/warning\|label}` | Seven types, custom labels, nested formatting |
 | Context annotations | `>> 26.01.21 - text` | Relative timestamp calculation at build time |
-| Backtick protection | (pipeline-level) | Extracts all code before processing, restores after — {{not a component problem|backtick protection: a system that extracts every code block and inline code span before any preprocessor runs, replaces them with placeholder tokens, processes the rest, and restores them after. Prevents custom syntax from transforming content inside code blocks.}} |
+| Backtick protection | (pipeline-level) | Extracts all code before processing, restores after — ^[backtick protection: a system that extracts every code block and inline code span before any preprocessor runs, replaces them with placeholder tokens, processes the rest, and restores them after. Prevents custom syntax from transforming content inside code blocks.] |
 
 MDX solves a different problem. It lets you embed rich interactive components inside prose. What I needed was a prose-first system where custom syntax is _invisible_ — where writing `{#e74c3c:text}` feels like writing markdown, not like writing JSX. The decision wasn't dogmatic. It was practical: my syntax features are lightweight text transforms, not component trees.
 
@@ -93,7 +93,7 @@ The site has four content categories, and naming them took longer than it should
 
 --Threads-- was harder. I wanted something that captured the feeling of a running conversation — not "articles" (too formal), not "posts" (too generic), not "essays" (too pretentious). I kept thinking about threading in systems programming — multiple execution paths sharing a context. And also, honestly, about Instagram Threads, which had just launched and was everywhere at the time. The name stuck not because of either reference specifically, but because it captures the right feeling: each thread is one train of thought that connects to others. Does it make perfect sense? Probably not. But it feels right, and in a personal project, that's enough.
 
---Bits2bricks-- took the longest. This section is about bridging the gap between software and physical engineering — taking what I've been learning in the digital world (bits) and bringing it back home to the world of atoms, materials, and industrial processes (bricks). A "going home" section. I'm a systems person, and the people I work with are brick engineers — they build things you can touch, things that {{obey thermodynamics|as opposed to software, which obeys whatever the developer felt like that morning.}} and don't crash silently. This section is for translating between those two worlds. The name is silly. It stays.
+--Bits2bricks-- took the longest. This section is about bridging the gap between software and physical engineering — taking what I've been learning in the digital world (bits) and bringing it back home to the world of atoms, materials, and industrial processes (bricks). A "going home" section. I'm a systems person, and the people I work with are brick engineers — they build things you can touch, things that ^[as opposed to software, which obeys whatever the developer felt like that morning.] and don't crash silently. This section is for translating between those two worlds. The name is silly. It stays.
 
 --Fieldnotes-- came from field notebooks — the kind engineers carry on-site to jot down observations, measurements, sketches. Each fieldnote is a concept: a node in a knowledge graph. But I'll get to that.
 
@@ -133,7 +133,7 @@ The first layout had a horizontal navigation bar at the top. That's what most we
 
 The real issue, though, was conceptual. A top bar suggests a flat site — five or six pages at the same level. This site is not flat. It has two worlds (lab and blog) with different themes, plus a knowledge graph with its own navigation. A top bar couldn't express that hierarchy without becoming a mess.
 
-So I moved everything to a side {{sidebar|I still don't know if "sidebar" is the right word. In hardware documentation, a sidebar is supplementary information in a callout box. In web development, it's a persistent navigation panel. I use the web meaning but it never stops feeling slightly wrong.}}. The sidebar could show the lab/blog split visually, with section groups and icons. It could also collapse on mobile without losing hierarchy. The move took a full day and broke every layout assumption I'd made up to that point. Worth it.
+So I moved everything to a side ^[I still don't know if "sidebar" is the right word. In hardware documentation, a sidebar is supplementary information in a callout box. In web development, it's a persistent navigation panel. I use the web meaning but it never stops feeling slightly wrong.]. The sidebar could show the lab/blog split visually, with section groups and icons. It could also collapse on mobile without losing hierarchy. The move took a full day and broke every layout assumption I'd made up to that point. Worth it.
 
 >> 26.01.25 - It clicked. The layout makes sense now. Routes, sidebar, content area — everything has a place. This is the first time it feels like a real project and not a homework assignment.
 
@@ -167,7 +167,7 @@ If you reversed the order — ran `marked` first, then pre-processors — marked
 
 Here's where I discovered a word that changed how I think about text processing.
 
-A backtick. The character `` ` ``. It sits on your keyboard — you've probably pressed it {{hundreds of times|on a Spanish keyboard, it's the key right next to the P, above the + key. I'd been pressing it accidentally for years without knowing what it was called.}} without knowing its name. "Backtick" — it sounds like it should be on a menu somewhere between paella and patatas bravas. But in markdown, backticks are sacred. They mark code: `` `like this` `` for inline code, and triple backticks for code blocks. Whatever's inside them is meant to be displayed literally, not interpreted.
+A backtick. The character `` ` ``. It sits on your keyboard — you've probably pressed it ^[on a Spanish keyboard, it's the key right next to the P, above the + key. I'd been pressing it accidentally for years without knowing what it was called.] without knowing its name. "Backtick" — it sounds like it should be on a menu somewhere between paella and patatas bravas. But in markdown, backticks are sacred. They mark code: `` `like this` `` for inline code, and triple backticks for code blocks. Whatever's inside them is meant to be displayed literally, not interpreted.
 
 And here's the problem: if my pre-processors fire before `marked`, they'd also transform content inside code blocks. Writing `` `{#e74c3c:red}` `` in a tutorial would produce actual red text instead of showing the syntax. Which means I need to --protect-- everything inside backticks before any custom processing runs.
 
@@ -206,7 +206,7 @@ The complete compilation pipeline, in order:
 | 11 | `stripHeadingFormatting` | Removes inline tags from `<h1>`–`<h4>` |
 | 12 | `highlightCodeBlocks` | Shiki dual-theme highlighting per language |
 | 13 | `applyPostProcessors` | Extensible HTML transforms (currently empty) |
-| 14 | `processAnnotations` | `{{ref\|explanation}}` → inline footnotes |
+| 14 | `processAnnotations` | `^[explanation]` → inline footnotes |
 
 Then two more passes across _all_ compiled files: wiki-link resolution (because link targets depend on which notes exist) and cross-document link processing.
 
@@ -383,7 +383,7 @@ the arithmetic logic unit — the circuit inside a [[Z9W6rweD]] that performs...
 
 The `[[wiki-links]]` in the body create references. The links at the bottom are --trailing refs-- — intentional connections that appear on both sides. If note A has a trailing ref to note B, the connection shows up on _both_ A and B's pages. One ref, bilateral display. The `::` syntax adds annotations: `[[Z9W6rweD]] :: shares execution resources` explains _why_ the connection exists.
 
-The bidirectional resolution is one of the things I'm most proud of technically. The build system processes every note, extracts every reference, computes the reverse links, and generates a complete relationship graph — not just a list of links, but a data structure where every connection is typed, annotated, and navigable from either end. The kind of thing you'd build with a proper graph database if you were being serious about it. I built it with JSON files and a build script. {{It works|"it works" is the systems engineer's highest compliment. Not "it's elegant." Not "it's optimized." It works.}}.
+The bidirectional resolution is one of the things I'm most proud of technically. The build system processes every note, extracts every reference, computes the reverse links, and generates a complete relationship graph — not just a list of links, but a data structure where every connection is typed, annotated, and navigable from either end. The kind of thing you'd build with a proper graph database if you were being serious about it. I built it with JSON files and a build script. ^["it works" is the systems engineer's highest compliment. Not "it's elegant." Not "it's optimized." It works.].
 
 ## Why this needed to be an SPA
 
@@ -391,7 +391,7 @@ This is where the architecture stops being a stylistic choice and becomes a func
 
 The Second Brain needs instant navigation between notes — you click a wiki-link, the content swaps, the URL updates, the neighborhood graph recalculates, all without a full page reload. Hover over a `[[link]]` and a floating preview appears with the target note's content. Search needs to feel instant, filtering 60+ notes as you type. The neighborhood graph needs smooth transitions when you switch contexts.
 
-None of this works well with purely static HTML pages. Each page load would require a full round-trip, re-parsing the nav state, re-rendering the sidebar, losing scroll position. The interactivity isn't a nice-to-have — it's the core experience. The Second Brain is an application, not a document{{, and applications need client-side state management|React manages component state, re-renders on data changes, and handles routing without full page reloads. For static content it's overkill. For an interactive knowledge graph it's the minimum viable approach.}}.
+None of this works well with purely static HTML pages. Each page load would require a full round-trip, re-parsing the nav state, re-rendering the sidebar, losing scroll position. The interactivity isn't a nice-to-have — it's the core experience. The Second Brain is an application, not a document^[React manages component state, re-renders on data changes, and handles routing without full page reloads. For static content it's overkill. For an interactive knowledge graph it's the minimum viable approach.].
 
 Astro's islands could handle this — the blog as static HTML, the Second Brain as a React island. I acknowledged that trade-off earlier and I'll acknowledge it again here: architecturally, islands would have been more elegant. But in practice, having the Second Brain and the blog articles share the same routing, the same theme system, the same hover preview component, the same wiki-link resolution — that cohesion simplified development enormously. One mental model, one debugging strategy, one set of patterns.
 
@@ -436,7 +436,7 @@ Building the system was one thing. Making sure it doesn't break as it grows was 
 
 Once the knowledge graph had 60+ notes with hundreds of cross-references, things started breaking in ways I couldn't see. I'd rename a concept, forget to update a reference three files away, and only discover the broken link weeks later when re-reading the note.
 
-So I built a {{validation pipeline|runs automatically on every `npm run build`. Errors fail the build. Warnings are logged. The build is the safety net.}} that catches problems before they reach the deployed site:
+So I built a ^[runs automatically on every `npm run build`. Errors fail the build. Warnings are logged. The build is the safety net.] that catches problems before they reach the deployed site:
 
 | Phase | What it catches | Severity |
 |---|---|---|
@@ -478,7 +478,7 @@ The rename script was born from pain. I once manually renamed a concept that had
 
 >> 26.02.13 - Came back to the web project after a few days heads-down on something else entirely. Opened the codebase, ran the build, and 6 warnings stared back at me. They'd been there for a while. The validator was catching them — it always does — but I was the one who had to fix them. Every time. Manually. That felt like the obvious next thing to fix.
 
-The validation pipeline I described above already knew how to --identify-- every structural problem in the knowledge graph. Missing parent nodes (a vertex {{_v_ in the hierarchy subgraph _H_|the knowledge graph has two overlapping structures: a directed acyclic graph _H_ encoding the `//`-separated address hierarchy (where `CPU//ALU` means "ALU is a child of CPU"), and a general directed graph _G_ encoding the `[[wiki-link]]` references between notes. A "missing parent" is a vertex implied by _H_ but absent from the vertex set _V_ — the hierarchy says it should exist, but no `.md` file defines it.}} exists in the address path but has no corresponding `.md` file), segment collisions (two vertices in _G_ sharing a terminal label — like `CPU//cache` and `networking//cache` both ending in "cache" — which _might_ mean someone accidentally created the same concept twice under different parents), stale `distinct` entries (a suppression annotation pointing to a vertex that was deleted from _V_), isolated notes (vertices with degree zero — no edges in, no edges out, completely disconnected from the graph).
+The validation pipeline I described above already knew how to --identify-- every structural problem in the knowledge graph. Missing parent nodes (a vertex ^[the knowledge graph has two overlapping structures: a directed acyclic graph _H_ encoding the `//`-separated address hierarchy (where `CPU//ALU` means "ALU is a child of CPU"), and a general directed graph _G_ encoding the `[[wiki-link]]` references between notes. A "missing parent" is a vertex implied by _H_ but absent from the vertex set _V_ — the hierarchy says it should exist, but no `.md` file defines it.] exists in the address path but has no corresponding `.md` file), segment collisions (two vertices in _G_ sharing a terminal label — like `CPU//cache` and `networking//cache` both ending in "cache" — which _might_ mean someone accidentally created the same concept twice under different parents), stale `distinct` entries (a suppression annotation pointing to a vertex that was deleted from _V_), isolated notes (vertices with degree zero — no edges in, no edges out, completely disconnected from the graph).
 
 The validator printed all of this. Colored, categorized, clearly. And then it stopped. It was my job to open each file, add a `distinct` annotation, or create a stub note (a minimal `.md` file with nothing but an address and a date — just enough to make the parent vertex exist in _V_ so the hierarchy checks pass), or run a rename script to merge two notes that turned out to be the same concept. For a few warnings, that's fine. For six, eight, twelve after a batch of new notes — it's the kind of repetitive task that makes you wonder why you're doing the computer's job.
 

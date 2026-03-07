@@ -10,5 +10,7 @@ date: "2026-02-15"
 - In addition to everything DPO uses, adds: the reward model, a critic that reduces variance by predicting scores, plus LLM actor and reference model for KL divergence
 - SGD reward signal derives from sequence-level scalar, not token-level logit derivatives — credit assignment problem: every token gets the same offset
 - Considered RLAIF when using a reward model trained from [[0f5GJDwc|RLHF]] data
----
-[[YwfNaR4R|DPO]] :: DPO maps preferences directly to token-level gradients — no reward model middleman, better credit assignment. papers argue PPO captures holistic non-compositional properties DPO loses — but attention already encodes inter-token dependencies before logits reach the loss
+
+## Interactions
+
+- [[YwfNaR4R|DPO]] : : DPO maps preferences directly to token-level gradients — no reward model middleman, better credit assignment. papers argue PPO captures holistic non-compositional properties DPO loses — but attention already encodes inter-token dependencies before logits reach the loss

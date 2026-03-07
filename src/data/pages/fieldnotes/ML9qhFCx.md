@@ -10,6 +10,6 @@ date: "2025-05-03"
 - The single most critical piece of information for joining a network — who + where
 - Mismatched public key → connection rejected during handshake
 
----
-[[Ixdu9hgo|ECDSA]] :: the enode public key is verified through ECDSA during the P2P handshake — proves the peer's identity
+## Interactions
 
+- [[Ixdu9hgo|ECDSA]] : : the enode public key is verified through ECDSA during the P2P handshake — proves the peer's identity

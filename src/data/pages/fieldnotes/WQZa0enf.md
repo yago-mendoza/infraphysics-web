@@ -9,6 +9,6 @@ date: "2025-07-06"
 - Keystore era: each account had its own encrypted file — lose one file = lose that account forever
 - HD wallet era: one seed phrase → all accounts — lose the device, not the keys
 
----
-[[uCuLAMTU|Metamask]] :: Metamask is the most popular HD wallet for Ethereum — browser extension managing keys and signing
+## Interactions
 
+- [[uCuLAMTU|Metamask]] : : Metamask is the most popular HD wallet for Ethereum — browser extension managing keys and signing

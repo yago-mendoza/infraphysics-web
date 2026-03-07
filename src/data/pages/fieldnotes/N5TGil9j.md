@@ -9,6 +9,6 @@ date: "2025-02-03"
 - `/16` gives 65534 usable host addresses — plenty for development networks
 - Host `192.168.1.50` and container `172.18.0.5` coexist without conflict — different virtual networks
 
----
-[[cgOcsEWf|LAN]] :: host LAN and Docker network are parallel, isolated layers — [[T0U5VL9d|port mapping]] is the only bridge between them
+## Interactions
 
+- [[cgOcsEWf|LAN]] : : host LAN and Docker network are parallel, isolated layers — [[T0U5VL9d|port mapping]] is the only bridge between them

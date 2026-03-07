@@ -9,6 +9,6 @@ date: "2025-08-19"
 - Key methods: `eth_getBalance`, `eth_blockNumber`, `eth_sendRawTransaction`, `eth_getTransactionReceipt`
 - Querying one node returns state for any account — the full world state is replicated on every full node
 
----
-[[PgionCm1|RPC]] :: JSON-RPC is the wire protocol; the RPC port is where the node listens for these requests
+## Interactions
 
+- [[PgionCm1|RPC]] : : JSON-RPC is the wire protocol; the RPC port is where the node listens for these requests

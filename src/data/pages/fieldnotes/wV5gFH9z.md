@@ -8,5 +8,7 @@ date: "2026-02-26"
 - Multi-layer graph: upper layers have long-range connections (fast coarse search), lower layers short-range (precise local)
 - The algorithm inside most [[TIQNpwbS|vector databases]]: Pinecone, Weaviate, Qdrant, pgvector all use HNSW or variants
 - Tradeoff: orders of magnitude faster than exact search, but approximate — 95-99% recall is typical
----
-[[TIQNpwbS|vector database]] :: HNSW is the core search algorithm inside most vector databases — a "vector search" is navigating an HNSW graph
+
+## Interactions
+
+- [[TIQNpwbS|vector database]] : : HNSW is the core search algorithm inside most vector databases — a "vector search" is navigating an HNSW graph

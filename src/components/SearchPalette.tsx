@@ -338,7 +338,9 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
         : a.label.toLowerCase().includes(lower)
     );
     // Exact concept matches first, then articles
-    return [...matchedActions, ...conceptMatches, ...articleMatches];
+    const results = [...matchedActions, ...conceptMatches, ...articleMatches];
+    // Fall back to default actions when nothing matches
+    return results.length > 0 ? results : actions;
   }, [query, actions, articleMatches, conceptMatches]);
 
   // Track search palette usage for HomeTour hint
@@ -400,11 +402,11 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setSelectedIndex(i => (i + 1) % filtered.length);
+        if (filtered.length > 0) setSelectedIndex(i => (i + 1) % filtered.length);
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setSelectedIndex(i => (i - 1 + filtered.length) % filtered.length);
+        if (filtered.length > 0) setSelectedIndex(i => (i - 1 + filtered.length) % filtered.length);
         break;
       case 'Enter':
         e.preventDefault();

@@ -11,8 +11,10 @@ date: "2026-02-15"
 - KL divergence acts as an anchor — penalizes if the new probability distribution drifts too far from the reference model to avoid spamming "Wonderful! Excellent! Helpful!" just to farm points
 - The KL leash paradox: remove KL and the model doesn't discover deeper truths — it discovers reward hacking (adversarial shortcuts that score high but mean nothing to humans)
 - If robots do it through NNs or LLM reasoning, it's [[mCK28lZ6|iterative DPO]] — the best training method today
----
-[[rxVjxTLA|PPO]] :: PPO uses sequence-level scalar reward via a reward model — every token gets the same offset, no custom derivative. DPO uses token-level logit derivatives — better credit assignment, no reward model needed
-[[qcqxPFA0|SFT]] :: SFT creates a rigid ceiling with singular attractor learning — DPO escapes it by learning from contrasts, not imitation
-[[0f5GJDwc|RLHF]] :: if humans choose between Bx and By, the pairs feed DPO — slower but grounded in real human judgment
-[[mCK28lZ6|constitutional AI]] :: if an AI crafts By from Bx through reflection, those pairs feed iterative DPO — fastest path
+
+## Interactions
+
+- [[rxVjxTLA|PPO]] : : PPO uses sequence-level scalar reward via a reward model — every token gets the same offset, no custom derivative. DPO uses token-level logit derivatives — better credit assignment, no reward model needed
+- [[qcqxPFA0|SFT]] : : SFT creates a rigid ceiling with singular attractor learning — DPO escapes it by learning from contrasts, not imitation
+- [[0f5GJDwc|RLHF]] : : if humans choose between Bx and By, the pairs feed DPO — slower but grounded in real human judgment
+- [[mCK28lZ6|constitutional AI]] : : if an AI crafts By from Bx through reflection, those pairs feed iterative DPO — fastest path

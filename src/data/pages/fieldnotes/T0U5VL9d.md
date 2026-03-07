@@ -10,6 +10,6 @@ date: "2025-02-03"
 - `-p` is for network, `-v` is for files — both bridge host↔container but in different dimensions
 - Only expose what's needed: if one node needs RPC access, only map that node's port
 
----
-[[1gCBEfat|Security: Minimum Privilege]] :: port mapping follows least privilege — expose only the RPC nodes that external clients need
+## Interactions
 
+- [[1gCBEfat|Security: Minimum Privilege]] : : port mapping follows least privilege — expose only the RPC nodes that external clients need

@@ -28,6 +28,7 @@ Threads use only universal fields — no category-specific extras.
 | `featured` | no | boolean | Shows in "Latest Work" on home page. |
 | `tldr` | no | string/string[] | Key takeaway lines in the header area. |
 | `author` | no | string | Defaults to `Yago Mendoza`. |
+| `lang` | no | string | Language code (`en`, `es`). Defaults to `en`. Non-English threads show a small language chip on the card. |
 
 **Example:**
 
@@ -120,7 +121,7 @@ In threads, the article `date` is the publication date. Context annotations (`>>
 
 Threads lean heavily on:
 - **Accent text** (`--key claims--`) for revelations and surprising facts
-- **Inline footnotes** (`{{ref|explanation}}`) for definitions and tangential context
+- **Inline footnotes** (`^[explanation]`) for definitions and tangential context
 - **Typed blockquotes** for core arguments that need visual weight
 - **Bold** for proper nouns and terms introduced for the first time
 

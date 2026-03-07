@@ -10,6 +10,6 @@ date: "2025-06-14"
 - Cross-wallet compatible: same seed phrase in Metamask and Trust Wallet → same accounts, same balances
 - After restore, only Account 1 shows — user must "Add Account" to re-derive the others in order
 
----
-[[HzLb0Y6y|Seed Phrase]] :: the seed phrase is the human-readable form of the entropy that generates the master key
+## Interactions
 
+- [[HzLb0Y6y|Seed Phrase]] : : the seed phrase is the human-readable form of the entropy that generates the master key

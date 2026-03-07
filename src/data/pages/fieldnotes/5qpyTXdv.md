@@ -10,5 +10,7 @@ date: "2026-02-15"
 - Top-p (nucleus): only consider tokens whose cumulative probability exceeds p
 - Introduces stochasticity — same input can produce different outputs (new [[RnKMoC3a|manifold]] path)
 - Temperature is cranked up when generating candidate outputs for [[0f5GJDwc|RLHF]] or [[YwfNaR4R|DPO]] — need diversity
----
-[[RnKMoC3a|latent space]] :: sampling picks a point in vocabulary space, which becomes the next step on the manifold — low temperature hugs the most likely path, high temperature explores branches
+
+## Interactions
+
+- [[RnKMoC3a|latent space]] : : sampling picks a point in vocabulary space, which becomes the next step on the manifold — low temperature hugs the most likely path, high temperature explores branches

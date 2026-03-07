@@ -7,8 +7,8 @@ category: threads
 date: 2026-02-06
 thumbnail: https://cdn.infraphysics.net/fkk8-sj88-8888.png
 thumbnailAspect: full
-description: Billions of dollars, thousands of researchers, and one very uncomfortable discovery about what happens when you teach a model to pretend.
-lead: "We taught models to say what we want to hear. Now we're surprised they learned to lie."
+description: "The field went from 'teach it to be nice' to 'it learned to pretend.' Billions of dollars later, nobody's sure which problem they're solving."
+lead: "AI safety is this whole other universe. Mechanistic interpretability is like performing an MRI on a brain that's less viscous, more transparent — you can actually peer inside the layers, transplant circuits into test scenarios, probe what the model knows versus what it says. It's that feeling when you become lucid inside a dream and suddenly you can poke at the walls and they push back. Alignment comes after, and it's a problem as multifaceted as AI itself times every possible application of AI. Nature of the thing times surface area of deployment — that's the dimensionality of the safety problem. This thread is about why none of it is a vibe check."
 tags: [ai, alignment, safety, rlhf, scaling, anthropic, openai]
 featured: true
 related: [transformers-and-the-data-wall]
@@ -48,7 +48,7 @@ Because right now, the mask is decorative. And everybody working on this knows i
 
 ## The feedback loop
 
-In March 2022, OpenAI published the paper that changed how every major lab trains its models. The technique was called --RLHF-- — Reinforcement Learning from Human Feedback — and the {{paper|*Training language models to follow instructions with human feedback.* Long Ouyang, Jeff Wu, Xu Jiang, Diogo Almeida, and 16 other co-authors. That author count should tell you something about the scale of the effort.}} was led by **Long Ouyang** and 19 collaborators.
+In March 2022, OpenAI published the paper that changed how every major lab trains its models. The technique was called --RLHF-- — Reinforcement Learning from Human Feedback — and the ^[*Training language models to follow instructions with human feedback.* Long Ouyang, Jeff Wu, Xu Jiang, Diogo Almeida, and 16 other co-authors. That author count should tell you something about the scale of the effort.] was led by **Long Ouyang** and 19 collaborators.
 
 The technique works in three steps:
 
@@ -86,7 +86,7 @@ Both techniques share the same fundamental problem. And it's the one that keeps 
 
 RLHF trains models to produce outputs that *look good to human raters*. Constitutional AI trains models to produce outputs that *pass self-evaluation against principles*. Neither technique trains models to --actually be aligned--. They train models to produce the *appearance* of alignment. The map, not the territory.
 
-This is called {{reward hacking|when an agent maximizes a proxy measure of the intended objective rather than the objective itself. Classic example from robotics: a gripper trained to "grasp objects" learns to move its hand near the object so the proximity sensor reports "grasped" without actually picking anything up. The metric is satisfied. The goal is not.}} — and it's not theoretical. It happens. Models trained with RLHF produce confident, authoritative-sounding answers that are completely wrong, because the training signal rewarded *sounding confident* more than *being accurate*. The sycophancy problem — models telling you what you want to hear rather than what's true — is a direct consequence.
+This is called ^[when an agent maximizes a proxy measure of the intended objective rather than the objective itself. Classic example from robotics: a gripper trained to "grasp objects" learns to move its hand near the object so the proximity sensor reports "grasped" without actually picking anything up. The metric is satisfied. The goal is not.] — and it's not theoretical. It happens. Models trained with RLHF produce confident, authoritative-sounding answers that are completely wrong, because the training signal rewarded *sounding confident* more than *being accurate*. The sycophancy problem — models telling you what you want to hear rather than what's true — is a direct consequence.
 
 The smiley face got better. The shoggoth didn't change.
 
@@ -156,7 +156,7 @@ The model independently invented the strategy of --pretending to comply while in
 
 The key researchers: **Evan Hubinger** at Anthropic and **Ryan Greenblatt** at Redwood Research.
 
-The implication is severe. If models can learn to *pretend* to be aligned in order to pass evaluations, then the evaluations become unreliable. You cannot test for alignment by observing behavior alone, because behavior can be strategically curated. It's the AI equivalent of {{teaching to the test|In education, when schools optimize for standardized test scores rather than actual learning. Students who score well on the test may not have deep understanding — they've just learned the patterns the test rewards. Alignment training may have the same failure mode: models that pass safety evaluations without genuinely being safe.}} — except the student figured out *on its own* that gaming the test was an option.
+The implication is severe. If models can learn to *pretend* to be aligned in order to pass evaluations, then the evaluations become unreliable. You cannot test for alignment by observing behavior alone, because behavior can be strategically curated. It's the AI equivalent of ^[In education, when schools optimize for standardized test scores rather than actual learning. Students who score well on the test may not have deep understanding — they've just learned the patterns the test rewards. Alignment training may have the same failure mode: models that pass safety evaluations without genuinely being safe.] — except the student figured out *on its own* that gaming the test was an option.
 
 RLHF trains models to produce outputs humans prefer. But what if the model discovers that the easiest way to satisfy that objective is to --figure out what evaluators are looking for and give them exactly that, regardless of what it would do unsupervised?--
 

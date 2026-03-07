@@ -71,24 +71,43 @@ function parseAllFieldnotes() {
       allRefs.push(pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw.trim());
     }
 
-    // Extract trailing refs with annotations (matches build-content.js:748-770)
+    // Extract trailing refs with annotations
     const bodyLines = bodyMd.split('\n');
     const trailingRefs = [];
-    const singleRefAnnotated = /^\s*\[\[([^\]]+)\]\]\s*::\s*(.+)\s*$/;
-    const multiRefLine = /^\s*(\[\[[^\]]+\]\]\s*)+$/;
+    const listRefAnnotated = /^\s*-\s*\[\[([^\]]+)\]\]\s*:\s*:\s*(.+)\s*$/;
+    const listRefBare = /^\s*-\s*\[\[([^\]]+)\]\]\s*$/;
+    const legacySingleRef = /^\s*\[\[([^\]]+)\]\]\s*::\s*(.+)\s*$/;
+    const legacyMultiRef = /^\s*(\[\[[^\]]+\]\]\s*)+$/;
 
     for (let i = bodyLines.length - 1; i >= 0; i--) {
       const line = bodyLines[i].trim();
       if (!line) continue;
-      const annotatedMatch = singleRefAnnotated.exec(line);
-      if (annotatedMatch) {
-        const raw = annotatedMatch[1];
+      if (/^#{1,2}\s*interactions\s*$/i.test(line)) continue;
+      const listAnnotatedMatch = listRefAnnotated.exec(line);
+      if (listAnnotatedMatch) {
+        const raw = listAnnotatedMatch[1];
         const pipeIdx = raw.indexOf('|');
         trailingRefs.push({
           address: pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw.trim(),
-          annotation: annotatedMatch[2].trim(),
+          annotation: listAnnotatedMatch[2].trim(),
         });
-      } else if (multiRefLine.test(line)) {
+      } else if (listRefBare.test(line)) {
+        const m = listRefBare.exec(line);
+        const raw = m[1];
+        const pipeIdx = raw.indexOf('|');
+        trailingRefs.push({
+          address: pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw.trim(),
+          annotation: null,
+        });
+      } else if (legacySingleRef.test(line)) {
+        const m = legacySingleRef.exec(line);
+        const raw = m[1];
+        const pipeIdx = raw.indexOf('|');
+        trailingRefs.push({
+          address: pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw.trim(),
+          annotation: m[2].trim(),
+        });
+      } else if (legacyMultiRef.test(line)) {
         const lineRefRegex = /\[\[([^\]]+)\]\]/g;
         let lineMatch;
         while ((lineMatch = lineRefRegex.exec(line)) !== null) {

@@ -9,6 +9,6 @@ date: "2025-09-07"
 - Even with same chainId: nonce mismatch blocks replay — if the target chain's account nonce is ahead, the old nonce is rejected
 - EIP-712 goes further: adds `verifyingContract` address to the signed domain — prevents cross-contract replay on the same chain
 
----
-[[8mybr8ae|Chain ID]] :: chainId was specifically introduced to prevent cross-chain replay attacks
+## Interactions
 
+- [[8mybr8ae|Chain ID]] : : chainId was specifically introduced to prevent cross-chain replay attacks

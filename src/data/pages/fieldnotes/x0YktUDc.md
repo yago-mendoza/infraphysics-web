@@ -9,6 +9,6 @@ date: "2025-05-18"
 - Ephemeral container runs the Besu CLI tool, saves output to host via volume, self-destructs
 - Even students with Java installation problems can use this approach — Docker abstracts all dependencies
 
----
-[[IjOYtr23|Docker Lifecycle]] :: the `--rm` flag makes these containers truly ephemeral — run the tool, get output, done
+## Interactions
 
+- [[IjOYtr23|Docker Lifecycle]] : : the `--rm` flag makes these containers truly ephemeral — run the tool, get output, done

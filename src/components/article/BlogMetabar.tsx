@@ -7,6 +7,7 @@ interface BlogMetabarProps {
   authorName: string;
   authorPath: string;
   readingTime: number;
+  showReadingTime?: boolean;
   views: number | null | undefined;
   hearts: number | null | undefined;
   hearted: boolean;
@@ -16,7 +17,7 @@ interface BlogMetabarProps {
 }
 
 export const BlogMetabar: React.FC<BlogMetabarProps> = ({
-  date, authorName, authorPath, readingTime,
+  date, authorName, authorPath, readingTime, showReadingTime = true,
   views, hearts, hearted, toggleHeart,
   shareDropdown, formatDate,
 }) => (
@@ -25,8 +26,12 @@ export const BlogMetabar: React.FC<BlogMetabarProps> = ({
       <span>{formatDate(date)}</span>
       <span className="article-blog-metabar-sep">&middot;</span>
       <span className="article-blog-metabar-author">Written by <Link to={authorPath} className="article-blog-metabar-link">{authorName}</Link></span>
-      <span className="article-blog-metabar-sep">&middot;</span>
-      <span>{readingTime} min read</span>
+      {showReadingTime && (
+        <>
+          <span className="article-blog-metabar-sep">&middot;</span>
+          <span>{readingTime} min read</span>
+        </>
+      )}
       {views != null && (
         <>
           <span className="article-blog-metabar-sep">&middot;</span>

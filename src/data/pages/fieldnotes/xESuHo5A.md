@@ -8,5 +8,7 @@ date: "2026-02-05"
 - Spinlocks, semaphores, and read-write locks are common variants
 - Contention on hot mutexes is a top scalability bottleneck
 - Language runtimes sometimes enforce broader exclusion — Python's [[azuwblly|GIL]] or JavaScript's [[cgxZ1IJb|event loop]] sidestep data races by constraining concurrency at the language level
----
-[[cgxZ1IJb|event loop]] :: single-threaded concurrency model that avoids mutex contention entirely
+
+## Interactions
+
+- [[cgxZ1IJb|event loop]] : : single-threaded concurrency model that avoids mutex contention entirely

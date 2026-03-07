@@ -9,6 +9,6 @@ date: "2025-09-07"
 - Bootnodes should NOT have RPC exposed — they only need P2P connectivity
 - Ideal topology: separate RPC node that's neither validator nor bootnode — single purpose, minimal exposure
 
----
-[[6Upy5jpc|Node Roles]] :: role separation is the practical implementation of minimum privilege in a Besu network
+## Interactions
 
+- [[6Upy5jpc|Node Roles]] : : role separation is the practical implementation of minimum privilege in a Besu network

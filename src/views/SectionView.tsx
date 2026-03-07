@@ -41,6 +41,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
   const [selectedTechs, setSelectedTechs] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [selectedLang, setSelectedLang] = useState<string | null>(null);
   const toggleTopic = (t: string) => setSelectedTopics(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
   const toggleTech = (t: string) => setSelectedTechs(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
   const toggleStatus = (s: string) => setSelectedStatuses(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
@@ -56,10 +57,17 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
     setSortBy('newest');
     setShowFilters(category === 'projects');
     setVisibleCount(PAGE_SIZE);
+    setSelectedLang(null);
   }, [category]);
 
   const sectionPosts = useMemo(() => posts.filter(p => p.category === category), [category]);
   const stats = useArticleStats(sectionPosts);
+
+  const hasMultipleLangs = useMemo(() => {
+    if (category !== 'threads') return false;
+    const langs = new Set(sectionPosts.map(p => p.lang || 'en'));
+    return langs.size > 1;
+  }, [sectionPosts, category]);
 
   const allTopics = useMemo(() => [...new Set(sectionPosts.flatMap(p => p.tags || []))].sort(), [sectionPosts]);
   const allTechs = useMemo(() => [...new Set(sectionPosts.flatMap(p => p.technologies || []))].sort(), [sectionPosts]);
@@ -93,6 +101,12 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
       result = result.filter(p => p.status && selectedStatuses.includes(p.status));
     }
 
+    // Language filter — only when no other filters are active
+    const hasFilters = query || selectedTopics.length > 0 || selectedTechs.length > 0 || selectedStatuses.length > 0;
+    if (!hasFilters && selectedLang) {
+      result = result.filter(p => (p.lang || 'en') === selectedLang);
+    }
+
     result.sort((a, b) => {
       if (sortBy === 'newest') return new Date(b.date).getTime() - new Date(a.date).getTime();
       if (sortBy === 'oldest') return new Date(a.date).getTime() - new Date(b.date).getTime();
@@ -101,7 +115,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
     });
 
     return result;
-  }, [sectionPosts, query, sortBy, selectedTopics, selectedTechs, selectedStatuses]);
+  }, [sectionPosts, query, sortBy, selectedTopics, selectedTechs, selectedStatuses, selectedLang]);
 
   const topicCounts = useMemo(() => {
     const map: Record<string, number> = {};
@@ -176,7 +190,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
             className="text-2xl md:text-4xl font-bold tracking-tight title-l-frame uppercase"
             style={category !== 'projects' ? { fontFamily: "'Roboto Slab', Georgia, serif", fontWeight: 700, textTransform: 'none' as const } : undefined}
           >
-            <span className="text-th-heading">{categoryInfo.title}</span>
+            <span style={{ color: `var(--cat-${category}-accent)` }}>{categoryInfo.title}</span>
           </h1>
           <div className="flex items-center gap-4 text-xs text-th-tertiary" style={category !== 'projects' ? { fontFamily: "'Roboto Slab', Georgia, serif" } : undefined}>
             <span>{filteredPosts.length} {filteredPosts.length === 1 ? 'entry' : 'entries'}</span>
@@ -308,6 +322,30 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
           </div>
         </div>
       </div>
+
+      {/* Language toggle — threads only, hidden when filters active */}
+      {hasMultipleLangs && !query && selectedTopics.length === 0 && selectedTechs.length === 0 && selectedStatuses.length === 0 && (
+        <div className="flex justify-center gap-2 mb-6">
+          {['en', 'es'].map(lang => {
+            const active = selectedLang === lang;
+            return (
+              <button
+                key={lang}
+                onClick={() => setSelectedLang(active ? null : lang)}
+                className="text-[11px] font-semibold tracking-widest uppercase px-3 py-1 border rounded-sm transition-colors"
+                style={{
+                  fontFamily: "'Roboto Slab', Georgia, serif",
+                  borderColor: active ? `var(--cat-threads-accent)` : 'var(--border)',
+                  color: active ? `var(--cat-threads-accent)` : 'var(--text-tertiary)',
+                  backgroundColor: active ? 'color-mix(in srgb, var(--cat-threads-accent) 10%, transparent)' : 'transparent',
+                }}
+              >
+                {lang}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Delegated renderer */}
       <Renderer posts={visiblePosts} query={query} getExcerpt={getExcerpt} getMatchCount={getMatchCount} accent={accent} stats={stats} />

@@ -10,6 +10,6 @@ date: "2025-08-19"
 - Flow: your DApp → HTTPS → Infura → TCP/P2P gossip → validators
 - Transaction security comes from [[Ixdu9hgo|ECDSA]] signatures done in the wallet, not from Infura's infrastructure
 
----
-[[Ixdu9hgo|ECDSA]] :: Infura never touches your private key — transactions arrive already signed, Infura just relays them
+## Interactions
 
+- [[Ixdu9hgo|ECDSA]] : : Infura never touches your private key — transactions arrive already signed, Infura just relays them

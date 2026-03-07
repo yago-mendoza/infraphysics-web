@@ -158,6 +158,7 @@ function processMarkdownFile(filePath) {
     lead: frontmatter.lead || null,
     tldr: frontmatter.tldr || null,
     related: frontmatter.related || null,
+    lang: frontmatter.lang || null,
   };
 }
 
@@ -255,19 +256,33 @@ function extractFieldnoteMeta(filename, filePath) {
   const references = [...refsSet];
 
   const trailingRefs = [];
-  const singleRefAnnotated = /^\s*\[\[([^\]]+)\]\]\s*::\s*(.+)\s*$/;
-  const multiRefLine = /^\s*(\[\[[^\]]+\]\]\s*)+$/;
+  const listRefAnnotated = /^\s*-\s*\[\[([^\]]+)\]\]\s*:\s*:\s*(.+)\s*$/;
+  const listRefBare = /^\s*-\s*\[\[([^\]]+)\]\]\s*$/;
+  const legacySingleRef = /^\s*\[\[([^\]]+)\]\]\s*::\s*(.+)\s*$/;
+  const legacyMultiRef = /^\s*(\[\[[^\]]+\]\]\s*)+$/;
   let trailingRefStart = bodyLines.length;
   for (let i = bodyLines.length - 1; i >= 0; i--) {
     const line = bodyLines[i].trim();
     if (!line) continue;
-    const annotatedMatch = singleRefAnnotated.exec(line);
-    if (annotatedMatch) {
-      const raw = annotatedMatch[1].trim();
+    const listAnnotatedMatch = listRefAnnotated.exec(line);
+    if (listAnnotatedMatch) {
+      const raw = listAnnotatedMatch[1].trim();
       const pipeIdx = raw.indexOf('|');
-      trailingRefs.push({ uid: pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw, annotation: annotatedMatch[2].trim() });
+      trailingRefs.push({ uid: pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw, annotation: listAnnotatedMatch[2].trim() });
       trailingRefStart = i;
-    } else if (multiRefLine.test(line)) {
+    } else if (listRefBare.test(line)) {
+      const m = listRefBare.exec(line);
+      const raw = m[1].trim();
+      const pipeIdx = raw.indexOf('|');
+      trailingRefs.push({ uid: pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw, annotation: null });
+      trailingRefStart = i;
+    } else if (legacySingleRef.test(line)) {
+      const m = legacySingleRef.exec(line);
+      const raw = m[1].trim();
+      const pipeIdx = raw.indexOf('|');
+      trailingRefs.push({ uid: pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw, annotation: m[2].trim() });
+      trailingRefStart = i;
+    } else if (legacyMultiRef.test(line)) {
       const lineRefRegex = /\[\[([^\]]+)\]\]/g;
       let lineMatch;
       while ((lineMatch = lineRefRegex.exec(line)) !== null) {
@@ -275,6 +290,8 @@ function extractFieldnoteMeta(filename, filePath) {
         const pipeIdx = raw.indexOf('|');
         trailingRefs.push({ uid: pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw, annotation: null });
       }
+      trailingRefStart = i;
+    } else if (/^#{1,2}\s*interactions\s*$/i.test(line)) {
       trailingRefStart = i;
     } else {
       break;

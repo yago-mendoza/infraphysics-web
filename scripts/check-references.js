@@ -58,12 +58,13 @@ function parseAllFieldnotes() {
     // Extract trailing refs (last lines of body)
     const bodyLines = bodyMd.split('\n');
     const trailingRefs = [];
-    const trailingRefPattern = /^\s*(\[\[[^\]]+\]\]\s*)+$/;
+    const listRefPattern = /^\s*-\s*\[\[([^\]]+)\]\]/;
+    const legacyRefPattern = /^\s*(\[\[[^\]]+\]\]\s*)+$/;
 
     for (let i = bodyLines.length - 1; i >= 0; i--) {
       const line = bodyLines[i].trim();
       if (!line) continue;
-      if (trailingRefPattern.test(line)) {
+      if (listRefPattern.test(line)) {
         const lineRefRegex = /\[\[([^\]]+)\]\]/g;
         let lineMatch;
         while ((lineMatch = lineRefRegex.exec(line)) !== null) {
@@ -71,6 +72,16 @@ function parseAllFieldnotes() {
           const pipeIdx = raw.indexOf('|');
           trailingRefs.push(pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw.trim());
         }
+      } else if (legacyRefPattern.test(line)) {
+        const lineRefRegex = /\[\[([^\]]+)\]\]/g;
+        let lineMatch;
+        while ((lineMatch = lineRefRegex.exec(line)) !== null) {
+          const raw = lineMatch[1];
+          const pipeIdx = raw.indexOf('|');
+          trailingRefs.push(pipeIdx !== -1 ? raw.slice(0, pipeIdx).trim() : raw.trim());
+        }
+      } else if (/^#{1,2}\s*interactions\s*$/i.test(line)) {
+        continue;
       } else {
         break;
       }

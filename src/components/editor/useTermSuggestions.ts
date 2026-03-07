@@ -55,10 +55,16 @@ function buildSkipRanges(raw: string): Array<[number, number]> {
     ranges.push([m.index, m.index + m[0].length]);
   }
 
-  // Trailing refs: contiguous block of `- [[` lines anchored at document end
-  const trailingMatch = raw.match(/(?:\n- \[\[.*)+\s*$/);
+  // Trailing refs: ## Interactions heading + list of `- [[` lines anchored at document end
+  const trailingMatch = raw.match(/\n## Interactions\s*\n(?:\s*\n|\s*- \[\[.*\n?)*\s*$/i);
   if (trailingMatch && trailingMatch.index != null) {
     ranges.push([trailingMatch.index, raw.length]);
+  } else {
+    // Legacy: contiguous block of `[[...]] ::` lines at end
+    const legacyMatch = raw.match(/(?:\n\[\[.*::.*)+\s*$/);
+    if (legacyMatch && legacyMatch.index != null) {
+      ranges.push([legacyMatch.index, raw.length]);
+    }
   }
 
   return ranges;

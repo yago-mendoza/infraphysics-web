@@ -8,5 +8,7 @@ date: "2026-02-26"
 - LLMs produce code with subtle security issues, logic errors, and silent failures that pass basic tests
 - CriticGPT catches errors human reviewers miss, especially in complex codebases
 - Anthropic's parallel: use SAEs ([[UHGnehtS|mechanistic interpretability]]) to identify features that cause buggy generation
----
-[[UHGnehtS|mechanistic interpretability]] :: Anthropic uses SAEs to find features causing buggy code — a direct application of interpretability to code safety
+
+## Interactions
+
+- [[UHGnehtS|mechanistic interpretability]] : : Anthropic uses SAEs to find features causing buggy code — a direct application of interpretability to code safety

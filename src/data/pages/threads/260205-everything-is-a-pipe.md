@@ -6,7 +6,7 @@ category: threads
 date: 2026-02-05
 thumbnail: https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=400&auto=format&fit=crop
 description: roman aqueducts, your bloodstream, and TCP/IP all solved the same problem. none of them knew about the others.
-lead: "The Romans, your circulatory system, and the internet all arrived at the same engineering solution independently."
+lead: "When I was studying engineering, my diagrams kept looking the same across subjects — thermodynamics, hydraulics, heat engines, control systems. Then I realized a perceptron is just another pipe."
 tags: [systems-thinking, infrastructure, networking, biology, history]
 featured: true
 ---

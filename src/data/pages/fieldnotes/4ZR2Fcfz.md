@@ -9,6 +9,6 @@ date: "2025-05-18"
 - Identity creation: `besu public-key export-address --data-path=/data/n1 --to=/data/n1/addr`
 - `--data-path` creates the key files; `--to` exports the human-readable address as a convenience
 
----
-[[Nohc505O|Besu Funding]] :: after generating keys, use their addresses in genesis `alloc` to pre-fund accounts
+## Interactions
 
+- [[Nohc505O|Besu Funding]] : : after generating keys, use their addresses in genesis `alloc` to pre-fund accounts

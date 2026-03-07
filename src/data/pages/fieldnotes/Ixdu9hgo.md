@@ -9,6 +9,6 @@ date: "2025-06-14"
 - Used for: transaction signing, block signing, personal message signing (`personal_sign`)
 - Infura API keys are NOT ECDSA — they're service authentication tokens, not cryptographic signatures
 
----
-[[ML9qhFCx|Besu Enode]] :: ECDSA verification during P2P handshake prevents man-in-the-middle attacks
+## Interactions
 
+- [[ML9qhFCx|Besu Enode]] : : ECDSA verification during P2P handshake prevents man-in-the-middle attacks

@@ -1371,12 +1371,7 @@
   margin-top: -0.5rem;
 }
 
-/* B3c. Inline annotations (WORD{{explanation}} → superscript + notes) */
-
-.article-content .ann-ref-text {
-  font-style: italic;
-  text-decoration: none;
-}
+/* B3c. Inline annotations (^[explanation] → superscript + notes) */
 
 .article-content .ann-ref {
   color: var(--art-accent);
@@ -1410,12 +1405,6 @@
 
 .article-content .bkqt .annotations {
   margin-top: 0.75rem;
-}
-
-.article-content .annotations-nested {
-  padding-left: 2.5rem;
-  margin-top: 0.5;
-  margin-bottom: 0;
 }
 
 /* B4. Unordered lists */
@@ -2190,7 +2179,8 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 .article-threads .article-title {
   font-family: var(--font-blog-heading);
-  font-weight: 700;
+  font-weight: 400;
+  color: var(--cat-threads-accent);
 }
 
 .article-threads .article-content h1,
@@ -2200,6 +2190,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   font-family: var(--font-blog-heading);
   font-style: normal;
   font-weight: 600;
+  color: var(--art-accent);
 }
 
 /* Threads feedback — monospace (inherits) */
@@ -2338,9 +2329,8 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 /* E4c. Blog lead — italic intro text below metabar, border-bottom before body */
 .article-blog-lead {
-  padding: 0.75rem 0 1.875rem;
+  padding: 1.5rem 0 1.875rem;
   margin: 0;
-  border-bottom: 1px solid var(--art-border);
 }
 
 /* Collapse top margin of first element after lead so line sits equidistant */
@@ -2655,13 +2645,26 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 /* F7. (removed — share icons consolidated into dropdown) */
 
-/* F8. Image — flush to card edges, above header content */
+/* F8. Image — flush to card edges, above header content (legacy, no longer used at top) */
 .article-threads-image {
   border-bottom: 1px solid var(--art-border);
   overflow: hidden;
 }
 
 .article-threads-image img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+/* F8b. End-of-article image — after content, before feedback */
+.article-threads-end-image {
+  margin-top: 3rem;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.article-threads-end-image img {
   width: 100%;
   display: block;
   object-fit: cover;
@@ -2813,5 +2816,23 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   }
   .article-projects .article-content .ann-note {
     font-size: 0.85rem;
+  }
+
+  /* G3. Threads — slightly smaller body */
+  .article-threads .article-content p,
+  .article-threads .article-content li,
+  .article-threads .article-content td,
+  .article-threads .article-content .defn,
+  .article-threads .article-content .shout {
+    font-size: 0.9375rem;
+  }
+  .article-threads .article-content .bkqt {
+    font-size: 0.9375rem;
+  }
+  .article-threads .article-content .small-text p {
+    font-size: 0.9375rem;
+  }
+  .article-threads .article-content .ann-note {
+    font-size: 0.9375rem;
   }
 }

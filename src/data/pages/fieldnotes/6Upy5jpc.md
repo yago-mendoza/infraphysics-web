@@ -9,10 +9,10 @@ date: "2025-05-18"
 - Ideal topology: dedicated bootnode (no RPC), dedicated validator (no RPC), dedicated RPC node (no validator)
 - Role assignment is about port exposure and genesis config — not different binaries
 
----
-[[1gCBEfat]] :: separating roles minimizes attack surface — validators should never expose RPC
-[[J2OCjPpb]] :: discovery entry point — other nodes list its enode in --bootnodes
-[[dL13xOGB]] :: block signer — address listed in genesis extraData
-[[0YSqmnyU]] :: external API gateway — port mapped for dApps and wallets
-[[8rIt8ncJ]] :: baseline — stores and verifies the chain, no special privileges
+## Interactions
 
+- [[1gCBEfat]] : : separating roles minimizes attack surface — validators should never expose RPC
+- [[J2OCjPpb]] : : discovery entry point — other nodes list its enode in --bootnodes
+- [[dL13xOGB]] : : block signer — address listed in genesis extraData
+- [[0YSqmnyU]] : : external API gateway — port mapped for dApps and wallets
+- [[8rIt8ncJ]] : : baseline — stores and verifies the chain, no special privileges

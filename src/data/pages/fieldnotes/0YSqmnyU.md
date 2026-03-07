@@ -10,5 +10,6 @@ date: "2026-02-17"
 - One node can wear multiple hats (bootnode + validator + RPC), but separation is more secure
 - Ideal: dedicated RPC node that's neither validator nor bootnode — single purpose, minimal exposure
 
----
-[[1gCBEfat]] :: only map RPC ports on nodes that external clients actually connect to
+## Interactions
+
+- [[1gCBEfat]] : : only map RPC ports on nodes that external clients actually connect to

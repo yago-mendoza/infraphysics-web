@@ -9,6 +9,6 @@ date: "2025-08-19"
 - A node's RPC port is the "front door" for external interaction — read state, submit transactions
 - Only nodes with `-p` mapped ports are accessible from outside Docker
 
----
-[[DGPxwG79|JSON-RPC]] :: JSON-RPC defines the exact format and available methods for RPC communication
+## Interactions
 
+- [[DGPxwG79|JSON-RPC]] : : JSON-RPC defines the exact format and available methods for RPC communication

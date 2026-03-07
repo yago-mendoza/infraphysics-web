@@ -8,5 +8,7 @@ date: "2026-02-26"
 - Inspired by OS memory hierarchy — "page out" older memories to archival, "page in" when relevant
 - Adopted by [[Wb0yDrNZ|ChatGPT]] (memory feature) and LangGraph. Variants in MetaGPT, AutoGen, Smallville
 - Solves the fundamental problem: [[JUby2DIy|context windows]] are finite but agent conversations can be infinite
----
-[[JUby2DIy|context window]] :: MemGPT works around context limits — manages what's "loaded" like an OS manages RAM pages
+
+## Interactions
+
+- [[JUby2DIy|context window]] : : MemGPT works around context limits — manages what's "loaded" like an OS manages RAM pages

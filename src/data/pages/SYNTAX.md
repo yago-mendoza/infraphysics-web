@@ -38,8 +38,7 @@ For frontmatter schemas, content types, editorial rules, and the compilation pip
 | Nested list (1 level) | 2-space indent before `- ` or `1. ` |
 | Horizontal rule | `---` on its own line |
 | Context annotation | `>> 26.02.05 - annotation text` |
-| Inline footnote | `{{ref\|explanation}}` |
-| Nested footnote | `{{ref\|text with {{inner\|nested explanation}}}}` |
+| Inline footnote | `^[explanation]` |
 
 ---
 
@@ -275,45 +274,32 @@ All inline formatting works inside typed blockquotes: colored text, kbd, supersc
 
 ## Inline Footnotes
 
-Use `{{ref|explanation}}` to attach a paragraph-scoped footnote. (Not to be confused with [Context Annotations](#context-annotations), which are timestamped author notes using `>>` syntax.) The `ref` is the word or phrase being annotated — it renders inline with a dotted underline and a superscript number. The `explanation` appears as a numbered note below the paragraph.
+Use `^[explanation]` to attach a paragraph-scoped footnote. (Not to be confused with [Context Annotations](#context-annotations), which are timestamped author notes using `>>` syntax.) This is Obsidian's inline footnote syntax. A superscript number appears at the insertion point, and the explanation renders as a numbered note below the paragraph.
 
 ### Syntax
 
 ```
-it just {{counted|these were called HMMs and later n-gram language models.}}.
+it just ^[these were called HMMs and later n-gram language models.].
 ```
 
-This produces: "counted" with a dotted underline + superscript `1`, and below the paragraph a note: `1 these were called HMMs and later n-gram language models.`
+This produces a superscript `1` at the insertion point, and below the paragraph a note: `1 these were called HMMs and later n-gram language models.`
 
-### Multiple annotations per paragraph
+### Multiple footnotes per paragraph
 
-You can use multiple annotations in the same paragraph. Each gets a sequential number (1, 2, 3...) scoped to that paragraph — numbering resets for the next paragraph.
-
-```
-the model uses {{attention|a mechanism that lets the model weigh which parts of the input matter most.}} and {{embeddings|dense vector representations of tokens in a high-dimensional space.}} to process input.
-```
-
-### Nested annotations
-
-Explanations can themselves contain annotations. Nested annotations are indented one level further, at the same font size, with their own numbering.
+You can use multiple footnotes in the same paragraph. Each gets a sequential number (1, 2, 3...) scoped to that paragraph — numbering resets for the next paragraph.
 
 ```
-it just {{counted|these were called {{HMMs|Hidden Markov Models — a class of probabilistic models.}} and later n-gram language models.}}.
+the model uses ^[a mechanism that lets the model weigh which parts of the input matter most.] and ^[dense vector representations of tokens in a high-dimensional space.] to process input.
 ```
-
-This produces:
-- `1` explanation for "counted" with "HMMs" underlined + superscript inside it
-- indented below: `1` explanation for "HMMs"
-
-There is no depth limit — you can nest annotations inside nested annotations.
 
 ### Notes
 
-- Annotations are paragraph-scoped: numbering resets per `<p>`.
-- The `ref` part renders with a dotted underline. The `explanation` renders in sans-serif at text-mid color.
-- Nested annotations indent further but keep the same font size.
-- Annotations are skipped inside code blocks.
-- Use annotations for brief clarifications or definitions. For longer tangential content, prefer a `{bkqt/note}...{/bkqt}` blockquote instead.
+- Footnotes are paragraph-scoped: numbering resets per `<p>`.
+- The explanation renders in sans-serif at text-mid color.
+- Footnotes are skipped inside code blocks.
+- Nesting is not supported. Keep footnotes flat — use parentheses for inline clarifications within a footnote.
+- Use footnotes for brief clarifications or definitions. For longer tangential content, prefer a `{bkqt/note}...{/bkqt}` blockquote instead.
+- This syntax is Obsidian-compatible: `^[text]` renders natively in Obsidian as an inline footnote.
 
 ---
 
@@ -613,7 +599,7 @@ This produces **two** separate cards.
 - **Date format:** `YY.MM.DD` — two-digit year, month (01-12), day (01-31). Displayed as `YY · mon DD` (e.g. `26 · feb 05`).
 - **Relative time:** Annotations are post-publication edits. The compiler computes time elapsed since the article's `date` frontmatter and shows it in parentheses (e.g. `(3d later)`, `(6m 24d later)`). Omitted when the annotation date is on or before the publication date.
 - **Annotation dates must be >= article date.** They represent edits made after publishing. Same-day annotations show no relative time.
-- **Text supports inline markdown:** bold, italic, code, accent text, colored text — anything that works in a paragraph works in the annotation text. **Exception: inline footnotes (`{{ref|...}}`) are not allowed** — context annotations are quick, informal notes; use parentheses for inline clarifications instead.
+- **Text supports inline markdown:** bold, italic, code, accent text, colored text — anything that works in a paragraph works in the annotation text. **Exception: inline footnotes (`^[...]`) are not allowed** — context annotations are quick, informal notes; use parentheses for inline clarifications instead.
 - **Placement:** Anywhere in the article body. They can appear at the top (for article-level notes), between sections, or inline within content flow.
 - **Author avatar:** Currently hardcoded to the site author's GitHub avatar. Future versions may support multi-author annotations.
 
@@ -678,7 +664,7 @@ When `--accent--` appears inside a typed blockquote, its color adapts to match t
 
 For clarity, these common markdown extensions are **not** part of this system:
 
-- **Footnotes** (`[^1]`): Not supported. Use standard blockquotes (`> text`) for asides.
+- **Numbered footnotes** (`[^1]`): Not supported. Use inline footnotes (`^[text]`) instead.
 - **Callouts / Admonitions** (`> [!NOTE]`): Use typed blockquotes (`{bkqt/note}...{/bkqt}`) instead.
 - **Task lists** (`- [ ]`): Not supported.
 - **Emoji shortcodes** (`:emoji:`): Not supported. Use actual Unicode emoji if needed.

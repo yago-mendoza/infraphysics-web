@@ -14,6 +14,8 @@ date: "2026-02-05"
 - General-purpose: can be a toaster, a drone, a watch, a sensor hub
 - [[OQmzx1Vg|Cortex-M]] is the great match for IoT; also wearables (battery life up to 2 years)
 - Requires [[6YzJQiig|ASIC]] helpers around it for specialized tasks
----
-[[trkh9gwv|SoC]] :: SoCs integrate GPU, NPU, and modem — MCUs focus on real-time control with minimal overhead
-[[sNxMwfUX|firmware]] :: MCUs run firmware directly on bare metal or lightweight RTOS, no OS abstraction layer
+
+## Interactions
+
+- [[trkh9gwv|SoC]] : : SoCs integrate GPU, NPU, and modem — MCUs focus on real-time control with minimal overhead
+- [[sNxMwfUX|firmware]] : : MCUs run firmware directly on bare metal or lightweight RTOS, no OS abstraction layer

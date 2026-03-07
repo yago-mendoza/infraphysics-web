@@ -388,7 +388,7 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg, options = {}) 
         BROKEN_REF: 'inline [[ref]] to nonexistent fieldnote',
         BROKEN_WIKILINK: '[[wiki-link]] in post to nonexistent fieldnote',
         SELF_REF: 'note trails a ref to itself',
-        BARE_TRAILING_REF: 'trailing ref without :: annotation (must explain why)',
+        BARE_TRAILING_REF: 'trailing ref without : : annotation (must explain why)',
         MISSING_PARENT: 'parent address has no dedicated note',
         CIRCULAR_REF: 'cycle in reference graph',
         SEGMENT_COLLISION: 'same segment name at different hierarchy paths',

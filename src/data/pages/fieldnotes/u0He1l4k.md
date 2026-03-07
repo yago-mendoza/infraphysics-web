@@ -10,6 +10,6 @@ date: "2025-09-07"
 - `sleep` doesn't fix a state problem — the bootnode may accept connections intermittently regardless of wait time
 - Symptoms: some nodes connect, others report 0 peers — inconsistent across runs
 
----
-[[z1zenyXi|Self-Reference]] :: the self-referencing bootnode is the most common trigger for race conditions in Besu deployments
+## Interactions
 
+- [[z1zenyXi|Self-Reference]] : : the self-referencing bootnode is the most common trigger for race conditions in Besu deployments

@@ -134,6 +134,8 @@ FILES=(
   "scripts/analyze-pairs.js"
   "scripts/preflight.js"
   "scripts/move-hierarchy.js"
+  "scripts/obsidian-export.js"
+  "scripts/obsidian-import.js"
   "scripts/README.md"
   "src/data/pages/fieldnotes/README.md"
 

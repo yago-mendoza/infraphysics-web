@@ -10,6 +10,6 @@ date: "2025-03-08"
 - Valid signature alone isn't enough — sender must have ETH to cover `gas × gasPrice` (upfront cost)
 - Nonce: sequential counter per account — prevents replay and enforces transaction ordering
 
----
-[[PYsPVUGS|Wallet Signing]] :: modern flow: wallet (Metamask) signs locally, then sends the raw signed transaction to an RPC node
+## Interactions
 
+- [[PYsPVUGS|Wallet Signing]] : : modern flow: wallet (Metamask) signs locally, then sends the raw signed transaction to an RPC node

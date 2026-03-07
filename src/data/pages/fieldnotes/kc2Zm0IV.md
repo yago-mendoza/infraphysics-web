@@ -9,7 +9,7 @@ date: "2026-02-26"
 - The paper that started the tool-using LLM paradigm. Led to [[5jy6Ik4M|function calling]], Gorilla, BFCL leaderboard
 - Simple but effective. Most modern agent frameworks implement variations of ReAct
 > If I could say anything, I would say seomthing.
----
-[[mydQy6ia|tool use]] :: ReAct formalized how models use tools — interleave reasoning about what to do with actually doing it
 
+## Interactions
 
+- [[mydQy6ia|tool use]] : : ReAct formalized how models use tools — interleave reasoning about what to do with actually doing it
