@@ -3,7 +3,7 @@ id: brain-vs-backprop
 displayTitle: The brain can't do backpropagation. So what is it doing?
 category: threads
 date: "2026-03-06"
-description: "The algorithm behind every neural network requires something the brain physically cannot do. The brain doesn't care."
+subtitle: "The algorithm behind every neural network requires something the brain physically cannot do. The brain doesn't care."
 lead: "For years I found something genuinely poetic in neural networks. Hopfield nets, Boltzmann machines, echo state networks, LSTMs with their gated recurrence — architectures with feedback loops that felt like they were reaching toward something biological. Arguably emulating fragments of actual neural signaling: neurotransmitters crossing the synaptic cleft, binding to postsynaptic receptors, triggering ion channel cascades that propagate graded potentials through dendritic trees. Beautiful on paper. But lately I keep circling the same uncomfortable thought: the brain is something fundamentally different. Twenty watts. Eighty-six billion neurons firing in continuous parallel. No clock cycle, no von Neumann bottleneck, no sequential memory bus — a thermodynamic machine operating near Landauer's limit, where computation and dissipation are the same process. We built digital cathedrals inspired by a system that runs on chemistry, timing, and heat. The inspiration was real. The resemblance might not be."
 tags: [ai, neuroscience, predictive-coding, backpropagation]
 lang: en
@@ -50,3 +50,5 @@ It is also, in principle, perfectly parallelizable in a way backpropagation is n
 We do not yet know how much of this will matter in practice, at scale, in the systems that are actually pushing the frontier of what AI can do. The honest answer is that backpropagation, for all its biological implausibility, continues to produce results that are difficult to argue with. But the brain learned to recognize faces, understand language, navigate physical space, and accumulate a lifetime of knowledge, all without a conductor, all without freezing, all in continuous time, on twenty watts.
 
 That is a capability gap worth taking seriously. Predictive coding is one of the more credible theories we have for how it might be closed.
+
+Artem Kirsanov, ["The Brain Doesn't Do Backpropagation"](https://www.youtube.com/watch?v=l-OLgbdZ3kk&t=448s).

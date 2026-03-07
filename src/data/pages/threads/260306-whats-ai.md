@@ -3,7 +3,7 @@ id: whats-ai
 displayTitle: Why nobody actually understands AI (and how to fix that in one thread)
 category: threads
 date: "2026-03-06"
-description: "Nodes, weights, connections — words that feel technical but explain nothing. Most people still think these systems consult a giant database somewhere."
+subtitle: "Nodes, weights, connections — words that feel technical but explain nothing. Most people still think these systems consult a giant database somewhere."
 lead: "Understanding AI is one thing. Building the intuition — finetuning a model, debugging a loss curve, writing a training loop, labeling data at 2am, watching a GAN collapse, deploying an endpoint, reading a confusion matrix — is another. But you need the first one to not embarrass yourself with the second. I've talked to too many people convinced that these systems are rule-based programs written by code monkeys, consulting a giant real-time database with all of the internet stored in the dungeons, as if training on data meant keeping it locked in a vault for the model to browse whenever it pleased. You need the basics. Not to build AI. To stop saying nonsense about it."
 tags: [ai, neural-networks, shannon, information-theory]
 lang: en

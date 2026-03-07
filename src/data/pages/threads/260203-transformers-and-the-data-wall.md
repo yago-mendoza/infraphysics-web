@@ -1,13 +1,11 @@
 ---
 id: transformers-and-the-data-wall
-title: transformers-and-the-data-wall
 displayTitle: Transformers and the data wall
-subtitle: some stuff has been going on for long
+subtitle: Why the transformer architecture refuses to stop getting smarter — and what stands in its way
 category: threads
 date: 2026-02-03
 thumbnail: https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=400&auto=format&fit=crop
 thumbnailAspect: banner
-description: Why the transformer architecture refuses to stop getting smarter — and what stands in its way.
 lead: "This is the ABC. Attention, embeddings, tokenization, scaling laws — the whole stack that everything else is built on. Unless a Terence Tao decides to get serious about AI, or Ilya Sutskever walks out of SSI with a new paradigm, or someone at Sakana AI actually cracks nature-inspired architectures — unless that happens, these concepts are the long runway of brute-force scaling. Bitter. But a lesson."
 tags: [ai, deep-learning, scaling, language-models]
 featured: true

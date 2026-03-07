@@ -13,7 +13,7 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
 
   /* ── Default: editorial card layout ── */
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-xl mx-auto">
       {posts.map((post, index) => {
         return (
           <div key={post.id} className={`listing-card thread-card ${index < posts.length - 1 ? 'border-b border-th-border pb-8 mb-8' : ''}`}>
@@ -33,6 +33,13 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
                     );
                   })()}
                 </div>
+
+                {/* Thumbnail (if available) */}
+                {post.thumbnail && (
+                  <Link to={postPath(post.category, post.id)} className="block mb-4 overflow-hidden rounded-lg">
+                    <img src={post.thumbnail} alt="" className="w-full h-auto object-cover transition-opacity hover:opacity-90" loading="lazy" />
+                  </Link>
+                )}
 
                 {/* Title + Description — both clickable */}
                 <Link to={postPath(post.category, post.id)} className="listing-title-link thread-title-link group block mb-3">

@@ -143,7 +143,7 @@ function processMarkdownFile(filePath) {
     thumbnail: frontmatter.thumbnail || null,
     thumbnailAspect: frontmatter.thumbnailAspect || null,
     thumbnailShading: frontmatter.thumbnailShading || null,
-    description: frontmatter.description,
+    description: frontmatter.description || frontmatter.subtitle || '',
     content: htmlContent,
     status: frontmatter.status || null,
     technologies: frontmatter.technologies || null,

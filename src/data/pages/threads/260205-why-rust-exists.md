@@ -1,11 +1,10 @@
 ---
 id: why-rust-exists
-title: why-rust-exists
 displayTitle: why rust exists
 category: threads
 date: 2026-02-05
 thumbnail: https://images.unsplash.com/photo-1504639725590-34d0984388bd?q=80&w=400&auto=format&fit=crop
-description: ownership, borrowing, and the compiler that won't let you hurt yourself.
+subtitle: ownership, borrowing, and the compiler that won't let you hurt yourself.
 lead: "I don't control Rust. I found it years ago, fell down a compiler rabbit hole while studying electronics, left it, and came back when Solana and Linus Torvalds made it impossible to ignore. This thread is pure idolatry — I have thick layers of concepts left to learn, and it's refreshing to see ideas that C and C++ seemed to have copyrighted reborn in a new paradigm."
 tags: [rust, systems-programming, memory-safety, languages]
 featured: false

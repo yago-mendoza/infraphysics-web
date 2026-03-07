@@ -518,6 +518,16 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
       {isThreads ? (
         <article className="article-threads-card">
+          {post.thumbnail && (
+            <div className={`article-threads-hero-image thumb-${post.thumbnailAspect || 'full'}`}>
+              <img
+                src={post.thumbnail}
+                alt={post.displayTitle || post.title}
+                loading="lazy"
+                className="w-full h-auto rounded-lg"
+              />
+            </div>
+          )}
           <div className="article-threads-header-content">
 
             <div className="article-title-block">
@@ -560,16 +570,6 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               allFieldNotes={brainIndex?.allFieldNotes}
               className="article-content"
             />
-            {post.thumbnail && (
-              <div className={`article-threads-end-image thumb-${post.thumbnailAspect || 'full'}`}>
-                <img
-                  src={post.thumbnail}
-                  alt={post.displayTitle || post.title}
-                  loading="lazy"
-                  className="article-blog-image-img"
-                />
-              </div>
-            )}
             <FeedbackForm title={post.displayTitle || post.title} category={post.category} />
             <GiscusComments />
           </div>

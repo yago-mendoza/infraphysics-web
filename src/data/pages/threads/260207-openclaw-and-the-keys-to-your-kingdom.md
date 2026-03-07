@@ -1,16 +1,15 @@
 ---
 id: openclaw-and-the-keys-to-your-kingdom
 displayTitle: "OpenClaw and the keys to your kingdom"
-subtitle: "65,000 GitHub stars, one malware incident, and the question nobody's asking about autonomous AI agents"
+subtitle: "An AI agent with full access to your computer sounds amazing until you think about it for five minutes."
 category: threads
 date: 2026-02-07
 thumbnail: https://images.unsplash.com/photo-1510511459019-5dda7724fd87?q=80&w=1200&auto=format&fit=crop
 thumbnailAspect: wide
-description: "An AI agent with full access to your computer sounds amazing until you think about it for five minutes."
 lead: "Steinberger is a beast. What I don't understand is why he chose the other side — and why Anthropic's trademark claim ended up being the push that sent him there."
 tags: [ai, security, agents, openclaw, privacy, networking]
 featured: true
-related: [openclaw-containment-playbook, alignment-is-not-a-vibe-check, transformers-and-the-data-wall]
+related: [openclaw-containment-playbook, "8888777", transformers-and-the-data-wall]
 ---
 
 How did nobody do this before?
