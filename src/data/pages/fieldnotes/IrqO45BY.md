@@ -1,6 +1,6 @@
 ---
 uid: "IrqO45BY"
-address: "Claude Code//dot-claude//skills"
+address: "Claude Code//.claude//skills"
 name: "Skills"
 date: "2026-02-06"
 ---

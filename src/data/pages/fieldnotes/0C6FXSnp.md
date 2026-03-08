@@ -1,6 +1,6 @@
 ---
 uid: "0C6FXSnp"
-address: "Claude Code//dot-claude//hooks"
+address: "Claude Code//.claude//hooks"
 name: "Hooks"
 date: "2026-02-06"
 ---

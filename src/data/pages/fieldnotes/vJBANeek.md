@@ -1,7 +1,7 @@
 ---
 uid: "vJBANeek"
-address: "Claude Code//dot-claude"
-name: "dot-claude"
+address: "Claude Code//.claude"
+name: ".claude"
 date: "2026-02-06"
 ---
 - The `.claude/` directory at the project root — houses all Claude Code configuration that isn't pure instructions.
