@@ -8,6 +8,7 @@ export interface GraphSettings {
   edgeOpacity: number;   // 0.05–1
   forceStrength: number; // 0.1–5 (repulsion)
   linkDistance: number;   // 20–200
+  gravity: number;       // 0–1 (pulls islands toward center)
   labelSize: number;     // 0–14 (0 = hidden)
   showLabels: boolean;   // master toggle for labels (2D + 3D)
   warmupTicks: number;   // initial simulation ticks
@@ -21,6 +22,7 @@ export const DEFAULT_SETTINGS: GraphSettings = {
   edgeOpacity: 0.35,
   forceStrength: 1,
   linkDistance: 60,
+  gravity: 0.15,
   labelSize: 10,
   showLabels: false,
   warmupTicks: 100,
@@ -278,6 +280,8 @@ export const GraphControls = forwardRef<HTMLInputElement, GraphControlsProps>(({
           onChange={v => setSetting('forceStrength', v)} />
         <Slider label="Link dist." value={settings.linkDistance} min={10} max={250} step={5}
           onChange={v => setSetting('linkDistance', v)} />
+        <Slider label="Gravity" value={settings.gravity} min={0} max={1} step={0.05}
+          onChange={v => setSetting('gravity', v)} />
         <label className="flex items-center gap-2 text-[11px] text-th-secondary">
           <span className="w-20 shrink-0 text-th-tertiary">Labels</span>
           <button

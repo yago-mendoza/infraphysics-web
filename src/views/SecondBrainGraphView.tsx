@@ -40,7 +40,7 @@ const tipStrong = 'text-th-primary';
 const tipAccent = 'text-violet-400';
 const tipCode = 'bg-violet-500/10 text-violet-400/80 px-1 py-0.5 text-[11px] rounded-sm font-mono';
 
-const GraphGuide: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+const GraphGuide: React.FC<{ isOpen: boolean; onClose: () => void; isMobile: boolean }> = ({ isOpen, onClose, isMobile }) => {
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); onClose(); } };
@@ -67,29 +67,44 @@ const GraphGuide: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen
           </button>
         </div>
         <div className="space-y-4 text-[12px] text-th-secondary leading-relaxed">
-          <div>
-            <h3 className={'text-[11px] uppercase tracking-wider mb-1.5 ' + tipAccent}>Navigation</h3>
-            <ul className="space-y-1">
-              <li><strong className={tipStrong}>Scroll wheel</strong> — zoom in/out</li>
-              <li><strong className={tipStrong}>Middle mouse + drag</strong> — pan around the graph</li>
-              <li><strong className={tipStrong}>Click on a node</strong> — select it, view its content in the preview panel and its connections below the controls</li>
-              <li><strong className={tipStrong}>Click on empty space</strong> — deselect everything</li>
-              <li><strong className={tipStrong}>Hover on a node</strong> — highlights it and all connected nodes, dims the rest</li>
-            </ul>
-          </div>
-          <div>
-            <h3 className={'text-[11px] uppercase tracking-wider mb-1.5 ' + tipAccent}>Multi-selection</h3>
-            <ul className="space-y-1">
-              <li><strong className={tipStrong}>Drag on background</strong> — draw a selection rectangle (2D)</li>
-              <li><strong className={tipStrong}>Ctrl + click</strong> — toggle individual nodes in/out of selection</li>
-              <li>Selected nodes appear in <span className="text-cyan-400">cyan</span>. A prompt appears to copy all their content as structured context for LLMs.</li>
-              <li><code className={tipCode}>Escape</code> — clear selection</li>
-            </ul>
-          </div>
+          {isMobile ? (
+            <div>
+              <h3 className={'text-[11px] uppercase tracking-wider mb-1.5 ' + tipAccent}>Navigation</h3>
+              <ul className="space-y-1">
+                <li><strong className={tipStrong}>Pinch</strong> — zoom in/out</li>
+                <li><strong className={tipStrong}>Drag</strong> — pan around the graph</li>
+                <li><strong className={tipStrong}>Tap a node</strong> — select it and open the preview panel</li>
+                <li><strong className={tipStrong}>Tap empty space</strong> — deselect</li>
+                <li><strong className={tipStrong}>Swipe right</strong> on the preview panel — dismiss it</li>
+              </ul>
+            </div>
+          ) : (
+            <>
+              <div>
+                <h3 className={'text-[11px] uppercase tracking-wider mb-1.5 ' + tipAccent}>Navigation</h3>
+                <ul className="space-y-1">
+                  <li><strong className={tipStrong}>Scroll wheel</strong> — zoom in/out</li>
+                  <li><strong className={tipStrong}>Middle mouse + drag</strong> — pan around the graph</li>
+                  <li><strong className={tipStrong}>Click on a node</strong> — select it, view its content in the preview panel and its connections below the controls</li>
+                  <li><strong className={tipStrong}>Click on empty space</strong> — deselect everything</li>
+                  <li><strong className={tipStrong}>Hover on a node</strong> — highlights it and all connected nodes, dims the rest</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className={'text-[11px] uppercase tracking-wider mb-1.5 ' + tipAccent}>Multi-selection</h3>
+                <ul className="space-y-1">
+                  <li><strong className={tipStrong}>Drag on background</strong> — draw a selection rectangle (2D)</li>
+                  <li><strong className={tipStrong}>Ctrl + click</strong> — toggle individual nodes in/out of selection</li>
+                  <li>Selected nodes appear in <span className="text-cyan-400">cyan</span>. A prompt appears to copy all their content as structured context for LLMs.</li>
+                  <li><code className={tipCode}>Escape</code> — clear selection</li>
+                </ul>
+              </div>
+            </>
+          )}
           <div>
             <h3 className={'text-[11px] uppercase tracking-wider mb-1.5 ' + tipAccent}>Toolbar</h3>
             <ul className="space-y-1">
-              <li><strong className={tipStrong}>Controls panel</strong> — toggle edge types, presets, sliders for node size, repulsion, link distance, labels. Press <code className={tipCode}>C</code> to toggle.</li>
+              <li><strong className={tipStrong}>Controls panel</strong> — toggle edge types, presets, sliders for node size, repulsion, link distance, labels.{!isMobile && <> Press <code className={tipCode}>C</code> to toggle.</>}</li>
               <li><strong className={tipStrong}>Crosshair button</strong> — zoom to fit the entire graph</li>
               <li><strong className={tipStrong}>Dice button</strong> — jump to a random note (in the preview panel header)</li>
               <li><strong className={tipStrong}>2D / 3D toggle</strong> — switch renderer. 3D uses WebGL spheres.</li>
@@ -101,16 +116,7 @@ const GraphGuide: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen
               <li>Type in the search box to filter nodes by name or address.</li>
               <li><strong className={tipStrong}>Primary matches</strong> (name contains the query) appear in <span className="text-amber-400">amber</span> with a bright outline.</li>
               <li><strong className={tipStrong}>Secondary matches</strong> (children via address) appear dimmer in <span className="text-orange-400">orange</span>.</li>
-              <li>Press <strong className={tipStrong}>Enter</strong> to center the camera on the first result.</li>
-            </ul>
-          </div>
-          <div>
-            <h3 className={'text-[11px] uppercase tracking-wider mb-1.5 ' + tipAccent}>Mobile</h3>
-            <ul className="space-y-1">
-              <li><strong className={tipStrong}>Pinch</strong> — zoom in/out</li>
-              <li><strong className={tipStrong}>Single finger drag</strong> — pan around the graph</li>
-              <li><strong className={tipStrong}>Hold a node (~300 ms)</strong> — select it and open the preview panel</li>
-              <li><strong className={tipStrong}>Swipe right</strong> on the preview panel — dismiss it</li>
+              {!isMobile && <li>Press <strong className={tipStrong}>Enter</strong> to center the camera on the first result.</li>}
             </ul>
           </div>
           <div>
@@ -127,6 +133,7 @@ const GraphGuide: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen
               <li><strong className={tipStrong}>Edge width</strong> — thickness of the lines connecting nodes. Hierarchy edges are drawn ~2× thicker.</li>
               <li><strong className={tipStrong}>Warmup</strong> — how many simulation steps run before the first frame renders. Higher values = the graph appears more settled on load, but takes longer.</li>
               <li><strong className={tipStrong}>Alpha decay</strong> — how fast the simulation cools down and stops moving. Lower = nodes keep adjusting longer. Higher = settles quickly but may look cramped.</li>
+              <li><strong className={tipStrong}>Gravity</strong> — pulls all nodes toward the center. Higher values bring isolated clusters closer together; 0 lets them drift freely.</li>
               <li><strong className={tipStrong}>Damping</strong> — friction on node movement. Low damping = nodes coast further (fluid, slower to settle). High damping = nodes stop almost immediately (snappy, tighter layout).</li>
             </ul>
           </div>
@@ -567,11 +574,6 @@ const SecondBrainGraphView: React.FC = () => {
   // Mobile slide-in panel
   const [mobilePanel, setMobilePanel] = useState(false);
 
-  // ─── Mobile touch: long-press gating ───
-  const pointerDownTime = useRef(0);
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const longPressFired = useRef(false);
-
   // ─── Mobile: swipe-to-dismiss state ───
   const [swipeOffset, setSwipeOffset] = useState(0);
   const swipingRef = useRef(false);
@@ -579,9 +581,6 @@ const SecondBrainGraphView: React.FC = () => {
 
   // ─── Event handlers ───
   const onNodeClick = useCallback((node: any, event?: MouseEvent) => {
-    // Mobile: only allow node interaction after a long press (~300 ms hold)
-    if (isMobile && !longPressFired.current) return;
-
     if (event?.ctrlKey || event?.metaKey) {
       // Ctrl+click: toggle node in multi-selection
       setMultiSelected(prev => {
@@ -602,62 +601,6 @@ const SecondBrainGraphView: React.FC = () => {
       setShowPanel(true);
     }
   }, [showPanel, isMobile]);
-
-  // ─── Mobile: track pointer timing for long-press ───
-  useEffect(() => {
-    if (!isMobile) return;
-    const el = graphAreaRef.current;
-    if (!el) return;
-
-    const LONG_PRESS_MS = 300;
-    const MOVE_THRESHOLD = 10;
-    let startX = 0, startY = 0;
-
-    const onDown = (e: PointerEvent) => {
-      // Only track single-finger touches
-      if (e.pointerType === 'touch') {
-        startX = e.clientX;
-        startY = e.clientY;
-        pointerDownTime.current = Date.now();
-        longPressFired.current = false;
-        longPressTimer.current = setTimeout(() => {
-          longPressFired.current = true;
-          // Haptic feedback if available
-          if (navigator.vibrate) navigator.vibrate(30);
-        }, LONG_PRESS_MS);
-      }
-    };
-
-    const onMove = (e: PointerEvent) => {
-      if (e.pointerType !== 'touch' || !longPressTimer.current) return;
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
-      if (Math.hypot(dx, dy) > MOVE_THRESHOLD) {
-        // Finger moved too much — cancel long press (this is a pan)
-        clearTimeout(longPressTimer.current);
-        longPressTimer.current = null;
-        longPressFired.current = false;
-      }
-    };
-
-    const onUp = () => {
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current);
-        longPressTimer.current = null;
-      }
-    };
-
-    el.addEventListener('pointerdown', onDown);
-    el.addEventListener('pointermove', onMove);
-    el.addEventListener('pointerup', onUp);
-    el.addEventListener('pointercancel', onUp);
-    return () => {
-      el.removeEventListener('pointerdown', onDown);
-      el.removeEventListener('pointermove', onMove);
-      el.removeEventListener('pointerup', onUp);
-      el.removeEventListener('pointercancel', onUp);
-    };
-  }, [isMobile]);
 
   const onNodeHover = useCallback((node: any) => {
     if (containerRef.current) {
@@ -763,17 +706,35 @@ const SecondBrainGraphView: React.FC = () => {
   const d3VelocityDecay = settings.velocityDecay;
 
   // Apply force settings when they change
+  const gravityInitialized = useRef(false);
   useEffect(() => {
     const fg = graphRef.current;
-    if (!fg) return;
-    if (fg.d3Force) {
-      const charge = fg.d3Force('charge');
-      if (charge) charge.strength(-30 * settings.forceStrength);
-      const link = fg.d3Force('link');
-      if (link) link.distance(settings.linkDistance);
-      fg.d3ReheatSimulation?.();
+    if (!fg || !fg.d3Force) return;
+
+    const charge = fg.d3Force('charge');
+    if (charge) charge.strength(-30 * settings.forceStrength);
+    const link = fg.d3Force('link');
+    if (link) link.distance(settings.linkDistance);
+
+    // Gravity: forceX/forceY pull islands toward center
+    if (!gravityInitialized.current) {
+      // First run: register gravity forces via dynamic import
+      import('d3-force-3d').then((d3) => {
+        if (!fg.d3Force) return;
+        fg.d3Force('x', d3.forceX(0).strength(settings.gravity));
+        fg.d3Force('y', d3.forceY(0).strength(settings.gravity));
+        gravityInitialized.current = true;
+        fg.d3ReheatSimulation?.();
+      });
+    } else {
+      const fx = fg.d3Force('x');
+      const fy = fg.d3Force('y');
+      if (fx) fx.strength(settings.gravity);
+      if (fy) fy.strength(settings.gravity);
     }
-  }, [settings.forceStrength, settings.linkDistance]);
+
+    fg.d3ReheatSimulation?.();
+  }, [settings.forceStrength, settings.linkDistance, settings.gravity]);
 
   // Keyboard: Escape to deselect, C to toggle controls, type-to-search
   useEffect(() => {
@@ -955,7 +916,7 @@ const SecondBrainGraphView: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className="fixed right-0 bottom-0 bg-th-base flex"
+      className="fixed right-0 bottom-0 bg-th-base flex select-none"
       style={{ left: isMobile ? 0 : SIDEBAR_WIDTH, top: isMobile ? MOBILE_NAV_HEIGHT : 0 }}
     >
       {/* Toolbar */}
@@ -975,6 +936,7 @@ const SecondBrainGraphView: React.FC = () => {
             onClick={() => setGuideOpen(true)}
             className="inline-flex items-center px-1.5 py-1.5 bg-th-base/80 backdrop-blur-sm border border-th-hub-border text-violet-400 hover:text-violet-300 transition-colors"
             title="Graph guide"
+            aria-label="Graph guide"
           >
             <InfoIcon size={11} />
           </button>
@@ -983,6 +945,7 @@ const SecondBrainGraphView: React.FC = () => {
             onClick={() => graphRef.current?.zoomToFit?.(400, 60)}
             className="inline-flex items-center px-2 py-1.5 text-th-secondary bg-th-base/80 backdrop-blur-sm border border-th-hub-border hover:text-violet-400 transition-colors"
             title="Center view"
+            aria-label="Center view"
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
               <circle cx="6" cy="6" r="4" />
@@ -999,6 +962,7 @@ const SecondBrainGraphView: React.FC = () => {
               popInActive ? 'border-violet-500/40 text-violet-400' : 'border-th-hub-border text-th-secondary hover:text-violet-400'
             }`}
             title={popInActive ? 'Stop pop-in' : 'Pop-in animation'}
+            aria-label={popInActive ? 'Stop pop-in' : 'Pop-in animation'}
           >
             {popInActive ? (
               <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
@@ -1018,6 +982,7 @@ const SecondBrainGraphView: React.FC = () => {
               selectMode ? 'border-cyan-500/40 text-cyan-400' : 'border-th-hub-border text-th-secondary hover:text-violet-400'
             }`}
             title={selectMode ? 'Exit selection mode' : 'Area selection mode'}
+            aria-label={selectMode ? 'Exit selection mode' : 'Area selection mode'}
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
               {/* Dashed rectangle icon */}
@@ -1039,6 +1004,7 @@ const SecondBrainGraphView: React.FC = () => {
           className="inline-flex items-center gap-1 px-2 py-1.5 text-[11px] bg-th-base/80 backdrop-blur-sm border border-th-hub-border transition-colors self-start"
           style={{ color: showControls ? '#a78bfa' : undefined }}
           title="Toggle controls (C)"
+          aria-label="Toggle controls"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
             <line x1="2" y1="3" x2="10" y2="3" /><circle cx="4" cy="3" r="1" fill="currentColor" />
@@ -1188,7 +1154,7 @@ const SecondBrainGraphView: React.FC = () => {
       {/* Note preview panel — desktop: side column */}
       {showPanel && !isMobile && (
         <div
-          className="shrink-0 bg-th-base border-l border-th-hub-border flex flex-col overflow-hidden"
+          className="shrink-0 bg-th-base border-l border-th-hub-border flex flex-col overflow-hidden select-text"
           style={{ width: PANEL_WIDTH }}
         >
           <div className="flex items-center justify-between px-3 py-2 border-b border-th-hub-border bg-th-surface/30">
@@ -1290,7 +1256,7 @@ const SecondBrainGraphView: React.FC = () => {
           />
           {/* Sliding panel */}
           <div
-            className={`fixed right-0 bottom-0 z-40 bg-th-base border-l border-th-hub-border flex flex-col overflow-hidden ${swipingRef.current ? '' : 'transition-transform duration-200'}`}
+            className={`fixed right-0 bottom-0 z-40 bg-th-base border-l border-th-hub-border flex flex-col overflow-hidden select-text ${swipingRef.current ? '' : 'transition-transform duration-200'}`}
             style={{
               top: MOBILE_NAV_HEIGHT,
               width: '85vw',
@@ -1362,7 +1328,7 @@ const SecondBrainGraphView: React.FC = () => {
           </div>
         </>
       )}
-      <GraphGuide isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
+      <GraphGuide isOpen={guideOpen} onClose={() => setGuideOpen(false)} isMobile={isMobile} />
     </div>
   );
 };
