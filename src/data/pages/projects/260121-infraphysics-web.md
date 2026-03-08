@@ -130,7 +130,7 @@ On February 5th I caught myself fixing the fixes of my previous fixes.
 
 When that happens, the codebase is telling you something. It's telling you to stop.
 
-The old [[E9olQ6Ox]] was regex scattered across three files. The blockquote parser couldn't handle nested formatting. Definition lists inside blockquotes produced broken HTML. Every fix introduced a new edge case, and every edge case demanded another fix. The [[JkzQf7qt]] features had become unpredictable — not because any individual feature was complex, but because they were composed without a clean boundary.
+The old [[E9olQ6Ox]] was regex scattered across three files. The blockquote parser couldn't handle nested formatting. Definition lists inside blockquotes produced broken HTML. Every fix introduced a new edge case, and every edge case demanded another fix. The [[JkzQf7qt]] features had become unpredictable. No single feature was complex — the complexity lived in their interactions.
 
 I looked at the diff. I looked at the blockquote parser. I thought about the Hugo site I could've had two weeks ago.
 
@@ -234,7 +234,7 @@ I showed it to a friend. He looked at the Second Brain for about thirty seconds 
 
 The third question I kept getting was: "so... it's Obsidian?"
 
-And honestly, on the surface, it kind of is. Markdown notes. Wiki-links. A graph of connections. If you squint, the Second Brain looks like Obsidian built by someone who didn't know Obsidian existed. (I did know. I just wanted to build mine anyway, which is arguably worse.)
+And honestly, on the surface, it kind of is. Markdown notes. Wiki-links. A graph of connections. If you squint, the Second Brain looks like Obsidian built by someone who didn't know Obsidian existed. (I did know. I just wanted to build mine anyway, which is worse.)
 
 But the more I built, the more the differences became the whole point.
 
@@ -274,6 +274,12 @@ So I built a validation pipeline that runs on every build. Broken `[[wiki-links]
 >> 26.02.06 - The validator catches 14 broken references on its first run. Fourteen. Half are wiki-links in posts pointing to fieldnotes I've renamed. Without the validator, those would be dead links in production for weeks.
 
 The rename script was born from a specific disaster. I manually renamed a concept called "chip" to "component//chip" — 23 references across 15 files. I went through them by hand in VS Code's search panel. I missed three. The build caught two (broken `[[refs]]`). The third was a `distinct` entry in another note that the build doesn't validate — it survived as a stale reference until I happened to re-read that note weeks later. After that I wrote `rename-address.js`: one command, dry-run by default, touches every reference atomically. And `move-hierarchy.js` for cascading renames — because `rename-address.js` renames ONE exact address, not its children. I learned that by isolating an entire subtree. Twice.
+
+Five scripts now, if you're counting. None of them were planned — each one was a different disaster. But together they protect --internal consistency--: the graph's version of type safety. References resolve to real notes, hierarchies have actual parents, connections exist on purpose. Break one of those and nothing crashes. The note loads, the links render. You just can't tell it's lying to you until you click something that should exist and doesn't.
+
+The build validator catches structural breaks — dead `[[refs]]` halt everything. `check-references.js` goes deeper: notes with zero connections sitting in the graph like forgotten furniture, trailing refs duplicated on both sides (the system only needs one), address segments that imply a parent note nobody ever wrote, fuzzy collisions like `chip//MCU` vs `chip//MPU` at 95% string similarity. First time I ran it: 40 duplicate bilateral refs. Forty. `preflight.js` runs _before_ you create anything — feed it the addresses you're about to write and it flags collision risks, shows bilateral status with neighbors, catches body patterns that should be trailing refs instead of prose ("unlike X" is an interaction, not a sentence). `analyze-pairs.js` is the microscope: point it at two notes and it maps the full relationship — hierarchy, trailing refs, body mentions, shared neighbors.
+
+Build catches compilation errors, `check-references` catches semantic rot, `preflight` catches pre-creation blind spots, `analyze-pairs` catches relational gaps, the rename scripts catch structural moves gone wrong. Five axes, no overlap. I didn't plan it — every disaster just happened to break something new.
 
 ## The sidebar dashboard
 
@@ -402,7 +408,7 @@ But here's what I know that I didn't know 18 days ago. I know that `overflow: hi
 
 I know that a backtick ^[on a Spanish keyboard, it's the key right next to the P, above the + key. I'd been pressing it accidentally for years without knowing what it was called.] sounds like it should be a tapas dish. I know what `useLayoutEffect` does and I know when it matters. I know that an AI assistant will rewrite your theme switching if you ask it to fix a border color. I know that 777 lines can disappear in an afternoon and you feel lighter after.
 
-I'm an industrial engineer who picked up code because every engineer should — not to become a developer, but to move faster. This site exists because I've been collecting knowledge about how things work for a decade, and I finally have the tools to structure it.
+I'm an industrial engineer who picked up code because every engineer should. Becoming a developer was never the plan — moving faster was. This site exists because I've been collecting knowledge about how things work for a decade, and I finally have the tools to structure it.
 
 The compiler was fun. The theme system was educational. The CSS bugs were painful. But the reason I keep building this thing — the reason there are 300+ notes in the graph now, the reason I photograph old notebooks and transcribe them at 11pm, the reason the editor keeps growing features I didn't plan — is simpler than any of that.
 
