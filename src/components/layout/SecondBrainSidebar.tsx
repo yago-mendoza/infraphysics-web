@@ -69,6 +69,7 @@ const ScopeIcon: React.FC<{ onClick: (e: React.MouseEvent) => void }> = ({ onCli
     onClick={onClick}
     className="hover-reveal text-th-muted hover:text-violet-400 flex-shrink-0"
     title="Scope to this folder"
+    aria-label="Scope to this folder"
   >
     <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
       <circle cx="8" cy="8" r="5" />
@@ -153,6 +154,8 @@ const TreeNodeItem: React.FC<{
               }
             }}
             className="w-5 h-5 flex items-center justify-center text-th-muted hover:text-th-secondary transition-colors flex-shrink-0"
+            aria-expanded={isExpanded}
+            aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
             <ChevronIcon isOpen={isExpanded} />
           </button>

@@ -365,6 +365,7 @@ export const EditorPanel: React.FC<Props> = ({
                   : 'text-th-muted hover:text-violet-400 hover:bg-violet-400/10'
               }`}
               title={title}
+              aria-label={title}
             >
               <Icon size={14} />
             </button>
@@ -383,6 +384,7 @@ export const EditorPanel: React.FC<Props> = ({
               onMouseDown={e => { e.preventDefault(); placeholder ? cmRef.current?.wrapSelection(prefix, suffix, placeholder) : cmRef.current?.insertAtCursor(prefix); }}
               className="p-1 text-th-muted hover:text-violet-400 hover:bg-violet-400/10 transition-colors rounded"
               title={title}
+              aria-label={title}
             >
               <Icon size={14} />
             </button>
@@ -397,6 +399,7 @@ export const EditorPanel: React.FC<Props> = ({
             }}
             className="p-1 text-th-muted hover:text-violet-400 hover:bg-violet-400/10 transition-colors rounded"
             title="Universal reference (@)"
+            aria-label="Universal reference"
           >
             <AtRefIcon size={14} />
           </button>
@@ -410,6 +413,7 @@ export const EditorPanel: React.FC<Props> = ({
             }}
             className="p-1 text-th-muted hover:text-violet-400 hover:bg-violet-400/10 transition-colors rounded"
             title="Insert interaction (trailing ref)"
+            aria-label="Insert interaction"
           >
             <InteractionIcon size={14} />
           </button>

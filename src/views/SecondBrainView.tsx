@@ -1628,6 +1628,7 @@ export const SecondBrainView: React.FC = () => {
                       onClick={() => setShowCopyModal(true)}
                       className="ml-auto shrink-0 text-th-tertiary hover:text-violet-400 transition-colors"
                       title="Copy for context"
+                      aria-label="Copy for context"
                     >
                       <ClipboardIcon size={14} />
                     </button>
@@ -1964,6 +1965,7 @@ export const SecondBrainView: React.FC = () => {
                   }}
                   className="w-6 h-6 flex items-center justify-center text-violet-400/60 hover:text-violet-400 transition-colors"
                   title="Random note"
+                  aria-label="Random note"
                 >
                   <DiceIcon size={13} />
                 </button>
@@ -1974,6 +1976,7 @@ export const SecondBrainView: React.FC = () => {
                   }}
                   className="w-6 h-6 flex items-center justify-center text-violet-400/60 hover:text-violet-400 transition-colors"
                   title="New note"
+                  aria-label="New note"
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                     <path d="M12 5v14M5 12h14" />
@@ -1995,6 +1998,7 @@ export const SecondBrainView: React.FC = () => {
                     : 'text-violet-400/60 hover:text-violet-400'
                     }`}
                   title={globalEditMode ? 'Exit editing mode' : 'Enter editing mode'}
+                  aria-label={globalEditMode ? 'Exit editing mode' : 'Enter editing mode'}
                 >
                   <PencilIcon size={13} />
                 </button>
