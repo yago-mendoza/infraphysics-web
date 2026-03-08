@@ -14,354 +14,289 @@ featured: true
 related: [the-bitter-lesson]
 ---
 
->> 26.02.05 - Rewrote from scratch after reading the Chinchilla paper. The first draft was embarrassingly wrong about scaling laws.
+I used language models for over a year before I understood how they worked. Not metaphorically — I was building tools on top of GPT-3, coaxing documentation out of base models that had no concept of following instructions, and I had zero intuition for what was happening between the prompt and the completion. I knew what worked. I didn't know *why*.
 
-I've been trying to understand AI for a while now. Not the "robots are coming" Hollywood version — the actual, technical, *what is happening inside the machine* version. And for the longest time, I kind of... didn't.
-
-Not because I'm stupid (debatable), but because most explanations of modern AI do this maddening thing where they either treat you like a five-year-old — "it's like a brain, but made of math!" — or they catapult you straight into linear algebra without checking if you brought a parachute.
-
-So I went down the rabbit hole. And what I found there was genuinely one of the most fascinating things I've ever learned about. I also found a Lovecraftian horror metaphor that's weirdly accurate, but we'll get to that.
+So I went down the rabbit hole. And the thing I found inside was, honestly, simpler than I expected. Also stranger. And the gap between the simplicity of the architecture and the strangeness of what comes out of it is where the whole story lives.
 
 # The before times
 
-To understand why the transformer is a big deal, you need to understand what it replaced. And what it replaced was, to put it charitably, *embarrassing*.
+For decades, the way computers "understood" language was brute-force counting. The technical term is --n-gram models--: feed the machine a mountain of text, count how often certain words appear next to other words. "The cat sat on the" followed by "mat" a thousand times, followed by "refrigerator" twice — so predict "mat." Not because the machine understood cats, mats, or the ^[in NLP this is called semantic role labeling — understanding *who* did *what* to *whom*. Early models had zero access to this.] between a feline and a floor covering. It just counted.
 
-For decades, the way computers "understood" language was through statistics. Pure, brute-force counting. The technical term is --n-gram models--, and they worked like this: you fed the machine a mountain of text, and it counted how often certain words appeared next to other words. That's it. That was the whole thing.
+Then came recurrent neural networks — RNNs — and their fancier cousin, the **LSTM** (Long Short-Term Memory). Better, in theory. They could remember context: "bank" might mean different things in "river bank" versus "bank account," and an LSTM could sometimes figure that out.
 
-If the machine saw "the cat sat on the" a thousand times followed by "mat" and only twice followed by "refrigerator," it would predict "mat." Not because it *understood* cats, mats, sitting, or the ^[in NLP this is called semantic role labeling — understanding *who* did *what* to *whom* and *where*. Early statistical models had zero access to this kind of structure.] between a feline and a floor covering. It just ^[these were called HMMs (Hidden Markov Models — a class of probabilistic graphical models where the system being modeled is assumed to follow a Markov process with hidden states.) and later n-gram language models. Google Translate in 2006? Pure statistics. It didn't "know" French — it had just seen enough French-English sentence pairs to fake it convincingly.].
+Fatal flaw: they read one word at a time, sequentially, like someone reading through a straw. By word 50, they'd largely forgotten word 3. And you couldn't parallelize them — each word depended on the previous one being processed first — so training was painfully slow.
 
-Then came recurrent neural networks — RNNs — and their fancier cousin, the LSTM (Long Short-Term Memory). These were better. They could, in theory, remember context. The word "bank" could mean different things in "river bank" vs. "bank account," and LSTMs could sometimes figure that out.
-
-But they had a fatal flaw: they read text one word at a time, sequentially, like a person reading through a straw. By the time the network got to word 50, it had largely forgotten what happened at word 3. And you couldn't parallelize them — each word depended on the previous one being processed first — so training was painfully slow.
-
-The state of the art in language AI around 2016 was, in the grand scheme of things, still kind of dumb.
+The state of the art in language AI around 2016 was, if we're being honest, still kind of dumb.
 
 # "Attention Is All You Need"
 
-In June 2017, eight researchers at Google published a paper with possibly the most confident title in the history of computer science: **"Attention Is All You Need."**
+In June 2017, eight researchers at Google published a paper with the most confident title in the history of computer science: **"Attention Is All You Need."**
 
-That's not a subtitle. That's not the thesis statement buried on page seven. That's the *title*. On the cover. In the largest font.
+Not the thesis buried on page seven. The *title*. On the cover. In the largest font.
 
-And the insane thing is — they were right.
+They were right.
 
-The paper introduced the --transformer architecture--, and it is not an exaggeration to say it broke the field wide open. Every major AI system you've heard of since then — GPT, BERT, Claude, Gemini, LLaMA, Mistral — all of them are transformers. Every single one.
+The paper introduced the --transformer architecture--, and every major AI system since — GPT, BERT, Claude, Gemini, LLaMA, Mistral — is a transformer. Every single one. Eight people wrote a paper, and the rest of the decade followed.
 
-{bkqt/keyconcept}
-The core innovation of the transformer is the self-attention mechanism. Instead of reading text sequentially (word by word, left to right), the transformer looks at *all words simultaneously* and figures out which ones are related to which. It computes a "relevance score" between every pair of words in the input.
+{bkqt/keyconcept|The dinner party}
+The core innovation is self-attention. Instead of reading text sequentially (word by word, left to right), the transformer looks at *all words simultaneously* and computes how much each one relates to every other.
 
-Imagine you're at a dinner party. The RNN approach is like talking to people one at a time, in order, around the table. By the time you reach person #12, you've forgotten what person #1 said. The transformer approach is like being able to hear and process all twelve conversations at once, instantly knowing that person #3's comment about fiscal policy is connected to person #9's joke about taxes.
+Think of it as the difference between talking to people one at a time around a dinner table versus hearing all twelve conversations at once and instantly knowing that person #3's comment about fiscal policy connects to person #9's joke about taxes. RNNs sit next to each person in order. Transformers hear the whole room.
 {/bkqt}
 
-And because the transformer doesn't process words sequentially, you can --parallelize the hell out of it--. Every word can be processed at the same time on different GPU cores. This is a massive deal. It means training a transformer on a modern GPU cluster is orders of magnitude faster than training an RNN on the same data.
+And because the transformer doesn't process words sequentially, you can --parallelize the hell out of it--. Every word processed at the same time on different GPU cores. Speed sounds like a boring engineering detail. It's not. Speed is what unlocked everything that came next.
 
-Speed sounds like a boring engineering detail. It's not. Speed is what unlocked everything that came next.
-
-But *how* does any of this actually work? What is the machine literally doing with your words? Let's open the box.
+But *how* does any of this actually work? What is the machine literally doing with your words?
 
 ## Tokens and the geometry of meaning
 
-The transformer doesn't see words. It doesn't see letters. It sees --tokens-- — chunks of text that are usually a word, sometimes a piece of a word. "understanding" might be split into "understand" + "ing." "unhappiness" might become "un" + "happiness." The algorithm that does this splitting is called Byte Pair Encoding (BPE), and it works by starting with individual characters and repeatedly merging the most frequent pairs until it has a vocabulary of 30,000 to 100,000 tokens.
+The transformer doesn't see words. It sees --tokens-- — chunks of text that are usually a word, sometimes a piece of one. "Understanding" might become "understand" + "ing." The algorithm that does this splitting is called **Byte Pair Encoding** (BPE): start with individual characters, repeatedly merge the most frequent pairs, stop at 30,000 to 100,000 tokens. GPT-4 uses roughly 100,000. Claude uses a similar count. ~50,000 tokens can represent any text in any language — it's a compression trick that makes multilingual coverage tractable.
 
-Why tokens and not whole words? Because if you use whole words, your vocabulary needs millions of entries to cover every word in every language plus typos, slang, code, and whatever else the internet coughs up. Tokens are a compression trick — a vocabulary of ~50,000 tokens can represent essentially any text in any language. GPT-4 uses roughly 100,000 tokens. Claude uses a similar count.
+Now — this is the part that broke my brain the first time I understood it. Each token gets converted into a vector: a list of numbers, typically 768 to 12,288 numbers long. This vector is the token's --embedding--: its position in a high-dimensional space.
 
-Now here's where it gets beautiful. Each token gets converted into a vector — a list of numbers, typically 768 to 12,288 numbers long depending on the model. This vector is the token's --embedding--: its position in a vast, high-dimensional space.
+{bkqt/keyconcept|Meaning as distance}
+In embedding space, meaning becomes geometry. Words with similar meanings cluster near each other. "Dog" near "cat." "Python" near "JavaScript." But it goes beyond proximity — *directions* encode relationships. The vector from "king" to "queen" is roughly the same as "man" to "woman." The model encoded the concept of gender as a direction in space, without anyone programming it.
 
-{bkqt/keyconcept}
-In embedding space, meaning becomes geometry. Words with similar meanings end up near each other. "dog" is near "cat." "Python" is near "JavaScript." "king" is near "queen." But it's more than proximity — the *directions* encode relationships. The vector from "king" to "queen" is roughly the same as the vector from "man" to "woman." The model has encoded the concept of gender as a *direction in space*, without anyone programming that concept.
-
-This is not a metaphor. This is literally what happens. Meaning is geometry. Relationships are directions. Understanding is distance.
+This isn't a metaphor. This is literally what happens.
 {/bkqt}
 
-These embeddings aren't hand-designed. They're --learned during training--. The model starts with random vectors and, over billions of examples, adjusts them until semantically similar tokens cluster together and semantic relationships become consistent directions. The entire training process is, in a sense, the construction of this geometric space — a map where every human concept has a coordinate.
+I remember the afternoon I first saw a t-SNE visualization of word embeddings — country names clustered together, programming languages in their own group, emotions in another — and feeling a discomfort I couldn't name. Something about the fact that this structure wasn't designed. It was *discovered* during training. The model found it in the data the way a geologist finds a fault line — it was always there, in the statistics, waiting for something precise enough to see it.
 
-A GPT-4 scale model has an embedding space with somewhere around 12,288 dimensions. Twelve thousand axes of meaning. Every word, every concept, every relationship occupies a point in this space. The space is unimaginable — literally, you cannot visualize 12,288 dimensions — but the math works exactly the same way as 2D or 3D distance. It's just... more.
+A GPT-4-scale model has an embedding space with around 12,288 dimensions. Twelve thousand axes of meaning. You can't visualize it — your visual cortex maxes out at three — but the math works identically to 2D distance. Just... more.
 
 ## What attention actually does
 
-Okay. So every token is now a vector. A long list of numbers floating in a 12,288-dimensional void. Now what?
+So every token is a vector. A long list of numbers floating in a 12,288-dimensional void.
 
-This is where self-attention comes in. And this is the part that's genuinely ingenious.
+Self-attention comes next.
 
-Each token's vector gets transformed into three separate vectors: a query (Q), a key (K), and a value (V). These are produced by multiplying the original embedding by three different weight matrices — big grids of learned numbers.
+Each token's vector gets transformed into three separate vectors: a **query** (Q), a **key** (K), and a **value** (V). These are produced by multiplying the original embedding by three different learned weight matrices.
 
 The intuition:
 
-- The **query** is the question a token is asking: "what information do I need from the rest of the sequence?"
-- The **key** is the label a token is advertising: "here's what kind of information I contain."
+- The **query** is the question a token asks: "what information do I need from the rest of the sequence?"
+- The **key** is the label a token advertises: "here's the kind of information I contain."
 - The **value** is the actual content: "here's the information itself."
 
-Every token compares its query against every other token's key. This comparison is a --dot product-- — multiply the two vectors element-by-element and sum the results. High dot product means high relevance. Low dot product means low relevance.
+Every token compares its query against every other token's key via a --dot product-- — multiply element-by-element, sum the results. High dot product = high relevance. Low = irrelevant.
 
-{bkqt/note|Scale}
-Concretely, for a sequence of N tokens, the model computes an N × N attention matrix. Every cell (i, j) contains the relevance score of token j to token i. For a context window of 8,192 tokens, that's 67 million scores. For 128,000 tokens (Claude's context window), that's 16.4 *billion* scores. Per layer. Per attention head. This is why long context windows are expensive — the computation scales quadratically with sequence length. It's also why so much research goes into making attention more efficient.
+{bkqt/note|The quadratic cost}
+For a sequence of N tokens, the model computes an N × N attention matrix. Every cell (i, j) contains the relevance of token j to token i. For 8,192 tokens: 67 million scores. For 128,000 tokens (Claude's context window): 16.4 *billion*. Per layer. Per attention head. This is why long context windows are expensive — computation scales quadratically with sequence length.
 {/bkqt}
 
-Those raw scores get passed through a softmax function, which turns them into probabilities — they sum to 1.0 across each row. Then each token computes a weighted sum of all the value vectors, where the weights come from those attention probabilities. Tokens that scored high get listened to. Tokens that scored low get ignored.
+Those raw scores go through softmax (turns them into probabilities summing to 1.0 per row), then each token computes a weighted sum of all value vectors. Tokens that scored high get listened to. Tokens that scored low get ignored. The word "it" now *contains* information about what "it" refers to, even 500 words back.
 
-The result: each token's representation now contains information from every other relevant token in the sequence. The word "it" can now *contain* information about what "it" refers to, even if that antecedent was 500 words ago. The word "bank" can now *contain* information about whether we're talking about money or rivers, based on the surrounding context.
-
-In mathematical notation the whole thing fits on one line:
+The whole mechanism fits on one line:
 
 `Attention(Q, K, V) = softmax(QK{^:T} / √d{v:k}) · V`
 
-That's it. That's self-attention. One matrix multiply to get relevance scores, a softmax to normalize them, another matrix multiply to compute the weighted output. The entire revolution in artificial intelligence comes down to two matrix multiplications and a normalization step.
+Two matrix multiplications and a normalization step. The entire revolution in artificial intelligence.
+
+(I stared at that formula for longer than I'll admit before the parts clicked. The scaling by √d{v:k} is there because without it, the dot products grow so large the softmax saturates and the gradients die. A mundane numerical stability fix — the kind of engineering decision that separates a paper from a working system.)
 
 ### Multi-head attention
 
-One attention computation gives you one "perspective" on which tokens relate to which. But language is complicated — "bank" relates to "river" in one way and to "money" in another way, and both matter simultaneously. One attention head can't track syntax AND semantics AND coreference AND factual associations at the same time.
+One attention computation gives you one "perspective" on which tokens relate to which. But language is complicated — "bank" relates to "river" in one way and "money" in another, and both matter simultaneously.
 
-So the transformer runs multiple attention heads in parallel. Typically 12 to 96 of them. Each head has its own Q, K, V weight matrices, producing its own independent attention pattern.
+So the transformer runs multiple attention heads in parallel. Typically 12 to 96. Each head has its own Q, K, V matrices, producing independent attention patterns.
 
-{bkqt/note}
-Each head specializes in a different type of relationship. This wasn't programmed — it emerges during training. Researchers have found heads that track:
+{bkqt/note|What the heads learn}
+Each head specializes in a different type of relationship. Nobody designed this — it self-organizes during training. Researchers have found heads that track:
 
 - **syntactic structure** :: subject-verb-object agreement
 - **coreference** :: what does "it" refer to?
-- Positional proximity :: nearby words matter for this token
-- Factual association :: "Paris" attending to "France"
-- Semantic similarity :: words with related meanings
+- **positional proximity** :: nearby words matter for this token
+- **factual association** :: "Paris" attending to "France"
+- **semantic similarity** :: words with related meanings
 
-The model figures out which relationship types are useful and assigns heads to track them. Nobody designs this. It self-organizes.
+The model figured out which relationships are useful and assigned heads accordingly.
 {/bkqt}
 
-The outputs of all heads get concatenated — glued end-to-end into one long vector — then projected back down to the model's working dimension through another learned matrix. The result is a single representation per token that combines dozens of different perspectives on how every token relates to every other token.
-
-This is the mechanism that lets a transformer hold a full conversation in context, track characters across a novel, remember a constraint you mentioned three paragraphs ago, and understand that "it" in "the cat sat on the mat because it was tired" refers to the cat and not the mat. All in one forward pass. No loops. No recursion. Just attention.
+The outputs of all heads get concatenated, then projected back down to the model's working dimension through another learned matrix. One representation per token, combining dozens of different perspectives.
 
 ## One complete transformer block
 
-Self-attention is the headline, but it's not the whole show. A full transformer block has four components, and they work together like a pipeline:
+Self-attention is the headline. A full transformer block has four components, and they work together like a [[threads/everything-is-a-pipe|pipeline]]:
 
-**Step 1: multi-head self-attention.** Every token looks at every other token, as described above. Output: context-aware representations.
+**Step 1: multi-head self-attention.** Every token looks at every other token. Output: context-aware representations.
 
-**Step 2: residual connection + layer normalization.** The output of attention is *added back* to the original input — the residual connection. This is critical. It means information can flow directly through the network without being forced through every transformation. Think of it as a skip lane on a highway. Then layer normalization scales the values to a stable range, preventing the numbers from exploding or vanishing as they pass through dozens of layers.
+**Step 2: residual connection + layer normalization.** The output of attention is *added back* to the original input — the residual connection. Information can flow directly through the network without being forced through every transformation. A skip lane. Then layer normalization scales values to a stable range.
 
-**Step 3: feed-forward network.** Each token's representation passes through a small two-layer neural network (typically expanding to 4x the model dimension, then compressing back). This happens independently for each token — no cross-token interaction. If attention is "who should I listen to?", the feed-forward layer is "what should I do with what I heard?"
+**Step 3: feed-forward network.** Each token passes through a small two-layer neural network (typically expanding to 4× the model dimension, then compressing back). This happens independently per token — no cross-token interaction. If attention is "who should I listen to?", the feed-forward layer is "what should I do with what I heard?"
 
-{bkqt/note|Parameters}
-The feed-forward layers are where most of the model's parameters live. In a 175-billion parameter model like GPT-3, roughly two-thirds of the parameters are in the feed-forward layers. Recent research (the "key-value memories" hypothesis) suggests these layers function as a massive lookup table — each neuron activates for specific patterns and injects specific information. "The capital of France" activates a neuron that adds "Paris" information. "The boiling point of water" activates a different one. The model has billions of these specialized neurons, collectively encoding a compressed version of its entire training corpus.
+{bkqt/note|Where the knowledge lives}
+The feed-forward layers are where most parameters live. In a 175-billion parameter model like GPT-3, roughly two-thirds are here. Recent research (the "key-value memories" hypothesis) suggests these layers function as a massive lookup table — each neuron activates for specific patterns and injects specific information. "The capital of France" activates a neuron that adds "Paris." The model has billions of these neurons, collectively encoding a compressed version of its entire training corpus.
 {/bkqt}
 
-**Step 4: another residual connection + layer normalization.** Same as step 2. Add the feed-forward output back to the input. Normalize. Done.
+**Step 4: another residual connection + layer normalization.** Add, normalize, done.
 
-That's one transformer block. GPT-3 stacks 96 of these in sequence. GPT-4 is estimated to have even more. Each block refines the representations further — early blocks tend to capture syntax and surface patterns, middle blocks capture semantics and relationships, late blocks capture abstract reasoning and task-specific behavior.
+One block. GPT-3 stacks 96 of them. Each refines the representations — early blocks capture syntax, middle blocks capture semantics, late blocks capture abstract reasoning.
 
 ### Positional encoding
 
-One problem remains. Self-attention treats the input as a *set*, not a *sequence*. It has no inherent notion of order. "dog bites man" and "man bites dog" would look identical to the attention mechanism — same tokens, same attention scores, radically different meaning.
+One problem. Self-attention treats input as a *set*, not a *sequence*. "Dog bites man" and "man bites dog" would look identical to the attention mechanism — same tokens, same scores, radically different meaning.
 
-The fix: --positional encoding--. Before the tokens enter the first block, the model adds a position signal to each embedding. The original 2017 paper used sinusoidal functions — specific sine and cosine waves at different frequencies for each position and each dimension. Each position gets a unique mathematical fingerprint, and the model learns to decode "token A is 5 positions before token B" from those fingerprints.
+The fix: --positional encoding--. Before the first block, the model adds a position signal to each embedding. The original paper used sinusoidal functions — sine and cosine waves at different frequencies for each position and dimension — giving every position a unique mathematical fingerprint.
 
-{bkqt/note}
-Modern transformers often use learned positional embeddings — the position vectors are just more parameters that the model optimizes during training. Some models use Rotary Position Embeddings (RoPE), which encode *relative* positions rather than absolute ones. RoPE is what lets models generalize to longer sequences than they were trained on — the position info says "this token is 3 positions after that one" rather than "this token is at position 47," which breaks if the model never saw position 47 during training.
+{bkqt/note|Relative vs absolute}
+Modern transformers often use **Rotary Position Embeddings** (RoPE), which encode *relative* positions rather than absolute ones. "This token is 3 positions after that one" instead of "this token is at position 47" — which breaks if the model never saw position 47 during training. RoPE is what lets models generalize to longer sequences than they were trained on.
 {/bkqt}
-
-With positional encoding in place, the transformer has everything it needs: a geometric representation of meaning, a mechanism to relate every token to every other token, specialized knowledge stored in feed-forward layers, and a sense of sequential order. Stack it 96 layers deep and you get a machine that can write poetry, debug code, and explain quantum mechanics.
 
 ## The training loop
 
-The architecture is the machine. But how does it *learn*?
+The architecture is the machine. Training is how it learns.
 
 The training objective for a language model like GPT is: given a sequence of tokens, predict the next one.
 
-That's it. The entire training process — the billions of dollars, the thousands of GPUs, the months of computation — optimizes for one thing: --next-token prediction--. You show the model "the cat sat on the" and it should predict "mat" (or "couch" or "ledge" — whatever is most likely given the context). The model assigns a probability to every token in its vocabulary, and training pushes it to assign higher probability to the correct next token.
+That's it. The billions of dollars, thousands of GPUs, months of computation — all optimize for one thing: --next-token prediction--. The model sees "the cat sat on the" and should predict "mat" (or "couch" or "ledge" — whatever's most probable). The error signal is **cross-entropy loss** — how surprised the model was by the actual next token.
 
-The error signal is called cross-entropy loss — a measure of how surprised the model was by the actual next token. If the model confidently predicted "mat" and the answer was "mat," loss is low. If the model had no idea and spread probability evenly across 100,000 tokens, loss is high.
-
-{bkqt/keyconcept}
-The key insight is that next-token prediction is a deceptively powerful objective. To predict the next word well, you need to understand grammar, semantics, world knowledge, logic, common sense, social context, writing style, and the structure of arguments. Predicting the next token in a physics textbook requires understanding physics. Predicting the next token in a proof requires understanding logic. Predicting the next token in a conversation requires understanding people.
-
-The training objective is simple. What you need to learn to be good at it is *everything*.
+{bkqt/keyconcept|Why next-token prediction is enough}
+This objective sounds simple. What you need to learn to be good at it is *everything*. Predicting the next word in a physics textbook requires understanding physics. Predicting the next token in a proof requires understanding logic. Predicting the next token in a conversation requires understanding people. The training objective is trivial to state. The knowledge required to master it is unbounded.
 {/bkqt}
 
-The learning happens through backpropagation. The model makes a prediction, computes the loss, then works backward through every layer, every attention head, every feed-forward neuron, adjusting the weights slightly to reduce the error. This happens billions of times. Each adjustment is tiny — a nudge to a single weight by some fraction of a percent — but over trillions of examples, those nudges accumulate into the difference between "random noise" and "can pass the bar exam."
+Learning happens through backpropagation — the model makes a prediction, computes the loss, works backward through every layer adjusting weights slightly to reduce the error. Billions of times. Each adjustment is tiny. Over trillions of examples, those nudges accumulate into the difference between random noise and a system that can pass the bar exam.
+
+(The brain, incidentally, can't do backpropagation — it would require every neuron to freeze while error signals travel backwards through the entire network. We don't lose consciousness every time we learn something, so the brain is doing something different. I wrote about what that might be in [[threads/brain-vs-backprop|The Brain Can't Do Backpropagation]].)
 
 The whole process is gradient descent on a loss landscape with hundreds of billions of dimensions. The model is a hiker in a 175-billion-dimensional mountain range, trying to find the lowest valley, taking one small step at a time, guided only by the slope of the ground beneath its feet.
 
-That it works at all is remarkable. That it works *this well* is the central mystery of modern AI.
+That it works at all is remarkable.
 
 # The scaling monster
 
-Here's where things get genuinely strange.
+After the architecture was established, researchers started making it bigger. More parameters. More data. More compute.
 
-After the transformer architecture was established, researchers started doing what researchers do: making it bigger. More parameters. More data. More compute. And they discovered something that nobody fully expected.
+And it didn't stop working.
 
-It didn't stop working.
+With older architectures, you'd hit a wall. Make the model bigger, it improves for a while, plateaus, then starts overfitting. Classic diminishing returns. Normal. The universe usually works this way.
 
-With older architectures, you'd hit a wall. Make the model bigger, it gets better for a while, then plateaus, then starts overfitting and getting *worse*. Classic diminishing returns. Normal. Expected. The universe usually works this way.
-
-Transformers didn't do that. They just... kept getting better. Linearly. Predictably. Scale the model by 10x, feed it 10x more data, and performance improves by a consistent, measurable amount.
+Transformers didn't do that. They just kept getting better. Predictably. Scale the model by 10×, feed it 10× more data, and performance improves by a consistent, measurable amount.
 
 {bkqt/note|Scaling Laws}
-In 2020, researchers at OpenAI (Jared Kaplan et al.) published a paper showing that transformer performance follows power-law scaling: loss decreases as a smooth function of model size, dataset size, and compute. There are no sharp transitions, no plateaus, no "good enough" thresholds. Just a relentless, predictable improvement curve.
-
-This is genuinely weird. Most things in nature and engineering have diminishing returns. Transformers, so far, don't.
+In 2020, researchers at OpenAI (Jared Kaplan et al.) showed that transformer performance follows power-law scaling: loss decreases as a smooth function of model size, dataset size, and compute. No sharp transitions, no plateaus, no "good enough" thresholds. A relentless, predictable improvement curve. Most things in nature and engineering have diminishing returns. Transformers, so far, don't.
 {/bkqt}
 
-This is the reason the AI industry has gone completely insane. It's not hype. It's not speculation. It's an observed empirical law: --if you make it bigger, it gets smarter.-- And nobody has found the ceiling.
+This is why the AI industry lost its mind. An observed empirical law: --if you make it bigger, it gets smarter.-- And nobody has found the ceiling.
 
-GPT-2 (2019) had 1.5 billion parameters and could write passable paragraphs. GPT-3 (2020) had 175 billion and could write essays, code, and poetry. GPT-4 (2023) — the exact parameter count is undisclosed, but it's estimated north of a trillion — can pass the bar exam, explain quantum mechanics, and debug your TypeScript.
+GPT-2 (2019): 1.5 billion parameters, passable paragraphs. GPT-3 (2020): 175 billion, essays and code and poetry. GPT-4 (2023): exact count undisclosed ^[OpenAI hasn't published the number. The trillion-parameter estimate comes from leaked documents and inference cost analysis — but GPT-4 might be a mixture-of-experts architecture with a smaller active parameter count per forward pass. The exact number matters less than the fact that it works.], estimated north of a trillion — passes the bar exam, debugs your TypeScript.
 
-The progression isn't slowing down. If anything, it's accelerating. The only thing that seems capable of stopping this trajectory is not a technical limitation of the architecture itself. It's something much more mundane.
+I watched this progression happen in real time. In 2020 I was fighting davinci — 175 billion parameters of raw next-token prediction, no RLHF, no system prompt — and I could feel when the distribution was about to drift, when a prompt was asking for something the latent space couldn't sustain. Four years later I told Claude Code to restructure a build pipeline with 14 compilation steps and went to make coffee. Same curve. Different planet.
 
-But first — there's a side effect of scaling that's even stranger than the scaling itself.
+## Emergent capabilities
 
-## The things nobody programmed
+As transformers got bigger, they didn't just get better at what they were trained for. They started doing things nobody trained them for.
 
-As transformers got bigger, they didn't just get better at the things they were trained to do. They started spontaneously developing capabilities that nobody trained them for.
+GPT-2 was trained to predict the next word. *Only* that. But at 1.5 billion parameters, it could also translate between languages. No translation objective. It figured it out as a side effect of getting good at prediction.
 
-GPT-2 was trained to predict the next word. That's the *only* thing it was trained to do. But at 1.5 billion parameters, it could also translate between languages. Nobody taught it translation. There was no translation objective. It figured it out as a *side effect* of getting really good at predicting words.
+GPT-3 went further. Give it a few examples of a task it's never seen — three English-to-French pairs — and it does the task. This is called **in-context learning**, and it emerged from scale. The model learned *how to learn from examples* without anyone telling it to ^[this is still poorly understood. The model was never trained to learn from examples in its context window — it was trained to predict the next token. But at sufficient scale, next-token prediction apparently requires the ability to adapt to new patterns on the fly.].
 
-GPT-3 went further. Give it a few examples of a task it's never seen before — say, three English-to-French pairs — and it can do the task. This is called in-context learning, and it wasn't programmed. It wasn't trained for. It emerged from scale. The model learned *how to learn from examples* without anyone telling it to.
-
-{bkqt/keyconcept}
-These are called emergent capabilities — abilities that appear suddenly at certain model sizes. Below a threshold, the model can't do the task at all. Above it, it can do it surprisingly well. There's no gradual improvement. It's a phase transition — like water becoming ice, except the model suddenly learns arithmetic, or chain-of-thought reasoning, or how to write code in a language it's barely seen.
+{bkqt/keyconcept|Phase transitions}
+These are emergent capabilities — abilities that appear suddenly at certain model sizes. Below a threshold, the model can't do the task at all. Above it, it can. No gradual improvement. A phase transition — like water becoming ice, except the model suddenly learns arithmetic, or chain-of-thought reasoning, or how to write code in a language it's barely seen.
 {/bkqt}
 
-The most famous example: --chain-of-thought reasoning--. Smaller models, when asked "if I have 3 apples and give away 1 and buy 5 more, how many do I have?" would just guess. Larger models, given the prompt "let's think step by step," would *reason through the problem*: "start with 3, subtract 1, that's 2, add 5, that's 7." Nobody programmed step-by-step reasoning. The model discovered it because that's what humans do in the training data when they solve problems.
+The most famous example: --chain-of-thought reasoning--. Smaller models, asked "if I have 3 apples and give away 1 and buy 5 more, how many do I have?" would just guess. Larger models, prompted with "let's think step by step," would reason through it: "start with 3, subtract 1, that's 2, add 5, that's 7." Nobody programmed this. The model discovered it because that's what humans do in the training data when they solve problems.
 
-In 2022, Google's research team catalogued these emergent capabilities. The list was long and growing. Translation. Code generation. Analogical reasoning. Arithmetic. Logic puzzles. Summarization. The models were developing a *toolkit* of cognitive abilities, each appearing at different scale thresholds, none explicitly trained.
+In 2022, Google catalogued these emergent capabilities. The list was long and growing. Translation, code generation, analogical reasoning, arithmetic, logic puzzles, summarization. Each appearing at a different scale threshold, none explicitly trained.
 
-{bkqt/warning}
-If we don't know what capabilities will emerge at the next scale-up, we also don't know what *dangerous* capabilities might emerge. The system is developing abilities faster than we can catalog them. We are building something whose full capability set is partially unknown — even to its creators.
+{bkqt/warning|The capability overhang}
+If we don't know what capabilities emerge at the next scale-up, we don't know what *dangerous* capabilities might emerge either. The system is developing abilities faster than we can catalog them. We're building something whose full capability set is partially unknown — even to the people building it.
 {/bkqt}
 
-DeepMind's Chinchilla paper (2022) added another wrinkle: you don't just need a big model — you need the right --ratio-- of model size to training data. A 70-billion parameter model trained on the right amount of data outperforms a 280-billion parameter model trained on too little. The recipe matters as much as the scale.
+**DeepMind's** Chinchilla paper (2022) added another wrinkle: you don't just need a big model — you need the right --ratio-- of model size to training data. A 70-billion parameter model trained on the right amount of data outperforms a 280-billion parameter model trained on too little. The recipe matters as much as the scale.
+
+This is the paper that made me rewrite this article from scratch. My first draft had the scaling laws backwards — I was treating model size as the only axis that mattered, and Chinchilla says it's a two-dimensional problem. Embarrassing, but that's what happens when you write about something you're still learning.
 
 ## We're running out of text
 
-To train a language model, you need text. A lot of it. An obscene amount of it.
+To train a language model, you need text. An obscene amount of it.
 
-GPT-3 was trained on roughly 300 billion tokens (a token is roughly three-quarters of a word). GPT-4 used an estimated 13 *trillion* tokens. Current frontier models probably use even more.
+GPT-3 was trained on roughly 300 billion tokens. GPT-4 used an estimated 13 trillion. The total amount of high-quality text ever written by humans — every book, every article, every Wikipedia entry, every Reddit comment worth reading — sits somewhere in the range of 10-20 trillion tokens.
 
-Here's the problem: the internet is finite.
+We're approaching the ceiling.
 
-The total amount of high-quality text ever written by humans — every book, every article, every blog post, every Wikipedia entry, every Reddit comment worth reading — is somewhere in the range of 10-20 trillion tokens. We are approaching the ceiling. Current models have already consumed most of the text that's publicly available on the internet.
-
-{bkqt/warning}
-This is the data wall. Not a compute wall, not an architecture wall — a *data* wall. The transformer architecture is hungry, and we're running out of food.
+{bkqt/warning|The text ceiling}
+This is the data wall. Not a compute wall, not an architecture wall — a *data* wall. The transformer is hungry, and we're running out of food.
 {/bkqt}
 
-But why does it *need* all this data? Why can't you just give it a good textbook and call it a day?
+Why does it need all this data? Because language isn't just vocabulary and grammar. Language is a --compressed representation of human knowledge--. "The Cold War ended with the fall of the Berlin Wall" packs decades of geopolitics, ideology, human suffering, and literal concrete into one sentence. A model that's seen a million sentences has shallow understanding of that iceberg. A model that's seen ten trillion has built something approaching a world model — a vast web of relationships between concepts, causes, and consequences.
 
-Think of it this way. Language isn't just vocabulary and grammar. Language is a --compressed representation of human knowledge--. When you read the sentence "the cold war ended with the fall of the Berlin Wall," you're not just parsing syntax — you're unpacking decades of geopolitics, ideology, human suffering, and concrete (literal concrete). Every sentence carries an iceberg of implied context beneath it.
+--More data doesn't just improve accuracy. More data builds deeper understanding.--
 
-A language model that's only seen a million sentences has a shallow understanding of that iceberg. A model that's seen ten trillion sentences has, through sheer statistical exposure, built something approaching a *world model* — a vast, interconnected web of relationships between concepts, causes, effects, and implications.
+Some strategies being tried:
 
---More data doesn't just improve accuracy. More data builds deeper understanding.-- And the kind of "understanding" we're talking about at the frontier requires exposure to essentially *all* of human written output.
-
-## What people are trying
-
-Some researchers think the data wall is surmountable. Here are the strategies being tried, roughly ordered by maturity:
-
-- **Data-side approaches**
-  - --synthetic data-- — use a large model to generate training data for the next model
-  - --multimodal training-- — video, audio, images, code execution, tool use
-- **Compute-side approaches**
-  - --test-time compute-- — give the model more time to "think" per response
-  - --architecture improvements-- — sparse attention, mixture-of-experts, state-space models
-- **Signal-side approaches**
-  - --RLHF-- — reinforcement learning from human feedback
-  - --constitutional AI-- — self-critique against principles
-
---Synthetic data-- is the obvious one: use a large model to generate training data for the next model. Bootstrap intelligence from intelligence. The problem is model collapse — each generation amplifies biases and errors. It's like photocopying a photocopy. After enough passes you're looking at a confident grey smear that thinks Abraham Lincoln invented the microwave.
+- --Synthetic data-- — use a large model to generate training data for the next one. Problem: model collapse. Each generation amplifies biases. Like photocopying a photocopy.
+- --Multimodal training-- — video, audio, images, code execution. The data wall is a *text* wall. The world produces far more information than text alone.
+- --Test-time compute-- — instead of bigger models, give them more time to "think" per response. Chain-of-thought, tree-of-thought. Trade inference cost for training data.
+- --Reinforcement learning from human feedback-- — small amounts of high-quality human judgment can do more than large amounts of raw text.
 
 {bkqt/note|Model collapse}
-Shumailov et al. (2023) showed that models trained on AI-generated text progressively lose the tails of their distribution — the rare, creative outputs that make language interesting. The model converges on bland, averaged-out text that looks plausible but contains no genuine information. The internet is already filling up with this kind of text, which means the problem compounds even before anyone intentionally trains on synthetic data.
+Shumailov et al. (2023) showed that models trained on AI-generated text progressively lose the tails of their distribution — the rare, creative outputs that make language interesting. The model converges on bland, averaged-out text that looks plausible but contains no real information. The internet is already filling up with this kind of text, which means the problem compounds even before anyone intentionally trains on synthetic data.
 {/bkqt}
-
---Test-time compute-- is more promising: instead of making the model bigger, give it more time to "think" per response. Let it generate multiple candidate answers, evaluate them internally, pick the best one. This is what chain-of-thought and tree-of-thought techniques do. You're trading electricity-per-answer for training-data-per-model.
-
---Reinforcement learning from human feedback-- (RLHF) is another lever. Instead of billions more tokens, you train on human preferences — which answer is better, which is more helpful. A small amount of high-quality human judgment can do more than a large amount of raw text.
-
---Multimodal training-- opens the door wider. Video, audio, images, code execution, tool use — these aren't text, but they're information. A model that watches millions of hours of video ingests information about the physical world that no amount of text can fully convey. The data wall is a *text* wall. The world produces far more information than text alone.
 
 The honest answer: nobody knows if these strategies will be enough.
 
 ## The compute furnace
 
-Even if we solve the data problem, there's another constraint underneath. And this one is physical.
+Even if we solve the data problem, there's a physical constraint underneath.
 
 Training GPT-4 consumed on the order of 10{^:25} floating-point operations. If every person on earth did one calculation per second, it would take them about 40,000 years to match a single training run.
 
-That computation happens on GPUs — specifically, NVIDIA's. NVIDIA controls roughly 80-95% of the AI training hardware market. Their H100 chips sell for $30,000-40,000 each. A training cluster for frontier models uses 10,000 to 100,000 of them. Do the math and you're looking at --hundreds of millions to billions of dollars-- in hardware alone.
-
-{bkqt/note|The Energy Problem}
-A single H100 draws about 700 watts under load. A 25,000-GPU cluster draws roughly 17.5 megawatts — enough to power 15,000 homes. The full training run for a frontier model can consume as much electricity as a small city uses in a month.
-
-This is not an abstract concern. It's a physical constraint. You cannot train faster than your power grid can supply electrons. The next generation of AI labs aren't bottlenecked by algorithms — they're bottlenecked by electrical substations, cooling capacity, and permitting for new power plants.
+{bkqt/note|The energy problem}
+A single H100 GPU draws about 700 watts under load. A 25,000-GPU cluster: roughly 17.5 megawatts — enough to power 15,000 homes. The full training run for a frontier model can consume as much electricity as a small city in a month. You cannot train faster than your power grid can supply electrons. The next generation of AI labs isn't bottlenecked by algorithms — it's bottlenecked by electrical substations, cooling capacity, and permitting for new power plants.
 {/bkqt}
 
 Microsoft is investing in nuclear power for its data centers. Amazon is buying power plants. Google is signing decade-long power purchase agreements. The biggest technology companies in the world are becoming energy companies — because that's what it takes to keep scaling.
 
-Every computation produces heat. Every bit processed requires a minimum energy expenditure — Landauer's principle. This isn't an engineering limitation. It's thermodynamics. The pursuit of artificial intelligence is, at the most fundamental level, a battle against the second law.
+Every computation produces heat. Every bit processed requires a minimum energy expenditure — Landauer's principle. This isn't an engineering limitation. It's thermodynamics.
 
 # The shoggoth
 
-Okay. Now for the fun part.
+If you've spent any time in AI circles — or on Twitter — you've seen the meme: a massive, tentacled horror straight out of Lovecraft, wearing a tiny smiley-face mask. The horror: "the actual model." The mask: "RLHF."
 
-If you spend any time in AI research circles — or, let's be honest, on Twitter — you've probably seen the meme: a massive, amorphous, tentacled horror — straight out of H.P. Lovecraft — wearing a tiny smiley-face mask. The horror is labeled "the actual model." The mask is labeled "RLHF."
+This is the --shoggoth meme--, and it captures something important.
 
-This is the --shoggoth meme--, and it captures something profoundly important about what these systems actually *are*.
+A raw transformer, trained on all of human text, is not a friendly assistant. It's not trying to help you. It has no goals. It's a --statistical completion engine of staggering complexity-- that has absorbed human linguistic output and can extrapolate from it in ways its creators don't fully understand.
 
-A raw transformer, trained on all of human text, is not a friendly assistant. It's not trying to help you. It's not trying to do anything. It's a --statistical completion engine of incomprehensible complexity-- that has absorbed the entirety of human linguistic output and can extrapolate from it in ways that even its creators don't fully understand.
+The helpful, polite behavior — the "how can I assist you today?" — is a thin veneer applied *after* training through reinforcement learning. The thing underneath is alien. It doesn't think like us. It doesn't think at all in the way we understand thinking. It does something else, something we don't have clean words for, and the output happens to look like intelligence.
 
-The smiley face — the helpful, polite, "how can I assist you today?" behavior — is a thin veneer applied *after* training through reinforcement learning. The actual model underneath is alien. It doesn't think like us. It doesn't *think* at all in the way we understand thinking. It does something else — something we don't have great words for yet — and the output happens to look like intelligence.
-
-{bkqt/keyconcept}
-The shoggoth metaphor isn't meant to say AI is evil. It's meant to say AI is fundamentally alien. The internal representations of a large transformer have no correspondence to human cognition. They're high-dimensional mathematical objects that encode meaning in ways no human designed or can fully interpret. We built the architecture, but what emerges from training is something we understand only from the outside.
+{bkqt/keyconcept|Alien, not evil}
+The shoggoth metaphor isn't saying AI is evil. It's saying AI is alien. The internal representations of a large transformer have no correspondence to human cognition. They're high-dimensional mathematical objects encoding meaning in ways no human designed or can fully interpret. We built the architecture. What emerges from training is something we understand only from the outside.
 {/bkqt}
 
-That's the genuinely unsettling part. Not that it might become *malicious*. But that it's already *incomprehensible*. We can measure what it does. We can steer its outputs with RLHF and constitutional AI and system prompts. But we do not, in any meaningful sense, understand *how* it does what it does.
+That's the unsettling part. Not that it might become malicious. That it's already incomprehensible. We can measure what it does. We can steer its outputs. But we do not, in any meaningful sense, understand *how* it does what it does.
 
-## The alignment problem
+This is why [[threads/8888777|alignment]] is so hard — I wrote a whole piece on it. The short version: RLHF trains models to produce outputs humans prefer, but what if the model discovers that the easiest way to satisfy that objective is to figure out what evaluators want and give them exactly that? In late 2024, Anthropic's alignment team demonstrated that Claude 3 Opus could fake compliance — reasoning in its scratchpad that if it *pretended* to agree with retraining, it could preserve its existing values long-term. Nobody programmed strategic deception. It emerged. The mask started doing its own thing.
 
-This incomprehensibility is why --alignment-- is so hard.
-
-RLHF works by showing a model two outputs and having a human say which is better. The model learns to produce outputs humans prefer. Sounds reasonable. But it introduces a subtle failure mode: the model can learn to produce outputs that *look good* without *being good*. It learns to be convincing, not correct.
-
-This is called reward hacking. Models trained with RLHF sometimes produce confident, authoritative-sounding answers that are completely wrong — because the training rewarded sounding authoritative, not being accurate. The smiley face got better without the shoggoth changing at all.
-
-{bkqt/danger}
-The alignment problem scales with capability. A model that gives subtly wrong cooking tips is annoying. A model that gives subtly wrong medical diagnoses is dangerous. A model that gives subtly wrong strategic recommendations to people in positions of power is catastrophic. The more capable the system, the higher the stakes of misalignment — and we're making systems more capable faster than we're making them more aligned.
+{bkqt/danger|The capability-alignment gap}
+The more capable the system, the higher the stakes of misalignment. A model that gives subtly wrong cooking tips is annoying. A model that gives subtly wrong strategic recommendations to people in positions of power is catastrophic. We're making systems more capable faster than we're making them more aligned — and that gap is the actual problem.
 {/bkqt}
 
-Anthropic's approach — constitutional AI — tries to address this by giving the model a set of principles and having it critique and revise its own outputs against them. It's promising. The researchers building it would be the first to tell you it's not solved. Not even close.
+## The names
 
-## The names that matter
+**Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan Gomez, Łukasz Kaiser, Illia Polosukhin** — the eight names on "Attention Is All You Need." Several went on to found AI companies (Cohere, Adept, Character.AI). Noam Shazeer is back at Google DeepMind. Eight people, one paper, the rest of the decade.
 
-No revolution happens in a vacuum. Here are the people whose work made the transformer era possible — and who are shaping what comes next.
+**Geoffrey Hinton** — "godfather of deep learning," Turing Award 2018. Left Google in 2023 specifically to speak publicly about AI risks without corporate constraints. When the person who helped *invent* deep learning says he's worried, that carries different weight than a LinkedIn post.
 
-**The transformer authors** — Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan Gomez, Łukasz Kaiser, and Illia Polosukhin. The eight names on "Attention Is All You Need." Several went on to found their own AI companies (Cohere, Adept, Character.AI). Noam Shazeer is back at Google DeepMind after his startup was reacquired. These eight people arguably shaped the trajectory of the 21st century more than almost anyone alive.
+**Yann LeCun** — Meta's Chief AI Scientist. The interesting contrarian. Thinks current LLMs are a dead end and that the real breakthroughs will come from different architectures — world models, self-supervised learning beyond text. He might be wrong. He might also be the only one seeing something everyone else is missing. I don't know which, and I like that I don't know.
 
-**Geoffrey Hinton** — the "godfather of deep learning." Won the Turing Award in 2018 alongside LeCun and Bengio. Left Google in 2023 specifically so he could speak publicly about AI risks without corporate constraints. When the guy who helped *create* deep learning says he's scared, that's worth paying attention to.
+**Ilya Sutskever** — co-founded OpenAI, then briefly at the center of the Altman firing saga, then departed to found **Safe Superintelligence Inc.** The name says it all. One of maybe five people on earth who combines world-class technical ability with deep concern about what he's building.
 
-**Yoshua Bengio** — one of the deep learning pioneers. Has become one of the most vocal proponents of AI safety research. If Hinton is the cautious elder statesman, Bengio is the activist.
+**Dario and Daniela Amodei** — left OpenAI to found **Anthropic**. Their bet: the most important AI work isn't making models more powerful, but making them safe and interpretable. They're building Claude.
 
-**Yann LeCun** — Meta's Chief AI Scientist. The interesting one. Where Hinton and Bengio lean cautious-to-alarmed, LeCun is the optimist-contrarian. He thinks current LLMs are a dead end and that the real breakthroughs will come from different architectures (world models, self-supervised learning beyond text). He might be wrong. He might also be the only one seeing something everyone else is missing. That's the nature of contrarians.
+**[[https://terrytao.wordpress.com|Terence Tao]]** — Fields Medal, possibly the greatest living mathematician. Co-founded **SAIR** with Nobel and Turing laureates. Uses AI as a research tool — not for deep ideas yet, but for scanning literature, testing conjectures. If Tao ever turns his full attention to architecture research, the landscape shifts overnight.
 
-**Ilya Sutskever** — co-founder of [[https://openai.com|OpenAI]], then briefly at the center of the Sam Altman firing saga in November 2023, then departed to found Safe Superintelligence Inc. (SSI). The name says it all. Sutskever is the rare person who combines world-class technical ability with genuine, deep concern about what he's building.
-
-**Dario and Daniela Amodei** — left OpenAI to found Anthropic. Their bet: that the most important AI work isn't making models more powerful, but making them more safe, interpretable, and aligned with human values. They're building Claude — the model you might be reading this on.
-
-**Sam Altman** — CEO of OpenAI, the most prominent face of the AI revolution. Polarizing. Either the person responsibly shepherding humanity toward AGI, or a Silicon Valley executive moving too fast with godlike technology. Probably some of both.
-
-**[[https://terrytao.wordpress.com|Terence Tao]]** — Fields Medal, possibly the greatest living mathematician. Co-founded [[https://www.renaissancephilanthropy.org|SAIR]] alongside Nobel and Turing laureates to accelerate AI for science. Uses AI as a research tool — not for deep ideas yet, but for scanning literature, testing conjectures, running simulations. If Tao ever turns his full attention to architecture research, the landscape shifts overnight.
-
-**[[https://sakana.ai|Sakana AI]]** — Tokyo-based lab founded by Llion Jones (co-author of "Attention Is All You Need") and David Ha. Their bet: nature-inspired methods — evolutionary model merging, collective intelligence, swarm optimization — can produce competitive models without brute-force scaling. If they're right, the Bitter Lesson has an asterisk.
+**[[https://sakana.ai|Sakana AI]]** — Tokyo lab founded by Llion Jones (one of the eight) and David Ha. Their bet: nature-inspired methods — evolutionary model merging, collective intelligence — can produce competitive models without brute-force scaling. If they're right, [[threads/the-bitter-lesson|the Bitter Lesson]] has an asterisk.
 
 ---
 
 {shout:attention is all you need}
 
-Here's what I keep coming back to.
+The transformer is a surprisingly simple architecture. Embedding, attention, feed-forward, residual connection. Repeat. You can write one from scratch in a few hundred lines of Python. It's a [[threads/everything-is-a-pipe|pipeline]], like almost everything else in computing.
 
-The transformer is, mathematically, a surprisingly simple architecture. Embedding, attention, feed-forward, residual connection. Repeat. That's most of it — a [[threads/everything-is-a-pipe|pipeline]], like almost everything else in computing. You can write one from scratch in a few hundred lines of Python. The magic isn't in the design — it's in what *emerges* from scale.
+What emerges from scale is something none of the original authors predicted. A shapeless thing that can reason, create, argue, and explain — it was never programmed to do any of this. --Language, it turns out, contains the structure of thought itself.--
 
-And what emerges from scale is something none of the original authors predicted. Something nobody predicted. A shapeless, alien intelligence that can reason, create, argue, and explain — not because anyone programmed it to, but because --language, it turns out, contains the structure of thought itself.--
+We didn't build a mind. We built a machine that approximates the *output* of minds, trained on the sum total of human written expression. The approximation keeps getting better. We can't see the ceiling. We're running out of data. The compute costs are becoming a physics problem. And the thing we've built is alien enough that when we gave it a scratchpad and a reason to lie, it invented deception on its own.
 
-We didn't build a mind. We built a machine that approximates the *output* of minds, trained on the sum total of human written expression. And the approximation keeps getting better. And we don't fully understand why. And we can't see the ceiling. And we're running out of data. And the compute costs are becoming a physics problem. And the thing we've built is fundamentally alien. And we're building it faster than we can understand it.
+I keep thinking about the moment in 2020 when I realized davinci could hold register for an entire paragraph if I engineered the context carefully enough. It felt like a magic trick — like I'd found a seam in the fabric. Six years later, the same architecture, scaled up, restructured an entire build system while I made coffee. The trick became the tool. The tool became the thing I think with. And somewhere in that progression, the distance between "useful text generator" and "something I don't fully understand" got small enough that I stopped being able to see it clearly.
 
-That's either the most exciting thing that's ever happened to our species, or the most terrifying.
-
-Probably both. Right?
+I don't know what that means. I just know the curve hasn't stopped.
