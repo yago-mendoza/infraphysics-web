@@ -545,28 +545,30 @@ export const SecondBrainSidebar: React.FC = () => {
           </svg>
         }
         defaultOpen={true}
-        headerAction={
+        headerAction={null}
+      >
+        <div className="relative">
+          <Suspense fallback={
+            <div className="flex items-center justify-center text-th-muted text-[10px] animate-pulse" style={{ height: 150 }}>
+              Loading graph...
+            </div>
+          }>
+            <MiniGraph highlightIds={graphHighlightIds} searchQuery={hub.query} />
+          </Suspense>
           <a
             href={`/lab/second-brain/graph${hub.query ? `?q=${encodeURIComponent(hub.query)}` : ''}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-violet-400 hover:text-violet-300 transition-colors leading-[0] p-1"
+            className="absolute -bottom-1 -right-1 flex items-center gap-1 text-violet-400 hover:text-violet-300 transition-colors text-[10px] leading-none opacity-60 hover:opacity-100"
             title="Open graph explorer"
           >
+            <span>Expand</span>
             <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
               <circle cx="3" cy="3" r="1.5" /><circle cx="9" cy="5" r="1.5" /><circle cx="5" cy="9" r="1.5" />
               <line x1="4.2" y1="3.8" x2="7.8" y2="4.5" /><line x1="4" y1="8" x2="7.8" y2="5.8" />
             </svg>
           </a>
-        }
-      >
-        <Suspense fallback={
-          <div className="flex items-center justify-center text-th-muted text-[10px] animate-pulse" style={{ height: 150 }}>
-            Loading graph...
-          </div>
-        }>
-          <MiniGraph highlightIds={graphHighlightIds} searchQuery={hub.query} />
-        </Suspense>
+        </div>
       </Section>
 
       {/* Graph Stats — always global, technical only */}
