@@ -15,6 +15,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import matter from 'gray-matter';
 import { marked, Renderer } from 'marked';
+import katex from 'katex';
 import compilerConfig from '../scripts/compiler.config.js';
 import {
   compileMarkdown,
@@ -170,6 +171,7 @@ function loadAllFieldnotes() {
       markedInstance: marked,
       compilerConfig,
       highlighter: null,
+      katex,
     });
     const searchText = preLinkHtml.replace(/<[^>]*>/g, '').toLowerCase();
 

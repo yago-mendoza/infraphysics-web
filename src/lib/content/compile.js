@@ -267,6 +267,42 @@ export function processAnnotations(html) {
   });
 }
 
+// ── Math rendering ──
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/**
+ * Process math expressions: \(...\) inline, {math}...{/math} block.
+ * If katex is null (live preview), renders raw LaTeX in styled <code>.
+ */
+export function processMath(markdown, katex) {
+  // Block math: {math}\n...\n{/math}
+  let result = markdown.replace(/\{math\}\n([\s\S]*?)\n\{\/math\}/g, (_, expr) => {
+    const trimmed = expr.trim();
+    if (!katex) return `<div class="math-block"><code class="math-raw">${escapeHtml(trimmed)}</code></div>`;
+    try {
+      return `<div class="math-block">${katex.renderToString(trimmed, { displayMode: true, throwOnError: false })}</div>`;
+    } catch {
+      return `<div class="math-block math-error"><code>${escapeHtml(trimmed)}</code></div>`;
+    }
+  });
+
+  // Inline math: \(...\)
+  result = result.replace(/\\\((.+?)\\\)/g, (_, expr) => {
+    const trimmed = expr.trim();
+    if (!katex) return `<code class="math-raw">${escapeHtml(trimmed)}</code>`;
+    try {
+      return katex.renderToString(trimmed, { displayMode: false, throwOnError: false });
+    } catch {
+      return `<code class="math-error">${escapeHtml(trimmed)}</code>`;
+    }
+  });
+
+  return result;
+}
+
 // ── Post-processors ──
 
 export function applyPostProcessors(html, postProcessors) {
@@ -511,12 +547,13 @@ export function highlightCodeBlocks(html, highlighter) {
  * @returns {string} - compiled HTML
  */
 export function compileMarkdown(rawMd, articleDate, options) {
-  const { markedInstance, compilerConfig, highlighter = null } = options;
+  const { markedInstance, compilerConfig, highlighter = null, katex = null } = options;
 
   rawMd = rawMd.replace(/\r\n/g, '\n');
   const { text, placeholders } = protectBackticks(rawMd);
   const withSyntax = applyPreProcessors(text, compilerConfig.preProcessors);
-  const withBkqt = processCustomBlockquotes(withSyntax, placeholders, markedInstance);
+  const withMath = processMath(withSyntax, katex);
+  const withBkqt = processCustomBlockquotes(withMath, placeholders, markedInstance);
   const restored = restoreBackticks(withBkqt, placeholders);
   const withUrls = processExternalUrls(restored);
   const withSide = preprocessSideImages(withUrls, markedInstance);

@@ -1349,7 +1349,33 @@
   opacity: 0.25;
 }
 
-/* B3b. Small text (> markdown blocks) */
+/* B3b. Math blocks */
+
+.article-content .math-block {
+  margin: 1rem 0;
+  text-align: center;
+  overflow-x: auto;
+}
+
+.article-content .math-block .katex-display {
+  margin: 0;
+}
+
+/* Fallback for live preview (no KaTeX available) */
+.article-content .math-raw {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--art-accent);
+  background: color-mix(in srgb, var(--art-accent) 8%, transparent);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+}
+
+.article-content .math-error {
+  color: #f87171;
+}
+
+/* B3c. Small text (> markdown blocks) */
 
 .article-content .small-text {
   margin-bottom: 1rem;

@@ -6,6 +6,7 @@ import { load as loadYaml } from 'js-yaml';
 import { fileURLToPath } from 'url';
 import { createHash } from 'crypto';
 import { createHighlighter } from 'shiki';
+import katex from 'katex';
 import { validateFieldnotes } from '../src/lib/content/validate.js';
 import {
   compileMarkdown as _compileMarkdown,
@@ -112,6 +113,7 @@ function compileMarkdown(rawMd, articleDate) {
     markedInstance: marked,
     compilerConfig,
     highlighter,
+    katex,
   });
 }
 

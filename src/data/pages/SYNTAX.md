@@ -39,6 +39,8 @@ For frontmatter schemas, content types, editorial rules, and the compilation pip
 | Horizontal rule | `---` on its own line |
 | Context annotation | `>> 26.02.05 - annotation text` |
 | Inline footnote | `^[explanation]` |
+| Inline math | `\(E = mc^2\)` |
+| Block math | `{math}...\n...\n{/math}` |
 
 ---
 
@@ -628,6 +630,38 @@ For callout-style blocks with color coding and labels, use [typed blockquotes](#
 
 ---
 
+## Math Formulas
+
+LaTeX math rendering via KaTeX. Compiled at build time — zero JavaScript in production.
+
+### Inline math
+
+Use `\(` and `\)` delimiters (standard LaTeX):
+
+```
+The energy is \(E = mc^2\) and the area is \(\pi r^2\).
+```
+
+### Block math
+
+Use `{math}...{/math}` for centered, display-mode equations:
+
+```
+{math}
+\int_0^\infty e^{-x}\, dx = 1
+{/math}
+```
+
+### Notes
+
+- Full LaTeX syntax is supported inside both forms: fractions (`\frac{a}{b}`), matrices, Greek letters, operators, etc.
+- Math inside backticks is never processed (same rule as all custom syntax).
+- `$formula$` is **not** used — it conflicts with dollar signs in text (`$100`, `$PATH`).
+- Invalid LaTeX renders with best-effort (no build crash) — `throwOnError` is off.
+- In the live editor preview, math shows as raw LaTeX in a styled code element (KaTeX only runs at build time).
+
+---
+
 ## Edge Cases and Sacred Rules
 
 ### Backticks are sacred
@@ -669,4 +703,4 @@ For clarity, these common markdown extensions are **not** part of this system:
 - **Task lists** (`- [ ]`): Not supported.
 - **Emoji shortcodes** (`:emoji:`): Not supported. Use actual Unicode emoji if needed.
 - **Sidenotes / Margin notes**: Not supported. Use side-by-side image layouts for visual asides.
-- **LaTeX math** (`$formula$`): Not supported. Use superscript/subscript for simple formulas. For complex math, consider embedding an image.
+- **LaTeX math with `$`** (`$formula$`): Not supported (conflicts with dollar signs in text). Use `\(formula\)` for inline math and `{math}...{/math}` for block math instead — see [Math Formulas](#math-formulas).
