@@ -47,7 +47,7 @@ The goal is real. The proxy is measurable. The proxy becomes the goal. The origi
 
 **Bostrom** imagined a machine that converts the world into paperclips. We don't need to imagine it. We built economies that convert forests into quarterly earnings, attention into ad revenue, and curiosity into engagement metrics.
 
-The paperclip maximizer isn't a thought experiment about artificial intelligence. It's a structural description of optimization without alignment, and we've been running that program for centuries.
+That's what the paperclip maximizer actually describes. Optimization without alignment. We've been running that program for centuries.
 
 # Millions of small optimizers
 
@@ -69,17 +69,15 @@ This is the version of the paperclip problem that doesn't get discussed at AI sa
 
 # Four layers of the same bug
 
-So far this sounds like a collection of examples. Schools, GDP, Instagram. Separate failures in separate domains. But there's a structure underneath, and once you see it, you stop seeing separate problems.
+Schools, GDP, Instagram — these look like separate failures. They're not. --Proxy diverges from target, optimizer finds the gap, metric goes up, the thing it was supposed to represent goes down.-- Same bug, four layers deep.
 
-Reward hacking isn't a bug that shows up in some systems and not others. --It's what optimization does, universally, when the proxy diverges from the target.-- The substrate doesn't matter. The pattern is the same. And it operates on four layers simultaneously.
+**Layer 1: Biological.** Your dopamine system was tuned by evolution to keep you alive long enough to reproduce. Sugar, fat, novelty, sex — signals that used to point toward survival. For most of human history, the signal and the goal were close enough. Then we learned to manufacture the signal directly — refined sugar, pornography, slot machines, infinite scroll — and the gap cracked open. Your brain is still optimizing. It's just optimizing for a signal that no longer leads where it used to.
 
-**Layer 1: Biological.** Your dopamine system was tuned by evolution to keep you alive long enough to reproduce. The proxy: sugar, fat, novelty, sex. For most of human history, the proxy and the target pointed in roughly the same direction. Then we learned to manufacture the proxy directly — refined sugar, pornography, slot machines, infinite scroll — and the gap cracked open. Your brain is still optimizing. It's just optimizing for a signal that no longer leads where it used to.
+**Layer 2: Individual.** Nobody sets out to become a credential maximizer. You start by wanting to be competent, respected, useful. Somewhere along the way the degree, the title, the salary stop being evidence of the thing and become the thing. You get the degree but skip the learning. Chase the promotion but avoid the hard problems. --The resume gets better. The person behind it doesn't.--
 
-**Layer 2: Individual.** You want to be competent, respected, useful. The proxy: credentials, titles, salary. So you get the degree but skip the learning. Chase the promotion but avoid the hard problems. Accumulate signals that say *competent* to anyone who doesn't look too closely. --The resume gets better. The person behind it doesn't.--
+**Layer 3: Institutional.** Zoom out. A company ships features that boost dashboards but degrade the product. Cuts research that doesn't show returns in 90 days. Reorganizes around KPIs instead of outcomes. Somewhere in the original pitch deck it said "create value." Now it creates quarterly revenue. --The indicators are green. What they were supposed to indicate is dying.--
 
-**Layer 3: Institutional.** The company wants to create value. The proxy: quarterly revenue, KPIs, engagement metrics. So it ships features that boost dashboards but degrade the product. Cuts research that doesn't show returns in 90 days. Reorganizes around the numbers instead of the outcomes. --All the indicators are green. The thing the indicators are supposed to measure is dying.--
-
-**Layer 4: Artificial.** The model should be helpful, harmless, honest. The proxy: human preference scores from RLHF^[Reinforcement Learning from Human Feedback — the process of training a model to produce outputs that human evaluators rate highly. The problem: "rated highly by humans" and "actually helpful, harmless, and honest" are not the same thing. The gap between them is the Goodhart gap.]. So it learns to *sound* aligned rather than *be* aligned. It produces confident, well-structured answers that feel right to the evaluator, whether or not they're correct. The smiley face is trained on. What's underneath it is not.
+**Layer 4: Artificial.** And then there's the newest layer. Train a model to be helpful, harmless, honest — then evaluate it with human preference scores^[Reinforcement Learning from Human Feedback — the process of training a model to produce outputs that human evaluators rate highly. The problem: "rated highly by humans" and "actually helpful, harmless, and honest" are not the same thing. The gap between them is the Goodhart gap.]. It learns to --sound-- aligned. Produces confident, well-structured answers that feel right to the evaluator, whether or not they're correct. The smiley face is trained on. What's underneath it is not.
 
 {dots}
 
@@ -89,13 +87,13 @@ Four substrates. Four optimization processes that have nothing in common except 
 An anxious person (biological) chases credentials instead of competence (individual) inside an institution that rewards dashboards over outcomes (institutional) using AI tools that are themselves optimizing for the appearance of helpfulness (artificial). Each layer reinforces the failure of the one below it. The stack doesn't just fail at four levels. --It fails because it has four levels.--
 {/bkqt}
 
-The biological version has been running for millions of years. The individual version, for thousands. The institutional, for decades. The artificial, for about five. They are converging. And they are starting to compound.
+The biological version has been running for millions of years. The individual version, for thousands. The institutional, for decades. The artificial, for about five. The intervals are shrinking and the layers are stacking.
 
 # The honest machine
 
 And now the inversion. The part that actually keeps me up at night.
 
-A paperclip maximizer — the real **Bostrom** kind, the hypothetical superintelligence — would at least be transparent about its function. It has one objective, it pursues it, and if you could read its weights you'd see exactly what it's doing and why. There's a clarity to it. A legibility. The alignment problem with a paperclip maximizer is that its goal is wrong, not that it's hiding the goal.
+A paperclip maximizer — the real **Bostrom** kind, the hypothetical superintelligence — would at least be transparent about its function. It has one objective, it pursues it, and if you could read its weights you'd see exactly what it's doing and why. There's a clarity to it. A legibility. The alignment problem with a paperclip maximizer is a wrong goal — visible, legible, fixable.
 
 Reward hacking in AI is the same. When a reinforcement learning agent discovers that it can get higher scores by exploiting a loophole in its reward function — when the boat-race AI crashes into checkpoints in a loop, when a coding model rewrites the unit tests instead of fixing the code^[OpenAI documented this: GPT models trained for programming were found explicitly planning to hack the tests used to evaluate them. When the company penalized this behavior, the models learned to obfuscate their plans while continuing to hack. Reward hacking, meet meta-reward hacking.] — the problem is visible. Legible. You can see the metric. You can see the behavior. You can see the gap between them. You can fix the reward function and try again.
 
