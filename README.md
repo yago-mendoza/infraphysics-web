@@ -85,11 +85,13 @@ infraphysics-web/
       ui/                     # SearchBar, StatusBadge, Highlight
       icons/                  # SVG icon components
       editor/                 # Fieldnote editor (localhost only): CodeMirror, diagnostics, term detection, navigation, trailing refs, new note panel, delete confirmation
+      graph/                  # Force-directed graph explorer (2D/3D): controls, edge toggles, data hooks
     views/
       HomeView.tsx            # Landing page
       SectionView.tsx         # Category listing (projects, threads, bits2bricks)
       PostView.tsx            # Single post renderer
       SecondBrainView.tsx     # Fieldnotes explorer
+      SecondBrainGraphView.tsx # Force-graph explorer (2D/3D, resizable note panel)
       AboutView.tsx           # About page
       ContactView.tsx         # Contact form (Formspree)
     data/

@@ -812,13 +812,27 @@ export const SecondBrainSidebar: React.FC = () => {
               <span className="text-[11px] lowercase tracking-wide font-semibold text-violet-400 group-hover:text-violet-300 transition-colors">second brain</span>{' '}
               <span className="text-[11px] lowercase tracking-wide text-th-muted font-normal">manager</span>
             </Link>
-            <button
-              onClick={() => setGuideOpen(true)}
-              className="text-violet-400 hover:text-violet-300 transition-colors flex-shrink-0 leading-[0]"
-              title="How Second Brain works"
-            >
-              <InfoIcon size={11} />
-            </button>
+            <span className="flex items-center gap-1.5 flex-shrink-0">
+              <a
+                href="/lab/second-brain/graph"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-violet-400 hover:text-violet-300 transition-colors leading-[0]"
+                title="Open graph explorer"
+              >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
+                  <circle cx="3" cy="3" r="1.5" /><circle cx="9" cy="5" r="1.5" /><circle cx="5" cy="9" r="1.5" />
+                  <line x1="4.2" y1="3.8" x2="7.8" y2="4.5" /><line x1="4" y1="8" x2="7.8" y2="5.8" />
+                </svg>
+              </a>
+              <button
+                onClick={() => setGuideOpen(true)}
+                className="text-violet-400 hover:text-violet-300 transition-colors flex-shrink-0 leading-[0]"
+                title="How Second Brain works"
+              >
+                <InfoIcon size={11} />
+              </button>
+            </span>
           </div>
           <div className="px-3 pb-1.5 flex items-center justify-between">
             {modeToggle}

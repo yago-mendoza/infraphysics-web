@@ -119,6 +119,9 @@ FILES=(
   "src/views/PostView.tsx"
   "src/views/ArticlePostView.tsx"
   "src/views/SecondBrainView.tsx"
+  "src/views/SecondBrainGraphView.tsx"
+  "src/components/graph/useGraphData.ts"
+  "src/components/graph/GraphControls.tsx"
 
   # --- Styles ---
   "src/styles/article.css"

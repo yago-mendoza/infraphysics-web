@@ -1,0 +1,1074 @@
+// Second Brain — Graph Explorer View
+// Full-screen force-directed graph with note preview panel
+
+import React, {
+  useState, useEffect, useRef, useCallback, useMemo,
+  Suspense,
+} from 'react';
+import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
+import { secondBrainPath } from '../config/categories';
+import { InfoIcon } from '../components/icons';
+import { initBrainIndex, fetchNoteContent, type BrainIndex } from '../lib/brainIndex';
+import { useGraphRelevance } from '../hooks/useGraphRelevance';
+import {
+  buildGraphData,
+  type GraphData, type GraphNode, type GraphLink,
+  type EdgeVisibility, EDGE_COLORS,
+  useFilteredGraph,
+} from '../components/graph/useGraphData';
+import {
+  GraphControls,
+  DEFAULT_SETTINGS,
+  type GraphSettings,
+} from '../components/graph/GraphControls';
+import type { FieldNoteMeta } from '../types';
+import { SIDEBAR_WIDTH } from '../constants/layout';
+import '../styles/article.css';
+import '../styles/wiki-content.css';
+
+// Lazy-load force-graph components (large deps)
+const ForceGraph2D = React.lazy(() => import('react-force-graph-2d'));
+const ForceGraph3D = React.lazy(() => import('react-force-graph-3d'));
+
+/** Display-friendly address: `//` → ` / ` */
+const displayAddress = (addr: string) => addr.replace(/\/\//g, ' / ');
+
+// ─── Graph Guide Modal ────────────────────────────────────────────────
+
+const tipStrong = 'text-th-primary';
+const tipAccent = 'text-violet-400';
+const tipCode = 'bg-violet-500/10 text-violet-400/80 px-1 py-0.5 text-[11px] rounded-sm font-mono';
+
+const GraphGuide: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); onClose(); } };
+    window.addEventListener('keydown', handler, true);
+    return () => window.removeEventListener('keydown', handler, true);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/40" />
+      <div
+        className="relative w-full max-w-lg max-h-[75vh] overflow-y-auto border border-violet-500/20 rounded-sm shadow-2xl p-5"
+        style={{ backgroundColor: 'var(--hub-sidebar-bg)' }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-th-primary">Graph Explorer</h2>
+          <button onClick={onClose} className="text-th-muted hover:text-th-secondary transition-colors">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div className="space-y-4 text-[12px] text-th-secondary leading-relaxed">
+          <div>
+            <h3 className={'text-[11px] uppercase tracking-wider mb-1.5 ' + tipAccent}>Navigation</h3>
+            <ul className="space-y-1">
+              <li><strong className={tipStrong}>Scroll wheel</strong> — zoom in/out</li>
+              <li><strong className={tipStrong}>Middle mouse + drag</strong> — pan around the graph</li>
+              <li><strong className={tipStrong}>Click on a node</strong> — select it, view its content in the preview panel and its connections below the controls</li>
+              <li><strong className={tipStrong}>Click on empty space</strong> — deselect everything</li>
+              <li><strong className={tipStrong}>Hover on a node</strong> — highlights it and all connected nodes, dims the rest</li>
+            </ul>
+          </div>
+          <div>
+            <h3 className={'text-[11px] uppercase tracking-wider mb-1.5 ' + tipAccent}>Multi-selection</h3>
+            <ul className="space-y-1">
+              <li><strong className={tipStrong}>Drag on background</strong> — draw a selection rectangle (2D)</li>
+              <li><strong className={tipStrong}>Ctrl + click</strong> — toggle individual nodes in/out of selection</li>
+              <li>Selected nodes appear in <span className="text-cyan-400">cyan</span>. A prompt appears to copy all their content as structured context for LLMs.</li>
+              <li><code className={tipCode}>Escape</code> — clear selection</li>
+            </ul>
+          </div>
+          <div>
+            <h3 className={'text-[11px] uppercase tracking-wider mb-1.5 ' + tipAccent}>Toolbar</h3>
+            <ul className="space-y-1">
+              <li><strong className={tipStrong}>Controls panel</strong> — toggle edge types, presets, sliders for node size, repulsion, link distance, labels. Press <code className={tipCode}>C</code> to toggle.</li>
+              <li><strong className={tipStrong}>Crosshair button</strong> — zoom to fit the entire graph</li>
+              <li><strong className={tipStrong}>Dice button</strong> — jump to a random note (in the preview panel header)</li>
+              <li><strong className={tipStrong}>2D / 3D toggle</strong> — switch renderer. 3D uses WebGL spheres.</li>
+            </ul>
+          </div>
+          <div>
+            <h3 className={'text-[11px] uppercase tracking-wider mb-1.5 ' + tipAccent}>Search</h3>
+            <ul className="space-y-1">
+              <li>Type in the search box to filter nodes by name or address.</li>
+              <li><strong className={tipStrong}>Primary matches</strong> (name contains the query) appear in <span className="text-amber-400">amber</span> with a bright outline.</li>
+              <li><strong className={tipStrong}>Secondary matches</strong> (children via address) appear dimmer in <span className="text-orange-400">orange</span>.</li>
+              <li>Press <strong className={tipStrong}>Enter</strong> to center the camera on the first result.</li>
+            </ul>
+          </div>
+          <div>
+            <h3 className={'text-[11px] uppercase tracking-wider mb-1.5 ' + tipAccent}>Edge colors</h3>
+            <ul className="space-y-1">
+              <li><span style={{ color: '#a78bfa' }}>Purple</span> — body references (wiki-links inside the note)</li>
+              <li><span style={{ color: '#f472b6' }}>Pink</span> — interactions (trailing refs / contrasts)</li>
+              <li><span style={{ color: '#60a5fa' }}>Blue</span> — hierarchy (parent → child)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+};
+
+// ─── Note Preview Panel ──────────────────────────────────────────────
+
+const NotePreviewPanel: React.FC<{
+  note: FieldNoteMeta | null;
+  html: string;
+  loading: boolean;
+  onNavigate: (uid: string) => void;
+}> = ({ note, html, loading, onNavigate }) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // Handle wiki-link clicks inside rendered HTML
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    const handler = (e: MouseEvent) => {
+      const anchor = (e.target as HTMLElement).closest('a.wiki-ref');
+      if (!anchor) return;
+      e.preventDefault();
+      const uid = anchor.getAttribute('data-uid');
+      if (uid) onNavigate(uid);
+    };
+    el.addEventListener('click', handler);
+    return () => el.removeEventListener('click', handler);
+  }, [html, onNavigate]);
+
+  if (!note) {
+    return (
+      <div className="flex items-center justify-center h-full text-th-muted text-sm">
+        Click a node to preview
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Header */}
+      <div className="shrink-0 px-4 py-3 border-b border-th-hub-border bg-th-surface/50">
+        <div className="text-[10px] text-th-muted tracking-wide mb-1">
+          {displayAddress(note.address || note.title)}
+        </div>
+        <div className="flex items-center gap-2">
+          <h2 className="text-base font-semibold text-th-heading flex-1 min-w-0 truncate">
+            {note.name}
+          </h2>
+          <a
+            href={secondBrainPath(note.id)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] text-violet-400 hover:text-violet-300 shrink-0 transition-colors"
+          >
+            expand ↗
+          </a>
+        </div>
+        <div className="text-[10px] text-th-muted mt-1">{note.date}</div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto px-4 py-3">
+        {loading ? (
+          <div className="text-th-muted text-xs animate-pulse">Loading content...</div>
+        ) : (
+          <div className="wiki-content-box">
+            <div className="article-page-wrapper article-wiki">
+              <div
+                ref={contentRef}
+                className="article-content wiki-content"
+                dangerouslySetInnerHTML={{ __html: html }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ─── Main Graph View ─────────────────────────────────────────────────
+
+const SecondBrainGraphView: React.FC = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const graphRef = useRef<any>(null);
+
+  // Data
+  const [index, setIndex] = useState<BrainIndex | null>(null);
+  const { getCentrality, loaded: relevanceLoaded } = useGraphRelevance();
+
+  // Graph state
+  const [fullGraph, setFullGraph] = useState<GraphData | null>(null);
+  const [visibility, setVisibility] = useState<EdgeVisibility>({
+    body: true, interaction: true, hierarchy: false,
+  });
+  const [settings, setSettings] = useState<GraphSettings>({ ...DEFAULT_SETTINGS });
+  const [dimension, setDimension] = useState<'2d' | '3d'>(() => {
+    const stored = sessionStorage.getItem('graph-dimension');
+    if (stored === '3d') { sessionStorage.removeItem('graph-dimension'); return '3d'; }
+    return '2d';
+  });
+
+  // Selection & hover preview
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [noteHtml, setNoteHtml] = useState('');
+  const [contentLoading, setContentLoading] = useState(false);
+  // The "active" id for the preview panel: selected wins over hovered
+  const previewId = selectedId ?? hoveredId;
+
+  // Guide modal + selection mode + connections panel
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [showConnections, setShowConnections] = useState(false);
+
+  // Multi-select (Ctrl+click or Shift+drag)
+  const [multiSelected, setMultiSelected] = useState<Set<string>>(new Set());
+  const [dragSelect, setDragSelect] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+
+  // Search
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchResults = useMemo(() => {
+    if (!searchQuery || !index) return [];
+    const q = searchQuery.toLowerCase();
+    return index.allFieldNotes
+      .filter(n => n.name.toLowerCase().includes(q) || n.address.toLowerCase().includes(q))
+      .map(n => n.id);
+  }, [searchQuery, index]);
+
+  // Layout
+  const PANEL_WIDTH = 380;
+  const [showPanel, setShowPanel] = useState(() => window.innerWidth >= 768);
+  const [showControls, setShowControls] = useState(() => window.innerWidth >= 768);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)');
+    const handler = (e: MediaQueryListEvent) => setIsMobile(!e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  // Load index
+  useEffect(() => {
+    initBrainIndex().then(setIndex);
+  }, []);
+
+  // Build graph when data ready
+  useEffect(() => {
+    if (!index || !relevanceLoaded) return;
+    const centralityMap: Record<string, number> = {};
+    index.allFieldNotes.forEach(n => {
+      centralityMap[n.id] = getCentrality(n.id);
+    });
+    setFullGraph(buildGraphData(index, centralityMap));
+  }, [index, relevanceLoaded, getCentrality]);
+
+  // Filtered graph
+  const filtered = useFilteredGraph(fullGraph, visibility);
+
+  // Track graph area size via its own ref
+  const graphAreaRef = useRef<HTMLDivElement>(null);
+  const [graphDims, setGraphDims] = useState(() => {
+    const sidebarW = window.innerWidth >= 768 ? SIDEBAR_WIDTH : 0;
+    const panelW = window.innerWidth >= 768 ? PANEL_WIDTH : 0;
+    return {
+      width: Math.max(300, window.innerWidth - sidebarW - panelW),
+      height: window.innerHeight,
+    };
+  });
+
+  useEffect(() => {
+    const el = graphAreaRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      const { width, height } = entries[0].contentRect;
+      if (width > 0 && height > 0) setGraphDims({ width, height });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Fetch note content for whichever note is active in the panel
+  useEffect(() => {
+    if (!previewId) { setNoteHtml(''); return; }
+    let cancelled = false;
+    setContentLoading(true);
+    fetchNoteContent(previewId).then(html => {
+      if (!cancelled) {
+        setNoteHtml(html);
+        setContentLoading(false);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [previewId]);
+
+  const previewNote = useMemo(
+    () => previewId ? index?.noteById.get(previewId) ?? null : null,
+    [previewId, index],
+  );
+
+  // ─── Zoom to fit after simulation settles ───
+  const hasZoomed = useRef(false);
+  useEffect(() => {
+    if (!filtered || hasZoomed.current) return;
+    const timer = setTimeout(() => {
+      graphRef.current?.zoomToFit?.(400, 60);
+      hasZoomed.current = true;
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [filtered]);
+
+  // Adjacency map: nodeId → list of { id, name, type }
+  const adjacency = useMemo(() => {
+    if (!fullGraph || !index) return new Map<string, { id: string; name: string; type: string }[]>();
+    const adj = new Map<string, { id: string; name: string; type: string }[]>();
+    for (const link of fullGraph.links) {
+      const s = typeof link.source === 'string' ? link.source : (link.source as any).id;
+      const t = typeof link.target === 'string' ? link.target : (link.target as any).id;
+      const sName = index.noteById.get(s)?.name ?? s;
+      const tName = index.noteById.get(t)?.name ?? t;
+      if (!adj.has(s)) adj.set(s, []);
+      if (!adj.has(t)) adj.set(t, []);
+      adj.get(s)!.push({ id: t, name: tName, type: link.type });
+      adj.get(t)!.push({ id: s, name: sName, type: link.type });
+    }
+    return adj;
+  }, [fullGraph, index]);
+
+  // Tooltip with related nodes
+  const nodeTooltip = useCallback((node: any) => {
+    const n = node as GraphNode;
+    const neighbors = adjacency.get(n.id) ?? [];
+    if (neighbors.length === 0) return n.name;
+    const grouped: Record<string, string[]> = {};
+    for (const nb of neighbors) {
+      (grouped[nb.type] ??= []).push(nb.name);
+    }
+    const lines = Object.entries(grouped).map(([type, names]) =>
+      `<div style="margin-top:3px"><span style="opacity:0.5;font-size:9px">${type}</span> ${names.join(', ')}</div>`
+    ).join('');
+    return `<div style="max-width:280px"><b>${n.name}</b>${lines}</div>`;
+  }, [adjacency]);
+
+  // ─── Node rendering ───
+  const searchResultSet = useMemo(() => new Set(searchResults), [searchResults]);
+  // Primary matches: name contains the query. Secondary: matched only via address (children).
+  const searchPrimarySet = useMemo(() => {
+    if (!searchQuery || !index) return new Set<string>();
+    const q = searchQuery.toLowerCase();
+    return new Set(
+      index.allFieldNotes
+        .filter(n => n.name.toLowerCase().includes(q))
+        .map(n => n.id)
+    );
+  }, [searchQuery, index]);
+
+  // The "focus" node for neighbor highlight: only when pinned (clicked)
+  const focusId = selectedId;
+  const focusNeighborSet = useMemo(() => {
+    if (!focusId) return new Set<string>();
+    const neighbors = adjacency.get(focusId) ?? [];
+    return new Set(neighbors.map(n => n.id));
+  }, [focusId, adjacency]);
+  // Grouped neighbors for the connections panel (works for both click and hover)
+  const previewNeighbors = useMemo(() => {
+    if (!previewId) return null;
+    const neighbors = adjacency.get(previewId) ?? [];
+    const grouped: Record<string, { id: string; name: string }[]> = {};
+    for (const nb of neighbors) {
+      (grouped[nb.type] ??= []).push({ id: nb.id, name: nb.name });
+    }
+    return grouped;
+  }, [previewId, adjacency]);
+
+  const nodeCanvasObject = useCallback((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+    const n = node as GraphNode & { x: number; y: number };
+    const baseR = 2 + n.centrality * 12;
+    const r = baseR * settings.nodeSize;
+
+    // Dim non-matching nodes when search is active
+    const isSearching = searchResultSet.size > 0;
+    const isPrimary = searchPrimarySet.has(n.id);
+    const isSecondary = !isPrimary && searchResultSet.has(n.id);
+    const isMatch = isPrimary || isSecondary;
+    const isSelected = n.id === selectedId;
+    const isMultiSelected = multiSelected.has(n.id);
+    const isFocused = n.id === focusId;
+    const isFocusNeighbor = focusNeighborSet.has(n.id);
+    const hasFocus = !!focusId;
+
+    if (hasFocus && !isFocused && !isFocusNeighbor && !isSelected && !isMultiSelected) {
+      ctx.globalAlpha = 0.12;
+    } else if (isSearching && !isMatch && !isSelected) {
+      ctx.globalAlpha = 0.15;
+    } else if (isSecondary) {
+      ctx.globalAlpha = 0.6;
+    }
+
+    // Node circle
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, r, 0, 2 * Math.PI);
+    ctx.fillStyle = isMultiSelected ? '#22d3ee' : isSelected ? '#a78bfa' : isFocused ? '#e879f9' : isPrimary ? '#f59e0b' : isSecondary ? '#fb923c' : isFocusNeighbor ? '#c084fc' : n.isParent ? '#8b5cf6' : '#6d28d9';
+    ctx.fill();
+    if (isSelected || isPrimary || isMultiSelected || isFocused) {
+      ctx.strokeStyle = isMultiSelected ? '#67e8f9' : isSelected ? '#c4b5fd' : isFocused ? '#f0abfc' : '#fbbf24';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    // Label
+    if (settings.showLabels && settings.labelSize > 0 && (globalScale > 0.5 || isMatch)) {
+      const fontSize = settings.labelSize / globalScale;
+      if (fontSize < 2 && !isMatch) { ctx.globalAlpha = 1; return; }
+      ctx.font = `${Math.max(fontSize, isMatch ? 4 : 0)}px Inter, system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = isSelected ? '#e9d5ff' : isPrimary ? '#fef3c7' : isSecondary ? 'rgba(251,191,36,0.5)' : 'rgba(255,255,255,0.75)';
+      ctx.fillText(n.name, n.x, n.y + r + 2);
+    }
+
+    ctx.globalAlpha = 1;
+  }, [settings.nodeSize, settings.labelSize, settings.showLabels, selectedId, multiSelected, searchResultSet, searchPrimarySet, focusId, focusNeighborSet]);
+
+  const nodePointerAreaPaint = useCallback((node: any, color: string, ctx: CanvasRenderingContext2D) => {
+    const n = node as GraphNode & { x: number; y: number };
+    const r = (2 + n.centrality * 12) * settings.nodeSize + 3;
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, r, 0, 2 * Math.PI);
+    ctx.fillStyle = color;
+    ctx.fill();
+  }, [settings.nodeSize]);
+
+  // ─── Link rendering ───
+  const linkCanvasObject = useCallback((link: any, ctx: CanvasRenderingContext2D) => {
+    const l = link as GraphLink & { source: { x: number; y: number }; target: { x: number; y: number } };
+    if (!l.source?.x || !l.target?.x) return;
+    ctx.beginPath();
+    ctx.moveTo(l.source.x, l.source.y);
+    ctx.lineTo(l.target.x, l.target.y);
+    ctx.strokeStyle = EDGE_COLORS[l.type];
+    ctx.globalAlpha = settings.edgeOpacity;
+    ctx.lineWidth = l.type === 'hierarchy' ? 1.5 : 0.8;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }, [settings.edgeOpacity]);
+
+  // Mobile slide-in panel
+  const [mobilePanel, setMobilePanel] = useState(false);
+
+  // ─── Event handlers ───
+  const onNodeClick = useCallback((node: any, event?: MouseEvent) => {
+    if (event?.ctrlKey || event?.metaKey) {
+      // Ctrl+click: toggle node in multi-selection
+      setMultiSelected(prev => {
+        const next = new Set(prev);
+        if (next.has(node.id)) next.delete(node.id);
+        else next.add(node.id);
+        return next;
+      });
+      return;
+    }
+    // Normal click: pin single node, clear multi-selection
+    setMultiSelected(new Set());
+    setSelectedId(node.id);
+    setHoveredId(null);
+    if (isMobile) {
+      setMobilePanel(true);
+    } else if (!showPanel) {
+      setShowPanel(true);
+    }
+  }, [showPanel, isMobile]);
+
+  const onNodeHover = useCallback((node: any) => {
+    if (containerRef.current) {
+      containerRef.current.style.cursor = node ? 'pointer' : 'default';
+    }
+    // Always update hover for visual highlight
+    setHoveredId(node ? node.id : null);
+    // Only open panel preview if nothing is pinned
+    if (!selectedId && node && !showPanel && !isMobile) {
+      setShowPanel(true);
+    }
+  }, [selectedId, showPanel, isMobile]);
+
+  const onBackgroundClick = useCallback(() => {
+    setSelectedId(null);
+    setMultiSelected(new Set());
+    setHoveredId(null);
+  }, []);
+
+  const goToRandomNote = useCallback(() => {
+    if (!filtered) return;
+    const nodes = filtered.nodes as (GraphNode & { x: number; y: number })[];
+    const rand = nodes[Math.floor(Math.random() * nodes.length)];
+    if (!rand) return;
+    setSelectedId(rand.id);
+    setMultiSelected(new Set());
+    setHoveredId(null);
+    if (!showPanel && !isMobile) setShowPanel(true);
+    const fg = graphRef.current;
+    if (!fg) return;
+    // 2D: centerAt, 3D: cameraPosition
+    if (fg.centerAt) {
+      fg.centerAt(rand.x, rand.y, 600);
+    } else if (fg.cameraPosition) {
+      const n = rand as any;
+      fg.cameraPosition(
+        { x: n.x, y: n.y, z: (n.z ?? 0) + 200 }, // camera position
+        { x: n.x, y: n.y, z: n.z ?? 0 },           // lookAt target
+        600,                                          // transition ms
+      );
+    }
+  }, [filtered, showPanel, isMobile]);
+
+  const onNavigateFromPanel = useCallback((uid: string) => {
+    setSelectedId(uid);
+    // Center graph on the node
+    if (graphRef.current && fullGraph) {
+      const node = fullGraph.nodes.find(n => n.id === uid);
+      if (node && graphRef.current.centerAt) {
+        graphRef.current.centerAt((node as any).x, (node as any).y, 400);
+      }
+    }
+  }, [fullGraph]);
+
+  // Search submit — center on first result
+  const onSearchSubmit = useCallback(() => {
+    if (searchResults.length === 0) return;
+    const uid = searchResults[0];
+    setSelectedId(uid);
+    if (!showPanel) setShowPanel(true);
+    // Center camera on the node
+    const fg = graphRef.current;
+    if (fg && filtered) {
+      const node = filtered.nodes.find((n: any) => (n.id || n) === uid);
+      if (node && fg.centerAt) {
+        fg.centerAt((node as any).x, (node as any).y, 600);
+        fg.zoom(3, 600);
+      }
+    }
+  }, [searchResults, showPanel, filtered]);
+
+  // ─── Force config ───
+  const d3AlphaDecay = 0.02;
+  const d3VelocityDecay = 0.3;
+
+  // Apply force settings when they change
+  useEffect(() => {
+    const fg = graphRef.current;
+    if (!fg) return;
+    if (fg.d3Force) {
+      const charge = fg.d3Force('charge');
+      if (charge) charge.strength(-30 * settings.forceStrength);
+      const link = fg.d3Force('link');
+      if (link) link.distance(settings.linkDistance);
+      fg.d3ReheatSimulation?.();
+    }
+  }, [settings.forceStrength, settings.linkDistance]);
+
+  // Keyboard: Escape to deselect, C to toggle controls
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setSelectedId(null); setMultiSelected(new Set()); }
+      if (e.key === 'c' && !e.ctrlKey && !e.metaKey && !(e.target instanceof HTMLInputElement)) {
+        setShowControls(v => !v);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  // Drag rectangle selection (only when selectMode is active, 2D only)
+  useEffect(() => {
+    const el = graphAreaRef.current;
+    if (!el || dimension !== '2d' || !selectMode) return;
+
+    let selecting = false;
+    let startX = 0, startY = 0;
+    const MIN_DRAG = 5;
+
+    const onMouseDown = (e: MouseEvent) => {
+      if (e.button !== 0) return;
+      selecting = true;
+      const rect = el.getBoundingClientRect();
+      startX = e.clientX - rect.left;
+      startY = e.clientY - rect.top;
+      e.preventDefault(); // prevent pan while in select mode
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!selecting) return;
+      const rect = el.getBoundingClientRect();
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
+      if (Math.abs(cx - startX) > MIN_DRAG || Math.abs(cy - startY) > MIN_DRAG) {
+        setDragSelect({ x0: startX, y0: startY, x1: cx, y1: cy });
+      }
+    };
+
+    const onMouseUp = (e: MouseEvent) => {
+      if (e.button !== 0 || !selecting) return;
+      selecting = false;
+      const rect = el.getBoundingClientRect();
+      const endX = e.clientX - rect.left;
+      const endY = e.clientY - rect.top;
+      setDragSelect(null);
+
+      if (Math.abs(endX - startX) <= MIN_DRAG && Math.abs(endY - startY) <= MIN_DRAG) return;
+
+      const fg = graphRef.current;
+      if (!fg || !filtered || !fg.screen2GraphCoords) return;
+
+      const topLeft = fg.screen2GraphCoords(Math.min(startX, endX), Math.min(startY, endY));
+      const bottomRight = fg.screen2GraphCoords(Math.max(startX, endX), Math.max(startY, endY));
+
+      const selected = new Set<string>();
+      for (const node of filtered.nodes) {
+        const n = node as GraphNode & { x: number; y: number };
+        if (n.x >= topLeft.x && n.x <= bottomRight.x && n.y >= topLeft.y && n.y <= bottomRight.y) {
+          selected.add(n.id);
+        }
+      }
+      if (selected.size > 0) {
+        setMultiSelected(prev => {
+          if (e.ctrlKey || e.metaKey) {
+            const merged = new Set(prev);
+            selected.forEach(id => merged.add(id));
+            return merged;
+          }
+          return selected;
+        });
+      }
+    };
+
+    el.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    return () => {
+      el.removeEventListener('mousedown', onMouseDown);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [dimension, filtered, selectMode]);
+
+  // Copy multi-selected notes to clipboard
+  const copySelectionToClipboard = useCallback(async () => {
+    if (!index || multiSelected.size === 0) return;
+    const notes = Array.from(multiSelected)
+      .map(uid => index.noteById.get(uid))
+      .filter(Boolean) as FieldNoteMeta[];
+
+    // Fetch content for all selected notes in parallel
+    const contents = await Promise.all(
+      notes.map(async n => {
+        try {
+          const resp = await fetch(`/fieldnotes/${n.id}.json`);
+          if (!resp.ok) return { note: n, body: '' };
+          const { content } = await resp.json();
+          // Strip HTML tags for plain text
+          const text = content.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'").replace(/&quot;/g, '"').trim();
+          return { note: n, body: text };
+        } catch { return { note: n, body: '' }; }
+      })
+    );
+
+    const structured = contents.map(({ note, body }) =>
+      `## ${note.name}\n**Address:** ${note.address}\n**UID:** ${note.id}\n\n${body}`
+    ).join('\n\n---\n\n');
+
+    const header = `# Fieldnotes context (${notes.length} notes)\n\n`;
+    await navigator.clipboard.writeText(header + structured);
+    setToast(`Copied ${notes.length} fieldnotes to clipboard`);
+    setTimeout(() => setToast(null), 2500);
+  }, [index, multiSelected]);
+
+  // Names of multi-selected notes (for the prompt)
+  const multiSelectedNames = useMemo(() => {
+    if (!index || multiSelected.size === 0) return [];
+    return Array.from(multiSelected)
+      .map(uid => index.noteById.get(uid)?.name)
+      .filter(Boolean) as string[];
+  }, [index, multiSelected]);
+
+  // 3D callbacks (memoized — must be before early return to keep hook order stable)
+  const nodeColor3d = useCallback((node: any) => {
+    const n = node as GraphNode;
+    return n.id === selectedId ? '#a78bfa' : n.isParent ? '#8b5cf6' : '#6d28d9';
+  }, [selectedId]);
+
+  const nodeVal3d = useCallback((node: any) => {
+    const n = node as GraphNode;
+    return (1 + n.centrality * 8) * settings.nodeSize;
+  }, [settings.nodeSize]);
+
+  const linkColor3d = useCallback((link: any) => {
+    return EDGE_COLORS[(link as GraphLink).type];
+  }, []);
+
+  if (!index || !filtered) {
+    return (
+      <div className="flex items-center justify-center h-[80vh] text-th-muted text-sm animate-pulse">
+        Loading graph data...
+      </div>
+    );
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      className="fixed top-0 right-0 bottom-0 bg-th-base flex"
+      style={{ left: isMobile ? 0 : SIDEBAR_WIDTH }}
+    >
+      {/* Toolbar */}
+      <div className="absolute top-3 left-3 z-20 flex flex-col gap-2">
+        <div className="flex items-center gap-1.5">
+          {/* Back arrow */}
+          <Link
+            to={secondBrainPath()}
+            className="inline-flex items-center px-2 py-1.5 text-th-secondary bg-th-base/80 backdrop-blur-sm border border-th-hub-border hover:text-violet-400 hover:border-violet-500/40 transition-colors"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M8 2L4 6l4 4" />
+            </svg>
+          </Link>
+          {/* Info */}
+          <button
+            onClick={() => setGuideOpen(true)}
+            className="inline-flex items-center px-1.5 py-1.5 bg-th-base/80 backdrop-blur-sm border border-th-hub-border text-violet-400 hover:text-violet-300 transition-colors"
+            title="Graph guide"
+          >
+            <InfoIcon size={11} />
+          </button>
+          {/* Center */}
+          <button
+            onClick={() => graphRef.current?.zoomToFit?.(400, 60)}
+            className="inline-flex items-center px-2 py-1.5 text-th-secondary bg-th-base/80 backdrop-blur-sm border border-th-hub-border hover:text-violet-400 transition-colors"
+            title="Center view"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
+              <circle cx="6" cy="6" r="4" />
+              <line x1="6" y1="1" x2="6" y2="3" />
+              <line x1="6" y1="9" x2="6" y2="11" />
+              <line x1="1" y1="6" x2="3" y2="6" />
+              <line x1="9" y1="6" x2="11" y2="6" />
+            </svg>
+          </button>
+          {/* Select mode */}
+          <button
+            onClick={() => setSelectMode(v => !v)}
+            className={`inline-flex items-center px-2 py-1.5 bg-th-base/80 backdrop-blur-sm border transition-colors ${
+              selectMode ? 'border-cyan-500/40 text-cyan-400' : 'border-th-hub-border text-th-secondary hover:text-violet-400'
+            }`}
+            title={selectMode ? 'Exit selection mode' : 'Area selection mode'}
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
+              {/* Dashed rectangle icon */}
+              <line x1="1" y1="1" x2="4" y2="1" />
+              <line x1="8" y1="1" x2="11" y2="1" />
+              <line x1="11" y1="1" x2="11" y2="4" />
+              <line x1="11" y1="8" x2="11" y2="11" />
+              <line x1="11" y1="11" x2="8" y2="11" />
+              <line x1="4" y1="11" x2="1" y2="11" />
+              <line x1="1" y1="11" x2="1" y2="8" />
+              <line x1="1" y1="4" x2="1" y2="1" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Controls toggle + panel */}
+        <button
+          onClick={() => setShowControls(v => !v)}
+          className="inline-flex items-center gap-1 px-2 py-1.5 text-[11px] bg-th-base/80 backdrop-blur-sm border border-th-hub-border transition-colors self-start"
+          style={{ color: showControls ? '#a78bfa' : undefined }}
+          title="Toggle controls (C)"
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
+            <line x1="2" y1="3" x2="10" y2="3" /><circle cx="4" cy="3" r="1" fill="currentColor" />
+            <line x1="2" y1="6" x2="10" y2="6" /><circle cx="7" cy="6" r="1" fill="currentColor" />
+            <line x1="2" y1="9" x2="10" y2="9" /><circle cx="5" cy="9" r="1" fill="currentColor" />
+          </svg>
+        </button>
+        {showControls && (
+          <GraphControls
+            visibility={visibility}
+            onVisibilityChange={setVisibility}
+            settings={settings}
+            onSettingsChange={setSettings}
+            dimension={dimension}
+            onDimensionChange={setDimension}
+            nodeCount={filtered.nodes.length}
+            linkCount={filtered.links.length}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onSearchSubmit={onSearchSubmit}
+            searchResultCount={searchResults.length}
+          />
+        )}
+      </div>
+
+      {/* Graph canvas */}
+      <div ref={graphAreaRef} className="flex-1 min-w-0 h-full overflow-hidden relative" style={{ cursor: selectMode ? 'crosshair' : undefined }}>
+        <Suspense fallback={
+          <div className="flex items-center justify-center h-full text-th-muted text-sm animate-pulse">
+            Loading renderer...
+          </div>
+        }>
+          {dimension === '2d' ? (
+            <ForceGraph2D
+              ref={graphRef}
+              graphData={filtered}
+              width={graphDims.width}
+              height={graphDims.height}
+              nodeCanvasObject={nodeCanvasObject}
+              nodePointerAreaPaint={nodePointerAreaPaint}
+              nodeLabel={nodeTooltip}
+              linkCanvasObject={linkCanvasObject}
+              onNodeClick={onNodeClick}
+              onNodeHover={onNodeHover}
+              onBackgroundClick={onBackgroundClick}
+              d3AlphaDecay={d3AlphaDecay}
+              d3VelocityDecay={d3VelocityDecay}
+              warmupTicks={settings.warmupTicks}
+              cooldownTicks={300}
+              enableNodeDrag={true}
+              enableZoomInteraction={true}
+              enablePanInteraction={!selectMode}
+              backgroundColor="transparent"
+            />
+          ) : (
+            <ForceGraph3D
+              ref={graphRef}
+              graphData={filtered}
+              width={graphDims.width}
+              height={graphDims.height}
+              nodeColor={nodeColor3d}
+              nodeVal={nodeVal3d}
+              nodeLabel={nodeTooltip}
+              nodeResolution={8}
+              linkColor={linkColor3d}
+              linkOpacity={settings.edgeOpacity}
+              linkWidth={0}
+              onNodeClick={onNodeClick}
+              onNodeHover={onNodeHover}
+              onBackgroundClick={onBackgroundClick}
+              backgroundColor="#000011"
+              warmupTicks={settings.warmupTicks}
+              cooldownTicks={200}
+              enableNodeDrag={!isMobile}
+            />
+          )}
+        </Suspense>
+
+        {/* Shift+drag selection rectangle */}
+        {dragSelect && (
+          <div
+            className="absolute border border-cyan-400/60 bg-cyan-400/10 pointer-events-none z-10"
+            style={{
+              left: Math.min(dragSelect.x0, dragSelect.x1),
+              top: Math.min(dragSelect.y0, dragSelect.y1),
+              width: Math.abs(dragSelect.x1 - dragSelect.x0),
+              height: Math.abs(dragSelect.y1 - dragSelect.y0),
+            }}
+          />
+        )}
+
+        {/* Multi-selection prompt */}
+        {multiSelected.size > 0 && (
+          <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2 px-4 py-3 bg-th-base/95 backdrop-blur-sm border border-cyan-500/40 text-[11px] max-w-sm">
+            <div className="text-cyan-300 font-medium">
+              {multiSelected.size} note{multiSelected.size > 1 ? 's' : ''} selected
+            </div>
+            <div className="text-th-muted text-[10px] max-h-24 overflow-y-auto leading-relaxed">
+              {multiSelectedNames.join(', ')}
+            </div>
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                onClick={copySelectionToClipboard}
+                className="px-2.5 py-1 bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/30 transition-colors text-[10px]"
+              >
+                Copy structured context
+              </button>
+              <button
+                onClick={() => setMultiSelected(new Set())}
+                className="px-2.5 py-1 border border-th-hub-border text-th-muted hover:text-th-secondary transition-colors text-[10px]"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Toast notification */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-cyan-900/90 border border-cyan-500/40 text-cyan-200 text-[12px] backdrop-blur-sm animate-pulse">
+          {toast}
+        </div>
+      )}
+
+      {/* Toggle panel button (desktop only) */}
+      {!showPanel && !isMobile && (
+        <button
+          onClick={() => setShowPanel(true)}
+          className="absolute top-3 right-3 z-20 px-2 py-1 text-[10px] text-th-muted bg-th-base/80 backdrop-blur-sm border border-th-hub-border hover:text-violet-400 transition-colors"
+        >
+          Show panel
+        </button>
+      )}
+
+      {/* Note preview panel — desktop: side column */}
+      {showPanel && !isMobile && (
+        <div
+          className="shrink-0 bg-th-base border-l border-th-hub-border flex flex-col overflow-hidden"
+          style={{ width: PANEL_WIDTH }}
+        >
+          <div className="flex items-center justify-between px-3 py-2 border-b border-th-hub-border bg-th-surface/30">
+            <span className="text-[10px] text-th-muted uppercase tracking-wide">Preview</span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={goToRandomNote}
+                className="text-th-muted hover:text-violet-400 transition-colors p-1"
+                title="Random note"
+              >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
+                  <rect x="2" y="2" width="8" height="8" rx="1.5" />
+                  <circle cx="4.5" cy="4.5" r="0.7" fill="currentColor" stroke="none" />
+                  <circle cx="7.5" cy="4.5" r="0.7" fill="currentColor" stroke="none" />
+                  <circle cx="6" cy="6" r="0.7" fill="currentColor" stroke="none" />
+                  <circle cx="4.5" cy="7.5" r="0.7" fill="currentColor" stroke="none" />
+                  <circle cx="7.5" cy="7.5" r="0.7" fill="currentColor" stroke="none" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setShowPanel(false)}
+                className="text-th-muted hover:text-th-secondary transition-colors p-1"
+              >
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <line x1="2" y1="2" x2="8" y2="8" /><line x1="8" y1="2" x2="2" y2="8" />
+              </svg>
+              </button>
+            </div>
+          </div>
+          {/* Connections — collapsible, shown when a node is pinned */}
+          {previewId && previewNeighbors && index && (
+            <div className="border-b border-th-hub-border text-[11px]">
+              <button
+                onClick={() => setShowConnections(v => !v)}
+                className="flex items-center justify-between w-full px-3 py-1.5 text-[9px] text-th-muted uppercase tracking-wide hover:text-th-secondary transition-colors"
+              >
+                <span>Connections</span>
+                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" strokeWidth="1.5"
+                  style={{ transform: showConnections ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 150ms' }}
+                >
+                  <path d="M1 3l3 3 3-3" />
+                </svg>
+              </button>
+              {showConnections && (
+                <div className="flex flex-col gap-1 px-3 pb-2 max-h-[30vh] overflow-y-auto">
+                  {Object.entries(previewNeighbors).map(([type, neighbors]) => (
+                    <div key={type} className="flex flex-col gap-0.5">
+                      <span className="text-[9px] uppercase tracking-wider" style={{ color: EDGE_COLORS[type as keyof typeof EDGE_COLORS] }}>
+                        {type}
+                      </span>
+                      {neighbors.map(nb => (
+                        <button
+                          key={nb.id}
+                          onClick={() => {
+                            setSelectedId(nb.id);
+                            setHoveredId(null);
+                            const fg = graphRef.current;
+                            if (!fg) return;
+                            const node = filtered!.nodes.find((n: any) => n.id === nb.id) as any;
+                            if (node && fg.centerAt) fg.centerAt(node.x, node.y, 400);
+                            else if (node && fg.cameraPosition) {
+                              fg.cameraPosition(
+                                { x: node.x, y: node.y, z: (node.z ?? 0) + 200 },
+                                { x: node.x, y: node.y, z: node.z ?? 0 }, 400,
+                              );
+                            }
+                          }}
+                          className="text-left px-1.5 py-0.5 text-th-secondary hover:text-violet-400 hover:bg-violet-500/10 transition-colors truncate"
+                        >
+                          {nb.name}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          <NotePreviewPanel
+            note={previewNote}
+            html={noteHtml}
+            loading={contentLoading}
+            onNavigate={onNavigateFromPanel}
+          />
+        </div>
+      )}
+
+      {/* Note preview panel — mobile: slide-in from right */}
+      {isMobile && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-30 bg-black/50 transition-opacity"
+            style={{ opacity: mobilePanel && previewNote ? 1 : 0, pointerEvents: mobilePanel && previewNote ? 'auto' : 'none' }}
+            onClick={() => setMobilePanel(false)}
+          />
+          {/* Sliding panel */}
+          <div
+            className="fixed top-0 right-0 bottom-0 z-40 bg-th-base border-l border-th-hub-border flex flex-col overflow-hidden transition-transform duration-200"
+            style={{
+              width: '85vw',
+              maxWidth: 400,
+              transform: mobilePanel && previewNote ? 'translateX(0)' : 'translateX(100%)',
+            }}
+          >
+            {/* Mobile panel header */}
+            <div className="flex items-center justify-between px-3 py-2.5 border-b border-th-hub-border bg-th-surface/30">
+              <button
+                onClick={() => setMobilePanel(false)}
+                className="inline-flex items-center gap-1 text-[11px] text-th-secondary hover:text-violet-400 transition-colors"
+              >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M8 2L4 6l4 4" />
+                </svg>
+                Back to graph
+              </button>
+              {previewNote && (
+                <a
+                  href={secondBrainPath(previewNote.id)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] text-violet-400 hover:text-violet-300 transition-colors"
+                >
+                  open full ↗
+                </a>
+              )}
+            </div>
+            <NotePreviewPanel
+              note={previewNote}
+              html={noteHtml}
+              loading={contentLoading}
+              onNavigate={(uid) => { onNavigateFromPanel(uid); setMobilePanel(true); }}
+            />
+          </div>
+        </>
+      )}
+      <GraphGuide isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
+    </div>
+  );
+};
+
+export default SecondBrainGraphView;

@@ -17,6 +17,7 @@ const SectionView = React.lazy(() => import('../views/SectionView').then(m => ({
 const PostView = React.lazy(() => import('../views/PostView').then(m => ({ default: m.PostView })));
 const SecondBrainView = React.lazy(() => import('../views/SecondBrainView').then(m => ({ default: m.SecondBrainView })));
 const SecondBrainSidebar = React.lazy(() => import('./layout/SecondBrainSidebar').then(m => ({ default: m.SecondBrainSidebar })));
+const SecondBrainGraphView = React.lazy(() => import('../views/SecondBrainGraphView'));
 import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../constants/layout';
 import { useKeyboardShortcuts, ShortcutDef } from '../hooks/useKeyboardShortcuts';
 import { initBrainIndex } from '../lib/brainIndex';
@@ -141,9 +142,10 @@ const AppLayout: React.FC = () => {
   const showGrid = location.pathname.startsWith('/lab');
   const isBlog = location.pathname.startsWith('/blog');
   const isSecondBrain = location.pathname.startsWith(secondBrainPath());
+  const isSecondBrainGraph = location.pathname === '/lab/second-brain/graph';
   const isArticlePage = /^\/(blog|lab)\/[^/]+\/[^/]+/.test(location.pathname) && !isSecondBrain;
 
-  const gridOffset = isSecondBrain
+  const gridOffset = isSecondBrain && !isSecondBrainGraph
     ? SIDEBAR_WIDTH + SECOND_BRAIN_SIDEBAR_WIDTH
     : isArticlePage ? 0 : SIDEBAR_WIDTH;
 
@@ -192,8 +194,8 @@ const AppLayout: React.FC = () => {
       {/* Contextual retention hints */}
       <RetentionHints />
 
-      {/* Hub Sidebar (second-brain only, desktop only) */}
-      {isSecondBrain && (
+      {/* Hub Sidebar (second-brain only, desktop only — not on graph view) */}
+      {isSecondBrain && !isSecondBrainGraph && (
         <Suspense fallback={null}>
           <SecondBrainSidebar />
         </Suspense>
@@ -201,7 +203,7 @@ const AppLayout: React.FC = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 min-w-0 flex flex-col min-h-screen">
-        <main className={`flex-grow w-full relative z-10 ${isSecondBrain ? 'max-w-6xl px-4 md:px-10 pt-20 pb-10 md:py-12 mx-auto' : isArticlePage ? 'px-2 pt-[4.5rem] pb-10 md:px-6 md:pt-20 md:pb-16 main-center-viewport' : 'px-6 pt-20 pb-10 md:py-16 main-center-viewport'}`}>
+        <main className={`flex-grow w-full relative z-10 ${isSecondBrainGraph ? '' : isSecondBrain ? 'max-w-6xl px-4 md:px-10 pt-20 pb-10 md:py-12 mx-auto' : isArticlePage ? 'px-2 pt-[4.5rem] pb-10 md:px-6 md:pt-20 md:pb-16 main-center-viewport' : 'px-6 pt-20 pb-10 md:py-16 main-center-viewport'}`}>
           <Suspense fallback={<div className="py-20 text-center text-th-tertiary text-sm animate-pulse">Loading…</div>}>
             <Routes key={location.pathname}>
               <Route path="/" element={<Navigate to="/home" replace />} />
@@ -223,6 +225,7 @@ const AppLayout: React.FC = () => {
 
               {/* Second Brain */}
               <Route path="/lab/second-brain" element={<SecondBrainView />} />
+              <Route path="/lab/second-brain/graph" element={<SecondBrainGraphView />} />
               <Route path="/lab/second-brain/:id" element={<SecondBrainView />} />
 
               {/* Post detail views */}
