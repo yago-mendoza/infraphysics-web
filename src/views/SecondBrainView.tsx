@@ -1613,16 +1613,25 @@ export const SecondBrainView: React.FC = () => {
                       {badges}
                     </div>
                   )}
-                  <h2 className="text-2xl font-bold mb-1 text-th-heading">
-                    {noteLabel(activePost!)}
-                    {!isSimplified && <BridgeScoreBadge percentile={getPercentile(activePost!.id)} />}
-                    {/* Desktop: badges inline after title */}
-                    {hasBadges && (
-                      <span className="hidden lg:inline-flex items-center gap-2 ml-3 align-middle">
-                        {badges}
-                      </span>
-                    )}
-                  </h2>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h2 className="text-2xl font-bold text-th-heading">
+                      {noteLabel(activePost!)}
+                      {!isSimplified && <BridgeScoreBadge percentile={getPercentile(activePost!.id)} />}
+                      {/* Desktop: badges inline after title */}
+                      {hasBadges && (
+                        <span className="hidden lg:inline-flex items-center gap-2 ml-3 align-middle">
+                          {badges}
+                        </span>
+                      )}
+                    </h2>
+                    <button
+                      onClick={() => setShowCopyModal(true)}
+                      className="ml-auto shrink-0 text-th-tertiary hover:text-violet-400 transition-colors"
+                      title="Copy for context"
+                    >
+                      <ClipboardIcon size={14} />
+                    </button>
+                  </div>
                 </>
               );
             })()}
@@ -1674,13 +1683,6 @@ export const SecondBrainView: React.FC = () => {
               <span>links {'\u2193'} {outgoingRefCount}</span>
               <span>&middot;</span>
               <span>mentioned {'\u2191'} {mentions.length}</span>
-              <button
-                onClick={() => setShowCopyModal(true)}
-                className="ml-auto text-th-tertiary hover:text-violet-400 transition-colors"
-                title="Copy for context"
-              >
-                <ClipboardIcon size={13} />
-              </button>
             </div>
 
             {/* Body + Interactions box */}
