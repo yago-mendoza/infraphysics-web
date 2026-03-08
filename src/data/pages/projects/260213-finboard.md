@@ -201,7 +201,7 @@ Iteration 3 added the missing transfers. The mismatches shrank from thousands to
 
 Iteration 4 fine-tuned three amounts. The first TDRP transfer: 600 became 670.74. The recent MYNV funding: 4000 became 3831.17. The IBKR cash reserve: 3018 became 2757.94.
 
-## the result
+## validated to the cent
 
 | Platform | Computed | Declared | Status |
 |---|---|---|---|

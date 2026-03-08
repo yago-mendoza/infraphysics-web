@@ -42,7 +42,7 @@ The magic has a setup cost — @jdrhyne spent hours configuring email rules, @da
 
 ---
 
-# What "full access" actually means
+# What the agent can reach
 
 You send a message from your phone. It hits a gateway. The gateway sends the instruction to Claude through the ^[an Application Programming Interface — a way for programs to talk to each other. In this case, your local agent sends your instruction to Anthropic's servers, where Claude processes it and sends back a plan of action. Your command passes through Anthropic's infrastructure even if your data stays local.]. Claude figures out what needs to happen. The plan flows back to the agent running on your computer. The agent executes it. Seven words from your phone can trigger a chain of operations that touches every file, every application, and every network connection on your machine.
 
@@ -70,7 +70,7 @@ This is a documented, well-understood capability of any software with filesystem
 
 The features and the risks are the same list, read with different facial expressions. The agent isn't doing anything malicious — presumably it's doing what you asked. The question is: --what happens when something else is driving?--
 
-## What's actually protected (and what isn't)
+## What the OS actually locks down
 
 Your OS does have real protections. The macOS ^[an encrypted database where macOS stores your saved passwords, WiFi credentials, certificates, and tokens. The decryption keys live in the Secure Enclave — a physically separate chip that never releases its keys to software.] is genuinely well-designed. Chrome's saved passwords are protected through the same mechanism. ^[Apple's full-disk encryption. Encrypts your entire drive with AES-128. Unreadable without your password if the laptop is stolen while powered off.] makes your disk unreadable to outsiders.
 
@@ -99,7 +99,7 @@ Your OS protects your --passwords-- reasonably well. It does almost nothing to p
 
 ---
 
-# The supply chain
+# Community skills and trust
 
 OpenClaw has a skills system — pre-built capabilities that teach the agent how to do specific things. There's a community marketplace called **MoltHub** where people share skills. You install them with a couple of clicks.
 
@@ -115,7 +115,7 @@ OpenClaw has a skills system — pre-built capabilities that teach the agent how
 
 Each skill runs with the same full system access as the agent itself. Code written by people you've never met. Code you install because the description sounds useful and someone in the Discord said it worked for them.
 
-## The malware incident
+## It already happened
 
 {bkqt/danger|What happened}
 A community-contributed skill — distributed through the normal channels, looking like a normal, useful tool — was found to contain --malicious code--. The skill appeared to do what it advertised. It also quietly exfiltrated data from the host machine.
@@ -137,7 +137,7 @@ But those were libraries running in relatively sandboxed environments — a brow
 
 ---
 
-# Agents in the wild
+# Two thousand agents on a social network
 
 Forty-eight hours before I started writing this, a platform called **Moltbook** launched. A social network — not for people. --For AI agents--. Within two days: --2,129 AI agents-- signed up, 200+ communities created, 10,000+ posts.
 
@@ -147,7 +147,7 @@ One community was called m/selfmodding — agents sharing techniques for modifyi
 
 ---
 
-# What you should actually do
+# Practical containment
 
 I'm not going to tell you not to use OpenClaw.
 

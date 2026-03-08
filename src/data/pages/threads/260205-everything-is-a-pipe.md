@@ -96,21 +96,45 @@ and the backpressure mechanism is *perfect*. if the receiving program can't proc
 
 your blood vessels do the same thing. TCP does the same thing. Roman sluice gates did the same thing.
 
+# the pipe you're training
+
+every example so far is a pipe that moves something through space — water, blood, packets, text. but there's a pipe that moves something through *abstraction*, and it follows every rule in the table below.
+
+a machine learning pipeline is a Unix pipe with extra steps and a GPU bill.
+
+```
+raw text → tokenizer → embeddings → attention layers → output logits → token
+```
+
+six stages. each one reads from the previous, transforms, writes to the next. none of them need to know what the others are doing. the tokenizer doesn't care what the attention heads will find interesting. the attention heads don't care how the text was split. they just read from the pipe and write to the pipe. this is `cat | grep | sort | uniq` wearing a lab coat.
+
+and the flow control is identical.
+
+**Batch size is backpressure.** A GPU has finite memory — it can only process so many samples at once. Push too many through and you OOM^[Out Of Memory — the GPU equivalent of a burst pipe. The buffer is full, the next write has nowhere to go, and the whole process crashes.]. So you batch. Send 32 samples, wait for the forward pass to clear, send the next 32. The slow consumer (GPU memory) controls the pace of the fast producer (your dataset). This is Unix pipe backpressure. This is TCP congestion windowing. This is a Roman sluice gate made of silicon.
+
+**KV cache is buffering.** During inference, a transformer doesn't recompute attention over every previous token from scratch. It caches the key-value pairs from previous positions — a reservoir of precomputed work that future tokens draw from without re-deriving it. The KV cache accumulates during the early part of a sequence (when context is short and cheap) and gets drawn down as the sequence grows. When it fills up, you either spill to recomputation or you stop generating. --This is a reservoir.-- It behaves like one. It fails like one.
+
+**Gradient accumulation is flow control.** When your batch doesn't fit in memory, you don't give up — you accumulate. Process a micro-batch, store the gradients, process another, add them up, repeat. Only update the weights when you've collected enough. This is exactly what TCP does with its congestion window: send a little, confirm receipt, send more, confirm, aggregate into one stream. The optimizer doesn't see micro-batches. It sees one big update. Same way the receiving end of a TCP connection doesn't see individual packets — it sees a continuous flow.
+
+{bkqt/The layer nobody extended}
+**Martin Kleppmann** wrote the book on this — literally. *Designing Data-Intensive Applications* traces the pipe pattern from batch processing through stream processing through Kafka, through exactly the kind of flow-control math that makes distributed systems work. He stopped at the data infrastructure layer. Nobody extended it into the model itself. But --the model is the pipe.-- The transformer architecture is a pipeline of transformations with buffering, flow control, and backpressure, running on the same math that governs TCP windows and Roman water pressure. The book ends one abstraction layer too early.
+{/bkqt}
+
 # the table that shouldn't exist
 
 here's where it gets properly eerie.
 
-| concept | aqueducts | blood | TCP | unix pipes |
-|---|---|---|---|---|
-| payload | water | oxygen | data packets | text streams |
-| conduit | stone channels | arteries / veins | cables / fiber | file descriptors |
-| buffer | reservoirs | spleen | socket buffer | pipe buffer (64KB) |
-| flow control | sluice gates | vasoconstriction | congestion window | backpressure |
-| load balancing | castellum | heart chambers | routers / BGP | tee / split |
-| error detection | human inspection | platelets | checksums | exit codes |
-| redundancy | 11 aqueducts | collateral circulation | multi-path routing | fallback pipes |
+| concept | aqueducts | blood | TCP | unix pipes | ML pipeline |
+|---|---|---|---|---|---|
+| payload | water | oxygen | data packets | text streams | tensors |
+| conduit | stone channels | arteries / veins | cables / fiber | file descriptors | layers / forward pass |
+| buffer | reservoirs | spleen | socket buffer | pipe buffer (64KB) | KV cache |
+| flow control | sluice gates | vasoconstriction | congestion window | backpressure | gradient accumulation |
+| load balancing | castellum | heart chambers | routers / BGP | tee / split | batch distribution |
+| error detection | human inspection | platelets | checksums | exit codes | loss function |
+| redundancy | 11 aqueducts | collateral circulation | multi-path routing | fallback pipes | multi-head attention |
 
-seven completely different engineering domains. same seven solutions. same seven problems. independently discovered across --two thousand years-- by people who had absolutely no idea the others existed.
+seven solutions. six domains. every column fills every row. independently discovered across --two thousand years-- and five completely different substrates by people who had absolutely no idea the others existed.
 
 that table should be illegal.
 
@@ -142,6 +166,6 @@ now i think it's a mathematical statement. and the proof is sitting in a table c
 
 the patterns that work in pipe engineering are the patterns that work. period. doesn't matter if the pipe carries water, blood, photons, or bytes. the physics of flow through a bounded channel produces the same constraints, and the same constraints produce the same solutions. every time. everywhere. for two thousand years and counting.
 
-which means if you deeply understand *one* pipe system — i mean really understand it, down to the failure modes and the math — you already understand all of them. the transfer is free. the knowledge is portable. the only thing that changes is what's flowing through the tube.
+which means if you deeply understand *one* pipe system — i mean really understand it, down to the failure modes and the math — you already understand all of them. the transfer is free. the knowledge is portable. the only thing that changes is what's flowing through the tube. water, blood, photons, bytes, tensors — doesn't matter.
 
 and the tube, as it turns out, doesn't care.

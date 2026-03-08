@@ -18,7 +18,7 @@ Everyone has an opinion on AI. Not just the engineers and the investors — ever
 
 --The actual bubble isn't in AI stocks. It's in AI opinions.-- We have created a secondary market of hot takes that trades at higher volume and with less underlying value than anything on the NASDAQ.
 
-# The oldest trick in the air
+# Balloonomania, 1783
 
 Someone who described himself as a "digital anthropologist" told a story I couldn't fully verify but also couldn't stop thinking about. He claimed that in the 1780s, after the first hot air balloon flights, an early aeronaut declared that balloons would take people to the moon in a short time. He raised huge sums on that claim. The commenter's punchline: "yes, it was a lot of hot air."
 
@@ -88,7 +88,7 @@ Someone cut through all of it: "until the AI bubble bursts, so many people will 
 
 That's the one that sat with me.
 
-# The bubble in understanding
+# Half of all venture capital
 
 The number that matters: in 2025, AI captured --half of all venture capital deployed worldwide--. $202 billion. Up 75% from the year before. Foundation models alone — the raw engines, the stuff companies like OpenAI and Anthropic build — absorbed $80 billion, more than doubling from $31 billion in 2024.
 
@@ -118,7 +118,7 @@ This isn't speculation — it's already happening. **Weights & Biases**, once th
 
 Someone put it bluntly: --"95% of these companies are already dead. They just don't know it yet."-- The infrastructure bubble is arguably more fragile than the model bubble, because at least the models do something novel. The infrastructure companies are building things that bigger companies can replicate with a team and a quarter.
 
-# What actually happens after
+# The dot-com pattern
 
 Everyone in that comment section cited the dot-com bubble. Not one of them followed the analogy all the way through.
 
@@ -138,7 +138,7 @@ Someone wrote something I keep coming back to: "those who survive will be far mo
 
 And there's a wildcard that nobody at the investment conferences wants to discuss: --open source--. Optimized models running on consumer hardware — no data center required, no API bill, no vendor lock-in. A commenter predicted that "open source optimized models for consumer hardware will kill big companies in 4-5 years." Maybe. Maybe not. But the fact that a viable open-source path exists means that the entire centralized infrastructure play — the hundred-billion-dollar bet on GPU clouds and proprietary APIs — has a timer on it. The picks and shovels become irrelevant when people start finding gold in their backyard.
 
-# The escape hatch
+# Quantum is warming up
 
 Speaking of the next thing — several commenters noticed that the hype machine is already warming up a replacement. **Quantum computing.** The theory being: once the AI bubble pops, investors will need somewhere to park their optimism, and quantum computing is exotic enough to absorb it.
 

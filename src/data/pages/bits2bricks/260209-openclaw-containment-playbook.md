@@ -21,7 +21,7 @@ If you haven't read the thread, the one-paragraph version: OpenClaw is an open-s
 
 ---
 
-# The threat model in 60 seconds
+# What's exposed on your machine
 
 Before picking a containment strategy, you need to know what you're containing. Here's what a user-level process on your machine can access --silently, without any prompt or password--:
 
@@ -50,11 +50,11 @@ The containment goal: keep the agent's access to the green table. Block its acce
 
 # Option 1: Docker
 
-## Why Docker is the sweet spot
+## Docker does most of the work
 
 Running the agent in a ^[a tool that creates isolated environments called containers. The program inside gets its own filesystem, its own process list, and its own network. It cannot see the host's files or network unless you explicitly mount a path or expose a port.] gives you filesystem isolation, network isolation, and capability restriction in a single command. For most threat models — a misbehaving agent, a malicious skill, accidental data exfiltration — it's enough.
 
-## The locked-down command
+## The full command
 
 ```bash
 docker run --rm -it \
@@ -115,7 +115,7 @@ The agent gets internet. It cannot see your NAS, your partner's laptop, or your 
 
 **Setup time: 30 minutes** to configure and test. A weekend if you want to be thorough about it.
 
-## Docker networking modes at a glance
+## Networking modes compared
 
 | Mode | Isolation | LAN access | Use for an agent? |
 |---|---|---|---|
@@ -124,7 +124,7 @@ The agent gets internet. It cannot see your NAS, your partner's laptop, or your 
 | Custom bridge + iptables | Internet yes, LAN blocked | No | Best for online tasks |
 | `--network=host` | None. Shares host's network stack. | Full | --Never-- use for untrusted agents |
 
-## Beyond standard Docker: gVisor
+## gVisor: fewer syscalls, smaller surface
 
 Docker containers share the host's kernel. All 300+ Linux syscalls go directly to the host. A kernel exploit inside the container = root on the host. This has happened (CVE-2019-5736, Dirty COW).
 
@@ -201,13 +201,13 @@ Apple announced native containerization at WWDC 2025 for macOS Tahoe. Each conta
 
 # Option 3: Cloud deployment
 
-## Why the cloud solves most of the problem
+## Your files aren't there
 
 Here's the thing about running OpenClaw on a cloud server: --your files aren't there--. Your SSH keys, your browser sessions, your `.env` files, your messaging databases, your local network — none of it exists on the server. The agent has "full access" to... a clean Ubuntu box in a datacenter. That's a fundamentally different risk profile than a Mac Mini in your closet that also has your tax returns on it.
 
 DigitalOcean published a deployment guide (by Amit Jotwani) that walks through the setup. Here's the security-relevant summary:
 
-## The setup
+## DigitalOcean setup
 
 ```bash
 # 1. Create a $12/month Droplet: Ubuntu 24.04, 2GB RAM, region near you
@@ -237,7 +237,7 @@ That's it. The gateway runs as a systemd service — survives SSH disconnects, r
 - **Firewall at the VPC level** — cloud firewalls are more capable than your home router
 {/bkqt}
 
-## The tradeoff
+## Data leaves your network
 
 Cloud deployment has one meaningful downside: --your data leaves your network--. Every instruction you send passes through Anthropic's API (this is true for local deployments too, but the local machine can also process local files without sending them anywhere). If the agent needs to read a file, that file has to be on the server. You're trading local-file convenience for a dramatically better security boundary.
 

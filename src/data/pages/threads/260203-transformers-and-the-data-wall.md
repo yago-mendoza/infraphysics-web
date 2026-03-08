@@ -36,7 +36,7 @@ But they had a fatal flaw: they read text one word at a time, sequentially, like
 
 The state of the art in language AI around 2016 was, in the grand scheme of things, still kind of dumb.
 
-# The paper that changed everything
+# "Attention Is All You Need"
 
 In June 2017, eight researchers at Google published a paper with possibly the most confident title in the history of computer science: **"Attention Is All You Need."**
 
@@ -228,7 +228,7 @@ If we don't know what capabilities will emerge at the next scale-up, we also don
 
 DeepMind's Chinchilla paper (2022) added another wrinkle: you don't just need a big model — you need the right --ratio-- of model size to training data. A 70-billion parameter model trained on the right amount of data outperforms a 280-billion parameter model trained on too little. The recipe matters as much as the scale.
 
-## The data wall
+## We're running out of text
 
 To train a language model, you need text. A lot of it. An obscene amount of it.
 
@@ -250,7 +250,7 @@ A language model that's only seen a million sentences has a shallow understandin
 
 --More data doesn't just improve accuracy. More data builds deeper understanding.-- And the kind of "understanding" we're talking about at the frontier requires exposure to essentially *all* of human written output.
 
-## Climbing the wall
+## What people are trying
 
 Some researchers think the data wall is surmountable. Here are the strategies being tried, roughly ordered by maturity:
 
@@ -296,7 +296,7 @@ Microsoft is investing in nuclear power for its data centers. Amazon is buying p
 
 Every computation produces heat. Every bit processed requires a minimum energy expenditure — Landauer's principle. This isn't an engineering limitation. It's thermodynamics. The pursuit of artificial intelligence is, at the most fundamental level, a battle against the second law.
 
-# The shoggoth in the room
+# The shoggoth
 
 Okay. Now for the fun part.
 

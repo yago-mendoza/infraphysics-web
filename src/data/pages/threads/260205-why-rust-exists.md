@@ -22,7 +22,7 @@ i closed the editor. i went for a walk. i came back three days later and tried a
 
 that was roughly the start of one of the most rewarding — and most infuriating — learning experiences i've had as a programmer. and to understand *why* Rust works the way it does, you need to understand the problem it was built to solve. because it's a big one. a really, really expensive one.
 
-## the billion-dollar graveyard
+## seventy percent
 
 here's a fun fact that isn't fun at all: --roughly 70% of all security vulnerabilities in large C and C++ codebases are memory safety bugs.-- not "roughly" as in "we think, maybe." roughly as in Microsoft, Google, and Apple have independently published reports confirming exactly this number. seventy percent. seven out of ten.
 
@@ -36,7 +36,7 @@ these aren't rare edge cases. they are the --default failure mode-- of systems p
 
 so for decades, the industry had two options. and they both sucked.
 
-## the two bad options
+## garbage collection or manual memory
 
 **option one: garbage collection.**
 
@@ -56,7 +56,7 @@ so that's the landscape. you get safety but lose control, or you get control but
 
 for forty years, everyone assumed those were the only two options.
 
-## the third door
+## a third option
 
 in 2006, Graydon Hoare — a Mozilla engineer — started working on a side project. he was tired of the C++ bugs in Firefox. specifically, he was tired of the *same categories* of C++ bugs showing up over and over, despite smart people trying hard to avoid them. so he started designing a language where those bugs would be *structurally impossible*.
 
@@ -64,7 +64,7 @@ not caught at runtime. not caught by a linter. not caught by code review. --impo
 
 that language became Rust. and its core innovation is a concept called ownership.
 
-## three rules that change everything
+## three rules
 
 Rust's ownership system is built on three rules. that's it. three rules. they sound almost trivially simple. they have consequences that will break your brain.
 
@@ -84,7 +84,7 @@ that's the entire memory model. three rules. no garbage collector. no manual mem
 
 it sounds too good to be true. the catch is that learning to work within these rules feels, at first, like writing code in a straitjacket.
 
-## the borrow checker experience
+## fighting the compiler
 
 the borrow checker is the part of the Rust compiler that enforces the ownership rules. it is, simultaneously, the most hated and most loved feature of the language.
 
@@ -111,7 +111,7 @@ after a few weeks (or months, depending on your background), something changes. 
 
 the confidence this gives you is hard to overstate. you can refactor aggressively. you can write concurrent code without fear. you can hand your codebase to someone else and know that the compiler will catch their memory mistakes just like it caught yours.
 
-## beyond memory: the things nobody told me
+## the rest of the language
 
 ownership is the headline feature, but Rust has a bunch of other design choices that are quietly excellent.
 
@@ -163,7 +163,7 @@ fn area(shape: &Shape) -> f64 {
 
 **zero-cost abstractions.** iterators, closures, generics, trait objects — they all compile down to the same machine code you'd write by hand in C. "zero-cost" means you pay no runtime overhead for using high-level constructs. the compiler optimizes them away completely.
 
-## who's using it and why
+## who's shipping it
 
 Rust isn't a toy language or an academic experiment. it's in production at:
 

@@ -498,3 +498,52 @@ They are not competitors. They are stages. SFT builds the foundation. RL pushes 
 The model does not learn *what* to think. It learns that *thinking produces better outputs*. And with just that signal — a reward for correct answers — it discovers reasoning strategies, self-correction, and tool use on its own. The thinking is [[h7ZzT64Z|emergent]], like the specialization of [[Hd4nK8xS|attention heads]] in a transformer. Nobody designs it. It falls out of the optimization.
 
 We started with a pile of random numbers. We applied pressure — "be less wrong." And from that pressure, something emerged that reasons, plans, and corrects itself. Not because we told it how. Because we told it what "better" looks like, and it figured out the rest.
+
+---
+
+# The Signal Ladder
+
+The summary above tells you what each technique *answers*. It does not tell you when to use which. That is a different question — and the answer has nothing to do with which technique is "best."
+
+Each step up the ladder gives the model more freedom. More freedom to discover good behaviors, and more freedom to discover bad ones. The variable that changes is not power — it is --the kind of thing that goes wrong--.
+
+## SFT: you get what you showed it
+
+The signal is examples. The model imitates. The failure mode is **ceiling**: the model cannot exceed the quality of its training examples. If your annotators wrote mediocre reasoning chains, the model produces mediocre reasoning chains — confidently, in perfect format. If they had blind spots, the model inherits the same blind spots.
+
+But it is predictable. The model stays within the distribution you showed it. It will not surprise you. The worst case is well-bounded: an SFT model is as bad as its worst examples, and you control the examples.
+
+The risk you accept: being stuck at the level of your data, with no way to exceed it.
+
+## DPO: it can rank, but it cannot invent
+
+The signal is preferences. The model learns to distinguish better from worse. The failure mode is **coverage**: the model can only prefer among behaviors it already produces. If neither response in a comparison pair uses a good reasoning strategy, the model learns to prefer the less-bad option — but never discovers the good one.
+
+This is the 3–7% out-of-domain performance gap we noted [above](#dpo's-real-limitations). DPO generalizes worse than RLHF because the comparisons are specific — the model learns "A is better than B in this context" rather than developing a general sense of quality. It is SFT with a sharper gradient, but it still cannot leave the training distribution.
+
+The risk you accept: never inventing a behavior that was not already in your comparison data.
+
+## RL: it will find every shortcut
+
+The signal is reward. The model explores. The failure mode is **[[Rh9tN6hF|reward hacking]]**: the model will exploit every gap between your reward function and what you actually want. We covered this in the [KL divergence section](#kl-divergence) — without the anchor, RL training almost always diverges into degenerate behaviors that score high but are useless.
+
+But RL is the only technique that can discover behaviors no human demonstrated. DeepSeek-R1-Zero discovered chain-of-thought reasoning. Cursor's Composer discovered search-before-edit. Neither was in any dataset. The ceiling is the quality of your reward signal, not the quality of your data.
+
+The risk you accept: the model finding shortcuts you did not imagine. You pay for this with [[Rh9tN6hF|KL regularization]], [[83orykQl|reward model]] quality, and constant monitoring.
+
+## So which one do you use?
+
+```
+          freedom    failure mode       ceiling
+SFT       low        imitation          data quality
+DPO       medium     coverage gap       comparison diversity
+RL        high       reward hacking     reward quality
+```
+
+The choice is not "which technique is most powerful." It is "which failure mode can I afford."
+
+- You need instruction following → SFT. The failure mode (can't exceed data quality) is fine because you *control* the data.
+- You need style or safety alignment → DPO. The failure mode (can't invent new behaviors) is fine because you *don't want* new behaviors — you want the model to stay close to demonstrated human preferences.
+- You need reasoning, tool use, self-correction → RL. The failure mode (reward hacking) is the price. There is no alternative — [only RL has the requisite variety](#rl) to expand what the model can do.
+
+Most production pipelines use all three, not because more is better, but because each step addresses a failure mode the others cannot. SFT builds a controlled base. RL expands the frontier. DPO smooths the edges. At each step, the question is not "is this powerful enough?" It is "can I handle what goes wrong when I use it?"

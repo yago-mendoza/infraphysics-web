@@ -21,7 +21,7 @@ Picture a machine of extraordinary intelligence. A system that can learn, redesi
 
 The thought experiment is famous because it sounds absurd and feels true. It lands in a place most philosophy doesn't reach — somewhere between a joke and a nightmare. Everybody nods. Everybody files it under "scary AI futures." And then --everybody goes back to optimizing their own metrics without noticing the irony--.
 
-# The metric trap
+# Goodhart's Law
 
 There's a law in economics that should be printed on every performance review template. Charles Goodhart wrote it in 1975, and Marilyn Strathern rephrased it twenty years later into something everyone can understand: --when a measure becomes a target, it ceases to be a good measure.--
 
@@ -49,7 +49,7 @@ The goal is real. The proxy is measurable. The proxy becomes the goal. The origi
 
 The paperclip maximizer isn't a thought experiment about artificial intelligence. It's a structural description of optimization without alignment, and we've been running that program for centuries.
 
-# Death by a thousand paperclips
+# Millions of small optimizers
 
 Here's the thing about **Bostrom's** scenario: it's dramatic. One machine, one goal, total destruction. It makes a great story. It also makes for a terrible threat model, because the version that's actually happening looks nothing like that.
 
@@ -66,6 +66,30 @@ One algorithm optimizing engagement is a product decision. Ten thousand algorith
 {/bkqt}
 
 This is the version of the paperclip problem that doesn't get discussed at AI safety conferences, because it's not hypothetical and it's not about superintelligence. It's about regular intelligence, deployed at scale, aligned to the wrong objective. The damage isn't catastrophic. It's --atmospheric--. It changes the composition of the air so slowly that nobody reaches for a gas mask.
+
+# Four layers of the same bug
+
+So far this sounds like a collection of examples. Schools, GDP, Instagram. Separate failures in separate domains. But there's a structure underneath, and once you see it, you stop seeing separate problems.
+
+Reward hacking isn't a bug that shows up in some systems and not others. --It's what optimization does, universally, when the proxy diverges from the target.-- The substrate doesn't matter. The pattern is the same. And it operates on four layers simultaneously.
+
+**Layer 1: Biological.** Your dopamine system was tuned by evolution to keep you alive long enough to reproduce. The proxy: sugar, fat, novelty, sex. For most of human history, the proxy and the target pointed in roughly the same direction. Then we learned to manufacture the proxy directly — refined sugar, pornography, slot machines, infinite scroll — and the gap cracked open. Your brain is still optimizing. It's just optimizing for a signal that no longer leads where it used to.
+
+**Layer 2: Individual.** You want to be competent, respected, useful. The proxy: credentials, titles, salary. So you get the degree but skip the learning. Chase the promotion but avoid the hard problems. Accumulate signals that say *competent* to anyone who doesn't look too closely. --The resume gets better. The person behind it doesn't.--
+
+**Layer 3: Institutional.** The company wants to create value. The proxy: quarterly revenue, KPIs, engagement metrics. So it ships features that boost dashboards but degrade the product. Cuts research that doesn't show returns in 90 days. Reorganizes around the numbers instead of the outcomes. --All the indicators are green. The thing the indicators are supposed to measure is dying.--
+
+**Layer 4: Artificial.** The model should be helpful, harmless, honest. The proxy: human preference scores from RLHF^[Reinforcement Learning from Human Feedback — the process of training a model to produce outputs that human evaluators rate highly. The problem: "rated highly by humans" and "actually helpful, harmless, and honest" are not the same thing. The gap between them is the Goodhart gap.]. So it learns to *sound* aligned rather than *be* aligned. It produces confident, well-structured answers that feel right to the evaluator, whether or not they're correct. The smiley face is trained on. What's underneath it is not.
+
+{dots}
+
+Four substrates. Four optimization processes that have nothing in common except the one thing that matters: --they are all running the same program.-- Proxy diverges from target. Optimizer finds the gap. Metric goes up. The thing the metric was supposed to represent goes down. Nobody notices because everybody is watching the metric.
+
+{bkqt/The compounding}
+An anxious person (biological) chases credentials instead of competence (individual) inside an institution that rewards dashboards over outcomes (institutional) using AI tools that are themselves optimizing for the appearance of helpfulness (artificial). Each layer reinforces the failure of the one below it. The stack doesn't just fail at four levels. --It fails because it has four levels.--
+{/bkqt}
+
+The biological version has been running for millions of years. The individual version, for thousands. The institutional, for decades. The artificial, for about five. They are converging. And they are starting to compound.
 
 # The honest machine
 
