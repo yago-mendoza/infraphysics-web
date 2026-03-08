@@ -9,6 +9,7 @@ thumbnailAspect: wide
 thumbnailShading: heavy
 description: "A ground-up explanation of how language models are trained after pretraining — SFT, DPO, RL, RLHF, reward hacking, KL divergence, and the DeepSeek-R1 pipeline."
 tags: [ai, training, rlhf, dpo, sft, reinforcement-learning, deep-learning, alignment]
+complexity: 8
 featured: true
 tldr:
   - SFT, DPO, and RL all adjust the same weights via backpropagation. The difference is where the training signal comes from — examples, preferences, or rewards.
@@ -51,7 +52,13 @@ The loss function is literally "what number is the model trying to minimize." It
 
 - In **RL**, the loss involves a reward signal — "how good was the response the model just generated?"
 
-Same mechanism, different objective. The loss function is what separates these techniques.
+Same mechanism, different objective. The loss function is what separates these techniques. For pretraining and SFT, that loss is [[q3MjogvW|cross-entropy]] — a single number measuring how surprised the model was, averaged over all tokens in the sequence:
+
+{math}
+\mathcal{L} = -\frac{1}{T}\sum_{t=1}^{T} \log \, p_\theta(x_t \mid x_{<t})
+{/math}
+
+Each term asks: "what probability did the model assign to the token that actually came next?" If it was confident and right, \(-\log(0.9) \approx 0.1\). If it was clueless, \(-\log(0.01) \approx 4.6\). Summed across the whole sequence and averaged — that is the number that gradient descent minimizes.
 
 ## Policy
 
@@ -166,7 +173,13 @@ Chosen:   "Quantum computing uses qubits that can be in superposition..."
 Rejected: "Well, quantum computing is very complicated and hard to explain..."
 ```
 
-The model is trained to assign higher probability to the chosen response and lower probability to the rejected one. The loss function directly encodes this preference — no intermediate reward model needed.
+The model is trained to assign higher probability to the chosen response and lower probability to the rejected one. The loss function directly encodes this preference — no intermediate reward model needed:
+
+{math}
+\mathcal{L}_{\text{DPO}} = -\mathbb{E} \left[ \log \sigma \!\left( \beta \log \frac{\pi_\theta(y_w \mid x)}{\pi_{\text{ref}}(y_w \mid x)} - \beta \log \frac{\pi_\theta(y_l \mid x)}{\pi_{\text{ref}}(y_l \mid x)} \right) \right]
+{/math}
+
+Here \(y_w\) is the preferred response, \(y_l\) the rejected one, \(\pi_\theta\) the model being trained, and \(\pi_{\text{ref}}\) the frozen reference (usually the SFT checkpoint). The \(\sigma\) is a sigmoid — it squashes the log-probability gap between chosen and rejected into a 0–1 range. The \(\beta\) hyperparameter controls how sharply the model should prefer the winner. Notice the ratio \(\pi_\theta / \pi_{\text{ref}}\) — this is the built-in KL constraint that keeps DPO stable without an explicit penalty term.
 
 DPO was introduced as a simplification of RLHF (which we will get to). The insight was: instead of training a separate reward model and then doing RL against it, you can collapse those two steps into a single supervised objective. Same preference data, simpler pipeline, more stable training.
 

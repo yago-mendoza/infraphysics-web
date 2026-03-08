@@ -9,6 +9,7 @@ thumbnailAspect: wide
 thumbnailShading: heavy
 description: "A patient, ground-up explanation of transformer architecture — how tokens become predictions, what attention really computes, where facts live, and why it all scales."
 tags: [ai, transformers, deep-learning, attention, neural-networks, nlp]
+complexity: 8
 featured: true
 tldr:
   - A transformer is a sequence of alternating attention blocks (context routing) and MLP blocks (fact storage), transforming token embeddings until the last vector can predict what comes next.
@@ -75,7 +76,7 @@ This is worth sitting with for a moment. Imagine a space with 12,288 dimensions.
 
 A classic example: if you take the [[haA3MDhG|embedding]] of "woman" and subtract the embedding of "man", you get a vector — a [[Dr6kN2wY|direction]] in this space. If you add that same direction to the embedding of "king", you land very close to "queen". The model learned, without being told, that there is a direction in this space that encodes gender. Another direction might encode plurality, another might encode whether something is a country, another might encode verb tense.
 
-The mathematical tool that measures how well two vectors align is the **[[Dp2kN6wF|dot product]]**. You multiply corresponding components and sum the results. If two vectors point in the same direction, the dot product is a large positive number. If they are perpendicular (unrelated), it is near zero. If they point in opposite directions, it is negative.
+The mathematical tool that measures how well two vectors align is the **[[Dp2kN6wF|dot product]]**: \(\mathbf{a} \cdot \mathbf{b} = \sum_i a_i \, b_i\). You multiply corresponding components and sum the results. If two vectors point in the same direction, the dot product is a large positive number. If they are perpendicular (unrelated), it is near zero. If they point in opposite directions, it is negative.
 
 ```
 dot_product(cat, cats)    =  large positive  (similar meaning)
@@ -93,7 +94,13 @@ So: the embedding matrix \(W_E\) takes each token ID and maps it to a vector in 
 
 There is a problem with what we have so far. If we just look up each word's embedding independently, the sentence "dog bites man" produces exactly the same set of vectors as "man bites dog" — just in a different order. But the model receives these vectors as a set. It needs to know *where* each word is.
 
-The solution is to add [[eGfBTEQ5|positional encoding]] to each embedding. The original transformer paper used a fixed pattern of sine and cosine waves at different frequencies — each position in the sequence gets a unique signature baked into the vector. You literally add this positional vector to the word embedding, so the result encodes both *what* the word is and *where* it sits.
+The solution is to add [[eGfBTEQ5|positional encoding]] to each embedding. The original transformer paper used a fixed pattern of sine and cosine waves at different frequencies:
+
+{math}
+PE(pos, 2i) = \sin\!\left(\frac{pos}{10000^{\,2i/d_{\text{model}}}}\right) \qquad PE(pos, 2i{+}1) = \cos\!\left(\frac{pos}{10000^{\,2i/d_{\text{model}}}}\right)
+{/math}
+
+Each position in the sequence gets a unique signature baked into the vector — sine for even dimensions, cosine for odd, with wavelengths that increase geometrically across dimensions. You literally add this positional vector to the word embedding, so the result encodes both *what* the word is and *where* it sits.
 
 {bkqt/note|Modern positional encoding}
 The original sinusoidal encoding had a weakness: if you train with a context of 512 tokens and then try to process 1000, the model has never seen those positions and performance degrades. Modern models use [[m0VJ5a3l|RoPE]] (Rotary Position Embedding), which is more elegant. Instead of adding a vector, RoPE *rotates* the query and key vectors by an angle proportional to their position before computing dot products. The beauty is that the dot product between any two tokens then depends naturally on the *relative distance* between them, not their absolute positions. This generalizes better beyond the training context length.
@@ -183,7 +190,13 @@ For token i:
     new_embedding_i = old_embedding_i + update
 ```
 
-That is a single attention head. The entire process — query, key, value, dot product, softmax, weighted sum — is just a mechanism for --selectively moving information from some embeddings into others--.
+That is a single attention head. The entire process in one line:
+
+{math}
+\text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^T}{\sqrt{d_k}}\right) V
+{/math}
+
+Query dot-producted with every key, scaled, passed through softmax, multiplied by values. It is just a mechanism for --selectively moving information from some embeddings into others--.
 
 ## Why not skip the value matrix?
 
