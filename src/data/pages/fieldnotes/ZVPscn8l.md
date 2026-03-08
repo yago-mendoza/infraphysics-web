@@ -1,6 +1,6 @@
 ---
 uid: "ZVPscn8l"
-address: "ML//open source model//Qwen"
+address: "ML//model//open source model//Qwen"
 name: "Qwen"
 date: "2026-02-26"
 ---

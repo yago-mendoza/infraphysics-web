@@ -1,6 +1,6 @@
 ---
 uid: "Oy7kR3mL"
-address: "ML//reasoning model//o1"
+address: "ML//model//GPT//o1"
 name: "o1"
 date: "2026-03-05"
 ---

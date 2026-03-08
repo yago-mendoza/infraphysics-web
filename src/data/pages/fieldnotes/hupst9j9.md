@@ -1,7 +1,7 @@
 ---
 uid: "hupst9j9"
-address: "ML//open source model"
-name: "Open Source Model"
+address: "ML//model//open source model"
+name: "open source model"
 date: "2023-06-15"
 ---
 - The movement to release model weights publicly.

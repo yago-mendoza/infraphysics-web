@@ -1,7 +1,7 @@
 ---
 uid: "Cl2rB6nL"
-address: "ML//GPT//causal language modeling"
-name: "Causal Language Modeling"
+address: "ML//model//GPT//causal language modeling"
+name: "causal language modeling"
 date: "2026-03-06"
 ---
 [[U7ljk7Wf|GPT]]'s training objective: predict the next token using only tokens to the left. No [[St5yK9jL|[MASK]]], no bidirectional context.

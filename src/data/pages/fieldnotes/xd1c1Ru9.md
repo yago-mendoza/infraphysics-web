@@ -1,6 +1,6 @@
 ---
 uid: "xd1c1Ru9"
-address: "ML//open source model//Mistral"
+address: "ML//model//open source model//Mistral"
 name: "Mistral"
 date: "2023-11-10"
 ---

@@ -1,6 +1,6 @@
 ---
 uid: "Fyx8hGHL"
-address: "ML//open source model//LLaMA"
+address: "ML//model//open source model//LLaMA"
 name: "LLaMA"
 date: "2023-06-15"
 ---

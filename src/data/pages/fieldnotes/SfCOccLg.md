@@ -1,6 +1,6 @@
 ---
 uid: "SfCOccLg"
-address: "ML//GPT//GPT-2"
+address: "ML//model//GPT//GPT-2"
 name: "GPT-2"
 date: "2019-08-10"
 ---

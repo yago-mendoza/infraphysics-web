@@ -1,6 +1,6 @@
 ---
 uid: "Wb0yDrNZ"
-address: "ML//GPT//ChatGPT"
+address: "ML//model//GPT//ChatGPT"
 name: "ChatGPT"
 date: "2023-01-05"
 ---

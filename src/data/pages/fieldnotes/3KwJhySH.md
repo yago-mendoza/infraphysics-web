@@ -1,6 +1,6 @@
 ---
 uid: "3KwJhySH"
-address: "ML//GPT//GPT-4"
+address: "ML//model//GPT//GPT-4"
 name: "GPT-4"
 date: "2023-04-18"
 ---

@@ -1,7 +1,7 @@
 ---
 uid: "Dl5mK9cJ"
-address: "ML//BERT//downstream layer"
-name: "Downstream Layer"
+address: "ML//model//BERT//downstream layer"
+name: "downstream layer"
 date: "2026-02-25"
 ---
 A simple linear layer on top of [[MwbJnjdN|BERT]]'s output that converts the embedding vector into task-specific predictions.

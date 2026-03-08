@@ -1,6 +1,6 @@
 ---
 uid: "29LsyGvx"
-address: "ML//GPT//GPT-1"
+address: "ML//model//GPT//GPT-1"
 name: "GPT-1"
 date: "2019-02-14"
 ---

@@ -1,7 +1,7 @@
 ---
 uid: "IdfB7mVS"
-address: "ML//GPT//GPT-3//few-shot learning"
-name: "Few-Shot Learning"
+address: "ML//model//GPT//GPT-3//few-shot learning"
+name: "few-shot learning"
 date: "2020-10-15"
 ---
 Give the model a few examples in the prompt, and it generalizes to new inputs.

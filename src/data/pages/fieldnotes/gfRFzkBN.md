@@ -1,6 +1,6 @@
 ---
 uid: "gfRFzkBN"
-address: "ML//GPT//GPT-3"
+address: "ML//model//GPT//GPT-3"
 name: "GPT-3"
 date: "2020-08-22"
 ---

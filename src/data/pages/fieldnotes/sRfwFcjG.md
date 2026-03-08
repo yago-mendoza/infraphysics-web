@@ -1,6 +1,6 @@
 ---
 uid: "sRfwFcjG"
-address: "ML//GPT//InstructGPT"
+address: "ML//model//GPT//InstructGPT"
 name: "InstructGPT"
 date: "2026-02-27"
 ---

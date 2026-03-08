@@ -1,7 +1,7 @@
 ---
 uid: "1zpNyBrj"
-address: "ML//BERT//masked language modeling"
-name: "Masked Language Modeling"
+address: "ML//model//BERT//masked language modeling"
+name: "masked language modeling"
 date: "2019-01-20"
 ---
 Mask 15% of input tokens randomly with [[St5yK9jL|[MASK]]], train the model to predict them from context of both sides.

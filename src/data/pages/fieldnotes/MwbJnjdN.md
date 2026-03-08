@@ -1,6 +1,6 @@
 ---
 uid: "MwbJnjdN"
-address: "ML//BERT"
+address: "ML//model//BERT"
 name: "BERT"
 date: "2019-01-20"
 ---

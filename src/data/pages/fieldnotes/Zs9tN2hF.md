@@ -1,7 +1,7 @@
 ---
 uid: "Zs9tN2hF"
-address: "ML//GPT//GPT-3//zero-shot learning"
-name: "Zero-Shot Learning"
+address: "ML//model//GPT//GPT-3//zero-shot learning"
+name: "zero-shot learning"
 date: "2026-03-01"
 ---
 Solving a task with no examples, just an instruction. "Translate this to French: Hello" with zero demonstrations. The model relies entirely on its [[2oNdlB5L|pre-training]] knowledge to understand the task format.

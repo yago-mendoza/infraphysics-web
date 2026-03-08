@@ -1,7 +1,7 @@
 ---
 uid: "oBpGr85I"
-address: "ML//GPT//GPT-3//in-context learning"
-name: "In-Context Learning"
+address: "ML//model//GPT//GPT-3//in-context learning"
+name: "in-context learning"
 date: "2020-10-15"
 ---
 The model adapts its behavior based on what's in the [[JUby2DIy|context window]], without any weight updates.

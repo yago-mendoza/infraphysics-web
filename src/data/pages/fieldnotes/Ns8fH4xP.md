@@ -1,7 +1,7 @@
 ---
 uid: "Ns8fH4xP"
-address: "ML//BERT//next sentence prediction"
-name: "Next Sentence Prediction"
+address: "ML//model//BERT//next sentence prediction"
+name: "next sentence prediction"
 date: "2026-03-02"
 ---
 The pre-training objective that got fired — BERT shipped with it, then RoBERTa proved everyone was better off without it. BERT's second pre-training objective alongside [[1zpNyBrj|MLM]]: given sentence pair (A, B), predict if B actually follows A in the original text.

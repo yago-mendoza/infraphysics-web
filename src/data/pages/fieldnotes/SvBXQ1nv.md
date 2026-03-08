@@ -1,6 +1,6 @@
 ---
 uid: "SvBXQ1nv"
-address: "ML//Gemini"
+address: "ML//model//Gemini"
 name: "Gemini"
 date: "2026-03-07"
 ---

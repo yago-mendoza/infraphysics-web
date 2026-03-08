@@ -1,6 +1,6 @@
 ---
 uid: "nUKlfmSO"
-address: "ML//DeepSeek"
+address: "ML//model//open source model//DeepSeek"
 name: "DeepSeek"
 date: "2026-03-06"
 ---
