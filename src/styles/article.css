@@ -2296,20 +2296,14 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 .article-hashtag {
   font-size: 0.7rem;
-  color: var(--art-purple);
+  color: var(--art-accent);
   letter-spacing: 0.03em;
-  border: 1px solid color-mix(in srgb, var(--art-purple) 30%, transparent);
+  border: 1px solid color-mix(in srgb, var(--art-accent) 30%, transparent);
   padding: 0.2rem 0.55rem;
   border-radius: 2px;
 }
 
 .article-hashtag-tech {
-  color: var(--art-accent);
-  border-color: color-mix(in srgb, var(--art-accent) 30%, transparent);
-}
-
-/* Threads: topic hashtags match accent (rose) instead of purple */
-.article-threads .article-hashtag {
   color: var(--art-accent);
   border-color: color-mix(in srgb, var(--art-accent) 30%, transparent);
 }
