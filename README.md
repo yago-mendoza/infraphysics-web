@@ -35,7 +35,7 @@ infraphysics-web/
     workflows/
       validate.yml              # CI: build + type check + fieldnote reference validation
   functions/
-    [[catchall]].ts             # Cloudflare Pages Function (dynamic OG tags + JSON-LD for social crawlers)
+    [[catchall]].ts             # Cloudflare Pages Function (OG tags + JSON-LD + body content for social + AI crawlers)
     api/views/[[slug]].ts       # View counter API (KV-backed, IP-deduped per 24h)
     api/reactions/[[slug]].ts   # Heart reaction toggle API (KV-backed, IP-deduped)
     api/stats.ts                # Bulk stats endpoint (POST slugs → views + hearts)
@@ -114,8 +114,11 @@ infraphysics-web/
     public/
       fieldnotes/             # {uid}.json content files (served as static assets)
       fieldnotes-index.json   # Generated: fieldnote metadata index (HTTP-fetched at runtime)
-      og-manifest.json        # Generated: URL path → OG metadata for social previews
-      sitemap.xml             # Generated: XML sitemap for search engines (322+ URLs)
+      og-manifest.json        # Generated: URL path → OG metadata + full text body for crawlers
+      sitemap.xml             # Generated: XML sitemap (415+ URLs)
+      feed.xml                # Generated: RSS feed (latest 30 articles)
+      llms.txt                # Static: LLM-friendly site summary (manually maintained)
+      llms-full.txt           # Generated: all articles in full plain text
       robots.txt              # Crawler directives + sitemap reference
       _routes.json            # Cloudflare Pages routing (which paths invoke the Function)
     lib/
@@ -271,9 +274,26 @@ Articles include engagement and navigation features layered on top of the base c
 
 ---
 
-### Social previews
+### Crawler visibility and AEO (Answer Engine Optimization)
 
-Article URLs return dynamic OG meta tags and JSON-LD structured data for social crawlers and search engines (WhatsApp, Twitter, Discord, Google, etc.) via a Cloudflare Pages Function (`functions/[[catchall]].ts`). The build generates `public/og-manifest.json` mapping every article and fieldnote URL to its title, description, thumbnail, and date. Routing (`public/_routes.json`) limits the Function to article paths only — static assets and section listings are served directly. A `public/sitemap.xml` (generated at build time) and `public/robots.txt` complete the SEO setup.
+The site is an SPA — without server-side rendering, crawlers see an empty `<div id="root"></div>`. A Cloudflare Pages Function (`functions/[[catchall]].ts`) intercepts requests from both social crawlers (Facebook, Twitter, etc.) and AI crawlers (GPTBot, ClaudeBot, Googlebot, PerplexityBot, etc.) and injects:
+
+- **`<head>`**: OG tags, Twitter cards, canonical URL, and JSON-LD structured data (Article + BreadcrumbList for posts, WebSite for `/home`, ProfilePage with Person schema for `/about`)
+- **`<body>`**: Full article text in semantic `<article>` HTML with heading, paragraphs, date, and author footer — so AI crawlers can read and index the actual content, not just metadata
+
+The build generates `public/og-manifest.json` mapping every URL to its metadata **plus full plain text body** for regular posts. For fieldnotes, the edge function fetches individual `public/fieldnotes/{uid}.json` at runtime and strips HTML. Section pages (`/blog/threads`, `/lab/projects`, etc.) include article listings.
+
+**Additional discovery files (all generated at build time):**
+
+| File | What it is |
+|---|---|
+| `public/llms.txt` | Static summary for LLMs — who, what, site structure, article list with URLs (manually maintained) |
+| `public/llms-full.txt` | All 21+ articles in full plain text, auto-generated from post content |
+| `public/feed.xml` | RSS feed (latest 30 articles) with `<link rel="alternate">` in `index.html` for autodiscovery |
+| `public/sitemap.xml` | XML sitemap (415+ URLs: static pages, posts, fieldnotes) |
+| `public/robots.txt` | Crawler directives + sitemap reference |
+
+Routing (`public/_routes.json`) sends article paths, section pages, `/home`, and `/about` through the edge function. Static assets bypass it.
 
 ---
 

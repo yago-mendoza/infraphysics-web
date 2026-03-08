@@ -44,6 +44,18 @@ When the user gives feedback on article quality (tone, structure, storytelling, 
 - **Restructuring** (hierarchy change or note has children): use `move-hierarchy.js` instead — it cascades to all descendants. Dry-run → `--apply` → `npm run build` → `check-references.js` → commit together.
 - Hierarchy separator is `//`, not `/`. `X//node` = child. `X/node` = literal slash in the segment name.
 
+### On publishing or removing articles
+
+When a new article is published or an existing one is removed/renamed:
+
+1. **`npm run build`** regenerates everything automatically: `og-manifest.json` (with full text body), `sitemap.xml`, `feed.xml`, and `llms-full.txt`.
+2. **Update `public/llms.txt`** manually — add or remove the article entry in the appropriate section (Projects, Threads, Bits2Bricks). This is the only AEO file that doesn't auto-generate.
+3. If the article introduces a **new category**, also update `_routes.json` (add the section path so the edge function serves it to crawlers).
+
+### On changing the /about or /home page content
+
+The text that crawlers see for `/about` and `/home` is hardcoded in `build-content.js` (in the `ogManifest` static page entries). If the actual page content changes (AboutView.tsx, HomeView.tsx), update the corresponding `text` field in `build-content.js` to keep them in sync. Crawlers never run JavaScript — they only see what the edge function injects.
+
 ### On file create/delete
 
 1. Update file tree in root `README.md`
@@ -182,3 +194,9 @@ YAML parsers (like `gray-matter`) auto-convert bare `date: 2026-02-15` into a JS
 
 ### Blog category list duplicated for OG manifest
 `build-content.js` has a local `BLOG_CATS` set (used to build URL paths for `og-manifest.json`) that mirrors `BLOG_CATEGORIES` in `categories.tsx`. If a new blog category is added, update both. Also add the new route pattern to `public/_routes.json`.
+
+### Crawler body text for static pages is hardcoded
+The `text` field in `ogManifest['/about']` and `ogManifest['/home']` (in `build-content.js`) is a plain-text copy of what those React components render. It's **not** auto-extracted from the component. If AboutView.tsx or HomeView.tsx content changes, the `text` field must be updated manually or crawlers will see stale content.
+
+### `llms.txt` is manually maintained
+Unlike `llms-full.txt` (auto-generated from all posts), `public/llms.txt` is a hand-written summary. New articles won't appear in it unless manually added. This is intentional — `llms.txt` is curated, `llms-full.txt` is exhaustive.
