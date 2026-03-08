@@ -8,6 +8,7 @@ thumbnail: https://images.unsplash.com/photo-1510511459019-5dda7724fd87?q=80&w=1
 thumbnailAspect: wide
 lead: "Steinberger is a beast. What I don't understand is why he chose the other side — and why Anthropic's trademark claim ended up being the push that sent him there."
 tags: [ai, security, agents, openclaw, privacy, networking]
+complexity: 4
 featured: true
 related: [openclaw-containment-playbook, "8888777", transformers-and-the-data-wall]
 ---

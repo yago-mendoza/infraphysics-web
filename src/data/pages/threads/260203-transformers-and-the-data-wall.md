@@ -8,6 +8,7 @@ thumbnail: https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=4
 thumbnailAspect: banner
 lead: "This is the ABC. Attention, embeddings, tokenization, scaling laws — the whole stack that everything else is built on. Unless a Terence Tao decides to get serious about AI, or Ilya Sutskever walks out of SSI with a new paradigm, or someone at Sakana AI actually cracks nature-inspired architectures — unless that happens, these concepts are the long runway of brute-force scaling. Bitter. But a lesson."
 tags: [ai, deep-learning, scaling, language-models]
+complexity: 6
 featured: true
 related: [the-bitter-lesson]
 ---

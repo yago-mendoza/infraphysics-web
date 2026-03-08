@@ -9,6 +9,7 @@ thumbnailShading: heavy
 description: "A vanilla JS investment dashboard built in one session with Claude 4.6. No framework, no build step, no npm install. Just a folder you double-click."
 status: deployed
 tags: [Finance, Dashboard, Vanilla JS, Chart.js]
+complexity: 2
 technologies: [JavaScript, HTML, CSS, Chart.js]
 github: https://github.com/yago-mendoza/FinBoard
 tldr:

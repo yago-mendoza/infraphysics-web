@@ -6,6 +6,7 @@ date: "2026-03-06"
 subtitle: "The algorithm behind every neural network requires something the brain physically cannot do. The brain doesn't care."
 lead: "For years I found something genuinely poetic in neural networks. Hopfield nets, Boltzmann machines, echo state networks, LSTMs with their gated recurrence — architectures with feedback loops that felt like they were reaching toward something biological. Arguably emulating fragments of actual neural signaling: neurotransmitters crossing the synaptic cleft, binding to postsynaptic receptors, triggering ion channel cascades that propagate graded potentials through dendritic trees. Beautiful on paper. But lately I keep circling the same uncomfortable thought: the brain is something fundamentally different. Twenty watts. Eighty-six billion neurons firing in continuous parallel. No clock cycle, no von Neumann bottleneck, no sequential memory bus — a thermodynamic machine operating near Landauer's limit, where computation and dissipation are the same process. We built digital cathedrals inspired by a system that runs on chemistry, timing, and heat. The inspiration was real. The resemblance might not be."
 tags: [ai, neuroscience, predictive-coding, backpropagation]
+complexity: 7
 lang: en
 ---
 

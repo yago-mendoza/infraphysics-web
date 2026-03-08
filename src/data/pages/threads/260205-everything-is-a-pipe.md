@@ -7,6 +7,7 @@ thumbnail: https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=4
 subtitle: roman aqueducts, your bloodstream, and TCP/IP all solved the same problem. none of them knew about the others.
 lead: "When I was studying engineering, my diagrams kept looking the same across subjects — thermodynamics, hydraulics, heat engines, control systems. Then I realized a perceptron is just another pipe."
 tags: [systems-thinking, infrastructure, networking, biology, history]
+complexity: 2
 featured: true
 ---
 

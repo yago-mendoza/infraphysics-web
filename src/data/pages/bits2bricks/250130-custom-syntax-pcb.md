@@ -8,6 +8,7 @@ thumbnailAspect: banner # full (auto) / wide (16/7) / banner (16/4) / strip (16/
 description: bridging markup syntax and hardware notation.
 lead: "Hardware documentation benefits from rich inline formatting. A PCB design log is the perfect test case."
 tags: [pcb, hardware, syntax]
+complexity: 6
 ---
 
 # custom syntax pcb

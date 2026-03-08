@@ -9,6 +9,7 @@ thumbnailAspect: wide
 description: "Step-by-step guide to running OpenClaw safely using containers, VMs, network segmentation, and cloud deployment. Every technique ranked by effort and protection."
 lead: "Three days testing every containment setup I could find. This is what survived."
 tags: [ai, security, docker, networking, agents, openclaw, devops]
+complexity: 5
 related: [openclaw-and-the-keys-to-your-kingdom]
 ---
 

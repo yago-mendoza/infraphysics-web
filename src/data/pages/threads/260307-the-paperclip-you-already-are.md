@@ -9,6 +9,7 @@ thumbnailShading: heavy
 subtitle: "Nick Bostrom's paperclip maximizer isn't a warning about the future. It's a description of the present."
 description: "Reward hacking isn't an AI problem. It's a human one. We've been paperclip maximizers all along."
 tags: [ai, alignment, reward-hacking, philosophy]
+complexity: 4
 related: [the-number-nobody-is-watching, 6616933]
 ---
 
