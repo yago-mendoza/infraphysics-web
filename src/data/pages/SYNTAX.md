@@ -67,6 +67,16 @@ For frontmatter schemas, content types, editorial rules, and the compilation pip
 
 Seven custom inline rules are applied as pre-processors (step 3). They are defined in `compiler.config.js` under `preProcessors`. The compiler processes them in order: curly-brace patterns first (unambiguous delimiters), then bare-delimiter patterns (underscores, dashes).
 
+### Protected zones
+
+Before pre-processors run, three content types are replaced with inert placeholders so pre-processors cannot corrupt them:
+
+1. **Code** — fenced (` ``` `) and inline (`` ` ``) blocks
+2. **Headings** — any `# ...` line
+3. **Math** — `{math}...{/math}` blocks and `\(...\)` inline expressions
+
+Pre-processors see `%%CBLK_0%%`, `%%HEADING_0%%`, `%%MATH_0%%` instead of the real content. Placeholders are restored after pre-processors finish, before `marked.parse`. If a new pre-processor uses characters that overlap with these zones (`_`, `{`, `\(`), verify it doesn't match inside them.
+
 ### Headings are immune
 
 Section headings (`#`, `##`, `###`, `####`) are **never processed** by any inline formatting rules. No accent text, colored text, inline code (backticks), or any other custom syntax will be applied inside a heading line. Headings are plain text only. Use standard capitalization and nothing else.

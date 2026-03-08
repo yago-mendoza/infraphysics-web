@@ -7,6 +7,19 @@
 //   - uidToMeta: Map<uid, {address, name}> for wiki-link resolution
 //   - compilerConfig: the compiler.config.js object (pre/post processors, etc.)
 //   - marked: the configured marked instance
+//
+// ── Protection order ──
+// Preprocessors (underline, accent-text, etc.) run on raw markdown and can
+// collide with syntax they don't own. Three zones are shielded with placeholders
+// BEFORE preprocessors execute:
+//
+//   1. %%CBLK_N%%    — fenced & inline code (protectBackticks, before everything)
+//   2. %%HEADING_N%% — ATX headings (inside applyPreProcessors)
+//   3. %%MATH_N%%    — {math}...{/math} blocks & \(...\) inline (inside applyPreProcessors)
+//
+// If you add a preprocessor that touches `_`, `{`, `\(`, or any character used
+// by math/code/headings, verify it doesn't invade these protected zones.
+// Placeholders are restored after preprocessors finish, before marked.parse.
 
 // ── Copy button icon (used in code terminal blocks) ──
 const COPY_ICON = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
@@ -39,9 +52,20 @@ export function applyPreProcessors(markdown, preProcessors) {
     headings.push(line);
     return `%%HEADING_${headings.length - 1}%%`;
   });
+  // Protect math expressions from preprocessors (e.g. underline eating _subscripts_)
+  const mathBlocks = [];
+  result = result.replace(/\{math\}\n[\s\S]*?\n\{\/math\}/g, (match) => {
+    mathBlocks.push(match);
+    return `%%MATH_${mathBlocks.length - 1}%%`;
+  });
+  result = result.replace(/\\\(.+?\\\)/g, (match) => {
+    mathBlocks.push(match);
+    return `%%MATH_${mathBlocks.length - 1}%%`;
+  });
   for (const rule of preProcessors) {
     result = result.replace(rule.pattern, rule.replace);
   }
+  result = result.replace(/%%MATH_(\d+)%%/g, (_, idx) => mathBlocks[parseInt(idx)]);
   result = result.replace(/%%HEADING_(\d+)%%/g, (_, idx) => headings[parseInt(idx)]);
   return result;
 }
@@ -375,9 +399,9 @@ export function processDefinitionLists(markdown, markedInstance) {
 
 export function processAlphabeticalLists(markdown, markedInstance) {
   return markdown.replace(
-    /^([a-zA-Z])\. .+(?:\n[a-zA-Z]\. .+)*/gm,
+    /^([a-zA-Z])\. .+(?:\n\n?[a-zA-Z]\. .+)*/gm,
     (block) => {
-      const lines = block.split('\n');
+      const lines = block.split('\n').filter(l => l.trim());
       const firstChar = lines[0][0];
       const isUpper = firstChar >= 'A' && firstChar <= 'Z';
       const startCode = (isUpper ? 'A' : 'a').charCodeAt(0);
