@@ -6,7 +6,7 @@ import React, {
   Suspense,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { secondBrainPath } from '../config/categories';
 import { InfoIcon } from '../components/icons';
 import { initBrainIndex, fetchNoteContent, type BrainIndex } from '../lib/brainIndex';
@@ -23,7 +23,7 @@ import {
   type GraphSettings,
 } from '../components/graph/GraphControls';
 import type { FieldNoteMeta } from '../types';
-import { SIDEBAR_WIDTH } from '../constants/layout';
+import { SIDEBAR_WIDTH, MOBILE_NAV_HEIGHT } from '../constants/layout';
 import '../styles/article.css';
 import '../styles/wiki-content.css';
 
@@ -105,11 +105,36 @@ const GraphGuide: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen
             </ul>
           </div>
           <div>
+            <h3 className={'text-[11px] uppercase tracking-wider mb-1.5 ' + tipAccent}>Mobile</h3>
+            <ul className="space-y-1">
+              <li><strong className={tipStrong}>Pinch</strong> — zoom in/out</li>
+              <li><strong className={tipStrong}>Single finger drag</strong> — pan around the graph</li>
+              <li><strong className={tipStrong}>Hold a node (~300 ms)</strong> — select it and open the preview panel</li>
+              <li><strong className={tipStrong}>Swipe right</strong> on the preview panel — dismiss it</li>
+            </ul>
+          </div>
+          <div>
             <h3 className={'text-[11px] uppercase tracking-wider mb-1.5 ' + tipAccent}>Edge colors</h3>
             <ul className="space-y-1">
               <li><span style={{ color: '#a78bfa' }}>Purple</span> — body references (wiki-links inside the note)</li>
               <li><span style={{ color: '#f472b6' }}>Pink</span> — interactions (trailing refs / contrasts)</li>
               <li><span style={{ color: '#60a5fa' }}>Blue</span> — hierarchy (parent → child)</li>
+            </ul>
+          </div>
+          <div>
+            <h3 className={'text-[11px] uppercase tracking-wider mb-1.5 ' + tipAccent}>Advanced parameters</h3>
+            <ul className="space-y-1">
+              <li><strong className={tipStrong}>Edge width</strong> — thickness of the lines connecting nodes. Hierarchy edges are drawn ~2× thicker.</li>
+              <li><strong className={tipStrong}>Warmup</strong> — how many simulation steps run before the first frame renders. Higher values = the graph appears more settled on load, but takes longer.</li>
+              <li><strong className={tipStrong}>Alpha decay</strong> — how fast the simulation cools down and stops moving. Lower = nodes keep adjusting longer. Higher = settles quickly but may look cramped.</li>
+              <li><strong className={tipStrong}>Damping</strong> — friction on node movement. Low damping = nodes coast further (fluid, slower to settle). High damping = nodes stop almost immediately (snappy, tighter layout).</li>
+            </ul>
+          </div>
+          <div>
+            <h3 className={'text-[11px] uppercase tracking-wider mb-1.5 ' + tipAccent}>Pop-in mode</h3>
+            <ul className="space-y-1">
+              <li>The <strong className={tipStrong}>play button</strong> in the toolbar reveals nodes one by one, sorted by importance (PageRank). Watch the graph grow organically as each node pops in with its connections.</li>
+              <li>Click again to stop and show the full graph.</li>
             </ul>
           </div>
         </div>
@@ -217,6 +242,11 @@ const SecondBrainGraphView: React.FC = () => {
     return '2d';
   });
 
+  // Pop-in animation — purely visual reveal (physics run on full graph)
+  const [popInActive, setPopInActive] = useState(false);
+  const [popInCount, setPopInCount] = useState(0);
+  const popInRevealed = useRef<Set<string>>(new Set());
+
   // Selection & hover preview
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -235,14 +265,26 @@ const SecondBrainGraphView: React.FC = () => {
   const [dragSelect, setDragSelect] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  // Search
-  const [searchQuery, setSearchQuery] = useState('');
+  // Search — initialize from URL ?q= param (passed from mini graph)
+  const [searchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '');
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const searchResults = useMemo(() => {
     if (!searchQuery || !index) return [];
     const q = searchQuery.toLowerCase();
     return index.allFieldNotes
       .filter(n => n.name.toLowerCase().includes(q) || n.address.toLowerCase().includes(q))
       .map(n => n.id);
+  }, [searchQuery, index]);
+
+  // Search results with metadata (for the dropdown)
+  const searchResultsMeta = useMemo(() => {
+    if (!searchQuery || !index) return [];
+    const q = searchQuery.toLowerCase();
+    return index.allFieldNotes
+      .filter(n => n.name.toLowerCase().includes(q) || n.address.toLowerCase().includes(q))
+      .slice(0, 20)
+      .map(n => ({ id: n.id, name: n.name, address: n.address }));
   }, [searchQuery, index]);
 
   // Layout
@@ -276,14 +318,60 @@ const SecondBrainGraphView: React.FC = () => {
   // Filtered graph
   const filtered = useFilteredGraph(fullGraph, visibility);
 
+  // Pop-in: nodes sorted by centrality (most important first)
+  const popInNodeOrder = useMemo(() => {
+    if (!filtered) return [];
+    return [...filtered.nodes]
+      .sort((a, b) => (b as GraphNode).centrality - (a as GraphNode).centrality)
+      .map(n => n.id);
+  }, [filtered]);
+
+  // Pop-in interval — just grows the revealed set (physics untouched)
+  useEffect(() => {
+    if (!popInActive || !filtered) return;
+    const total = popInNodeOrder.length;
+    if (popInCount >= total) {
+      setPopInActive(false);
+      return;
+    }
+    const timer = setInterval(() => {
+      setPopInCount(prev => {
+        const step = Math.max(1, Math.floor(prev / 15));
+        const next = Math.min(prev + step, total);
+        // Add newly revealed nodes to the set
+        for (let i = prev; i < next; i++) {
+          popInRevealed.current.add(popInNodeOrder[i]);
+        }
+        if (next >= total) setPopInActive(false);
+        return next;
+      });
+    }, 50);
+    return () => clearInterval(timer);
+  }, [popInActive, filtered, popInCount, popInNodeOrder]);
+
+  const togglePopIn = useCallback(() => {
+    if (popInActive) {
+      // Stop — reveal everything
+      setPopInActive(false);
+      popInRevealed.current.clear();
+      setPopInCount(filtered?.nodes.length ?? 0);
+    } else {
+      // Start — hide all, then reveal progressively
+      popInRevealed.current.clear();
+      setPopInCount(0);
+      setPopInActive(true);
+    }
+  }, [popInActive, filtered]);
+
   // Track graph area size via its own ref
   const graphAreaRef = useRef<HTMLDivElement>(null);
   const [graphDims, setGraphDims] = useState(() => {
-    const sidebarW = window.innerWidth >= 768 ? SIDEBAR_WIDTH : 0;
-    const panelW = window.innerWidth >= 768 ? PANEL_WIDTH : 0;
+    const mobile = window.innerWidth < 768;
+    const sidebarW = mobile ? 0 : SIDEBAR_WIDTH;
+    const panelW = mobile ? 0 : PANEL_WIDTH;
     return {
       width: Math.max(300, window.innerWidth - sidebarW - panelW),
-      height: window.innerHeight,
+      height: window.innerHeight - (mobile ? MOBILE_NAV_HEIGHT : 0),
     };
   });
 
@@ -393,6 +481,10 @@ const SecondBrainGraphView: React.FC = () => {
 
   const nodeCanvasObject = useCallback((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
     const n = node as GraphNode & { x: number; y: number };
+
+    // Pop-in: skip unrevealed nodes
+    if (popInActive && !popInRevealed.current.has(n.id)) return;
+
     const baseR = 2 + n.centrality * 12;
     const r = baseR * settings.nodeSize;
 
@@ -438,36 +530,58 @@ const SecondBrainGraphView: React.FC = () => {
     }
 
     ctx.globalAlpha = 1;
-  }, [settings.nodeSize, settings.labelSize, settings.showLabels, selectedId, multiSelected, searchResultSet, searchPrimarySet, focusId, focusNeighborSet]);
+  }, [settings.nodeSize, settings.labelSize, settings.showLabels, selectedId, multiSelected, searchResultSet, searchPrimarySet, focusId, focusNeighborSet, popInActive, popInCount]);
 
   const nodePointerAreaPaint = useCallback((node: any, color: string, ctx: CanvasRenderingContext2D) => {
     const n = node as GraphNode & { x: number; y: number };
-    const r = (2 + n.centrality * 12) * settings.nodeSize + 3;
+    const pad = isMobile ? 8 : 3;
+    const r = (2 + n.centrality * 12) * settings.nodeSize + pad;
     ctx.beginPath();
     ctx.arc(n.x, n.y, r, 0, 2 * Math.PI);
     ctx.fillStyle = color;
     ctx.fill();
-  }, [settings.nodeSize]);
+  }, [settings.nodeSize, isMobile]);
 
   // ─── Link rendering ───
   const linkCanvasObject = useCallback((link: any, ctx: CanvasRenderingContext2D) => {
-    const l = link as GraphLink & { source: { x: number; y: number }; target: { x: number; y: number } };
+    const l = link as GraphLink & { source: { x: number; y: number; id?: string }; target: { x: number; y: number; id?: string } };
     if (!l.source?.x || !l.target?.x) return;
+
+    // Pop-in: skip links where either endpoint is not yet revealed
+    if (popInActive) {
+      const sId = (l.source as any).id ?? l.source;
+      const tId = (l.target as any).id ?? l.target;
+      if (!popInRevealed.current.has(sId) || !popInRevealed.current.has(tId)) return;
+    }
+
     ctx.beginPath();
     ctx.moveTo(l.source.x, l.source.y);
     ctx.lineTo(l.target.x, l.target.y);
     ctx.strokeStyle = EDGE_COLORS[l.type];
     ctx.globalAlpha = settings.edgeOpacity;
-    ctx.lineWidth = l.type === 'hierarchy' ? 1.5 : 0.8;
+    ctx.lineWidth = l.type === 'hierarchy' ? settings.edgeWidth * 1.8 : settings.edgeWidth;
     ctx.stroke();
     ctx.globalAlpha = 1;
-  }, [settings.edgeOpacity]);
+  }, [settings.edgeOpacity, settings.edgeWidth, popInActive, popInCount]);
 
   // Mobile slide-in panel
   const [mobilePanel, setMobilePanel] = useState(false);
 
+  // ─── Mobile touch: long-press gating ───
+  const pointerDownTime = useRef(0);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFired = useRef(false);
+
+  // ─── Mobile: swipe-to-dismiss state ───
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const swipingRef = useRef(false);
+  const swipeStart = useRef<{ x: number; y: number; time: number } | null>(null);
+
   // ─── Event handlers ───
   const onNodeClick = useCallback((node: any, event?: MouseEvent) => {
+    // Mobile: only allow node interaction after a long press (~300 ms hold)
+    if (isMobile && !longPressFired.current) return;
+
     if (event?.ctrlKey || event?.metaKey) {
       // Ctrl+click: toggle node in multi-selection
       setMultiSelected(prev => {
@@ -488,6 +602,62 @@ const SecondBrainGraphView: React.FC = () => {
       setShowPanel(true);
     }
   }, [showPanel, isMobile]);
+
+  // ─── Mobile: track pointer timing for long-press ───
+  useEffect(() => {
+    if (!isMobile) return;
+    const el = graphAreaRef.current;
+    if (!el) return;
+
+    const LONG_PRESS_MS = 300;
+    const MOVE_THRESHOLD = 10;
+    let startX = 0, startY = 0;
+
+    const onDown = (e: PointerEvent) => {
+      // Only track single-finger touches
+      if (e.pointerType === 'touch') {
+        startX = e.clientX;
+        startY = e.clientY;
+        pointerDownTime.current = Date.now();
+        longPressFired.current = false;
+        longPressTimer.current = setTimeout(() => {
+          longPressFired.current = true;
+          // Haptic feedback if available
+          if (navigator.vibrate) navigator.vibrate(30);
+        }, LONG_PRESS_MS);
+      }
+    };
+
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch' || !longPressTimer.current) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      if (Math.hypot(dx, dy) > MOVE_THRESHOLD) {
+        // Finger moved too much — cancel long press (this is a pan)
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+        longPressFired.current = false;
+      }
+    };
+
+    const onUp = () => {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+    };
+
+    el.addEventListener('pointerdown', onDown);
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerup', onUp);
+    el.addEventListener('pointercancel', onUp);
+    return () => {
+      el.removeEventListener('pointerdown', onDown);
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointerup', onUp);
+      el.removeEventListener('pointercancel', onUp);
+    };
+  }, [isMobile]);
 
   const onNodeHover = useCallback((node: any) => {
     if (containerRef.current) {
@@ -559,9 +729,38 @@ const SecondBrainGraphView: React.FC = () => {
     }
   }, [searchResults, showPanel, filtered]);
 
-  // ─── Force config ───
-  const d3AlphaDecay = 0.02;
-  const d3VelocityDecay = 0.3;
+  // Auto-preview first result as user types
+  useEffect(() => {
+    if (searchResults.length > 0) {
+      setSelectedId(searchResults[0]);
+      if (!showPanel && !isMobile) setShowPanel(true);
+    }
+  }, [searchResults]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Click a search result → select + center
+  const onSearchResultClick = useCallback((uid: string) => {
+    setSelectedId(uid);
+    setHoveredId(null);
+    if (!showPanel && !isMobile) setShowPanel(true);
+    const fg = graphRef.current;
+    if (fg && filtered) {
+      const node = filtered.nodes.find((n: any) => n.id === uid);
+      if (node && fg.centerAt) {
+        fg.centerAt((node as any).x, (node as any).y, 400);
+        fg.zoom(3, 400);
+      } else if (node && fg.cameraPosition) {
+        const n = node as any;
+        fg.cameraPosition(
+          { x: n.x, y: n.y, z: (n.z ?? 0) + 200 },
+          { x: n.x, y: n.y, z: n.z ?? 0 }, 400,
+        );
+      }
+    }
+  }, [filtered, showPanel, isMobile]);
+
+  // ─── Force config (from settings) ───
+  const d3AlphaDecay = settings.alphaDecay;
+  const d3VelocityDecay = settings.velocityDecay;
 
   // Apply force settings when they change
   useEffect(() => {
@@ -576,17 +775,47 @@ const SecondBrainGraphView: React.FC = () => {
     }
   }, [settings.forceStrength, settings.linkDistance]);
 
-  // Keyboard: Escape to deselect, C to toggle controls
+  // Keyboard: Escape to deselect, C to toggle controls, type-to-search
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setSelectedId(null); setMultiSelected(new Set()); }
-      if (e.key === 'c' && !e.ctrlKey && !e.metaKey && !(e.target instanceof HTMLInputElement)) {
+      const el = e.target as HTMLElement;
+      const isInput = el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT';
+
+      if (e.key === 'Escape') {
+        if (isInput && searchQuery) {
+          setSearchQuery('');
+          (el as HTMLInputElement).blur();
+        } else {
+          setSelectedId(null); setMultiSelected(new Set());
+        }
+        return;
+      }
+      if (e.key === 'c' && !e.ctrlKey && !e.metaKey && !isInput) {
         setShowControls(v => !v);
+        return;
+      }
+
+      // Type-to-search: printable keys focus the search input
+      if (isInput || e.ctrlKey || e.metaKey || e.altKey) return;
+
+      if (e.key === 'Backspace' && searchQuery) {
+        e.preventDefault();
+        setSearchQuery(searchQuery.slice(0, -1));
+        if (!showControls) setShowControls(true);
+        searchInputRef.current?.focus();
+        return;
+      }
+
+      if (e.key.length === 1 && !e.shiftKey) {
+        e.preventDefault();
+        setSearchQuery(searchQuery + e.key);
+        if (!showControls) setShowControls(true);
+        searchInputRef.current?.focus();
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, []);
+  }, [searchQuery, showControls]);
 
   // Drag rectangle selection (only when selectMode is active, 2D only)
   useEffect(() => {
@@ -726,11 +955,11 @@ const SecondBrainGraphView: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className="fixed top-0 right-0 bottom-0 bg-th-base flex"
-      style={{ left: isMobile ? 0 : SIDEBAR_WIDTH }}
+      className="fixed right-0 bottom-0 bg-th-base flex"
+      style={{ left: isMobile ? 0 : SIDEBAR_WIDTH, top: isMobile ? MOBILE_NAV_HEIGHT : 0 }}
     >
       {/* Toolbar */}
-      <div className="absolute top-3 left-3 z-20 flex flex-col gap-2">
+      <div className="absolute left-3 top-3 z-20 flex flex-col gap-2">
         <div className="flex items-center gap-1.5">
           {/* Back arrow */}
           <Link
@@ -762,6 +991,25 @@ const SecondBrainGraphView: React.FC = () => {
               <line x1="1" y1="6" x2="3" y2="6" />
               <line x1="9" y1="6" x2="11" y2="6" />
             </svg>
+          </button>
+          {/* Pop-in */}
+          <button
+            onClick={togglePopIn}
+            className={`inline-flex items-center px-2 py-1.5 bg-th-base/80 backdrop-blur-sm border transition-colors ${
+              popInActive ? 'border-violet-500/40 text-violet-400' : 'border-th-hub-border text-th-secondary hover:text-violet-400'
+            }`}
+            title={popInActive ? 'Stop pop-in' : 'Pop-in animation'}
+          >
+            {popInActive ? (
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                <rect x="2" y="2" width="3" height="8" rx="0.5" />
+                <rect x="7" y="2" width="3" height="8" rx="0.5" />
+              </svg>
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                <path d="M3 1.5v9l7-4.5z" />
+              </svg>
+            )}
           </button>
           {/* Select mode */}
           <button
@@ -800,18 +1048,22 @@ const SecondBrainGraphView: React.FC = () => {
         </button>
         {showControls && (
           <GraphControls
+            ref={searchInputRef}
             visibility={visibility}
             onVisibilityChange={setVisibility}
             settings={settings}
             onSettingsChange={setSettings}
             dimension={dimension}
             onDimensionChange={setDimension}
-            nodeCount={filtered.nodes.length}
+            nodeCount={popInActive ? popInCount : filtered.nodes.length}
             linkCount={filtered.links.length}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             onSearchSubmit={onSearchSubmit}
             searchResultCount={searchResults.length}
+            searchResults={searchResultsMeta}
+            activeResultId={selectedId}
+            onResultClick={onSearchResultClick}
           />
         )}
       </div>
@@ -840,7 +1092,7 @@ const SecondBrainGraphView: React.FC = () => {
               d3VelocityDecay={d3VelocityDecay}
               warmupTicks={settings.warmupTicks}
               cooldownTicks={300}
-              enableNodeDrag={true}
+              enableNodeDrag={!isMobile}
               enableZoomInteraction={true}
               enablePanInteraction={!selectMode}
               backgroundColor="transparent"
@@ -908,6 +1160,13 @@ const SecondBrainGraphView: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Pop-in counter */}
+      {popInActive && filtered && (
+        <div className="absolute bottom-4 left-4 z-20 px-3 py-1.5 bg-th-base/90 backdrop-blur-sm border border-violet-500/30 text-[11px] text-violet-400 tabular-nums">
+          {popInCount} / {filtered.nodes.length}
+        </div>
+      )}
 
       {/* Toast notification */}
       {toast && (
@@ -1017,24 +1276,61 @@ const SecondBrainGraphView: React.FC = () => {
         </div>
       )}
 
-      {/* Note preview panel — mobile: slide-in from right */}
+      {/* Note preview panel — mobile: slide-in from right, swipe to dismiss */}
       {isMobile && (
         <>
           {/* Backdrop */}
           <div
             className="fixed inset-0 z-30 bg-black/50 transition-opacity"
-            style={{ opacity: mobilePanel && previewNote ? 1 : 0, pointerEvents: mobilePanel && previewNote ? 'auto' : 'none' }}
+            style={{
+              opacity: mobilePanel && previewNote ? Math.max(0, 1 - swipeOffset / 200) : 0,
+              pointerEvents: mobilePanel && previewNote ? 'auto' : 'none',
+            }}
             onClick={() => setMobilePanel(false)}
           />
           {/* Sliding panel */}
           <div
-            className="fixed top-0 right-0 bottom-0 z-40 bg-th-base border-l border-th-hub-border flex flex-col overflow-hidden transition-transform duration-200"
+            className={`fixed right-0 bottom-0 z-40 bg-th-base border-l border-th-hub-border flex flex-col overflow-hidden ${swipingRef.current ? '' : 'transition-transform duration-200'}`}
             style={{
+              top: MOBILE_NAV_HEIGHT,
               width: '85vw',
               maxWidth: 400,
-              transform: mobilePanel && previewNote ? 'translateX(0)' : 'translateX(100%)',
+              transform: mobilePanel && previewNote
+                ? `translateX(${swipeOffset}px)`
+                : 'translateX(100%)',
+            }}
+            onTouchStart={(e) => {
+              if (e.touches.length !== 1) return;
+              swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, time: Date.now() };
+              swipingRef.current = false;
+            }}
+            onTouchMove={(e) => {
+              if (!swipeStart.current || e.touches.length !== 1) return;
+              const dx = e.touches[0].clientX - swipeStart.current.x;
+              const dy = e.touches[0].clientY - swipeStart.current.y;
+              // Only activate horizontal swipe to the right
+              if (!swipingRef.current) {
+                if (Math.abs(dx) < 10) return; // too early
+                if (dx < 0 || Math.abs(dy) > Math.abs(dx) * 1.5) { swipeStart.current = null; return; }
+                swipingRef.current = true;
+              }
+              e.preventDefault();
+              setSwipeOffset(Math.max(0, dx));
+            }}
+            onTouchEnd={() => {
+              if (!swipeStart.current || !swipingRef.current) { swipeStart.current = null; return; }
+              const elapsed = Date.now() - swipeStart.current.time;
+              const velocity = swipeOffset / Math.max(elapsed, 1);
+              if (swipeOffset > 80 || velocity > 0.4) {
+                setMobilePanel(false);
+              }
+              setSwipeOffset(0);
+              swipingRef.current = false;
+              swipeStart.current = null;
             }}
           >
+            {/* Drag handle indicator */}
+            <div className="absolute left-1.5 top-1/2 -translate-y-1/2 w-1 h-8 rounded-full bg-th-muted/30 pointer-events-none" />
             {/* Mobile panel header */}
             <div className="flex items-center justify-between px-3 py-2.5 border-b border-th-hub-border bg-th-surface/30">
               <button

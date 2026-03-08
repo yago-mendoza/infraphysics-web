@@ -1,6 +1,6 @@
 // Graph control panel — edge visibility toggles, sliders, view mode switch
 
-import React from 'react';
+import React, { forwardRef, useState } from 'react';
 import { EDGE_COLORS, EDGE_LABELS, type EdgeType, type EdgeVisibility } from './useGraphData';
 
 export interface GraphSettings {
@@ -11,6 +11,9 @@ export interface GraphSettings {
   labelSize: number;     // 0–14 (0 = hidden)
   showLabels: boolean;   // master toggle for labels (2D + 3D)
   warmupTicks: number;   // initial simulation ticks
+  edgeWidth: number;     // base line width 0.2–3
+  alphaDecay: number;    // simulation settling speed 0.005–0.1
+  velocityDecay: number; // damping 0.05–0.8
 }
 
 export const DEFAULT_SETTINGS: GraphSettings = {
@@ -21,7 +24,16 @@ export const DEFAULT_SETTINGS: GraphSettings = {
   labelSize: 10,
   showLabels: false,
   warmupTicks: 100,
+  edgeWidth: 0.8,
+  alphaDecay: 0.02,
+  velocityDecay: 0.3,
 };
+
+export interface SearchResultItem {
+  id: string;
+  name: string;
+  address: string;
+}
 
 interface GraphControlsProps {
   visibility: EdgeVisibility;
@@ -36,6 +48,9 @@ interface GraphControlsProps {
   onSearchChange: (q: string) => void;
   onSearchSubmit: () => void;
   searchResultCount: number;
+  searchResults: SearchResultItem[];
+  activeResultId: string | null;
+  onResultClick: (id: string) => void;
 }
 
 const Slider: React.FC<{
@@ -83,7 +98,27 @@ const EdgeToggle: React.FC<{
   </button>
 );
 
-export const GraphControls: React.FC<GraphControlsProps> = ({
+const AdvancedSection: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-t border-th-hub-border pt-1">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="flex items-center justify-between w-full text-[10px] text-th-muted hover:text-th-secondary transition-colors py-1"
+      >
+        <span className="uppercase tracking-wider">Advanced parameters</span>
+        <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" strokeWidth="1.5"
+          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 150ms' }}
+        >
+          <path d="M1 3l3 3 3-3" />
+        </svg>
+      </button>
+      {open && <div className="flex flex-col gap-1.5 pt-1 pb-1">{children}</div>}
+    </div>
+  );
+};
+
+export const GraphControls = forwardRef<HTMLInputElement, GraphControlsProps>(({
   visibility,
   onVisibilityChange,
   settings,
@@ -96,7 +131,10 @@ export const GraphControls: React.FC<GraphControlsProps> = ({
   onSearchChange,
   onSearchSubmit,
   searchResultCount,
-}) => {
+  searchResults,
+  activeResultId,
+  onResultClick,
+}, ref) => {
   const toggleEdge = (type: EdgeType) => {
     onVisibilityChange({ ...visibility, [type]: !visibility[type] });
   };
@@ -139,19 +177,44 @@ export const GraphControls: React.FC<GraphControlsProps> = ({
       </div>
 
       {/* Search */}
-      <div className="relative">
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={e => onSearchChange(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') onSearchSubmit(); }}
-          placeholder="Find node..."
-          className="w-full text-[11px] px-2 py-1.5 bg-transparent border border-th-hub-border text-th-primary placeholder-th-muted focus:outline-none focus:border-violet-500/50"
-        />
-        {searchQuery && (
-          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-th-muted tabular-nums">
-            {searchResultCount}
-          </span>
+      <div>
+        <div className="relative">
+          <input
+            ref={ref}
+            type="text"
+            value={searchQuery}
+            onChange={e => onSearchChange(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') onSearchSubmit();
+              if (e.key === 'Escape') { onSearchChange(''); (e.target as HTMLInputElement).blur(); }
+            }}
+            placeholder="Find node..."
+            className="w-full text-[11px] px-2 py-1.5 bg-transparent border border-th-hub-border text-th-primary placeholder-th-muted focus:outline-none focus:border-violet-500/50"
+          />
+          {searchQuery && (
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-th-muted tabular-nums">
+              {searchResultCount}
+            </span>
+          )}
+        </div>
+        {searchQuery && searchResults.length > 0 && (
+          <div className="max-h-[200px] overflow-y-auto border border-t-0 border-th-hub-border bg-th-base/95 backdrop-blur-sm">
+            {searchResults.slice(0, 20).map((r, i) => (
+              <button
+                key={r.id}
+                onClick={() => onResultClick(r.id)}
+                className={`w-full text-left px-2 py-1.5 text-[11px] transition-colors truncate flex items-center gap-1.5 ${
+                  r.id === activeResultId
+                    ? 'bg-violet-500/20 text-violet-300'
+                    : i === 0 && !activeResultId
+                      ? 'bg-violet-500/10 text-th-primary'
+                      : 'text-th-secondary hover:bg-violet-500/10 hover:text-th-primary'
+                }`}
+              >
+                <span className="truncate">{r.name}</span>
+              </button>
+            ))}
+          </div>
         )}
       </div>
 
@@ -242,6 +305,18 @@ export const GraphControls: React.FC<GraphControlsProps> = ({
         </label>
       </div>
 
+      {/* Advanced */}
+      <AdvancedSection>
+        <Slider label="Edge width" value={settings.edgeWidth} min={0.2} max={3} step={0.1}
+          onChange={v => setSetting('edgeWidth', v)} />
+        <Slider label="Warmup" value={settings.warmupTicks} min={0} max={300} step={10}
+          onChange={v => setSetting('warmupTicks', v)} display={v => String(v)} />
+        <Slider label="Alpha decay" value={settings.alphaDecay} min={0.005} max={0.1} step={0.005}
+          onChange={v => setSetting('alphaDecay', v)} display={v => v.toFixed(3)} />
+        <Slider label="Damping" value={settings.velocityDecay} min={0.05} max={0.8} step={0.05}
+          onChange={v => setSetting('velocityDecay', v)} />
+      </AdvancedSection>
+
       {/* Reset */}
       <button
         onClick={() => onSettingsChange({ ...DEFAULT_SETTINGS })}
@@ -251,4 +326,6 @@ export const GraphControls: React.FC<GraphControlsProps> = ({
       </button>
     </div>
   );
-};
+});
+
+GraphControls.displayName = 'GraphControls';

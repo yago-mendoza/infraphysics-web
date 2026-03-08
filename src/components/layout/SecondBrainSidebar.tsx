@@ -1,6 +1,6 @@
 // Second Brain Manager Sidebar — data exploration dashboard for /second-brain* routes
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { secondBrainPath } from '../../config/categories';
 import { useHub } from '../../contexts/SecondBrainHubContext';
@@ -20,6 +20,9 @@ import { useIsLocalhost } from '../../hooks/useIsLocalhost';
 import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../../constants/layout';
 import type { FieldNoteMeta } from '../../types';
 import type { TreeNode, FilterState, DirectorySortMode, ViewMode } from '../../hooks/useSecondBrainHub';
+
+// Lazy-load MiniGraph — heavy dep (react-force-graph-2d)
+const MiniGraph = React.lazy(() => import('../graph/MiniGraph'));
 
 // --- Collapsible Section ---
 const Section: React.FC<{
@@ -524,13 +527,53 @@ export const SecondBrainSidebar: React.FC = () => {
     </button>
   );
 
+  // Build highlight set from sortedResults when searching
+  const graphHighlightIds = useMemo(() => {
+    if (!searchActive) return null;
+    return new Set(sortedResults.map(n => n.id));
+  }, [searchActive, sortedResults]);
+
   const sections = (
     <>
+      {/* Mini Graph — visual overview, highlights search matches */}
+      <Section
+        title="graph"
+        icon={
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
+            <circle cx="3" cy="3" r="1.5" /><circle cx="9" cy="5" r="1.5" /><circle cx="5" cy="9" r="1.5" />
+            <line x1="4.2" y1="3.8" x2="7.8" y2="4.5" /><line x1="4" y1="8" x2="7.8" y2="5.8" />
+          </svg>
+        }
+        defaultOpen={true}
+        headerAction={
+          <a
+            href={`/lab/second-brain/graph${hub.query ? `?q=${encodeURIComponent(hub.query)}` : ''}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-violet-400 hover:text-violet-300 transition-colors leading-[0] p-1"
+            title="Open graph explorer"
+          >
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
+              <circle cx="3" cy="3" r="1.5" /><circle cx="9" cy="5" r="1.5" /><circle cx="5" cy="9" r="1.5" />
+              <line x1="4.2" y1="3.8" x2="7.8" y2="4.5" /><line x1="4" y1="8" x2="7.8" y2="5.8" />
+            </svg>
+          </a>
+        }
+      >
+        <Suspense fallback={
+          <div className="flex items-center justify-center text-th-muted text-[10px] animate-pulse" style={{ height: 150 }}>
+            Loading graph...
+          </div>
+        }>
+          <MiniGraph highlightIds={graphHighlightIds} searchQuery={hub.query} />
+        </Suspense>
+      </Section>
+
       {/* Graph Stats — always global, technical only */}
       {!isSimplified && <Section
         title="graph stats"
         icon={<BarChartIcon />}
-        defaultOpen={false}
+        defaultOpen={true}
       >
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
           <div>
@@ -812,27 +855,13 @@ export const SecondBrainSidebar: React.FC = () => {
               <span className="text-[11px] lowercase tracking-wide font-semibold text-violet-400 group-hover:text-violet-300 transition-colors">second brain</span>{' '}
               <span className="text-[11px] lowercase tracking-wide text-th-muted font-normal">manager</span>
             </Link>
-            <span className="flex items-center gap-1.5 flex-shrink-0">
-              <a
-                href="/lab/second-brain/graph"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-violet-400 hover:text-violet-300 transition-colors leading-[0]"
-                title="Open graph explorer"
-              >
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
-                  <circle cx="3" cy="3" r="1.5" /><circle cx="9" cy="5" r="1.5" /><circle cx="5" cy="9" r="1.5" />
-                  <line x1="4.2" y1="3.8" x2="7.8" y2="4.5" /><line x1="4" y1="8" x2="7.8" y2="5.8" />
-                </svg>
-              </a>
-              <button
-                onClick={() => setGuideOpen(true)}
-                className="text-violet-400 hover:text-violet-300 transition-colors flex-shrink-0 leading-[0]"
-                title="How Second Brain works"
-              >
-                <InfoIcon size={11} />
-              </button>
-            </span>
+            <button
+              onClick={() => setGuideOpen(true)}
+              className="text-violet-400 hover:text-violet-300 transition-colors flex-shrink-0 leading-[0]"
+              title="How Second Brain works"
+            >
+              <InfoIcon size={11} />
+            </button>
           </div>
           <div className="px-3 pb-1.5 flex items-center justify-between">
             {modeToggle}
