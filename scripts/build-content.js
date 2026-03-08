@@ -308,7 +308,10 @@ function extractFieldnoteMeta(filename, filePath) {
     contentMd = bodyLines.slice(0, cutoff).join('\n');
   }
 
+  // Fieldnotes use breaks:true — single newline → <br>, double newline → new <p>
+  marked.setOptions({ ...compilerConfig.marked, breaks: true });
   const preLinkHtml = compileMarkdown(contentMd.trim(), date);
+  marked.setOptions(compilerConfig.marked); // restore
   const searchText = preLinkHtml.replace(/<[^>]*>/g, '').toLowerCase();
 
   return {

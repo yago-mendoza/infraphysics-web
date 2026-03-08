@@ -64,7 +64,7 @@ previewRenderer.image = function ({ href, title, text }) {
   return `<img src="${href}" alt="${alt}"${classAttr}${styleAttr}${titleAttr} loading="lazy" />`;
 };
 
-const previewMarked = new Marked({ renderer: previewRenderer, ...compilerConfig.marked });
+const previewMarked = new Marked({ renderer: previewRenderer, ...compilerConfig.marked, breaks: true });
 
 // ── Hook ──
 
