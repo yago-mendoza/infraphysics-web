@@ -2013,7 +2013,7 @@ export const SecondBrainView: React.FC = () => {
                   toolbarInputRef.current?.focus();
                 }, 100);
               }}
-              className="lg:hidden fixed bottom-16 right-4 z-40 w-11 h-11 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+              className="lg:hidden fixed bottom-[72px] right-4 z-40 w-11 h-11 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
               aria-label="Search concepts"
             >
               <SearchIcon />

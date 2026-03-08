@@ -292,7 +292,7 @@ export const HomeView: React.FC = () => {
                 </Link>
                 <Link
                   to="/lab/second-brain/graph"
-                  className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium border border-violet-500/30 text-violet-400/80 hover:bg-violet-500/10 hover:border-violet-500/50 hover:text-violet-400 transition-all"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium border border-violet-500/30 text-violet-400/80 hover:bg-violet-500/10 hover:border-violet-500/50 hover:text-violet-400 transition-all"
                   onClick={() => sessionStorage.setItem('graph-dimension', '3d')}
                 >
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
