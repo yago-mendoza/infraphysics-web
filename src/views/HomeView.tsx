@@ -246,6 +246,88 @@ export const HomeView: React.FC = () => {
         )}
       </section>
 
+      {/* Second Brain */}
+      <section className="pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
+        <div className="rounded-lg border border-violet-500/20 bg-violet-500/[0.03] p-6 md:p-8 overflow-hidden">
+          <div className="flex items-start justify-between gap-8">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-base text-violet-400 tracking-wide mb-3">What I learn, I share.</h2>
+              <p className="text-th-secondary text-sm leading-relaxed font-sans mb-4">
+                This is where I break down what I'm studying into atomic, cross-linked notes. It's technical, but a good entry point: everything connects to everything else, so you can start anywhere and follow the links. Knowledge compounds when it's written down and shared. If you're curious, you're welcome here.
+              </p>
+              <div className="flex items-center gap-6 mb-5">
+                <span className="text-sm text-th-tertiary">
+                  <span className="text-violet-400 font-mono font-semibold">{brainStats.notes}</span> notes
+                </span>
+                <span className="text-sm text-th-tertiary">
+                  <span className="text-violet-400 font-mono font-semibold">{brainStats.connections}</span> connections
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  to={secondBrainPath()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium border border-violet-500/30 bg-violet-500/10 text-violet-400 hover:bg-violet-500/20 hover:border-violet-500/50 transition-all"
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
+                    <rect x="1" y="1" width="4" height="4" rx="0.5" />
+                    <rect x="7" y="1" width="4" height="4" rx="0.5" />
+                    <rect x="1" y="7" width="4" height="4" rx="0.5" />
+                    <rect x="7" y="7" width="4" height="4" rx="0.5" />
+                  </svg>
+                  Browse brain
+                </Link>
+                <Link
+                  to="/lab/second-brain/graph"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium border border-violet-500/30 text-violet-400/80 hover:bg-violet-500/10 hover:border-violet-500/50 hover:text-violet-400 transition-all"
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
+                    <circle cx="3" cy="3" r="1.5" />
+                    <circle cx="9" cy="5" r="1.5" />
+                    <circle cx="5" cy="9" r="1.5" />
+                    <line x1="4.2" y1="3.7" x2="7.8" y2="4.5" />
+                    <line x1="3.8" y1="4.3" x2="5" y2="7.5" />
+                    <line x1="6.5" y1="8.5" x2="7.8" y2="6.2" />
+                  </svg>
+                  Graph 2D
+                </Link>
+                <Link
+                  to="/lab/second-brain/graph"
+                  className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium border border-violet-500/30 text-violet-400/80 hover:bg-violet-500/10 hover:border-violet-500/50 hover:text-violet-400 transition-all"
+                  onClick={() => sessionStorage.setItem('graph-dimension', '3d')}
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
+                    <path d="M6 1L11 4V8L6 11L1 8V4L6 1Z" />
+                    <line x1="6" y1="1" x2="6" y2="11" />
+                    <line x1="1" y1="4" x2="11" y2="4" />
+                  </svg>
+                  Graph 3D
+                </Link>
+              </div>
+            </div>
+            <div className="hidden md:block shrink-0 w-32 h-32 opacity-30">
+              <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                <line x1="60" y1="30" x2="30" y2="70" stroke="#8b5cf6" strokeWidth="1" />
+                <line x1="60" y1="30" x2="90" y2="55" stroke="#8b5cf6" strokeWidth="1" />
+                <line x1="30" y1="70" x2="75" y2="90" stroke="#8b5cf6" strokeWidth="1" />
+                <line x1="90" y1="55" x2="75" y2="90" stroke="#8b5cf6" strokeWidth="1" />
+                <line x1="30" y1="70" x2="15" y2="40" stroke="#8b5cf6" strokeWidth="0.75" />
+                <line x1="90" y1="55" x2="105" y2="30" stroke="#8b5cf6" strokeWidth="0.75" />
+                <line x1="75" y1="90" x2="100" y2="100" stroke="#8b5cf6" strokeWidth="0.75" />
+                <line x1="60" y1="30" x2="45" y2="10" stroke="#8b5cf6" strokeWidth="0.75" />
+                <circle cx="60" cy="30" r="4" fill="#8b5cf6" />
+                <circle cx="30" cy="70" r="3.5" fill="#8b5cf6" />
+                <circle cx="90" cy="55" r="3.5" fill="#8b5cf6" />
+                <circle cx="75" cy="90" r="3" fill="#8b5cf6" />
+                <circle cx="15" cy="40" r="2" fill="#7c3aed" />
+                <circle cx="105" cy="30" r="2" fill="#7c3aed" />
+                <circle cx="100" cy="100" r="2" fill="#7c3aed" />
+                <circle cx="45" cy="10" r="2" fill="#7c3aed" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Latest Work */}
       <section className="pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
         <h2 className="text-xs text-th-tertiary uppercase tracking-wider mb-5 md:mb-8">Latest Work</h2>
@@ -278,7 +360,7 @@ export const HomeView: React.FC = () => {
                 </span>
               </div>
 
-              <h3 className="text-th-heading font-semibold leading-snug mb-2 group-hover-accent transition-colors lowercase"
+              <h3 className="text-th-heading font-semibold leading-snug mb-2 group-hover-accent transition-colors"
                 style={{ '--ac-color': accent } as React.CSSProperties}>
                 {post.displayTitle || post.title}
               </h3>
@@ -295,67 +377,6 @@ export const HomeView: React.FC = () => {
             );
           })}
         </div>
-      </section>
-
-      {/* Second Brain */}
-      <section className="pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
-        <Link
-          to={secondBrainPath()}
-          className="group block rounded-lg border border-violet-500/20 bg-violet-500/[0.03] p-6 md:p-8 hover:border-violet-500/40 hover:bg-violet-500/[0.06] transition-all overflow-hidden"
-        >
-          <div className="flex items-start justify-between gap-8">
-            {/* Left: content */}
-            <div className="flex-1 min-w-0 flex flex-col md:min-h-[8rem]">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-xs text-violet-400 uppercase tracking-wider">Second Brain</h2>
-                  <span className="inline-flex items-center gap-1 text-xs text-violet-400 opacity-0 group-hover:opacity-100 transition-opacity md:hidden">
-                    Open <ArrowRightIcon />
-                  </span>
-                </div>
-                <p className="text-th-secondary text-sm leading-relaxed font-sans">
-                  The job of an industrial engineer is making sense of how things work, across domains. From signals to structures to code, the same fundamentals keep appearing. This maps the ones that matter. One concept per page, all connected.
-                </p>
-              </div>
-              <div className="flex items-center gap-6 mt-auto pt-4">
-                <span className="text-sm text-th-tertiary">
-                  <span className="text-violet-400 font-mono font-semibold">{brainStats.notes}</span> notes
-                </span>
-                <span className="text-sm text-th-tertiary">
-                  <span className="text-violet-400 font-mono font-semibold">{brainStats.connections}</span> connections
-                </span>
-                <span className="hidden md:inline-flex items-center gap-1 text-xs text-violet-400 opacity-0 group-hover:opacity-100 transition-opacity ml-auto">
-                  Explore <ArrowRightIcon />
-                </span>
-              </div>
-            </div>
-
-            {/* Right: network graph */}
-            <div className="hidden md:block shrink-0 w-32 h-32 opacity-30 group-hover:opacity-50 transition-opacity">
-              <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-                {/* Connections */}
-                <line x1="60" y1="30" x2="30" y2="70" stroke="#8b5cf6" strokeWidth="1" />
-                <line x1="60" y1="30" x2="90" y2="55" stroke="#8b5cf6" strokeWidth="1" />
-                <line x1="30" y1="70" x2="75" y2="90" stroke="#8b5cf6" strokeWidth="1" />
-                <line x1="90" y1="55" x2="75" y2="90" stroke="#8b5cf6" strokeWidth="1" />
-                <line x1="30" y1="70" x2="15" y2="40" stroke="#8b5cf6" strokeWidth="0.75" />
-                <line x1="90" y1="55" x2="105" y2="30" stroke="#8b5cf6" strokeWidth="0.75" />
-                <line x1="75" y1="90" x2="100" y2="100" stroke="#8b5cf6" strokeWidth="0.75" />
-                <line x1="60" y1="30" x2="45" y2="10" stroke="#8b5cf6" strokeWidth="0.75" />
-                {/* Core nodes */}
-                <circle cx="60" cy="30" r="4" fill="#8b5cf6" />
-                <circle cx="30" cy="70" r="3.5" fill="#8b5cf6" />
-                <circle cx="90" cy="55" r="3.5" fill="#8b5cf6" />
-                <circle cx="75" cy="90" r="3" fill="#8b5cf6" />
-                {/* Leaf nodes */}
-                <circle cx="15" cy="40" r="2" fill="#7c3aed" />
-                <circle cx="105" cy="30" r="2" fill="#7c3aed" />
-                <circle cx="100" cy="100" r="2" fill="#7c3aed" />
-                <circle cx="45" cy="10" r="2" fill="#7c3aed" />
-              </svg>
-            </div>
-          </div>
-        </Link>
       </section>
 
       {/* CTA */}
