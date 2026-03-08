@@ -1,9 +1,10 @@
 ---
-uid: "qcqxPFA0"
-address: "ML//Training//SFT"
+uid: qcqxPFA0
+address: "ML//RL//Training//SFT"
 name: "SFT"
 date: "2026-02-15"
 ---
+
 - You give the AI a script: input X → output A — we call that an instruction tuning dataset
 - Creates a rigid ceiling — A acts as a massive gravity attractor (singular attractor learning via cross-entropy loss + SGD), so the AI stops exploring
 - Valid, beautiful synonyms (Bx, By, Bz) are sacrificed at the altar of literal imitation
@@ -14,5 +15,5 @@ date: "2026-02-15"
 
 ## Interactions
 
-- [[YwfNaR4R|DPO]] : : SFT is 20%, DPO is 80% — SFT teaches format, DPO teaches quality. SFT has a ceiling; DPO doesn't
-- [[2oNdlB5L|Pre-training]] : : pre-training teaches language, SFT teaches the instruction-following format on top
+- [[2oNdlB5L]] : : pre-training teaches language, SFT teaches the instruction-following format on top
+- [[YwfNaR4R]] : : SFT is 20%, DPO is 80% — SFT teaches format, DPO teaches quality. SFT has a ceiling; DPO doesn't

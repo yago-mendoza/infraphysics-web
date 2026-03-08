@@ -1,9 +1,10 @@
 ---
-uid: "YwfNaR4R"
-address: "ML//Training//DPO"
+uid: YwfNaR4R
+address: "ML//RL//Training//DPO"
 name: "DPO"
 date: "2026-02-15"
 ---
+
 - Like SFT but with two options — maps "this is better than" (By > Bx contrastive pairs) directly back to individual token derivatives, widening the logit gap between tokens that led to the better path
 - The model computes logits for BOTH outputs and adjusts weights so the preferred output gets higher logits (feels natural) and the rejected gets lower (feels unnatural)
 - No ceiling — the AI is free to roam [[RnKMoC3a|latent space]], finding new ways to be smart (relational gradient learning → better in-context knowledge retrieval)
@@ -14,7 +15,7 @@ date: "2026-02-15"
 
 ## Interactions
 
-- [[rxVjxTLA|PPO]] : : PPO uses sequence-level scalar reward via a reward model — every token gets the same offset, no custom derivative. DPO uses token-level logit derivatives — better credit assignment, no reward model needed
-- [[qcqxPFA0|SFT]] : : SFT creates a rigid ceiling with singular attractor learning — DPO escapes it by learning from contrasts, not imitation
-- [[0f5GJDwc|RLHF]] : : if humans choose between Bx and By, the pairs feed DPO — slower but grounded in real human judgment
-- [[mCK28lZ6|constitutional AI]] : : if an AI crafts By from Bx through reflection, those pairs feed iterative DPO — fastest path
+- [[mCK28lZ6]] : : if an AI crafts By from Bx through reflection, those pairs feed iterative DPO — fastest path
+- [[0f5GJDwc]] : : if humans choose between Bx and By, the pairs feed DPO — slower but grounded in real human judgment
+- [[qcqxPFA0]] : : SFT creates a rigid ceiling with singular attractor learning — DPO escapes it by learning from contrasts, not imitation
+- [[rxVjxTLA]] : : PPO uses sequence-level scalar reward via a reward model — every token gets the same offset, no custom derivative. DPO uses token-level logit derivatives — better credit assignment, no reward model needed

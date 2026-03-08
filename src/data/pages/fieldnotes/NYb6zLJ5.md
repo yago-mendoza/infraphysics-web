@@ -1,9 +1,10 @@
 ---
-uid: "NYb6zLJ5"
-address: "ML//reinforcement learning"
-name: "reinforcement learning"
+uid: NYb6zLJ5
+address: "ML//RL"
+name: "RL"
 date: "2018-06-15"
 ---
+
 - Agent learns by trial and error, maximizing cumulative reward
 - No labeled data — just actions, states, and outcomes
 - Q-learning: learn the value of each action in each state. Policy gradient: directly optimize the action probabilities.
@@ -11,4 +12,4 @@ date: "2018-06-15"
 
 ## Interactions
 
-- [[83orykQl|reward model]] : : RLHF brought RL into language model training — the reward model is a learned proxy for human preferences
+- [[83orykQl]] : : RLHF brought RL into language model training — the reward model is a learned proxy for human preferences

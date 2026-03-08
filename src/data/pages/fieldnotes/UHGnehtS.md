@@ -10,5 +10,5 @@ date: "2026-02-16"
 
 ## Interactions
 
-- [[0f5GJDwc|RLHF]] : : interpretability reveals what [[0f5GJDwc|RLHF]] actually optimizes; whether the [[83orykQl|reward model]] captures intent or just a proxy
+- [[0f5GJDwc|RLHF]] : : interpretability reveals what [[0f5GJDwc|RLHF]] actually optimizes; whether the [[83orykQl|RM]] captures intent or just a proxy
 - [[a0AXrxFY|Red teaming]] : : red teaming finds failure modes empirically (from outside); interpretability finds them mechanistically (from inside)
