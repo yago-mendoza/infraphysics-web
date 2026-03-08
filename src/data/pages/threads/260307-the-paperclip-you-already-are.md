@@ -3,6 +3,7 @@ id: the-paperclip-you-already-are
 displayTitle: "We Solved Alignment. For Paperclips."
 category: threads
 date: "2026-03-07"
+lang: en
 thumbnail: https://images.unsplash.com/photo-1585314062604-1a357de8b000?w=1200
 thumbnailAspect: full
 thumbnailShading: heavy

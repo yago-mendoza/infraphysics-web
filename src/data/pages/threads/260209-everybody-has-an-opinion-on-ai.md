@@ -3,7 +3,8 @@ id: everybody-has-an-opinion-on-ai
 displayTitle: Everybody has an opinion on AI
 subtitle: The real AI bubble isn't in the stocks. It's in the takes.
 category: threads
-date: 2026-02-09
+date: "2026-02-09"
+lang: en
 thumbnail: https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?q=80&w=800&auto=format&fit=crop
 thumbnailAspect: banner
 lead: "There are days when the term AI makes me physically recoil — especially when I'm elbow-deep building a markdown knowledge base with hierarchical folder resolution and a live reference-detection layer that flags wiki-links on the fly, and my girlfriend walks in from her fifth meeting of the day where they dropped 'AI' more times than Tim Cook unveiling the latest iteration of Apple's Thoughtfully Reimagined Personal Intelligence Experience. At least that confirms I'm not some recluse obsessing over antique spoons all day, convinced that antique spoons are the pinnacle of human achievement, blogging about antique spoons to an audience of seven other antique spoon enthusiasts. People are talking about this. A lot. Most of them are wrong, but they're talking."

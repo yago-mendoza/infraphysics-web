@@ -3,7 +3,8 @@ id: openclaw-and-the-keys-to-your-kingdom
 displayTitle: "OpenClaw and the keys to your kingdom"
 subtitle: "An AI agent with full access to your computer sounds amazing until you think about it for five minutes."
 category: threads
-date: 2026-02-07
+date: "2026-02-07"
+lang: en
 thumbnail: https://images.unsplash.com/photo-1510511459019-5dda7724fd87?q=80&w=1200&auto=format&fit=crop
 thumbnailAspect: wide
 lead: "Steinberger is a beast. What I don't understand is why he chose the other side — and why Anthropic's trademark claim ended up being the push that sent him there."
