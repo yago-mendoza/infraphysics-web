@@ -1670,7 +1670,7 @@ export const SecondBrainView: React.FC = () => {
             )}
 
             {/* Metadata line */}
-            <div className="text-xs text-th-tertiary mb-2 flex items-center gap-2">
+            <div className="text-xs text-th-tertiary mb-4 flex items-center gap-2">
               <span>links {'\u2193'} {outgoingRefCount}</span>
               <span>&middot;</span>
               <span>mentioned {'\u2191'} {mentions.length}</span>
