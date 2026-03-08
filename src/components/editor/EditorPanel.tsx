@@ -7,6 +7,7 @@ import { SyntaxCheatsheet } from './SyntaxCheatsheet';
 import { NewNotePanel } from './NewNotePanel';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
 import { useTermSuggestions } from './useTermSuggestions';
+import { AddressPickerModal } from './AddressPickerModal';
 import type { EditorState, Diagnostic } from './useFieldnoteEditor';
 import type { CodeMirrorHandle } from './CodeMirrorEditor';
 import type { FieldNoteMeta, Post } from '../../types';
@@ -36,6 +37,7 @@ export const EditorPanel: React.FC<Props> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>('editor');
   const [createRequest, setCreateRequest] = useState<string | null>(null);
+  const [showAddressPicker, setShowAddressPicker] = useState(false);
   const cmRef = useRef<CodeMirrorHandle>(null);
 
   // Resizable editor area — drag handle controls CodeMirror max-height
@@ -121,6 +123,44 @@ export const EditorPanel: React.FC<Props> = ({
     } catch { /* silent */ }
   }, [editor]);
 
+  // Detect name change from frontmatter
+  const parsedName = useMemo(() => {
+    const match = editor.rawContent.match(/^name:\s*(.+)$/m);
+    return match?.[1]?.trim().replace(/^["'](.*)["']$/, '$1') || null;
+  }, [editor.rawContent]);
+
+  const nameChanged = !!(parsedName && editor.originalName && parsedName !== editor.originalName);
+
+  // Auto-sync: address last segment follows name
+  useEffect(() => {
+    if (!parsedName || !editor.originalAddress || !cmRef.current) return;
+    const origParts = editor.originalAddress.split('//');
+    const parentPrefix = origParts.slice(0, -1);
+    const expectedAddress = parentPrefix.length > 0
+      ? [...parentPrefix, parsedName].join('//')
+      : parsedName;
+
+    // Check current address in raw
+    const addressMatch = editor.rawContent.match(/^address:\s*.+$/m);
+    const addressFromRaw = addressMatch?.[0]?.match(/^address:\s*(.+)$/)?.[1]?.trim().replace(/^["'](.*)["']$/, '$1');
+    if (addressFromRaw !== expectedAddress && addressMatch && addressMatch.index !== undefined) {
+      const from = addressMatch.index;
+      const to = from + addressMatch[0].length;
+      cmRef.current.replaceRanges([{ from, to, insert: `address: "${expectedAddress}"` }]);
+    }
+  }, [parsedName, editor.originalAddress, editor.rawContent]);
+
+  const handleUpdatePipeText = useCallback(() => {
+    if (editor.originalName && parsedName) {
+      editor.updatePipeText(editor.originalName, parsedName);
+    }
+  }, [editor, parsedName]);
+
+  const handleMoveAddress = useCallback((newAddress: string, newName: string) => {
+    setShowAddressPicker(false);
+    editor.moveAddress(newAddress, newName);
+  }, [editor]);
+
   const mergedDiagnostics = useMemo((): Diagnostic[] => {
     // Enrich "Missing parent" warnings with a create-stub action
     const enriched = editor.diagnostics.map(d => {
@@ -133,6 +173,16 @@ export const EditorPanel: React.FC<Props> = ({
       }
       return d;
     });
+
+    // Name change diagnostic
+    if (nameChanged) {
+      enriched.push({
+        source: 'VALIDATE',
+        severity: 'INFO',
+        message: `Name: "${editor.originalName}" \u2192 "${parsedName}". Other notes may show old name.`,
+        actions: [{ label: 'Update refs', style: 'accept' as const, onAction: handleUpdatePipeText }],
+      });
+    }
 
     // Group suggestions by uid+term — no duplicate lines
     const grouped = new Map<string, typeof suggestions[number][]>();
@@ -158,7 +208,7 @@ export const EditorPanel: React.FC<Props> = ({
       };
     });
     return [...enriched, ...suggestionDiags];
-  }, [editor.diagnostics, suggestions, handleAcceptGroup, dismiss, handleCreateStub]);
+  }, [editor.diagnostics, suggestions, handleAcceptGroup, dismiss, handleCreateStub, nameChanged, parsedName, editor.originalName, handleUpdatePipeText]);
 
   // When a note is created from autocomplete, insert [[uid|name]] at cursor
   const handleNoteCreated = useCallback((uid: string) => {
@@ -239,6 +289,13 @@ export const EditorPanel: React.FC<Props> = ({
             Save
           </button>
           <button
+            onClick={() => setShowAddressPicker(true)}
+            className="text-[10px] px-2 py-0.5 border border-violet-400/30 text-violet-400/70 hover:text-violet-400 hover:bg-violet-400/10 hover:border-violet-400/50 transition-colors"
+            title="Move note to a different address"
+          >
+            Move
+          </button>
+          <button
             onClick={editor.analyzeForDelete}
             disabled={editor.deleteStatus === 'analyzing'}
             className={`text-[10px] px-2 py-0.5 border transition-colors ${
@@ -268,13 +325,36 @@ export const EditorPanel: React.FC<Props> = ({
             </button>
           ))}
           <span className="w-px h-3.5 bg-th-hub-border mx-0.5" />
+          {/* Bold / Italic / Heading */}
+          <button
+            onMouseDown={e => { e.preventDefault(); cmRef.current?.wrapSelection('**', '**', 'text'); }}
+            className="px-1.5 py-0.5 text-[12px] font-bold text-th-muted hover:text-violet-400 hover:bg-violet-400/10 transition-colors rounded"
+            title="Bold"
+          >
+            B
+          </button>
+          <button
+            onMouseDown={e => { e.preventDefault(); cmRef.current?.wrapSelection('*', '*', 'text'); }}
+            className="px-1.5 py-0.5 text-[12px] italic text-th-muted hover:text-violet-400 hover:bg-violet-400/10 transition-colors rounded"
+            title="Italic"
+          >
+            I
+          </button>
+          <button
+            onMouseDown={e => { e.preventDefault(); cmRef.current?.insertAtCursor('##### '); }}
+            className="px-1.5 py-0.5 text-[11px] font-semibold text-th-muted hover:text-violet-400 hover:bg-violet-400/10 transition-colors rounded"
+            title="Heading (h5)"
+          >
+            H
+          </button>
+          <span className="w-px h-3.5 bg-th-hub-border mx-0.5" />
           {/* Inline syntax */}
           {([
             [SuperscriptIcon, '{^:', '}', 'text', 'Superscript'],
             [SubscriptIcon, '{v:', '}', 'text', 'Subscript'],
             [KbdIcon, '{kbd:', '}', 'key', 'Keyboard key'],
             [AccentIcon, '--', '--', 'text', 'Accent text'],
-            [FootnoteIcon, '{{', '|ref}}', 'text', 'Footnote'],
+            [FootnoteIcon, '^[', ']', 'text', 'Footnote'],
           ] as [React.FC<{ size?: number }>, string, string, string, string][]).map(([Icon, prefix, suffix, placeholder, title], i) => (
             <button
               key={title}
@@ -428,6 +508,15 @@ export const EditorPanel: React.FC<Props> = ({
           onConfirmDelete={editor.confirmDelete}
           onBack={editor.backToOverview}
           onCancel={editor.cancelDelete}
+        />
+      )}
+      {showAddressPicker && editor.originalAddress && editor.originalName && (
+        <AddressPickerModal
+          allNotes={allNotes}
+          currentAddress={editor.originalAddress}
+          currentName={editor.originalName}
+          onConfirm={handleMoveAddress}
+          onCancel={() => setShowAddressPicker(false)}
         />
       )}
     </div>

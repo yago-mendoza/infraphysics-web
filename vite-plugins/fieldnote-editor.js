@@ -735,6 +735,127 @@ export function fieldnoteEditorPlugin() {
           }
         }
 
+        // ── POST /api/fieldnotes/move-address ──
+        // Moves a note to a new address, cascading to children
+        if (req.url === '/api/fieldnotes/move-address' && req.method === 'POST') {
+          try {
+            const { uid, newAddress, newName } = await readBody(req);
+            if (!uid || !newAddress) {
+              return sendJson(res, { error: 'Missing uid or newAddress' }, 400);
+            }
+
+            if (!cachedFieldnotes) {
+              const { fieldnotePosts, uidToMeta } = loadAllFieldnotes();
+              cachedFieldnotes = { posts: fieldnotePosts, uidToMeta };
+            }
+
+            const targetPost = cachedFieldnotes.posts.find(p => p.id === uid);
+            if (!targetPost) return sendJson(res, { error: 'Note not found' }, 404);
+
+            const oldAddress = targetPost.address;
+            if (oldAddress === newAddress && targetPost.name === (newName || targetPost.name)) {
+              return sendJson(res, { error: 'No changes' }, 400);
+            }
+
+            // Check collision
+            const collision = cachedFieldnotes.posts.find(p => p.id !== uid && p.address === newAddress);
+            if (collision) {
+              return sendJson(res, { error: `Address "${newAddress}" already exists (${collision.name})` }, 409);
+            }
+
+            // 1. Update target note frontmatter
+            const filePath = path.join(FIELDNOTES_DIR, `${uid}.md`);
+            const raw = fs.readFileSync(filePath, 'utf-8');
+            const parsed = parseFrontmatter(raw);
+            if (!parsed) return sendJson(res, { error: 'Invalid frontmatter' }, 400);
+
+            parsed.frontmatter.address = newAddress;
+            if (newName) parsed.frontmatter.name = newName;
+
+            const { body } = parsed;
+            const { trailingRefs: tRefs, trailingRefStart } = parseTrailingRefs(body);
+            const contentBody = stripTrailingRefs(body, trailingRefStart);
+            const newRaw = serializeFieldnote(parsed.frontmatter, contentBody, tRefs);
+            fs.writeFileSync(filePath, newRaw, 'utf-8');
+
+            // 2. Cascade to children
+            let movedChildren = 0;
+            const oldPrefix = oldAddress + '//';
+            for (const post of cachedFieldnotes.posts) {
+              if (post.id === uid) continue;
+              if (post.address.startsWith(oldPrefix)) {
+                const childFile = path.join(FIELDNOTES_DIR, `${post.id}.md`);
+                const childRaw = fs.readFileSync(childFile, 'utf-8');
+                const childParsed = parseFrontmatter(childRaw);
+                if (!childParsed) continue;
+
+                const childOldAddr = childParsed.frontmatter.address;
+                childParsed.frontmatter.address = newAddress + '//' + childOldAddr.slice(oldPrefix.length);
+
+                const { body: childBody } = childParsed;
+                const { trailingRefs: childTRefs, trailingRefStart: childTStart } = parseTrailingRefs(childBody);
+                const childContent = stripTrailingRefs(childBody, childTStart);
+                fs.writeFileSync(childFile, serializeFieldnote(childParsed.frontmatter, childContent, childTRefs), 'utf-8');
+                movedChildren++;
+              }
+            }
+
+            // 3. Full rebuild
+            const { fieldnotePosts, uidToMeta } = fullRebuild();
+            cachedFieldnotes = { posts: fieldnotePosts, uidToMeta };
+
+            server.ws.send({
+              type: 'custom',
+              event: 'fieldnote-update',
+              data: { uid, action: 'move' },
+            });
+
+            return sendJson(res, { ok: true, movedChildren, newAddress });
+          } catch (err) {
+            return sendJson(res, { error: err.message }, 500);
+          }
+        }
+
+        // ── POST /api/fieldnotes/update-pipe-text ──
+        // Batch-update [[uid|oldName]] → [[uid|newName]] across all notes
+        if (req.url === '/api/fieldnotes/update-pipe-text' && req.method === 'POST') {
+          try {
+            const { uid, oldName, newName } = await readBody(req);
+            if (!uid || !oldName || !newName) {
+              return sendJson(res, { error: 'Missing uid, oldName, or newName' }, 400);
+            }
+
+            let updated = 0;
+            const pattern = `[[${uid}|${oldName}]]`;
+            const replacement = `[[${uid}|${newName}]]`;
+            const allFieldnotes = cachedFieldnotes?.posts || [];
+
+            for (const post of allFieldnotes) {
+              if (post.id === uid) continue;
+              const filePath = path.join(FIELDNOTES_DIR, `${post.id}.md`);
+              if (!fs.existsSync(filePath)) continue;
+              const raw = fs.readFileSync(filePath, 'utf-8');
+              if (raw.includes(pattern)) {
+                fs.writeFileSync(filePath, raw.split(pattern).join(replacement), 'utf-8');
+                updated++;
+              }
+            }
+
+            const { fieldnotePosts, uidToMeta } = fullRebuild();
+            cachedFieldnotes = { posts: fieldnotePosts, uidToMeta };
+
+            server.ws.send({
+              type: 'custom',
+              event: 'fieldnote-update',
+              data: { uid, action: 'rename' },
+            });
+
+            return sendJson(res, { ok: true, updated });
+          } catch (err) {
+            return sendJson(res, { error: err.message }, 500);
+          }
+        }
+
         // ── POST /api/fieldnotes/validate ──
         if (req.url === '/api/fieldnotes/validate' && req.method === 'POST') {
           try {
