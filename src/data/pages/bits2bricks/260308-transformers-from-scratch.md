@@ -1,0 +1,602 @@
+---
+id: transformers-from-scratch
+displayTitle: "Transformers from scratch"
+subtitle: "Tokens, embeddings, attention, MLPs, masking, BERT, GPT, KV cache, superposition, and everything in between"
+category: bits2bricks
+date: "2026-03-08"
+thumbnail: https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1200&auto=format&fit=crop
+thumbnailAspect: wide
+thumbnailShading: heavy
+description: "A patient, ground-up explanation of transformer architecture — how tokens become predictions, what attention really computes, where facts live, and why it all scales."
+tags: [ai, transformers, deep-learning, attention, neural-networks, nlp]
+featured: true
+tldr:
+  - A transformer is a sequence of alternating attention blocks (context routing) and MLP blocks (fact storage), transforming token embeddings until the last vector can predict what comes next.
+  - Attention computes queries, keys, and values from each embedding, cross-references them via dot products, and lets tokens selectively absorb information from other tokens.
+  - About 1/3 of all parameters live in attention layers. The other 2/3 live in MLPs — they are where the model stores facts about the world.
+---
+
+The word *transformer* gets thrown around a lot. ChatGPT, image generators, speech-to-text, translation — all built on the same architecture, published in a single 2017 paper called **Attention Is All You Need**. That paper changed the trajectory of an entire field. If you want the atomic definitions of each concept discussed here, the [[QtZjVPKo|Transformer]] page in the second brain is the index — every subcomponent links outward from there.
+
+But what *is* a transformer? What happens inside it? If you feed it the sentence "The cat sat on the" and it predicts "mat", what computation produced that prediction?
+
+This article is an attempt to answer that question from scratch. No prerequisites beyond basic intuition about what vectors and matrices are. We will go slow, reinforce things as we go, and build up the full picture one piece at a time. By the end you will understand — not just pattern-match the jargon, but actually understand — what happens inside these models.
+
+---
+
+# The big picture
+
+Let's start with the acronym. GPT stands for **Generative Pre-trained Transformer**. "Generative" means it produces new text. "Pre-trained" means it learned from a massive pile of data before you ever talked to it. "Transformer" is the architecture — the specific design of the neural network. That last word is the one that matters.
+
+A transformer takes text in, and produces a prediction of what comes next. That prediction is a probability distribution over every possible next piece of text. If the input is "The cat sat on the", the model might assign 40% probability to "mat", 15% to "floor", 8% to "roof", and so on across its entire vocabulary.
+
+The way you turn a predictor into a generator is simple. You give it some text, it predicts the next piece, you sample from that distribution, append the result, and repeat. Each step generates one more piece. Do it a thousand times and you have a paragraph, an essay, a story. The entire magic of ChatGPT is a prediction loop running over and over.
+
+Here is the flow at the highest level:
+
+a. The input text is split into small pieces called **tokens**
+b. Each token is converted into a **vector** — a list of numbers encoding meaning
+c. These vectors flow through a sequence of **attention blocks** and **MLP blocks**, alternating
+d. After many such blocks, the last vector in the sequence encodes enough information to predict the next token
+e. That vector is multiplied by a matrix to produce a score for every word in the vocabulary
+f. Softmax converts those scores into probabilities
+
+That's it. Everything else in this article is zooming into each of those steps.
+
+---
+
+# Tokens
+
+The first step is breaking text into pieces.
+
+You might think each word becomes one unit. Sometimes it does. But sometimes a long or unusual word gets split into subwords. The word "transformer" might be two tokens: "trans" and "former". The word "the" is almost always one token. A punctuation mark is usually its own token. Common phrases like "of the" might even be a single token.
+
+This splitting is done by the [[zSFOpgNO|tokenizer]], and it is *not* a neural network. It is a lookup algorithm called [[KjZsXIft|BPE]] ^[Byte Pair Encoding. An algorithm that starts with individual characters, then iteratively merges the most frequent pair of adjacent tokens into a new token. After many rounds, you end up with a vocabulary of subword units that efficiently compress text. The same algorithm is used for data compression.] that was decided before training. The model never changes it. The tokenizer has a fixed [[Vb8kM2nQ|vocabulary]] — [[gfRFzkBN|GPT-3]] uses 50,257 tokens — and every possible input gets carved into pieces from that vocabulary.
+
+Why not just use individual characters? You could. "transformer" would become 11 tokens instead of 2-3. That means your sequences are much longer. A typical novel — say, 80,000 words — is about 100,000 BPE tokens. With characters, it would be around 400,000. And since the cost of attention (which we will get to) grows with the *square* of the sequence length, character-level models are 16x more expensive for the same text. There's also a learning disadvantage: with BPE, "running", "runner", and "runs" share subword tokens, giving the model a free morphological hint. With characters, it has to learn those relationships entirely from co-occurrence patterns.
+
+{bkqt/note|What about bytes?}
+There is real research on [[By2tN6hF|byte-level models]] — Meta's **MegaByte** (2023) and Google's **ByT5** are examples. A byte-level model would make sequences roughly 4x longer than characters, which is 16x more expensive than characters for attention, and about 100x more expensive than BPE. The theoretical appeal is that the model would learn optimal compression of language without any tokenizer bias. But the computational cost makes it impractical at scale today. The current consensus is BPE with large vocabularies (100k+ tokens). Characters and bytes remain a research direction, not production.
+{/bkqt}
+
+Each token in the vocabulary gets an integer ID. The word "cat" might be token 4821. The tokenizer's job is to convert text into a sequence of these IDs. That is all it does. No understanding, no semantics — just a lookup table from text to numbers.
+
+---
+
+# Embeddings
+
+Now we need to convert each token ID into something the neural network can work with. That something is a **vector** — a list of real numbers.
+
+The model has an [[Em3xR7wP|embedding matrix]], which we will call \(W_E\). This matrix has one column for every token in the [[Vb8kM2nQ|vocabulary]]. In GPT-3, each column is 12,288 numbers long. When the tokenizer says "this word is token 4821", the model grabs column 4821 from the embedding matrix. That column *is* the embedding — the vector representation of that word.
+
+At the start, before any training, these columns are random numbers. But during training, the model learns to arrange them so that words with similar meanings end up as vectors pointing in similar directions.
+
+This is worth sitting with for a moment. Imagine a space with 12,288 dimensions. You cannot visualize it — nobody can, our brains max out at three and cheat on the fourth — but mathematically it works the same as 3D space, just with more axes. A lot more. Every word in the vocabulary gets a point in this space. Training pushes similar words closer together and different words farther apart.
+
+A classic example: if you take the [[haA3MDhG|embedding]] of "woman" and subtract the embedding of "man", you get a vector — a [[Dr6kN2wY|direction]] in this space. If you add that same direction to the embedding of "king", you land very close to "queen". The model learned, without being told, that there is a direction in this space that encodes gender. Another direction might encode plurality, another might encode whether something is a country, another might encode verb tense.
+
+The mathematical tool that measures how well two vectors align is the **[[Dp2kN6wF|dot product]]**. You multiply corresponding components and sum the results. If two vectors point in the same direction, the dot product is a large positive number. If they are perpendicular (unrelated), it is near zero. If they point in opposite directions, it is negative.
+
+```
+dot_product(cat, cats)    =  large positive  (similar meaning)
+dot_product(cat, dog)     =  positive        (related but different)
+dot_product(cat, algebra) =  near zero       (unrelated)
+```
+
+This is not a metaphor. This is literally how the model measures relationships between words, and it is exactly the operation at the heart of attention.
+
+So: the embedding matrix \(W_E\) takes each token ID and maps it to a vector in a 12,288-dimensional space. In GPT-3, with 50,257 tokens and 12,288 dimensions per embedding, this matrix contains about **617 million parameters**. Six hundred million numbers just to convert words into vectors. And that is the *small* part of the model — roughly 0.35% of the 175 billion total. The real weight is coming.
+
+---
+
+# Positional encoding
+
+There is a problem with what we have so far. If we just look up each word's embedding independently, the sentence "dog bites man" produces exactly the same set of vectors as "man bites dog" — just in a different order. But the model receives these vectors as a set. It needs to know *where* each word is.
+
+The solution is to add [[eGfBTEQ5|positional encoding]] to each embedding. The original transformer paper used a fixed pattern of sine and cosine waves at different frequencies — each position in the sequence gets a unique signature baked into the vector. You literally add this positional vector to the word embedding, so the result encodes both *what* the word is and *where* it sits.
+
+{bkqt/note|Modern positional encoding}
+The original sinusoidal encoding had a weakness: if you train with a context of 512 tokens and then try to process 1000, the model has never seen those positions and performance degrades. Modern models use [[m0VJ5a3l|RoPE]] (Rotary Position Embedding), which is more elegant. Instead of adding a vector, RoPE *rotates* the query and key vectors by an angle proportional to their position before computing dot products. The beauty is that the dot product between any two tokens then depends naturally on the *relative distance* between them, not their absolute positions. This generalizes better beyond the training context length.
+
+Another approach is [[Al5fD9kX|ALiBi]] (Attention with Linear Biases), which doesn't modify the embeddings at all — it adds a penalty to attention scores proportional to the distance between tokens. Closer tokens get higher attention. Simple and effective.
+{/bkqt}
+
+---
+
+# The alternating blocks
+
+After tokenization, embedding, and positional encoding, we have a sequence of vectors. In GPT-3, this is a matrix of 2,048 columns (the [[JUby2DIy|context window]]) by 12,288 rows (the embedding dimension). Each column is one token's vector.
+
+Now these vectors enter the core of the transformer: a long sequence of alternating blocks.
+
+```
+[Attention Block] → [MLP Block] → [Attention Block] → [MLP Block] → ... → output
+```
+
+GPT-3 repeats this pair **96 times**. That is 96 attention blocks and 96 MLP blocks, 192 blocks total.
+
+Here is the critical intuition. These two block types do fundamentally different things:
+
+- **[[ml8njOQc|Attention]] blocks** are about **context**. They let vectors talk to each other. They allow the meaning of "bank" to be updated based on whether the surrounding text mentions "river" or "money". Roughly 1/3 of all parameters live here.
+
+- **[[Pr8dt3wz|MLP]] blocks** are about **facts**. They process each vector individually, in parallel, with no communication between vectors. They add knowledge: "if this vector encodes Michael Jordan, add the direction for basketball". Roughly 2/3 of all parameters live here.
+
+The path through the network alternates: one step of context, one step of facts, one step of context, one step of facts. With each alternation, the vectors become richer, more refined, more specific. A vector that started as a generic embedding for the word "bank" might, after 96 rounds of this process, encode something like "a financial institution in 19th century London being discussed in the context of a Dickens novel." By that point, the vector for "bank" has almost nothing in common with its original embedding. It has been overwritten, refined, and contextualized beyond recognition — like a lump of clay that went through 96 rounds of sculpting. Same clay. Completely different shape.
+
+There are also [[mcdxPW3m|layer normalization]] steps between these blocks — they keep the numbers from exploding or vanishing as they flow through dozens of layers. We will not dwell on them because they do not change the conceptual picture, but they are there, and they matter for stability.
+
+Let's zoom into each block type.
+
+---
+
+# Attention
+
+This is the heart of the transformer. This is what the 2017 paper was about. Attention existed before that paper ^[Bahdanau et al. introduced attention for [[78kjiso5|sequence-to-sequence]] models in 2014. The mechanism let a decoder "attend" to different parts of the encoder's output when generating each output word. The innovation of "Attention Is All You Need" was showing that [[vCs7RZqL|self-attention]] — tokens attending to each other without any recurrence — was sufficient for the entire architecture. You did not need [[mBCcy7bn|RNNs]] or [[rK1Dy2Fa|LSTMs]] at all.], but the big insight was that attention alone, without any recurrence, was sufficient for processing sequences. Self-attention — where tokens within the same sequence attend to each other — was the novel contribution.
+
+What does attention do? In one sentence: --it routes context from one token's embedding into another's--.
+
+The word "model" means something different in "a machine learning model" and "a fashion model". After the initial embedding step, both cases have the same vector for "model". Attention is the mechanism that lets "machine learning" flow information into "model" to disambiguate it.
+
+## Queries, keys, and values
+
+Every [[Hd4nK8xS|attention head]] ^[A "head" is one instance of the attention computation. A transformer runs many heads in parallel, each with its own learned parameters, looking for different types of relationships. We will get to multi-head attention shortly.] involves three matrices: the **query matrix** \(W_Q\), the **key matrix** \(W_K\), and the **value matrix** \(W_V\) — the [[Qk3vT7mJ|Q, K, V]] triplet. All three are full of learnable parameters — numbers that get adjusted during training.
+
+Here is the intuition. Think of each token as both asking a question and offering an answer.
+
+- The **query** is the question a token asks: "what kind of information am I looking for?"
+- The **key** is what a token advertises about itself: "here is what I can offer"
+- The **value** is the actual content a token passes along when selected: "here is the information to add to your embedding"
+
+Every embedding in the sequence gets multiplied by all three matrices. So each token produces a query vector, a key vector, and a value vector.
+
+```
+For each embedding E:
+    Q = W_Q × E    (query: what am I looking for?)
+    K = W_K × E    (key: what do I have to offer?)
+    V = W_V × E    (value: what do I actually pass along?)
+```
+
+The query and key vectors are smaller than the embeddings — 128 dimensions in GPT-3 instead of 12,288. This compression is deliberate. It forces the model to distill the question and the advertisement into a compact representation.
+
+## The attention pattern
+
+Now we cross-reference every query with every key by computing dot products. Token 5's query gets dot-producted with every other token's key. The result is a grid — a matrix of scores that tells us how much each token's key matches each other token's query.
+
+High score between token 3's key and token 7's query means token 3 has information that token 7 is looking for.
+
+Then we apply [[Sm8rH4nW|softmax]] to each column of this grid. Softmax converts a list of arbitrary numbers into a probability distribution: all values between 0 and 1, summing to 1. The highest scores dominate, the lowest scores get pushed toward zero.
+
+After softmax, each column is a set of weights that tells us: "for this token, here is how much to attend to each other token." This grid is called the **attention pattern**.
+
+There is one technical detail: before softmax, the scores are divided by \(\sqrt{d_k}\), where \(d_k\) is the dimension of the key vectors (128 in GPT-3). This prevents the dot products from getting too large, which would cause softmax to produce extremely sharp distributions where one token gets all the attention and everything else gets zero. The scaling keeps the gradients healthy during training.
+
+## Applying the values
+
+Now we use the attention weights to create a weighted combination of value vectors. For each token, we multiply each value vector by the corresponding attention weight and sum them up. Tokens with high attention weights contribute a lot. Tokens with near-zero weights contribute nothing.
+
+The result is a vector — the "update" — that gets added to the original embedding. If the word "creature" had high attention weights on "fluffy" and "blue", then the value vectors of "fluffy" and "blue" flow into "creature" and shift its embedding toward a direction that encodes a fluffy blue creature.
+
+```
+For token i:
+    attention_weights = softmax( Q_i · K_all / √d_k )
+    update = sum( attention_weights × V_all )
+    new_embedding_i = old_embedding_i + update
+```
+
+That is a single attention head. The entire process — query, key, value, dot product, softmax, weighted sum — is just a mechanism for --selectively moving information from some embeddings into others--.
+
+## Why not skip the value matrix?
+
+You might wonder: why not just use the original embedding as the value? Why have a separate \(W_V\) matrix at all?
+
+Because you do not want *all* the information in a token to flow into another token. You want selective, relevant information. When "blue" attends to "creature", you do not want everything about "blue" — its part of speech, its position, its tense. You want the *blueness* direction. The value matrix is a learned projection that extracts exactly the subspace of information that is useful for this particular head. Each head gets to specialize in what it passes along.
+
+## Multi-head attention
+
+One attention head can only capture one type of relationship. Maybe it learns to connect adjectives to nouns. But language has many kinds of relationships: syntactic dependencies, coreference ("he" refers to "John"), semantic similarity, temporal ordering, and many more.
+
+The solution is to run many heads in parallel. GPT-3 uses **96 attention heads** per [[dpYqVkke|multi-head attention]] block. Each head has its own \(W_Q\), \(W_K\), and \(W_V\) matrices. Each head computes its own attention pattern. Each head produces its own proposed update.
+
+All 96 proposed updates are summed together and added to the original embedding. The result is a single refined embedding that has been updated by 96 different types of contextual information simultaneously.
+
+No explicit mechanism forces the heads to specialize. It emerges from training. If two heads learn exactly the same thing, they are wasting capacity — the gradient pushes them to diversify because doing so reduces the prediction error. In practice, researchers have found that different heads reliably capture different linguistic phenomena: one head might track subject-verb agreement, another might track coreference chains, another might attend to nearby tokens for local syntax.
+
+With 96 heads per block and 96 blocks, GPT-3 has 9,216 individual attention heads. The total parameters devoted to all attention heads across all layers add up to about **58 billion** — roughly a third of the 175 billion total.
+
+---
+
+# Masking
+
+There is a rule in GPT that we have not discussed yet: --a token can only attend to tokens that came before it, never to tokens that come after--.
+
+This is called [[Cm7jR4sQ|causal masking]], and it is fundamental to how [[U7ljk7Wf|GPT]] works.
+
+Think about it from the training perspective. When you train the model, you want it to predict the next token at *every* position simultaneously. Given "The cat sat on the mat", you want it to predict "cat" from "The", predict "sat" from "The cat", predict "on" from "The cat sat", and so on. This is efficient because one training example gives you six prediction tasks instead of one.
+
+But if tokens could attend to future tokens, the model would just look ahead and cheat. The word "sat" could look at "on" and "the" and "mat" to figure out what comes next. To prevent this, we mask out all attention from later tokens to earlier ones.
+
+The implementation is simple. Before applying softmax, we set all entries in the upper triangle of the attention score grid to negative infinity. After softmax, \(e^{-\infty} = 0\), so those entries become exactly zero. Later tokens have zero influence on earlier tokens.
+
+```
+Before masking:         After masking:
+
+  The cat sat on        The cat sat on
+The [.8  .3  .1  .2]   The [.8  -∞  -∞  -∞]
+cat [.2  .7  .4  .1]   cat [.2  .7  -∞  -∞]
+sat [.1  .5  .6  .3]   sat [.1  .5  .6  -∞]
+on  [.3  .2  .5  .9]   on  [.3  .2  .5  .9]
+```
+
+After softmax, each column sums to 1, but only using the tokens at or before that position.
+
+This masking has a secondary benefit: it is what makes **KV caching** possible (we will get to that). And it is what distinguishes GPT from BERT. But first, let's finish the forward pass.
+
+---
+
+# MLP blocks
+
+After the attention block refines the embeddings with context, each vector passes through an MLP block ^[MLP stands for Multi-Layer Perceptron. It is also called a "[[Pr8dt3wz|feed-forward network]]" or "FFN" in some papers. Despite the fancy names, it is just two matrix multiplications with a nonlinearity in between.]. This is where the other two-thirds of the parameters live.
+
+The MLP processes each vector **independently**. There is no communication between tokens in this step — each vector goes through the same operation in parallel. The purpose is different from attention: while attention is about routing context, the MLP is about adding knowledge.
+
+The computation is:
+
+```
+input:  embedding E (12,288 dims)
+
+step 1: project UP      →  W_up × E + bias_up    =  intermediate (49,152 dims)
+step 2: nonlinearity     →  ReLU(intermediate)     =  activated (49,152 dims)
+step 3: project DOWN     →  W_down × activated + bias_down  =  output (12,288 dims)
+
+result: E + output   (add the MLP output back to the original embedding)
+```
+
+That is the entire operation. Two matrix multiplications and a clipping function.
+
+## Step by step
+
+**Step 1** multiplies the embedding by a large matrix \(W_{up}\) that projects it into a higher-dimensional space — in GPT-3, from 12,288 dimensions to 49,152 (exactly 4x). You can think of each row of this matrix as a "question" — a direction in embedding space that the model is probing. The dot product of the embedding with each row tells you how much the embedding aligns with that question.
+
+For example, one row might be a direction very close to "first name Michael" + "last name Jordan". If the embedding encodes both of those properties, the dot product with that row will be high. If it only encodes one, it will be lower. If neither, it will be near zero.
+
+A bias term is added after the multiplication. This is just a learned offset — it shifts the threshold for each "question". If the bias for our Michael Jordan row is -1, then the output is only positive when the embedding strongly encodes *both* names.
+
+**Step 2** is the nonlinearity, typically [[ZS34nG4d|ReLU]]: if the value is positive, keep it; if negative, set it to zero. That is all ReLU does.
+
+```
+ReLU(x) = max(0, x)
+```
+
+This is critical. Without it, the whole MLP would just be a single matrix multiplication (two linear transformations compose into one linear transformation). The ReLU introduces a threshold — an AND gate. The "Michael Jordan" neuron fires *only* when both name components are present. Without ReLU, a high score on "Michael" alone plus a moderate score on any "Jordan" would trigger it — and suddenly Michael Phelps is playing basketball and Alexis Jordan is dunking from the free-throw line.
+
+When people talk about **neurons** in a transformer, they mean these intermediate values — the 49,152 numbers between the two matrix multiplications. A neuron is "active" when its value is positive (survives the ReLU) and "inactive" when it is zero.
+
+**Step 3** multiplies the activated neurons by a second matrix \(W_{down}\) that projects back down to the embedding dimension. Think of each *column* of this matrix as an answer. If the Michael Jordan neuron is active, its corresponding column might encode the direction for "basketball" — and that direction gets added to the output. If the neuron is inactive (zero), that column contributes nothing.
+
+So the MLP is essentially a massive lookup: thousands of probes ask "does this vector match pattern X?", and for each match, a corresponding fact is added to the vector. If the vector encodes Michael Jordan, the basketball direction gets added. If it encodes Paris, maybe the France and Europe directions get added. Each probe-and-inject pair is one "fact" stored in the weights.
+
+## The parameter count
+
+Each MLP block has two matrices of size 12,288 x 49,152 (plus small bias vectors). That is about **1.2 billion parameters** per block. Across 96 blocks, the MLPs account for roughly **116 billion parameters** — about two-thirds of the entire model.
+
+This is why researchers from Google DeepMind concluded that --facts live in the MLPs--. The attention mechanism routes context, but the raw factual knowledge — that Michael Jordan plays basketball, that Paris is in France, that water is H2O — is baked into the MLP weight matrices.
+
+---
+
+# The output
+
+After flowing through 96 rounds of attention and MLP blocks, we have a sequence of deeply refined vectors. Each one started as a generic word embedding but now encodes a rich mixture of contextual meaning and factual knowledge.
+
+To make a prediction, we take the **last vector** in the sequence and multiply it by the **unembedding matrix** \(W_U\) — the [[2GCBLdlB|LM head]].
+
+This matrix has one row for every token in the vocabulary (50,257 rows) and each row has 12,288 entries. The result of the multiplication is a list of 50,257 numbers — one score for each possible next token. These raw scores are called [[Lg7cD3vX|logits]].
+
+{bkqt/keyconcept|Weight tying}
+Here is an elegant detail. The unembedding matrix \(W_U\) is the *transpose* of the embedding matrix \(W_E\). They share the same parameters. This is called [[Wt9rB5kH|weight tying]].
+
+Think about what this means. The embedding matrix converts token IDs into vectors — it maps words into the embedding space. The unembedding matrix does the reverse: it takes a vector and measures its similarity with each word's embedding. The dot product of the final vector with each embedding column tells you "how similar is this refined vector to the concept of each word?"
+
+If the last vector, after 96 rounds of refinement, has been pushed very close to the direction that "mat" occupies in embedding space, then the dot product with "mat" will be high — and "mat" will get a high logit. The same matrix serves both purposes because the task is symmetric: embed a word into the space, or measure how close a vector is to a word.
+{/bkqt}
+
+## Softmax and temperature
+
+The logits are raw scores — they can be any real number, positive or negative, and they do not sum to 1. To turn them into probabilities, we apply **softmax**.
+
+Softmax does three things:
+
+a. It exponentiates each value: \(e^{x_i}\). This makes everything positive.
+b. It sums all the exponentials.
+c. It divides each exponential by the sum. Now everything is between 0 and 1, and they all add up to 1.
+
+{math}
+\text{softmax}(x_i) = \frac{e^{x_i}}{\sum_j e^{x_j}}
+{/math}
+
+If one logit is much bigger than the rest, its probability dominates. If several are close, the probability is spread. Softmax is "softer" than just picking the maximum — it preserves uncertainty.
+
+When ChatGPT generates text, there is an extra knob called [[Pr11SIS0|temperature]]. It divides the logits by a constant \(T\) before softmax:
+
+{math}
+\text{softmax}(x_i) = \frac{e^{x_i / T}}{\sum_j e^{x_j / T}}
+{/math}
+
+- **Low temperature** (\(T\) near 0): the distribution sharpens. The most probable token gets nearly all the weight. Output is predictable, repetitive.
+- **High temperature** (\(T\) above 1): the distribution flattens. Less probable tokens get more weight. Output is more creative, more surprising, but risks being incoherent.
+- **Temperature = 0**: always picks the single most probable token. Deterministic, no randomness. You tend to get generic, formulaic text — "once upon a time" stories that go to the same predictable places every time.
+
+## Why only the last vector?
+
+This might seem strange. There are thousands of vectors in the sequence, all deeply refined. Why do we only use the last one to predict the next token?
+
+Two reasons. First, because of causal masking, the last vector is the only one that has attended to *all* previous tokens. Every other vector has a blindspot — it cannot see tokens that came after it. The last token is the only one with the complete picture.
+
+Second, during training, the model actually uses *every* vector to predict the next token at that position. Each vector predicts what comes immediately after it. This makes training much more efficient — one training example yields thousands of prediction tasks, not just one. But during generation (inference), we only care about the last position because that is where we are extending the text.
+
+---
+
+# Why we start from scratch every pass
+
+You might wonder: if each forward pass produces these beautifully enriched vectors that encode deep contextual meaning, why not save them? Why not reuse the enriched embeddings from the previous step as starting points for the next step, instead of looking up fresh embeddings every time?
+
+If you did that, you would have essentially reinvented an [[mBCcy7bn|RNN]] ^[Recurrent Neural Network. The architecture that dominated sequence processing before transformers. RNNs passed a "hidden state" forward from one timestep to the next, accumulating context. The problem was that information from early in the sequence degraded with each step — the vanishing gradient problem. By the time you reached token 500, the hidden state had barely any memory of token 1.].
+
+RNNs did exactly this: they passed a hidden state from one step to the next. And they had a fatal flaw — the information decayed. Token 1's information got diluted with every subsequent step. It is like a game of telephone: by the time the message reaches the end, it bears only a faint resemblance to the original. By the end of a long sequence, the model had effectively forgotten the beginning. This is the [[7IHpnRNx|vanishing gradient]] problem, and it is the reason RNNs could not handle long contexts.
+
+Transformers solved this by starting fresh every time. Each token's base embedding is fixed. The context is not accumulated in a state — it is computed via attention, which can directly connect any two tokens regardless of distance. Token 1 can attend to token 1000 just as easily as to token 2. No information decay, no vanishing gradients.
+
+There is a second reason, specific to GPT: causal masking means the earlier tokens' representations are "closed" — they cannot see later tokens anyway. Their values would not change if you recomputed them. This is actually what makes the KV cache possible, which we will get to shortly.
+
+---
+
+# BERT vs GPT
+
+You have probably heard of both BERT and GPT. They are both transformers, but they are fundamentally different — and the difference is not just a technical detail. It changes what the model is good at.
+
+**GPT is a decoder.** It uses causal masking — each token can only see tokens before it. It is trained to predict the next token. It generates text.
+
+**[[MwbJnjdN|BERT]] is an encoder.** It uses *no masking* — every token can see every other token, in both directions. It is trained differently: it randomly masks 15% of the tokens with a special `[MASK]` token, and the model predicts what the masked tokens were. This is called [[1zpNyBrj|Masked Language Modeling]] ^[BERT also had a second training objective called [[Ns8fH4xP|Next Sentence Prediction]] (NSP): given two sentences, predict if the second follows the first in the original text. This turned out to contribute very little, and later models like RoBERTa dropped it entirely.].
+
+The bidirectional attention in BERT means every word gets disambiguated using context from both sides. When BERT sees "The bank of the river was steep", the word "bank" attends to "river" (which comes after it) and fully resolves its meaning. In GPT, "bank" can only see "The" — it does not know about "river" yet and remains ambiguous.
+
+This makes BERT much better at *understanding* text — sentiment analysis, named entity recognition, question answering — but it cannot generate text. GPT is better at *generation* — writing, completion, conversation — but pays a price in understanding because it only ever sees context in one direction.
+
+{bkqt/keyconcept|No masking means better disambiguation}
+Without causal masking, early words in a sentence get fully disambiguated. "Bank" sees everything around it. This is why BERT-style models dominate tasks that require deep understanding of existing text, while GPT-style models dominate tasks that require producing new text.
+{/bkqt}
+
+## The architecture difference
+
+GPT is **[[Dc8sW4nR|decoder]]-only**: attention blocks with causal masking, MLP blocks, and that is it.
+
+BERT is **[[En6fL2qY|encoder]]-only**: attention blocks *without* masking, MLP blocks, and that is it.
+
+The original transformer from the 2017 paper was neither — it was an [[4WOV3Wpt|encoder-decoder]] model, designed for translation. It had an encoder (bidirectional, no masking) that processed the source language, and a decoder (causal masking) that generated the target language. The decoder had an extra type of attention — [[LZEkMuDa|cross-attention]] — that let it attend to the encoder's output.
+
+In [[LZEkMuDa|cross-attention]], the queries come from the decoder (the language you are translating *into*) and the keys and values come from the encoder (the language you are translating *from*). This lets each generated word in the target language look at all the words in the source language to decide what to produce next.
+
+{bkqt/quote}
+The first generated token's query is literally the embedding of a [[St5yK9jL|special token]] `[BOS]` (beginning of sequence), processed by the decoder. It is the cold start — you have to begin the translation with *something*, and `[BOS]` is that something. From there, each new token generates a query, cross-attends to the full source sentence, and produces the next word.
+{/bkqt}
+
+Cross-attention has **no causal masking**. The decoder can see all encoder tokens freely — there is no notion of "future" in the source sentence. It has already been fully processed. Causal masking only applies within the decoder's self-attention (the generated tokens should not see tokens that have not been generated yet).
+
+```
+Self-attention of the encoder:    no masking     (fully bidirectional)
+Self-attention of the decoder:    causal masking (only see past tokens)
+Cross-attention (decoder → encoder):  no masking (see entire source)
+```
+
+GPT simplifies this entire setup by throwing away the encoder and cross-attention. There is no "source" and "target" — there is just one sequence, processed left to right. If GPT can translate, it is because translation patterns were in its training data, not because it has specialized architecture for it.
+
+---
+
+# KV cache
+
+When GPT generates text one token at a time, there is a massive computational waste: each new token requires a full forward pass through the entire sequence. If you have generated 500 tokens and are producing token 501, you are re-computing attention over all 500 previous tokens — even though their representations have not changed (because of causal masking, earlier tokens cannot see later ones, so their values are fixed).
+
+The [[89ceVDr1|KV cache]] eliminates this waste. After computing the key and value vectors for each token, you store them in a cache. When the next token arrives, you only compute the new token's query, key, and value — then you look up all the cached keys and values from previous tokens.
+
+```
+Context so far: ["The", "cat"]
+New token: "sat"
+
+Without KV cache:
+  Recompute K and V for "The", "cat", "sat"  →  O(n) work
+
+With KV cache:
+  Load cached K_"The", V_"The", K_"cat", V_"cat"
+  Compute only K_"sat", V_"sat"  →  O(1) new work
+  Compute attention: Q_"sat" · [K_"The", K_"cat", K_"sat"]  →  done
+```
+
+The new token *can* attend to all previous tokens (its query dot-products with all cached keys). But the previous tokens do *not* need to be recomputed — their representations are frozen by causal masking.
+
+For long sequences (4k+ tokens), the KV cache can reduce generation time by 10-50x. Without it, ChatGPT would not exist — or rather, it would exist as something that takes thirty seconds to write a single sentence. Nobody would use it. The KV cache is the kind of optimization that makes the difference between a research curiosity and a product that rewrites industries. The cost is memory — the cache grows linearly with context length, which is part of why long-context inference is expensive.
+
+This is --another reason why starting from base embeddings each pass is the right design--. If we kept enriched embeddings as state, every new token would change the context for all previous tokens, and you would have to recompute everything from scratch every single step. No caching possible.
+
+---
+
+# Superposition
+
+We have been talking as if each "direction" in the embedding space encodes a single clean concept — one direction for "gender", one for "plurality", one for "basketball". If that were literally true, a 12,288-dimensional space could encode at most 12,288 independent features. That is a lot, but is it enough for a model that needs to represent every fact, concept, and relationship in human language?
+
+It is not. And what actually happens is far more interesting.
+
+In a 12,288-dimensional space, you can fit at most 12,288 perfectly perpendicular directions. But what if you relax the constraint slightly? What if you allow directions that are *nearly* perpendicular — say, between 89 and 91 degrees?
+
+In low dimensions, this buys you almost nothing. In 3D, you cannot fit many more than 3 nearly-perpendicular vectors. Try it with pencils on a desk — you get three orthogonal pencils and that is about it. But in high dimensions, something remarkable happens. The number of nearly-perpendicular vectors you can pack into an n-dimensional space grows **exponentially** with n. High-dimensional space is weird. Most of your intuitions from 3D are wrong up there.
+
+```python
+import numpy as np
+
+# 100-dimensional space, 10,000 random vectors (100x the dimensions)
+vectors = np.random.randn(10000, 100)
+vectors /= np.linalg.norm(vectors, axis=1, keepdims=True)
+
+# After optimization to maximize near-perpendicularity:
+# All pairwise angles fall between 89° and 91°
+# 10,000 nearly-independent directions in a 100-dim space
+```
+
+This is a consequence of something called the **Johnson-Lindenstrauss lemma**, and it has profound implications. A 12,288-dimensional space does not just store 12,288 features. It can store --millions-- of features as nearly-perpendicular directions, with minimal interference between them.
+
+This phenomenon is called [[Sp2tK6jL|superposition]]. Instead of each neuron encoding a single feature, each feature is encoded as a combination of many neurons — a specific direction that activates a specific pattern across many neurons simultaneously. Individual neurons are **polysemantic** — they participate in encoding many different features.
+
+This is why transformer internals are so hard to interpret. You cannot point to a single neuron and say "this is the basketball neuron." Basketball is a direction in the space, but that direction activates dozens of neurons partially, and each of those neurons also participates in encoding many other features. Everything is superimposed.
+
+{bkqt/keyconcept|Sparse autoencoders}
+A tool called a [[Sa4vB8mQ|sparse autoencoder]] attempts to reverse this superposition — to extract the true underlying [[Ft9pL5hS|features]] from the tangled neuron activations. The key reference is Anthropic's research on [[Mn7cR3xF|monosemanticity]]: "Towards Monosemanticity: Decomposing Language Models with Dictionary Learning". The idea is to learn a much larger set of directions (the "dictionary") such that each direction corresponds to a single interpretable concept, and the model's actual activations can be reconstructed as a sparse combination of these directions.
+
+This is an active area of interpretability research. The results so far suggest that yes, the features are in there — they are just packed far more densely than the raw neuron count would suggest.
+{/bkqt}
+
+Superposition might partially explain why scaling works so well. A model with 10x more dimensions does not get 10x more feature capacity — it gets exponentially more. A small increase in model size unlocks a disproportionately large increase in what the model can represent.
+
+---
+
+# The embedding bottleneck
+
+Here is an implication of everything above that is worth pausing on.
+
+The MLP blocks in GPT-3 have 49,152 neurons each. You can make them bigger — more neurons, more facts, more capacity. And because those facts are probed via dot products with the embedding, the MLP's effectiveness is ultimately bounded by the richness of the embedding space. If the embedding is 12,288-dimensional, that is the resolution at which the model can distinguish concepts, even if the MLP is enormous.
+
+Superposition helps — you can pack millions of features into 12,288 dimensions — but there are limits. At some point, features start interfering with each other. The more features you cram in, the more "crosstalk" between nearly-perpendicular directions.
+
+This means --the embedding dimension is a more fundamental bottleneck than the MLP size--. Making the MLP wider adds more fact-storage capacity, but the model can only use it to the extent that its embedding space can represent the distinctions being probed. This is part of why [[iTljPiGW|scaling laws]] exist: you need to scale everything together — embedding dimension, number of heads, MLP width, number of layers — not just one component.
+
+---
+
+# Training
+
+We have described the forward pass — data flowing through the network, producing a prediction. But how does the model learn? How do those 175 billion parameters get set?
+
+The answer is [[aufHHy2p|backpropagation]] and **gradient descent**, the same algorithm used for every deep learning model. The basic loop is:
+
+a. Feed the model a batch of text
+b. The model predicts the next token at every position
+c. Compare the predictions to the actual next tokens. Compute a [[DxaRVjHg|loss]] — a single number measuring how wrong the model was ^[The specific [[DxaRVjHg|loss function]] is [[q3MjogvW|cross-entropy]] loss. For each position, you take the probability the model assigned to the correct next token and compute \(-\log(p)\). If the model assigned 90% to the right answer, the loss is small. If it assigned 1%, the loss is large. You average this across all positions and all examples in the batch.]
+d. Backpropagate: compute the gradient of the loss with respect to every parameter. This tells you, for each of the 175 billion numbers, "if you nudge this number up, does the loss go up or down, and by how much?"
+e. Nudge every parameter a tiny step in the direction that reduces the loss
+f. Repeat billions of times
+
+The model sees trillions of tokens during training. GPT-3 was trained on about 300 billion tokens. Each parameter gets adjusted millions of times. The process is not magical — it is calculus and linear algebra, applied at enormous scale.
+
+## Fine-tuning and RLHF
+
+Pre-training produces a model that is good at predicting the next token but not necessarily good at being helpful, harmless, or honest. [[esHo5jMx|Fine-tuning]] adjusts the parameters further using curated data — examples of helpful conversations, refusals of harmful requests, corrections of factual errors.
+
+[[0f5GJDwc|RLHF]] (Reinforcement Learning from Human Feedback) is a specific fine-tuning technique. Humans rank model outputs by quality, a separate "reward model" learns to predict those rankings, and the language model is fine-tuned to maximize the reward model's score. This is how models learn to be assistants rather than autocomplete engines.
+
+In standard fine-tuning (including [[YwfNaR4R|DPO]] ^[Direct Preference Optimization. A simpler alternative to RLHF that skips the reward model entirely. Instead of training a reward model and then optimizing against it, DPO directly optimizes the language model to prefer the human-preferred response over the human-rejected response. Mathematically cleaner, practically easier to implement.]), all parameters are updated — both attention and MLP weights. Nothing is frozen by default.
+
+However, [[3kgsj4Y4|LoRA]] (Low-Rank Adaptation), the most popular efficient fine-tuning method, typically only modifies the attention matrices (\(W_Q\), \(W_K\), \(W_V\), and the output matrix). The MLP weights stay frozen. This works because behavior changes — tone, style, instruction-following — are primarily about attention patterns (how the model routes information), not about stored facts (which live in the MLPs).
+
+The tokenizer is almost never touched during fine-tuning. Changing it would mean changing the embedding matrix, which would essentially mean starting over.
+
+---
+
+# RAG
+
+BERT-style models have a second life beyond direct text processing: they power [[yK3RLt0K|RAG]] (Retrieval-Augmented Generation).
+
+The idea is simple. BERT produces a vector for each input. The special `[CLS]` ^[A special token prepended to every BERT input. During training, the representation at this position learns to aggregate information about the entire input. After training, the `[CLS]` vector is used as a fixed-size "summary" of the whole input. GPT does not have `[CLS]` — it just uses the last token, which serves the same purpose because causal masking ensures the last token has seen everything.] token's vector summarizes the entire input. If you fine-tune BERT with [[Ct9xL5mW|contrastive learning]] — training on pairs of (question, relevant paragraph) so that similar pairs end up close in vector space — you get a powerful semantic search engine.
+
+```
+"What is the capital of France?"  →  BERT  →  vector A
+"Paris is the capital of France"  →  BERT  →  vector B
+
+cosine_similarity(A, B) = 0.94   (very close — good match)
+
+"Recipe for tortilla"             →  BERT  →  vector C
+
+cosine_similarity(A, C) = 0.12   (far apart — not relevant)
+```
+
+BERT *without* fine-tuning would do this poorly — its `[CLS]` vector was trained to predict masked tokens, not to capture semantic similarity. Fine-tuning with contrastive learning reshapes the space so that questions and their answers cluster together. Models like [[Sr7tD3vH|sentence-transformers]] and OpenAI's [[KugYH1TK|embedding models]] are essentially BERT/RoBERTa fine-tuned specifically for this.
+
+RAG uses this to augment a language model: embed the user's question, search a database of pre-embedded documents for the most similar paragraphs, and inject those paragraphs into the prompt. The language model then generates an answer grounded in the retrieved context. This is how you get a chatbot that can answer questions about your company's documentation without having been trained on it.
+
+The layers after BERT — what people call [[Dl5mK9cJ|downstream layers]] — are typically just a linear layer on top of the embedding output. They convert the vector into whatever format the task needs: 2 classes for sentiment analysis, a cosine similarity score for RAG, a span of tokens for question answering.
+
+---
+
+# Flash attention
+
+The attention mechanism, as described, has a computational problem. To compute \(\text{softmax}(QK^T)V\) for a sequence of \(N\) tokens, you need to compute the full \(N \times N\) attention matrix. For \(N = 4096\), that is 16 million values. For \(N = 32768\), that is over 1 billion values. This matrix has to be stored in GPU memory.
+
+[[Fa9tL3hP|Flash Attention]] solves this. The insight is that you do not need to materialize the full \(N \times N\) matrix. You can compute attention in blocks — load small chunks of Q, K, V into the GPU's fast on-chip SRAM, compute partial attention scores, accumulate the result, and move to the next block.
+
+```
+Standard attention:
+  Compute full Q×K^T  →  write N×N matrix to GPU RAM  →  softmax  →  multiply by V
+
+Flash Attention:
+  Load small block of Q, K, V into SRAM (fast, small)
+  Compute partial attention in SRAM
+  Accumulate result
+  Next block
+  Never writes N×N matrix to RAM
+```
+
+The math is identical. The result is identical. The difference is entirely about memory access patterns. Flash Attention reduces memory usage from \(O(N^2)\) to \(O(N)\) and is significantly faster because SRAM access is orders of magnitude faster than GPU RAM access.
+
+This is not an approximation. It computes exact attention. It is a pure engineering optimization — the same computation, reorganized to respect the GPU's memory hierarchy.
+
+---
+
+# Context length
+
+Standard attention has \(O(N^2)\) cost in sequence length. Double the context, quadruple the compute and memory. This is why context size is such a hard limit and why expanding it is non-trivial.
+
+Several approaches try to break this bottleneck:
+
+- [[Sw3pJ7cR|Sliding window attention]] (Longformer): each token only attends to its nearby neighbors plus a few designated "global" tokens. Cost drops from \(O(N^2)\) to \(O(N)\), but you lose the ability to directly attend to distant tokens.
+
+- **Sparse attention patterns**: various schemes that sparsify the attention matrix — only attending to certain positions based on learned or fixed patterns.
+
+- **Flash Attention** (above): does not change the asymptotic cost but makes the constant factor dramatically better, enabling longer contexts in practice.
+
+None of these are truly "infinite" context. They are tradeoffs between cost and the range of attention. The fundamental constraint remains: representing and computing over longer sequences costs more.
+
+---
+
+# Architecture variations
+
+Two important variations that show up in modern models:
+
+## MoE (Mixture of Experts)
+
+[[x5qaZizz|Mixture of Experts]]: instead of one MLP per layer, you have \(N\) MLPs (the "experts") and a learned router that picks \(K\) of them for each token. GPT-4 and Mixtral use this. The total parameter count is huge — many experts, each with their own weights — but the computational cost per token stays manageable because only a few experts activate for each token.
+
+This is a way to scale the model's knowledge capacity (more parameters = more facts) without proportionally scaling the compute cost.
+
+## GQA (Grouped Query Attention)
+
+Standard multi-head attention gives each head its own K, V matrices. [[Gq6mB2vY|GQA]] shares K, V across groups of heads — for example, 8 heads might share 1 set of K, V matrices. This dramatically reduces the KV cache size (which scales with the number of heads), making long-context inference much more memory-efficient. Llama 3 and Gemini use this.
+
+---
+
+# Putting it all together
+
+Let's trace a single forward pass, end to end, for a model generating the next token after "The cat sat on the".
+
+a. **Tokenizer:** "The cat sat on the" becomes token IDs [464, 3797, 3332, 319, 262]
+b. **Embedding:** each ID is looked up in the embedding matrix. Five vectors of 12,288 dimensions each.
+c. **Positional encoding:** position information is added to each vector.
+d. **96 rounds of:** attention (compute Q, K, V; cross-reference keys and queries via dot products; apply causal masking; softmax the scores; combine value vectors by attention weights; sum results from 96 parallel heads; add to embeddings), then layer norm, then MLP (project up 12,288 → 49,152, ReLU, project back down 49,152 → 12,288, add to embedding — facts about the world are injected here), then layer norm again.
+e. **Unembedding:** the last vector (position 5, "the") is multiplied by the transpose of the embedding matrix. This produces 50,257 logits — one for each token in the vocabulary.
+f. **Softmax with temperature:** the logits are converted to probabilities. "mat" might get the highest probability.
+g. **Sampling:** a token is sampled from the distribution. Say we get "mat".
+h. **Append and repeat:** "mat" is added to the sequence. The process starts over with "The cat sat on the mat" to generate the next token.
+
+Each forward pass produces one token. To generate a paragraph, you run this loop hundreds of times. With KV caching, steps d-f are efficient because you only compute the new token's interactions with cached keys and values from previous tokens.
+
+{dots}
+
+What makes transformers special is not any single component. Embeddings existed before. Attention existed before. Feedforward networks existed before. The insight was combining them in a way that is --massively parallelizable--. RNNs processed tokens sequentially — you had to wait for token 1 to finish before starting token 2. Transformers process all tokens simultaneously during training. This parallelism maps perfectly onto [[WEUTQwqv|GPUs]], which have thousands of cores designed for exactly this kind of matrix multiplication.
+
+The result: you can throw more data and more compute at the problem, and the model gets better. Not linearly better — qualitatively better. GPT-2 (1.5 billion parameters) generated plausible-sounding text. GPT-3 (175 billion) could write essays and code. The same architecture, just bigger. Scale alone, enabled by parallelism, produced the capabilities that launched the current AI era.
+
+The transformer was not designed to think. It was designed to predict the next token. But it turns out that in order to predict the next token well enough, across enough data, you have to build something that looks an awful lot like understanding. Nobody planned this. The architecture was supposed to be good at translation. Nine years later, it writes poetry, debugs code, passes the bar exam, and argues philosophy. All from next-token prediction.
