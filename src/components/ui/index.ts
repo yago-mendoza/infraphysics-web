@@ -2,3 +2,4 @@
 
 export * from './StatusBadge';
 export * from './Highlight';
+export * from './ComplexityBar';

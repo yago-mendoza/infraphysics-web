@@ -6,6 +6,7 @@ import { formatDateTimeline } from '../../lib/date';
 import { Highlight, StatusBadge } from '../ui';
 import { GitHubIcon, FileTextIcon, PlayCircleIcon, EyeIcon, HeartIcon } from '../icons';
 import { postPath, STATUS_CONFIG } from '../../config/categories';
+import { ComplexityBar } from '../ui';
 import type { ArticleStats } from '../../hooks/useArticleStats';
 import { EmptyState } from './SearchResultsList';
 import type { SectionRendererProps } from './index';
@@ -46,6 +47,11 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                       loading="lazy"
                       className="w-full h-full object-cover"
                     />
+                    {post.complexity != null && (
+                      <span className="absolute top-2 right-2 px-1.5 py-1 backdrop-blur-sm rounded-sm" style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}>
+                        <ComplexityBar value={post.complexity} />
+                      </span>
+                    )}
                   </Link>
                 )}
 

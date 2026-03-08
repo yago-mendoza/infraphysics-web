@@ -71,6 +71,24 @@ export const catAccentVar = (cat: string): string =>
 export const secondBrainPath = (uid?: string): string =>
   uid ? `/lab/second-brain/${uid}` : '/lab/second-brain';
 
+/* ── Complexity metadata — maps 1-10 to audience labels ── */
+
+export interface ComplexityLevel {
+  label: string;
+  range: [number, number];
+}
+
+export const COMPLEXITY_LEVELS: ComplexityLevel[] = [
+  { label: 'for everyone', range: [1, 2] },
+  { label: 'enthusiast',   range: [3, 4] },
+  { label: 'practitioner', range: [5, 6] },
+  { label: 'expert',       range: [7, 8] },
+  { label: 'deep cut',     range: [9, 10] },
+];
+
+export const getComplexityLevel = (c: number | null | undefined): ComplexityLevel | null =>
+  c == null ? null : COMPLEXITY_LEVELS.find(l => c >= l.range[0] && c <= l.range[1]) ?? null;
+
 /* ── Status metadata (shared across SectionView filters + ArticlePostView header) ── */
 
 export const STATUS_CONFIG: Record<string, { label: string; accent: string; dotColor: string }> = {

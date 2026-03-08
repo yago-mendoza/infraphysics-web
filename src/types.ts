@@ -23,6 +23,7 @@ interface BasePost {
   tldr?: string[] | string | null;
   related?: string[] | null;
   featured?: boolean;
+  complexity?: number | null;   // 1–10, maps to audience labels
 }
 
 /* ── Category-specific extensions ── */

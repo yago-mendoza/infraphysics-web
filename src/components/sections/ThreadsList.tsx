@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { formatDate } from '../../lib/date';
 import { EyeIcon, HeartIcon } from '../icons';
 import { postPath } from '../../config/categories';
+import { ComplexityBar } from '../ui';
 import { EmptyState } from './SearchResultsList';
 import type { SectionRendererProps } from './index';
 
@@ -19,19 +20,22 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
           <div key={post.id} className={`listing-card thread-card ${index < posts.length - 1 ? 'border-b border-th-border pb-8 mb-8' : ''}`}>
             <div className="flex flex-col">
               <div className="flex-grow min-w-0">
-                {/* Date + stats */}
-                <div className="flex flex-wrap items-center gap-3 mb-3">
-                  <span className="text-xs text-th-tertiary" style={{ fontFamily: "'Roboto Slab', Georgia, serif" }}>{formatDate(post.date)}</span>
-                  {(() => {
-                    const s = stats?.[postPath(post.category, post.id)];
-                    if (!s) return null;
-                    return (
-                      <>
-                        {s.views > 0 && <span className="inline-flex items-center gap-1 text-xs text-th-tertiary"><EyeIcon size={12} /> {s.views}</span>}
-                        {s.hearts > 0 && <span className="inline-flex items-center gap-1 text-xs text-th-tertiary"><HeartIcon size={12} /> {s.hearts}</span>}
-                      </>
-                    );
-                  })()}
+                {/* Date + stats + complexity */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-xs text-th-tertiary" style={{ fontFamily: "'Roboto Slab', Georgia, serif" }}>{formatDate(post.date)}</span>
+                    {(() => {
+                      const s = stats?.[postPath(post.category, post.id)];
+                      if (!s) return null;
+                      return (
+                        <>
+                          {s.views > 0 && <span className="inline-flex items-center gap-1 text-xs text-th-tertiary"><EyeIcon size={12} /> {s.views}</span>}
+                          {s.hearts > 0 && <span className="inline-flex items-center gap-1 text-xs text-th-tertiary"><HeartIcon size={12} /> {s.hearts}</span>}
+                        </>
+                      );
+                    })()}
+                  </div>
+                  <ComplexityBar value={post.complexity} />
                 </div>
 
                 {/* Thumbnail (if available) */}

@@ -6,7 +6,7 @@ import { posts } from '../data/data';
 import { Category } from '../types';
 import { calculateReadingTime, stripHtml, accentChipStyle } from '../lib';
 import { getSearchExcerpt, countMatches } from '../lib/search';
-import { CATEGORY_CONFIG, STATUS_CONFIG, catAccentVar, type CategoryDisplayConfig } from '../config/categories';
+import { CATEGORY_CONFIG, STATUS_CONFIG, COMPLEXITY_LEVELS, getComplexityLevel, catAccentVar, type CategoryDisplayConfig } from '../config/categories';
 import { useTheme } from '../contexts/ThemeContext';
 import { useArticleStats } from '../hooks/useArticleStats';
 import {
@@ -42,9 +42,11 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [selectedLang, setSelectedLang] = useState<string | null>(null);
+  const [selectedComplexity, setSelectedComplexity] = useState<string[]>([]);
   const toggleTopic = (t: string) => setSelectedTopics(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
   const toggleTech = (t: string) => setSelectedTechs(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
   const toggleStatus = (s: string) => setSelectedStatuses(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+  const toggleComplexity = (label: string) => setSelectedComplexity(prev => prev.includes(label) ? prev.filter(x => x !== label) : [...prev, label]);
 
   const { theme } = useTheme();
 
@@ -54,6 +56,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
     setSelectedTopics([]);
     setSelectedTechs([]);
     setSelectedStatuses([]);
+    setSelectedComplexity([]);
     setSortBy('newest');
     setShowFilters(category === 'projects');
     setVisibleCount(PAGE_SIZE);
@@ -101,8 +104,15 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
       result = result.filter(p => p.status && selectedStatuses.includes(p.status));
     }
 
+    if (selectedComplexity.length > 0) {
+      result = result.filter(p => {
+        const cl = getComplexityLevel(p.complexity);
+        return cl && selectedComplexity.includes(cl.label);
+      });
+    }
+
     // Language filter — only when no other filters are active
-    const hasFilters = query || selectedTopics.length > 0 || selectedTechs.length > 0 || selectedStatuses.length > 0;
+    const hasFilters = query || selectedTopics.length > 0 || selectedTechs.length > 0 || selectedStatuses.length > 0 || selectedComplexity.length > 0;
     if (!hasFilters && selectedLang) {
       result = result.filter(p => (p.lang || 'en') === selectedLang);
     }
@@ -115,7 +125,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
     });
 
     return result;
-  }, [sectionPosts, query, sortBy, selectedTopics, selectedTechs, selectedStatuses, selectedLang]);
+  }, [sectionPosts, query, sortBy, selectedTopics, selectedTechs, selectedStatuses, selectedComplexity, selectedLang]);
 
   const topicCounts = useMemo(() => {
     const map: Record<string, number> = {};
@@ -134,6 +144,17 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
     for (const p of filteredPosts) if (p.status) map[p.status] = (map[p.status] || 0) + 1;
     return map;
   }, [filteredPosts]);
+
+  const complexityCounts = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const p of filteredPosts) {
+      const cl = getComplexityLevel(p.complexity);
+      if (cl) map[cl.label] = (map[cl.label] || 0) + 1;
+    }
+    return map;
+  }, [filteredPosts]);
+
+  const hasAnyComplexity = useMemo(() => sectionPosts.some(p => p.complexity != null), [sectionPosts]);
 
   // Infinite scroll
   const visiblePosts = filteredPosts.slice(0, visibleCount);
@@ -289,6 +310,29 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
                         }`}
                       >
                         {t} ({count})
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {hasAnyComplexity && (
+              <div>
+                <span className="text-xs text-th-tertiary uppercase block mb-2">Complexity</span>
+                <div className="flex flex-wrap gap-2">
+                  {COMPLEXITY_LEVELS.map(level => {
+                    const active = selectedComplexity.includes(level.label);
+                    const count = complexityCounts[level.label] || 0;
+                    if (!active && (count === 0 || count === filteredPosts.length)) return null;
+                    return (
+                      <button
+                        key={level.label}
+                        onClick={() => toggleComplexity(level.label)}
+                        className="text-xs px-2.5 py-0.5 border rounded-sm transition-colors accent-chip"
+                        style={accentChipStyle(accent, active)}
+                      >
+                        {level.label} ({count})
                       </button>
                     );
                   })}

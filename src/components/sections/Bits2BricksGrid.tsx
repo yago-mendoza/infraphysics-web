@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { formatDate } from '../../lib/date';
 import { EyeIcon, HeartIcon } from '../icons';
 import { postPath } from '../../config/categories';
+import { ComplexityBar } from '../ui';
 import { EmptyState, SearchResultsList } from './SearchResultsList';
 import type { SectionRendererProps } from './index';
 
@@ -25,7 +26,7 @@ export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, 
             className="card-link group overflow-hidden"
           >
             {/* Square thumbnail */}
-            <div className="aspect-square bg-th-surface-alt overflow-hidden">
+            <div className="relative aspect-square bg-th-surface-alt overflow-hidden">
               {post.thumbnail && (
                 <img
                   src={post.thumbnail}
@@ -33,6 +34,11 @@ export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, 
                   loading="lazy"
                   className="w-full h-full object-cover transition-transform duration-300 scale-[1.03] group-hover:scale-100"
                 />
+              )}
+              {post.complexity != null && (
+                <span className="absolute top-2 right-2 px-1.5 py-1 backdrop-blur-sm rounded-sm" style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}>
+                  <ComplexityBar value={post.complexity} />
+                </span>
               )}
             </div>
 

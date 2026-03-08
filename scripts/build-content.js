@@ -161,6 +161,7 @@ function processMarkdownFile(filePath) {
     tldr: frontmatter.tldr || null,
     related: frontmatter.related || null,
     lang: frontmatter.lang || null,
+    complexity: frontmatter.complexity || null,
   };
 }
 
