@@ -1233,24 +1233,13 @@
 }
 
 .article-content .bkqt-label {
+  display: block;
   font-size: inherit;
   font-weight: 600;
   color: var(--art-text-title);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin-right: 0.4em;
-}
-
-.article-content .bkqt-label::after {
-  content: ':';
-}
-
-.article-threads .article-content .bkqt-label::after {
-  content: none;
-}
-
-.article-content .bkqt-body > .bkqt-label + p {
-  display: inline;
+  margin-bottom: 0.4rem;
 }
 
 .article-content .copy-btn {
@@ -2248,10 +2237,6 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   margin-right: 0;
   margin-top: 0;
   margin-bottom: 0.1rem;
-}
-
-.article-threads .article-content .bkqt-body > .bkqt-label + p {
-  display: block;
 }
 
 /* E3. Breadcrumbs */
