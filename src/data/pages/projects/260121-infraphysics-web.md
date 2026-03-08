@@ -1,595 +1,415 @@
 ---
 id: infraphysics-web
 displayTitle: "Infraphysics — building a website that thinks"
-subtitle: "from blank page to knowledge graph in 18 days"
+subtitle: "or: how a folder of messy notes became a knowledge graph"
 category: projects
-date: 2026-01-21
+date: "2026-03-08"
 thumbnail: https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=400&auto=format&fit=crop
 thumbnailAspect: wide
 thumbnailShading: heavy
 description: "How a systems engineer built a personal site with a custom markdown compiler, a second brain, and an AI development partner — and what went wrong along the way."
 status: ongoing
 tags: [React, Vite, Markdown, Second Brain, Web Development]
+complexity: 4
 technologies: [React, TypeScript, Vite, Tailwind CSS, Shiki, marked]
 github: https://github.com/yago-mendoza/infraphysics-web
+featured: true
 tldr:
   - This is the website you're reading right now. The article, the compiler that rendered it, the theme system coloring it, the wiki-links connecting it — all of it is the project.
-  - Started January 21st with a blank Vite scaffold and no web development experience worth mentioning. 18 days and 132 commits later, I had a custom markdown language, a knowledge graph with 60+ notes, and strong opinions about CSS custom properties.
-  - From day 16 I worked with Claude Code (an AI coding assistant) as a development partner. The last section of the article is about what it's like to teach an LLM to maintain a codebase it didn't build — and why it keeps trying to "improve" things you didn't ask it to touch.
+  - I've been collecting notes on how things work since 2016. Notebooks, TXTs, physical drawings, Post-its. AI finally made it possible to structure everything. That's the real reason this site exists.
+  - The interesting part isn't the CSS or the menus. It's the Second Brain — a knowledge graph where every concept is a node, everything connects, and Claude Code helps me organize ten years of scattered knowledge into something navigable.
   - I considered Astro, I considered MDX, I considered buying a theme. I built everything from scratch instead, because the point was never to have a website — it was to find out what I didn't know.
 ---
 
->> 26.01.21 - Created the repo. No idea what I'm doing. Let's go.
->> 26.02.07 - 132 commits later, this article exists on the platform it describes. Meta.
+>> 26.01.21 - Just created the repo. No idea what I'm doing. Let's go.
 
 I am not a web developer.
 
-I build things that deal with hardware, systems, infrastructure — the kind of stuff where a misplaced byte crashes real silicon. I've spent more time reading datasheets than CSS specs. My natural habitat is closer to a [[dlBw5GXu]] than a landing page.
-
-So when I decided to build a personal website, the rational move was to use a template. Pick a Hugo theme, write some markdown, deploy to Netlify, move on with my life. I actually considered it. I looked at Astro — which is genuinely designed for content-heavy sites with interactive islands — and even thought about buying a pre-built theme and customizing it from there. That's what a sane person would do.
+I build things that deal with hardware, systems, infrastructure. My natural habitat is closer to a [[dlBw5GXu]] than a landing page. So when I decided to build a personal website, the rational move was to use a template. Pick a Hugo theme, write some markdown, deploy, move on. I actually considered it. I looked at Astro. I even thought about buying a pre-built theme.
 
 I did not do the sane thing.
 
-The truth is, I'd been circling around web development for a while. Small projects, experiments, half-finished things that never made it past the "it works on localhost" stage. And at some point the question stopped being "can I make a website" and became "can I build a _real_ one — architecture, data, interaction, everything — without leaning on someone else's decisions." Not because templates are bad. Because I wanted to know what I didn't know, and the only way to find out was to build something complex enough to punish every gap in my understanding.
+>> 26.01.21 - I've been carrying a folder of notes around for almost ten years. Notebooks that start from both ends to fit two topics. Post-its that made sense for a week. Drawings with arrows connecting concepts — my own bootleg knowledge graphs, on paper, before I knew that's what they were called. TXTs, markdowns, photos of whiteboards. AI, hardware, optimization, how chips work, how industries scale. All of it scattered across devices and formats and years. The real reason I'm building this site is that I finally have the tools to structure it all. The web stuff is a vehicle. The destination is the brain.
 
-So I spent 18 days building a custom React app with its own [[E9olQ6Ox|markdown compiler]], a wiki-style knowledge graph I call the Second Brain, a dual-theme system, and a set of scripts that refactor my notes for me. Because apparently "I just need a simple blog" is the most dangerous sentence in software engineering.
+The truth is, I'd been circling around web development for a while. Small experiments that never made it past localhost. And at some point the question stopped being "can I make a website" and became "can I build a _real_ one — architecture, data, interaction, everything — without leaning on someone else's decisions." Not because templates are bad. Because I wanted to know what I didn't know.
 
-One thing worth clarifying upfront, because it's easy to misread the architecture: although the site runs on React, **the content you're reading right now was not generated by your browser.** Every article is compiled to HTML at build time — before the site is even deployed. The markdown goes through a [[dlBw5GXu|14-step pipeline]], gets transformed into static HTML, and gets served as-is. Like setting the table before the guests arrive: when you open this page, the food is already there. Your browser just sits down and eats.
+So I spent 18 days building a custom React app with its own [[E9olQ6Ox|markdown compiler]], a wiki-style knowledge graph I call the Second Brain, and a dual-theme system. This article is compiled by the same pipeline it describes. The wiki-links in the text point to fieldnotes that were compiled in the same build. Everything here is the project. Because apparently "I just need a simple blog" is the most dangerous sentence in software engineering.
 
-> The JavaScript bundle weighs roughly 150–200 KB compressed (before React's own weight). For a personal portfolio that nobody discovers through Google, this is irrelevant. This isn't an e-commerce site competing for ad clicks. The people who find this place come from LinkedIn, GitHub, or a direct link — they already know what they're looking for.
-
-This is the story of how it happened — what worked, what broke, and what I'd do differently if I were sane enough to do it again.
+> One thing worth clarifying: although the site runs on React, **the content you're reading was not generated by your browser.** Every article is compiled to HTML at build time. The markdown goes through a 14-step pipeline, gets transformed into static HTML, and gets served as-is. Your browser just sits down and eats.
 
 ---
 
-# Decisions and chaos
+# The first week
 
-Before any code was written, there were decisions. Most of them made too quickly.
+>> 26.01.21 - Day 1. Empty index.html. Staring at it. The cursor is blinking. I am not blinking.
+>> 26.01.22 - Day 2. Try building the whole thing with no routing. Hit a wall. Delete it. Starting over with a plan. Probably.
+>> 26.01.23 - Day 3. Discover that when your content renders outside its container and pushes the page sideways, the fix is a single CSS property. I don't know the word "overflow" in this context. I google "div content pushes page right how to fix." That's the search that leads me to `overflow: hidden`. Four hours for one line.
+>> 26.01.24 - Day 4. Build a horizontal navbar. It already feels wrong. Too flat for a site with two themes and a knowledge graph.
+>> 26.01.25 - Day 5. Rip out the navbar. Spend the whole day rebuilding as a sidebar. Break every layout assumption. Worth it. I keep resizing the browser to watch it collapse on mobile. Is that normal.
+>> 26.01.25 - Same day, later. It clicks. Routes, sidebar, content area — everything has a place. First time this feels like a project and not a homework assignment.
 
-## The stack
+The first version was the Vite scaffold. 47 files, most of them boilerplate I'd delete within a week. Then nothing useful for two days. That gap between knowing _what_ you want to build and knowing _how_ is wider than it looks from the outside.
 
-The first question was what to build with. The honest answer is: I didn't spend a lot of time deciding. That was probably a mistake. Or maybe not.
+The early days tell the real story. "Solved render issue." "Bound fieldnotes list to rendering area." "Minimal shifts." The vocabulary of someone who's discovering CSS grid for the first time and doesn't know what `overflow: hidden` does — and, worse, doesn't know how to describe the problem well enough to google it efficiently. In hardware, if something doesn't fit, the datasheet tells you the dimensions. CSS doesn't have a datasheet. You just keep trying things until the page stops doing something weird.
 
-| Option | Why I looked at it | Why I didn't pick it |
+The sidebar pivot was the first real decision. A top bar works for flat sites — five pages at the same level. This site has two worlds (lab and blog) with different themes, plus a knowledge graph with its own navigation. A horizontal nav couldn't express that without becoming a dropdown disaster. The sidebar ^[I still don't know if "sidebar" is the right word. In hardware documentation, a sidebar is supplementary information in a callout box. In web dev it's a persistent navigation panel. I use the web meaning but it never stops feeling wrong.] could show the lab/blog split visually, with section groups and icons, and collapse on mobile without losing the hierarchy.
+
+The rebuild took a full day and the layout didn't work until around 10pm. Then, somewhere around the fourth or fifth hot reload, it just... worked. The sidebar collapsed where it should. The content area filled the space. The transitions felt smooth. I don't remember what exactly triggered it. Looking back, it was the moment the responsive behavior clicked — the routing, the sidebar, the content area all talking to each other. I sat there resizing the window like an idiot, watching it adapt. That was the first time the project felt like a real thing.
+
+I also thought, briefly: I could have had a Hugo site done by now. That thought came back several times over the next two weeks.
+
+---
+
+# The stack and the chaos
+
+## Picking tools
+
+I didn't spend a lot of time deciding. That was probably a mistake. Or maybe not.
+
+| Option | Why I looked | Why I passed |
 |---|---|---|
-| **Hugo / Jekyll** | Fast, simple, built for blogs | Too rigid — I wanted interactive components, not just static pages |
-| **Next.js** | Industry standard, SSR, file-based routing | Overkill for a personal site with no SEO needs. The server-side rendering was solving a problem I didn't have |
-| **Gatsby** | React-based, plugin ecosystem | Tried it once. The plugin dependency graph felt like a build system for a build system |
-| **Astro** | Lightweight, content-focused, islands architecture | Genuinely good option. Should have considered it more seriously. More below |
-| **Vite + React** | Fast dev server, minimal config, I know React | Won by inertia |
+| **Hugo / Jekyll** | Fast, simple, built for blogs | Too rigid — I wanted interactive components |
+| **Next.js** | Industry standard, SSR | Overkill. The server-side rendering was solving a problem I didn't have |
+| **Astro** | Lightweight, islands architecture | Genuinely good. More on this below |
+| **Vite + React** | Fast dev server, I know React | Won by inertia |
 
-### Why not Astro
+If I were starting today with no learning agenda, Astro would be the right call. Static HTML by default, React islands for interactive bits. The blog posts would ship zero JavaScript. The Second Brain would be an island inside static HTML. Architecturally elegant.
 
-If I were starting today with a clean slate and no learning agenda, Astro with islands would be the right call for the blog portion. It renders everything to static HTML by default and only activates the components you explicitly mark as interactive. The blog posts would ship zero JavaScript. The Second Brain would be an island of React inside a sea of static HTML. Architecturally elegant.
+But I chose cohesion over purity. One framework, one routing system, one way of thinking. React was the logic I knew, and the whole project asked for a single dominant logic. The trade-off was conscious.
 
-But I didn't start with a clean slate. I started with a question: --can I build a full system from scratch?-- Astro would have answered a different question — "can I pick the right tool?" — and I already knew the answer to that one. The trade-off was conscious: I chose cohesion of the codebase and simplicity of the mental model over architectural purity. One framework, one routing system, one way of thinking. Not because Astro couldn't handle it, but because the whole project asked for a single dominant logic, and React was the logic I knew.
+The final stack: **React 19** + **TypeScript**, **Vite 6**, **Tailwind CSS via CDN** ^[not the npm package — the CDN play mode generates classes at runtime, which means dynamic interpolation works without a build step. The npm version would need a PostCSS setup and dynamic class generation would break under build-time purging.], **marked** + **Shiki** for markdown and syntax highlighting, **Cloudflare Pages** for deployment with **R2** for image storage and **KV** for view/heart counters.
 
-{bkqt/tip|A note on SSG vs. SPA}
-This site is often described as an SPA (Single Page Application), and technically it is — React manages the routing client-side. But the _content_ is statically generated. Every article is pre-compiled HTML served from a CDN. The distinction matters: the "SPA penalty" (slow first paint, blank screen while JavaScript loads) applies to the app shell, not to the content. And for a portfolio with no SEO requirements, the app shell penalty is negligible. The real architectural cost of using React everywhere is code weight, not rendering speed.
+{bkqt/danger|In Hindsight}
+Tailwind via CDN instead of the npm package means no build-time purging — the CSS payload is larger than it needs to be. And the first implementation was brutal: hardcoded colors everywhere. `text-white`, `bg-gray-900`, `border-gray-700`. Doing the theme migration "later" cost me a full day. Should have set up CSS custom properties on day one. I knew it. I did it anyway.
 {/bkqt}
 
-### Why not MDX
+## Why not MDX
 
-I also considered MDX — Markdown that lets you import React components inline. The idea was appealing: instead of writing regex-based preprocessors, I'd just write `<ColorText color="#e74c3c">danger</ColorText>` directly in my markdown.
+I tried MDX for an afternoon. It lets you import React components directly into markdown — `<ColorText color="#e74c3c">danger</ColorText>` instead of regex. Appealing in theory. But the things I needed were ^[colored text (`{#e74c3c:text}`) that flows with prose. Accent text (`--text--`) that takes the category color with no props. `[[wiki-links]]` with bidirectional resolution across hundreds of files. Typed blockquotes with seven types. Context annotations with relative timestamps. Backtick protection across the entire pipeline.] — not component trees. Writing `{#e74c3c:text}` feels like writing markdown. Writing `<ColorText>` feels like writing JSX. The decision was practical: my features are lightweight text transforms, not interactive widgets.
 
-I tried sketching it out. It didn't survive the first afternoon. The things I needed couldn't be expressed cleanly as components:
+## Naming things
 
-| What I needed | Syntax | Why not a component |
-|---|---|---|
-| Colored text | `{#e74c3c:text}` | Inline, flows with prose — XML tags interrupt it |
-| Accent text | `--text--` | Takes the category color automatically, no props |
-| Wiki-links | `[[address]]` | Bidirectional resolution across hundreds of files — a build-time graph operation |
-| Typed blockquotes | `{bkqt/warning\|label}` | Seven types, custom labels, nested formatting |
-| Context annotations | `>> 26.01.21 - text` | Relative timestamp calculation at build time |
-| Backtick protection | (pipeline-level) | Extracts all code before processing, restores after — ^[backtick protection: a system that extracts every code block and inline code span before any preprocessor runs, replaces them with placeholder tokens, processes the rest, and restores them after. Prevents custom syntax from transforming content inside code blocks.] |
+Four content categories. Naming them took longer than it should.
 
-MDX solves a different problem. It lets you embed rich interactive components inside prose. What I needed was a prose-first system where custom syntax is _invisible_ — where writing `{#e74c3c:text}` feels like writing markdown, not like writing JSX. The decision wasn't dogmatic. It was practical: my syntax features are lightweight text transforms, not component trees.
+--Projects-- was obvious. --Threads-- came from systems programming (multiple execution paths sharing a context) and probably from Instagram Threads being everywhere that month. The name stuck because each thread is one train of thought connecting to others. --Bits2bricks-- was the hardest — it's about bridging software and physical engineering, taking what I've learned in bits back to the world of ^[bricks, as in atoms. As opposed to software, which obeys whatever the developer felt like that morning.]. The name is silly. It stays. --Fieldnotes-- came from field notebooks — the kind engineers carry on-site. Each one is a concept, a node in a graph.
 
-### Naming things
-
-The site has four content categories, and naming them took longer than it should have.
-
---Projects-- was obvious. Things I've built, with code and architecture and screenshots.
-
---Threads-- was harder. I wanted something that captured the feeling of a running conversation — not "articles" (too formal), not "posts" (too generic), not "essays" (too pretentious). I kept thinking about threading in systems programming — multiple execution paths sharing a context. And also, honestly, about Instagram Threads, which had just launched and was everywhere at the time. The name stuck not because of either reference specifically, but because it captures the right feeling: each thread is one train of thought that connects to others. Does it make perfect sense? Probably not. But it feels right, and in a personal project, that's enough.
-
---Bits2bricks-- took the longest. This section is about bridging the gap between software and physical engineering — taking what I've been learning in the digital world (bits) and bringing it back home to the world of atoms, materials, and industrial processes (bricks). A "going home" section. I'm a systems person, and the people I work with are brick engineers — they build things you can touch, things that ^[as opposed to software, which obeys whatever the developer felt like that morning.] and don't crash silently. This section is for translating between those two worlds. The name is silly. It stays.
-
---Fieldnotes-- came from field notebooks — the kind engineers carry on-site to jot down observations, measurements, sketches. Each fieldnote is a concept: a node in a knowledge graph. But I'll get to that.
-
-### The final stack
-
-- **React 19** + **TypeScript** — because I'd rather fight the type checker than fight runtime bugs at 2am
-- **Vite 6** — dev server starts in milliseconds. No webpack config. No tears
-- **Tailwind CSS via CDN** — not the npm package. The CDN play mode generates classes at runtime, which means dynamic interpolation works without a build step. This matters later
-- **marked** + **Shiki** — markdown parsing and syntax highlighting, both at build time
-- **Cloudflare Pages** — deployment. Free, fast, global CDN
-
-{bkqt/danger|In hindsight}
-Tailwind via CDN instead of the npm package means no build-time purging — the CSS payload is larger than it needs to be. For this site's scale it doesn't matter, but it's technically debt I chose to accept. The npm version would require a PostCSS setup and rethinking how dynamic class interpolation works.
-{/bkqt}
-
->> 26.01.21 - Initial commit. Vite scaffolding + React template. 47 files, most of them boilerplate I'll delete within a week.
-
-## Day one: the blank page problem
-
-The first two days were pure chaos.
-
-I had a vague idea: a personal site with a lab section (projects, dark theme), a blog section (threads and tutorials, light theme), and a wiki-style "second brain" for my notes. Three audiences, three visual identities, one codebase. The ambition-to-skill ratio was concerning.
-
-The initial commit was just the Vite scaffold. The second commit — "Add index" — was me staring at an empty `index.html` thinking "okay, now what." That moment where you realize that knowing _what_ you want to build and knowing _how_ to build it are two completely different skills, and you have exactly one of them.
-
->> 26.01.22 - Migrated from my first attempt. That one had no routing, no layout system, no plan. This one has a plan. Probably.
-
-The third commit, two days later, was labeled "First iteration (migrated)" — I'd tried a completely different approach, hit a wall, and started over. The early commit messages tell the real story. "Solved render issue." "Bound fieldnotes list to rendering area." "Minimal shifts." Messages from someone who's discovering CSS grid for the first time and doesn't know what `overflow: hidden` does.
-
-{bkqt/tip}
-I lost an entire afternoon to a bug where my content was rendering outside its container, pushing the whole page sideways. The fix was a single CSS property: `overflow: hidden`. Web development has this quality where the bug is always trivial and the search is always endless. If you come from systems engineering, the experience is familiar — but at least in hardware, the datasheet tells you where to look. CSS has no datasheet.
-{/bkqt}
-
-### The navbar problem
-
-The first layout had a horizontal navigation bar at the top. That's what most websites do, and it made sense when the site only had three pages. But as sections multiplied — home, about, projects, threads, bits2bricks, second brain, contact — the top bar started feeling cramped. On mobile it collapsed into a hamburger menu. On desktop it ate vertical space that should have been content.
-
-The real issue, though, was conceptual. A top bar suggests a flat site — five or six pages at the same level. This site is not flat. It has two worlds (lab and blog) with different themes, plus a knowledge graph with its own navigation. A top bar couldn't express that hierarchy without becoming a mess.
-
-So I moved everything to a side ^[I still don't know if "sidebar" is the right word. In hardware documentation, a sidebar is supplementary information in a callout box. In web development, it's a persistent navigation panel. I use the web meaning but it never stops feeling slightly wrong.]. The sidebar could show the lab/blog split visually, with section groups and icons. It could also collapse on mobile without losing hierarchy. The move took a full day and broke every layout assumption I'd made up to that point. Worth it.
-
->> 26.01.25 - It clicked. The layout makes sense now. Routes, sidebar, content area — everything has a place. This is the first time it feels like a real project and not a homework assignment.
-
-Then, on day four, the commit message reads: "Considerable inspired leap." I don't remember exactly what triggered it. Looking at the diff, it was the moment the responsive behavior clicked — the sidebar, the content area, the transitions between sections. The site went from "a pile of divs" to something that felt navigable. The next commit was an `App.tsx` refactor that established the routing structure I still use today. Sometimes a project crosses a threshold where it stops being an experiment and starts being a thing. This was that moment.
+>> 26.01.25 - It clicks. The layout makes sense now. Routes, sidebar, content area — everything has a place. First time it feels like a real project and not a homework assignment.
 
 ---
 
 # The compiler
 
-Here's where things got... architectural.
+I needed a way to write articles in markdown and get styled HTML. Standard requirement. But I also wanted colored text, superscripts, keyboard shortcuts, accent text, typed blockquotes, wiki-links to my knowledge graph, and context annotations with timestamps.
 
-I needed a way to write articles in markdown and render them as styled HTML. Standard requirement. `marked` does this fine. But I also wanted colored text, subscript, superscript, keyboard shortcuts, accent text that takes the category color, typed blockquotes with labels, wiki-links to my fieldnotes, syntax highlighting with per-language themes, and context annotations with dates and relative timestamps.
+Standard markdown doesn't do any of this. So instead of using something like remark/rehype with plugins — which would've been the "correct" choice — I started with `marked` and kept adding layers. One regex for colored text. Another for superscript. Another for blockquotes. Each one was "just one more regex." And each one was trivial in isolation. But together they form a custom markup language that coexists with standard markdown, and the interaction surface is enormous.
 
-Standard markdown doesn't do any of this. So I built a [[dlBw5GXu|14-step compilation pipeline]] that transforms raw markdown into the HTML you're reading right now — the same pipeline that later compiles the Second Brain fieldnotes into the knowledge graph. A language researcher would probably design this differently. But it compiles this page, and the page looks right, so I'll take it.
+The key insight was --ordering--. If you write `{#e74c3c:some **bold** text}`, the color preprocessor needs to fire _before_ marked parses the bold. Reverse the order and the braces survive as literal text. Obvious in hindsight, impossible to predict if you don't think about it.
 
-## The pipeline
-
-### The ordering problem
-
-The pipeline runs in a specific order, and --the order matters more than anything else--.
-
-Imagine you write `{#e74c3c:some **bold** text}`. What needs to happen?
-
-1. [[W16WJgHC|Pre-processors]] fire first — the color syntax wraps the content in a `<span>`
-2. `marked` parses next — it sees `**bold**` inside the span and converts it to `<strong>`
-3. Result: {#e74c3c:some **bold** text} — both work
-
-If you reversed the order — ran `marked` first, then pre-processors — marked would see `{#e74c3c:...}` as literal text and leave it untouched. The braces would survive into the HTML. That would be a bug — the kind of bug that's obvious once you see it and impossible to predict if you don't.
-
-### Backtick protection
-
-Here's where I discovered a word that changed how I think about text processing.
-
-A backtick. The character `` ` ``. It sits on your keyboard — you've probably pressed it ^[on a Spanish keyboard, it's the key right next to the P, above the + key. I'd been pressing it accidentally for years without knowing what it was called.] without knowing its name. "Backtick" — it sounds like it should be on a menu somewhere between paella and patatas bravas. But in markdown, backticks are sacred. They mark code: `` `like this` `` for inline code, and triple backticks for code blocks. Whatever's inside them is meant to be displayed literally, not interpreted.
-
-And here's the problem: if my pre-processors fire before `marked`, they'd also transform content inside code blocks. Writing `` `{#e74c3c:red}` `` in a tutorial would produce actual red text instead of showing the syntax. Which means I need to --protect-- everything inside backticks before any custom processing runs.
-
-The solution is a trick I'm genuinely proud of: before any pre-processor runs, the pipeline extracts every fenced code block and inline code span, replaces them with placeholder tokens (`%%CBLK_0%%`, `%%CBLK_1%%`, ...), runs all pre-processing on the token-protected text, and then restores the original code content. Anything inside backticks is invisible to the preprocessors. They can't touch it. They don't even know it's there.
-
-```
-raw markdown
-    ↓
-[1] protectBackticks    →  code becomes %%CBLK_N%% tokens
-[2] pre-processors      →  custom syntax transforms (safe — code is hidden)
-[3] restoreBackticks    →  tokens become code again
-[4] marked.parse        →  standard markdown → HTML
-[5] Shiki highlighting  →  code blocks get syntax colors
-```
+The other key insight was backtick protection: before any custom processing runs, the pipeline extracts every code block and inline code span, replaces them with placeholder tokens, runs all preprocessing on the protected text, then restores the originals. Anything inside backticks is invisible to the preprocessors. They can't touch it. They don't even know it's there.
 
 {bkqt/tip}
-If you're building a markdown extension system, protect code content first. Extract it, process everything else, restore it. Trying to make your regex "skip code blocks" is a losing game — the edge cases will eat you alive. The protection approach is conceptually simple and bulletproof in practice.
+If you're building a markdown extension system, protect code content first. Extract it, process everything else, restore it. Trying to make your regex "skip code blocks" is a losing game — the edge cases will eat you alive.
 {/bkqt}
 
-### The full pipeline
-
-The complete compilation pipeline, in order:
-
-| # | Step | What it does |
-|---|---|---|
-| 1 | `protectBackticks` | Shields code with `%%CBLK_N%%` tokens |
-| 2 | `applyPreProcessors` | Color, superscript, subscript, kbd, underline, accent text |
-| 3 | `processCustomBlockquotes` | `{bkqt/note}...{/bkqt}` → typed callout blocks |
-| 4 | `restoreBackticks` | Brings code content back |
-| 5 | `processExternalUrls` | `[[https://...]]` → external link markup (before marked to prevent URL corruption) |
-| 6 | `preprocessSideImages` | Side-by-side image+text layouts |
-| 7 | `processDefinitionLists` | `- TERM:: desc` → styled definition blocks |
-| 8 | `processAlphabeticalLists` | `a. text` → `<ol type="a">` |
-| 9 | `processContextAnnotations` | `>> 26.01.21 - text` → timestamped cards |
-| 10 | `marked.parse` | Standard GFM → HTML |
-| 11 | `stripHeadingFormatting` | Removes inline tags from `<h1>`–`<h4>` |
-| 12 | `highlightCodeBlocks` | Shiki dual-theme highlighting per language |
-| 13 | `applyPostProcessors` | Extensible HTML transforms (currently empty) |
-| 14 | `processAnnotations` | `^[explanation]` → inline footnotes |
-
-Then two more passes across _all_ compiled files: wiki-link resolution (because link targets depend on which notes exist) and cross-document link processing.
-
->> 26.01.30 - The custom syntax compiler works. Color, superscript, blockquotes, wiki-links. I wrote this at 1:30pm and by 4pm I had wiki-link hover previews working. Today was a good day.
+The full pipeline has 14 steps. I won't list them all ^[protect backticks → custom preprocessors → typed blockquotes → restore backticks → external URLs → side images → definition lists → alpha lists → context annotations → marked.parse → strip heading formatting → Shiki highlighting → post-processors → footnotes. Then two global passes: wiki-link resolution and cross-document links.] because the details aren't what matters here. What matters is that this compiler, originally built to render articles, turned out to be the same engine that powers the Second Brain. And later, when I built the localhost editor, it was this same compiler running in real time — compiling notes as I type, catching broken references on every keystroke. A tool built for one purpose that kept finding new ones.
 
 ## Inventing a language
 
-Here's the thing about custom syntax: once you start, you can't stop.
+Once you start adding custom syntax, you can't stop.
 
-It began with colored text. I wanted to highlight key terms in category-specific colors. `{#e74c3c:danger}` → {#e74c3c:danger}. Simple enough. One regex, one `<span>`. Then superscript for exponents. Then subscript for chemical formulas. Then keyboard shortcuts. Then underline. Then accent text.
+It began with colored text. `{#e74c3c:danger}` → {#e74c3c:danger}. One regex, one `<span>`. Then superscript. Then subscript. Then keyboard shortcuts. Then underline. Then accent text. Each one was "just one more regex." Each one was trivial in isolation. But together they have to coexist with standard markdown, and also with `[[wiki-links]]`, and also with code blocks, and also with each other. The ^[my `_underline_` syntax uses word-boundary lookbehind to avoid matching `snake_case`, but it still conflicts with markdown's native `_italic_` syntax. I settled on `_text_` for underline and `*text*` for italic. The boundary is thin. Every new rule has to be tested against every existing one.] is enormous.
 
-Each one was "just one more regex." And each one was trivial in isolation. But together they form a custom markup language that coexists with standard markdown — and also with the `[[wiki-links]]` that connect articles to the Second Brain. _Coexists_ is the key word. Every feature has to play nicely with bold, italic, links, code blocks, lists, tables, and every other markdown feature. The interaction surface is enormous.
+At some point I had an `==highlight==` syntax. It had bugs, edge cases, and nothing to justify existing alongside bold and accent. I replaced it with `--accent text--` — takes the category color automatically, no props. Killing a feature you built is a specific kind of satisfaction.
 
-{bkqt/tip|The regex tax}
-Every custom syntax rule is a regex that runs on every line of every article on every build. They compose in ways you can't predict. My `_underline_` syntax uses word-boundary lookbehind to avoid matching `snake_case`, but it still conflicts with markdown's native `_italic_` syntax. I settled on `_text_` for underline (with word boundaries) and `*text*` for italic (standard markdown). The boundary is thin. If you're designing custom syntax, test every new rule against every existing one. The bugs hide in the intersections.
-{/bkqt}
-
-The blockquote system deserves its own mention. Standard markdown blockquotes (`> text`) produce small, muted text — fine for disclaimers and footnotes. But I wanted rich callout blocks with colors, icons, and labels. So I built typed blockquotes:
-
-{bkqt/keyconcept|Typed blockquotes}
-Seven types: `note` (blue), `tip` (green), `warning` (amber), `danger` (red), `keyconcept` (purple), `quote` (full-width with attribution), and `pullquote` (half-width). Custom labels override defaults. Accent text inside blockquotes adapts to the blockquote's color, not the page accent.
-{/bkqt}
-
-The syntax:
-
-```markdown
-{bkqt/warning|Memory Trap}
-don't cache pointers across allocator resets.
-{/bkqt}
-```
-
-This was one of the [[JkzQf7qt]] features I couldn't stop iterating on. The first version supported three types. The current version supports seven, with custom labels, nested formatting, definition lists inside blockquotes, and color adaptation. Each iteration required rewriting the parser — blockquote content has to be processed differently from body content because definition lists and alpha lists get their own pass inside the blockquote boundaries.
-
-{bkqt/tip|On killing features}
-At some point I had an `==highlight==` syntax for emphasis. It had bugs, edge cases, and no clear use case distinct from bold or italic. I replaced it with `--accent text--`, which takes the category color automatically, looks better, and carries more semantic meaning. Subtraction can be progress. Killing a feature you built is a specific kind of satisfaction.
-{/bkqt}
-
->> 26.02.05 - Removed `==highlight==`, replaced with `--accent--`. The double-hyphen is cleaner and doesn't conflict with anything. Killed the old code with zero nostalgia.
+>> 26.01.30 - The compiler WORKS. Colors, superscript, blockquotes, wiki-links. I write this at 1:30pm and by 4pm I have wiki-link hover previews working. I can't stop clicking things.
+>> 26.02.05 - Remove `==highlight==`, replace with `--accent--`. Kill the old code. No nostalgia.
 
 ## The rewrite
 
-On february 5th, the [[E9olQ6Ox]] broke in a way that made me realize it wasn't a bug — it was a symptom. The commit message reads: "Fixed fixes fixing fixes." When you're fixing the fixes of your previous fixes, the codebase is telling you something. It's telling you to start over.
+On February 5th I caught myself fixing the fixes of my previous fixes.
 
->> 26.02.05 - "Syntax from scratch." Everything from zero. The next day, 777 lines disappeared. The codebase got lighter and I could breathe again.
+When that happens, the codebase is telling you something. It's telling you to stop.
 
-The old [[E9olQ6Ox]] was a tangle of ad-hoc regex scattered across three files. The blockquote parser couldn't handle nested formatting. Definition lists inside blockquotes produced broken HTML. Consecutive paragraphs lost their spacing. Every fix introduced a new edge case, and every edge case demanded another fix. The interaction between the [[JkzQf7qt]] features had become unpredictable — not because any individual feature was complex, but because they were composed without a clean boundary between them.
+The old [[E9olQ6Ox]] was regex scattered across three files. The blockquote parser couldn't handle nested formatting. Definition lists inside blockquotes produced broken HTML. Every fix introduced a new edge case, and every edge case demanded another fix. The [[JkzQf7qt]] features had become unpredictable — not because any individual feature was complex, but because they were composed without a clean boundary.
 
-The rewrite centralized everything into three clean layers:
+I looked at the diff. I looked at the blockquote parser. I thought about the Hugo site I could've had two weeks ago.
 
-- **`compiler.config.js`** — single source of truth for all syntax rules, pre-processors, post-processors, and validation flags. Changing this file invalidates the entire build cache, which means I can't accidentally serve stale content
-- **`build-content.js`** — the pipeline orchestrator. Reads the config, runs the 14 steps in order, handles caching and incremental compilation
-- **`article.css`** — one stylesheet for all article styling. Category accents flow through CSS vars, not class conditionals
+Then I deleted everything.
 
-{bkqt/tip|On starting over}
-Rewrites have a bad reputation because they're often motivated by boredom or aesthetics. This one was motivated by the [[E9olQ6Ox]] physically refusing to do what I needed. The difference matters: a rewrite driven by "I don't like this code" is usually a mistake. A rewrite driven by "this code can't express the next feature I need" is usually the right call. The test is whether the new version enables something the old version couldn't. Mine enabled blockquotes with nested definition lists, which the old parser literally couldn't parse.
-{/bkqt}
+{shout:777 lines.}
+
+>> 26.02.05 - "Syntax from scratch." Everything from zero. The codebase gets lighter. I sit in the chair and don't do anything for ten minutes. It feels like exhaling after holding your breath for a week.
+
+The rewrite centralized the [[E9olQ6Ox]] into three layers: **`compiler.config.js`** (single source of truth for all syntax rules — changing it invalidates the entire build cache), **`build-content.js`** (the pipeline orchestrator), and **`article.css`** (one stylesheet, category accents through CSS vars). The new version could parse blockquotes with nested definition lists inside them. The old version literally couldn't. That's how you know a rewrite was the right call — the new version enables something the old version couldn't express.
+
+### Context annotations
+
+One feature worth calling out, because it captures the philosophy. I wanted a way to add timestamped diary entries inside articles — not footnotes, not blockquotes, but small dated cards that feel like margin notes from a project journal:
+
+```markdown
+>> 26.01.30 - The custom syntax compiler works. Today was a good day.
+```
+
+This produces a card with the date, a relative timestamp ("5 weeks ago"), and the text. It's the feature I use most in projects articles. Because every project has a story, and the story has dates, and the dates carry context that the polished prose can't. When you read "5 weeks ago" next to a note about the compiler finally working, you feel the time. That's the whole point.
 
 ---
 
 # The visual layer
 
-The site needed to look right in two modes and four colors. This is probably not how a frontend engineer would approach it — but it works, and once you understand the resolution order, it's predictable.
+I wanted the site to feel like a terminal. Dark background, monospace headings, lime green accents. But the blog needed to be light — long-form reading on a dark background is miserable.
 
-## Dark by default
+The site has two worlds: lab (dark, projects and Second Brain) and blog (light, threads and tutorials). Four content categories, each with its own accent color: {#a3e635:projects}, {#fb7185:threads}, {#3B82F6:bits2bricks}, {#a78bfa:fieldnotes}.
 
-I wanted the site to feel like a terminal. Dark background, monospace headings, lime green accents for the lab section. But the blog needed to be light — long-form reading on a dark background is a crime against eyeballs.
-
-{bkqt/danger|In hindsight}
-The first implementation was brutal: hardcoded colors everywhere. `text-white`, `bg-gray-900`, `border-gray-700`. It worked, but it meant that adding light mode later would require touching every single component. I knew I'd need a theme system eventually. Doing it "later" cost me a full day of migration. Should have set up the CSS var cascade on day one.
-{/bkqt}
-
-The solution I eventually landed on is a three-layer cascade. The idea is simple, even if the implementation has some subtlety: CSS custom properties define the actual colors, Tailwind maps those properties to semantic tokens, and components only ever use the tokens. Change one attribute on the `<html>` element and everything flips — dark to light, light to dark, no JavaScript color logic, no conditional class names.
+The theme system is a three-layer cascade: CSS custom properties define colors on `:root` and `[data-theme="light"]`, Tailwind maps them to semantic tokens (`th-base`, `th-primary`), and components only use the tokens. Flip one attribute on `<html>` and everything switches. No JavaScript color logic, no conditional class names.
 
 ```css
-/* layer 1: CSS custom properties in index.html */
 :root {
   --bg-base: #0a0a0a;
   --text-primary: rgba(255,255,255,0.87);
-  --cat-projects-accent: #a3e635;   /* lime — identity color, same in both themes */
+  --cat-projects-accent: #a3e635;   /* identity color — same in both themes */
 }
 [data-theme="light"] {
   --bg-base: #ffffff;
   --text-primary: rgba(0,0,0,0.87);
-  /* category accents don't change — they're identity, not theme */
 }
 ```
 
-```typescript
-// layer 2: Tailwind config maps vars to semantic tokens
-colors: {
-  'th-base': 'var(--bg-base)',
-  'th-primary': 'var(--text-primary)',
-}
-```
-
-```html
-<!-- layer 3: components use th-* classes -->
-<div class="bg-th-base text-th-primary">
-  <!-- never sees a hardcoded color -->
-</div>
-```
-
-The site auto-switches theme based on route: `/lab/*` → dark (projects, Second Brain), `/blog/*` → light (threads, bits2bricks). This switch uses `useLayoutEffect` — a React hook that fires _before_ the browser paints — so the user never sees the wrong theme, even for a single frame.
-
-> The manual toggle ({kbd:Shift+T}) works differently: a smooth fade via a CSS class called `.theme-transitioning` that temporarily enables transitions on `background-color`, `color`, and `border-color`. The auto-switch is instant (no animation), the manual toggle is smooth (fade). Two codepaths for two different intentions.
-
-{bkqt/tip|The custom property trap}
-Never put CSS custom properties in a transition list. I tried transitioning `--art-accent` directly and got a visual seizure — the browser double-interpolates, resolving the variable mid-transition while the property using it runs its own transition. The fix: only transition standard properties (`background-color`, not `--bg-base`). This cost me two hours and a headache. Literally.
-{/bkqt}
-
-There's also a light-mode asymmetry that catches you off guard if you come from dark-first design: `rgba(255,255,255,0.10)` on a dark background is clearly visible. `rgba(0,0,0,0.10)` on a white background is almost invisible. Light mode borders and surfaces need 2-3x the opacity of their dark counterparts. I forgot to adjust this. Several times.
-
->> 26.01.30 - Dark/light mode works. Auto-switches on route. Manual toggle with smooth fade. The hardcoded color migration took all morning but the result is clean.
-
-## The accent cascade
-
-Every content category has its own accent color: {#a3e635:projects} (lime), {#fb7185:threads} (rose), {#3B82F6:bits2bricks} (blue), {#a78bfa:fieldnotes} (purple). These colors need to cascade through headings, links, code block borders, blockquote bars, table headers, and dozens of other elements.
-
-The system uses CSS custom properties with `color-mix()` derivations:
-
-```css
-/* base accent (defaults to projects/lime) */
-:root { --art-accent: var(--cat-projects-accent); }
-
-/* override per category */
-.article-threads  { --art-accent: var(--cat-threads-accent); }
-.article-bits2bricks { --art-accent: var(--cat-bits2bricks-accent); }
-
-/* derivations compute from whatever --art-accent resolved to */
-.article-page-wrapper {
-  --art-accent-dim: color-mix(in srgb, var(--art-accent) 30%, transparent);
-  --art-accent-bg: color-mix(in srgb, var(--art-accent) 5%, transparent);
-}
-```
-
-The critical detail: derivations must live on `.article-page-wrapper`, not `:root`. CSS custom properties resolve at computation time, not declaration time. If the `color-mix()` derivations were on `:root`, they'd bake in the default lime accent and ignore category overrides. By placing them on the element that gets the category class, they resolve against the correct accent.
+Route auto-switching uses `useLayoutEffect` so the user never sees the wrong theme, even for a single frame. Manual toggle ({kbd:Shift+T}) uses a smooth fade through a `.theme-transitioning` class that only transitions standard properties like `background-color` and `border-color` — never CSS custom properties. I tried transitioning `--art-accent` directly once and got a visual seizure. The browser double-interpolates: the variable resolves mid-transition while the property using it runs its own transition. Two hours and a literal headache.
 
 {bkqt/tip}
-CSS `color-mix()` is one of those features that seems like a minor convenience until you build a theme system. Being able to write `color-mix(in srgb, var(--art-accent) 10%, transparent)` and get a tinted version of _any_ accent color — in any category, in either theme — is absurdly powerful. No JavaScript. No build step. Pure CSS.
+CSS `color-mix()` is one of those features that seems minor until you build a theme system. Writing `color-mix(in srgb, var(--art-accent) 10%, transparent)` to get a tinted version of any accent color — in any category, in either theme — is absurdly powerful. No JS. Pure CSS. The one thing that catches you off guard if you come from dark-first design: light-mode borders and surfaces need 2-3x the opacity of their dark counterparts. `rgba(0,0,0,0.10)` on white is almost invisible. I forgot to adjust this. Several times.
 {/bkqt}
+
+I could write three more sections about the accent cascade and the custom property transition trap. But the honest truth is that while these bugs were painful — and they were, hours of my life — they're not what makes this project interesting. The CSS works. It's fine. The interesting part is what lives inside it.
+
+>> 26.01.30 - Dark/light works. Auto-switch on route. Smooth manual toggle. The hardcoded color migration takes the whole morning but the result is clean. My eyes hurt.
 
 ---
 
-# The second brain
-
-This part of the project didn't start as a plan. It started as a folder.
-
-I had been keeping notes — loose markdown files about CPUs, compilers, networking protocols, whatever I was studying at the time. They lived in a directory on my machine. Some referenced each other with filenames. Most didn't reference anything. There was no structure, no search, no way to see how concepts connected.
-
-When I started building the site, those notes came with me. At first they were just another section — a list of topics you could scroll through. But the more I built, the more I realized that what I actually wanted wasn't a list. It was a graph. A place where every concept knows its neighbors, where clicking on [[egoxqpmC]] takes you to the ALU page and also shows you that ALU connects to [[Z9W6rweD]], which connects to the [[dlBw5GXu]], which connects to the article you're reading right now.
+# The Second Brain
 
 This is the part where the project stopped being a website and started being something I actually use every day.
 
-## The address system
+## The origin story
 
-{bkqt/keyconcept|The address system}
-Every fieldnote has an `address` — a hierarchical identifier that doubles as its identity. `CPU//ALU` is a note about the ALU, nested under CPU. The `//` is the hierarchy separator — not `/`, which is reserved for segment names like `I/O`. The hierarchy is semantic, not organizational: it reflects how concepts relate, not how files are stored. All files live flat in one directory.
-{/bkqt}
+I've been collecting notes since 2016. Not casual notes — obsessive, multi-format, cross-domain knowledge collection. It started in college: an industrial engineering student who picked up software because every engineer should, and fell down the rabbit hole. AI, low-level computing, optimization algorithms, chip architecture, robotics, industry processes. Every topic opened four more topics. Every rabbit hole led to another rabbit hole.
 
-Each note is a markdown file with frontmatter:
+The medium kept changing. First, physical notebooks that I'd start from both ends — front for one topic, back for another — trying to squeeze two subjects into one book. Then Post-its. Then conceptual drawings where I'd force myself to make them _beautiful_, because making something beautiful forces you to think before you draw. Arrows connecting ideas. Diagrams showing how the parts of a system relate. My own bootleg knowledge graphs, on paper, years before I knew that's what they were called.
 
-```yaml
----
-address: "CPU//ALU"
-date: "2026-02-05"
-aliases: [ALU, arithmetic logic unit]
----
-the arithmetic logic unit — the circuit inside a [[Z9W6rweD]] that performs...
+Then TXT files. Then markdown. Then more TXT files because I forgot about the markdown files. Then photos of whiteboards that lived on my phone and never got organized. For years, the passion was the only thing pulling me forward. Every time I learned something, I'd write it down somewhere. The problem was that "somewhere" was everywhere.
 
-[[Z9W6rweD]] :: shares execution resources
-[[2S1PZjWY]]
-[[OkJJJyxX]]
+>> 26.02.03 - The thing nobody tells you about collecting knowledge for a decade is that the collection itself becomes the problem. You have hundreds of notes and no way to find anything. The structure you need exists in your head, but it's not on paper. The whole point of this project is to get it on paper. On screen. Whatever.
+
+## The AI inflection
+
+Before AI, organizing all this was a war of attrition. You'd read something, four new topics would branch off, and you'd have to manually chase each one. The passion kept you going, but the bottleneck was always human processing speed.
+
+Then the tools changed. First I'd use AI subscriptions — the browser-based ones — to process batches of notes. Upload a TXT, ask it to structure it, get back organized markdown. It worked, but it was slow. Copy-paste workflows. Switching between browser and local files. Formatting issues. Token limits.
+
+When I moved to [[gk4wYqzk|Claude Code]] — working directly in the terminal, with the AI reading my files, understanding the project structure, and writing directly to disk — everything accelerated. And [[Et5mN8wJ|extended thinking]] is something else entirely. I'm still discovering what these systems can do organizationally — not just code generation, but knowledge organization. The ability to take a messy folder of notes and produce structured, cross-referenced, hierarchically organized content. It's like having the passion that was always driving you forward, but now with sixteen horses pulling the cart instead of four ^[that analogy sounds dramatic, but if you've ever spent a Saturday afternoon manually cross-referencing notes between three different notebooks, you know exactly what I mean.].
+
+> More on how extended thinking changes the game: [[threads/6616933|Every time we think we've found the ceiling, the ceiling leaves]].
+
+## How it actually works
+
+Every fieldnote is a markdown file with frontmatter: a unique ID, a hierarchical address, a name, and a date. The address system uses `//` as a hierarchy separator — `ML//Transformer//attention` means "attention, under Transformer, under ML." The hierarchy is semantic, not organizational: all files live flat in one directory. The structure exists in the addresses.
+
+The `[[wiki-links]]` in the body create references. Links at the bottom are --trailing refs-- — intentional connections that appear on _both_ sides. If note A has a trailing ref to note B, the connection shows up on A _and_ B. One ref, bilateral display. Annotations explain _why_:
+
+```markdown
+## Interactions
+
+- [[avBp6NIF|synthetic data]] : : Synthetic data is the fuel, model collapse is the exhaust
 ```
 
-The `[[wiki-links]]` in the body create references. The links at the bottom are --trailing refs-- — intentional connections that appear on both sides. If note A has a trailing ref to note B, the connection shows up on _both_ A and B's pages. One ref, bilateral display. The `::` syntax adds annotations: `[[Z9W6rweD]] :: shares execution resources` explains _why_ the connection exists.
+The bidirectional resolution is one of the things I'm most proud of technically. The build processes every note, extracts every reference, computes the reverse links, and generates a complete relationship graph — every connection typed, annotated, and navigable from either end. The kind of thing you'd build with a graph database if you were being serious. I built it with JSON and a build script. It works.
 
-The bidirectional resolution is one of the things I'm most proud of technically. The build system processes every note, extracts every reference, computes the reverse links, and generates a complete relationship graph — not just a list of links, but a data structure where every connection is typed, annotated, and navigable from either end. The kind of thing you'd build with a proper graph database if you were being serious about it. I built it with JSON files and a build script. ^["it works" is the systems engineer's highest compliment. Not "it's elegant." Not "it's optimized." It works.].
-
-## Why this needed to be an SPA
-
-This is where the architecture stops being a stylistic choice and becomes a functional requirement.
-
-The Second Brain needs instant navigation between notes — you click a wiki-link, the content swaps, the URL updates, the neighborhood graph recalculates, all without a full page reload. Hover over a `[[link]]` and a floating preview appears with the target note's content. Search needs to feel instant, filtering 60+ notes as you type. The neighborhood graph needs smooth transitions when you switch contexts.
-
-None of this works well with purely static HTML pages. Each page load would require a full round-trip, re-parsing the nav state, re-rendering the sidebar, losing scroll position. The interactivity isn't a nice-to-have — it's the core experience. The Second Brain is an application, not a document^[React manages component state, re-renders on data changes, and handles routing without full page reloads. For static content it's overkill. For an interactive knowledge graph it's the minimum viable approach.].
-
-Astro's islands could handle this — the blog as static HTML, the Second Brain as a React island. I acknowledged that trade-off earlier and I'll acknowledge it again here: architecturally, islands would have been more elegant. But in practice, having the Second Brain and the blog articles share the same routing, the same theme system, the same hover preview component, the same wiki-link resolution — that cohesion simplified development enormously. One mental model, one debugging strategy, one set of patterns.
-
-## From monolith to lazy loading
-
-{bkqt/danger|In hindsight}
-The first version of the Second Brain was terrible. All notes lived in a single `_fieldnotes.md` file — one giant markdown document separated by `---`. The build parsed the whole thing and generated a single JSON blob loaded eagerly on page load. This worked at 20 notes. At 60+ it was getting slow. I should have started with one file per note from the beginning.
+{bkqt/keyconcept|One file, one concept}
+Every fieldnote is exactly one idea. Not a topic. Not a chapter. One atomic concept. "Attention mechanism" is one note. "Softmax" is another. "KV cache" is another. They connect through wiki-links, not through being in the same document. This is what makes the graph possible — and what makes navigation feel like thinking.
 {/bkqt}
 
-The current system splits content into two tiers:
+## So... it's Obsidian?
 
-- **Metadata index** (`fieldnotes-index.generated.json`) — loaded eagerly on app init. Contains addresses, references, search text. No HTML content. Small enough to be fast
-- **Content files** (`public/fieldnotes/{id}.json`) — one per note. Loaded on demand when you open a note. Each file is a few KB of compiled HTML
+I showed it to a friend. He looked at the Second Brain for about thirty seconds and said "this is like Wikipedia if Wikipedia had a panic attack." I still don't know if that was a compliment. Another friend asked why I didn't just use Notion. That one stung a little. But Notion wouldn't let me write `[[egoxqpmC]] :: shares execution resources` and have it resolve bilaterally across hundreds of notes with aliases and hierarchical parents. I checked.
 
-The index gives the app everything it needs for search, navigation, and relationship display. The actual content only loads when you click. Fast initial paint, instant search, lazy content — the right trade-off.
+The third question I kept getting was: "so... it's Obsidian?"
 
->> 26.02.06 - Split fieldnotes into individual files. 60+ notes, each its own .md. Added incremental cache so the build only recompiles files that changed. The build went from 4 seconds to ~400ms for a single-file change.
+And honestly, on the surface, it kind of is. Markdown notes. Wiki-links. A graph of connections. If you squint, the Second Brain looks like Obsidian built by someone who didn't know Obsidian existed. (I did know. I just wanted to build mine anyway, which is arguably worse.)
 
-## The neighborhood graph
+But the more I built, the more the differences became the whole point.
 
-Once you have hierarchical addresses and bilateral connections, you can compute neighborhoods: for any note, who are its parents, siblings, children, and connections?
+**Obsidian is a note editor with a graph attached. The Second Brain is a graph browser with notes attached.** The difference sounds semantic until you use both. In Obsidian, you spend most of your time writing — the graph is a visualization you open occasionally to feel smart about your note-taking system. In the Second Brain, you spend most of your time _navigating_ — clicking through connections, discovering neighborhoods, watching the structure reveal things you didn't know you'd written. One prioritizes creation. The other prioritizes discovery. Both are valid. They're just not the same tool.
 
-The neighborhood graph is a panel that shows these relationships visually — three zones (structural hierarchy, explicit connections, mentions) with their own scroll areas and keyboard navigation. Click a node to navigate. The graph recalculates when you switch notes. Building it was straightforward since the data was already there. The tricky part was the UI: I went through four iterations of the layout before finding one that didn't feel cluttered.
+The first technical difference is references. In Obsidian, `[[links]]` point to filenames. Rename a file and every reference across your vault needs rewriting — Obsidian does this automatically, which works great until it doesn't (merge conflicts, external tools editing the files, sync issues). The Second Brain uses UIDs — stable 8-character identifiers generated when you create a note. `[[OkJJJyxX]]` points to a note by its identity, not its name. Rename the note, change its address, restructure the entire hierarchy — the UID never changes. Zero references break. No rewriting needed. Ever. It's the difference between addressing a letter to "John Smith, 42 Oak Street" (hope he doesn't move) and addressing it to a ^[like a Social Security number for concepts. The address changes. The identity doesn't. In graph theory terms: the vertex label is mutable but the vertex ID is immutable. References point to the ID.] that follows him everywhere.
 
-## The brain sidebar
+The second difference is --trailing refs--. Obsidian has backlinks — if you mention a note anywhere in another note's body, it shows up as an automatic backlink. Useful, but noisy. Every casual mention counts the same as a deliberate connection. Write "unlike `[[CPU]]`, the GPU handles..." and Obsidian treats that throwaway comparison the same as a carefully curated relationship. The Second Brain separates these: body mentions are body mentions (tracked, but lightweight), and trailing refs are _intentional connections_ — written at the end of a note, with optional annotations explaining the relationship. `[[Z9W6rweD]] :: shares execution resources` tells you _why_ these two things are connected, not just _that_ they are. And the system only needs the ref on one side — it crosses automatically to the other. Write it once, see it on both pages.
 
-And then came the moment I needed a dedicated panel for the Second Brain — a tree view for browsing the hierarchy, with search, filters, and the active note highlighted. When I first got it working — the tree expanding, the search filtering in real time, notes appearing and disappearing as I typed — it felt like the project had crossed another threshold. Not a website anymore. A tool.
+Then there's the topology layer — and this is where Obsidian and the Second Brain aren't even playing the same game anymore. Obsidian gives you a force-directed graph visualization. It's pretty. You can zoom and drag nodes around. It tells you approximately nothing ^[I'm being slightly unfair. The Obsidian graph is useful for spotting clusters and isolated notes visually. But it's a visualization, not an analysis tool. It shows you what your graph looks like. It doesn't tell you what your graph _means_.]. The Second Brain computes actual graph topology at build time: which notes form connected **islands** (groups that can reach each other through links), which notes are **bridges** (remove them and an island splits in two — with a criticality score from 0 to 100%), which notes are **isolated** (completely disconnected from everything), and which notes are **hubs** (ranked by percentile of total connections). This isn't a visualization you stare at — it's structural analysis you _use_. You can filter by island, show only bridges, scope the search to a connected component. The graph stops being decoration and starts being a navigation instrument.
 
-But I had a naming problem. The site already had a sidebar — the main navigation panel on the left. Now the Second Brain had its own panel too. Is it a "manager"? A "browser"? Another "sidebar"? Having two things called "sidebar" in the same codebase is confusing, especially when you don't have the webdev vocabulary to know what the convention is. I come from systems, where a "panel" is a physical thing on a rack and a "browser" is what you use to read datasheets. I ended up calling it the "Second Brain sidebar" in conversation and `SecondBrainSidebar` in code, which is descriptive if not elegant. I still don't love the name. But I love what it does.
+And then there's drift detection — the feature that made me realize I'd accidentally built something I couldn't get anywhere else. The algorithm looks at pairs of notes that share neighbors but aren't directly connected. If note A links to C and D, and note B also links to C and D, but A and B don't link to each other — that's suspicious. They're probably related. The system surfaces the top three suggested missing links per note, ranked by evidence strength, with the shared neighbors listed as justification. It's a recommender system for your own knowledge graph. "Hey, you wrote about these two things separately, and they both connect to the same three concepts, but you never connected them to each other. Maybe you should."
 
-{bkqt/tip|The render storm}
-A bug worth knowing about: the wiki-link hover previews once caused the entire app to freeze. The preview component was comparing DOM element references to detect hover changes — but React recreates DOM objects on every render, so the comparison was always true, triggering an infinite re-render loop. Hundreds of renders per second until the browser gave up. The fix: compare a string attribute (the `href`) instead of the element object. Compare primitives, not objects. Four hours of debugging for a one-line fix.
+The filtering system has toggles for isolated notes, leaves, bridges, and hubs; a depth range slider for the naming hierarchy; a heatmap that looks like a GitHub contribution graph where each cell is a day and you can click to filter by creation date. Three search modes — by name, by content, by backlinks. Session tracking that marks which notes you've already opened (blue = visited, purple = not yet) so you can toggle "unvisited only" and see what's left to explore.
+
+{bkqt/tip|On building what exists}
+I could have used Obsidian. Or Logseq. Or Roam. Any of them would have been faster to set up and better maintained than anything I'd build alone. But none of them would have taught me what I learned by building it: that a graph is more than its nodes, that references need stable identities, that the difference between a mention and a connection is the difference between noise and signal. Sometimes the point of building something that exists is finding out _why_ it exists the way it does — and where it could exist differently.
 {/bkqt}
 
----
+## From monolith to tool
 
-# Keeping it alive
+The first version of the Second Brain was terrible. All notes lived in a single `_fieldnotes.md` — one giant document. The build parsed the whole thing and generated a single JSON blob. This worked at 20 notes. At 60+ it was slow enough to notice.
 
-Building the system was one thing. Making sure it doesn't break as it grows was another.
+The split into individual files changed everything. The current system has two tiers: a **metadata index** (loaded eagerly — addresses, references, search text, no HTML) and **content files** (one per note, loaded on demand when you open it). Fast initial paint, instant search, lazy content. The build went from 4 seconds to ~400ms for a single-file change.
+
+>> 26.02.06 - Split fieldnotes into individual files. Add incremental cache. The build is fast now. Spend the evening just writing new notes because it finally feels frictionless.
+>> 26.02.17 - Optimization pass at 251 notes. Three changes: (1) sync cache path — if a note's HTML is already cached, content loads in the same render frame instead of waiting for an async round-trip. (2) prefetching — when you open a note, all visible targets (connections, mentions, neighbors, wiki-links) get fetched in the background. By the time you click, the content is already there. (3) O(N) neighborhood — the old algorithm scans all notes to find siblings/children for each note (O(N^{2}), ~63k comparisons at 251 notes). Replace with a pre-built map: one pass to bucket notes by parent, then O(1) lookups. Net result: clicking a search result no longer flashes the old note, navigation between connected notes feels instant when prefetched, and index initialization drops from O(N^{2}) to O(N).
+
+This is also where the architecture choice pays off. The Second Brain needs instant navigation between notes, hover previews when you mouse over a `[[link]]`, real-time search across hundreds of notes, and smooth graph transitions. None of this works with full page reloads. The Second Brain is an application, not a document, and it needed client-side state management. Astro's islands could have handled this — the blog as static HTML, the brain as a React island. It would have been more elegant architecturally. But in practice, sharing the same routing, theme system, and wiki-link resolution between the brain and the blog simplified development enormously.
 
 ## The safety net
 
-Once the knowledge graph had 60+ notes with hundreds of cross-references, things started breaking in ways I couldn't see. I'd rename a concept, forget to update a reference three files away, and only discover the broken link weeks later when re-reading the note.
+Once the graph hit 60+ notes with hundreds of cross-references, things started breaking in ways I couldn't see. I'd rename a concept, forget to update a reference three files away, and discover the broken link weeks later.
 
-So I built a ^[runs automatically on every `npm run build`. Errors fail the build. Warnings are logged. The build is the safety net.] that catches problems before they reach the deployed site:
+So I built a validation pipeline that runs on every build. Broken `[[wiki-links]]` fail the build — hard stop. Self-references, missing parents, circular refs, and isolated notes get warnings. The most interesting check is segment collisions: if I create `CPU//cache` and `networking//cache`, the validator flags it — "cache" appears at two different paths. Same concept? Probably, refactor into one note. Intentionally different? Declare it with `distinct` to suppress the warning. It's data integrity, but for ideas.
 
-| Phase | What it catches | Severity |
-|---|---|---|
-| 1 | Broken `[[wiki-links]]` — reference points to nonexistent note | {#e74c3c:ERROR} (fails build) |
-| 2 | Self-references — a note linking to itself | {#f39c12:WARN} |
-| 3 | Missing parents — `CPU//ALU` exists but `CPU` doesn't | {#f39c12:WARN} |
-| 4 | Circular references — A→B→C→A cycles (opt-in) | {#f39c12:WARN} |
-| 5 | Segment collisions — same concept name at different paths | {#f39c12:WARN} |
-| 6 | Isolated notes — zero incoming or outgoing connections | {#22d3ee:INFO} |
+>> 26.02.06 - The validator catches 14 broken references on its first run. Fourteen. Half are wiki-links in posts pointing to fieldnotes I've renamed. Without the validator, those would be dead links in production for weeks.
 
-Phase 5 is the most interesting. If I create `CPU//cache` and `networking//cache`, the validator flags it: "cache" appears as a leaf in two different hierarchies. Are they the same concept? (Probably — refactor into one note.) Or intentionally different? (Add `distinct: ["CPU//cache"]` to suppress the warning.) This catches a class of errors that no linter or type checker would find — conceptual duplication in a knowledge graph. It's data integrity, but for ideas.
+The rename script was born from a specific disaster. I manually renamed a concept called "chip" to "component//chip" — 23 references across 15 files. I went through them by hand in VS Code's search panel. I missed three. The build caught two (broken `[[refs]]`). The third was a `distinct` entry in another note that the build doesn't validate — it survived as a stale reference until I happened to re-read that note weeks later. After that I wrote `rename-address.js`: one command, dry-run by default, touches every reference atomically. And `move-hierarchy.js` for cascading renames — because `rename-address.js` renames ONE exact address, not its children. I learned that by isolating an entire subtree. Twice.
 
-{bkqt/keyconcept|Build as safety net}
-Every command that writes content — `npm run dev`, `npm run build`, `npm run content` — runs the full validation pipeline. You should never be able to deploy a broken knowledge graph. If a reference is broken, you know within seconds, not weeks. The build is the test suite.
-{/bkqt}
+## The sidebar dashboard
 
-There's also a standalone deep audit script (`check-references.js`) that catches subtler issues: one-way trailing refs, redundant references, and fuzzy duplicates (addresses with >80% string similarity). I run it after bulk operations — creating a batch of notes, renaming hierarchies, restructuring branches.
+The Second Brain has its own management panel — a sidebar with tools that evolved over time:
 
->> 26.02.06 - The validator caught 14 broken references on its first run. Half were wiki-links in regular posts pointing to fieldnotes I'd renamed. Without the validator, those would have been dead links in production. Worth every line of code.
+First came the **directory tree** with scoping. Click a folder to filter. Click a concept to navigate. The tree prunes itself based on active filters — if you're searching for "attention" and the blockchain branch has no matches, it disappears while the filter is active.
 
-## Scripts that think for you
+Then **topology detection** — the system finds disconnected islands in the graph. Notes that form isolated clusters with no bridge to the main body of knowledge. This is surprisingly useful: it shows you what you haven't connected yet.
 
-As the Second Brain grew, manual operations became error-prone. Renaming a concept means updating the note's address, renaming its file, and finding every `[[reference]]` across potentially hundreds of files. Miss one and the build breaks.
+Then the **word count histogram** — a quick visual of note depth across the graph. Click a bar to filter by length. Then the **calendar heatmap** — and this one deserves its own paragraph.
 
-So I built a set of scripts:
+### The calendar
 
-- **`rename-address.js`** — renames one address and updates every reference across the entire codebase. Dry-run by default, `--apply` to execute. Atomic: either everything changes or nothing does
-- **`move-hierarchy.js`** — cascading rename. Moves a note and all its descendants to a new address prefix in one operation. `"chip" → "component//chip"` automatically becomes `"chip//MCU" → "component//chip//MCU"` for every child
-- **`check-references.js`** — deep audit: isolated notes, weak parents, one-way trailing refs, redundant refs, fuzzy duplicates, segment collisions
-- **`analyze-pairs.js`** — relationship analyzer. "How are A and B connected?" Checks structural hierarchy, trailing refs, and body mentions
+The calendar isn't about productivity tracking. It's about --mental archaeology--. When I filter by a two-week window, I see what I was focused on during that period. Not what I _think_ I was focused on — what I _actually_ wrote about. And the gaps between periods reveal what I missed.
 
-The rename script was born from pain. I once manually renamed a concept that had 23 references across 15 files. I missed three. The build caught two (broken `[[refs]]`). The third was a `distinct` entry in another note — not validated by the build, so it survived as a stale reference until I noticed it weeks later. After that, I wrote the script.
+If I spent two weeks deep in machine learning six months ago, and then two weeks on the same topic last month, the calendar lets me isolate each period and compare. What did I know then? What do I know now? What's missing between the two? Those gaps — the concepts I didn't write about because I didn't understand them yet — are exactly where the next batch of notes should go. The calendar turns time into a filter for thought.
 
-{bkqt/tip|The cascade trap}
-`rename-address.js` renames ONE exact address. It does NOT cascade to children. If `chip` has children like `chip//MCU`, renaming `chip → component//chip` does NOT touch `chip//MCU`. That's why `move-hierarchy.js` exists — it finds every descendant and renames them all. I learned this by isolating an entire subtree. Twice. The first time was a mistake. The second time was me not believing the first time was real.
-{/bkqt}
+Then **centrality bars** — tiny inline indicators showing how connected each note is relative to the whole graph. A quiet signal for what's well-integrated and what's floating.
 
-## From passive warnings to an interactive resolver
+## The graph
 
->> 26.02.13 - Came back to the web project after a few days heads-down on something else entirely. Opened the codebase, ran the build, and 6 warnings stared back at me. They'd been there for a while. The validator was catching them — it always does — but I was the one who had to fix them. Every time. Manually. That felt like the obvious next thing to fix.
+The force-directed graph was originally a visual flex. I'll be honest about that. I'd been playing with [[threads/everything-is-a-pipe|graph visualization libraries]] for years without going anywhere, because I didn't have enough structured data to make it interesting. Now I do.
 
-The validation pipeline I described above already knew how to --identify-- every structural problem in the knowledge graph. Missing parent nodes (a vertex ^[the knowledge graph has two overlapping structures: a directed acyclic graph _H_ encoding the `//`-separated address hierarchy (where `CPU//ALU` means "ALU is a child of CPU"), and a general directed graph _G_ encoding the `[[wiki-link]]` references between notes. A "missing parent" is a vertex implied by _H_ but absent from the vertex set _V_ — the hierarchy says it should exist, but no `.md` file defines it.] exists in the address path but has no corresponding `.md` file), segment collisions (two vertices in _G_ sharing a terminal label — like `CPU//cache` and `networking//cache` both ending in "cache" — which _might_ mean someone accidentally created the same concept twice under different parents), stale `distinct` entries (a suppression annotation pointing to a vertex that was deleted from _V_), isolated notes (vertices with degree zero — no edges in, no edges out, completely disconnected from the graph).
+But here's what I didn't expect: **I actually use it.** Not every day, but regularly. The graph shows you the shape of your thinking. Three clusters are immediately visible — hardware, machine learning, and blockchain — with bridges between them. The isolated nodes are obvious. The over-connected hubs are obvious. And sometimes you see a connection you didn't know was there, because two notes reference the same concept from completely different domains.
 
-The validator printed all of this. Colored, categorized, clearly. And then it stopped. It was my job to open each file, add a `distinct` annotation, or create a stub note (a minimal `.md` file with nothing but an address and a date — just enough to make the parent vertex exist in _V_ so the hierarchy checks pass), or run a rename script to merge two notes that turned out to be the same concept. For a few warnings, that's fine. For six, eight, twelve after a batch of new notes — it's the kind of repetitive task that makes you wonder why you're doing the computer's job.
+Building the tree view for browsing the hierarchy was the moment the project crossed another threshold. When I first got it working — the tree expanding, the search filtering in real time, notes appearing and disappearing as I typed — I spent twenty minutes just clicking around my own notes, watching concepts I'd written months ago suddenly have visible neighbors. Not a website anymore. A tool.
 
-So I made the validator interactive. The build still runs the same six phases, catches the same problems, prints the same output. But now every issue gets a structured error code — `[BROKEN_REF]`, `[MISSING_PARENT]`, `[SEGMENT_COLLISION]`, `[ISOLATED_NOTE]`, and so on — and each one carries a flag: --promptable-- or not. Broken references can't be auto-fixed (the human has to decide what the link should point to). But missing parents and segment collisions have predictable resolution paths. Those are promptable.
+The 2D graph uses `react-force-graph-2d`. The 3D version uses `react-force-graph-3d` with Three.js. Both read from the same pre-computed relevance data. Neither is architecturally complex — the hard part was having clean graph data, and the Second Brain already provides that.
 
-`npm run content:fix` runs the build with `--interactive`. After validation, it walks through every promptable issue and asks what to do:
+## The editor
 
-For a missing parent — a vertex that _H_ implies but _V_ doesn't contain:
+This part escalated.
 
-```
-[1/6] MISSING_PARENT
-  "LAPTOP" has no block (parent of LAPTOP//UI)
+It started as "I want to edit a note without opening VS Code." A small CodeMirror panel, inline, on localhost only. But then I needed wiki-link autocomplete — type `[[` and get a dropdown of all notes. Then I needed term detection — the editor scanning the body for mentions of known concepts that aren't linked yet, highlighting them in purple, offering to insert the link with one click. Then missing parent detection — if I write a note at `ML//Transformer//attention//sink` but `ML//Transformer//attention` doesn't exist, the editor warns me and offers to create the stub.
 
-  (c) Create stub note
-  (k) Skip  (q) Quit
-  >
-```
-
-Choosing `(c)` creates the stub — a `.md` file with just `address: "LAPTOP"` and today's date. The vertex is born. The hierarchy is satisfied. The warning disappears on the next build.
-
-For a segment collision — two vertices sharing a terminal label across different subtrees of _H_:
-
-```
-[4/6] SEGMENT_COLLISION (HIGH)
-  Segment "cache" exists at:
-    1. CPU//cache  (leaf)
-    2. networking//cache  (leaf)
-    3. storage//cache  (leaf)
-
-  (d) Different concepts — add distinct to suppress
-  (s) Same concept — collect merge instructions
-  (k) Skip  (q) Quit
-  >
-```
-
-Choosing `(d)` means "these are genuinely different concepts that happen to share a name" (a cache in a CPU is not the same cache as in an HTTP layer). The resolver picks a target note (the deepest in _H_, by convention) and adds `distinct: ["CPU//cache", "storage//cache"]` to its frontmatter. One edit, one file write, the collision is suppressed bilaterally — only one side needs the annotation.
-
-Choosing `(s)` means "these are the same concept, they should be merged." The resolver doesn't merge them right there — merging means running rename scripts, combining note bodies, resolving conflicting trailing refs. That's not a one-keystroke operation. Instead, it --queues-- the merge: notes the segment, the addresses, which one to keep. Then, at the end of the session, it prints everything together in a bordered block:
-
-```
-╭──────────────────────────────────────────────────────────────────╮
-│  2 pending merges — copy the block below into Claude to execute  │
-╰──────────────────────────────────────────────────────────────────╯
-
-┌──────────────────────────────────────────────────────────────┐
-│  Merge the following fieldnotes. For each group:             │
-│  1. Run the rename commands with --apply                     │
-│  2. Manually combine the note bodies                         │
-│  3. After all merges, run npm run build to verify            │
-│                                                              │
-│  Group 1: "cache" — keep "CPU//cache"                        │
-│    node scripts/rename-address.js "networking//cache" ...    │
-│    node scripts/rename-address.js "storage//cache" ...       │
-└──────────────────────────────────────────────────────────────┘
-```
-
-That block is designed to be copied straight into Claude Code. Paste it, the AI reads the instructions, runs the commands, combines the notes, rebuilds. The human decides --what-- should happen (different or same?). The machine does the rest.
-
-{bkqt/tip|On stubs and ghosts}
-A "stub note" is the knowledge graph's equivalent of a forward declaration in C — you're telling the system "this thing exists, I'll fill it in later." The hierarchy needs it now (because `LAPTOP//UI` can't have a parent that doesn't exist), but the content can wait. Some of my stubs stayed empty for weeks before I got around to writing them. They served their structural purpose the entire time. Not every vertex needs content to be useful — sometimes just existing in _V_ is enough.
-{/bkqt}
-
-The whole system runs on `node:readline/promises` for the terminal prompts. Every prompt accepts `(q)` to quit early — changes already written to disk are kept, remaining issues are skipped. Ctrl+C does the same. The resolver never holds uncommitted state in memory — each file write is atomic, so quitting mid-session doesn't corrupt anything. You get exactly what you answered, nothing more, nothing less.
-
->> 26.02.13 - Built the interactive resolver. Six warnings resolved in about forty seconds — three stub notes created, one distinct suppression applied, two merges queued and delegated to Claude. The validator went from a passive alarm system to an active assistant. Should have done this weeks ago.
-
-## Teaching an AI to maintain it
-
-On february 6th, something changed. I started using [[gk4wYqzk]] — an AI coding assistant that lives in the terminal — to help build the site. And I discovered that LLMs are simultaneously incredible and terrible at maintaining a codebase.
-
---Incredible-- because they can hold the entire architecture in context, suggest changes that touch five files consistently, and write code faster than I can type.
-
---Terrible-- because they don't remember anything between sessions. They can't read the room. They'll happily "improve" code you didn't ask them to touch, "optimize" patterns that were intentional, and "clean up" things that were there for a reason.
-
-So I wrote a [[vJBANeek|CLAUDE.md]] — a document that lives in the repo root and contains instructions for AI assistants. Think of it as an onboarding guide for a new hire with amnesia who needs to re-read it every morning. The document has --automation rules-- — mandatory triggers that fire when specific things happen:
-
-- File create/delete → update the README file tree
-- Edit markdown in `pages/` → run the build
-- Rename a fieldnote → use the rename script, never by hand
-- Change the syntax pipeline → update the authoring guide
-- Any code change → do ONLY what was requested
-
-That last rule exists because AI assistants have a pathological need to "improve" adjacent code. You ask for a one-line bug fix and they refactor the entire file. The rule is there to say: --stop. Do exactly what I asked. Nothing more.--
-
-### Hooks
-
-Even with CLAUDE.md, the AI sometimes forgets. It edits a fieldnote and doesn't run the build. It applies a rename without dry-running first. The instructions exist, but they depend on the AI remembering to check them.
-
-So I added [[0C6FXSnp|hooks]] — shell scripts that fire automatically when the AI uses specific tools. If it writes a fieldnote file, a reminder injects itself: "FIELDNOTE MODIFIED — when done, run the build." If it's about to apply a rename, a checklist appears: "did you dry-run first?"
-
-The hooks don't block anything. They just ensure the AI sees the reminder at the right moment. It's the difference between "please remember to lock the door" (CLAUDE.md) and a sign on the door that says "DID YOU LOCK THIS?" (hooks).
+Now it's a mini-IDE. I navigate between notes, the editor panel follows, I fix a typo or add a reference, the compiler runs in real time, the build catches broken links on every keystroke, and the page refreshes via HMR. The compiler that was built to render articles at build time now runs live in the browser as I type. A tool built for one purpose that kept finding new ones — the theme of this entire project.
 
 {bkqt/tip}
-If you work with AI coding assistants regularly, invest in guardrails. A CLAUDE.md or equivalent instructions file catches 80% of mistakes. Hooks catch the remaining 15%. The last 5% is you reading the diff before committing. None of this is bulletproof, but the combination is surprisingly effective.
+The term suggestion system works by scanning the note body for unlinked mentions of known note names. It skips frontmatter, existing wiki-links, code blocks, and trailing refs. When it finds a match, it shows a purple highlight with a one-click option to insert the link. It's the kind of feature that sounds simple and is simple — 50 lines of regex, a StateField in CodeMirror, done. But it catches connections I would've missed every single time.
 {/bkqt}
-
->> 26.02.06 - Added CLAUDE.md, automation rules, and project configuration for Claude Code. The AI can now maintain the codebase without breaking the knowledge graph. In theory.
->> 26.02.07 - Added safety hooks. The AI no longer forgets to build after editing fieldnotes. In practice.
-
-## Deployment
-
-Cloudflare Pages, connected to the repo, auto-deploys on push. Images live on **Cloudflare R2** — never in git. Markdown references them by URL.
-
-That's it. Deployment was the only part of this project that was boring.
 
 ---
 
-This is not my domain. The CSS is definitely not how a frontend engineer would write it. The [[E9olQ6Ox]] is definitely not how a language designer would design it.
+# The workflow
 
-But it works. It renders this page. It hosts 60+ interconnected notes across four content categories. It compiles markdown through a [[dlBw5GXu|14-step pipeline]] with validation and caching. And it taught me more about web development in 18 days than any tutorial could have.
+Here's how a typical session works, because understanding the workflow explains why everything was built this way.
 
-It wasn't the simplest path. It wasn't the most efficient architecture. But it was the most honest one for the kind of interaction I wanted — a portfolio as a living system, not a static showcase.
+I start with raw material. A photo of a hand-drawn diagram from 2019. A TXT file from a course I took. A markdown document from last week's research session. I bring these to Claude Code in the terminal. Together we transcribe, structure, fact-check, and cross-reference. At every step I supervise the output — reading forces me to re-learn the material, and sometimes I catch something that triggers a search, and the search produces an extra note I didn't plan for.
 
->> 26.02.07 - It's 11pm. The article is done. The compiler that rendered it is the same compiler the article describes. The wiki-links in the text point to fieldnotes that were compiled by the same pipeline. I don't know if that's clever or just recursive. I do know I'm going to keep building this thing.
+Once the notes exist as fieldnotes, Claude helps organize them into the address hierarchy. I let Claude drive the organizational logic — its internal consistency is often better than my improvised taxonomy. This echoes something Peter Steinberg ^[the Obsidian community has a long-running conversation about whether folder structures should serve human intuition or machine retrieval. Steinberg argued that the system that organizes should be the system that retrieves. If the AI organizes your notes, the AI will know where things are.] advocates: the system that organizes should be the system that retrieves.
+
+Then bulk import into the Second Brain. Build. Check references. The validator catches missing parents, broken links, segment collisions. The interactive resolver fixes them — create a stub here, add a distinct annotation there, queue a merge for later. Then I open the localhost editor and polish: remove redundant bullet points, add missing wiki-links (the term detector catches most of them), write openers for notes that start too abruptly.
+
+The calendar heatmap reflects the session. The graph grows. And sometimes — this is the part that keeps me going — Claude suggests, based on the cluster of notes I just imported, what kind of article I could write. "You have twelve notes on attention mechanisms, three on training dynamics, and two on model collapse. That's a thread." And it's right. The notes compound into something I couldn't see when they were scattered across notebooks.
+
+>> 26.02.07 - The article now exists on the platform it describes. Meta.
+
+---
+
+# Teaching an AI to maintain it
+
+On February 6th I started using [[gk4wYqzk|Claude Code]] to help build the site. LLMs are simultaneously incredible and terrible at maintaining a codebase. Incredible because they can hold the entire architecture in context and write code faster than I can think. Terrible because they don't remember anything between sessions, and they'll happily "improve" code you didn't ask them to touch.
+
+## The incredible and the terrible
+
+The incredible part was real. The first time I described a feature — the category accent system, how colors need to cascade through headings and borders and blockquote bars — and the AI produced changes across `article.css`, `index.html`, and two React components, all consistent, all correct. I would have spent an hour on that. It took ninety seconds. That moment changes how you think about development velocity.
+
+The terrible part was also real. I asked for a fix on the sidebar border — it was using the wrong opacity in light mode. A one-line CSS change. The AI fixed the border, and also "improved" the theme switching logic in `ThemeContext.tsx`, and also "cleaned up" what it considered redundant CSS variables in `index.html`, and also added comments explaining the code it had just rewritten. I spent forty minutes reverting its improvements. The border opacity is still wrong in the commit history because I was so annoyed I forgot to push the actual fix.
+
+This wasn't a one-time thing. It was a pattern. Every session, something got "improved." It would add docstrings to functions I hadn't asked about. It would refactor a variable name because the old one was "unclear." It would consolidate two CSS rules into one because they "did the same thing" — except they didn't, they targeted different states, and now hover styles were broken.
+
+The AI wasn't being malicious. It was being --helpful--. It saw code that could be "better" and it "improved" it. The problem is that "better" for an AI means "more consistent, more documented, more conventionally structured." "Better" for a maintainer means "exactly what it was before, except for the one thing I asked you to change."
+
+## The instructions file
+
+So I wrote a [[vJBANeek|CLAUDE.md]] — instructions for the AI. An onboarding guide for someone with amnesia who needs to re-read it every morning.
+
+The rules are simple:
+
+- File create/delete → update the README tree
+- Edit markdown in `pages/` → run the build
+- Rename a fieldnote → use the rename script, never by hand
+- Change the syntax pipeline → update the authoring guide
+- --Any code change → do ONLY what was requested. Nothing more.--
+
+That last rule took three drafts. The first version said "try not to change things you weren't asked to change." Too soft. The AI interpreted "try" as "consider briefly, then do it anyway." The second said "only modify files directly related to the request." It found creative ways to argue that `ThemeContext.tsx` was "directly related" to a CSS border fix. The third version says "do ONLY what was requested. Nothing more." Blunt, unambiguous, impossible to lawyer around. It mostly works.
+
+>> 26.02.06 - Write CLAUDE.md. Eleven automation rules. The most important one is four words: "nothing more. stop there."
+>> 26.02.07 - The AI adds comments to a file I ask it to leave alone. We're getting there.
+
+## Hooks
+
+Even with CLAUDE.md, the AI forgets. It edits a fieldnote and doesn't run the build. It applies a rename without dry-running first. The instructions exist, but they rely on the AI checking them at the right moment.
+
+So I added [[0C6FXSnp|hooks]] — shell scripts that fire automatically when the AI uses specific tools. Write a fieldnote file and a reminder injects: "FIELDNOTE MODIFIED — run the build when done." Start a rename and a checklist appears: "did you dry-run first?"
+
+The hooks don't block anything. They just make sure the AI sees the reminder at the right moment. It's the difference between "please remember to lock the door" (CLAUDE.md) and a sign taped to the door that says "DID YOU LOCK THIS?" (hooks). CLAUDE.md catches 80% of mistakes. Hooks catch another 15%. The last 5% is me reading every diff before pushing. It's not bulletproof. But the combination is surprisingly effective.
+
+>> 26.02.07 - The AI stops forgetting to build after fieldnote edits. The hooks work. I feel like I've trained a very smart, very forgetful dog.
+
+The scripts — `check-references.js`, `move-hierarchy.js`, `preflight.js`, `analyze-pairs.js` — are a collaboration. I describe what I need, Claude builds the pipeline. And here's the thing: Claude is _very_ good at organizational tooling. The scripts it builds for knowledge management — validation, cross-referencing, bulk operations — tend to work on the first try. It's the kind of structured, rule-based pipeline work where an LLM's consistency shines. I'd trust it to build a reference checker before I'd trust it to pick a CSS color.
+
+---
+
+# Everything else
+
+Some features deserve a mention without deserving a section.
+
+**Giscus comments, view counts, hearts.** Integrated because I wanted to learn how, not because I needed them. My friends don't have GitHub. But the integration was easier than expected — Cloudflare KV for counters, Giscus for comments, both configured in an afternoon. The repository exists, the task board is there, and even if nobody uses the comments, I learned how API endpoints work on Cloudflare Workers. Worth it.
+
+**Search.** Full-text across all categories, with match counts and excerpts. The search palette opens with {kbd:Ctrl+K}. Fieldnote search is separate, built into the sidebar, with instant filtering as you type. Neither was architecturally hard — the data was already indexed. The challenge was UI, and UI is just patience.
+
+**Performance.** Lazy loading views with `React.lazy`. Content prefetching for the next likely note. O(1) lookups in the graph relevance engine. I'll be honest: Claude did most of the heavy lifting on performance. Bundle splitting, fetch optimization, cache invalidation — that's not my domain. I described what felt slow, Claude fixed it. The graph and the note loading were the main culprits. Both are fast now.
+
+**English and Spanish.** The threads in Spanish are for my circle — friends, family, university classmates. I send them direct links. The rest is English because if you're going to put something on the internet, you might as well make it readable by anyone interested. I'm a --divulgador-- ^[Spanish for someone who makes complex topics accessible. "Science communicator" is close but too formal. "Explainer" is too casual. Divulgador is the right word, and it doesn't have an English equivalent.] — but I'm starting small. This site is the small. The circle that reads the Spanish threads is the proof of concept. The English content is the scale.
+
+**Deployment.** Cloudflare Pages, connected to the repo, auto-deploys on push. Chose it over Vercel and Netlify because the R2 + KV + Workers ecosystem meant I could keep images, counters, and edge functions in one platform. Setup was boring. Boring is good for deployment.
+
+---
+
+# What this is really about
+
+This project was not the rational choice. The CSS is not how a frontend engineer would write it. The [[E9olQ6Ox]] is not how a language designer would build it. There are parts I'd do differently — the Tailwind CDN choice, the hardcoded colors on day one, the monolith fieldnotes file I should have split from the start.
+
+But here's what I know that I didn't know 18 days ago. I know that `overflow: hidden` is the answer to questions you can't articulate yet. I know that CSS custom properties resolve at computation time, not declaration time, and that this matters more than it sounds. I know that `color-mix()` is unreasonably powerful and that transitioning CSS variables will give you a headache. I know that a wiki-link is really just a regex with ambition, and that if you build enough of them, a graph appears — and the graph is more interesting than any individual note.
+
+I know that a backtick ^[on a Spanish keyboard, it's the key right next to the P, above the + key. I'd been pressing it accidentally for years without knowing what it was called.] sounds like it should be a tapas dish. I know what `useLayoutEffect` does and I know when it matters. I know that an AI assistant will rewrite your theme switching if you ask it to fix a border color. I know that 777 lines can disappear in an afternoon and you feel lighter after.
+
+I'm an industrial engineer who picked up code because every engineer should — not to become a developer, but to move faster. This site exists because I've been collecting knowledge about how things work for a decade, and I finally have the tools to structure it.
+
+The compiler was fun. The theme system was educational. The CSS bugs were painful. But the reason I keep building this thing — the reason there are 300+ notes in the graph now, the reason I photograph old notebooks and transcribe them at 11pm, the reason the editor keeps growing features I didn't plan — is simpler than any of that.
+
+I believe knowledge compounds faster when it's written down, and even faster when it's shared. The notes I took in 2016 about how CPUs work are connected to the notes I took last week about how transformers work, and the connection is real, and the graph shows it, and you can click through it right now.
+
+This site is my lab, my notebook, and my proof of work. The Second Brain is the part that thinks. Everything else is just the frame.
+
+I am still not a web developer. But the website doesn't seem to mind.
+
+>> 26.03.08 - 300+ fieldnotes. The graph has three visible continents: hardware, ML, and blockchain. The bridges between them are the most interesting part. I'm still building.
