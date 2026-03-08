@@ -1,7 +1,7 @@
 ---
 uid: "kQheVgur"
 address: "electronics"
-name: "electronics"
+name: "Electronics"
 date: "2026-02-15"
 ---
 

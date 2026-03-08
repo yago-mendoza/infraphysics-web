@@ -1,6 +1,6 @@
 ---
-uid: rxVjxTLA
-address: "ML//RL//Training//PPO"
+uid: "rxVjxTLA"
+address: "ML//Training//PPO"
 name: "PPO"
 date: "2026-02-15"
 ---
@@ -13,15 +13,12 @@ date: "2026-02-15"
 ##### LLMs
 - The environment becomes here a RM trained via RLHF.
 > In DPO, RLHF is used to [d]irectly update the weights ([[4vDsUzfM|policy]]).
-- 
-
-
-  - Requires a single output to score via a [[83orykQl|RM]] — no contrastive pairs needed upfront
-- Presumes holistic properties require sequence-level scoring — false, IMO
-- Faster than DPO in theory (no humans clicking or robots reasoning beforehand) — yet on-[[4vDsUzfM|Policy]] behavior (scoring during training) makes it actually slower
-- In addition to everything DPO uses, adds: the reward model, a critic that reduces variance by predicting scores, plus LLM actor and reference model for KL divergence
-- SGD reward signal derives from sequence-level scalar, not token-level logit derivatives — credit assignment problem: every token gets the same offset
-- Considered RLAIF when using a reward model trained from [[0f5GJDwc|RLHF]] data
+- [[Op3pJ7mS|On-policy]]: generates outputs during training and scores them in real-time via a [[83orykQl|RM]] — no contrastive pairs needed upfront.
+- Presumes holistic properties require sequence-level scoring — false, IMO.
+- Faster than DPO in theory (no humans clicking or robots reasoning beforehand) — yet on-[[4vDsUzfM|Policy]] behavior (scoring during training) makes it actually slower.
+- In addition to everything DPO uses, adds: the reward model, a critic that reduces variance by predicting scores, plus LLM actor and reference model for KL divergence.
+- SGD reward signal derives from sequence-level scalar, not token-level logit derivatives — credit assignment problem: every token gets the same offset.
+- Considered RLAIF when using a reward model trained from [[0f5GJDwc|RLHF]] data.
 
 ## Interactions
 

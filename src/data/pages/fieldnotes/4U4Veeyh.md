@@ -1,14 +1,14 @@
 ---
 uid: 4U4Veeyh
-address: "ML//RL//Training//dataset//The Stack"
+address: "ML//Training//dataset//The Stack"
 name: "The Stack"
-date: "2026-02-26"
+date: "2026-02-25"
 ---
 
-- Largest open code dataset (BigCode: HuggingFace + ServiceNow). The code companion to The Pile
-- v1: 6.4 TB of permissively licensed code in 358 languages. v2: expanded, better deduplication
-- StarCoder and other open code models train on The Stack — the foundation of open-source codegen
-- The "[[Xe6SbANI|Common Crawl]] of code": same role for code models that Common Crawl plays for text LLMs
+- Largest open code dataset (BigCode: HuggingFace + ServiceNow). The code companion to The Pile.
+- v1: 6.4 TB of permissively licensed code in 358 languages. v2: expanded, better deduplication.
+- StarCoder and other open code models train on The Stack — the foundation of open-source codegen.
+- The "[[Xe6SbANI|Common Crawl]] of code": same role for code models that Common Crawl plays for text LLMs.
 
 ## Interactions
 

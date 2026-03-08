@@ -1,12 +1,12 @@
 ---
 uid: "a2FkPabO"
 address: "GPU//integrated"
-name: "integrated"
+name: "Integrated"
 date: "2026-02-05"
 ---
-- A [[WEUTQwqv|GPU]] core embedded on the same die (or package) as the [[OkJJJyxX|CPU]], sharing system [[jBm8Zuu2|RAM]] instead of dedicated VRAM
-- Found in every laptop APU, mobile [[trkh9gwv|SoC]], and Apple Silicon
+A [[WEUTQwqv|GPU]] core embedded on the same die (or package) as the [[OkJJJyxX|CPU]], sharing system [[jBm8Zuu2|RAM]] instead of dedicated VRAM.
+- Found in every laptop APU, mobile [[trkh9gwv|SoC]], and Apple Silicon.
 - Lower power and bandwidth than [[LxUj37D3|discrete]]
-- Zero-copy data sharing with the CPU simplifies programming and cuts latency for lightweight graphics and [[1yDGHLLU|NPU]]-style inference tasks
-- Hardwired [[6YzJQiig|ASIC]] on-die; nail size, ~30 W
+- Zero-copy data sharing with the CPU simplifies programming and cuts latency for lightweight graphics and [[1yDGHLLU|NPU]]-style inference tasks.
+- Hardwired [[6YzJQiig|ASIC]] on-die; nail size, ~30 W.
 - Handles lightweight inference (e.g. GPS, small models)

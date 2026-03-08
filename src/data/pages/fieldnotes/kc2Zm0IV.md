@@ -2,12 +2,12 @@
 uid: kc2Zm0IV
 address: "ML//agent//ReAct"
 name: "ReAct"
-date: "2026-02-26"
+date: "2026-02-24"
 ---
 - Reasoning + Acting: the model alternates between thinking (reasoning traces) and acting ([[mydQy6ia|tool]] calls)
-- Loop: "Thought → Action → Observation → Thought → ..." until the task is solved
-- The paper that started the tool-using LLM paradigm. Led to [[5jy6Ik4M|function calling]], Gorilla, BFCL leaderboard
-- Simple but effective. Most modern agent frameworks implement variations of ReAct
+- Loop: "Thought → Action → Observation → Thought → ..." until the task is solved.
+- The paper that started the tool-using LLM paradigm. Led to [[5jy6Ik4M|function calling]], Gorilla, BFCL leaderboard.
+- Simple but effective. Most modern agent frameworks implement variations of ReAct.
 > If I could say anything, I would say seomthing.
 
 ## Interactions

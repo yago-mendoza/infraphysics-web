@@ -5,5 +5,5 @@ name: "UI"
 distinct: ["UI"]
 date: "2026-02-05"
 ---
-- Interface channel linking human intent to machine response
-- Modalities include voice, neural, gesture, and more
+- Interface channel linking human intent to machine response.
+- Modalities include voice, neural, gesture, and more.

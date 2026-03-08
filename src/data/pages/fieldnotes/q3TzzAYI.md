@@ -4,9 +4,9 @@ address: "NVIDIA"
 name: "NVIDIA"
 date: "2026-02-15"
 ---
-- Designs chip blueprints (GPU, [[trkh9gwv|SoC]], accelerators); [[ZzRsypXy|fab]]bed by TSMC ⟶ tiny black squares
+- Designs chip blueprints (GPU, [[trkh9gwv|SoC]], accelerators); [[ZzRsypXy|fab]]bed by TSMC ⟶ tiny black squares.
 - Consumer GPUs: RTX 3090/4090 (PCB with fans, fits inside a tower)
-- Edge/automotive: [[58TuBQEb|Orin]] [[trkh9gwv|SoC]], [[HjOAbpcL|Jetson]] [[X0GHHYNe|microcomputer]] platform
+- Edge/automotive: [[58TuBQEb|Orin]] [[trkh9gwv|SoC]], [[HjOAbpcL|Jetson]] [[X0GHHYNe|microcomputer]] platform.
 - CUDA enables deterministic GPU programming; NVLink interconnects multiple chips on a [[26t2rDup|PCB]]
 
 ## Interactions

@@ -2,11 +2,11 @@
 uid: "YgXtjbRE"
 address: "ML//benchmark//SWE-Bench"
 name: "SWE-Bench"
-date: "2026-02-26"
+date: "2026-03-04"
 ---
-- Real GitHub issues from popular Python repos — model must write a patch that passes the test suite
-- Tests [[WA8fVNaT|agent]] capabilities: planning, code understanding, debugging — not just generation
-- SWE-Bench Verified: human-validated subset. Adopted by Anthropic, Devin, OpenAI as the de-facto agent benchmark
+- Real GitHub issues from popular Python repos — model must write a patch that passes the test suite.
+- Tests [[WA8fVNaT|agent]] capabilities: planning, code understanding, debugging — not just generation.
+- SWE-Bench Verified: human-validated subset. Adopted by Anthropic, Devin, OpenAI as the de-facto agent benchmark.
 
 ## Interactions
 
