@@ -512,17 +512,126 @@ fs.writeFileSync(CATEGORIES_OUTPUT, JSON.stringify(categories, null, 2));
 const BLOG_CATS = new Set(['threads', 'bits2bricks']);
 const catGroup = (cat) => BLOG_CATS.has(cat) ? 'blog' : 'lab';
 
+// HTML → plain text (strip tags, decode entities, collapse whitespace)
+function htmlToText(html) {
+  return html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(?:p|div|h[1-6]|li|tr|blockquote)>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/[ \t]+/g, ' ')
+    .trim();
+}
+
 const ogManifest = {};
+
+// Static pages — enables OG/schema injection for non-article routes
+ogManifest['/home'] = {
+  t: 'InfraPhysics',
+  d: 'From systems to atoms and back. Lab, notebook, and proof of work by Yago Mendoza — industrial engineer, systems builder.',
+  img: null,
+  cat: null,
+  date: null,
+  text: `InfraPhysics — From systems to atoms and back.
+
+Personal lab, notebook, and knowledge graph by Yago Mendoza — industrial engineer and systems builder.
+
+Yago Mendoza is an industrial engineer who bridges hardware and software. He writes about machine learning infrastructure, distributed systems, scaling laws, AI alignment, and cross-domain pattern recognition. His work emphasizes that engineering principles transfer across substrates — supply chains and data pipelines follow the same optimization patterns.
+
+Site sections:
+
+Projects — Engineering projects with technical deep-dives. InfraPhysics Web (custom markdown compiler, wiki-link knowledge graph, AI-assisted development) and FinBoard (zero-dependency personal finance dashboard).
+
+Threads — Long-form essays on technology, AI, economics, and systems thinking. Topics include transformer architecture, AI alignment, Rust and memory safety, AI agent security, scaling laws, reward hacking, and the neuroscience of learning.
+
+Bits2Bricks — Technical tutorials bridging software and physical engineering. How LLMs learn (SFT, DPO, RL, RLHF), transformers from scratch, and AI agent containment.
+
+Second Brain — Knowledge graph of 300+ interconnected atomic concept notes covering machine learning, hardware architecture, blockchain, distributed systems, and optimization. Each note is one concept with bidirectional wiki-links.
+
+Contact: contact@infraphysics.net | GitHub: github.com/yago-mendoza | LinkedIn: linkedin.com/in/yago-mendoza | X: x.com/ymdatweets`,
+};
+ogManifest['/about'] = {
+  t: 'About — Yago Mendoza',
+  d: 'Yago Mendoza — industrial engineer who bridges hardware and software. Machine learning, distributed systems, scaling laws, and cross-domain pattern recognition.',
+  img: null,
+  cat: null,
+  date: null,
+  text: `Yago Mendoza — Industrial Engineer & Systems Builder
+
+"My competitive advantage is that I'm having fun."
+
+I'm into building things and making them move faster. I use AI to unlock compute, document everything I learn, and publish it here — because building in public is how I think best, and if it helps make complex topics more approachable along the way, even better.
+
+The Convergence
+
+I learned to build by watching systems fail. My industrial engineering training: design from the failure point backward — find the bottleneck, then architect around it. Hardware and software aren't separate worlds to me; they're two sides of the same constraint. The critical problems live where bits meet atoms.
+
+The Work
+
+Those worlds are converging faster than anyone expected. AI, infrastructure, distributed systems. This is where I build. I'm drawn to problems where software meets physical limits. Whether it's in a hyperscale data center or a constrained edge device, I want to understand the physics, not just abstract it away.
+
+The Record
+
+This site is a living, interconnected record. I document the process because clear thinking requires writing it down. I'm not an expert in any of this — I'm a generalist who stacks knowledge across domains and connects the dots. This site reflects that: work in progress, not finished reference.
+
+What I Believe
+
+- To truly build, you have to understand the full stack — not just your slice of it. Removing black boxes, from hardware to the models running on it, is what gives you real agency over what you're building.
+- The bottleneck is rarely software — it's physics. We cannot cheat thermodynamics. The real work is building infrastructure that satisfies physical constraints at scale, from data centers to edge devices.
+- Intelligence should be as ubiquitous and invisible as electricity. Making compute a silent, fundamental resource — that's the infrastructure I want to build.
+- Complexity is debt, not progress. The instinct to question what exists before optimizing it — to ask why before how — matters more than any specific skill.
+- The patterns that scale are the ones that transfer. The same structural thinking that optimizes a supply chain can redesign a data pipeline — not because the tools overlap, but because the constraints do.
+- In a world of infinite problems and finite time, passion is the only sustainable filter. I work on what I can't stop thinking about — because that's the only way to outlast hard problems. Obsession compounds.
+- The future is bright.
+
+Beyond the Stack
+
+I study how organizations scale, how technologies fail, and how to make hard things feel simple. Patterns surface everywhere. The best engineers I know aren't just good at code — they're good at understanding why systems exist the way they do.
+
+Outside of engineering, I try to keep things simple. I read because good writing forces clear thinking, and I write to figure out what I actually believe. Most of what I learn gets documented because patterns are easier to catch when they're on paper.
+
+Contact: contact@infraphysics.net
+GitHub: https://github.com/yago-mendoza
+LinkedIn: https://linkedin.com/in/yago-mendoza
+X: https://x.com/ymdatweets`,
+};
+
 for (const post of linkedRegularPosts) {
   const urlPath = `/${catGroup(post.category)}/${post.category}/${post.id}`;
   ogManifest[urlPath] = {
-    t: post.title,
+    t: post.displayTitle || post.title,
     d: post.description || '',
     img: post.thumbnail || null,
     cat: post.category,
     date: post.date || null,
+    text: htmlToText(post.content),
   };
 }
+
+// Section listing pages — so crawlers see article directories
+const sectionListings = {
+  '/blog/threads': { t: 'Threads', d: 'Long-form essays on technology, AI, economics, and systems thinking by Yago Mendoza.' },
+  '/blog/bits2bricks': { t: 'Bits2Bricks', d: 'Technical tutorials bridging software and physical engineering by Yago Mendoza.' },
+  '/lab/projects': { t: 'Projects', d: 'Engineering projects with technical deep-dives by Yago Mendoza.' },
+  '/lab/second-brain': { t: 'Second Brain', d: 'Knowledge graph of 300+ interconnected concept notes on ML, hardware, blockchain, and systems.' },
+};
+for (const [urlPath, meta] of Object.entries(sectionListings)) {
+  const sectionCat = urlPath.split('/').pop();
+  const sectionPosts = linkedRegularPosts.filter(p => p.category === sectionCat);
+  const listing = sectionPosts.map(p => `- ${p.displayTitle || p.title}: ${p.description || ''}`).join('\n');
+  ogManifest[urlPath] = {
+    t: meta.t,
+    d: meta.d,
+    img: null,
+    cat: null,
+    date: null,
+    text: listing || undefined,
+  };
+}
+
 for (const note of fieldnotesIndex) {
   const urlPath = `/lab/second-brain/${note.id}`;
   ogManifest[urlPath] = {
@@ -572,11 +681,69 @@ for (const note of fieldnotesIndex) {
 const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapEntries.join('\n')}\n</urlset>\n`;
 fs.writeFileSync(SITEMAP_FILE, sitemapXml);
 
+// Output 8: public/feed.xml (RSS feed for AI aggregators and readers)
+const FEED_FILE = path.join(__dirname, '../public/feed.xml');
+const feedItems = linkedRegularPosts
+  .filter(p => p.date)
+  .sort((a, b) => b.date.localeCompare(a.date))
+  .slice(0, 30)
+  .map(p => {
+    const urlPath = `/${catGroup(p.category)}/${p.category}/${p.id}`;
+    const pubDate = new Date(p.date).toUTCString();
+    const desc = (p.description || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const titleEsc = (p.displayTitle || p.title || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return `    <item>
+      <title>${titleEsc}</title>
+      <link>${SITE_URL}${urlPath}</link>
+      <guid>${SITE_URL}${urlPath}</guid>
+      <pubDate>${pubDate}</pubDate>
+      <description>${desc}</description>
+      <category>${p.category}</category>
+    </item>`;
+  });
+
+const feedXml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>InfraPhysics</title>
+    <link>${SITE_URL}</link>
+    <description>From systems to atoms and back. Lab, notebook, and proof of work by Yago Mendoza.</description>
+    <language>en</language>
+    <atom:link href="${SITE_URL}/feed.xml" rel="self" type="application/rss+xml" />
+${feedItems.join('\n')}
+  </channel>
+</rss>
+`;
+fs.writeFileSync(FEED_FILE, feedXml);
+
+// Output 9: public/llms-full.txt (full content for LLM crawlers)
+const LLMS_FULL_FILE = path.join(__dirname, '../public/llms-full.txt');
+const llmsFullSections = linkedRegularPosts
+  .filter(p => p.date)
+  .sort((a, b) => b.date.localeCompare(a.date))
+  .map(p => {
+    const urlPath = `${SITE_URL}/${catGroup(p.category)}/${p.category}/${p.id}`;
+    const plainText = htmlToText(p.content);
+    return `## ${p.displayTitle || p.title}\n\nURL: ${urlPath}\nCategory: ${p.category}\nDate: ${p.date}\nDescription: ${p.description || ''}\n\n${plainText}`;
+  });
+
+const llmsFullContent = `# InfraPhysics — Full Content
+
+> All published articles by Yago Mendoza — industrial engineer and systems builder.
+> For a summary, see /llms.txt
+
+---
+
+${llmsFullSections.join('\n\n---\n\n')}
+`;
+fs.writeFileSync(LLMS_FULL_FILE, llmsFullContent);
+
 console.log(`Generated ${linkedRegularPosts.length} posts → ${OUTPUT_FILE}`);
 console.log(`Generated ${linkedFieldnotePosts.length} fieldnotes → ${FIELDNOTES_INDEX_FILE} + public/fieldnotes/`);
 console.log(`Generated ${Object.keys(categories).length} categories → ${CATEGORIES_OUTPUT}`);
 console.log(`Generated ${Object.keys(ogManifest).length} entries → ${OG_MANIFEST_FILE}`);
 console.log(`Generated sitemap (${sitemapEntries.length} URLs) → ${SITEMAP_FILE}`);
+console.log(`Generated RSS feed (${feedItems.length} items) → ${FEED_FILE}`);
 
 // Output 6: graph-relevance.generated.json (PageRank + proximity + shared neighbors)
 await import('./compute-graph-relevance.js');

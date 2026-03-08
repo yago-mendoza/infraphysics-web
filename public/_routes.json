@@ -4,9 +4,15 @@
     "/api/views/*",
     "/api/reactions/*",
     "/api/stats",
+    "/home",
+    "/about",
+    "/lab/projects",
     "/lab/projects/*",
+    "/lab/second-brain",
     "/lab/second-brain/*",
+    "/blog/threads",
     "/blog/threads/*",
+    "/blog/bits2bricks",
     "/blog/bits2bricks/*"
   ],
   "exclude": []

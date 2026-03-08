@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>InfraPhysics</title>
+    <link>https://infraphysics.net</link>
+    <description>From systems to atoms and back. Lab, notebook, and proof of work by Yago Mendoza.</description>
+    <language>en</language>
+    <atom:link href="https://infraphysics.net/feed.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Trabajar con IA engancha.</title>
+      <link>https://infraphysics.net/blog/threads/2387542</link>
+      <guid>https://infraphysics.net/blog/threads/2387542</guid>
+      <pubDate>Fri, 03 Jul 2026 00:00:00 GMT</pubDate>
+      <description>Dormir está sobrevalorado. Opus 4.5 sube más la dopamina que encontrar un megayacimiento de hierro justo cuando estás montando la fábrica en Factorio.</description>
+      <category>threads</category>
+    </item>
+    <item>
+      <title>How LLMs learn</title>
+      <link>https://infraphysics.net/blog/bits2bricks/training-llms</link>
+      <guid>https://infraphysics.net/blog/bits2bricks/training-llms</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <description>A ground-up explanation of how language models are trained after pretraining — SFT, DPO, RL, RLHF, reward hacking, KL divergence, and the DeepSeek-R1 pipeline.</description>
+      <category>bits2bricks</category>
+    </item>
+    <item>
+      <title>Transformers from scratch</title>
+      <link>https://infraphysics.net/blog/bits2bricks/transformers-from-scratch</link>
+      <guid>https://infraphysics.net/blog/bits2bricks/transformers-from-scratch</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <description>A patient, ground-up explanation of transformer architecture — how tokens become predictions, what attention really computes, where facts live, and why it all scales.</description>
+      <category>bits2bricks</category>
+    </item>
+    <item>
+      <title>Infraphysics — building a website that thinks</title>
+      <link>https://infraphysics.net/lab/projects/infraphysics-web</link>
+      <guid>https://infraphysics.net/lab/projects/infraphysics-web</guid>
+      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
+      <description>How a systems engineer built a personal site with a custom markdown compiler, a second brain, and an AI development partner — and what went wrong along the way.</description>
+      <category>projects</category>
+    </item>
+    <item>
+      <title>El cangrejo bajo cubierta</title>
+      <link>https://infraphysics.net/blog/threads/7270022</link>
+      <guid>https://infraphysics.net/blog/threads/7270022</guid>
+      <pubDate>Sat, 07 Mar 2026 00:00:00 GMT</pubDate>
+      <description>La IA no crece porque alguien lo decida. Crece porque el mercado, la evolución y el capital lo exigen. Y nosotros seguimos alimentándola.</description>
+      <category>threads</category>
+    </item>
+    <item>
+      <title>We Solved Alignment. For Paperclips.</title>
+      <link>https://infraphysics.net/blog/threads/the-paperclip-you-already-are</link>
+      <guid>https://infraphysics.net/blog/threads/the-paperclip-you-already-are</guid>
+      <pubDate>Sat, 07 Mar 2026 00:00:00 GMT</pubDate>
+      <description>Reward hacking isn't an AI problem. It's a human one. We've been paperclip maximizers all along.</description>
+      <category>threads</category>
+    </item>
+    <item>
+      <title>I've spent years trying not to lose myself and I almost pulled it off.</title>
+      <link>https://infraphysics.net/blog/threads/collect-everything</link>
+      <guid>https://infraphysics.net/blog/threads/collect-everything</guid>
+      <pubDate>Fri, 06 Mar 2026 00:00:00 GMT</pubDate>
+      <description>Obsidian, Notion, Anki, a Drive folder that became sentient. The real problem was never the tool.</description>
+      <category>threads</category>
+    </item>
+    <item>
+      <title>15.4%</title>
+      <link>https://infraphysics.net/blog/threads/the-number-nobody-is-watching</link>
+      <guid>https://infraphysics.net/blog/threads/the-number-nobody-is-watching</guid>
+      <pubDate>Fri, 06 Mar 2026 00:00:00 GMT</pubDate>
+      <description>OpenAI tested whether their models can hide their chain-of-thought from safety monitors. The headline that spread: AI cannot lie. The correct headline: AI cannot yet lie.</description>
+      <category>threads</category>
+    </item>
+    <item>
+      <title>The brain can't do backpropagation. So what is it doing?</title>
+      <link>https://infraphysics.net/blog/threads/brain-vs-backprop</link>
+      <guid>https://infraphysics.net/blog/threads/brain-vs-backprop</guid>
+      <pubDate>Fri, 06 Mar 2026 00:00:00 GMT</pubDate>
+      <description>The algorithm behind every neural network requires something the brain physically cannot do. The brain doesn't care.</description>
+      <category>threads</category>
+    </item>
+    <item>
+      <title>The Bitter Lesson</title>
+      <link>https://infraphysics.net/blog/threads/the-bitter-lesson</link>
+      <guid>https://infraphysics.net/blog/threads/the-bitter-lesson</guid>
+      <pubDate>Fri, 06 Mar 2026 00:00:00 GMT</pubDate>
+      <description>En 2019 construí una herramienta de NLP durante dos semanas. Ese mismo año Sutton explicó por qué estaba equivocado.</description>
+      <category>threads</category>
+    </item>
+    <item>
+      <title>Why nobody actually understands AI (and how to fix that in one thread)</title>
+      <link>https://infraphysics.net/blog/threads/whats-ai</link>
+      <guid>https://infraphysics.net/blog/threads/whats-ai</guid>
+      <pubDate>Fri, 06 Mar 2026 00:00:00 GMT</pubDate>
+      <description>Nodes, weights, connections — words that feel technical but explain nothing. Most people still think these systems consult a giant database somewhere.</description>
+      <category>threads</category>
+    </item>
+    <item>
+      <title>Every time we think we've found the ceiling, the ceiling leaves.</title>
+      <link>https://infraphysics.net/blog/threads/6616933</link>
+      <guid>https://infraphysics.net/blog/threads/6616933</guid>
+      <pubDate>Thu, 05 Mar 2026 00:00:00 GMT</pubDate>
+      <description>Notes from someone who's been inside the slope since before there was a slope</description>
+      <category>threads</category>
+    </item>
+    <item>
+      <title>FinBoard — a personal finance dashboard that shouldn't exist</title>
+      <link>https://infraphysics.net/lab/projects/finboard</link>
+      <guid>https://infraphysics.net/lab/projects/finboard</guid>
+      <pubDate>Fri, 13 Feb 2026 00:00:00 GMT</pubDate>
+      <description>A vanilla JS investment dashboard built in one session with Claude 4.6. No framework, no build step, no npm install. Just a folder you double-click.</description>
+      <category>projects</category>
+    </item>
+    <item>
+      <title>OpenClaw containment playbook</title>
+      <link>https://infraphysics.net/blog/bits2bricks/openclaw-containment-playbook</link>
+      <guid>https://infraphysics.net/blog/bits2bricks/openclaw-containment-playbook</guid>
+      <pubDate>Mon, 09 Feb 2026 00:00:00 GMT</pubDate>
+      <description>Step-by-step guide to running OpenClaw safely using containers, VMs, network segmentation, and cloud deployment. Every technique ranked by effort and protection.</description>
+      <category>bits2bricks</category>
+    </item>
+    <item>
+      <title>Everybody has an opinion on AI</title>
+      <link>https://infraphysics.net/blog/threads/everybody-has-an-opinion-on-ai</link>
+      <guid>https://infraphysics.net/blog/threads/everybody-has-an-opinion-on-ai</guid>
+      <pubDate>Mon, 09 Feb 2026 00:00:00 GMT</pubDate>
+      <description>The real AI bubble isn't in the stocks. It's in the takes.</description>
+      <category>threads</category>
+    </item>
+    <item>
+      <title>OpenClaw and the keys to your kingdom</title>
+      <link>https://infraphysics.net/blog/threads/openclaw-and-the-keys-to-your-kingdom</link>
+      <guid>https://infraphysics.net/blog/threads/openclaw-and-the-keys-to-your-kingdom</guid>
+      <pubDate>Sat, 07 Feb 2026 00:00:00 GMT</pubDate>
+      <description>An AI agent with full access to your computer sounds amazing until you think about it for five minutes.</description>
+      <category>threads</category>
+    </item>
+    <item>
+      <title>Alignment is not a vibe check</title>
+      <link>https://infraphysics.net/blog/threads/8888777</link>
+      <guid>https://infraphysics.net/blog/threads/8888777</guid>
+      <pubDate>Fri, 06 Feb 2026 00:00:00 GMT</pubDate>
+      <description>The field went from 'teach it to be nice' to 'it learned to pretend.' Billions of dollars later, nobody's sure which problem they're solving.</description>
+      <category>threads</category>
+    </item>
+    <item>
+      <title>everything is a pipe</title>
+      <link>https://infraphysics.net/blog/threads/everything-is-a-pipe</link>
+      <guid>https://infraphysics.net/blog/threads/everything-is-a-pipe</guid>
+      <pubDate>Thu, 05 Feb 2026 00:00:00 GMT</pubDate>
+      <description>roman aqueducts, your bloodstream, and TCP/IP all solved the same problem. none of them knew about the others.</description>
+      <category>threads</category>
+    </item>
+    <item>
+      <title>why rust exists</title>
+      <link>https://infraphysics.net/blog/threads/why-rust-exists</link>
+      <guid>https://infraphysics.net/blog/threads/why-rust-exists</guid>
+      <pubDate>Thu, 05 Feb 2026 00:00:00 GMT</pubDate>
+      <description>ownership, borrowing, and the compiler that won't let you hurt yourself.</description>
+      <category>threads</category>
+    </item>
+    <item>
+      <title>Transformers and the data wall</title>
+      <link>https://infraphysics.net/blog/threads/transformers-and-the-data-wall</link>
+      <guid>https://infraphysics.net/blog/threads/transformers-and-the-data-wall</guid>
+      <pubDate>Tue, 03 Feb 2026 00:00:00 GMT</pubDate>
+      <description>Why the transformer architecture refuses to stop getting smarter — and what stands in its way</description>
+      <category>threads</category>
+    </item>
+    <item>
+      <title>custom syntax pcb</title>
+      <link>https://infraphysics.net/blog/bits2bricks/custom-syntax-pcb</link>
+      <guid>https://infraphysics.net/blog/bits2bricks/custom-syntax-pcb</guid>
+      <pubDate>Thu, 30 Jan 2025 00:00:00 GMT</pubDate>
+      <description>bridging markup syntax and hardware notation.</description>
+      <category>bits2bricks</category>
+    </item>
+  </channel>
+</rss>

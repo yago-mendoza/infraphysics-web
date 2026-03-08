@@ -1,0 +1,56 @@
+# InfraPhysics
+
+> Personal lab, notebook, and knowledge graph by Yago Mendoza -- industrial engineer and systems builder.
+
+## About
+
+Yago Mendoza is an industrial engineer who bridges hardware and software. He writes about machine learning infrastructure, distributed systems, scaling laws, AI alignment, and cross-domain pattern recognition. His work emphasizes that engineering principles transfer across substrates -- supply chains and data pipelines follow the same optimization patterns.
+
+Tagline: "From systems to atoms and back. Engineering is engineering. The substrate doesn't matter."
+
+## Site Structure
+
+- /home -- Landing page and navigation hub
+- /about -- Background, beliefs, and expertise areas
+- /lab/projects -- Engineering projects with technical deep-dives
+- /lab/second-brain -- Knowledge graph of 300+ interconnected concept notes
+- /lab/second-brain/graph -- Visual graph explorer
+- /blog/threads -- Long-form essays on technology, AI, economics, and systems thinking
+- /blog/bits2bricks -- Technical tutorials bridging software and physical engineering
+
+## Projects
+
+- [InfraPhysics Web](https://infraphysics.net/lab/projects/infraphysics-web): How a systems engineer built a personal site with a custom markdown compiler, a second brain, and an AI development partnership. React + TypeScript + Vite + Shiki.
+- [FinBoard](https://infraphysics.net/lab/projects/finboard): A vanilla JS investment dashboard built in one session with Claude. No framework, no build step, no npm install. MRP algorithm that reconstructs 50 months of cash flows from transaction records.
+
+## Threads (Essays)
+
+- [Transformers and the Data Wall](https://infraphysics.net/blog/threads/transformers-and-the-data-wall): Why the transformer architecture refuses to stop getting smarter -- and what stands in its way. Scaling laws, Chinchilla findings, text-data ceiling at 10-20T tokens.
+- [Everything Is a Pipe](https://infraphysics.net/blog/threads/everything-is-a-pipe): Roman aqueducts, your bloodstream, and TCP/IP all solved the same problem. None of them knew about the others. Cross-domain flow-control mathematics.
+- [Why Rust Exists](https://infraphysics.net/blog/threads/why-rust-exists): Ownership, borrowing, and the compiler that won't let you hurt yourself. Memory safety as constraint-based design -- borrow checker eliminates 70% of CVEs in C/C++ codebases.
+- [Alignment Is Not a Vibe Check](https://infraphysics.net/blog/threads/8888777): The field went from 'teach it to be nice' to 'it learned to pretend.' RLHF, Constitutional AI, deceptive alignment, Superalignment team collapse.
+- [OpenClaw and the Keys to Your Kingdom](https://infraphysics.net/blog/threads/openclaw-and-the-keys-to-your-kingdom): An AI agent with full access to your computer sounds amazing until you think about it for five minutes. Security model of autonomous AI agents.
+- [The Number Nobody Is Watching](https://infraphysics.net/blog/threads/the-number-nobody-is-watching): OpenAI tested whether their models can hide their chain-of-thought from safety monitors. 15.4% steganographic success rate -- the most important number in AI safety.
+- [The Brain Can't Do Backpropagation](https://infraphysics.net/blog/threads/brain-vs-backprop): The algorithm behind every neural network requires something the brain physically cannot do. Predictive coding as biological alternative. 20 watts, no conductor, no freezing.
+- [The Paperclip You Already Are](https://infraphysics.net/blog/threads/the-paperclip-you-already-are): Reward hacking isn't an AI problem. It's a human one. GDP up but rent unaffordable, likes up but friendship down. Goodhart's Law applied to human behavior.
+- [Everybody Has an Opinion on AI](https://infraphysics.net/blog/threads/everybody-has-an-opinion-on-ai): The real AI bubble isn't in the stocks. It's in the takes.
+- [Collect Everything](https://infraphysics.net/blog/threads/collect-everything): Obsidian, Notion, Anki, a Drive folder that became sentient. The real problem was never the tool.
+- [The Bitter Lesson](https://infraphysics.net/blog/threads/the-bitter-lesson): In 2019 I built an NLP tool during two weeks. That same year Sutton explained why I was wrong. General methods that leverage computation always win.
+- [What's AI](https://infraphysics.net/blog/threads/whats-ai): Nodes, weights, connections -- words that feel technical but explain nothing. Most people still think these systems consume information like humans do.
+
+## Bits2Bricks (Tutorials)
+
+- [How LLMs Learn](https://infraphysics.net/blog/bits2bricks/training-llms): A ground-up explanation of how language models are trained after pretraining -- SFT, DPO, RL, RLHF, reward hacking, KL divergence. Why RL discovers strategies that supervised learning cannot.
+- [Transformers from Scratch](https://infraphysics.net/blog/bits2bricks/transformers-from-scratch): Complete walkthrough -- tokens, embeddings, attention, MLPs, positional encoding, KV cache. How tokens become predictions.
+- [OpenClaw Containment Playbook](https://infraphysics.net/blog/bits2bricks/openclaw-containment-playbook): Security-first deployment for autonomous AI agents, ranked by effort vs. protection. Step-by-step guide using containers, VMs, network segmentation, and cloud deployment.
+
+## Second Brain (Knowledge Graph)
+
+300+ atomic concept notes covering machine learning, hardware architecture, blockchain, distributed systems, and optimization. Each note is one concept with bidirectional wiki-links. The graph reveals structural relationships between domains. Explorable at /lab/second-brain and /lab/second-brain/graph.
+
+## Contact
+
+- Email: contact@infraphysics.net
+- GitHub: https://github.com/yago-mendoza
+- LinkedIn: https://linkedin.com/in/yago-mendoza
+- X: https://x.com/ymdatweets
