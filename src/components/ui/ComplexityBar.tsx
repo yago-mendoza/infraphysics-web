@@ -25,7 +25,7 @@ export const ComplexityBar: React.FC<{ value: number | null | undefined }> = ({ 
           } else if (seg === level) {
             opacity = isUpper ? 0.75 : 0.38; // cap: strong or light
           } else {
-            opacity = 0.1;              // empty
+            opacity = 0.22;             // empty — visible in dark mode
           }
           return (
             <span
