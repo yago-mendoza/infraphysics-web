@@ -35,7 +35,7 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
                       );
                     })()}
                   </div>
-                  <ComplexityBar value={post.complexity} />
+                  <ComplexityBar value={post.complexity} category={post.category} />
                 </div>
 
                 {/* Thumbnail (if available) */}
@@ -45,14 +45,21 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
                   </Link>
                 )}
 
-                {/* Title + Description — both clickable */}
+                {/* Title + Subtitle + Lead preview — all clickable */}
                 <Link to={postPath(post.category, post.id)} className="listing-title-link thread-title-link group block mb-3">
-                  <h3 className="listing-card-title thread-card-title text-lg transition-colors leading-tight mb-2" style={{ fontFamily: "'Roboto Slab', Georgia, serif", fontWeight: 400, color: 'var(--cat-threads-accent)' }}>
+                  <h3 className="listing-card-title thread-card-title text-lg transition-colors leading-tight mb-1" style={{ fontFamily: "'Roboto Slab', Georgia, serif", fontWeight: 400, color: 'var(--cat-threads-accent)' }}>
                     {post.displayTitle || post.title}
                   </h3>
-                  <p className="text-sm text-th-secondary leading-relaxed" style={{ fontFamily: "'Roboto Slab', Georgia, serif" }}>
-                    {post.description}
-                  </p>
+                  {post.subtitle && (
+                    <p className="text-sm text-th-secondary leading-relaxed mb-1" style={{ fontFamily: "'Roboto Slab', Georgia, serif" }}>
+                      {post.subtitle}
+                    </p>
+                  )}
+                  {post.lead && (
+                    <p className="text-xs text-th-tertiary leading-relaxed" style={{ fontFamily: "'Roboto Slab', Georgia, serif" }}>
+                      {post.lead.length > 140 ? post.lead.slice(0, 140).trimEnd() + '...' : post.lead}
+                    </p>
+                  )}
                 </Link>
               </div>
             </div>
