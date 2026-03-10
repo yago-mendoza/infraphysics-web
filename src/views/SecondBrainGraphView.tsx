@@ -23,6 +23,7 @@ import {
   type GraphSettings,
 } from '../components/graph/GraphControls';
 import type { FieldNoteMeta } from '../types';
+import { parseHubFilters, applyHubFilters, describeFilters } from '../lib/filterParams';
 import { SIDEBAR_WIDTH, MOBILE_NAV_HEIGHT } from '../constants/layout';
 import '../styles/article.css';
 import '../styles/wiki-content.css';
@@ -247,7 +248,7 @@ const SecondBrainGraphView: React.FC = () => {
 
   // Data
   const [index, setIndex] = useState<BrainIndex | null>(null);
-  const { getCentrality, loaded: relevanceLoaded } = useGraphRelevance();
+  const { getCentrality, loaded: relevanceLoaded, getIslands } = useGraphRelevance();
 
   // Graph state
   const [fullGraph, setFullGraph] = useState<GraphData | null>(null);
@@ -293,8 +294,11 @@ const SecondBrainGraphView: React.FC = () => {
   const activeSubgraph = subgraphStack.length > 0 ? subgraphStack[subgraphStack.length - 1] : null;
 
   // Search — initialize from URL ?q= param (passed from mini graph)
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '');
+
+  // Hub filters — propagated from the list view via URL params
+  const hubFilters = useMemo(() => parseHubFilters(searchParams), [searchParams]);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchResults = useMemo(() => {
     if (!searchQuery || !index) return [];
@@ -346,13 +350,18 @@ const SecondBrainGraphView: React.FC = () => {
     setFullGraph(buildGraphData(index, centralityMap));
   }, [index, relevanceLoaded, getCentrality]);
 
-  // Filtered graph
+  // Filtered graph (edge visibility)
   const baseFiltered = useFilteredGraph(fullGraph, visibility);
 
-  // Apply subgraph constraint if active
-  const filtered = useMemo(() => {
-    if (!baseFiltered || !activeSubgraph) return baseFiltered;
-    const nodes = baseFiltered.nodes.filter(n => activeSubgraph.has(n.id));
+  // Apply hub filters from URL params (propagated from list view)
+  const hubFilteredIds = useMemo(() => {
+    if (!hubFilters.hasAny || !index) return null;
+    return applyHubFilters(index.allFieldNotes, hubFilters, index, getIslands);
+  }, [hubFilters, index, getIslands]);
+
+  const hubFilteredGraph = useMemo(() => {
+    if (!baseFiltered || !hubFilteredIds) return baseFiltered;
+    const nodes = baseFiltered.nodes.filter(n => hubFilteredIds.has(n.id));
     const nodeSet = new Set(nodes.map(n => n.id));
     const links = baseFiltered.links.filter((l: any) => {
       const src = typeof l.source === 'object' ? l.source.id : l.source;
@@ -360,7 +369,20 @@ const SecondBrainGraphView: React.FC = () => {
       return nodeSet.has(src) && nodeSet.has(tgt);
     });
     return { nodes, links };
-  }, [baseFiltered, activeSubgraph]);
+  }, [baseFiltered, hubFilteredIds]);
+
+  // Apply subgraph constraint if active
+  const filtered = useMemo(() => {
+    if (!hubFilteredGraph || !activeSubgraph) return hubFilteredGraph;
+    const nodes = hubFilteredGraph.nodes.filter(n => activeSubgraph.has(n.id));
+    const nodeSet = new Set(nodes.map(n => n.id));
+    const links = hubFilteredGraph.links.filter((l: any) => {
+      const src = typeof l.source === 'object' ? l.source.id : l.source;
+      const tgt = typeof l.target === 'object' ? l.target.id : l.target;
+      return nodeSet.has(src) && nodeSet.has(tgt);
+    });
+    return { nodes, links };
+  }, [hubFilteredGraph, activeSubgraph]);
 
   const resetGraph = useCallback(() => {
     if (filtered) {
@@ -1292,6 +1314,30 @@ const SecondBrainGraphView: React.FC = () => {
           />
         )}
       </div>
+
+      {/* Hub filter badge — shows when filters were propagated from list view */}
+      {hubFilters.hasAny && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-1.5 bg-violet-500/15 backdrop-blur-sm border border-violet-500/30 rounded-full text-[11px] text-violet-300">
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M1 2h10L7 6.5V10L5 11V6.5z" />
+          </svg>
+          <span className="max-w-[300px] truncate">{describeFilters(hubFilters).join(' · ')}</span>
+          <span className="text-violet-400/60">({filtered.nodes.length})</span>
+          <button
+            onClick={() => {
+              // Clear all hub filter params, keep only non-filter params
+              setSearchParams(new URLSearchParams());
+              setSearchQuery('');
+            }}
+            className="ml-0.5 text-violet-400/60 hover:text-violet-300 transition-colors"
+            title="Clear filters"
+          >
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <line x1="3" y1="3" x2="9" y2="9" /><line x1="9" y1="3" x2="3" y2="9" />
+            </svg>
+          </button>
+        </div>
+      )}
 
       {/* Graph canvas */}
       <div

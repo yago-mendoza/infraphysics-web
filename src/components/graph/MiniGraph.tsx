@@ -13,9 +13,11 @@ const MINI_HEIGHT = 150;
 const MiniGraph: React.FC<{
   /** Set of UIDs to highlight (from sidebar search results) */
   highlightIds: Set<string> | null;
+  /** Set of UIDs to keep in the graph (from sidebar filters). null = show all. */
+  filteredIds: Set<string> | null;
   /** Current search query (passed to full graph via URL) */
   searchQuery: string;
-}> = ({ highlightIds }) => {
+}> = ({ highlightIds, filteredIds }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
 
@@ -51,7 +53,30 @@ const MiniGraph: React.FC<{
     setFullGraph(buildGraphData(index, centralityMap));
   }, [index, relevanceLoaded, getCentrality]);
 
-  const filtered = useFilteredGraph(fullGraph, visibility);
+  const edgeFiltered = useFilteredGraph(fullGraph, visibility);
+
+  // Apply hub filters — remove nodes not in the filtered set
+  const filtered = useMemo(() => {
+    if (!edgeFiltered || !filteredIds) return edgeFiltered;
+    const nodes = edgeFiltered.nodes.filter(n => filteredIds.has(n.id));
+    const nodeSet = new Set(nodes.map(n => n.id));
+    const links = edgeFiltered.links.filter((l: any) => {
+      const src = typeof l.source === 'object' ? l.source.id : l.source;
+      const tgt = typeof l.target === 'object' ? l.target.id : l.target;
+      return nodeSet.has(src) && nodeSet.has(tgt);
+    });
+    return { nodes, links };
+  }, [edgeFiltered, filteredIds]);
+
+  // Refit when filtered set changes
+  const prevFilteredSize = useRef(filtered?.nodes.length ?? 0);
+  useEffect(() => {
+    const curSize = filtered?.nodes.length ?? 0;
+    if (curSize > 0 && curSize !== prevFilteredSize.current) {
+      prevFilteredSize.current = curSize;
+      setTimeout(() => graphRef.current?.zoomToFit?.(400, 2), 300);
+    }
+  }, [filtered?.nodes.length]);
 
   // Zoom to fit after simulation settles — closer default
   const hasZoomed = useRef(false);

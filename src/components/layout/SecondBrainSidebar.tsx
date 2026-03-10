@@ -20,6 +20,7 @@ import { useIsLocalhost } from '../../hooks/useIsLocalhost';
 import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../../constants/layout';
 import type { FieldNoteMeta } from '../../types';
 import type { TreeNode, FilterState, DirectorySortMode, ViewMode } from '../../hooks/useSecondBrainHub';
+import { serializeFilters } from '../../lib/filterParams';
 
 // Lazy-load MiniGraph — heavy dep (react-force-graph-2d)
 const MiniGraph = React.lazy(() => import('../graph/MiniGraph'));
@@ -536,6 +537,12 @@ export const SecondBrainSidebar: React.FC = () => {
     return new Set(sortedResults.map(n => n.id));
   }, [searchActive, sortedResults]);
 
+  // Build filtered ID set for mini graph — active when any filter reduces the result set
+  const graphFilteredIds = useMemo(() => {
+    if (!searchActive && !hub.hasActiveFilters && !hub.directoryScope) return null;
+    return new Set(sortedResults.map(n => n.id));
+  }, [searchActive, hub.hasActiveFilters, hub.directoryScope, sortedResults]);
+
   const sections = (
     <>
       {/* Mini Graph — visual overview, highlights search matches */}
@@ -556,10 +563,10 @@ export const SecondBrainSidebar: React.FC = () => {
               Loading graph...
             </div>
           }>
-            <MiniGraph highlightIds={graphHighlightIds} searchQuery={hub.query} />
+            <MiniGraph highlightIds={graphHighlightIds} filteredIds={graphFilteredIds} searchQuery={hub.query} />
           </Suspense>
           <a
-            href={`/lab/second-brain/graph${hub.query ? `?q=${encodeURIComponent(hub.query)}` : ''}`}
+            href={`/lab/second-brain/graph${serializeFilters(hub.filterState, hub.query, hub.searchMode, hub.directoryScope)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="absolute -bottom-1 -right-1 flex items-center gap-1 text-violet-400 hover:text-violet-300 transition-colors text-[10px] leading-none opacity-60 hover:opacity-100"
