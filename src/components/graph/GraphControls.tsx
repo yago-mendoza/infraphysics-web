@@ -37,6 +37,15 @@ export interface SearchResultItem {
   address: string;
 }
 
+export type ColorMode = 'default' | 'wordCount' | 'connections' | 'age';
+
+export const COLOR_MODE_LABELS: Record<ColorMode, string> = {
+  default: 'Default',
+  wordCount: 'Word count',
+  connections: 'Connections',
+  age: 'Age',
+};
+
 interface GraphControlsProps {
   visibility: EdgeVisibility;
   onVisibilityChange: (v: EdgeVisibility) => void;
@@ -53,6 +62,8 @@ interface GraphControlsProps {
   searchResults: SearchResultItem[];
   activeResultId: string | null;
   onResultClick: (id: string) => void;
+  colorMode: ColorMode;
+  onColorModeChange: (mode: ColorMode) => void;
   onReset?: () => void;
 }
 
@@ -137,6 +148,8 @@ export const GraphControls = forwardRef<HTMLInputElement, GraphControlsProps>(({
   searchResults,
   activeResultId,
   onResultClick,
+  colorMode,
+  onColorModeChange,
   onReset,
 }, ref) => {
   const toggleEdge = (type: EdgeType) => {
@@ -270,6 +283,34 @@ export const GraphControls = forwardRef<HTMLInputElement, GraphControlsProps>(({
             onToggle={() => toggleEdge(type)}
           />
         ))}
+      </div>
+
+      {/* Color by metric */}
+      <div className="flex flex-col gap-1.5 pt-1 border-t border-th-hub-border">
+        <span className="text-[9px] uppercase tracking-wider text-th-muted">Color by</span>
+        <div className="grid grid-cols-2 gap-0.5">
+          {(['default', 'wordCount', 'connections', 'age'] as ColorMode[]).map(mode => (
+            <button
+              key={mode}
+              onClick={() => onColorModeChange(mode)}
+              className={`px-2 py-1 text-[10px] border transition-colors ${
+                colorMode === mode
+                  ? 'border-violet-500/40 bg-violet-500/15 text-violet-400'
+                  : 'border-transparent text-th-muted hover:text-th-secondary'
+              }`}
+            >
+              {COLOR_MODE_LABELS[mode]}
+            </button>
+          ))}
+        </div>
+        {colorMode !== 'default' && (
+          <div className="flex items-center gap-1.5 pt-0.5">
+            <div className="flex-1 h-2 rounded-full" style={{
+              background: 'linear-gradient(to right, hsl(270,75%,30%), hsl(210,80%,40%), hsl(150,85%,42%), hsl(90,85%,50%), hsl(60,90%,55%))'
+            }} />
+            <span className="text-[9px] text-th-muted shrink-0">low → high</span>
+          </div>
+        )}
       </div>
 
       {/* Sliders */}

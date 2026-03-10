@@ -20,12 +20,12 @@ import {
 import {
   GraphControls,
   DEFAULT_SETTINGS,
+  COLOR_MODE_LABELS,
   type GraphSettings,
+  type ColorMode,
 } from '../components/graph/GraphControls';
 import type { FieldNoteMeta } from '../types';
-import type { FilterState } from '../hooks/useSecondBrainHub';
-import { parseHubFilters, applyHubFilters, describeFilters, serializeFilters } from '../lib/filterParams';
-import GraphFilterPanel from '../components/graph/GraphFilterPanel';
+import { parseHubFilters, applyHubFilters } from '../lib/filterParams';
 import { SIDEBAR_WIDTH, MOBILE_NAV_HEIGHT } from '../constants/layout';
 import '../styles/article.css';
 import '../styles/wiki-content.css';
@@ -281,11 +281,10 @@ const SecondBrainGraphView: React.FC = () => {
   // The "active" id for the preview panel: selected wins over hovered
   const previewId = selectedId ?? hoveredId;
 
-  // Guide modal + selection mode + connections panel + filters panel
+  // Guide modal + selection mode + connections panel
   const [guideOpen, setGuideOpen] = useState(false);
   const [selectMode, setSelectMode] = useState(false);
   const [showConnections, setShowConnections] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
 
   // Multi-select (Ctrl+click or Shift+drag)
   const [multiSelected, setMultiSelected] = useState<Set<string>>(new Set());
@@ -302,19 +301,6 @@ const SecondBrainGraphView: React.FC = () => {
 
   // Hub filters — propagated from the list view via URL params
   const hubFilters = useMemo(() => parseHubFilters(searchParams), [searchParams]);
-
-  // Update filters → sync to URL params
-  const handleFilterChange = useCallback((newFilters: FilterState, opts?: { query?: string; scope?: string | null }) => {
-    const query = opts?.query !== undefined ? opts.query : hubFilters.query;
-    const scope = opts?.scope !== undefined ? opts.scope : hubFilters.directoryScope;
-    const qs = serializeFilters(newFilters, query, hubFilters.searchMode as any, scope);
-    setSearchParams(qs ? new URLSearchParams(qs.slice(1)) : new URLSearchParams());
-  }, [hubFilters, setSearchParams]);
-
-  const handleFilterClear = useCallback(() => {
-    setSearchParams(new URLSearchParams());
-    setSearchQuery('');
-  }, [setSearchParams]);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchResults = useMemo(() => {
@@ -411,6 +397,43 @@ const SecondBrainGraphView: React.FC = () => {
     gravityInitialized.current = false;
     setGraphKey(k => k + 1);
   }, [filtered]);
+
+  // ─── Heatmap coloring ───────────────────────────────────────────────
+  const [colorMode, setColorMode] = useState<ColorMode>('default');
+
+  // Precompute metric values → normalized 0–1 per node
+  const colorMetrics = useMemo(() => {
+    if (colorMode === 'default' || !index) return null;
+
+    const values = new Map<string, number>();
+    const today = Date.now();
+
+    index.allFieldNotes.forEach(n => {
+      let v = 0;
+      if (colorMode === 'wordCount') {
+        v = (n.searchText || '').split(/\s+/).filter(Boolean).length;
+      } else if (colorMode === 'connections') {
+        const out = n.references?.length || 0;
+        const inc = (index.backlinksMap.get(n.id) || []).length;
+        v = out + inc;
+      } else if (colorMode === 'age') {
+        const d = n.date ? new Date(n.date).getTime() : today;
+        v = (today - d) / (1000 * 60 * 60 * 24); // days old
+      }
+      values.set(n.id, v);
+    });
+
+    // Find min/max for normalization
+    let min = Infinity, max = -Infinity;
+    values.forEach(v => { if (v < min) min = v; if (v > max) max = v; });
+    const range = max - min || 1;
+
+    // Normalize to 0–1
+    const normalized = new Map<string, number>();
+    values.forEach((v, id) => normalized.set(id, (v - min) / range));
+
+    return { normalized, min, max, range };
+  }, [colorMode, index]);
 
   // Reset layout when entering/exiting subgraph mode
   const prevSubgraphLen = useRef(0);
@@ -697,7 +720,25 @@ const SecondBrainGraphView: React.FC = () => {
     // Node circle
     ctx.beginPath();
     ctx.arc(n.x, n.y, r, 0, 2 * Math.PI);
-    ctx.fillStyle = isMultiSelected ? '#22d3ee' : isSelected ? '#a78bfa' : isFocused ? '#e879f9' : isPrimary ? '#f59e0b' : isSecondary ? '#fb923c' : isFocusNeighbor ? '#c084fc' : n.isParent ? '#8b5cf6' : '#6d28d9';
+    // Heatmap coloring: override default when a metric is active
+    let nodeColor: string;
+    if (isMultiSelected) nodeColor = '#22d3ee';
+    else if (isSelected) nodeColor = '#a78bfa';
+    else if (isFocused) nodeColor = '#e879f9';
+    else if (isPrimary) nodeColor = '#f59e0b';
+    else if (isSecondary) nodeColor = '#fb923c';
+    else if (isFocusNeighbor) nodeColor = '#c084fc';
+    else if (colorMetrics) {
+      const t = colorMetrics.normalized.get(n.id) ?? 0;
+      // Viridis-inspired gradient: violet → blue → teal → green → yellow
+      const hue = 270 - t * 210;
+      const sat = 75 + t * 15;
+      const lum = 30 + t * 35;
+      nodeColor = `hsl(${hue}, ${sat}%, ${lum}%)`;
+    } else {
+      nodeColor = n.isParent ? '#8b5cf6' : '#6d28d9';
+    }
+    ctx.fillStyle = nodeColor;
     ctx.fill();
     if (isSelected || isPrimary || isMultiSelected || isFocused) {
       ctx.strokeStyle = isMultiSelected ? '#67e8f9' : isSelected ? '#c4b5fd' : isFocused ? '#f0abfc' : '#fbbf24';
@@ -718,7 +759,7 @@ const SecondBrainGraphView: React.FC = () => {
     }
 
     ctx.globalAlpha = 1;
-  }, [settings.nodeSize, settings.labelSize, settings.showLabels, selectedId, multiSelected, searchResultSet, searchPrimarySet, focusId, focusNeighborSet, popInActive, popInCount]);
+  }, [settings.nodeSize, settings.labelSize, settings.showLabels, selectedId, multiSelected, searchResultSet, searchPrimarySet, focusId, focusNeighborSet, popInActive, popInCount, colorMetrics]);
 
   const nodePointerAreaPaint = useCallback((node: any, color: string, ctx: CanvasRenderingContext2D) => {
     const n = node as GraphNode & { x: number; y: number };
@@ -963,10 +1004,6 @@ const SecondBrainGraphView: React.FC = () => {
         setShowControls(v => !v);
         return;
       }
-      if (e.key === 'f' && !e.ctrlKey && !e.metaKey && !isInput) {
-        setShowFilters(v => !v);
-        return;
-      }
 
       // Type-to-search: printable keys focus the search input
       if (isInput || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -1183,8 +1220,16 @@ const SecondBrainGraphView: React.FC = () => {
   // 3D callbacks (memoized — must be before early return to keep hook order stable)
   const nodeColor3d = useCallback((node: any) => {
     const n = node as GraphNode;
-    return n.id === selectedId ? '#a78bfa' : n.isParent ? '#8b5cf6' : '#6d28d9';
-  }, [selectedId]);
+    if (n.id === selectedId) return '#a78bfa';
+    if (colorMetrics) {
+      const t = colorMetrics.normalized.get(n.id) ?? 0;
+      const hue = 270 - t * 210;
+      const sat = 75 + t * 15;
+      const lum = 30 + t * 35;
+      return `hsl(${hue}, ${sat}%, ${lum}%)`;
+    }
+    return n.isParent ? '#8b5cf6' : '#6d28d9';
+  }, [selectedId, colorMetrics]);
 
   const nodeVal3d = useCallback((node: any) => {
     const n = node as GraphNode;
@@ -1301,22 +1346,6 @@ const SecondBrainGraphView: React.FC = () => {
               <line x1="1" y1="4" x2="1" y2="1" />
             </svg>
           </button>
-          {/* Filters toggle */}
-          <button
-            onClick={() => setShowFilters(v => !v)}
-            className={`inline-flex items-center justify-center w-8 h-8 bg-th-base/80 backdrop-blur-sm border transition-colors relative ${
-              showFilters ? 'border-violet-500/40 text-violet-400' : 'border-th-hub-border text-th-secondary hover:text-violet-400'
-            }`}
-            title="Toggle filters (F)"
-            aria-label="Toggle filters"
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
-              <path d="M1 2h10L7 6.5V10L5 11V6.5z" />
-            </svg>
-            {hubFilters.hasAny && (
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-violet-500" />
-            )}
-          </button>
           {/* Go back */}
           <Link
             to={secondBrainPath()}
@@ -1328,59 +1357,31 @@ const SecondBrainGraphView: React.FC = () => {
           </Link>
         </div>
 
-        {/* Panels (stacked vertically to the right of the icon strip) */}
-        {(showControls || showFilters) && (
-          <div className="flex flex-col gap-1.5 max-h-[calc(100vh-24px)] overflow-y-auto">
-            {showControls && (
-              <GraphControls
-                ref={searchInputRef}
-                visibility={visibility}
-                onVisibilityChange={setVisibility}
-                settings={settings}
-                onSettingsChange={setSettings}
-                dimension={dimension}
-                onDimensionChange={setDimension}
-                nodeCount={popInActive ? popInCount : filtered.nodes.length}
-                linkCount={filtered.links.length}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                onSearchSubmit={onSearchSubmit}
-                searchResultCount={searchResults.length}
-                searchResults={searchResultsMeta}
-                activeResultId={selectedId}
-                onResultClick={onSearchResultClick}
-                onReset={resetGraph}
-              />
-            )}
-            {showFilters && (
-              <GraphFilterPanel
-                filters={hubFilters.filters}
-                searchQuery={hubFilters.query}
-                searchMode={hubFilters.searchMode}
-                directoryScope={hubFilters.directoryScope}
-                onChange={handleFilterChange}
-                onClear={handleFilterClear}
-                maxDepth={index?.globalStats?.maxDepth || 6}
-                activeCount={filtered.nodes.length}
-              />
-            )}
-          </div>
+        {/* Controls panel (opens to the right of the icon strip) */}
+        {showControls && (
+          <GraphControls
+            ref={searchInputRef}
+            visibility={visibility}
+            onVisibilityChange={setVisibility}
+            settings={settings}
+            onSettingsChange={setSettings}
+            dimension={dimension}
+            onDimensionChange={setDimension}
+            nodeCount={popInActive ? popInCount : filtered.nodes.length}
+            linkCount={filtered.links.length}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onSearchSubmit={onSearchSubmit}
+            searchResultCount={searchResults.length}
+            searchResults={searchResultsMeta}
+            activeResultId={selectedId}
+            onResultClick={onSearchResultClick}
+            colorMode={colorMode}
+            onColorModeChange={setColorMode}
+            onReset={resetGraph}
+          />
         )}
       </div>
-
-      {/* Hub filter badge — shows when filters active but panel closed */}
-      {hubFilters.hasAny && !showFilters && (
-        <button
-          onClick={() => setShowFilters(true)}
-          className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-1.5 bg-violet-500/15 backdrop-blur-sm border border-violet-500/30 rounded-full text-[11px] text-violet-300 hover:bg-violet-500/20 transition-colors cursor-pointer"
-        >
-          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M1 2h10L7 6.5V10L5 11V6.5z" />
-          </svg>
-          <span className="max-w-[300px] truncate">{describeFilters(hubFilters).join(' · ')}</span>
-          <span className="text-violet-400/60">({filtered.nodes.length})</span>
-        </button>
-      )}
 
       {/* Graph canvas */}
       <div
@@ -1565,6 +1566,20 @@ const SecondBrainGraphView: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Heatmap legend */}
+      {colorMode !== 'default' && colorMetrics && (
+        <div className="absolute bottom-4 left-4 z-20 flex flex-col gap-1 px-3 py-2 bg-th-base/90 backdrop-blur-sm border border-th-hub-border">
+          <span className="text-[9px] uppercase tracking-wider text-th-muted">{COLOR_MODE_LABELS[colorMode]}</span>
+          <div className="w-32 h-2 rounded-full" style={{
+            background: 'linear-gradient(to right, hsl(270,75%,30%), hsl(210,80%,40%), hsl(150,85%,42%), hsl(90,85%,50%), hsl(60,90%,55%))'
+          }} />
+          <div className="flex justify-between text-[9px] text-th-muted tabular-nums">
+            <span>{colorMode === 'age' ? `${Math.round(colorMetrics.min)}d` : Math.round(colorMetrics.min)}</span>
+            <span>{colorMode === 'age' ? `${Math.round(colorMetrics.max)}d` : Math.round(colorMetrics.max)}</span>
+          </div>
+        </div>
+      )}
 
       {/* Pop-in counter */}
       {popInActive && filtered && (
