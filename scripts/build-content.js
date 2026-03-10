@@ -162,6 +162,7 @@ function processMarkdownFile(filePath) {
     related: frontmatter.related || null,
     lang: frontmatter.lang || null,
     complexity: frontmatter.complexity || null,
+    hidden: frontmatter.hidden || false,
   };
 }
 
