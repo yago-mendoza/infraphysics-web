@@ -37,7 +37,7 @@ export const Bits2BricksGrid: React.FC<SectionRendererProps> = ({ posts, query, 
               )}
               {post.complexity != null && (
                 <span className="absolute top-2 right-2 px-1.5 py-1 backdrop-blur-sm rounded-sm" style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}>
-                  <ComplexityBar value={post.complexity} />
+                  <ComplexityBar value={post.complexity} category={post.category} />
                 </span>
               )}
             </div>
