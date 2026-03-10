@@ -23,7 +23,9 @@ import {
   type GraphSettings,
 } from '../components/graph/GraphControls';
 import type { FieldNoteMeta } from '../types';
-import { parseHubFilters, applyHubFilters, describeFilters } from '../lib/filterParams';
+import type { FilterState } from '../hooks/useSecondBrainHub';
+import { parseHubFilters, applyHubFilters, describeFilters, serializeFilters } from '../lib/filterParams';
+import GraphFilterPanel from '../components/graph/GraphFilterPanel';
 import { SIDEBAR_WIDTH, MOBILE_NAV_HEIGHT } from '../constants/layout';
 import '../styles/article.css';
 import '../styles/wiki-content.css';
@@ -279,10 +281,11 @@ const SecondBrainGraphView: React.FC = () => {
   // The "active" id for the preview panel: selected wins over hovered
   const previewId = selectedId ?? hoveredId;
 
-  // Guide modal + selection mode + connections panel
+  // Guide modal + selection mode + connections panel + filters panel
   const [guideOpen, setGuideOpen] = useState(false);
   const [selectMode, setSelectMode] = useState(false);
   const [showConnections, setShowConnections] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   // Multi-select (Ctrl+click or Shift+drag)
   const [multiSelected, setMultiSelected] = useState<Set<string>>(new Set());
@@ -299,6 +302,20 @@ const SecondBrainGraphView: React.FC = () => {
 
   // Hub filters — propagated from the list view via URL params
   const hubFilters = useMemo(() => parseHubFilters(searchParams), [searchParams]);
+
+  // Update filters → sync to URL params
+  const handleFilterChange = useCallback((newFilters: FilterState, opts?: { query?: string; scope?: string | null }) => {
+    const query = opts?.query !== undefined ? opts.query : hubFilters.query;
+    const scope = opts?.scope !== undefined ? opts.scope : hubFilters.directoryScope;
+    const qs = serializeFilters(newFilters, query, hubFilters.searchMode as any, scope);
+    setSearchParams(qs ? new URLSearchParams(qs.slice(1)) : new URLSearchParams());
+  }, [hubFilters, setSearchParams]);
+
+  const handleFilterClear = useCallback(() => {
+    setSearchParams(new URLSearchParams());
+    setSearchQuery('');
+  }, [setSearchParams]);
+
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchResults = useMemo(() => {
     if (!searchQuery || !index) return [];
@@ -946,6 +963,10 @@ const SecondBrainGraphView: React.FC = () => {
         setShowControls(v => !v);
         return;
       }
+      if (e.key === 'f' && !e.ctrlKey && !e.metaKey && !isInput) {
+        setShowFilters(v => !v);
+        return;
+      }
 
       // Type-to-search: printable keys focus the search input
       if (isInput || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -1280,6 +1301,22 @@ const SecondBrainGraphView: React.FC = () => {
               <line x1="1" y1="4" x2="1" y2="1" />
             </svg>
           </button>
+          {/* Filters toggle */}
+          <button
+            onClick={() => setShowFilters(v => !v)}
+            className={`inline-flex items-center justify-center w-8 h-8 bg-th-base/80 backdrop-blur-sm border transition-colors relative ${
+              showFilters ? 'border-violet-500/40 text-violet-400' : 'border-th-hub-border text-th-secondary hover:text-violet-400'
+            }`}
+            title="Toggle filters (F)"
+            aria-label="Toggle filters"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
+              <path d="M1 2h10L7 6.5V10L5 11V6.5z" />
+            </svg>
+            {hubFilters.hasAny && (
+              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-violet-500" />
+            )}
+          </button>
           {/* Go back */}
           <Link
             to={secondBrainPath()}
@@ -1291,52 +1328,58 @@ const SecondBrainGraphView: React.FC = () => {
           </Link>
         </div>
 
-        {/* Controls panel (opens to the right of the icon strip) */}
-        {showControls && (
-          <GraphControls
-            ref={searchInputRef}
-            visibility={visibility}
-            onVisibilityChange={setVisibility}
-            settings={settings}
-            onSettingsChange={setSettings}
-            dimension={dimension}
-            onDimensionChange={setDimension}
-            nodeCount={popInActive ? popInCount : filtered.nodes.length}
-            linkCount={filtered.links.length}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onSearchSubmit={onSearchSubmit}
-            searchResultCount={searchResults.length}
-            searchResults={searchResultsMeta}
-            activeResultId={selectedId}
-            onResultClick={onSearchResultClick}
-            onReset={resetGraph}
-          />
+        {/* Panels (stacked vertically to the right of the icon strip) */}
+        {(showControls || showFilters) && (
+          <div className="flex flex-col gap-1.5 max-h-[calc(100vh-24px)] overflow-y-auto">
+            {showControls && (
+              <GraphControls
+                ref={searchInputRef}
+                visibility={visibility}
+                onVisibilityChange={setVisibility}
+                settings={settings}
+                onSettingsChange={setSettings}
+                dimension={dimension}
+                onDimensionChange={setDimension}
+                nodeCount={popInActive ? popInCount : filtered.nodes.length}
+                linkCount={filtered.links.length}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onSearchSubmit={onSearchSubmit}
+                searchResultCount={searchResults.length}
+                searchResults={searchResultsMeta}
+                activeResultId={selectedId}
+                onResultClick={onSearchResultClick}
+                onReset={resetGraph}
+              />
+            )}
+            {showFilters && (
+              <GraphFilterPanel
+                filters={hubFilters.filters}
+                searchQuery={hubFilters.query}
+                searchMode={hubFilters.searchMode}
+                directoryScope={hubFilters.directoryScope}
+                onChange={handleFilterChange}
+                onClear={handleFilterClear}
+                maxDepth={index?.globalStats?.maxDepth || 6}
+                activeCount={filtered.nodes.length}
+              />
+            )}
+          </div>
         )}
       </div>
 
-      {/* Hub filter badge — shows when filters were propagated from list view */}
-      {hubFilters.hasAny && (
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-1.5 bg-violet-500/15 backdrop-blur-sm border border-violet-500/30 rounded-full text-[11px] text-violet-300">
+      {/* Hub filter badge — shows when filters active but panel closed */}
+      {hubFilters.hasAny && !showFilters && (
+        <button
+          onClick={() => setShowFilters(true)}
+          className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-1.5 bg-violet-500/15 backdrop-blur-sm border border-violet-500/30 rounded-full text-[11px] text-violet-300 hover:bg-violet-500/20 transition-colors cursor-pointer"
+        >
           <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M1 2h10L7 6.5V10L5 11V6.5z" />
           </svg>
           <span className="max-w-[300px] truncate">{describeFilters(hubFilters).join(' · ')}</span>
           <span className="text-violet-400/60">({filtered.nodes.length})</span>
-          <button
-            onClick={() => {
-              // Clear all hub filter params, keep only non-filter params
-              setSearchParams(new URLSearchParams());
-              setSearchQuery('');
-            }}
-            className="ml-0.5 text-violet-400/60 hover:text-violet-300 transition-colors"
-            title="Clear filters"
-          >
-            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              <line x1="3" y1="3" x2="9" y2="9" /><line x1="9" y1="3" x2="3" y2="9" />
-            </svg>
-          </button>
-        </div>
+        </button>
       )}
 
       {/* Graph canvas */}
