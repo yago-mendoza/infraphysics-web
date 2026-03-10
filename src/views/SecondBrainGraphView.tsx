@@ -525,6 +525,18 @@ const SecondBrainGraphView: React.FC = () => {
     return () => ro.disconnect();
   }, []);
 
+  // Force graph to reclaim space when panel opens/closes
+  useEffect(() => {
+    const el = graphAreaRef.current;
+    if (!el) return;
+    // Let flex settle, then read actual size and nudge the graph
+    const timer = setTimeout(() => {
+      const { width, height } = el.getBoundingClientRect();
+      if (width > 0 && height > 0) setGraphDims({ width, height });
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [showPanel]);
+
   // Compute off-screen node indicators on each frame
   useEffect(() => {
     let raf = 0;
