@@ -332,7 +332,7 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
     return (
       <div
         className="border border-th-hub-border rounded-sm flex items-center justify-center"
-        style={{ height: 60, backgroundColor: 'rgba(0,0,0,0.15)' }}
+        style={{ height: 60, backgroundColor: 'var(--bg-surface)' }}
       >
         <span className="text-[10px] text-th-muted">Root concept — no structural neighbors</span>
       </div>
@@ -344,7 +344,7 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
       {/* SVG Graph */}
       <div
         className="relative select-none border border-th-hub-border rounded-sm"
-        style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}
+        style={{ backgroundColor: 'var(--bg-surface)' }}
       >
         <svg
           ref={svgRef}
@@ -555,11 +555,11 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
                 x={tooltip.x + 8} y={tooltip.y - 14}
                 width={tooltip.label.length * 5.5 + 12} height={18}
                 rx={3}
-                fill="rgba(0,0,0,0.85)"
+                fill={theme === 'light' ? 'rgba(255,255,255,0.95)' : 'rgba(0,0,0,0.85)'}
               />
               <text
                 x={tooltip.x + 14} y={tooltip.y - 2}
-                fill="rgba(255,255,255,0.9)"
+                fill={theme === 'light' ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.9)'}
                 fontSize={9}
                 fontFamily="system-ui, sans-serif"
               >

@@ -72,13 +72,13 @@ export const DeleteConfirmModal: React.FC<Props> = ({
   return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center"
-      style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+      style={{ backgroundColor: 'var(--overlay-bg)' }}
       onClick={e => { if (e.target === e.currentTarget && !busy) onCancel(); }}
     >
       <div
         className="w-full max-w-md mx-4 border rounded-lg overflow-hidden"
         style={{
-          backgroundColor: '#1a1a1a',
+          backgroundColor: 'var(--hub-sidebar-bg)',
           borderColor: phase === 'permanent' ? 'rgba(248,113,113,0.3)' : 'rgba(139,92,246,0.3)',
           maxHeight: 'calc(100vh - 4rem)',
         }}
@@ -124,7 +124,7 @@ export const DeleteConfirmModal: React.FC<Props> = ({
               )}
             </div>
 
-            <div className="px-4 py-3 border-t flex items-center gap-2 justify-end" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+            <div className="px-4 py-3 border-t flex items-center gap-2 justify-end" style={{ borderColor: 'var(--bg-surface-alt)' }}>
               {!isSafe && (
                 <button
                   onClick={copyRefs}
@@ -288,7 +288,7 @@ export const DeleteConfirmModal: React.FC<Props> = ({
               )}
             </div>
 
-            <div className="px-4 py-3 border-t flex items-center gap-2 justify-end" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+            <div className="px-4 py-3 border-t flex items-center gap-2 justify-end" style={{ borderColor: 'var(--bg-surface-alt)' }}>
               <button
                 onClick={copyRefs}
                 className="text-[10px] px-2 py-1 text-th-muted hover:text-th-secondary transition-colors mr-auto"

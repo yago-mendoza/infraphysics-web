@@ -64,7 +64,7 @@ function CentralityIndicator({ percentile }: { percentile: number }) {
         className="relative z-10 flex-shrink-0 self-center ml-1"
         style={{ overflow: 'visible', marginTop: 1 }}
       >
-        <rect x={0} y={0} width={CENT_BAR_W} height={CENT_BAR_H} rx={1} fill="rgba(255,255,255,0.15)" />
+        <rect x={0} y={0} width={CENT_BAR_W} height={CENT_BAR_H} rx={1} fill="var(--bg-surface-alt)" />
         <rect x={segX} y={0} width={segW} height={CENT_BAR_H} rx={1} fill={BAR_FILL} />
         <polygon
           points={`${triX - TRI_SIZE / 2},${-TRI_SIZE - 1} ${triX + TRI_SIZE / 2},${-TRI_SIZE - 1} ${triX},${-1}`}

@@ -400,6 +400,7 @@ const DockedToolbar: React.FC<{
 
     // --- Bulk copy state ---
     const [bulkCopyState, setBulkCopyState] = useState<'idle' | 'copying' | 'copied'>('idle');
+    const [bulkCopyStats, setBulkCopyStats] = useState<string | null>(null);
     const [bulkCopyMode, setBulkCopyMode] = useState(false); // false = metadata, true = full
 
     const handleBulkCopy = useCallback(async () => {
@@ -417,8 +418,12 @@ const DockedToolbar: React.FC<{
           header,
         });
         await navigator.clipboard.writeText(result.markdown);
+        const chars = result.markdown.length;
+        const tokens = Math.round(chars / 4);
+        const fmtK = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
+        setBulkCopyStats(`${fmtK(chars)} chars · ~${fmtK(tokens)} tok`);
         setBulkCopyState('copied');
-        setTimeout(() => setBulkCopyState('idle'), 2000);
+        setTimeout(() => { setBulkCopyState('idle'); setBulkCopyStats(null); }, 3000);
       } catch {
         setBulkCopyState('idle');
       }
@@ -711,7 +716,7 @@ const DockedToolbar: React.FC<{
             {(hasActiveFilters || query || directoryScope) && allNotes.length > 0 && (
               <>
                 <span className="text-[9px] text-th-muted tabular-nums">{Math.round((sortedCount / allNotes.length) * 100)}%</span>
-                <span className="inline-block w-10 h-1 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}>
+                <span className="inline-block w-10 h-1 rounded-full" style={{ backgroundColor: 'var(--bg-surface-alt)' }}>
                   <span className="block h-full rounded-full" style={{ width: `${Math.min((sortedCount / allNotes.length) * 100, 100)}%`, backgroundColor: 'rgba(139,92,246,0.6)' }} />
                 </span>
               </>
@@ -731,6 +736,9 @@ const DockedToolbar: React.FC<{
             >
               {bulkCopyState === 'copied' ? <CheckIcon size={12} /> : bulkCopyState === 'copying' ? <span className="text-[9px]">...</span> : <ClipboardIcon size={12} />}
             </button>
+            {bulkCopyStats && (
+              <span className="text-[8px] text-violet-400/70 tabular-nums">{bulkCopyStats}</span>
+            )}
           </span>
 
           {/* Reset + active chips — technical only */}

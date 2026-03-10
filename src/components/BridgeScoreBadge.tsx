@@ -34,7 +34,7 @@ export const BridgeScoreBadge: React.FC<Props> = ({ percentile }) => {
         className="self-center"
         style={{ overflow: 'visible' }}
       >
-        <rect x={0} y={0} width={BAR_WIDTH} height={BAR_HEIGHT} rx={1} fill="rgba(255,255,255,0.15)" />
+        <rect x={0} y={0} width={BAR_WIDTH} height={BAR_HEIGHT} rx={1} fill="var(--bg-surface-alt)" />
         <rect x={segX} y={0} width={segW} height={BAR_HEIGHT} rx={1} fill={BAR_FILL} />
         <polygon
           points={`${triX - TRI_SIZE / 2},${-TRI_SIZE - 1} ${triX + TRI_SIZE / 2},${-TRI_SIZE - 1} ${triX},${-1}`}

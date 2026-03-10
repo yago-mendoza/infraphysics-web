@@ -16,6 +16,16 @@ type ZoneKey =
 
 type CopyState = 'idle' | 'copying' | 'copied';
 
+/** Rough token estimate: ~4 chars per token for English text */
+function estimateTokens(text: string): number {
+  return Math.round(text.length / 4);
+}
+
+function fmtNum(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return String(n);
+}
+
 interface Props {
   note: FieldNoteMeta;
   neighborhood: Neighborhood;
@@ -184,7 +194,7 @@ const ScopeGraph: React.FC<{
           <line
             key={`line-${z.key}`}
             x1={from.x} y1={from.y} x2={to.x} y2={to.y}
-            stroke={active ? 'rgba(139,92,246,0.35)' : 'rgba(255,255,255,0.08)'}
+            stroke={active ? 'rgba(139,92,246,0.35)' : 'var(--bg-surface-alt)'}
             strokeWidth={1}
             strokeDasharray={dashed ? '4 3' : undefined}
           />
@@ -205,10 +215,10 @@ const ScopeGraph: React.FC<{
         const active = activeZones.has(z.key);
         const isExt = EXTENDED_KEYS.has(z.key);
         const fillActive = isExt ? 'rgba(139,92,246,0.5)' : 'rgba(139,92,246,0.7)';
-        const fill = active ? fillActive : 'rgba(255,255,255,0.15)';
+        const fill = active ? fillActive : 'var(--bg-surface-alt)';
         const textFill = active
           ? (isExt ? 'rgba(139,92,246,0.7)' : 'rgba(139,92,246,0.9)')
-          : 'rgba(255,255,255,0.3)';
+          : 'var(--text-tertiary)';
         const dotCount = Math.min(count, MAX_DOTS);
         const overflow = count > MAX_DOTS ? count - MAX_DOTS : 0;
 
@@ -279,6 +289,7 @@ export const CopyExportModal: React.FC<Props> = ({
   const [activeZones, setActiveZones] = useState<Set<ZoneKey>>(() => new Set(['self']));
   const [fullMode, setFullMode] = useState(true);
   const [copyState, setCopyState] = useState<CopyState>('idle');
+  const [copyStats, setCopyStats] = useState<{ chars: number; tokens: number } | null>(null);
 
   const zones = useMemo(
     () => buildZones(note, neighborhood, connections, backlinks, neighborhoodMap, noteById),
@@ -322,8 +333,9 @@ export const CopyExportModal: React.FC<Props> = ({
         header: `Context from: ${note.address || note.title}`,
       });
       await navigator.clipboard.writeText(result.markdown);
+      setCopyStats({ chars: result.markdown.length, tokens: estimateTokens(result.markdown) });
       setCopyState('copied');
-      setTimeout(() => setCopyState('idle'), 2000);
+      setTimeout(() => { setCopyState('idle'); setCopyStats(null); }, 3000);
     } catch {
       setCopyState('idle');
     }
@@ -332,13 +344,13 @@ export const CopyExportModal: React.FC<Props> = ({
   return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center"
-      style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+      style={{ backgroundColor: 'var(--overlay-bg)' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
         className="w-full max-w-xl mx-4 border overflow-hidden"
         style={{
-          backgroundColor: '#1a1a1a',
+          backgroundColor: 'var(--hub-sidebar-bg)',
           borderColor: 'rgba(139,92,246,0.3)',
         }}
       >
@@ -356,7 +368,7 @@ export const CopyExportModal: React.FC<Props> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t flex items-center gap-3" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+        <div className="px-5 py-3 border-t flex items-center gap-3" style={{ borderColor: 'var(--bg-surface-alt)' }}>
           {/* Mode toggle */}
           <div className="flex items-center gap-2 text-[10px]">
             <button
@@ -379,7 +391,7 @@ export const CopyExportModal: React.FC<Props> = ({
               {selectedNotes.length} notes ~{wordEst > 1000 ? `${(wordEst / 1000).toFixed(1)}k` : wordEst} w
             </span>
             <span className="text-[9px] text-th-muted tabular-nums">{pct}%</span>
-            <span className="inline-block w-12 h-1 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}>
+            <span className="inline-block w-12 h-1 rounded-full" style={{ backgroundColor: 'var(--bg-surface-alt)' }}>
               <span
                 className="block h-full rounded-full transition-all"
                 style={{ width: `${pctWidth}%`, backgroundColor: 'rgba(139,92,246,0.6)' }}
@@ -393,8 +405,8 @@ export const CopyExportModal: React.FC<Props> = ({
             disabled={copyState === 'copying' || selectedNotes.length === 0}
             className="ml-auto flex items-center gap-1.5 text-[10px] px-3 py-1 border border-violet-400/50 text-violet-400 hover:bg-violet-400/10 transition-colors disabled:opacity-50"
           >
-            {copyState === 'copied' ? (
-              <><CheckIcon size={12} /> Copied</>
+            {copyState === 'copied' && copyStats ? (
+              <><CheckIcon size={12} /> {fmtNum(copyStats.chars)} chars · ~{fmtNum(copyStats.tokens)} tokens</>
             ) : copyState === 'copying' ? (
               <>...</>
             ) : (

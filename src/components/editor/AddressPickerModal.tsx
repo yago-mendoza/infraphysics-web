@@ -115,7 +115,7 @@ export const AddressPickerModal: React.FC<Props> = ({
   return createPortal(
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center"
-      style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+      style={{ backgroundColor: 'var(--overlay-bg)' }}
       onClick={e => { if (e.target === e.currentTarget) onCancel(); }}
     >
       <div
