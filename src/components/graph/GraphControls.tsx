@@ -6,9 +6,9 @@ import { EDGE_COLORS, EDGE_LABELS, type EdgeType, type EdgeVisibility } from './
 export interface GraphSettings {
   nodeSize: number;      // multiplier 0.5–3
   edgeOpacity: number;   // 0.05–1
-  forceStrength: number; // 0.1–5 (repulsion)
+  forceStrength: number; // 0.1–10 (repulsion)
   linkDistance: number;   // 20–200
-  gravity: number;       // 0–1 (pulls islands toward center)
+  gravity: number;       // 0–0.05 (pulls islands toward center)
   labelSize: number;     // 0–14 (0 = hidden)
   showLabels: boolean;   // master toggle for labels (2D + 3D)
   warmupTicks: number;   // initial simulation ticks
@@ -19,10 +19,10 @@ export interface GraphSettings {
 
 export const DEFAULT_SETTINGS: GraphSettings = {
   nodeSize: 1,
-  edgeOpacity: 0.35,
+  edgeOpacity: 1,
   forceStrength: 1,
   linkDistance: 60,
-  gravity: 0.15,
+  gravity: 0.05,
   labelSize: 10,
   showLabels: false,
   warmupTicks: 100,
@@ -53,6 +53,7 @@ interface GraphControlsProps {
   searchResults: SearchResultItem[];
   activeResultId: string | null;
   onResultClick: (id: string) => void;
+  onReset?: () => void;
 }
 
 const Slider: React.FC<{
@@ -136,6 +137,7 @@ export const GraphControls = forwardRef<HTMLInputElement, GraphControlsProps>(({
   searchResults,
   activeResultId,
   onResultClick,
+  onReset,
 }, ref) => {
   const toggleEdge = (type: EdgeType) => {
     onVisibilityChange({ ...visibility, [type]: !visibility[type] });
@@ -276,11 +278,11 @@ export const GraphControls = forwardRef<HTMLInputElement, GraphControlsProps>(({
           onChange={v => setSetting('nodeSize', v)} />
         <Slider label="Edge opacity" value={settings.edgeOpacity} min={0.05} max={1} step={0.05}
           onChange={v => setSetting('edgeOpacity', v)} />
-        <Slider label="Repulsion" value={settings.forceStrength} min={0.1} max={5} step={0.1}
+        <Slider label="Repulsion" value={settings.forceStrength} min={0.1} max={10} step={0.1}
           onChange={v => setSetting('forceStrength', v)} />
         <Slider label="Link dist." value={settings.linkDistance} min={10} max={250} step={5}
           onChange={v => setSetting('linkDistance', v)} />
-        <Slider label="Gravity" value={settings.gravity} min={0} max={1} step={0.05}
+        <Slider label="Gravity" value={settings.gravity} min={0} max={0.05} step={0.005}
           onChange={v => setSetting('gravity', v)} />
         <label className="flex items-center gap-2 text-[11px] text-th-secondary">
           <span className="w-20 shrink-0 text-th-tertiary">Labels</span>
@@ -323,7 +325,7 @@ export const GraphControls = forwardRef<HTMLInputElement, GraphControlsProps>(({
 
       {/* Reset */}
       <button
-        onClick={() => onSettingsChange({ ...DEFAULT_SETTINGS })}
+        onClick={() => { onSettingsChange({ ...DEFAULT_SETTINGS }); onReset?.(); }}
         className="text-[10px] text-th-muted hover:text-violet-400 transition-colors text-left"
       >
         Reset defaults

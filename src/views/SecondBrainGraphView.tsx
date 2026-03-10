@@ -249,6 +249,10 @@ const SecondBrainGraphView: React.FC = () => {
     return '2d';
   });
 
+  // Reset key — bumping this remounts the graph, re-running warmupTicks from scratch
+  const [graphKey, setGraphKey] = useState(0);
+  const gravityInitialized = useRef(false);
+
   // Pop-in animation — purely visual reveal (physics run on full graph)
   const [popInActive, setPopInActive] = useState(false);
   const [popInCount, setPopInCount] = useState(0);
@@ -271,6 +275,7 @@ const SecondBrainGraphView: React.FC = () => {
   const [multiSelected, setMultiSelected] = useState<Set<string>>(new Set());
   const [dragSelect, setDragSelect] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [hoveredMultiUid, setHoveredMultiUid] = useState<string | null>(null);
 
   // Search — initialize from URL ?q= param (passed from mini graph)
   const [searchParams] = useSearchParams();
@@ -325,6 +330,17 @@ const SecondBrainGraphView: React.FC = () => {
   // Filtered graph
   const filtered = useFilteredGraph(fullGraph, visibility);
 
+  const resetGraph = useCallback(() => {
+    if (filtered) {
+      for (const node of filtered.nodes as any[]) {
+        delete node.x; delete node.y; delete node.z;
+        delete node.vx; delete node.vy; delete node.vz;
+      }
+    }
+    gravityInitialized.current = false;
+    setGraphKey(k => k + 1);
+  }, [filtered]);
+
   // Pop-in: nodes sorted by centrality (most important first)
   const popInNodeOrder = useMemo(() => {
     if (!filtered) return [];
@@ -372,6 +388,11 @@ const SecondBrainGraphView: React.FC = () => {
 
   // Track graph area size via its own ref
   const graphAreaRef = useRef<HTMLDivElement>(null);
+
+  // Off-screen node indicators (triangles on viewport edges)
+  type EdgeIndicator = { edge: 'top' | 'bottom' | 'left' | 'right'; pos: number; count: number };
+  const [offscreenIndicators, setOffscreenIndicators] = useState<EdgeIndicator[]>([]);
+
   const [graphDims, setGraphDims] = useState(() => {
     const mobile = window.innerWidth < 768;
     const sidebarW = mobile ? 0 : SIDEBAR_WIDTH;
@@ -392,6 +413,77 @@ const SecondBrainGraphView: React.FC = () => {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  // Compute off-screen node indicators on each frame
+  useEffect(() => {
+    let raf = 0;
+    const MARGIN = 8;
+    const BUCKET = 120; // wide buckets to merge nearby clusters
+    const CORNER = 40;
+    const MIN_COUNT = 3; // need at least this many nodes to show an indicator
+    const MAX_PER_EDGE = 3; // max indicators per edge
+
+    const compute = () => {
+      raf = requestAnimationFrame(compute);
+      const fg = graphRef.current;
+      if (!fg || !filtered || !fg.graph2ScreenCoords) return;
+
+      const W = graphDims.width;
+      const H = graphDims.height;
+      if (W < 50 || H < 50) return;
+
+      const buckets: Record<string, { edge: 'top' | 'bottom' | 'left' | 'right'; bucket: number; count: number }> = {};
+
+      for (const node of (filtered.nodes as any[])) {
+        const x = node.x ?? 0;
+        const y = node.y ?? 0;
+        const z = node.z ?? 0;
+        const screen = dimension === '3d'
+          ? fg.graph2ScreenCoords(x, y, z)
+          : fg.graph2ScreenCoords(x, y);
+        if (!screen) continue;
+        const sx = screen.x;
+        const sy = screen.y;
+
+        if (sx >= MARGIN && sx <= W - MARGIN && sy >= MARGIN && sy <= H - MARGIN) continue;
+
+        let edge: 'top' | 'bottom' | 'left' | 'right';
+        let pos: number;
+        const cx = Math.max(0, Math.min(W, sx));
+        const cy = Math.max(0, Math.min(H, sy));
+
+        // Assign edge, skipping corner dead zones
+        if (sy < MARGIN && cx > CORNER && cx < W - CORNER) { edge = 'top'; pos = cx; }
+        else if (sy > H - MARGIN && cx > CORNER && cx < W - CORNER) { edge = 'bottom'; pos = cx; }
+        else if (sx < MARGIN && cy > CORNER && cy < H - CORNER) { edge = 'left'; pos = cy; }
+        else if (sx > W - MARGIN && cy > CORNER && cy < H - CORNER) { edge = 'right'; pos = cy; }
+        else continue; // corner — skip
+
+        const b = Math.round(pos / BUCKET) * BUCKET;
+        const key = `${edge}-${b}`;
+        if (buckets[key]) { buckets[key].count++; }
+        else { buckets[key] = { edge, bucket: b, count: 1 }; }
+      }
+
+      // Filter by minimum count, then keep only top N per edge
+      const all = Object.values(buckets).filter(b => b.count >= MIN_COUNT);
+      const byEdge: Record<string, typeof all> = {};
+      for (const b of all) {
+        (byEdge[b.edge] ??= []).push(b);
+      }
+      const indicators: EdgeIndicator[] = [];
+      for (const group of Object.values(byEdge)) {
+        group.sort((a, b) => b.count - a.count);
+        for (const b of group.slice(0, MAX_PER_EDGE)) {
+          indicators.push({ edge: b.edge, pos: b.bucket, count: b.count });
+        }
+      }
+      setOffscreenIndicators(indicators);
+    };
+
+    raf = requestAnimationFrame(compute);
+    return () => cancelAnimationFrame(raf);
+  }, [filtered, graphDims, dimension]);
 
   // Fetch note content for whichever note is active in the panel
   useEffect(() => {
@@ -502,6 +594,7 @@ const SecondBrainGraphView: React.FC = () => {
     const isMatch = isPrimary || isSecondary;
     const isSelected = n.id === selectedId;
     const isMultiSelected = multiSelected.has(n.id);
+    const isHoveredMulti = n.id === hoveredMultiUid;
     const isFocused = n.id === focusId;
     const isFocusNeighbor = focusNeighborSet.has(n.id);
     const hasFocus = !!focusId;
@@ -514,30 +607,43 @@ const SecondBrainGraphView: React.FC = () => {
       ctx.globalAlpha = 0.6;
     }
 
-    // Node circle
-    ctx.beginPath();
-    ctx.arc(n.x, n.y, r, 0, 2 * Math.PI);
-    ctx.fillStyle = isMultiSelected ? '#22d3ee' : isSelected ? '#a78bfa' : isFocused ? '#e879f9' : isPrimary ? '#f59e0b' : isSecondary ? '#fb923c' : isFocusNeighbor ? '#c084fc' : n.isParent ? '#8b5cf6' : '#6d28d9';
-    ctx.fill();
-    if (isSelected || isPrimary || isMultiSelected || isFocused) {
-      ctx.strokeStyle = isMultiSelected ? '#67e8f9' : isSelected ? '#c4b5fd' : isFocused ? '#f0abfc' : '#fbbf24';
-      ctx.lineWidth = 1.5;
+    // Outer glow ring for hovered multi-selected node
+    if (isHoveredMulti) {
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, r + 6, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(34, 211, 238, 0.15)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, r + 3, 0, 2 * Math.PI);
+      ctx.strokeStyle = '#22d3ee';
+      ctx.lineWidth = 2;
       ctx.stroke();
     }
 
-    // Label
-    if (settings.showLabels && settings.labelSize > 0 && (globalScale > 0.5 || isMatch)) {
-      const fontSize = settings.labelSize / globalScale;
-      if (fontSize < 2 && !isMatch) { ctx.globalAlpha = 1; return; }
-      ctx.font = `${Math.max(fontSize, isMatch ? 4 : 0)}px Inter, system-ui, sans-serif`;
+    // Node circle
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, r, 0, 2 * Math.PI);
+    ctx.fillStyle = isHoveredMulti ? '#67e8f9' : isMultiSelected ? '#22d3ee' : isSelected ? '#a78bfa' : isFocused ? '#e879f9' : isPrimary ? '#f59e0b' : isSecondary ? '#fb923c' : isFocusNeighbor ? '#c084fc' : n.isParent ? '#8b5cf6' : '#6d28d9';
+    ctx.fill();
+    if (isSelected || isPrimary || isMultiSelected || isFocused || isHoveredMulti) {
+      ctx.strokeStyle = isHoveredMulti ? '#ffffff' : isMultiSelected ? '#67e8f9' : isSelected ? '#c4b5fd' : isFocused ? '#f0abfc' : '#fbbf24';
+      ctx.lineWidth = isHoveredMulti ? 2 : 1.5;
+      ctx.stroke();
+    }
+
+    // Label — always show for hovered multi-selected node
+    if ((settings.showLabels && settings.labelSize > 0 && (globalScale > 0.5 || isMatch)) || isHoveredMulti) {
+      const fontSize = isHoveredMulti ? Math.max(settings.labelSize / globalScale, 5) : settings.labelSize / globalScale;
+      if (fontSize < 2 && !isMatch && !isHoveredMulti) { ctx.globalAlpha = 1; return; }
+      ctx.font = `${isHoveredMulti ? 'bold ' : ''}${Math.max(fontSize, isMatch ? 4 : 0)}px Inter, system-ui, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
-      ctx.fillStyle = isSelected ? '#e9d5ff' : isPrimary ? '#fef3c7' : isSecondary ? 'rgba(251,191,36,0.5)' : 'rgba(255,255,255,0.75)';
+      ctx.fillStyle = isHoveredMulti ? '#ffffff' : isSelected ? '#e9d5ff' : isPrimary ? '#fef3c7' : isSecondary ? 'rgba(251,191,36,0.5)' : 'rgba(255,255,255,0.75)';
       ctx.fillText(n.name, n.x, n.y + r + 2);
     }
 
     ctx.globalAlpha = 1;
-  }, [settings.nodeSize, settings.labelSize, settings.showLabels, selectedId, multiSelected, searchResultSet, searchPrimarySet, focusId, focusNeighborSet, popInActive, popInCount]);
+  }, [settings.nodeSize, settings.labelSize, settings.showLabels, selectedId, multiSelected, hoveredMultiUid, searchResultSet, searchPrimarySet, focusId, focusNeighborSet, popInActive, popInCount]);
 
   const nodePointerAreaPaint = useCallback((node: any, color: string, ctx: CanvasRenderingContext2D) => {
     const n = node as GraphNode & { x: number; y: number };
@@ -591,10 +697,11 @@ const SecondBrainGraphView: React.FC = () => {
       });
       return;
     }
-    // Normal click: pin single node, clear multi-selection
+    // Normal click: pin single node, clear multi-selection + search
     setMultiSelected(new Set());
     setSelectedId(node.id);
     setHoveredId(null);
+    setSearchQuery('');
     if (isMobile) {
       setMobilePanel(true);
     } else if (!showPanel) {
@@ -705,36 +812,65 @@ const SecondBrainGraphView: React.FC = () => {
   const d3AlphaDecay = settings.alphaDecay;
   const d3VelocityDecay = settings.velocityDecay;
 
-  // Apply force settings when they change
-  const gravityInitialized = useRef(false);
+  // Reset gravity flag when graph remounts (dimension or key change)
+  useEffect(() => {
+    gravityInitialized.current = false;
+  }, [dimension, graphKey]);
+
+  // Apply charge + link forces (full reheat OK)
   useEffect(() => {
     const fg = graphRef.current;
     if (!fg || !fg.d3Force) return;
 
     const charge = fg.d3Force('charge');
-    if (charge) charge.strength(-30 * settings.forceStrength);
+    if (charge) {
+      charge.strength(-30 * settings.forceStrength);
+      charge.distanceMax(800);
+    }
     const link = fg.d3Force('link');
     if (link) link.distance(settings.linkDistance);
 
-    // Gravity: forceX/forceY pull islands toward center
+    fg.d3ReheatSimulation?.();
+  }, [settings.forceStrength, settings.linkDistance, dimension, graphKey]);
+
+  // Apply gravity separately — gentle alpha so nodes drift instead of collapsing
+  useEffect(() => {
+    const fg = graphRef.current;
+    if (!fg || !fg.d3Force) return;
+
+    const is3d = dimension === '3d';
     if (!gravityInitialized.current) {
-      // First run: register gravity forces via dynamic import
       import('d3-force-3d').then((d3) => {
         if (!fg.d3Force) return;
         fg.d3Force('x', d3.forceX(0).strength(settings.gravity));
         fg.d3Force('y', d3.forceY(0).strength(settings.gravity));
+        if (is3d) fg.d3Force('z', d3.forceZ(0).strength(settings.gravity));
         gravityInitialized.current = true;
         fg.d3ReheatSimulation?.();
       });
     } else {
       const fx = fg.d3Force('x');
       const fy = fg.d3Force('y');
+      const fz = fg.d3Force('z');
       if (fx) fx.strength(settings.gravity);
       if (fy) fy.strength(settings.gravity);
+      if (is3d && fz) fz.strength(settings.gravity);
+      fg.d3ReheatSimulation?.();
     }
+  }, [settings.gravity, dimension]);
 
-    fg.d3ReheatSimulation?.();
-  }, [settings.forceStrength, settings.linkDistance, settings.gravity]);
+  // 3D: point controls target at selected node so scroll-zoom follows it
+  useEffect(() => {
+    if (dimension !== '3d' || !selectedId) return;
+    const fg = graphRef.current;
+    if (!fg || !fg.controls) return;
+    const node = (filtered?.nodes as any[])?.find(n => n.id === selectedId);
+    if (!node) return;
+    const controls = fg.controls();
+    if (controls?.target) {
+      controls.target.set(node.x ?? 0, node.y ?? 0, node.z ?? 0);
+    }
+  }, [selectedId, dimension, filtered]);
 
   // Keyboard: Escape to deselect, C to toggle controls, type-to-search
   useEffect(() => {
@@ -743,12 +879,9 @@ const SecondBrainGraphView: React.FC = () => {
       const isInput = el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT';
 
       if (e.key === 'Escape') {
-        if (isInput && searchQuery) {
-          setSearchQuery('');
-          (el as HTMLInputElement).blur();
-        } else {
-          setSelectedId(null); setMultiSelected(new Set());
-        }
+        if (isInput) (el as HTMLInputElement).blur();
+        setSearchQuery('');
+        setSelectedId(null); setMultiSelected(new Set());
         return;
       }
       if (e.key === 'c' && !e.ctrlKey && !e.metaKey && !isInput) {
@@ -883,12 +1016,16 @@ const SecondBrainGraphView: React.FC = () => {
   }, [index, multiSelected]);
 
   // Names of multi-selected notes (for the prompt)
-  const multiSelectedNames = useMemo(() => {
+  const multiSelectedEntries = useMemo(() => {
     if (!index || multiSelected.size === 0) return [];
     return Array.from(multiSelected)
-      .map(uid => index.noteById.get(uid)?.name)
-      .filter(Boolean) as string[];
+      .map(uid => {
+        const name = index.noteById.get(uid)?.name;
+        return name ? { uid, name } : null;
+      })
+      .filter(Boolean) as { uid: string; name: string }[];
   }, [index, multiSelected]);
+  const multiSelectedNames = useMemo(() => multiSelectedEntries.map(e => e.name), [multiSelectedEntries]);
 
   // 3D callbacks (memoized — must be before early return to keep hook order stable)
   const nodeColor3d = useCallback((node: any) => {
@@ -919,46 +1056,38 @@ const SecondBrainGraphView: React.FC = () => {
       className="fixed right-0 bottom-0 bg-th-base flex select-none"
       style={{ left: isMobile ? 0 : SIDEBAR_WIDTH, top: isMobile ? MOBILE_NAV_HEIGHT : 0 }}
     >
-      {/* Toolbar */}
-      <div className="absolute left-3 top-3 z-20 flex flex-col gap-2">
-        <div className="flex items-center gap-1.5">
-          {/* Back arrow */}
-          <Link
-            to={secondBrainPath()}
-            className="inline-flex items-center px-2 py-1.5 text-th-secondary bg-th-base/80 backdrop-blur-sm border border-th-hub-border hover:text-violet-400 hover:border-violet-500/40 transition-colors"
+      {/* Toolbar — vertical icon strip + controls panel side by side */}
+      <div className="absolute left-3 top-3 z-20 flex items-start gap-1.5">
+        {/* Icon strip (vertical): menu → replay → center → select → back */}
+        <div className="flex flex-col gap-1">
+          {/* Controls toggle (menu) */}
+          <button
+            onClick={() => setShowControls(v => !v)}
+            className={`inline-flex items-center justify-center w-8 h-8 bg-th-base/80 backdrop-blur-sm border transition-colors ${
+              showControls ? 'border-violet-500/40 text-violet-400' : 'border-th-hub-border text-th-secondary hover:text-violet-400'
+            }`}
+            title="Toggle controls (C)"
+            aria-label="Toggle controls"
           >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M8 2L4 6l4 4" />
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
+              <line x1="2" y1="3" x2="10" y2="3" /><circle cx="4" cy="3" r="1" fill="currentColor" />
+              <line x1="2" y1="6" x2="10" y2="6" /><circle cx="7" cy="6" r="1" fill="currentColor" />
+              <line x1="2" y1="9" x2="10" y2="9" /><circle cx="5" cy="9" r="1" fill="currentColor" />
             </svg>
-          </Link>
-          {/* Info */}
+          </button>
+          {/* Info / guide */}
           <button
             onClick={() => setGuideOpen(true)}
-            className="inline-flex items-center px-1.5 py-1.5 bg-th-base/80 backdrop-blur-sm border border-th-hub-border text-violet-400 hover:text-violet-300 transition-colors"
+            className="inline-flex items-center justify-center w-8 h-8 bg-th-base/80 backdrop-blur-sm border border-th-hub-border text-violet-400 hover:text-violet-300 transition-colors"
             title="Graph guide"
             aria-label="Graph guide"
           >
             <InfoIcon size={11} />
           </button>
-          {/* Center */}
-          <button
-            onClick={() => graphRef.current?.zoomToFit?.(400, 60)}
-            className="inline-flex items-center px-2 py-1.5 text-th-secondary bg-th-base/80 backdrop-blur-sm border border-th-hub-border hover:text-violet-400 transition-colors"
-            title="Center view"
-            aria-label="Center view"
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
-              <circle cx="6" cy="6" r="4" />
-              <line x1="6" y1="1" x2="6" y2="3" />
-              <line x1="6" y1="9" x2="6" y2="11" />
-              <line x1="1" y1="6" x2="3" y2="6" />
-              <line x1="9" y1="6" x2="11" y2="6" />
-            </svg>
-          </button>
-          {/* Pop-in */}
+          {/* Pop-in (replay) */}
           <button
             onClick={togglePopIn}
-            className={`inline-flex items-center px-2 py-1.5 bg-th-base/80 backdrop-blur-sm border transition-colors ${
+            className={`inline-flex items-center justify-center w-8 h-8 bg-th-base/80 backdrop-blur-sm border transition-colors ${
               popInActive ? 'border-violet-500/40 text-violet-400' : 'border-th-hub-border text-th-secondary hover:text-violet-400'
             }`}
             title={popInActive ? 'Stop pop-in' : 'Pop-in animation'}
@@ -975,17 +1104,40 @@ const SecondBrainGraphView: React.FC = () => {
               </svg>
             )}
           </button>
+          {/* Center view */}
+          <button
+            onClick={() => graphRef.current?.zoomToFit?.(400, 60)}
+            className="inline-flex items-center justify-center w-8 h-8 text-th-secondary bg-th-base/80 backdrop-blur-sm border border-th-hub-border hover:text-violet-400 transition-colors"
+            title="Center view"
+            aria-label="Center view"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
+              <circle cx="6" cy="6" r="4" />
+              <line x1="6" y1="1" x2="6" y2="3" />
+              <line x1="6" y1="9" x2="6" y2="11" />
+              <line x1="1" y1="6" x2="3" y2="6" />
+              <line x1="9" y1="6" x2="11" y2="6" />
+            </svg>
+          </button>
+          {/* 2D / 3D toggle */}
+          <button
+            onClick={() => setDimension(d => d === '2d' ? '3d' : '2d')}
+            className="inline-flex items-center justify-center w-8 h-8 bg-th-base/80 backdrop-blur-sm border border-th-hub-border text-th-secondary hover:text-violet-400 transition-colors text-[10px] font-mono font-bold"
+            title={dimension === '2d' ? 'Switch to 3D' : 'Switch to 2D'}
+            aria-label={dimension === '2d' ? 'Switch to 3D' : 'Switch to 2D'}
+          >
+            {dimension === '2d' ? '3D' : '2D'}
+          </button>
           {/* Select mode */}
           <button
             onClick={() => setSelectMode(v => !v)}
-            className={`inline-flex items-center px-2 py-1.5 bg-th-base/80 backdrop-blur-sm border transition-colors ${
+            className={`inline-flex items-center justify-center w-8 h-8 bg-th-base/80 backdrop-blur-sm border transition-colors ${
               selectMode ? 'border-cyan-500/40 text-cyan-400' : 'border-th-hub-border text-th-secondary hover:text-violet-400'
             }`}
             title={selectMode ? 'Exit selection mode' : 'Area selection mode'}
             aria-label={selectMode ? 'Exit selection mode' : 'Area selection mode'}
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
-              {/* Dashed rectangle icon */}
               <line x1="1" y1="1" x2="4" y2="1" />
               <line x1="8" y1="1" x2="11" y2="1" />
               <line x1="11" y1="1" x2="11" y2="4" />
@@ -996,22 +1148,18 @@ const SecondBrainGraphView: React.FC = () => {
               <line x1="1" y1="4" x2="1" y2="1" />
             </svg>
           </button>
+          {/* Go back */}
+          <Link
+            to={secondBrainPath()}
+            className="inline-flex items-center justify-center w-8 h-8 text-th-secondary bg-th-base/80 backdrop-blur-sm border border-th-hub-border hover:text-violet-400 hover:border-violet-500/40 transition-colors"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M8 2L4 6l4 4" />
+            </svg>
+          </Link>
         </div>
 
-        {/* Controls toggle + panel */}
-        <button
-          onClick={() => setShowControls(v => !v)}
-          className="inline-flex items-center gap-1 px-2 py-1.5 text-[11px] bg-th-base/80 backdrop-blur-sm border border-th-hub-border transition-colors self-start"
-          style={{ color: showControls ? '#a78bfa' : undefined }}
-          title="Toggle controls (C)"
-          aria-label="Toggle controls"
-        >
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
-            <line x1="2" y1="3" x2="10" y2="3" /><circle cx="4" cy="3" r="1" fill="currentColor" />
-            <line x1="2" y1="6" x2="10" y2="6" /><circle cx="7" cy="6" r="1" fill="currentColor" />
-            <line x1="2" y1="9" x2="10" y2="9" /><circle cx="5" cy="9" r="1" fill="currentColor" />
-          </svg>
-        </button>
+        {/* Controls panel (opens to the right of the icon strip) */}
         {showControls && (
           <GraphControls
             ref={searchInputRef}
@@ -1030,6 +1178,7 @@ const SecondBrainGraphView: React.FC = () => {
             searchResults={searchResultsMeta}
             activeResultId={selectedId}
             onResultClick={onSearchResultClick}
+            onReset={resetGraph}
           />
         )}
       </div>
@@ -1043,6 +1192,7 @@ const SecondBrainGraphView: React.FC = () => {
         }>
           {dimension === '2d' ? (
             <ForceGraph2D
+              key={graphKey}
               ref={graphRef}
               graphData={filtered}
               width={graphDims.width}
@@ -1065,12 +1215,14 @@ const SecondBrainGraphView: React.FC = () => {
             />
           ) : (
             <ForceGraph3D
+              key={graphKey}
               ref={graphRef}
               graphData={filtered}
               width={graphDims.width}
               height={graphDims.height}
               nodeColor={nodeColor3d}
               nodeVal={nodeVal3d}
+              nodeRelSize={6}
               nodeLabel={nodeTooltip}
               nodeResolution={8}
               linkColor={linkColor3d}
@@ -1100,14 +1252,60 @@ const SecondBrainGraphView: React.FC = () => {
           />
         )}
 
+        {/* Off-screen node indicators */}
+        {offscreenIndicators.map((ind, i) => {
+          const SIZE = 6;
+          let style: React.CSSProperties;
+          let points: string;
+          switch (ind.edge) {
+            case 'top':
+              style = { left: ind.pos - SIZE, top: 2 };
+              points = `${SIZE},0 0,${SIZE * 1.2} ${SIZE * 2},${SIZE * 1.2}`;
+              break;
+            case 'bottom':
+              style = { left: ind.pos - SIZE, bottom: 2 };
+              points = `0,0 ${SIZE * 2},0 ${SIZE},${SIZE * 1.2}`;
+              break;
+            case 'left':
+              style = { left: 2, top: ind.pos - SIZE };
+              points = `0,${SIZE} ${SIZE * 1.2},0 ${SIZE * 1.2},${SIZE * 2}`;
+              break;
+            case 'right':
+              style = { right: 2, top: ind.pos - SIZE };
+              points = `${SIZE * 1.2},${SIZE} 0,0 0,${SIZE * 2}`;
+              break;
+          }
+          const opacity = Math.min(0.9, 0.25 + ind.count * 0.06);
+          return (
+            <svg
+              key={`${ind.edge}-${ind.pos}`}
+              className="absolute pointer-events-none z-10"
+              width={SIZE * 2 + 2}
+              height={SIZE * 2 + 2}
+              style={style}
+            >
+              <polygon points={points} fill="#a78bfa" opacity={opacity} />
+            </svg>
+          );
+        })}
+
         {/* Multi-selection prompt */}
         {multiSelected.size > 0 && (
           <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2 px-4 py-3 bg-th-base/95 backdrop-blur-sm border border-cyan-500/40 text-[11px] max-w-sm">
             <div className="text-cyan-300 font-medium">
               {multiSelected.size} note{multiSelected.size > 1 ? 's' : ''} selected
             </div>
-            <div className="text-th-muted text-[10px] max-h-24 overflow-y-auto leading-relaxed">
-              {multiSelectedNames.join(', ')}
+            <div className="text-th-muted text-[10px] max-h-24 overflow-y-auto leading-relaxed flex flex-wrap gap-x-1 gap-y-0.5">
+              {multiSelectedEntries.map((entry, i) => (
+                <span key={entry.uid}>
+                  <span
+                    className="cursor-default transition-colors duration-100"
+                    style={hoveredMultiUid === entry.uid ? { backgroundColor: '#22d3ee', color: '#fff', padding: '1px 3px', borderRadius: '2px' } : undefined}
+                    onMouseEnter={() => setHoveredMultiUid(entry.uid)}
+                    onMouseLeave={() => setHoveredMultiUid(null)}
+                  >{entry.name}</span>{i < multiSelectedEntries.length - 1 ? ',' : ''}
+                </span>
+              ))}
             </div>
             <div className="flex items-center gap-2 pt-1">
               <button
