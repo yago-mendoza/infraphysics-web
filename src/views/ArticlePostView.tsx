@@ -560,6 +560,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
             {post.lead && (
               <div className="article-blog-lead">
                 <p>{post.lead}</p>
+                <p className="article-blog-lead-dots">···</p>
               </div>
             )}
           </div>
@@ -697,7 +698,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
           {/* Meta bar (blog non-threads only — threads has its own in header card) */}
           {isBlog && post.category !== 'threads' && (
-            <BlogMetabar date={post.date} authorName={authorName} authorPath={authorPath} readingTime={readingTime} views={null} hearts={null} hearted={hearted} toggleHeart={toggleHeart} shareDropdown={null} formatDate={formatDate} />
+            <BlogMetabar date={post.date} authorName={authorName} authorPath={authorPath} readingTime={readingTime} views={null} hearts={null} hearted={hearted} toggleHeart={toggleHeart} shareDropdown={shareDropdown} formatDate={formatDate} />
           )}
 
           {/* Lead text (blog non-threads only — threads has its own in header card) */}

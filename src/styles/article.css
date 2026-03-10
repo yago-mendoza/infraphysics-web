@@ -2354,6 +2354,16 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   line-height: 1.6;
 }
 
+.article-blog-lead-dots {
+  text-align: center;
+  font-style: normal !important;
+  letter-spacing: 0.5em;
+  color: var(--art-text-mid);
+  opacity: 0.5;
+  margin-top: 1.25rem !important;
+  font-size: 1rem;
+}
+
 /* E4d. Blog share button — pill shape with label */
 .article-blog .article-share-btn {
   width: auto;
