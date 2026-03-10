@@ -68,16 +68,27 @@ const GraphGuide: React.FC<{ isOpen: boolean; onClose: () => void; isMobile: boo
         </div>
         <div className="space-y-4 text-[12px] text-th-secondary leading-relaxed">
           {isMobile ? (
-            <div>
-              <h3 className={'text-[11px] uppercase tracking-wider mb-1.5 ' + tipAccent}>Navigation</h3>
-              <ul className="space-y-1">
-                <li><strong className={tipStrong}>Pinch</strong> — zoom in/out</li>
-                <li><strong className={tipStrong}>Drag</strong> — pan around the graph</li>
-                <li><strong className={tipStrong}>Tap a node</strong> — select it and open the preview panel</li>
-                <li><strong className={tipStrong}>Tap empty space</strong> — deselect</li>
-                <li><strong className={tipStrong}>Swipe right</strong> on the preview panel — dismiss it</li>
-              </ul>
-            </div>
+            <>
+              <div>
+                <h3 className={'text-[11px] uppercase tracking-wider mb-1.5 ' + tipAccent}>Navigation</h3>
+                <ul className="space-y-1">
+                  <li><strong className={tipStrong}>Pinch</strong> — zoom in/out</li>
+                  <li><strong className={tipStrong}>Drag</strong> — pan around the graph</li>
+                  <li><strong className={tipStrong}>Tap a node</strong> — select it and open the preview panel</li>
+                  <li><strong className={tipStrong}>Tap empty space</strong> — deselect</li>
+                  <li><strong className={tipStrong}>Swipe right</strong> on the preview panel — dismiss it</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className={'text-[11px] uppercase tracking-wider mb-1.5 ' + tipAccent}>Multi-selection</h3>
+                <ul className="space-y-1">
+                  <li>Activate <strong className={tipStrong}>selection mode</strong> with the dashed-rectangle button in the toolbar.</li>
+                  <li><strong className={tipStrong}>Tap nodes</strong> — toggle them in/out of selection</li>
+                  <li><strong className={tipStrong}>Drag on background</strong> — draw a selection rectangle (2D)</li>
+                  <li>Selected nodes appear in <span className="text-cyan-400">cyan</span>. A prompt lets you copy their content or <strong className={tipStrong}>isolate</strong> them into a subgraph.</li>
+                </ul>
+              </div>
+            </>
           ) : (
             <>
               <div>
@@ -95,7 +106,8 @@ const GraphGuide: React.FC<{ isOpen: boolean; onClose: () => void; isMobile: boo
                 <ul className="space-y-1">
                   <li><strong className={tipStrong}>Drag on background</strong> — draw a selection rectangle (2D)</li>
                   <li><strong className={tipStrong}>Ctrl + click</strong> — toggle individual nodes in/out of selection</li>
-                  <li>Selected nodes appear in <span className="text-cyan-400">cyan</span>. A prompt appears to copy all their content as structured context for LLMs.</li>
+                  <li>Selected nodes appear in <span className="text-cyan-400">cyan</span> with their names always visible. A prompt appears to copy all their content as structured context for LLMs.</li>
+                  <li><strong className={tipStrong}>Isolate cluster</strong> — with 2+ nodes selected, isolate them into their own subgraph. A breadcrumb at the top-right tracks depth. You can nest isolations and click breadcrumb levels to navigate back.</li>
                   <li><code className={tipCode}>Escape</code> — clear selection</li>
                 </ul>
               </div>
@@ -275,7 +287,10 @@ const SecondBrainGraphView: React.FC = () => {
   const [multiSelected, setMultiSelected] = useState<Set<string>>(new Set());
   const [dragSelect, setDragSelect] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [hoveredMultiUid, setHoveredMultiUid] = useState<string | null>(null);
+
+  // Subgraph mode — isolate selected cluster
+  const [subgraphStack, setSubgraphStack] = useState<Set<string>[]>([]);
+  const activeSubgraph = subgraphStack.length > 0 ? subgraphStack[subgraphStack.length - 1] : null;
 
   // Search — initialize from URL ?q= param (passed from mini graph)
   const [searchParams] = useSearchParams();
@@ -300,7 +315,11 @@ const SecondBrainGraphView: React.FC = () => {
   }, [searchQuery, index]);
 
   // Layout
-  const PANEL_WIDTH = 380;
+  const PANEL_MIN = 280;
+  const PANEL_MAX = 600;
+  const PANEL_DEFAULT = 380;
+  const [panelWidth, setPanelWidth] = useState(PANEL_DEFAULT);
+  const panelDragging = useRef(false);
   const [showPanel, setShowPanel] = useState(() => window.innerWidth >= 768);
   const [showControls, setShowControls] = useState(() => window.innerWidth >= 768);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
@@ -328,7 +347,20 @@ const SecondBrainGraphView: React.FC = () => {
   }, [index, relevanceLoaded, getCentrality]);
 
   // Filtered graph
-  const filtered = useFilteredGraph(fullGraph, visibility);
+  const baseFiltered = useFilteredGraph(fullGraph, visibility);
+
+  // Apply subgraph constraint if active
+  const filtered = useMemo(() => {
+    if (!baseFiltered || !activeSubgraph) return baseFiltered;
+    const nodes = baseFiltered.nodes.filter(n => activeSubgraph.has(n.id));
+    const nodeSet = new Set(nodes.map(n => n.id));
+    const links = baseFiltered.links.filter((l: any) => {
+      const src = typeof l.source === 'object' ? l.source.id : l.source;
+      const tgt = typeof l.target === 'object' ? l.target.id : l.target;
+      return nodeSet.has(src) && nodeSet.has(tgt);
+    });
+    return { nodes, links };
+  }, [baseFiltered, activeSubgraph]);
 
   const resetGraph = useCallback(() => {
     if (filtered) {
@@ -340,6 +372,23 @@ const SecondBrainGraphView: React.FC = () => {
     gravityInitialized.current = false;
     setGraphKey(k => k + 1);
   }, [filtered]);
+
+  // Reset layout when entering/exiting subgraph mode
+  const prevSubgraphLen = useRef(0);
+  useEffect(() => {
+    if (subgraphStack.length !== prevSubgraphLen.current) {
+      prevSubgraphLen.current = subgraphStack.length;
+      // Clear positions so force layout starts fresh
+      if (baseFiltered) {
+        for (const node of baseFiltered.nodes as any[]) {
+          delete node.x; delete node.y; delete node.z;
+          delete node.vx; delete node.vy; delete node.vz;
+        }
+      }
+      gravityInitialized.current = false;
+      setGraphKey(k => k + 1);
+    }
+  }, [subgraphStack.length, baseFiltered]);
 
   // Pop-in: nodes sorted by centrality (most important first)
   const popInNodeOrder = useMemo(() => {
@@ -396,7 +445,7 @@ const SecondBrainGraphView: React.FC = () => {
   const [graphDims, setGraphDims] = useState(() => {
     const mobile = window.innerWidth < 768;
     const sidebarW = mobile ? 0 : SIDEBAR_WIDTH;
-    const panelW = mobile ? 0 : PANEL_WIDTH;
+    const panelW = mobile ? 0 : PANEL_DEFAULT;
     return {
       width: Math.max(300, window.innerWidth - sidebarW - panelW),
       height: window.innerHeight - (mobile ? MOBILE_NAV_HEIGHT : 0),
@@ -594,7 +643,6 @@ const SecondBrainGraphView: React.FC = () => {
     const isMatch = isPrimary || isSecondary;
     const isSelected = n.id === selectedId;
     const isMultiSelected = multiSelected.has(n.id);
-    const isHoveredMulti = n.id === hoveredMultiUid;
     const isFocused = n.id === focusId;
     const isFocusNeighbor = focusNeighborSet.has(n.id);
     const hasFocus = !!focusId;
@@ -607,43 +655,31 @@ const SecondBrainGraphView: React.FC = () => {
       ctx.globalAlpha = 0.6;
     }
 
-    // Outer glow ring for hovered multi-selected node
-    if (isHoveredMulti) {
-      ctx.beginPath();
-      ctx.arc(n.x, n.y, r + 6, 0, 2 * Math.PI);
-      ctx.fillStyle = 'rgba(34, 211, 238, 0.15)';
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(n.x, n.y, r + 3, 0, 2 * Math.PI);
-      ctx.strokeStyle = '#22d3ee';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-
     // Node circle
     ctx.beginPath();
     ctx.arc(n.x, n.y, r, 0, 2 * Math.PI);
-    ctx.fillStyle = isHoveredMulti ? '#67e8f9' : isMultiSelected ? '#22d3ee' : isSelected ? '#a78bfa' : isFocused ? '#e879f9' : isPrimary ? '#f59e0b' : isSecondary ? '#fb923c' : isFocusNeighbor ? '#c084fc' : n.isParent ? '#8b5cf6' : '#6d28d9';
+    ctx.fillStyle = isMultiSelected ? '#22d3ee' : isSelected ? '#a78bfa' : isFocused ? '#e879f9' : isPrimary ? '#f59e0b' : isSecondary ? '#fb923c' : isFocusNeighbor ? '#c084fc' : n.isParent ? '#8b5cf6' : '#6d28d9';
     ctx.fill();
-    if (isSelected || isPrimary || isMultiSelected || isFocused || isHoveredMulti) {
-      ctx.strokeStyle = isHoveredMulti ? '#ffffff' : isMultiSelected ? '#67e8f9' : isSelected ? '#c4b5fd' : isFocused ? '#f0abfc' : '#fbbf24';
-      ctx.lineWidth = isHoveredMulti ? 2 : 1.5;
+    if (isSelected || isPrimary || isMultiSelected || isFocused) {
+      ctx.strokeStyle = isMultiSelected ? '#67e8f9' : isSelected ? '#c4b5fd' : isFocused ? '#f0abfc' : '#fbbf24';
+      ctx.lineWidth = 1.5;
       ctx.stroke();
     }
 
-    // Label — always show for hovered multi-selected node
-    if ((settings.showLabels && settings.labelSize > 0 && (globalScale > 0.5 || isMatch)) || isHoveredMulti) {
-      const fontSize = isHoveredMulti ? Math.max(settings.labelSize / globalScale, 5) : settings.labelSize / globalScale;
-      if (fontSize < 2 && !isMatch && !isHoveredMulti) { ctx.globalAlpha = 1; return; }
-      ctx.font = `${isHoveredMulti ? 'bold ' : ''}${Math.max(fontSize, isMatch ? 4 : 0)}px Inter, system-ui, sans-serif`;
+    // Label — always show for multi-selected nodes (area selection)
+    const forceLabel = isMultiSelected;
+    if ((settings.showLabels && settings.labelSize > 0 && (globalScale > 0.5 || isMatch)) || forceLabel) {
+      const fontSize = forceLabel ? Math.max(4, (settings.labelSize || 10) / globalScale) : settings.labelSize / globalScale;
+      if (fontSize < 2 && !isMatch && !forceLabel) { ctx.globalAlpha = 1; return; }
+      ctx.font = `${Math.max(fontSize, isMatch ? 4 : forceLabel ? 4 : 0)}px Inter, system-ui, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
-      ctx.fillStyle = isHoveredMulti ? '#ffffff' : isSelected ? '#e9d5ff' : isPrimary ? '#fef3c7' : isSecondary ? 'rgba(251,191,36,0.5)' : 'rgba(255,255,255,0.75)';
+      ctx.fillStyle = isMultiSelected ? '#67e8f9' : isSelected ? '#e9d5ff' : isPrimary ? '#fef3c7' : isSecondary ? 'rgba(251,191,36,0.5)' : 'rgba(255,255,255,0.75)';
       ctx.fillText(n.name, n.x, n.y + r + 2);
     }
 
     ctx.globalAlpha = 1;
-  }, [settings.nodeSize, settings.labelSize, settings.showLabels, selectedId, multiSelected, hoveredMultiUid, searchResultSet, searchPrimarySet, focusId, focusNeighborSet, popInActive, popInCount]);
+  }, [settings.nodeSize, settings.labelSize, settings.showLabels, selectedId, multiSelected, searchResultSet, searchPrimarySet, focusId, focusNeighborSet, popInActive, popInCount]);
 
   const nodePointerAreaPaint = useCallback((node: any, color: string, ctx: CanvasRenderingContext2D) => {
     const n = node as GraphNode & { x: number; y: number };
@@ -687,8 +723,8 @@ const SecondBrainGraphView: React.FC = () => {
 
   // ─── Event handlers ───
   const onNodeClick = useCallback((node: any, event?: MouseEvent) => {
-    if (event?.ctrlKey || event?.metaKey) {
-      // Ctrl+click: toggle node in multi-selection
+    if (event?.ctrlKey || event?.metaKey || (isMobile && selectMode)) {
+      // Ctrl+click (desktop) or tap in select mode (mobile): toggle multi-selection
       setMultiSelected(prev => {
         const next = new Set(prev);
         if (next.has(node.id)) next.delete(node.id);
@@ -707,7 +743,7 @@ const SecondBrainGraphView: React.FC = () => {
     } else if (!showPanel) {
       setShowPanel(true);
     }
-  }, [showPanel, isMobile]);
+  }, [showPanel, isMobile, selectMode]);
 
   const onNodeHover = useCallback((node: any) => {
     if (containerRef.current) {
@@ -984,6 +1020,80 @@ const SecondBrainGraphView: React.FC = () => {
     };
   }, [dimension, filtered, selectMode]);
 
+  // Touch-based drag rectangle selection (mobile, selectMode + 2D only)
+  const touchDragRef = useRef<{ startX: number; startY: number } | null>(null);
+  useEffect(() => {
+    const el = graphAreaRef.current;
+    if (!el || dimension !== '2d' || !selectMode || !isMobile) return;
+
+    const MIN_DRAG = 10;
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      const rect = el.getBoundingClientRect();
+      touchDragRef.current = {
+        startX: e.touches[0].clientX - rect.left,
+        startY: e.touches[0].clientY - rect.top,
+      };
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      const td = touchDragRef.current;
+      if (!td || e.touches.length !== 1) return;
+      const rect = el.getBoundingClientRect();
+      const cx = e.touches[0].clientX - rect.left;
+      const cy = e.touches[0].clientY - rect.top;
+      if (Math.abs(cx - td.startX) > MIN_DRAG || Math.abs(cy - td.startY) > MIN_DRAG) {
+        e.preventDefault(); // prevent scroll/pan while drawing rectangle
+        setDragSelect({ x0: td.startX, y0: td.startY, x1: cx, y1: cy });
+      }
+    };
+
+    const onTouchEnd = () => {
+      const td = touchDragRef.current;
+      touchDragRef.current = null;
+      const ds = dragSelect;
+      setDragSelect(null);
+      if (!td || !ds) return;
+
+      const { startX } = td;
+      const { startY } = td;
+      const endX = ds.x1;
+      const endY = ds.y1;
+      if (Math.abs(endX - startX) <= MIN_DRAG && Math.abs(endY - startY) <= MIN_DRAG) return;
+
+      const fg = graphRef.current;
+      if (!fg || !filtered || !fg.screen2GraphCoords) return;
+
+      const topLeft = fg.screen2GraphCoords(Math.min(startX, endX), Math.min(startY, endY));
+      const bottomRight = fg.screen2GraphCoords(Math.max(startX, endX), Math.max(startY, endY));
+
+      const selected = new Set<string>();
+      for (const node of filtered.nodes) {
+        const n = node as GraphNode & { x: number; y: number };
+        if (n.x >= topLeft.x && n.x <= bottomRight.x && n.y >= topLeft.y && n.y <= bottomRight.y) {
+          selected.add(n.id);
+        }
+      }
+      if (selected.size > 0) {
+        setMultiSelected(prev => {
+          const merged = new Set(prev);
+          selected.forEach(id => merged.add(id));
+          return merged;
+        });
+      }
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd);
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [dimension, filtered, selectMode, isMobile, dragSelect]);
+
   // Copy multi-selected notes to clipboard
   const copySelectionToClipboard = useCallback(async () => {
     if (!index || multiSelected.size === 0) return;
@@ -1010,22 +1120,22 @@ const SecondBrainGraphView: React.FC = () => {
     ).join('\n\n---\n\n');
 
     const header = `# Fieldnotes context (${notes.length} notes)\n\n`;
-    await navigator.clipboard.writeText(header + structured);
-    setToast(`Copied ${notes.length} fieldnotes to clipboard`);
-    setTimeout(() => setToast(null), 2500);
+    const text = header + structured;
+    await navigator.clipboard.writeText(text);
+    const chars = text.length;
+    const tokens = Math.round(chars / 4);
+    const fmtK = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
+    setToast(`Copied ${notes.length} notes · ${fmtK(chars)} chars · ~${fmtK(tokens)} tokens`);
+    setTimeout(() => setToast(null), 3000);
   }, [index, multiSelected]);
 
   // Names of multi-selected notes (for the prompt)
-  const multiSelectedEntries = useMemo(() => {
+  const multiSelectedNames = useMemo(() => {
     if (!index || multiSelected.size === 0) return [];
     return Array.from(multiSelected)
-      .map(uid => {
-        const name = index.noteById.get(uid)?.name;
-        return name ? { uid, name } : null;
-      })
-      .filter(Boolean) as { uid: string; name: string }[];
+      .map(uid => index.noteById.get(uid)?.name)
+      .filter(Boolean) as string[];
   }, [index, multiSelected]);
-  const multiSelectedNames = useMemo(() => multiSelectedEntries.map(e => e.name), [multiSelectedEntries]);
 
   // 3D callbacks (memoized — must be before early return to keep hook order stable)
   const nodeColor3d = useCallback((node: any) => {
@@ -1184,7 +1294,18 @@ const SecondBrainGraphView: React.FC = () => {
       </div>
 
       {/* Graph canvas */}
-      <div ref={graphAreaRef} className="flex-1 min-w-0 h-full overflow-hidden relative" style={{ cursor: selectMode ? 'crosshair' : undefined }}>
+      <div
+        ref={graphAreaRef}
+        className="flex-1 min-w-0 h-full overflow-hidden relative"
+        style={{
+          cursor: selectMode ? 'crosshair' : undefined,
+          ...(activeSubgraph ? {
+            backgroundImage: 'radial-gradient(circle, rgba(139,92,246,0.08) 1px, transparent 1px)',
+            backgroundSize: '20px 20px',
+            backgroundColor: 'rgba(139,92,246,0.03)',
+          } : {}),
+        }}
+      >
         <Suspense fallback={
           <div className="flex items-center justify-center h-full text-th-muted text-sm animate-pulse">
             Loading renderer...
@@ -1295,17 +1416,8 @@ const SecondBrainGraphView: React.FC = () => {
             <div className="text-cyan-300 font-medium">
               {multiSelected.size} note{multiSelected.size > 1 ? 's' : ''} selected
             </div>
-            <div className="text-th-muted text-[10px] max-h-24 overflow-y-auto leading-relaxed flex flex-wrap gap-x-1 gap-y-0.5">
-              {multiSelectedEntries.map((entry, i) => (
-                <span key={entry.uid}>
-                  <span
-                    className="cursor-default transition-colors duration-100"
-                    style={hoveredMultiUid === entry.uid ? { backgroundColor: '#22d3ee', color: '#fff', padding: '1px 3px', borderRadius: '2px' } : undefined}
-                    onMouseEnter={() => setHoveredMultiUid(entry.uid)}
-                    onMouseLeave={() => setHoveredMultiUid(null)}
-                  >{entry.name}</span>{i < multiSelectedEntries.length - 1 ? ',' : ''}
-                </span>
-              ))}
+            <div className="text-th-muted text-[10px] max-h-24 overflow-y-auto leading-relaxed">
+              {multiSelectedNames.join(', ')}
             </div>
             <div className="flex items-center gap-2 pt-1">
               <button
@@ -1314,6 +1426,17 @@ const SecondBrainGraphView: React.FC = () => {
               >
                 Copy structured context
               </button>
+              {multiSelected.size >= 2 && (
+                <button
+                  onClick={() => {
+                    setSubgraphStack(prev => [...prev, new Set(multiSelected)]);
+                    setMultiSelected(new Set());
+                  }}
+                  className="px-2.5 py-1 bg-violet-500/20 border border-violet-500/40 text-violet-300 hover:bg-violet-500/30 transition-colors text-[10px]"
+                >
+                  Isolate cluster
+                </button>
+              )}
               <button
                 onClick={() => setMultiSelected(new Set())}
                 className="px-2.5 py-1 border border-th-hub-border text-th-muted hover:text-th-secondary transition-colors text-[10px]"
@@ -1321,6 +1444,35 @@ const SecondBrainGraphView: React.FC = () => {
                 Clear
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Subgraph breadcrumb — top-right of graph viewport */}
+        {subgraphStack.length > 0 && (
+          <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-3 py-1.5 bg-th-base/90 backdrop-blur-sm border border-violet-500/30 text-[10px]">
+            <button
+              onClick={() => setSubgraphStack([])}
+              className="text-th-muted hover:text-violet-300 transition-colors"
+            >
+              graph
+            </button>
+            {subgraphStack.map((_, i) => (
+              <React.Fragment key={i}>
+                <span className="text-violet-500/40">/</span>
+                {i < subgraphStack.length - 1 ? (
+                  <button
+                    onClick={() => setSubgraphStack(prev => prev.slice(0, i + 1))}
+                    className="text-th-muted hover:text-violet-300 transition-colors"
+                  >
+                    {subgraphStack[i].size}n
+                  </button>
+                ) : (
+                  <span className="text-violet-300 font-medium">
+                    {subgraphStack[i].size} nodes
+                  </span>
+                )}
+              </React.Fragment>
+            ))}
           </div>
         )}
       </div>
@@ -1352,9 +1504,35 @@ const SecondBrainGraphView: React.FC = () => {
       {/* Note preview panel — desktop: side column */}
       {showPanel && !isMobile && (
         <div
-          className="shrink-0 bg-th-base border-l border-th-hub-border flex flex-col overflow-hidden select-text"
-          style={{ width: PANEL_WIDTH }}
+          className="shrink-0 bg-th-base border-l border-th-hub-border flex flex-col overflow-hidden select-text relative"
+          style={{ width: panelWidth }}
         >
+          {/* Resize drag handle */}
+          <div
+            className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize z-10 hover:bg-violet-500/30 transition-colors"
+            style={panelDragging.current ? { background: 'rgba(139,92,246,0.3)' } : undefined}
+            onMouseDown={e => {
+              e.preventDefault();
+              panelDragging.current = true;
+              document.body.style.userSelect = 'none';
+              document.body.style.cursor = 'col-resize';
+              const startX = e.clientX;
+              const startW = panelWidth;
+              const onMove = (ev: MouseEvent) => {
+                const delta = startX - ev.clientX;
+                setPanelWidth(Math.max(PANEL_MIN, Math.min(PANEL_MAX, startW + delta)));
+              };
+              const onUp = () => {
+                panelDragging.current = false;
+                document.body.style.userSelect = '';
+                document.body.style.cursor = '';
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onUp);
+              };
+              window.addEventListener('mousemove', onMove);
+              window.addEventListener('mouseup', onUp);
+            }}
+          />
           <div className="flex items-center justify-between px-3 py-2 border-b border-th-hub-border bg-th-surface/30">
             <span className="text-[10px] text-th-muted uppercase tracking-wide">Preview</span>
             <div className="flex items-center gap-1">
