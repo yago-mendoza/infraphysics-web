@@ -739,6 +739,63 @@ ${llmsFullSections.join('\n\n---\n\n')}
 `;
 fs.writeFileSync(LLMS_FULL_FILE, llmsFullContent);
 
+// Output 10: public/llms.txt (curated summary + auto-generated article listings)
+const LLMS_FILE = path.join(__dirname, '../public/llms.txt');
+const llmsListing = (cat) => linkedRegularPosts
+  .filter(p => p.category === cat && p.date)
+  .sort((a, b) => b.date.localeCompare(a.date))
+  .map(p => {
+    const urlPath = `${SITE_URL}/${catGroup(p.category)}/${p.category}/${p.id}`;
+    const desc = p.description ? `: ${p.description}` : '';
+    return `- [${p.displayTitle || p.title}](${urlPath})${desc}`;
+  })
+  .join('\n');
+
+const llmsContent = `# InfraPhysics
+
+> Personal lab, notebook, and knowledge graph by Yago Mendoza -- industrial engineer and systems builder.
+
+## About
+
+Yago Mendoza is an industrial engineer who bridges hardware and software. He writes about machine learning infrastructure, distributed systems, scaling laws, AI alignment, and cross-domain pattern recognition. His work emphasizes that engineering principles transfer across substrates -- supply chains and data pipelines follow the same optimization patterns.
+
+Tagline: "From systems to atoms and back. Engineering is engineering. The substrate doesn't matter."
+
+## Site Structure
+
+- /home -- Landing page and navigation hub
+- /about -- Background, beliefs, and expertise areas
+- /lab/projects -- Engineering projects with technical deep-dives
+- /lab/second-brain -- Knowledge graph of ${linkedFieldnotePosts.length}+ interconnected concept notes
+- /lab/second-brain/graph -- Visual graph explorer
+- /blog/threads -- Long-form essays on technology, AI, economics, and systems thinking
+- /blog/bits2bricks -- Technical tutorials bridging software and physical engineering
+
+## Projects
+
+${llmsListing('projects')}
+
+## Threads (Essays)
+
+${llmsListing('threads')}
+
+## Bits2Bricks (Tutorials)
+
+${llmsListing('bits2bricks')}
+
+## Second Brain (Knowledge Graph)
+
+${linkedFieldnotePosts.length}+ atomic concept notes covering machine learning, hardware architecture, blockchain, distributed systems, and optimization. Each note is one concept with bidirectional wiki-links. The graph reveals structural relationships between domains. Explorable at /lab/second-brain and /lab/second-brain/graph.
+
+## Contact
+
+- Email: contact@infraphysics.net
+- GitHub: https://github.com/yago-mendoza
+- LinkedIn: https://linkedin.com/in/yago-mendoza
+- X: https://x.com/ymdatweets
+`;
+fs.writeFileSync(LLMS_FILE, llmsContent);
+
 console.log(`Generated ${linkedRegularPosts.length} posts → ${OUTPUT_FILE}`);
 console.log(`Generated ${linkedFieldnotePosts.length} fieldnotes → ${FIELDNOTES_INDEX_FILE} + public/fieldnotes/`);
 console.log(`Generated ${Object.keys(categories).length} categories → ${CATEGORIES_OUTPUT}`);

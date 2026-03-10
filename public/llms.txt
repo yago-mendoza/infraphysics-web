@@ -13,40 +13,44 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 - /home -- Landing page and navigation hub
 - /about -- Background, beliefs, and expertise areas
 - /lab/projects -- Engineering projects with technical deep-dives
-- /lab/second-brain -- Knowledge graph of 300+ interconnected concept notes
+- /lab/second-brain -- Knowledge graph of 434+ interconnected concept notes
 - /lab/second-brain/graph -- Visual graph explorer
 - /blog/threads -- Long-form essays on technology, AI, economics, and systems thinking
 - /blog/bits2bricks -- Technical tutorials bridging software and physical engineering
 
 ## Projects
 
-- [InfraPhysics Web](https://infraphysics.net/lab/projects/infraphysics-web): How a systems engineer built a personal site with a custom markdown compiler, a second brain, and an AI development partnership. React + TypeScript + Vite + Shiki.
-- [FinBoard](https://infraphysics.net/lab/projects/finboard): A vanilla JS investment dashboard built in one session with Claude. No framework, no build step, no npm install. MRP algorithm that reconstructs 50 months of cash flows from transaction records.
+- [Infraphysics — building a website that thinks](https://infraphysics.net/lab/projects/infraphysics-web): How a systems engineer built a personal site with a custom markdown compiler, a second brain, and an AI development partner — and what went wrong along the way.
+- [FinBoard — a personal finance dashboard that shouldn't exist](https://infraphysics.net/lab/projects/finboard): A vanilla JS investment dashboard built in one session with Claude 4.6. No framework, no build step, no npm install. Just a folder you double-click.
 
 ## Threads (Essays)
 
-- [Transformers and the Data Wall](https://infraphysics.net/blog/threads/transformers-and-the-data-wall): Why the transformer architecture refuses to stop getting smarter -- and what stands in its way. Scaling laws, Chinchilla findings, text-data ceiling at 10-20T tokens.
-- [Everything Is a Pipe](https://infraphysics.net/blog/threads/everything-is-a-pipe): Roman aqueducts, your bloodstream, and TCP/IP all solved the same problem. None of them knew about the others. Cross-domain flow-control mathematics.
-- [Why Rust Exists](https://infraphysics.net/blog/threads/why-rust-exists): Ownership, borrowing, and the compiler that won't let you hurt yourself. Memory safety as constraint-based design -- borrow checker eliminates 70% of CVEs in C/C++ codebases.
-- [Alignment Is Not a Vibe Check](https://infraphysics.net/blog/threads/8888777): The field went from 'teach it to be nice' to 'it learned to pretend.' RLHF, Constitutional AI, deceptive alignment, Superalignment team collapse.
-- [OpenClaw and the Keys to Your Kingdom](https://infraphysics.net/blog/threads/openclaw-and-the-keys-to-your-kingdom): An AI agent with full access to your computer sounds amazing until you think about it for five minutes. Security model of autonomous AI agents.
-- [The Number Nobody Is Watching](https://infraphysics.net/blog/threads/the-number-nobody-is-watching): OpenAI tested whether their models can hide their chain-of-thought from safety monitors. 15.4% steganographic success rate -- the most important number in AI safety.
-- [The Brain Can't Do Backpropagation](https://infraphysics.net/blog/threads/brain-vs-backprop): The algorithm behind every neural network requires something the brain physically cannot do. Predictive coding as biological alternative. 20 watts, no conductor, no freezing.
-- [The Paperclip You Already Are](https://infraphysics.net/blog/threads/the-paperclip-you-already-are): Reward hacking isn't an AI problem. It's a human one. GDP up but rent unaffordable, likes up but friendship down. Goodhart's Law applied to human behavior.
-- [Everybody Has an Opinion on AI](https://infraphysics.net/blog/threads/everybody-has-an-opinion-on-ai): The real AI bubble isn't in the stocks. It's in the takes.
-- [Collect Everything](https://infraphysics.net/blog/threads/collect-everything): Obsidian, Notion, Anki, a Drive folder that became sentient. The real problem was never the tool.
-- [The Bitter Lesson](https://infraphysics.net/blog/threads/the-bitter-lesson): In 2019 I built an NLP tool during two weeks. That same year Sutton explained why I was wrong. General methods that leverage computation always win.
-- [What's AI](https://infraphysics.net/blog/threads/whats-ai): Nodes, weights, connections -- words that feel technical but explain nothing. Most people still think these systems consume information like humans do.
+- [Trabajar con IA engancha.](https://infraphysics.net/blog/threads/2387542): Dopamina, backlog, y un ciclo de recompensa que no para.
+- [We Solved Alignment. For Paperclips.](https://infraphysics.net/blog/threads/3392058): Goodhart's law, reward hacking, and the optimizer you already are.
+- [Caparazón de silicio](https://infraphysics.net/blog/threads/7270022): Presiones evolutivas, capital, y un animal que no para de crecer.
+- [I've spent years trying not to lose myself and I almost pulled it off.](https://infraphysics.net/blog/threads/2929333): Obsidian, Notion, Anki, and the archive that might actually pay off.
+- [Why nobody actually understands AI (and how to fix that in one thread)](https://infraphysics.net/blog/threads/6029417): Nodes, weights, training — and the intuition gap that makes people say nonsense.
+- [The brain can't do backpropagation. So what is it doing?](https://infraphysics.net/blog/threads/8305244): Backpropagation, Hebbian plasticity, and a fundamental mismatch.
+- [The Bitter Lesson](https://infraphysics.net/blog/threads/9150483): Computación bruta, diseño humano, y setenta años de lecciones ignoradas.
+- [15.4%](https://infraphysics.net/blog/threads/9962668): Scheming benchmarks, chain-of-thought opacity, and a number going up.
+- [Every time we think we've found the ceiling, the ceiling leaves.](https://infraphysics.net/blog/threads/6616933): Prediction, acceleration, and a ceiling that keeps leaving.
+- [Everybody has an opinion on AI](https://infraphysics.net/blog/threads/1147290): Hype, uninformed takes, and the real AI bubble.
+- [OpenClaw and the keys to your kingdom](https://infraphysics.net/blog/threads/5528103): AI agents, system access, and a trademark claim that backfired.
+- [Alignment is not a vibe check](https://infraphysics.net/blog/threads/8888777): Interpretability, RLHF, and a safety problem with no clean edges.
+- [why rust exists](https://infraphysics.net/blog/threads/4419076): Ownership, borrowing, and the compiler that won't let you cheat.
+- [Everything is a pipe](https://infraphysics.net/blog/threads/7733621): Aqueducts, bloodstreams, TCP/IP. Same pattern, same solution.
+- [Is there a wall for AI?](https://infraphysics.net/blog/threads/3841205): Attention, scaling laws, and an architecture that won't plateau.
 
 ## Bits2Bricks (Tutorials)
 
-- [How LLMs Learn](https://infraphysics.net/blog/bits2bricks/training-llms): A ground-up explanation of how language models are trained after pretraining -- SFT, DPO, RL, RLHF, reward hacking, KL divergence. Why RL discovers strategies that supervised learning cannot.
-- [Transformers from Scratch](https://infraphysics.net/blog/bits2bricks/transformers-from-scratch): Complete walkthrough -- tokens, embeddings, attention, MLPs, positional encoding, KV cache. How tokens become predictions.
-- [OpenClaw Containment Playbook](https://infraphysics.net/blog/bits2bricks/openclaw-containment-playbook): Security-first deployment for autonomous AI agents, ranked by effort vs. protection. Step-by-step guide using containers, VMs, network segmentation, and cloud deployment.
+- [How LLMs learn](https://infraphysics.net/blog/bits2bricks/training-llms): A ground-up explanation of how language models are trained after pretraining — SFT, DPO, RL, RLHF, reward hacking, KL divergence, and the DeepSeek-R1 pipeline.
+- [Transformers from scratch](https://infraphysics.net/blog/bits2bricks/transformers-from-scratch): A patient, ground-up explanation of transformer architecture — how tokens become predictions, what attention really computes, where facts live, and why it all scales.
+- [OpenClaw containment playbook](https://infraphysics.net/blog/bits2bricks/openclaw-containment-playbook): Step-by-step guide to running OpenClaw safely using containers, VMs, network segmentation, and cloud deployment. Every technique ranked by effort and protection.
+- [custom syntax pcb](https://infraphysics.net/blog/bits2bricks/custom-syntax-pcb): bridging markup syntax and hardware notation.
 
 ## Second Brain (Knowledge Graph)
 
-300+ atomic concept notes covering machine learning, hardware architecture, blockchain, distributed systems, and optimization. Each note is one concept with bidirectional wiki-links. The graph reveals structural relationships between domains. Explorable at /lab/second-brain and /lab/second-brain/graph.
+434+ atomic concept notes covering machine learning, hardware architecture, blockchain, distributed systems, and optimization. Each note is one concept with bidirectional wiki-links. The graph reveals structural relationships between domains. Explorable at /lab/second-brain and /lab/second-brain/graph.
 
 ## Contact
 
