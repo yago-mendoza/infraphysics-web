@@ -301,7 +301,7 @@ Then **centrality bars** — tiny inline indicators showing how connected each n
 
 ## The graph
 
-The force-directed graph was originally a visual flex. I'll be honest about that. I'd been playing with [[threads/everything-is-a-pipe|graph visualization libraries]] for years without going anywhere, because I didn't have enough structured data to make it interesting. Now I do.
+The force-directed graph was originally a visual flex. I'll be honest about that. I'd been playing with [[threads/7733621|graph visualization libraries]] for years without going anywhere, because I didn't have enough structured data to make it interesting. Now I do.
 
 But here's what I didn't expect: **I actually use it.** Not every day, but regularly. The graph shows you the shape of your thinking. Three clusters are immediately visible — hardware, machine learning, and blockchain — with bridges between them. The isolated nodes are obvious. The over-connected hubs are obvious. And sometimes you see a connection you didn't know was there, because two notes reference the same concept from completely different domains.
 

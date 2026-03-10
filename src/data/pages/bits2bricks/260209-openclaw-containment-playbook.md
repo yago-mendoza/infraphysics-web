@@ -10,7 +10,7 @@ description: "Step-by-step guide to running OpenClaw safely using containers, VM
 lead: "Three days testing every containment setup I could find. This is what survived."
 tags: [ai, security, docker, networking, agents, openclaw, devops]
 complexity: 5
-related: [openclaw-and-the-keys-to-your-kingdom]
+related: ["5528103"]
 ---
 
 >> 26.02.09 - spent three days trying every containment setup I could find for OpenClaw. this is what worked, what didn't, and what I actually ended up using.
