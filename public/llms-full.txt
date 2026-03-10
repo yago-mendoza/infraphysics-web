@@ -1426,6 +1426,9 @@ Building the tree view for browsing the hierarchy was the moment the project cro
 
 The 2D graph uses react-force-graph-2d. The 3D version uses react-force-graph-3d with Three.js. Both read from the same pre-computed relevance data. Neither is architecturally complex — the hard part was having clean graph data, and the Second Brain already provides that.
 
+26 · mar 10(2d later)
+added area selection mode to the graph. hold Shift and drag to draw a rectangle — every node inside gets selected (cyan highlight). Ctrl/Cmd+click adds individual nodes. the selection prompt shows the count and names, plus a "Copy structured context" button that dumps the selected notes as structured text for Claude. also added subgraph isolation: select a cluster, hit "Isolate cluster", and the graph filters to only those nodes and their internal connections. the background switches to a subtle violet dot grid to signal you're in a subgraph. breadcrumb navigation at the top-right lets you drill deeper (area-select within a subgraph) or step back. each level preserves its state. the idea is that the graph should be a workspace, not just a visualization — you should be able to isolate a region of your knowledge, study its internal structure, and navigate back without losing context.
+
 The editor
 
 This part escalated.
@@ -1518,6 +1521,13 @@ English and Spanish. The threads in Spanish are for my circle — friends, famil
 1Spanish for someone who makes complex topics accessible. "Science communicator" is close but too formal. "Explainer" is too casual. Divulgador is the right word, and it doesn't have an English equivalent.
 
 Deployment. Cloudflare Pages, connected to the repo, auto-deploys on push. Chose it over Vercel and Netlify because the R2 + KV + Workers ecosystem meant I could keep images, counters, and edge functions in one platform. Setup was boring. Boring is good for deployment.
+
+Crawlers and AEO. This is an SPA -- crawlers see an empty <div id="root"> unless you do something about it. The solution is a Cloudflare edge function that intercepts bot requests and injects the full page content (title, description, body text) as server-rendered HTML. The metadata lives in og-manifest.json, auto-generated at build time from every post and fieldnote.
+
+For LLM crawlers specifically, there are two files. llms-full.txt dumps every published article as plain text -- auto-generated, exhaustive, zero maintenance. llms.txt is the summary: site structure, curated intro, and article listings. It used to be manually maintained, which meant it was permanently out of sync. Now both files auto-generate from the same build pipeline that produces the sitemap and RSS feed. One npm run build and everything updates: Open Graph manifest, sitemap, RSS, llms.txt, llms-full.txt. No human memory required.
+
+26 · mar 10(2d later)
+llms.txt was manually maintained for weeks. every new article required editing it by hand, and it was already out of sync when I checked. moved it to auto-generation in the build pipeline. the fieldnote count, the article listings, the URLs -- all derived from the same source of truth now. one less thing to forget.
 
 9. What this is really about
 
