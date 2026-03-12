@@ -1,7 +1,7 @@
 ---
 uid: "hjMUh5ut"
-address: "semiconductor"
-name: "Semiconductor"
+address: "electronics//semiconductor"
+name: "semiconductor"
 date: "2026-02-06"
 ---
 - Material whose electrical conductivity falls between a conductor and an insulator — most commonly silicon.

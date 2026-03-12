@@ -1,6 +1,6 @@
 ---
 uid: "6YzJQiig"
-address: "ASIC"
+address: "electronics//ASIC"
 name: "ASIC"
 date: "2026-02-05"
 ---

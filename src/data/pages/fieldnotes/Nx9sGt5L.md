@@ -4,7 +4,7 @@ address: "Cloud//Cloudflare//Wrangler"
 name: "Wrangler"
 date: "2026-03-10"
 ---
->> 26.03.10 - building a CRM for a stealth startup at 2am. wrangler runs all of cloudflare on localhost. frontend, backend, db. one command. i mass years setting up express servers like a peasant. wrangler.toml + npx wrangler dev and you're done. the mass is real. sorry Eva, no climbing tomorrow.
+>> 26.03.10 - building a CRM at 2am. wrangler runs all of cloudflare on localhost. frontend, backend, db. i mass years setting up express servers like a peasant. wrangler.toml + npx wrangler dev and you're done.
 
 [[Hp5nVw9C|Cloudflare]]'s CLI tool. The bridge between your machine and Cloudflare: the same code that runs on `localhost:8788` is exactly what will run in production. Nothing to change.
 - Manages [[Lk2rXj6D|Workers]], [[Fs8tBm3G|Pages]], [[Wn4pCx7H|D1]], [[Zr6kDj2F|R2]], KV, and all other Cloudflare services from the terminal
