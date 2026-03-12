@@ -2446,7 +2446,7 @@ Most production pipelines use all three, not because more is better, but because
 
 ---
 
-## FinBoard — a personal finance dashboard that shouldn't exist
+## FinBoard — a personal finance dashboard for the crash
 
 URL: https://infraphysics.net/lab/projects/1112121
 Category: projects

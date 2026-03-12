@@ -21,7 +21,7 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 ## Projects
 
 - [Infraphysics — building a website that thinks](https://infraphysics.net/lab/projects/6184744): How a systems engineer built a personal site with a custom markdown compiler, a second brain, and an AI development partner — and what went wrong along the way.
-- [FinBoard — a personal finance dashboard that shouldn't exist](https://infraphysics.net/lab/projects/1112121): A vanilla JS investment dashboard built in one session with Claude 4.6. No framework, no build step, no npm install. Just a folder you double-click.
+- [FinBoard — a personal finance dashboard for the crash](https://infraphysics.net/lab/projects/1112121): A vanilla JS investment dashboard built in one session with Claude 4.6. No framework, no build step, no npm install. Just a folder you double-click.
 
 ## Threads (Essays)
 
