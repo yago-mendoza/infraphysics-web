@@ -89,11 +89,11 @@ Content flows between sections without repeating itself. When a topic spans mult
 
 | What you're connecting | Tool | Pattern |
 |---|---|---|
-| Article → companion in another category | Cross-doc link | `[[bits2bricks/slug\|display text]]` or `[[threads/slug\|display text]]` |
+| Article → companion in another category | Cross-doc link | `[[bits2bricks/id\|display text]]` or `[[threads/id\|display text]]` |
 | Article → atomic concept | Wiki-link | `[[concept]]` or `[[parent//child]]` |
 | Inline definition of a term | Inline footnote | `^[brief explanation of what it means]` |
 | Brief theory aside (3+ sentences) | Typed blockquote | `{bkqt/keyconcept\|label}...{/bkqt}` or `{bkqt/note\|label}...{/bkqt}` |
-| Post-publication update with cross-ref | Context annotation | `>> 26.03.10 - built this into a prototype: [[projects/slug\|link]]` |
+| Post-publication update with cross-ref | Context annotation | `>> 26.03.10 - built this into a prototype: [[projects/id\|link]]` |
 
 **Bidirectional bridges.** When a thread has a bits2bricks companion, both articles should link to each other. The thread points readers to the companion for technical depth ("for the full technical playbook, see..."). The bits2bricks opens by referencing the thread for narrative context ("companion piece to..., which explains why this matters"). Same pattern applies between projects and bits2bricks.
 
@@ -161,7 +161,7 @@ raw markdown
 
 Two additional passes run on the combined output of ALL files (not per-file):
 
-- **`processAllLinks`** — resolves `[[wiki-refs]]`, `[[category/slug|text]]` cross-doc links, and unresolved markers. Runs on every post every build because link targets change when notes are added/removed. Protected by `processOutsideCode` which shields `<pre>` and `<code>` segments.
+- **`processAllLinks`** — resolves `[[wiki-refs]]`, `[[category/id|text]]` cross-doc links, and unresolved markers. Runs on every post every build because link targets change when notes are added/removed. Protected by `processOutsideCode` which shields `<pre>` and `<code>` segments.
 - **`processAnnotations`** — converts `^[explanation]` inline footnotes into numbered markers + annotation blocks. Works inside `<p>`, `<li>`, and `<td>` elements. Also protected by `processOutsideCode`.
 
 ### Build outputs

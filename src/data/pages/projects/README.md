@@ -8,46 +8,59 @@ For syntax features, see **[SYNTAX.md](../SYNTAX.md)**. For general authoring ru
 
 ### Frontmatter
 
-Every project article starts with a YAML frontmatter block. Prefix filenames with `YYMMDD-` for chronological sorting (e.g. `260121-infraphysics-web.md`). The `id` field determines URLs — the filename is only for directory organization.
+Every project article starts with a YAML frontmatter block. Filenames use `YYMMDD-{id}.md` where `{id}` is the 7-digit numeric ID (e.g. `260121-6184744.md`). The `id` field determines URLs — the filename is only for directory organization.
+
+Projects have the most category-specific fields: `status`, `technologies`, `github`, `demo`, `caseStudy`, `duration`.
 
 | Field | Required | Type | What it does |
 |---|---|---|---|
-| `id` | yes | string | Unique slug used in URLs and as the primary key. |
+| `id` | yes | string | **7-digit numeric ID**, quoted (`"6184744"`). Same number as in the filename. Used in URLs (`/lab/projects/6184744`) and as the primary key. |
 | `displayTitle` | no | string | Human-readable title shown in UI. Falls back to `id`. |
 | `category` | yes | string | Must be `projects`. |
-| `date` | yes | string | ISO 8601 (`YYYY-MM-DD`). When the project was finished or published. |
+| `date` | yes | string | ISO 8601 (`YYYY-MM-DD`), quoted. When the project was finished or published. |
 | `description` | yes | string | One-liner for cards and meta tags. |
-| `thumbnail` | no | string | Hero image URL. Prefer Cloudflare R2 or Unsplash. |
+| `thumbnail` | no | string | Hero image URL. Prefer Cloudflare R2 (`cdn.infraphysics.net`). |
 | `thumbnailAspect` | no | string | Crop ratio: `full` (default), `wide` (16/7), `banner` (16/4), `strip` (16/2). |
 | `thumbnailShading` | no | string | Overlay: `heavy`, `light`, `none` (default). |
-| `tags` | no | string[] | Topic tags for filter system. `[tag1, tag2]`. |
 | `subtitle` | no | string | Below the title in the article header. |
-| `related` | no | string[] | Post IDs for the "Related" section. |
+| `tags` | no | string[] | Topic tags for filter system. `[tag1, tag2]`. |
+| `complexity` | no | number | Difficulty rating (1–10). Used for sorting/filtering. |
 | `featured` | no | boolean | Shows in "Latest Work" on home page. |
 | `tldr` | no | string/string[] | Key takeaway lines in the header area. |
-| `author` | no | string | Defaults to `Yago Mendoza`. |
+| `related` | no | string[] | Post IDs (quoted numerics) for the "Related" section. |
 | `status` | no | string | Lifecycle badge. Values: `ongoing` (violet), `deployed` (green), `completed` (blue), `arrested` (red). Defined in `STATUS_CONFIG` (`config/categories.tsx`). |
 | `technologies` | no | string[] | Tech stack pills in the header. `[TypeScript, React, Vite]`. |
 | `github` | no | string | GitHub repo URL. Renders a clickable link in the header. |
 | `demo` | no | string | Live demo URL. Same treatment as `github`. |
 | `caseStudy` | no | string | External case study URL. |
 | `duration` | no | string | Free-form duration (e.g. `4 weeks`, `ongoing`). |
+| `author` | no | string | Defaults to `Yago Mendoza`. |
+
+**Not used in projects:** `lang`, `lead`, `hidden`.
 
 **Example:**
 
 ```yaml
 ---
-id: neural-cellular-automata
-displayTitle: neural cellular automata
+id: "6184744"
+displayTitle: "Infraphysics — building a website that thinks"
+subtitle: "or: how a folder of messy notes became a knowledge graph"
 category: projects
-date: 2024-06-15
-thumbnail: https://pub-xxx.r2.dev/nca-hero.webp
-description: self-organizing patterns via learned update rules.
+date: "2026-03-08"
+thumbnail: https://cdn.infraphysics.net/6184744-banner.png
+thumbnailAspect: wide
+thumbnailShading: heavy
+description: "How a systems engineer built a personal site with a custom markdown compiler."
 status: ongoing
-technologies: [TypeScript, WebGL, React]
-github: https://github.com/user/nca
-tags: [simulation, graphics, ml]
-related: [quantum-interference-visualizer]
+tags: [React, Vite, Markdown, Second Brain]
+complexity: 4
+technologies: [React, TypeScript, Vite, Tailwind CSS]
+github: https://github.com/yago-mendoza/infraphysics-web
+featured: true
+tldr:
+  - This is the website you're reading right now.
+  - The interesting part is the Second Brain.
+related: ["1112121"]
 ---
 ```
 

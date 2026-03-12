@@ -8,39 +8,47 @@ For syntax features, see **[SYNTAX.md](../SYNTAX.md)**. For general authoring ru
 
 ### Frontmatter
 
-Every bits2bricks article starts with a YAML frontmatter block. Prefix filenames with `YYMMDD-` for chronological sorting (e.g. `250130-custom-syntax-pcb.md`). The `id` field determines URLs — the filename is only for directory organization.
+Every bits2bricks article starts with a YAML frontmatter block. Filenames use `YYMMDD-{id}.md` where `{id}` is the 7-digit numeric ID (e.g. `260308-5917362.md`). The `id` field determines URLs — the filename is only for directory organization.
 
-Bits2Bricks use only universal fields — no category-specific extras.
+Bits2Bricks use universal fields plus `complexity`. No other category-specific extras.
 
 | Field | Required | Type | What it does |
 |---|---|---|---|
-| `id` | yes | string | Unique slug used in URLs and as the primary key. |
+| `id` | yes | string | **7-digit numeric ID**, quoted (`"5917362"`). Same number as in the filename. Used in URLs (`/blog/bits2bricks/5917362`) and as the primary key. |
 | `displayTitle` | no | string | Human-readable title shown in UI. Falls back to `id`. |
 | `category` | yes | string | Must be `bits2bricks`. |
-| `date` | yes | string | ISO 8601 (`YYYY-MM-DD`). Publication date. |
+| `date` | yes | string | ISO 8601 (`YYYY-MM-DD`), quoted. Publication date. |
 | `description` | yes | string | One-liner for cards and meta tags. |
-| `thumbnail` | no | string | Hero image URL. Prefer Cloudflare R2 or Unsplash. |
+| `thumbnail` | no | string | Hero image URL. Prefer Cloudflare R2 (`cdn.infraphysics.net`). |
 | `thumbnailAspect` | no | string | Crop ratio: `full` (default), `wide` (16/7), `banner` (16/4), `strip` (16/2). |
 | `thumbnailShading` | no | string | Overlay: `heavy`, `light`, `none` (default). |
 | `tags` | no | string[] | Topic tags for filter system. `[tag1, tag2]`. |
 | `subtitle` | no | string | Below the title in the article header. |
-| `related` | no | string[] | Post IDs for the "Related" section. |
+| `related` | no | string[] | Post IDs (quoted numerics) for the "Related" section. |
 | `featured` | no | boolean | Shows in "Latest Work" on home page. |
 | `tldr` | no | string/string[] | Key takeaway lines in the header area. |
+| `complexity` | no | number | Difficulty rating (1–10). Used for sorting/filtering. |
 | `author` | no | string | Defaults to `Yago Mendoza`. |
 
 **Example:**
 
 ```yaml
 ---
-id: fpga-uart-controller
-displayTitle: FPGA UART controller
+id: "5917362"
+displayTitle: "Transformers from scratch"
 category: bits2bricks
-date: 2024-08-01
-thumbnail: https://pub-xxx.r2.dev/fpga-hero.webp
-thumbnailAspect: banner
-description: hardware serial communication from scratch.
-tags: [fpga, verilog, hardware]
+date: "2026-02-07"
+thumbnail: https://cdn.infraphysics.net/5917362-banner.jpg
+thumbnailAspect: wide
+thumbnailShading: heavy
+description: "A patient, ground-up explanation of transformer architecture."
+tags: [ai, transformers, deep-learning]
+complexity: 8
+featured: true
+tldr:
+  - First takeaway line.
+  - Second takeaway line.
+related: ["4028591"]
 ---
 ```
 

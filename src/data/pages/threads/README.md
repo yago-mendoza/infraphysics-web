@@ -8,40 +8,49 @@ For syntax features, see **[SYNTAX.md](../SYNTAX.md)**. For general authoring ru
 
 ### Frontmatter
 
-Every thread starts with a YAML frontmatter block. Prefix filenames with `YYMMDD-` for chronological sorting (e.g. `260206-alignment-is-not-a-vibe-check.md`). The `id` field determines URLs — the filename is only for directory organization.
+Every thread starts with a YAML frontmatter block. Filenames use `YYMMDD-{id}.md` where `{id}` is the 7-digit numeric ID (e.g. `260207-5528103.md`). The `id` field determines URLs — the filename is only for directory organization.
 
-Threads use only universal fields — no category-specific extras.
+Threads have several category-specific fields: `lang`, `lead`, `hidden`, and `complexity`.
 
 | Field | Required | Type | What it does |
 |---|---|---|---|
-| `id` | yes | string | Unique slug used in URLs and as the primary key. |
+| `id` | yes | string | **7-digit numeric ID**, quoted (`"5528103"`). Same number as in the filename. Used in URLs (`/blog/threads/5528103`) and as the primary key. |
 | `displayTitle` | no | string | Human-readable title shown in UI. Falls back to `id`. |
 | `category` | yes | string | Must be `threads`. |
-| `date` | yes | string | ISO 8601 (`YYYY-MM-DD`). Publication date. |
-| `description` | yes | string | One-liner for cards and meta tags. |
-| `thumbnail` | no | string | Hero image URL. Prefer Cloudflare R2 or Unsplash. |
+| `date` | yes | string | ISO 8601 (`YYYY-MM-DD`), quoted. Publication date. |
+| `lang` | no | string | Language code (`en`, `es`). Defaults to `en`. Non-English threads show a small language chip on the card. |
+| `thumbnail` | no | string | Hero image URL. Prefer Cloudflare R2 (`cdn.infraphysics.net`) or Unsplash. |
 | `thumbnailAspect` | no | string | Crop ratio: `full` (default), `wide` (16/7), `banner` (16/4), `strip` (16/2). |
 | `thumbnailShading` | no | string | Overlay: `heavy`, `light`, `none` (default). |
-| `tags` | no | string[] | Topic tags for filter system. `[tag1, tag2]`. |
 | `subtitle` | no | string | Below the title in the article header. |
-| `related` | no | string[] | Post IDs for the "Related" section. |
+| `lead` | no | string | Extended intro paragraph shown on the thread page. Longer than `description` — this is the hook, the editorial voice. Not used in cards or meta tags. |
+| `tags` | no | string[] | Topic tags for filter system. `[tag1, tag2]`. |
+| `complexity` | no | number | Difficulty rating (1–10). Used for sorting/filtering. |
 | `featured` | no | boolean | Shows in "Latest Work" on home page. |
-| `tldr` | no | string/string[] | Key takeaway lines in the header area. |
+| `related` | no | string[] | Post IDs (quoted numerics) for the "Related" section. |
+| `hidden` | no | boolean | If `true`, thread is excluded from listings. Defaults to `false`. |
 | `author` | no | string | Defaults to `Yago Mendoza`. |
-| `lang` | no | string | Language code (`en`, `es`). Defaults to `en`. Non-English threads show a small language chip on the card. |
+
+**Not used in threads:** `description` (threads use `lead` instead), `tldr`, `status`, `technologies`, `github`, `demo`.
 
 **Example:**
 
 ```yaml
 ---
-id: entropy-and-software-decay
-displayTitle: entropy and software decay
+id: "5528103"
+displayTitle: "OpenClaw and the keys to your kingdom"
 category: threads
-date: 2024-01-10
-thumbnail: https://images.unsplash.com/photo-xxx
-description: why code rots without maintenance.
-tags: [physics, systems, maintenance]
+date: "2026-02-07"
+lang: en
+thumbnail: https://cdn.infraphysics.net/5528103-banner.jpg
+thumbnailAspect: wide
+subtitle: "AI agents, system access, and a trademark claim that backfired."
+lead: "An AI agent with full access to your computer sounds amazing until you think about it for five minutes."
+tags: [ai, security, agents]
+complexity: 4
 featured: true
+related: ["7463810", "8888777"]
+hidden: false
 ---
 ```
 
