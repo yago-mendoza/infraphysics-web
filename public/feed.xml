@@ -7,75 +7,19 @@
     <language>en</language>
     <atom:link href="https://infraphysics.net/feed.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Trabajar con IA engancha.</title>
-      <link>https://infraphysics.net/blog/threads/2387542</link>
-      <guid>https://infraphysics.net/blog/threads/2387542</guid>
-      <pubDate>Fri, 03 Jul 2026 00:00:00 GMT</pubDate>
-      <description>Dopamina, backlog, y un ciclo de recompensa que no para.</description>
-      <category>threads</category>
-    </item>
-    <item>
-      <title>How LLMs learn</title>
-      <link>https://infraphysics.net/blog/bits2bricks/training-llms</link>
-      <guid>https://infraphysics.net/blog/bits2bricks/training-llms</guid>
-      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
-      <description>A ground-up explanation of how language models are trained after pretraining — SFT, DPO, RL, RLHF, reward hacking, KL divergence, and the DeepSeek-R1 pipeline.</description>
-      <category>bits2bricks</category>
-    </item>
-    <item>
-      <title>Transformers from scratch</title>
-      <link>https://infraphysics.net/blog/bits2bricks/transformers-from-scratch</link>
-      <guid>https://infraphysics.net/blog/bits2bricks/transformers-from-scratch</guid>
-      <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
-      <description>A patient, ground-up explanation of transformer architecture — how tokens become predictions, what attention really computes, where facts live, and why it all scales.</description>
-      <category>bits2bricks</category>
-    </item>
-    <item>
       <title>Infraphysics — building a website that thinks</title>
-      <link>https://infraphysics.net/lab/projects/infraphysics-web</link>
-      <guid>https://infraphysics.net/lab/projects/infraphysics-web</guid>
+      <link>https://infraphysics.net/lab/projects/6184744</link>
+      <guid>https://infraphysics.net/lab/projects/6184744</guid>
       <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
       <description>How a systems engineer built a personal site with a custom markdown compiler, a second brain, and an AI development partner — and what went wrong along the way.</description>
       <category>projects</category>
     </item>
     <item>
-      <title>We Solved Alignment. For Paperclips.</title>
-      <link>https://infraphysics.net/blog/threads/3392058</link>
-      <guid>https://infraphysics.net/blog/threads/3392058</guid>
-      <pubDate>Sat, 07 Mar 2026 00:00:00 GMT</pubDate>
-      <description>Goodhart's law, reward hacking, and the optimizer you already are.</description>
-      <category>threads</category>
-    </item>
-    <item>
-      <title>Caparazón de silicio</title>
-      <link>https://infraphysics.net/blog/threads/7270022</link>
-      <guid>https://infraphysics.net/blog/threads/7270022</guid>
-      <pubDate>Sat, 07 Mar 2026 00:00:00 GMT</pubDate>
-      <description>Presiones evolutivas, capital, y un animal que no para de crecer.</description>
-      <category>threads</category>
-    </item>
-    <item>
-      <title>I've spent years trying not to lose myself and I almost pulled it off.</title>
+      <title>The palest ink is better than the best memory</title>
       <link>https://infraphysics.net/blog/threads/2929333</link>
       <guid>https://infraphysics.net/blog/threads/2929333</guid>
       <pubDate>Fri, 06 Mar 2026 00:00:00 GMT</pubDate>
-      <description>Obsidian, Notion, Anki, and the archive that might actually pay off.</description>
-      <category>threads</category>
-    </item>
-    <item>
-      <title>Why nobody actually understands AI (and how to fix that in one thread)</title>
-      <link>https://infraphysics.net/blog/threads/6029417</link>
-      <guid>https://infraphysics.net/blog/threads/6029417</guid>
-      <pubDate>Fri, 06 Mar 2026 00:00:00 GMT</pubDate>
-      <description>Nodes, weights, training — and the intuition gap that makes people say nonsense.</description>
-      <category>threads</category>
-    </item>
-    <item>
-      <title>The brain can't do backpropagation. So what is it doing?</title>
-      <link>https://infraphysics.net/blog/threads/8305244</link>
-      <guid>https://infraphysics.net/blog/threads/8305244</guid>
-      <pubDate>Fri, 06 Mar 2026 00:00:00 GMT</pubDate>
-      <description>Backpropagation, Hebbian plasticity, and a fundamental mismatch.</description>
+      <description>Your mind is for having ideas, not holding them.</description>
       <category>threads</category>
     </item>
     <item>
@@ -83,7 +27,7 @@
       <link>https://infraphysics.net/blog/threads/9150483</link>
       <guid>https://infraphysics.net/blog/threads/9150483</guid>
       <pubDate>Fri, 06 Mar 2026 00:00:00 GMT</pubDate>
-      <description>Computación bruta, diseño humano, y setenta años de lecciones ignoradas.</description>
+      <description>Brute computation, human design, and seventy years of ignored lessons.</description>
       <category>threads</category>
     </item>
     <item>
@@ -103,19 +47,43 @@
       <category>threads</category>
     </item>
     <item>
+      <title>The complete OpenClaw playbook</title>
+      <link>https://infraphysics.net/blog/bits2bricks/7463810</link>
+      <guid>https://infraphysics.net/blog/bits2bricks/7463810</guid>
+      <pubDate>Sun, 01 Mar 2026 00:00:00 GMT</pubDate>
+      <description>The full OpenClaw stack: architecture, VPS deployment, skills, channels, security, and every containment technique ranked by effort and protection.</description>
+      <category>bits2bricks</category>
+    </item>
+    <item>
+      <title>Alignment is not a vibe check</title>
+      <link>https://infraphysics.net/blog/threads/8888777</link>
+      <guid>https://infraphysics.net/blog/threads/8888777</guid>
+      <pubDate>Mon, 16 Feb 2026 00:00:00 GMT</pubDate>
+      <description>If you're not concerned about AI safety, you're not paying attention.</description>
+      <category>threads</category>
+    </item>
+    <item>
+      <title>How LLMs learn</title>
+      <link>https://infraphysics.net/blog/bits2bricks/4028591</link>
+      <guid>https://infraphysics.net/blog/bits2bricks/4028591</guid>
+      <pubDate>Sun, 15 Feb 2026 00:00:00 GMT</pubDate>
+      <description>A ground-up explanation of how language models are trained after pretraining — SFT, DPO, RL, RLHF, reward hacking, KL divergence, and the DeepSeek-R1 pipeline.</description>
+      <category>bits2bricks</category>
+    </item>
+    <item>
       <title>FinBoard — a personal finance dashboard that shouldn't exist</title>
-      <link>https://infraphysics.net/lab/projects/finboard</link>
-      <guid>https://infraphysics.net/lab/projects/finboard</guid>
+      <link>https://infraphysics.net/lab/projects/1112121</link>
+      <guid>https://infraphysics.net/lab/projects/1112121</guid>
       <pubDate>Fri, 13 Feb 2026 00:00:00 GMT</pubDate>
       <description>A vanilla JS investment dashboard built in one session with Claude 4.6. No framework, no build step, no npm install. Just a folder you double-click.</description>
       <category>projects</category>
     </item>
     <item>
-      <title>OpenClaw containment playbook</title>
-      <link>https://infraphysics.net/blog/bits2bricks/openclaw-containment-playbook</link>
-      <guid>https://infraphysics.net/blog/bits2bricks/openclaw-containment-playbook</guid>
+      <title>Claude Code from zero to production</title>
+      <link>https://infraphysics.net/blog/bits2bricks/7722440</link>
+      <guid>https://infraphysics.net/blog/bits2bricks/7722440</guid>
       <pubDate>Mon, 09 Feb 2026 00:00:00 GMT</pubDate>
-      <description>Step-by-step guide to running OpenClaw safely using containers, VMs, network segmentation, and cloud deployment. Every technique ranked by effort and protection.</description>
+      <description>The complete Claude Code stack: installation, CLAUDE.md, skills, hooks, permissions, MCP servers, agent teams, Cowork, UI tools, and the workflow that ties them together.</description>
       <category>bits2bricks</category>
     </item>
     <item>
@@ -127,6 +95,14 @@
       <category>threads</category>
     </item>
     <item>
+      <title>Transformers from scratch</title>
+      <link>https://infraphysics.net/blog/bits2bricks/5917362</link>
+      <guid>https://infraphysics.net/blog/bits2bricks/5917362</guid>
+      <pubDate>Sat, 07 Feb 2026 00:00:00 GMT</pubDate>
+      <description>A patient, ground-up explanation of transformer architecture — how tokens become predictions, what attention really computes, where facts live, and why it all scales.</description>
+      <category>bits2bricks</category>
+    </item>
+    <item>
       <title>OpenClaw and the keys to your kingdom</title>
       <link>https://infraphysics.net/blog/threads/5528103</link>
       <guid>https://infraphysics.net/blog/threads/5528103</guid>
@@ -135,15 +111,15 @@
       <category>threads</category>
     </item>
     <item>
-      <title>Alignment is not a vibe check</title>
-      <link>https://infraphysics.net/blog/threads/8888777</link>
-      <guid>https://infraphysics.net/blog/threads/8888777</guid>
-      <pubDate>Fri, 06 Feb 2026 00:00:00 GMT</pubDate>
-      <description>Interpretability, RLHF, and a safety problem with no clean edges.</description>
-      <category>threads</category>
+      <title>MCP before and after</title>
+      <link>https://infraphysics.net/blog/bits2bricks/6184729</link>
+      <guid>https://infraphysics.net/blog/bits2bricks/6184729</guid>
+      <pubDate>Thu, 05 Feb 2026 00:00:00 GMT</pubDate>
+      <description>The Model Context Protocol turned every external service into a tool call. Here's what changed, what broke, and what's coming next.</description>
+      <category>bits2bricks</category>
     </item>
     <item>
-      <title>why rust exists</title>
+      <title>Why Rust exists</title>
       <link>https://infraphysics.net/blog/threads/4419076</link>
       <guid>https://infraphysics.net/blog/threads/4419076</guid>
       <pubDate>Thu, 05 Feb 2026 00:00:00 GMT</pubDate>
@@ -163,16 +139,32 @@
       <link>https://infraphysics.net/blog/threads/3841205</link>
       <guid>https://infraphysics.net/blog/threads/3841205</guid>
       <pubDate>Tue, 03 Feb 2026 00:00:00 GMT</pubDate>
-      <description>Attention, scaling laws, and an architecture that won't plateau.</description>
+      <description>Scaling laws, broken ceilings, and a question that keeps answering itself.</description>
       <category>threads</category>
     </item>
     <item>
-      <title>custom syntax pcb</title>
-      <link>https://infraphysics.net/blog/bits2bricks/custom-syntax-pcb</link>
-      <guid>https://infraphysics.net/blog/bits2bricks/custom-syntax-pcb</guid>
-      <pubDate>Thu, 30 Jan 2025 00:00:00 GMT</pubDate>
-      <description>bridging markup syntax and hardware notation.</description>
-      <category>bits2bricks</category>
+      <title>Working with AI is addictive.</title>
+      <link>https://infraphysics.net/blog/threads/2387542</link>
+      <guid>https://infraphysics.net/blog/threads/2387542</guid>
+      <pubDate>Tue, 03 Feb 2026 00:00:00 GMT</pubDate>
+      <description>Dopamine, backlog, and a reward cycle that won't stop.</description>
+      <category>threads</category>
+    </item>
+    <item>
+      <title>Silicon shell</title>
+      <link>https://infraphysics.net/blog/threads/7270022</link>
+      <guid>https://infraphysics.net/blog/threads/7270022</guid>
+      <pubDate>Mon, 02 Feb 2026 00:00:00 GMT</pubDate>
+      <description>Evolutionary pressures, capital, and an animal that won't stop growing.</description>
+      <category>threads</category>
+    </item>
+    <item>
+      <title>Splitting the context window</title>
+      <link>https://infraphysics.net/blog/threads/4481937</link>
+      <guid>https://infraphysics.net/blog/threads/4481937</guid>
+      <pubDate>Sun, 01 Feb 2026 00:00:00 GMT</pubDate>
+      <description>Context windows, attention budgets, and why splitting work across specialized agents outperforms the monolith.</description>
+      <category>threads</category>
     </item>
   </channel>
 </rss>
