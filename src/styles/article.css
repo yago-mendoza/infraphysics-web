@@ -2171,11 +2171,21 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 .article-blog .article-content p,
 .article-blog .article-content li,
 .article-blog .article-content td,
+.article-blog .article-content .bkqt,
 .article-blog .article-content .bkqt-body,
+.article-blog .article-content ul li,
+.article-blog .article-content ol li,
+.article-blog .article-content ol[type="a"] li,
+.article-blog .article-content ol[type="A"] li,
 .article-threads .article-content p,
 .article-threads .article-content li,
 .article-threads .article-content td,
-.article-threads .article-content .bkqt-body {
+.article-threads .article-content .bkqt,
+.article-threads .article-content .bkqt-body,
+.article-threads .article-content ul li,
+.article-threads .article-content ol li,
+.article-threads .article-content ol[type="a"] li,
+.article-threads .article-content ol[type="A"] li {
   font-size: 1.05rem;
 }
 
@@ -2255,7 +2265,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 .article-threads .article-content .bkqt-label {
   display: block;
   font-family: var(--font-blog-body);
-  font-size: inherit;
+  font-size: 1.05rem;
   font-weight: 700;
   font-style: normal;
   text-transform: none;
@@ -2754,7 +2764,15 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
     line-height: 1.55;
   }
   .article-blog .article-content li,
-  .article-threads .article-content li {
+  .article-blog .article-content ul li,
+  .article-blog .article-content ol li,
+  .article-blog .article-content ol[type="a"] li,
+  .article-blog .article-content ol[type="A"] li,
+  .article-threads .article-content li,
+  .article-threads .article-content ul li,
+  .article-threads .article-content ol li,
+  .article-threads .article-content ol[type="a"] li,
+  .article-threads .article-content ol[type="A"] li {
     font-size: 1.05rem;
     line-height: 1.55;
   }
@@ -2840,7 +2858,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   /* Blockquote label — uniform across categories */
   .article-content .bkqt-label,
   .article-threads .article-content .bkqt-label {
-    font-size: 0.8rem;
+    font-size: 1rem;
   }
 
   /* Pullquote */
