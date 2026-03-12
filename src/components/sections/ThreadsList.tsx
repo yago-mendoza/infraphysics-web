@@ -14,54 +14,62 @@ export const ThreadsList: React.FC<SectionRendererProps> = ({ posts, query, getE
 
   /* ── Default: editorial card layout ── */
   return (
-    <div className="max-w-xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       {posts.map((post, index) => {
         return (
           <div key={post.id} className={`listing-card thread-card ${index < posts.length - 1 ? 'border-b border-th-border pb-8 mb-8' : ''}`}>
-            <div className="flex flex-col">
+            <div className="flex flex-col md:flex-row gap-6">
+              {/* Text — left */}
               <div className="flex-grow min-w-0">
                 {/* Date + stats + complexity */}
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="text-xs text-th-tertiary" style={{ fontFamily: "'Roboto Slab', Georgia, serif" }}>{formatDate(post.date)}</span>
-                    {(() => {
-                      const s = stats?.[postPath(post.category, post.id)];
-                      if (!s) return null;
-                      return (
-                        <>
-                          {s.views > 0 && <span className="inline-flex items-center gap-1 text-xs text-th-tertiary"><EyeIcon size={12} /> {s.views}</span>}
-                          {s.hearts > 0 && <span className="inline-flex items-center gap-1 text-xs text-th-tertiary"><HeartIcon size={12} /> {s.hearts}</span>}
-                        </>
-                      );
-                    })()}
-                  </div>
+                <div className="flex flex-wrap items-center gap-3 mb-3">
+                  <span className="text-sm text-th-tertiary" style={{ fontFamily: "'Roboto Slab', Georgia, serif" }}>{formatDate(post.date)}</span>
                   <ComplexityBar value={post.complexity} category={post.category} />
+                  {(() => {
+                    const s = stats?.[postPath(post.category, post.id)];
+                    if (!s) return null;
+                    return (
+                      <>
+                        {s.views > 0 && <span className="inline-flex items-center gap-1 text-xs text-th-tertiary"><EyeIcon size={12} /> {s.views}</span>}
+                        {s.hearts > 0 && <span className="inline-flex items-center gap-1 text-xs text-th-tertiary"><HeartIcon size={12} /> {s.hearts}</span>}
+                      </>
+                    );
+                  })()}
                 </div>
-
-                {/* Thumbnail (if available) */}
-                {post.thumbnail && (
-                  <Link to={postPath(post.category, post.id)} className="block mb-4 overflow-hidden rounded-lg">
-                    <img src={post.thumbnail} alt="" className="w-full h-auto object-cover transition-opacity hover:opacity-90" loading="lazy" />
-                  </Link>
-                )}
 
                 {/* Title + Subtitle + Lead preview — all clickable */}
                 <Link to={postPath(post.category, post.id)} className="listing-title-link thread-title-link group block mb-3">
-                  <h3 className="listing-card-title thread-card-title text-lg transition-colors leading-tight mb-1" style={{ fontFamily: "'Roboto Slab', Georgia, serif", fontWeight: 400, color: 'var(--cat-threads-accent)' }}>
+                  <h3 className="listing-card-title thread-card-title text-xl transition-colors leading-tight mb-1" style={{ fontFamily: "'Roboto Slab', Georgia, serif", fontWeight: 400 }}>
                     {post.displayTitle || post.title}
                   </h3>
                   {post.subtitle && (
-                    <p className="text-sm text-th-secondary leading-relaxed mb-1" style={{ fontFamily: "'Roboto Slab', Georgia, serif" }}>
+                    <p className="text-base text-th-secondary leading-relaxed mb-1" style={{ fontFamily: "'Roboto Slab', Georgia, serif" }}>
                       {post.subtitle}
                     </p>
                   )}
-                  {post.lead && (
-                    <p className="text-xs text-th-tertiary leading-relaxed" style={{ fontFamily: "'Roboto Slab', Georgia, serif" }}>
-                      {post.lead.length > 140 ? post.lead.slice(0, 140).trimEnd() + '...' : post.lead}
-                    </p>
-                  )}
+                  {(() => {
+                    const preview = post.lead || post.description;
+                    if (!preview) return null;
+                    return (
+                      <p className="text-sm text-th-tertiary leading-relaxed" style={{ fontFamily: "'Roboto Slab', Georgia, serif" }}>
+                        {preview.length > 140 ? preview.slice(0, 140).trimEnd() + '...' : preview}
+                      </p>
+                    );
+                  })()}
                 </Link>
               </div>
+
+              {/* Thumbnail — right */}
+              {post.thumbnail && (
+                <Link to={postPath(post.category, post.id)} className="listing-thumb thread-thumb relative hidden md:block w-56 h-36 overflow-hidden flex-shrink-0 self-start">
+                  <img
+                    src={post.thumbnail}
+                    alt=""
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-opacity hover:opacity-90"
+                  />
+                </Link>
+              )}
             </div>
           </div>
         );
