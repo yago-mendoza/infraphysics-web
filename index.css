@@ -448,13 +448,9 @@ button:focus {
   color: var(--card-accent);
 }
 
-/* Project — full grayscale → color on hover */
-.project-thumb img { filter: grayscale(100%); }
-.listing-card:has(.listing-title-link:hover, .listing-thumb:hover) .project-thumb img { filter: grayscale(0%); }
+/* Project — no filter */
 
-/* Thread — desaturated → full color on hover */
-.thread-thumb img { filter: saturate(0.3) brightness(0.9); }
-.listing-card:has(.listing-title-link:hover, .listing-thumb:hover) .thread-thumb img { filter: saturate(1) brightness(1); }
+/* Thread — no filter */
 
 .thread-excerpt {
   border-left: 2px solid var(--card-accent);
