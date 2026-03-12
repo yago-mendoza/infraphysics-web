@@ -222,6 +222,12 @@
   filter: grayscale(50%) brightness(0.8) contrast(1.05);
 }
 
+/* Projects — no grayscale on hero */
+.article-projects .article-hero-img { filter: brightness(0.6) contrast(1.1); }
+[data-theme="light"] .article-projects .article-hero-img { filter: brightness(0.8) contrast(1.05); }
+.article-projects.shade-light .article-hero-img { filter: brightness(0.8) contrast(1.05); }
+[data-theme="light"] .article-projects.shade-light .article-hero-img { filter: brightness(0.9) contrast(1.02); }
+
 /* A3b. Thumbnail shading presets */
 /* heavy = default (defined above on .article-hero-img) */
 /* light = milder filter, softer gradient */
@@ -240,9 +246,12 @@
 /* A3c. Thumbnail aspect presets (hero + blog image) */
 .thumb-full                    { aspect-ratio: auto; }
 .thumb-full img                { height: auto; object-fit: contain; }
-.thumb-wide                    { aspect-ratio: 16 / 7; }
-.thumb-banner                  { aspect-ratio: 16 / 4; }
-.thumb-strip                   { aspect-ratio: 16 / 2; }
+.thumb-wide                    { aspect-ratio: 16 / 7; overflow: hidden; }
+.thumb-wide img                { width: 100%; height: 100%; object-fit: cover; }
+.thumb-banner                  { aspect-ratio: 16 / 4; overflow: hidden; }
+.thumb-banner img              { width: 100%; height: 100%; object-fit: cover; }
+.thumb-strip                   { aspect-ratio: 16 / 2; overflow: hidden; }
+.thumb-strip img               { width: 100%; height: 100%; object-fit: cover; }
 
 .article-hero-gradient {
   position: absolute;
@@ -1310,7 +1319,7 @@
 .article-content .bkqt-quote p,
 .article-content .bkqt-pullquote p {
   font-style: italic;
-  font-size: 0.85rem;
+  font-size: 1.05rem;
   color: var(--art-text-bright);
 }
 
@@ -2153,7 +2162,24 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   font-weight: 600;
 }
 
-/* E2b. Feedback form — monospace (inherits) */
+/* E2b. Blog/Threads body text — sans-serif, larger base */
+.article-blog .article-content,
+.article-threads .article-content {
+  font-family: var(--font-blog-body);
+}
+
+.article-blog .article-content p,
+.article-blog .article-content li,
+.article-blog .article-content td,
+.article-blog .article-content .bkqt-body,
+.article-threads .article-content p,
+.article-threads .article-content li,
+.article-threads .article-content td,
+.article-threads .article-content .bkqt-body {
+  font-size: 1.05rem;
+}
+
+/* E2c. Feedback form — monospace (inherits) */
 
 /* E2e. Blog chrome — SF Pro Display stack for breadcrumbs, hashtags, meta */
 .article-blog .article-breadcrumbs {
@@ -2195,7 +2221,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 .article-threads .article-title {
   font-family: var(--font-blog-heading);
   font-weight: 400;
-  color: var(--cat-threads-accent);
+  color: var(--text-heading);
 }
 
 .article-threads .article-content h1,
@@ -2205,7 +2231,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   font-family: var(--font-blog-heading);
   font-style: normal;
   font-weight: 600;
-  color: var(--art-accent);
+  color: var(--text-heading);
 }
 
 /* Threads feedback — monospace (inherits) */
@@ -2304,7 +2330,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   border-top: 1px solid var(--art-border);
   border-bottom: 1px solid var(--art-border);
   font-family: var(--font-blog-heading);
-  font-size: 0.85rem;
+  font-size: 1.05rem;
   color: var(--art-text-mid);
 }
 
@@ -2334,7 +2360,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 /* E4c. Blog lead — italic intro text below metabar, border-bottom before body */
 .article-blog-lead {
-  padding: 1.5rem 0 1.875rem;
+  padding: 1rem 0;
   margin: 0;
 }
 
@@ -2344,11 +2370,13 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 .article-blog .article-content > h2:first-child,
 .article-blog .article-content > h3:first-child,
 .article-blog .article-content > h4:first-child {
-  margin-top: 1.875rem !important;
+  margin-top: 1rem !important;
 }
 
 .article-blog-lead p {
   margin: 0;
+  font-family: var(--font-blog-body);
+  font-size: 1.05rem;
   font-style: italic;
   color: var(--art-text-body);
   line-height: 1.6;
@@ -2360,7 +2388,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   letter-spacing: 0.5em;
   color: var(--art-text-mid);
   opacity: 0.5;
-  margin-top: 1.25rem !important;
+  margin-top: 1rem !important;
   font-size: 1rem;
 }
 
@@ -2536,7 +2564,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   text-transform: none;
 }
 
-.article-toc--blog .article-toc-depth-0 > .article-toc-link { font-size: 0.85rem; font-weight: 400; }
+.article-toc--blog .article-toc-depth-0 > .article-toc-link { font-size: 1.05rem; font-weight: 400; }
 .article-toc--blog .article-toc-depth-0 > .article-toc-link > .article-toc-num { font-size: 0.75rem; }
 .article-toc--blog .article-toc-depth-1 > .article-toc-link { font-size: 0.8rem; }
 .article-toc--blog .article-toc-depth-1 > .article-toc-link > .article-toc-num { font-size: 0.7rem; }
@@ -2627,7 +2655,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   font-family: var(--font-blog-heading);
   font-style: italic;
   font-weight: 400;
-  font-size: 0.85rem;
+  font-size: 1.05rem;
   color: var(--art-text-mid);
   margin: 0 0 0.25rem;
 }
@@ -2710,26 +2738,35 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
    ───────────────────────────────────────────────── */
 @media (min-width: 768px) {
   /* Body text */
-  .article-content p,
+  .article-content p {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
   .article-blog .article-content p,
   .article-threads .article-content p {
-    font-size: 1rem;
+    font-size: 1.05rem;
     line-height: 1.55;
   }
 
   /* Lists */
-  .article-content li,
+  .article-content li {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
   .article-blog .article-content li,
   .article-threads .article-content li {
-    font-size: 1rem;
+    font-size: 1.05rem;
     line-height: 1.55;
   }
 
   /* Tables */
-  .article-content td,
+  .article-content td {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
   .article-blog .article-content td,
   .article-threads .article-content td {
-    font-size: 1rem;
+    font-size: 1.05rem;
     line-height: 1.55;
   }
 
@@ -2743,18 +2780,24 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   }
 
   /* Small text — same size as body */
-  .article-content .small-text p,
+  .article-content .small-text p {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
   .article-blog .article-content .small-text p,
   .article-threads .article-content .small-text p {
-    font-size: 1rem;
+    font-size: 1.05rem;
     line-height: 1.55;
   }
 
   /* Footnotes (annotations) — same size as body */
-  .article-content .ann-note,
+  .article-content .ann-note {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
   .article-blog .article-content .ann-note,
   .article-threads .article-content .ann-note {
-    font-size: 1rem;
+    font-size: 1.05rem;
     line-height: 1.55;
   }
 
@@ -2784,10 +2827,13 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   }
 
   /* Blockquotes */
-  .article-content .bkqt,
+  .article-content .bkqt {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
   .article-blog .article-content .bkqt,
   .article-threads .article-content .bkqt {
-    font-size: 1rem;
+    font-size: 1.05rem;
     line-height: 1.55;
   }
 
@@ -2821,33 +2867,16 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   .article-projects .article-content td,
   .article-projects .article-content .defn,
   .article-projects .article-content .shout {
-    font-size: 0.85rem;
+    font-size: 1.05rem;
   }
   .article-projects .article-content .bkqt {
-    font-size: 0.85rem;
+    font-size: 1.05rem;
   }
   .article-projects .article-content .small-text p {
-    font-size: 0.85rem;
+    font-size: 1.05rem;
   }
   .article-projects .article-content .ann-note {
-    font-size: 0.85rem;
+    font-size: 1.05rem;
   }
 
-  /* G3. Threads — slightly smaller body */
-  .article-threads .article-content p,
-  .article-threads .article-content li,
-  .article-threads .article-content td,
-  .article-threads .article-content .defn,
-  .article-threads .article-content .shout {
-    font-size: 0.9375rem;
-  }
-  .article-threads .article-content .bkqt {
-    font-size: 0.9375rem;
-  }
-  .article-threads .article-content .small-text p {
-    font-size: 0.9375rem;
-  }
-  .article-threads .article-content .ann-note {
-    font-size: 0.9375rem;
-  }
 }
