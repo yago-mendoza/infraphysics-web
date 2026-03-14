@@ -13,13 +13,14 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 - /home -- Landing page and navigation hub
 - /about -- Background, beliefs, and expertise areas
 - /lab/projects -- Engineering projects with technical deep-dives
-- /lab/second-brain -- Knowledge graph of 454+ interconnected concept notes
+- /lab/second-brain -- Knowledge graph of 497+ interconnected concept notes
 - /lab/second-brain/graph -- Visual graph explorer
 - /blog/threads -- Long-form essays on technology, AI, economics, and systems thinking
 - /blog/bits2bricks -- Technical tutorials bridging software and physical engineering
 
 ## Projects
 
+- [Building a custom CRM for a startup](https://infraphysics.net/lab/projects/3141592): A bespoke CRM for a health-tech startup, built from scratch in 5 days. 23 tables, 8 state machines, and a stale detection system that knows when you're neglecting a psychologist.
 - [Infraphysics — building a website that thinks](https://infraphysics.net/lab/projects/6184744): How a systems engineer built a personal site with a custom markdown compiler, a second brain, and an AI development partner — and what went wrong along the way.
 - [FinBoard — a personal finance dashboard for the crash](https://infraphysics.net/lab/projects/1112121): A vanilla JS investment dashboard built in one session with Claude 4.6. No framework, no build step, no npm install. Just a folder you double-click.
 
@@ -49,7 +50,7 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 
 ## Second Brain (Knowledge Graph)
 
-454+ atomic concept notes covering machine learning, hardware architecture, blockchain, distributed systems, and optimization. Each note is one concept with bidirectional wiki-links. The graph reveals structural relationships between domains. Explorable at /lab/second-brain and /lab/second-brain/graph.
+497+ atomic concept notes covering machine learning, hardware architecture, blockchain, distributed systems, and optimization. Each note is one concept with bidirectional wiki-links. The graph reveals structural relationships between domains. Explorable at /lab/second-brain and /lab/second-brain/graph.
 
 ## Contact
 

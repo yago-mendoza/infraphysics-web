@@ -5,15 +5,291 @@
 
 ---
 
+## Building a custom CRM for a startup
+
+URL: https://infraphysics.net/lab/projects/3141592
+Category: projects
+Date: 2026-03-14
+Description: A bespoke CRM for a health-tech startup, built from scratch in 5 days. 23 tables, 8 state machines, and a stale detection system that knows when you're neglecting a psychologist.
+
+On Monday I had a Notion spreadsheet with 40 psychologists' names in it. By Friday I had 23 database tables, 90 API endpoints, a Gmail integration, and a system that sends alerts when I've been ignoring a research fellow for too long.
+
+I should probably explain.
+
+3C Labs is a health-tech startup. Two people. They recruit psychologists, advisors, and research fellows into collaborative projects — clinical validation studies, regulatory advisory boards, co-authored papers. Their CRM was a Notion table with colored tags. It worked until it didn't, which was around the time they needed to track not just who someone was, but whether that person fit the organization, whether they fit a specific project, when someone last talked to them, and whether anyone was actually going to follow up.
+
+That's the kind of problem where you open HubSpot, stare at the pricing page for ten minutes, and think: "I could build this."
+
+So I did.
+
+26 · mar 10(4d earlier)
+First commit. Schema, API, seed data, 6 views. 70 commits today. The UI was in Spanish until 4pm — changed it to English mid-sprint because the team works in English. Lost an hour on string replacements.
+
+1. The problem with off-the-shelf
+
+The issue isn't that Salesforce can't track contacts. It can. The issue is semantic: a psychologist isn't a "lead," a research paper isn't an "opportunity," and "closing a deal" is a weird way to describe inviting someone to co-author a clinical validation study.
+
+3C's relationship model has two distinct phases that no generic CRM can express natively:
+
+The Two-Phase LifecyclePhase 1 — Assess Fit. General evaluation. Does this person belong in the 3C network at all? States: new → contacted → evaluating → won / lost.
+
+Phase 2 — Prospect. Project-specific. Does this person fit this particular quest? States: new → contacted → in_conversation → opportunity → won / lost.
+
+A contact can win the general assessment — great psychologist, solid fit for the network — and lose a specific quest prospect because their specialization doesn't match the study. These are separate tables with different schemas, different status enums, and different side effects on transition.
+
+In Salesforce, you'd model this as two custom objects with custom workflows and enrollment triggers. In HubSpot, you'd call enterprise sales and schedule a "solutions architect" meeting. Here it's a first-class design decision baked into the schema: assessFits and prospects are different tables because they represent different questions about the same person.
+
+But the lifecycle is just the beginning. The full data model has 23 tables. Here's what the off-the-shelf world can and can't cover:
+
+Table
+What it does
+Off-the-shelf?
+
+contacts
+People
+✓
+
+organisations
+Orgs + discovery metadata
+✓
+
+contactAffiliations
+Rich person-org links — role, type, strength, temporal data, academic metadata. 10 fields.
+1 field
+
+contactInterests
+Per-item interests, each with source and meeting provenance. Starrable for serendipity flagging.
+1 flat field
+
+contactConnections
+Who they know. Mutual auto-creation — add "Alice knows Bob" and Bob's profile updates too.
+✗
+
+assessFits
+Pre-quest general evaluation pipeline
+✗
+
+prospects
+Quest-specific prospect pipeline
+Different semantics
+
+quests
+Self-referencing project tree with 7-state lifecycle and participant tracking
+✗
+
+questParticipants
+Contact ↔ Quest many-to-many with ancestor chain propagation
+✗
+
+tasks
+7-state lifecycle, multi-assignee, linked to contacts and quests
+3 states, 1 assignee
+
+meetings
+Full lifecycle: prep → notes → debrief. Completeness scoring.
+No prep, no debrief
+
+meetingAttendeeNotes
+Per-person structured observations from each meeting
+✗
+
+ponderings
+Polymorphic notes that attach to any entity via refType + refId
+Notes on contacts only
+
+statusTransitions
+Full audit trail — every status change, timestamped, across all entities
+✗
+
+contactSleepHistory
+Hibernation log with reasons and wake triggers
+✗
+
+resources
+Papers, tools, links with provenance and quest associations
+✗
+
+HubSpot covers about 5 of these directly. The remaining 18 are the product.
+
+26 · mar 11(3d earlier)
+Day 2. Removed the stories table entirely. It was an abstraction that sounded smart on the whiteboard — narrative containers for groups of quests — but added zero value in practice. Prospects now link directly to contacts. Should have seen it sooner. 9 commits, but the data model restructure was effectively a v2.
+
+The speed argument matters. 30 schema migrations in 5 days. Day 3 alone shipped 14 — added assess fits, contact sleep, task assignees, resource types, built a shared component library, and deprecated an entire view. The whole stack is one repo. Schema changes go from schema.ts → drizzle-kit generate → wrangler d1 migrations apply in under a minute.
+
+Try adding 14 custom objects to Salesforce in an afternoon.
+
+2. State machines all the way down
+
+Every CRM is a state machine pretending to be a database. You don't notice until you build one from scratch, and then suddenly every entity has a lifecycle, every lifecycle has transitions, and every transition has side effects that cascade into other lifecycles.
+
+This CRM has 8 of them. I'll show three.
+
+the one with the cascade
+
+Quests and tasks share a unified 7-state lifecycle: theorizing → planned → prospecting → active → paused → done → killed. Not every transition is valid — you can't jump from theorizing to done because you can't finish what hasn't started, and terminal states can only reopen to specific re-entry points.
+
+TYPESCRIPT Copy
+
+const STATUS_TRANSITIONS: Record&#x3C;string, string[]> = {
+ theorizing: ['planned', 'prospecting', 'killed'],
+ planned: ['theorizing', 'prospecting', 'active', 'paused', 'killed'],
+ prospecting: ['planned', 'active', 'paused', 'killed'],
+ active: ['planned', 'prospecting', 'paused', 'done', 'killed'],
+ paused: ['theorizing', 'planned', 'prospecting', 'active', 'done', 'killed'],
+ done: ['active'],
+ killed: ['planned', 'paused'],
+}
+
+paused is the escape hatch — it can reach almost any state. done and killed are near-terminal: they can only reopen, not recategorize. This isn't arbitrary. A killed project can be resurrected into planned or paused, but it can't jump to active — because if you're bringing something back from the dead, you should plan it first.
+
+The cascade is the interesting part. Quests are self-referencing trees — a quest can be a sub-quest of another. When a parent quest is marked done or killed, the status propagates to every descendant quest and every task under each of them. A single status change on a top-level quest can touch 15 entities. Each one gets its own statusTransitions entry with a timestamp, so the audit trail stays clean even when the cascade runs deep.
+
+Both frontend and backend carry the same transition map 1. Click a status that shouldn't exist? The dropdown won't show it. Craft a PATCH request manually? The API returns 400.
+
+1Deliberate duplication. The frontend disables invalid options in the dropdown so users never see a state they can't reach. The backend validates anyway because the frontend is a suggestion, not a contract. The alternative — a shared validation package between a React SPA and a Hono API — would add complexity for a marginal DRY benefit. At this scale, I'll take the copy-paste.
+
+the one with the side effects
+
+Assess Fit has 5 states and deceptively simple transitions. But the side effects are where the engineering lives.
+
+When an assess fit moves from new to contacted for the first time, the API silently sets lastManualContact on the contact. That single timestamp starts the stale detection clock. Before this moment, the contact can't be stale — you haven't engaged yet, so there's nothing to decay. After it, every day of silence counts.
+
+When an assess fit is marked lost, all active tasks directed at that contact auto-pause. If someone failed the general assessment, there's no point keeping "send them the project brief" on your to-do list. When you reopen a lost assess fit back to new, the paused tasks auto-resume to planned. The system remembers what you were doing before you gave up.
+
+And then there's won. A single POST /assess-fits/:id/won triggers up to five things:
+
+Assess fit status → won
+
+Roles merged onto the contact's networkRoles
+
+Optionally: a prospect created for a specific quest
+
+Optionally: contact added as quest participant
+
+Ancestor quests in the tree also get the participant
+
+Five side effects, one API call. In HubSpot that's a custom workflow with enrollment triggers and a prayer that nobody renames a property.
+
+the one that isn't stored
+
+The most important state machine in the system doesn't have a database column.
+
+Contact category — team, assessing, network, lost, other — is computed on every API response from the underlying data:
+
+TYPESCRIPT Copy
+
+if (contact.isTeamMember) category = 'team'
+else if (afRows.some(af => af.status !== 'won' &#x26;&#x26; af.status !== 'lost'))
+ category = 'assessing'
+else if (afRows.some(af => af.status === 'won') || networkRoles.length > 0)
+ category = 'network'
+else if (afRows.some(af => af.status === 'lost'))
+ category = 'lost'
+// else: 'other'
+
+The transitions happen as side effects of other state machines. Win an assess fit and the contact silently shifts from assessing to network. Mark yourself as a team member and you jump to team. There's no updateCategory() function. The category is a shadow cast by the data — always current, never stale, never out of sync.
+
+It can't be wrong because nobody writes to it.
+
+26 · mar 12(2d earlier)
+Day 3. 38 commits. 14 migrations. Added assess fits, contact sleep, task assignees, resource types. Built the shared component library. Deprecated and removed FollowUpView — it was trying to be a dashboard and a follow-up tool at the same time. Pick one.
+
+3. Detecting relationship decay
+
+Relationships decay silently. Nobody sends you an email saying "hey, you're losing me." The connection just goes cold — one missed follow-up, then two, then three weeks pass and reaching out feels awkward. In a startup that lives on its network, that silence is the most expensive bug.
+
+3C tracks around 100 contacts across active assessments and network relationships. At that scale, you can't hold the state of every relationship in your head. You need the system to tap you on the shoulder.
+
+three sources, one clock
+
+The stale detection fuses three independent data sources into a single lastAction timestamp:
+
+TYPESCRIPT Copy
+
+const lastMeeting = lastMeetingMap.get(contact.id) // MAX(date) WHERE status='done'
+const lastEmail = lastEmailMap.get(contact.id) // MAX(date) WHERE to_address matches
+const lastManual = contact.lastManualContact // set via /contacts/:id/contacted
+const lastAction = [lastMeeting, lastEmail, lastManual]
+ .filter(Boolean).sort().pop()
+
+Three lines of code. The most recent interaction wins, regardless of source.
+
+Done meetings count. Scheduled ones don't — having a calendar invite doesn't mean you've talked. Only outbound emails count. Receiving an email from someone doesn't reset their stale clock because staleness measures your engagement, not theirs 1. Manual contact covers everything the system can't see — phone calls, WhatsApp, bumping into someone at a conference.
+
+1There's a feedback loop hiding here. An inbound email doesn't reset the stale clock — but it does appear in the Awaiting Reply panel, which creates social pressure to respond. When you reply, that outbound email resets the clock. The system nudges without lying.
+
+the escalating threshold
+
+A contact is stale when daysSinceAction > 7 × (snoozeCount + 1).
+
+Snooze count
+Threshold
+Meaning
+
+0
+7 days
+Default. One week of silence.
+
+2
+21 days
+"We're waiting." First snooze.
+
+4
+35 days
+Still waiting. Second snooze.
+
+6
+49 days
+Deliberately slow-burning. Third snooze.
+
+Why +2 per snooze, not +1If a contact has been stale for 15 days (count=0, threshold=7), incrementing the count by 1 sets the threshold to 14 — still stale. The alert stays. You'd have to snooze twice to clear it once, which makes the button feel broken. Incrementing by 2 sets the threshold to 21, which guarantees the alert clears in a single click. Small arithmetic, big UX difference.
+
+Manual contact is the nuclear option. It resets lastManualContact to today and resets staleSnoozeCount to 0. Clean slate. The clock restarts because you've actually engaged — not just postponed the reminder.
+
+immediate vs. tasked
+
+When a contact is stale, it falls into one of two categories:
+
+Immediate — no active tasks. Nobody is doing anything about this relationship. It's going cold. Highest urgency.
+
+Tasked — has active tasks but hasn't met the interaction threshold. Someone is working on it, but slowly. Lower urgency — a yellow flag, not a red one.
+
+The distinction matters because the response is different. Immediate means "drop everything and send an email." Tasked means "check if the person with the open task is making progress."
+
+None of this runs on a cron job. Stale is computed on demand — every time you load the contact list, the API runs four batch queries, fuses them, and returns the stale flag inline. No background workers, no scheduled tasks, no cache that's stale about staleness. D1 is SQLite on Cloudflare's edge. At startup scale with ~100 contacts, the queries are fast enough that the simplest architecture is the right one.
+
+26 · mar 13(1d earlier)
+Day 4. Stale logic reworked three times. First version tracked meetings only — useless if you communicate by email. Second version added Gmail but didn't handle snooze correctly. Third version fuses all three sources and has the +2 snooze increment. 24 commits. Also unified all contact affiliations into a single table (migration 0024) — replaced three separate data sources that had drifted out of sync.
+
+4. Engineering notes
+
+Things that don't fit the narrative arc but are too interesting to leave out.
+
+AI-powered meeting debrief. Upload a transcript after a meeting is done. A single API call sends it to Claude Sonnet 4, which auto-creates outcomes, attendee notes, tasks, ponderings, interests, projects, connections, and resources. The prompt includes meeting context — prep notes, agenda, key questions — and enforces quality with BAD/GOOD examples. What used to be 30 minutes of post-meeting data entry is now a paste and a click.
+
+Cycle resolution in tree drag-and-drop. Drag a parent quest onto its own descendant — which would create a circular reference — and the system doesn't block the drop. It promotes the target node to the dragged item's old parent, then nests the dragged item inside. Every drop succeeds. The tree stays valid. UX over defensive programming.
+
+Global undo with distributed closures. Every destructive action stores an async closure on a global stack. Ctrl+Z pops and executes the most recent one. No centralized command pattern — each component writes its own reversal logic. Toast with inline "Undo" button, 5-second window, 15-minute TTL, max 30 entries. Smart detection skips Ctrl+Z inside text inputs and contentEditable elements.
+
+Zero TODO markers. grep -r "TODO\|HACK\|FIXME" across the entire codebase returns nothing. Not because there's no technical debt — because every compromise was accepted at implementation time rather than deferred. The code documents what was consciously traded off, not what was left half-done.
+
+The CRM has been running for four days. Two people use it. It does exactly what they need.
+
+It doesn't scale to 10,000 users. It doesn't need to. There's no permission system beyond Cloudflare Zero Trust — if your email ends in @3clabs.io, you're in. The API has no rate limiting because two users aren't going to DDoS their own tool. Every architectural decision reflects a specific constraint at a specific scale, and that specificity is the point.
+
+When the domain is yours and the stack is simple, building custom isn't the reckless choice. Configuring an enterprise CRM to do something it wasn't designed for — forcing psychologists into "Leads," research papers into "Opportunities," relationship decay into a field that doesn't exist — that's reckless. Eighteen tables that HubSpot can't model aren't a feature request. They're a different product.
+
+26 · mar 14(day zero)
+178 commits. 30 migrations. 32,058 lines. It works.
+
+---
+
 ## Infraphysics — building a website that thinks
 
 URL: https://infraphysics.net/lab/projects/6184744
 Category: projects
 Date: 2026-03-08
 Description: How a systems engineer built a personal site with a custom markdown compiler, a second brain, and an AI development partner — and what went wrong along the way.
-
-26 · jan 21(1m 15d earlier)
-Just created the repo. No idea what I'm doing. Let's go.
 
 I am not a web developer.
 
@@ -24,44 +300,25 @@ I did not do the sane thing.
 26 · jan 21(1m 15d earlier)
 I've been carrying a folder of notes around for almost ten years. Notebooks that start from both ends to fit two topics. Post-its that made sense for a week. Drawings with arrows connecting concepts — my own bootleg knowledge graphs, on paper, before I knew that's what they were called. TXTs, markdowns, photos of whiteboards. AI, hardware, optimization, how chips work, how industries scale. All of it scattered across devices and formats and years. The real reason I'm building this site is that I finally have the tools to structure it all. The web stuff is a vehicle. The destination is the brain.
 
-The truth is, I'd been circling around web development for a while. Small experiments that never made it past localhost. And at some point the question stopped being "can I make a website" and became "can I build a real one — architecture, data, interaction, everything — without leaning on someone else's decisions." Not because templates are bad. Because I wanted to know what I didn't know.
+I spent 18 days building a custom React app with its own markdown compiler, a wiki-style knowledge graph I call the Second Brain, and a dual-theme system. In fact, this article is compiled by the same pipeline it describes. The wiki-links in the text point to fieldnotes that were compiled in the same build.
 
-So I spent 18 days building a custom React app with its own markdown compiler, a wiki-style knowledge graph I call the Second Brain, and a dual-theme system. This article is compiled by the same pipeline it describes. The wiki-links in the text point to fieldnotes that were compiled in the same build. Everything here is the project. Because apparently "I just need a simple blog" is the most dangerous sentence in software engineering.
-
+26 · mar 14(6d later)
 One thing worth clarifying: although the site runs on React, the content you're reading was not generated by your browser. Every article is compiled to HTML at build time. The markdown goes through a 14-step pipeline, gets transformed into static HTML, and gets served as-is. Your browser just sits down and eats.
 
-1. The first week
+1. The stack
 
 26 · jan 21(1m 15d earlier)
-Day 1. Empty index.html. Staring at it. The cursor is blinking. I am not blinking.
-26 · jan 22(1m 14d earlier)
-Day 2. Try building the whole thing with no routing. Hit a wall. Delete it. Starting over with a plan. Probably.
-26 · jan 23(1m 13d earlier)
-Day 3. Discover that when your content renders outside its container and pushes the page sideways, the fix is a single CSS property. I don't know the word "overflow" in this context. I google "div content pushes page right how to fix." That's the search that leads me to overflow: hidden. Four hours for one line.
+The cursor is blinking. I am not blinking.
 26 · jan 24(1m 12d earlier)
-Day 4. Build a horizontal navbar. It already feels wrong. Too flat for a site with two themes and a knowledge graph.
+Built a horizontal navbar. It already feels wrong. Too flat.
 26 · jan 25(1m 11d earlier)
-Day 5. Rip out the navbar. Spend the whole day rebuilding as a sidebar. Break every layout assumption. Worth it. I keep resizing the browser to watch it collapse on mobile. Is that normal.
-26 · jan 25(1m 11d earlier)
-Same day, later. It clicks. Routes, sidebar, content area — everything has a place. First time this feels like a project and not a homework assignment.
+Rip out the navbar. Spend the whole day rebuilding as a sidebar. Break every layout assumption. Worth it.
 
-The first version was the Vite scaffold. 47 files, most of them boilerplate I'd delete within a week. Then nothing useful for two days. That gap between knowing what you want to build and knowing how is wider than it looks from the outside.
-
-The early days tell the real story. "Solved render issue." "Bound fieldnotes list to rendering area." "Minimal shifts." The vocabulary of someone who's discovering CSS grid for the first time and doesn't know what overflow: hidden does — and, worse, doesn't know how to describe the problem well enough to google it efficiently. In hardware, if something doesn't fit, the datasheet tells you the dimensions. CSS doesn't have a datasheet. You just keep trying things until the page stops doing something weird.
-
-The sidebar pivot was the first real decision. A top bar works for flat sites — five pages at the same level. This site has two worlds (lab and blog) with different themes, plus a knowledge graph with its own navigation. A horizontal nav couldn't express that without becoming a dropdown disaster. The sidebar 1 could show the lab/blog split visually, with section groups and icons, and collapse on mobile without losing the hierarchy.
-
-1I still don't know if "sidebar" is the right word. In hardware documentation, a sidebar is supplementary information in a callout box. In web dev it's a persistent navigation panel. I use the web meaning but it never stops feeling wrong.
-
-The rebuild took a full day and the layout didn't work until around 10pm. Then, somewhere around the fourth or fifth hot reload, it just... worked. The sidebar collapsed where it should. The content area filled the space. The transitions felt smooth. I don't remember what exactly triggered it. Looking back, it was the moment the responsive behavior clicked — the routing, the sidebar, the content area all talking to each other. I sat there resizing the window like an idiot, watching it adapt. That was the first time the project felt like a real thing.
-
-I also thought, briefly: I could have had a Hugo site done by now. That thought came back several times over the next two weeks.
-
-2. The stack and the chaos
+That gap between knowing what you want to build and knowing how is wider than it looks from the outside.
 
 Picking tools
 
-I didn't spend a lot of time deciding. That was probably a mistake. Or maybe not.
+I didn't spend a lot of time deciding.
 
 Option
 Why I looked
@@ -110,7 +367,7 @@ Projects was obvious. Threads came from systems programming (multiple execution 
 26 · jan 25(1m 11d earlier)
 It clicks. The layout makes sense now. Routes, sidebar, content area — everything has a place. First time it feels like a real project and not a homework assignment.
 
-3. The compiler
+2. The compiler
 
 I needed a way to write articles in markdown and get styled HTML. Standard requirement. But I also wanted colored text, superscripts, keyboard shortcuts, accent text, typed blockquotes, wiki-links to my knowledge graph, and context annotations with timestamps.
 
@@ -126,7 +383,7 @@ The full pipeline has 14 steps. I won't list them all 1 because the details aren
 
 1protect backticks → custom preprocessors → typed blockquotes → restore backticks → external URLs → side images → definition lists → alpha lists → context annotations → marked.parse → strip heading formatting → Shiki highlighting → post-processors → footnotes. Then two global passes: wiki-link resolution and cross-document links.
 
-Inventing a language
+Inventing a syntax
 
 Once you start adding custom syntax, you can't stop.
 
@@ -138,8 +395,6 @@ At some point I had an ==highlight== syntax. It had bugs, edge cases, and nothin
 
 26 · jan 30(1m 6d earlier)
 The compiler WORKS. Colors, superscript, blockquotes, wiki-links. I write this at 1:30pm and by 4pm I have wiki-link hover previews working. I can't stop clicking things.
-26 · feb 05(1m 3d earlier)
-Remove ==highlight==, replace with --accent--. Kill the old code. No nostalgia.
 
 The rewrite
 
@@ -148,15 +403,6 @@ On February 5th I caught myself fixing the fixes of my previous fixes.
 When that happens, the codebase is telling you something. It's telling you to stop.
 
 The old Compiler was regex scattered across three files. The blockquote parser couldn't handle nested formatting. Definition lists inside blockquotes produced broken HTML. Every fix introduced a new edge case, and every edge case demanded another fix. The Custom Syntax features had become unpredictable. No single feature was complex — the complexity lived in their interactions.
-
-I looked at the diff. I looked at the blockquote parser. I thought about the Hugo site I could've had two weeks ago.
-
-Then I deleted everything.
-
-777 lines.
-
-26 · feb 05(1m 3d earlier)
-"Syntax from scratch." Everything from zero. The codebase gets lighter. I sit in the chair and don't do anything for ten minutes. It feels like exhaling after holding your breath for a week.
 
 The rewrite centralized the Compiler into three layers: compiler.config.js (single source of truth for all syntax rules — changing it invalidates the entire build cache), build-content.js (the pipeline orchestrator), and article.css (one stylesheet, category accents through CSS vars). The new version could parse blockquotes with nested definition lists inside them. The old version literally couldn't. That's how you know a rewrite was the right call — the new version enables something the old version couldn't express.
 
@@ -170,7 +416,7 @@ MARKDOWN Copy
 
 This produces a card with the date, a relative timestamp ("5 weeks ago"), and the text. It's the feature I use most in projects articles. Because every project has a story, and the story has dates, and the dates carry context that the polished prose can't. When you read "5 weeks ago" next to a note about the compiler finally working, you feel the time. That's the whole point.
 
-4. The visual layer
+3. The visual layer
 
 I wanted the site to feel like a terminal. Dark background, monospace headings, lime green accents. But the blog needed to be light — long-form reading on a dark background is miserable.
 
@@ -197,9 +443,9 @@ TipCSS color-mix() is one of those features that seems minor until you build a t
 I could write three more sections about the accent cascade and the custom property transition trap. But the honest truth is that while these bugs were painful — and they were, hours of my life — they're not what makes this project interesting. The CSS works. It's fine. The interesting part is what lives inside it.
 
 26 · jan 30(1m 6d earlier)
-Dark/light works. Auto-switch on route. Smooth manual toggle. The hardcoded color migration takes the whole morning but the result is clean. My eyes hurt.
+Dark/light works. Auto-switch on route. Smooth manual toggle. The hardcoded color migration takes the whole morning but the result is clean.
 
-5. The Second Brain
+4. The Second Brain
 
 This is the part where the project stopped being a website and started being something I actually use every day.
 
@@ -212,7 +458,7 @@ The medium kept changing. First, physical notebooks that I'd start from both end
 Then TXT files. Then markdown. Then more TXT files because I forgot about the markdown files. Then photos of whiteboards that lived on my phone and never got organized. For years, the passion was the only thing pulling me forward. Every time I learned something, I'd write it down somewhere. The problem was that "somewhere" was everywhere.
 
 26 · feb 03(1m 5d earlier)
-The thing nobody tells you about collecting knowledge for a decade is that the collection itself becomes the problem. You have hundreds of notes and no way to find anything. The structure you need exists in your head, but it's not on paper. The whole point of this project is to get it on paper. On screen. Whatever.
+The thing nobody tells you about collecting knowledge for a decade is that the collection itself becomes the problem. You have hundreds of notes and no way to find anything. The structure you need exists in your head, but it's not on paper. The whole point of this project is to get it on paper. On screen. Whatever. I wrote a whole threads/piece about this — about why documenting is the real competitive advantage.
 
 The AI inflection
 
@@ -341,7 +587,7 @@ Now it's a mini-IDE. I navigate between notes, the editor panel follows, I fix a
 
 TipThe term suggestion system works by scanning the note body for unlinked mentions of known note names. It skips frontmatter, existing wiki-links, code blocks, and trailing refs. When it finds a match, it shows a purple highlight with a one-click option to insert the link. It's the kind of feature that sounds simple and is simple — 50 lines of regex, a StateField in CodeMirror, done. But it catches connections I would've missed every single time.
 
-6. The workflow
+5. The workflow
 
 Here's how a typical session works, because understanding the workflow explains why everything was built this way.
 
@@ -358,7 +604,7 @@ The calendar heatmap reflects the session. The graph grows. And sometimes — th
 26 · feb 07(1m 1d earlier)
 The article now exists on the platform it describes. Meta.
 
-7. Teaching an AI to maintain it
+6. Teaching an AI to maintain it
 
 On February 6th I started using Claude Code to help build the site. LLMs are simultaneously incredible and terrible at maintaining a codebase. Incredible because they can hold the entire architecture in context and write code faster than I can think. Terrible because they don't remember anything between sessions, and they'll happily "improve" code you didn't ask them to touch.
 
@@ -408,7 +654,7 @@ The AI stops forgetting to build after fieldnote edits. The hooks work. I feel l
 
 The scripts — check-references.js, move-hierarchy.js, preflight.js, analyze-pairs.js — are a collaboration. I describe what I need, Claude builds the pipeline. And here's the thing: Claude is very good at organizational tooling. The scripts it builds for knowledge management — validation, cross-referencing, bulk operations — tend to work on the first try. It's the kind of structured, rule-based pipeline work where an LLM's consistency shines. I'd trust it to build a reference checker before I'd trust it to pick a CSS color.
 
-8. Everything else
+7. Everything else
 
 Some features deserve a mention without deserving a section.
 
@@ -434,7 +680,7 @@ For LLM crawlers specifically, there are two files. llms-full.txt dumps every pu
 26 · mar 10(2d later)
 llms.txt was manually maintained for weeks. every new article required editing it by hand, and it was already out of sync when I checked. moved it to auto-generation in the build pipeline. the fieldnote count, the article listings, the URLs -- all derived from the same source of truth now. one less thing to forget.
 
-9. What this is really about
+8. What this is really about
 
 This project was not the rational choice. The CSS is not how a frontend engineer would write it. The Compiler is not how a language designer would build it. There are parts I'd do differently — the Tailwind CDN choice, the hardcoded colors on day one, the monolith fieldnotes file I should have split from the start.
 

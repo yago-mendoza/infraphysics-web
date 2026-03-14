@@ -7,6 +7,14 @@
     <language>en</language>
     <atom:link href="https://infraphysics.net/feed.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Building a custom CRM for a startup</title>
+      <link>https://infraphysics.net/lab/projects/3141592</link>
+      <guid>https://infraphysics.net/lab/projects/3141592</guid>
+      <pubDate>Sat, 14 Mar 2026 00:00:00 GMT</pubDate>
+      <description>A bespoke CRM for a health-tech startup, built from scratch in 5 days. 23 tables, 8 state machines, and a stale detection system that knows when you're neglecting a psychologist.</description>
+      <category>projects</category>
+    </item>
+    <item>
       <title>Infraphysics — building a website that thinks</title>
       <link>https://infraphysics.net/lab/projects/6184744</link>
       <guid>https://infraphysics.net/lab/projects/6184744</guid>
