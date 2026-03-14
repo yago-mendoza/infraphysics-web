@@ -2885,16 +2885,16 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   .article-projects .article-content td,
   .article-projects .article-content .defn,
   .article-projects .article-content .shout {
-    font-size: 1.05rem;
+    font-size: 0.95rem;
   }
   .article-projects .article-content .bkqt {
-    font-size: 1.05rem;
+    font-size: 0.95rem;
   }
   .article-projects .article-content .small-text p {
-    font-size: 1.05rem;
+    font-size: 0.95rem;
   }
   .article-projects .article-content .ann-note {
-    font-size: 1.05rem;
+    font-size: 0.95rem;
   }
 
 }
