@@ -532,15 +532,15 @@ const ogManifest = {};
 // Static pages — enables OG/schema injection for non-article routes
 ogManifest['/home'] = {
   t: 'InfraPhysics',
-  d: 'From systems to atoms and back. Lab, notebook, and proof of work by Yago Mendoza — industrial engineer, systems builder.',
+  d: 'Yago Mendoza — industrial engineer, systems builder. From systems to atoms and back. Lab, notebook, and proof of work.',
   img: null,
   cat: null,
   date: null,
-  text: `InfraPhysics — From systems to atoms and back.
+  text: `InfraPhysics — Yago Mendoza, industrial engineer and systems builder.
 
-Personal lab, notebook, and knowledge graph by Yago Mendoza — industrial engineer and systems builder.
+From systems to atoms and back. I picked up code because every engineer should — not to become a developer, but to move faster. Now I build at the boundary. This is my lab, my notebook, and my proof of work.
 
-Yago Mendoza is an industrial engineer who bridges hardware and software. He writes about machine learning infrastructure, distributed systems, scaling laws, AI alignment, and cross-domain pattern recognition. His work emphasizes that engineering principles transfer across substrates — supply chains and data pipelines follow the same optimization patterns.
+Yago Mendoza writes about machine learning infrastructure, distributed systems, scaling laws, AI alignment, and cross-domain pattern recognition. His work emphasizes that engineering principles transfer across substrates — supply chains and data pipelines follow the same optimization patterns.
 
 Site sections:
 

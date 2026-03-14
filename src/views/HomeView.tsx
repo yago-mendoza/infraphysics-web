@@ -90,7 +90,22 @@ export const HomeView: React.FC = () => {
       {/* Hero */}
       <section className="pt-12 md:pt-20 pb-12 md:pb-20">
         <div className="max-w-xl">
-          <h1 className="text-[3.1rem] md:text-5xl font-bold tracking-tight leading-tight mb-3">
+          {/* Identity anchor */}
+          <div className="flex items-center gap-4 mb-8">
+            <div className="relative w-[4.5rem] h-[4.5rem] shrink-0">
+              <div className="absolute inset-0 rounded-full bg-violet-400/10 blur-2xl scale-125" />
+              <img src="https://avatars.githubusercontent.com/yago-mendoza" alt="Yago Mendoza" className="relative w-full h-full rounded-full border border-th-border object-cover" />
+            </div>
+            <div>
+              <p className="text-xl font-bold tracking-tight text-th-heading">Yago Mendoza</p>
+              <p className="text-sm text-th-tertiary font-sans">Industrial engineer &middot; Systems builder</p>
+              <Link to="/about" className="inline-flex items-center gap-1 text-xs text-th-secondary hover:text-th-heading transition-colors mt-1">
+                More about me <ArrowRightIcon />
+              </Link>
+            </div>
+          </div>
+
+          <h1 className="text-[3.1rem] md:text-5xl font-bold tracking-tight leading-tight mb-2">
             <span className="text-th-heading">From systems to atoms</span>
             <br />
             <span className="text-th-secondary">and back.</span>
@@ -101,20 +116,7 @@ export const HomeView: React.FC = () => {
           </p>
 
           <p className="text-th-secondary leading-relaxed text-base max-w-lg">
-            Industrial engineer by training. I picked up code because every engineer
-            should &mdash; not to become a developer, but to move faster. Now I build at the boundary.
-          </p>
-
-          <p className="text-th-secondary leading-relaxed text-base max-w-lg mt-3">
-            This is my <span className="text-th-heading font-semibold">lab</span>, my <span className="text-th-heading font-semibold">notebook</span>, and my <span className="text-th-heading font-semibold">proof of work</span>.
-          </p>
-
-          <p className="mt-3 md:mt-4 text-sm text-th-tertiary">
-            by{' '}
-            <Link to="/about" className="text-th-secondary hover:text-th-heading transition-colors underline underline-offset-4 decoration-th-secondary">
-              Yago Mendoza
-            </Link>
-            {' '}&mdash; industrial engineer, systems builder
+            I picked up code because every engineer should &mdash; not to become a developer, but to move faster. Now I build at the boundary. This is my <span className="text-th-heading font-semibold">lab</span>, my <span className="text-th-heading font-semibold">notebook</span>, and my <span className="text-th-heading font-semibold">proof of work</span>.
           </p>
         </div>
       </section>
@@ -195,30 +197,6 @@ export const HomeView: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* Recent articles from history */}
-            {recentPosts.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-[10px] text-th-tertiary uppercase tracking-wider mb-3">Recently viewed</h3>
-                <div className="space-y-1">
-                  {recentPosts.map(post => {
-                    const accent = catAccentVar(post.category);
-                    return (
-                      <Link
-                        key={`${post.category}-${post.id}`}
-                        to={postPath(post.category, post.id)}
-                        className="group flex items-center gap-2.5 px-3 py-2 rounded-sm hover:bg-th-surface-alt transition-all"
-                      >
-                        <span className="inline-block w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: accent }} />
-                        <span className="text-sm text-th-secondary group-hover:text-th-heading transition-colors truncate">
-                          {post.displayTitle || post.title}
-                        </span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {categoryKeys.map(key => {
                 const config = CATEGORY_CONFIG[key];
@@ -251,9 +229,9 @@ export const HomeView: React.FC = () => {
         <div className="rounded-lg border border-violet-500/20 bg-violet-500/[0.03] p-6 md:p-8 overflow-hidden">
           <div className="flex items-start justify-between gap-8">
             <div className="flex-1 min-w-0">
-              <h2 className="text-base text-violet-400 tracking-wide mb-3">What I learn, I share.</h2>
+              <h2 className="text-base text-violet-400 tracking-wide mb-3">My public knowledge graph.</h2>
               <p className="text-th-secondary text-sm leading-relaxed font-sans mb-4">
-                This is where I break down what I'm studying into atomic, cross-linked notes. It's technical, but a good entry point: everything connects to everything else, so you can start anywhere and follow the links. Knowledge compounds when it's written down and shared. If you're curious, you're welcome here.
+                Atomic, cross-linked notes on everything I study &mdash; from infrastructure and physics to distributed systems. Browse how ideas connect across domains. Start anywhere, follow the links.
               </p>
               <div className="flex items-center gap-6 mb-5">
                 <span className="text-sm text-th-tertiary">
@@ -330,7 +308,8 @@ export const HomeView: React.FC = () => {
 
       {/* Latest Work */}
       <section className="pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
-        <h2 className="text-xs text-th-tertiary uppercase tracking-wider mb-5 md:mb-8">Latest Work</h2>
+        <h2 className="text-lg md:text-xl text-th-heading font-semibold tracking-tight mb-1">What I Write About</h2>
+        <p className="text-th-tertiary text-sm font-sans mb-5 md:mb-8">Infrastructure, physics, and building things that work.</p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {featuredPosts.map(post => {
