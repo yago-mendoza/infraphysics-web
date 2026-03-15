@@ -859,23 +859,27 @@ const SecondBrainGraphView: React.FC = () => {
       const dy = e.touches[0].clientY - swipeStart.current.y;
       if (!swipingRef.current) {
         if (Math.abs(dx) < 10) return;
-        if (dx < 0 || Math.abs(dy) > Math.abs(dx) * 1.5) { swipeStart.current = null; return; }
+        // If browser already started vertical scroll, we can't cancel it
+        if (dx < 0 || !e.cancelable || Math.abs(dy) > Math.abs(dx) * 1.5) { swipeStart.current = null; return; }
         swipingRef.current = true;
       }
-      e.preventDefault(); // works because { passive: false }
+      if (e.cancelable) e.preventDefault();
       const offset = Math.max(0, dx);
       swipeOffsetRef.current = offset;
       setSwipeOffset(offset);
     };
 
     const onTouchEnd = () => {
-      if (!swipeStart.current || !swipingRef.current) { swipeStart.current = null; return; }
-      const elapsed = Date.now() - swipeStart.current.time;
-      const offset = swipeOffsetRef.current;
-      const velocity = offset / Math.max(elapsed, 1);
-      if (offset > 80 || velocity > 0.4) {
-        setMobilePanelRef.current(false);
+      const wasSwiping = swipingRef.current;
+      if (wasSwiping && swipeStart.current) {
+        const elapsed = Date.now() - swipeStart.current.time;
+        const offset = swipeOffsetRef.current;
+        const velocity = offset / Math.max(elapsed, 1);
+        if (offset > 80 || velocity > 0.4) {
+          setMobilePanelRef.current(false);
+        }
       }
+      // Always clean up — prevents panel getting stuck at partial offset
       setSwipeOffset(0);
       swipeOffsetRef.current = 0;
       swipingRef.current = false;
