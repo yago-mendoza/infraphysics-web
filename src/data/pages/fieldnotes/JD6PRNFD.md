@@ -1,7 +1,7 @@
 ---
 uid: "JD6PRNFD"
-address: "Cloud//Supabase//Supabase Auth"
-name: "Supabase Auth"
+address: "Cloud//Supabase//Auth"
+name: "Auth"
 date: "2026-03-15"
 ---
 [[Sb7tRx5K|Supabase]]'s built-in authentication system. It's like a toboggan that catches things — you plug in [[Oa3kTm7D|OAuth]] (which is part of its [[w2EGofgI|SDK]]) and it talks directly to Google's API. But Google creates the [[KyOPadSs|tokens]], not Supabase. Supabase just handles the handshake and stores the result.
