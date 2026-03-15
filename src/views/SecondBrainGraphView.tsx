@@ -907,13 +907,14 @@ const SecondBrainGraphView: React.FC = () => {
       gesture = null;
     };
 
-    el.addEventListener('touchstart', onTouchStart, { passive: true });
-    el.addEventListener('touchmove', onTouchMove, { passive: false });
-    el.addEventListener('touchend', onTouchEnd, { passive: true });
+    // Use capture phase so our handler fires before any scrollable child can consume the event
+    el.addEventListener('touchstart', onTouchStart, { passive: true, capture: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false, capture: true });
+    el.addEventListener('touchend', onTouchEnd, { passive: true, capture: true });
     return () => {
-      el.removeEventListener('touchstart', onTouchStart);
-      el.removeEventListener('touchmove', onTouchMove);
-      el.removeEventListener('touchend', onTouchEnd);
+      el.removeEventListener('touchstart', onTouchStart, true);
+      el.removeEventListener('touchmove', onTouchMove, true);
+      el.removeEventListener('touchend', onTouchEnd, true);
     };
   });
 
@@ -1880,7 +1881,7 @@ const SecondBrainGraphView: React.FC = () => {
           {/* Sliding panel */}
           <div
             ref={mobilePanelRef}
-            className={`fixed right-0 bottom-0 z-40 bg-th-base border-l border-th-hub-border flex flex-col overflow-hidden select-text swipe-panel ${swipingRef.current ? '' : 'transition-transform duration-200'}`}
+            className={`fixed right-0 bottom-0 z-40 bg-th-base border-l border-th-hub-border flex flex-col overflow-hidden select-none swipe-panel ${swipingRef.current ? '' : 'transition-transform duration-200'}`}
             style={{
               top: MOBILE_NAV_HEIGHT,
               width: '85vw',
