@@ -1498,7 +1498,7 @@ const SecondBrainGraphView: React.FC = () => {
               height={graphDims.height}
               nodeCanvasObject={nodeCanvasObject}
               nodePointerAreaPaint={nodePointerAreaPaint}
-              nodeLabel={nodeTooltip}
+              nodeLabel={isMobile ? undefined : nodeTooltip}
               linkCanvasObject={linkCanvasObject}
               onNodeClick={onNodeClick}
               onNodeHover={onNodeHover}
@@ -1522,7 +1522,7 @@ const SecondBrainGraphView: React.FC = () => {
               nodeColor={nodeColor3d}
               nodeVal={nodeVal3d}
               nodeRelSize={6}
-              nodeLabel={nodeTooltip}
+              nodeLabel={isMobile ? undefined : nodeTooltip}
               nodeResolution={8}
               linkColor={linkColor3d}
               linkOpacity={settings.edgeOpacity}
