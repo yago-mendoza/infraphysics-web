@@ -268,6 +268,23 @@ const SecondBrainGraphView: React.FC = () => {
   const [graphKey, setGraphKey] = useState(0);
   const gravityInitialized = useRef(false);
 
+  // Reset positions when switching 2D ↔ 3D so the force layout starts fresh
+  const prevDimension = useRef(dimension);
+  const dimensionResetFlag = useRef(false);
+  useEffect(() => {
+    if (dimension === prevDimension.current) return;
+    prevDimension.current = dimension;
+    if (filtered) {
+      for (const node of filtered.nodes as any[]) {
+        delete node.x; delete node.y; delete node.z;
+        delete node.vx; delete node.vy; delete node.vz;
+      }
+    }
+    gravityInitialized.current = false;
+    dimensionResetFlag.current = true;
+    setGraphKey(k => k + 1);
+  }, [dimension, filtered]);
+
   // Pop-in animation — purely visual reveal (physics run on full graph)
   const [popInActive, setPopInActive] = useState(false);
   const [popInCount, setPopInCount] = useState(0);
@@ -630,13 +647,18 @@ const SecondBrainGraphView: React.FC = () => {
   // ─── Zoom to fit after simulation settles ───
   const hasZoomed = useRef(false);
   useEffect(() => {
+    // Reset zoom flag when dimension changes
+    if (dimensionResetFlag.current) {
+      hasZoomed.current = false;
+      dimensionResetFlag.current = false;
+    }
     if (!filtered || hasZoomed.current) return;
     const timer = setTimeout(() => {
       graphRef.current?.zoomToFit?.(400, 60);
       hasZoomed.current = true;
     }, 1500);
     return () => clearTimeout(timer);
-  }, [filtered]);
+  }, [filtered, graphKey]);
 
   // Adjacency map: nodeId → list of { id, name, type }
   const adjacency = useMemo(() => {
@@ -1535,6 +1557,7 @@ const SecondBrainGraphView: React.FC = () => {
               onNodeHover={onNodeHover}
               onBackgroundClick={onBackgroundClick}
               backgroundColor="#000011"
+              showNavInfo={!isMobile}
               warmupTicks={settings.warmupTicks}
               cooldownTicks={200}
               enableNodeDrag={!isMobile}
