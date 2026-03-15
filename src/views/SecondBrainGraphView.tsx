@@ -223,7 +223,7 @@ const NotePreviewPanel: React.FC<{
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-4 py-3">
+      <div className="flex-1 overflow-y-auto px-4 py-3" style={{ touchAction: 'pan-y' }}>
         {loading ? (
           <div className="text-th-muted text-xs animate-pulse">Loading content...</div>
         ) : (
@@ -1837,28 +1837,6 @@ const SecondBrainGraphView: React.FC = () => {
           >
             {/* Drag handle indicator */}
             <div className="absolute left-1.5 top-1/2 -translate-y-1/2 w-1 h-8 rounded-full bg-th-muted/30 pointer-events-none" />
-            {/* Mobile panel header */}
-            <div className="flex items-center justify-between px-3 py-2.5 border-b border-th-hub-border bg-th-surface/30">
-              <button
-                onClick={() => setMobilePanel(false)}
-                className="inline-flex items-center gap-1 text-[11px] text-th-secondary hover:text-violet-400 transition-colors"
-              >
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M8 2L4 6l4 4" />
-                </svg>
-                Back to graph
-              </button>
-              {previewNote && (
-                <a
-                  href={secondBrainPath(previewNote.id)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[11px] text-violet-400 hover:text-violet-300 transition-colors"
-                >
-                  open full ↗
-                </a>
-              )}
-            </div>
             <NotePreviewPanel
               note={previewNote}
               html={noteHtml}
