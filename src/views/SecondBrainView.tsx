@@ -96,7 +96,7 @@ const Chip: React.FC<{
     ? 'bg-amber-400/10 hover:bg-amber-400/30'
     : 'bg-violet-400/5 hover:bg-violet-400/20';
   return (
-    <span className={`text-[9px] border flex items-center ${base}`}>
+    <span className={`text-[10px] border flex items-center ${base}`}>
       <span className="px-1.5 py-0.5">{label}</span>
       <button
         onClick={onDismiss}
@@ -255,7 +255,17 @@ const ActivityHeatmap: React.FC<{
     const rect = grid.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const firstWeekRect = (grid.children[1] as HTMLElement).getBoundingClientRect();
+    // Find first visible week column (day labels may be hidden on mobile)
+    let firstWeekEl: HTMLElement | null = null;
+    for (let i = 0; i < grid.children.length; i++) {
+      const child = grid.children[i] as HTMLElement;
+      if (!child.hasAttribute('data-day-labels') && child.offsetWidth > 0) {
+        firstWeekEl = child;
+        break;
+      }
+    }
+    if (!firstWeekEl) return;
+    const firstWeekRect = firstWeekEl.getBoundingClientRect();
     const gridStartX = firstWeekRect.left - rect.left;
     const gridX = x - gridStartX;
     if (gridX < 0) return;
@@ -265,7 +275,7 @@ const ActivityHeatmap: React.FC<{
     const colWidth = (gridWidth - (n - 1) * gap) / n;
     const colStep = colWidth + gap;
     const wi = Math.min(Math.max(Math.floor(gridX / colStep), 0), n - 1);
-    const rowPitch = 10; // 8px cell + 2px gap
+    const rowPitch = colWidth + gap; // square cells: row height = column width
     const di = Math.min(Math.max(Math.floor(y / rowPitch), 0), 6);
     const day = weeks[wi]?.[di];
     if (day?.inYear) handleCellClick(day.date);
@@ -283,7 +293,7 @@ const ActivityHeatmap: React.FC<{
       <div className="overflow-hidden pb-1">
         <div ref={gridRef} className="flex gap-[2px] cursor-pointer" style={{ width: '100%' }} onClick={handleGridClick}>
           {/* Day labels */}
-          <div className="flex flex-col gap-[2px] mr-0.5 flex-shrink-0">
+          <div data-day-labels className="hidden md:flex flex-col gap-[2px] mr-0.5 flex-shrink-0">
             {DAY_NAMES.map((name, i) => (
               <div key={i} className="text-[6px] text-th-muted leading-none flex items-center" style={{ width: 8, height: 8 }}>
                 {i % 2 === 1 ? name : ''}
@@ -297,9 +307,8 @@ const ActivityHeatmap: React.FC<{
                 return (
                   <div
                     key={di}
-                    className="aspect-square"
+                    className="aspect-square w-full"
                     style={{
-                      height: 8,
                       backgroundColor: cellColor(day.count, day.inYear),
                       border: isEmpty ? '1px solid rgba(255, 255, 255, 0.06)' : 'none',
                       borderRadius: 1,
@@ -480,7 +489,7 @@ const DockedToolbar: React.FC<{
             }}
             autoComplete="off"
             spellCheck={false}
-            className="flex-1 min-w-0 text-[11px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
+            className="flex-1 min-w-0 text-[16px] md:text-[11px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
           />
           {query && (
             <button onClick={() => setQuery('')} className="text-th-tertiary hover:text-th-secondary text-[16px] md:text-[13px] leading-none flex-shrink-0 px-0.5">&times;</button>
@@ -491,7 +500,7 @@ const DockedToolbar: React.FC<{
               <select
                 value={searchMode}
                 onChange={(e) => setSearchMode(e.target.value as SearchMode)}
-                className="md:hidden border border-th-hub-border text-[10px] text-th-primary px-1 py-0.5 focus:outline-none focus:border-th-border-active"
+                className="md:hidden border border-th-hub-border text-[16px] text-th-primary px-1 py-0.5 focus:outline-none focus:border-th-border-active"
                 style={{ backgroundColor: 'var(--hub-sidebar-bg)', colorScheme: 'dark' }}
               >
                 {SEARCH_MODES.map(mode => (
@@ -562,7 +571,7 @@ const DockedToolbar: React.FC<{
                           setScopeInput(''); setScopeOpen(false); (e.target as HTMLElement).blur();
                         }
                       }}
-                      className={`bg-th-surface border text-[10px] text-th-primary px-1.5 py-0.5 w-24 focus:outline-none transition-colors ${directoryScope ? 'border-violet-400/40' : 'border-th-hub-border'
+                      className={`bg-th-surface border text-[16px] md:text-[10px] text-th-primary px-1.5 py-0.5 w-24 md:w-24 focus:outline-none transition-colors ${directoryScope ? 'border-violet-400/40' : 'border-th-hub-border'
                         } focus:border-th-border-active`}
                     />
                     {scopeOpen && filteredScopeOptions.length > 0 && (
@@ -675,7 +684,7 @@ const DockedToolbar: React.FC<{
                 <select
                   value={sortMode}
                   onChange={(e) => setSortMode(e.target.value as SortMode)}
-                  className="md:hidden border border-th-hub-border text-[10px] text-th-primary px-1 py-0.5 focus:outline-none focus:border-th-border-active"
+                  className="md:hidden border border-th-hub-border text-[16px] text-th-primary px-1 py-0.5 focus:outline-none focus:border-th-border-active"
                   style={{ backgroundColor: 'var(--hub-sidebar-bg)', colorScheme: 'dark' }}
                 >
                   {sortOptions.map(opt => (
@@ -1527,7 +1536,7 @@ export const SecondBrainView: React.FC = () => {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
           onMouseDown={(e) => { if (e.target === e.currentTarget) dismissWelcome('technical'); }}
         >
-          <div className="max-w-lg mx-4 border border-violet-500/25 rounded-xl px-8 py-10 bg-th-surface/95 shadow-2xl">
+          <div className="max-w-lg mx-4 border border-violet-500/25 rounded-xl px-4 sm:px-8 py-8 sm:py-10 bg-th-surface/95 shadow-2xl">
             <p className="text-[15px] text-th-secondary leading-relaxed">
               <strong className="text-violet-400">This is a personal knowledge graph</strong> — a
               working reference I maintain as I study and build. It's not polished for consumption,
