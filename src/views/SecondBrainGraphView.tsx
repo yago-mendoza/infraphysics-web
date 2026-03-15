@@ -1337,7 +1337,7 @@ const SecondBrainGraphView: React.FC = () => {
       style={{ left: isMobile ? 0 : SIDEBAR_WIDTH, top: isMobile ? MOBILE_NAV_HEIGHT : 0, overscrollBehavior: 'contain', touchAction: 'none', WebkitTouchCallout: 'none', WebkitUserSelect: 'none' } as React.CSSProperties}
     >
       {/* Toolbar — vertical icon strip + controls panel side by side */}
-      <div className="absolute left-2 md:left-3 top-2 md:top-3 z-20 flex items-start gap-1.5">
+      <div className="absolute left-2 md:left-3 top-2 md:top-3 z-20 flex items-start gap-1.5" style={{ touchAction: 'auto' }}>
         {/* Icon strip (vertical): menu → replay → center → select → back */}
         <div className="flex flex-col gap-1.5 md:gap-1">
           {/* Controls toggle (menu) */}
@@ -1819,6 +1819,7 @@ const SecondBrainGraphView: React.FC = () => {
             style={{
               opacity: mobilePanel && previewNote ? Math.max(0, 1 - swipeOffset / 200) : 0,
               pointerEvents: mobilePanel && previewNote ? 'auto' : 'none',
+              touchAction: 'auto',
             }}
             onClick={() => setMobilePanel(false)}
           />
@@ -1827,6 +1828,7 @@ const SecondBrainGraphView: React.FC = () => {
             ref={mobilePanelRef}
             className={`fixed right-0 bottom-0 z-40 bg-th-base border-l border-th-hub-border flex flex-col overflow-hidden select-text ${swipingRef.current ? '' : 'transition-transform duration-200'}`}
             style={{
+              touchAction: 'auto',
               top: MOBILE_NAV_HEIGHT,
               width: '85vw',
               maxWidth: 400,
