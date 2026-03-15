@@ -268,22 +268,9 @@ const SecondBrainGraphView: React.FC = () => {
   const [graphKey, setGraphKey] = useState(0);
   const gravityInitialized = useRef(false);
 
-  // Reset positions when switching 2D ↔ 3D so the force layout starts fresh
+  // Refs for dimension-switch reset (effect is after `filtered` is declared)
   const prevDimension = useRef(dimension);
   const dimensionResetFlag = useRef(false);
-  useEffect(() => {
-    if (dimension === prevDimension.current) return;
-    prevDimension.current = dimension;
-    if (filtered) {
-      for (const node of filtered.nodes as any[]) {
-        delete node.x; delete node.y; delete node.z;
-        delete node.vx; delete node.vy; delete node.vz;
-      }
-    }
-    gravityInitialized.current = false;
-    dimensionResetFlag.current = true;
-    setGraphKey(k => k + 1);
-  }, [dimension, filtered]);
 
   // Pop-in animation — purely visual reveal (physics run on full graph)
   const [popInActive, setPopInActive] = useState(false);
@@ -414,6 +401,21 @@ const SecondBrainGraphView: React.FC = () => {
     gravityInitialized.current = false;
     setGraphKey(k => k + 1);
   }, [filtered]);
+
+  // Reset positions when switching 2D ↔ 3D so the force layout starts fresh
+  useEffect(() => {
+    if (dimension === prevDimension.current) return;
+    prevDimension.current = dimension;
+    if (filtered) {
+      for (const node of filtered.nodes as any[]) {
+        delete node.x; delete node.y; delete node.z;
+        delete node.vx; delete node.vy; delete node.vz;
+      }
+    }
+    gravityInitialized.current = false;
+    dimensionResetFlag.current = true;
+    setGraphKey(k => k + 1);
+  }, [dimension, filtered]);
 
   // ─── Heatmap coloring ───────────────────────────────────────────────
   const [colorMode, setColorMode] = useState<ColorMode>('default');
