@@ -223,7 +223,7 @@ const NotePreviewPanel: React.FC<{
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-4 py-3" style={{ touchAction: 'pan-y' }}>
+      <div className="flex-1 overflow-y-auto px-4 py-3">
         {loading ? (
           <div className="text-th-muted text-xs animate-pulse">Loading content...</div>
         ) : (
@@ -1830,9 +1830,9 @@ const SecondBrainGraphView: React.FC = () => {
           {/* Sliding panel */}
           <div
             ref={mobilePanelRef}
-            className={`fixed right-0 bottom-0 z-40 bg-th-base border-l border-th-hub-border flex flex-col overflow-hidden select-text ${swipingRef.current ? '' : 'transition-transform duration-200'}`}
+            className={`fixed right-0 bottom-0 z-40 bg-th-base border-l border-th-hub-border flex flex-col overflow-hidden select-text swipe-panel ${swipingRef.current ? '' : 'transition-transform duration-200'}`}
             style={{
-              touchAction: 'auto',
+              touchAction: 'pan-y',
               top: MOBILE_NAV_HEIGHT,
               width: '85vw',
               maxWidth: 400,

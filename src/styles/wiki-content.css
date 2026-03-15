@@ -125,6 +125,13 @@
   animation: topology-flash 1.2s ease-out;
 }
 
+/* Swipe-to-dismiss panel: force pan-y on ALL descendants so horizontal
+   swipe gestures propagate to the JS handler instead of being consumed
+   by the browser (touch-action does NOT inherit). */
+.swipe-panel, .swipe-panel * {
+  touch-action: pan-y !important;
+}
+
 /* Mobile horizontal scroll rows — fade edges, hidden scrollbar */
 @media (max-width: 767px) {
   .sb-filter-row,
