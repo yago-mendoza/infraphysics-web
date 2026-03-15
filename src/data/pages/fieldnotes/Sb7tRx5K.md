@@ -12,3 +12,6 @@ Open-source backend-as-a-service built on [[Pg6tRw2H|PostgreSQL]]. Combines auth
 - SDK for [[Rc4pBn9L|React]], [[Nx5tWs7J|Next.js]], Flutter — client libraries that talk to the Supabase API
 - Common pairing: [[Vc3pLx8B|Vercel]] + Supabase = frontend on Vercel, database + auth + storage + real-time on Supabase
 - The PostgreSQL they give you is yours to use however you want — if you need to store additional client data, run custom queries, or add tables beyond what the SDK manages, you can connect directly and use it as a regular Postgres database. Full access.
+- **Table Editor vs SQL Editor**: the Table Editor is visual — spreadsheet view, click to edit rows, filter, sort. The SQL Editor is for commands: [[1sqlzLdR|DDL]], [[PrjC4wIH|triggers]], [[UU9d6RWw|indexes]], [[iegOPp9Q|RLS]] policies, complex queries. Table Editor only touches rows; SQL Editor can do everything. It even lets you save queries as favorites.
+- **Architecture**: URL (where the "building" is) + publishable [[PkRkL6kd|key]] (front door, light lock) + [[KyOPadSs|session token]] per user (real identity) + [[iegOPp9Q|RLS]] (the database-level lock). The publishable key is not the security — the token + RLS is.
+- [[JD6PRNFD|Supabase Auth]] handles [[Oa3kTm7D|OAuth]] natively with Google — one login does both identity + Gmail access.
