@@ -915,11 +915,15 @@ const SecondBrainGraphView: React.FC = () => {
   }, [selectedId, showPanel, isMobile]);
 
   const onBackgroundClick = useCallback(() => {
-    setSelectedId(null);
-    setMultiSelected(new Set());
-    setHoveredId(null);
+    // On mobile, don't deselect on background tap — accidental taps in
+    // dense graphs are too frequent. Only another node tap replaces selection.
+    if (!isMobile) {
+      setSelectedId(null);
+      setMultiSelected(new Set());
+      setHoveredId(null);
+    }
     setShowControls(false);
-  }, []);
+  }, [isMobile]);
 
   const goToRandomNote = useCallback(() => {
     if (!filtered) return;
