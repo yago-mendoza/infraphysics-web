@@ -847,31 +847,52 @@ const SecondBrainGraphView: React.FC = () => {
     const el = mobilePanelRef.current;
     if (!el) return;
 
+    // gesture = null (undecided), 'swipe' (horizontal), 'scroll' (vertical)
+    let gesture: 'swipe' | 'scroll' | null = null;
+
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length !== 1) return;
       swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, time: Date.now() };
       swipingRef.current = false;
+      gesture = null;
     };
 
     const onTouchMove = (e: TouchEvent) => {
       if (!swipeStart.current || e.touches.length !== 1) return;
       const dx = e.touches[0].clientX - swipeStart.current.x;
       const dy = e.touches[0].clientY - swipeStart.current.y;
-      if (!swipingRef.current) {
-        if (Math.abs(dx) < 10) return;
-        // If browser already started vertical scroll, we can't cancel it
-        if (dx < 0 || !e.cancelable || Math.abs(dy) > Math.abs(dx) * 1.5) { swipeStart.current = null; return; }
-        swipingRef.current = true;
+
+      // Decide gesture direction on first significant movement
+      if (!gesture) {
+        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return; // too early
+        if (dx > 0 && Math.abs(dx) > Math.abs(dy)) {
+          gesture = 'swipe';
+        } else {
+          gesture = 'scroll';
+        }
       }
-      if (e.cancelable) e.preventDefault();
+
+      e.preventDefault(); // always works because touch-action: none
+
+      if (gesture === 'scroll') {
+        // Manually scroll the content container
+        const prevY = (swipeStart.current as any)._prevY ?? swipeStart.current.y;
+        const deltaY = e.touches[0].clientY - prevY;
+        const scrollEl = el.querySelector('.overflow-y-auto') as HTMLElement;
+        if (scrollEl) scrollEl.scrollTop -= deltaY;
+        (swipeStart.current as any)._prevY = e.touches[0].clientY;
+        return;
+      }
+
+      // Horizontal swipe
+      swipingRef.current = true;
       const offset = Math.max(0, dx);
       swipeOffsetRef.current = offset;
       setSwipeOffset(offset);
     };
 
     const onTouchEnd = () => {
-      const wasSwiping = swipingRef.current;
-      if (wasSwiping && swipeStart.current) {
+      if (swipingRef.current && swipeStart.current) {
         const elapsed = Date.now() - swipeStart.current.time;
         const offset = swipeOffsetRef.current;
         const velocity = offset / Math.max(elapsed, 1);
@@ -879,11 +900,11 @@ const SecondBrainGraphView: React.FC = () => {
           setMobilePanelRef.current(false);
         }
       }
-      // Always clean up — prevents panel getting stuck at partial offset
       setSwipeOffset(0);
       swipeOffsetRef.current = 0;
       swipingRef.current = false;
       swipeStart.current = null;
+      gesture = null;
     };
 
     el.addEventListener('touchstart', onTouchStart, { passive: true });
@@ -1861,7 +1882,6 @@ const SecondBrainGraphView: React.FC = () => {
             ref={mobilePanelRef}
             className={`fixed right-0 bottom-0 z-40 bg-th-base border-l border-th-hub-border flex flex-col overflow-hidden select-text swipe-panel ${swipingRef.current ? '' : 'transition-transform duration-200'}`}
             style={{
-              touchAction: 'pan-y',
               top: MOBILE_NAV_HEIGHT,
               width: '85vw',
               maxWidth: 400,
