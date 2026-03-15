@@ -775,7 +775,7 @@ const SecondBrainGraphView: React.FC = () => {
 
   const nodePointerAreaPaint = useCallback((node: any, color: string, ctx: CanvasRenderingContext2D) => {
     const n = node as GraphNode & { x: number; y: number };
-    const pad = isMobile ? 8 : 3;
+    const pad = isMobile ? 14 : 3;
     const r = (2 + n.centrality * 12) * settings.nodeSize + pad;
     ctx.beginPath();
     ctx.arc(n.x, n.y, r, 0, 2 * Math.PI);
