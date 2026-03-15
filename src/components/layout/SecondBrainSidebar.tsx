@@ -138,7 +138,7 @@ const TreeNodeItem: React.FC<{
   return (
     <div>
       <div
-        className={`flex items-center gap-1 py-0.5 group ${
+        className={`flex items-center gap-1 py-1.5 md:py-0.5 group ${
           isScoped ? 'bg-violet-400/10' : isActive ? 'bg-violet-400/5' : ''
         } ${isRoot ? 'border-l-2 border-violet-400/20' : ''}`}
         style={{ paddingLeft: `${depth * 12}px` }}
@@ -407,6 +407,54 @@ export const SecondBrainSidebar: React.FC = () => {
   const [drawerMounted, setDrawerMounted] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const { getPercentile, getIslands } = useGraphRelevance();
+
+  // Swipe-to-close state for mobile drawer
+  const drawerRef = useRef<HTMLElement>(null);
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const touchDeltaX = useRef(0);
+  const isSwiping = useRef(false);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    touchDeltaX.current = 0;
+    isSwiping.current = false;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const dx = e.touches[0].clientX - touchStartX.current;
+    const dy = e.touches[0].clientY - touchStartY.current;
+    // Only start swiping if horizontal movement dominates vertical
+    if (!isSwiping.current && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      isSwiping.current = true;
+    }
+    if (!isSwiping.current) return;
+    // Only allow swipe left (negative dx)
+    touchDeltaX.current = Math.min(0, dx);
+    if (drawerRef.current) {
+      drawerRef.current.style.transition = 'none';
+      drawerRef.current.style.transform = `translateX(${touchDeltaX.current}px)`;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isSwiping.current) return;
+    const el = drawerRef.current;
+    if (!el) return;
+    // Restore transition
+    el.style.transition = '';
+    if (touchDeltaX.current < -80) {
+      // Swipe far enough → close
+      el.style.transform = '';
+      setMobileOpen(false);
+    } else {
+      // Snap back
+      el.style.transform = '';
+    }
+    isSwiping.current = false;
+    touchDeltaX.current = 0;
+  };
 
   // Animate drawer open/close + lock background scroll
   useEffect(() => {
@@ -809,8 +857,12 @@ export const SecondBrainSidebar: React.FC = () => {
             onClick={() => setMobileOpen(false)}
           />
           <aside
+            ref={drawerRef}
             className={`absolute left-0 top-0 bottom-0 w-72 max-w-[85vw] flex flex-col overflow-hidden transition-transform duration-250 ease-out ${drawerVisible ? 'translate-x-0' : '-translate-x-full'}`}
             style={{ backgroundColor: 'var(--hub-sidebar-bg)' }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
             {/* Header with close */}
             <div className="px-3 py-3 border-b border-th-hub-border flex-shrink-0">
