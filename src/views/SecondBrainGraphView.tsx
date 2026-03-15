@@ -810,8 +810,63 @@ const SecondBrainGraphView: React.FC = () => {
 
   // ─── Mobile: swipe-to-dismiss state ───
   const [swipeOffset, setSwipeOffset] = useState(0);
+  const swipeOffsetRef = useRef(0);
   const swipingRef = useRef(false);
   const swipeStart = useRef<{ x: number; y: number; time: number } | null>(null);
+  const mobilePanelRef = useRef<HTMLDivElement>(null);
+  const setMobilePanelRef = useRef(setMobilePanel);
+  setMobilePanelRef.current = setMobilePanel;
+
+  // Native touch listeners with { passive: false } so preventDefault() works
+  // This allows horizontal swipe-to-close even over scrollable content
+  useEffect(() => {
+    const el = mobilePanelRef.current;
+    if (!el) return;
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, time: Date.now() };
+      swipingRef.current = false;
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!swipeStart.current || e.touches.length !== 1) return;
+      const dx = e.touches[0].clientX - swipeStart.current.x;
+      const dy = e.touches[0].clientY - swipeStart.current.y;
+      if (!swipingRef.current) {
+        if (Math.abs(dx) < 10) return;
+        if (dx < 0 || Math.abs(dy) > Math.abs(dx) * 1.5) { swipeStart.current = null; return; }
+        swipingRef.current = true;
+      }
+      e.preventDefault(); // works because { passive: false }
+      const offset = Math.max(0, dx);
+      swipeOffsetRef.current = offset;
+      setSwipeOffset(offset);
+    };
+
+    const onTouchEnd = () => {
+      if (!swipeStart.current || !swipingRef.current) { swipeStart.current = null; return; }
+      const elapsed = Date.now() - swipeStart.current.time;
+      const offset = swipeOffsetRef.current;
+      const velocity = offset / Math.max(elapsed, 1);
+      if (offset > 80 || velocity > 0.4) {
+        setMobilePanelRef.current(false);
+      }
+      setSwipeOffset(0);
+      swipeOffsetRef.current = 0;
+      swipingRef.current = false;
+      swipeStart.current = null;
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+    };
+  });
 
   // ─── Event handlers ───
   const onNodeClick = useCallback((node: any, event?: MouseEvent) => {
@@ -827,24 +882,34 @@ const SecondBrainGraphView: React.FC = () => {
     }
     // Normal click: pin single node, clear multi-selection + search
     setMultiSelected(new Set());
-    setSelectedId(node.id);
     setHoveredId(null);
     setSearchQuery('');
     if (isMobile) {
-      setMobilePanel(true);
-    } else if (!showPanel) {
-      setShowPanel(true);
+      setShowControls(false);
+      // First tap: select node (highlight connections). Second tap on same node: open panel.
+      if (selectedId === node.id) {
+        setMobilePanel(true);
+      } else {
+        setSelectedId(node.id);
+      }
+    } else {
+      setSelectedId(node.id);
+      if (!showPanel) {
+        setShowPanel(true);
+      }
     }
-  }, [showPanel, isMobile, selectMode]);
+  }, [showPanel, isMobile, selectMode, selectedId]);
 
   const onNodeHover = useCallback((node: any) => {
     if (containerRef.current) {
       containerRef.current.style.cursor = node ? 'pointer' : 'default';
     }
+    // On mobile, don't update hover from touch events — only explicit taps (onNodeClick)
+    if (isMobile) return;
     // Always update hover for visual highlight
     setHoveredId(node ? node.id : null);
     // Only open panel preview if nothing is pinned
-    if (!selectedId && node && !showPanel && !isMobile) {
+    if (!selectedId && node && !showPanel) {
       setShowPanel(true);
     }
   }, [selectedId, showPanel, isMobile]);
@@ -853,6 +918,7 @@ const SecondBrainGraphView: React.FC = () => {
     setSelectedId(null);
     setMultiSelected(new Set());
     setHoveredId(null);
+    setShowControls(false);
   }, []);
 
   const goToRandomNote = useCallback(() => {
@@ -1099,6 +1165,8 @@ const SecondBrainGraphView: React.FC = () => {
           }
           return selected;
         });
+        // Auto-exit select mode after completing a selection so pan/zoom works again
+        setSelectMode(false);
       }
     };
 
@@ -1173,6 +1241,8 @@ const SecondBrainGraphView: React.FC = () => {
           selected.forEach(id => merged.add(id));
           return merged;
         });
+        // Auto-exit select mode after completing a selection so pan/zoom works again
+        setSelectMode(false);
       }
     };
 
@@ -1264,16 +1334,16 @@ const SecondBrainGraphView: React.FC = () => {
     <div
       ref={containerRef}
       className="fixed right-0 bottom-0 bg-th-base flex select-none"
-      style={{ left: isMobile ? 0 : SIDEBAR_WIDTH, top: isMobile ? MOBILE_NAV_HEIGHT : 0 }}
+      style={{ left: isMobile ? 0 : SIDEBAR_WIDTH, top: isMobile ? MOBILE_NAV_HEIGHT : 0, overscrollBehavior: 'contain', touchAction: 'none', WebkitTouchCallout: 'none', WebkitUserSelect: 'none' } as React.CSSProperties}
     >
       {/* Toolbar — vertical icon strip + controls panel side by side */}
-      <div className="absolute left-3 top-3 z-20 flex items-start gap-1.5">
+      <div className="absolute left-2 md:left-3 top-2 md:top-3 z-20 flex items-start gap-1.5">
         {/* Icon strip (vertical): menu → replay → center → select → back */}
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5 md:gap-1">
           {/* Controls toggle (menu) */}
           <button
             onClick={() => setShowControls(v => !v)}
-            className={`inline-flex items-center justify-center w-8 h-8 bg-th-base/80 backdrop-blur-sm border transition-colors ${
+            className={`inline-flex items-center justify-center w-11 h-11 md:w-8 md:h-8 rounded-md md:rounded-none bg-th-base/80 backdrop-blur-sm border transition-colors ${
               showControls ? 'border-violet-500/40 text-violet-400' : 'border-th-hub-border text-th-secondary hover:text-violet-400'
             }`}
             title="Toggle controls (C)"
@@ -1288,16 +1358,17 @@ const SecondBrainGraphView: React.FC = () => {
           {/* Info / guide */}
           <button
             onClick={() => setGuideOpen(true)}
-            className="inline-flex items-center justify-center w-8 h-8 bg-th-base/80 backdrop-blur-sm border border-th-hub-border text-violet-400 hover:text-violet-300 transition-colors"
+            className="inline-flex items-center justify-center w-11 h-11 md:w-8 md:h-8 rounded-md md:rounded-none bg-th-base/80 backdrop-blur-sm border border-th-hub-border text-violet-400 hover:text-violet-300 transition-colors"
             title="Graph guide"
             aria-label="Graph guide"
           >
             <InfoIcon size={11} />
           </button>
-          {/* Pop-in (replay) */}
+          {/* Pop-in (replay) — 2D only */}
+          {dimension === '2d' && (
           <button
             onClick={togglePopIn}
-            className={`inline-flex items-center justify-center w-8 h-8 bg-th-base/80 backdrop-blur-sm border transition-colors ${
+            className={`inline-flex items-center justify-center w-11 h-11 md:w-8 md:h-8 rounded-md md:rounded-none bg-th-base/80 backdrop-blur-sm border transition-colors ${
               popInActive ? 'border-violet-500/40 text-violet-400' : 'border-th-hub-border text-th-secondary hover:text-violet-400'
             }`}
             title={popInActive ? 'Stop pop-in' : 'Pop-in animation'}
@@ -1314,10 +1385,12 @@ const SecondBrainGraphView: React.FC = () => {
               </svg>
             )}
           </button>
-          {/* Center view */}
+          )}
+          {/* Center view — 2D only (3D uses camera, no zoomToFit) */}
+          {dimension === '2d' && (
           <button
             onClick={() => graphRef.current?.zoomToFit?.(400, 60)}
-            className="inline-flex items-center justify-center w-8 h-8 text-th-secondary bg-th-base/80 backdrop-blur-sm border border-th-hub-border hover:text-violet-400 transition-colors"
+            className="inline-flex items-center justify-center w-11 h-11 md:w-8 md:h-8 rounded-md md:rounded-none text-th-secondary bg-th-base/80 backdrop-blur-sm border border-th-hub-border hover:text-violet-400 transition-colors"
             title="Center view"
             aria-label="Center view"
           >
@@ -1329,19 +1402,21 @@ const SecondBrainGraphView: React.FC = () => {
               <line x1="9" y1="6" x2="11" y2="6" />
             </svg>
           </button>
+          )}
           {/* 2D / 3D toggle */}
           <button
             onClick={() => setDimension(d => d === '2d' ? '3d' : '2d')}
-            className="inline-flex items-center justify-center w-8 h-8 bg-th-base/80 backdrop-blur-sm border border-th-hub-border text-th-secondary hover:text-violet-400 transition-colors text-[10px] font-mono font-bold"
+            className="inline-flex items-center justify-center w-11 h-11 md:w-8 md:h-8 rounded-md md:rounded-none bg-th-base/80 backdrop-blur-sm border border-th-hub-border text-th-secondary hover:text-violet-400 transition-colors text-[12px] md:text-[10px] font-mono font-bold"
             title={dimension === '2d' ? 'Switch to 3D' : 'Switch to 2D'}
             aria-label={dimension === '2d' ? 'Switch to 3D' : 'Switch to 2D'}
           >
             {dimension === '2d' ? '3D' : '2D'}
           </button>
-          {/* Select mode */}
+          {/* Select mode — 2D only */}
+          {dimension === '2d' && (
           <button
             onClick={() => setSelectMode(v => !v)}
-            className={`inline-flex items-center justify-center w-8 h-8 bg-th-base/80 backdrop-blur-sm border transition-colors ${
+            className={`inline-flex items-center justify-center w-11 h-11 md:w-8 md:h-8 rounded-md md:rounded-none bg-th-base/80 backdrop-blur-sm border transition-colors ${
               selectMode ? 'border-cyan-500/40 text-cyan-400' : 'border-th-hub-border text-th-secondary hover:text-violet-400'
             }`}
             title={selectMode ? 'Exit selection mode' : 'Area selection mode'}
@@ -1358,12 +1433,13 @@ const SecondBrainGraphView: React.FC = () => {
               <line x1="1" y1="4" x2="1" y2="1" />
             </svg>
           </button>
+          )}
           {/* Go back */}
           <Link
             to={secondBrainPath()}
-            className="inline-flex items-center justify-center w-8 h-8 text-th-secondary bg-th-base/80 backdrop-blur-sm border border-th-hub-border hover:text-violet-400 hover:border-violet-500/40 transition-colors"
+            className="inline-flex items-center justify-center w-11 h-11 md:w-8 md:h-8 rounded-md md:rounded-none text-th-secondary bg-th-base/80 backdrop-blur-sm border border-th-hub-border hover:text-violet-400 hover:border-violet-500/40 transition-colors"
           >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M8 2L4 6l4 4" />
             </svg>
           </Link>
@@ -1748,6 +1824,7 @@ const SecondBrainGraphView: React.FC = () => {
           />
           {/* Sliding panel */}
           <div
+            ref={mobilePanelRef}
             className={`fixed right-0 bottom-0 z-40 bg-th-base border-l border-th-hub-border flex flex-col overflow-hidden select-text ${swipingRef.current ? '' : 'transition-transform duration-200'}`}
             style={{
               top: MOBILE_NAV_HEIGHT,
@@ -1756,35 +1833,6 @@ const SecondBrainGraphView: React.FC = () => {
               transform: mobilePanel && previewNote
                 ? `translateX(${swipeOffset}px)`
                 : 'translateX(100%)',
-            }}
-            onTouchStart={(e) => {
-              if (e.touches.length !== 1) return;
-              swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, time: Date.now() };
-              swipingRef.current = false;
-            }}
-            onTouchMove={(e) => {
-              if (!swipeStart.current || e.touches.length !== 1) return;
-              const dx = e.touches[0].clientX - swipeStart.current.x;
-              const dy = e.touches[0].clientY - swipeStart.current.y;
-              // Only activate horizontal swipe to the right
-              if (!swipingRef.current) {
-                if (Math.abs(dx) < 10) return; // too early
-                if (dx < 0 || Math.abs(dy) > Math.abs(dx) * 1.5) { swipeStart.current = null; return; }
-                swipingRef.current = true;
-              }
-              e.preventDefault();
-              setSwipeOffset(Math.max(0, dx));
-            }}
-            onTouchEnd={() => {
-              if (!swipeStart.current || !swipingRef.current) { swipeStart.current = null; return; }
-              const elapsed = Date.now() - swipeStart.current.time;
-              const velocity = swipeOffset / Math.max(elapsed, 1);
-              if (swipeOffset > 80 || velocity > 0.4) {
-                setMobilePanel(false);
-              }
-              setSwipeOffset(0);
-              swipingRef.current = false;
-              swipeStart.current = null;
             }}
           >
             {/* Drag handle indicator */}
