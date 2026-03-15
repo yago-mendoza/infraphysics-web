@@ -12,18 +12,11 @@ Category: projects
 Date: 2026-03-14
 Description: A bespoke CRM for a health-tech startup, built from scratch in 5 days. 23 tables, 8 state machines, and a stale detection system that knows when you're neglecting a psychologist.
 
-On Monday I had a Notion spreadsheet with 40 psychologists' names in it. By Friday I had 23 database tables, 90 API endpoints, a Gmail integration, and a system that sends alerts when I've been ignoring a research fellow for too long.
-
 I should probably explain.
 
 3C Labs is a health-tech startup. Two people. They recruit psychologists, advisors, and research fellows into collaborative projects — clinical validation studies, regulatory advisory boards, co-authored papers. Their CRM was a Notion table with colored tags. It worked until it didn't, which was around the time they needed to track not just who someone was, but whether that person fit the organization, whether they fit a specific project, when someone last talked to them, and whether anyone was actually going to follow up.
 
-That's the kind of problem where you open HubSpot, stare at the pricing page for ten minutes, and think: "I could build this."
-
-So I did.
-
-26 · mar 10(4d earlier)
-First commit. Schema, API, seed data, 6 views. 70 commits today. The UI was in Spanish until 4pm — changed it to English mid-sprint because the team works in English. Lost an hour on string replacements.
+It's that moment where the overhead finally hits a tipping point. You start calculating the time it would take to script a custom solution versus just paying the convenience tax.
 
 1. The problem with off-the-shelf
 
@@ -458,7 +451,7 @@ The medium kept changing. First, physical notebooks that I'd start from both end
 Then TXT files. Then markdown. Then more TXT files because I forgot about the markdown files. Then photos of whiteboards that lived on my phone and never got organized. For years, the passion was the only thing pulling me forward. Every time I learned something, I'd write it down somewhere. The problem was that "somewhere" was everywhere.
 
 26 · feb 03(1m 5d earlier)
-The thing nobody tells you about collecting knowledge for a decade is that the collection itself becomes the problem. You have hundreds of notes and no way to find anything. The structure you need exists in your head, but it's not on paper. The whole point of this project is to get it on paper. On screen. Whatever. I wrote a whole threads/piece about this — about why documenting is the real competitive advantage.
+The thing about collecting notes for ten years is that eventually the collection is the problem. You have hundreds of files across dozens of formats and you can feel how they connect — the structure is in your head, you just can't grep it. The whole point of this project is to take that latent graph and externalize it into something you can actually navigate.
 
 The AI inflection
 
@@ -636,8 +629,6 @@ Any code change → do ONLY what was requested. Nothing more.
 
 That last rule took three drafts. The first version said "try not to change things you weren't asked to change." Too soft. The AI interpreted "try" as "consider briefly, then do it anyway." The second said "only modify files directly related to the request." It found creative ways to argue that ThemeContext.tsx was "directly related" to a CSS border fix. The third version says "do ONLY what was requested. Nothing more." Blunt, unambiguous, impossible to lawyer around. It mostly works.
 
-26 · feb 06(1m 2d earlier)
-Write CLAUDE.md. Eleven automation rules. The most important one is four words: "nothing more. stop there."
 26 · feb 07(1m 1d earlier)
 The AI adds comments to a file I ask it to leave alone. We're getting there.
 
@@ -648,9 +639,6 @@ Even with CLAUDE.md, the AI forgets. It edits a fieldnote and doesn't run the bu
 So I added hooks — shell scripts that fire automatically when the AI uses specific tools. Write a fieldnote file and a reminder injects: "FIELDNOTE MODIFIED — run the build when done." Start a rename and a checklist appears: "did you dry-run first?"
 
 The hooks don't block anything. They just make sure the AI sees the reminder at the right moment. It's the difference between "please remember to lock the door" (CLAUDE.md) and a sign taped to the door that says "DID YOU LOCK THIS?" (hooks). CLAUDE.md catches 80% of mistakes. Hooks catch another 15%. The last 5% is me reading every diff before pushing. It's not bulletproof. But the combination is surprisingly effective.
-
-26 · feb 07(1m 1d earlier)
-The AI stops forgetting to build after fieldnote edits. The hooks work. I feel like I've trained a very smart, very forgetful dog.
 
 The scripts — check-references.js, move-hierarchy.js, preflight.js, analyze-pairs.js — are a collaboration. I describe what I need, Claude builds the pipeline. And here's the thing: Claude is very good at organizational tooling. The scripts it builds for knowledge management — validation, cross-referencing, bulk operations — tend to work on the first try. It's the kind of structured, rule-based pipeline work where an LLM's consistency shines. I'd trust it to build a reference checker before I'd trust it to pick a CSS color.
 
@@ -678,7 +666,7 @@ Crawlers and AEO. This is an SPA -- crawlers see an empty <div id="root"> unless
 For LLM crawlers specifically, there are two files. llms-full.txt dumps every published article as plain text -- auto-generated, exhaustive, zero maintenance. llms.txt is the summary: site structure, curated intro, and article listings. It used to be manually maintained, which meant it was permanently out of sync. Now both files auto-generate from the same build pipeline that produces the sitemap and RSS feed. One npm run build and everything updates: Open Graph manifest, sitemap, RSS, llms.txt, llms-full.txt. No human memory required.
 
 26 · mar 10(2d later)
-llms.txt was manually maintained for weeks. every new article required editing it by hand, and it was already out of sync when I checked. moved it to auto-generation in the build pipeline. the fieldnote count, the article listings, the URLs -- all derived from the same source of truth now. one less thing to forget.
+llms.txt was manually maintained for days. every new article required editing it by hand, and it was already out of sync when I checked. moved it to auto-generation in the build pipeline. the fieldnote count, the article listings, the URLs -- all derived from the same source of truth now. one less thing to forget.
 
 8. What this is really about
 
@@ -699,9 +687,6 @@ I believe knowledge compounds faster when it's written down, and even faster whe
 This site is my lab, my notebook, and my proof of work. The Second Brain is the part that thinks. Everything else is just the frame.
 
 I am still not a web developer. But the website doesn't seem to mind.
-
-26 · mar 08(day zero)
-300+ fieldnotes. The graph has three visible continents: hardware, ML, and blockchain. The bridges between them are the most interesting part. I'm still building.
 
 ---
 
