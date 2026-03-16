@@ -18,14 +18,28 @@ import {
   MoonIcon,
   SearchIcon,
   GitHubIcon,
+  DiceIcon,
 } from '../icons';
 import { catAccentVar, secondBrainPath } from '../../config/categories';
 import { CATEGORY_ACCENTS } from '../../constants/theme';
+import { useNavigate } from 'react-router-dom';
 
 
 export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch }) => {
   const location = useLocation();
-  const showGitHub = location.pathname.startsWith('/lab/projects') || location.pathname.startsWith(secondBrainPath()) || location.pathname === '/about';
+  const navigate = useNavigate();
+  const isSecondBrain = location.pathname.startsWith(secondBrainPath());
+  const showGitHub = !isSecondBrain && (location.pathname.startsWith('/lab/projects') || location.pathname === '/about');
+
+  const handleRandomNote = useCallback(async () => {
+    try {
+      const res = await fetch('/fieldnotes-index.json');
+      const notes: { id: string }[] = await res.json();
+      if (notes.length === 0) return;
+      const random = notes[Math.floor(Math.random() * notes.length)];
+      navigate(secondBrainPath(random.id));
+    } catch { /* noop */ }
+  }, [navigate]);
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);   // controls DOM presence
   const [visible, setVisible] = useState(false);    // controls CSS transition state
@@ -96,6 +110,15 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearc
           >
             {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
           </button>
+          {isSecondBrain && (
+            <button
+              onClick={handleRandomNote}
+              className="p-2 hover:bg-th-active rounded-sm transition-colors text-th-secondary"
+              aria-label="Random fieldnote"
+            >
+              <DiceIcon />
+            </button>
+          )}
           {showGitHub && (
             <a
               href="https://github.com/yago-mendoza"
