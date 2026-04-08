@@ -13,7 +13,7 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 - /home -- Landing page and navigation hub
 - /about -- Background, beliefs, and expertise areas
 - /lab/projects -- Engineering projects with technical deep-dives
-- /lab/second-brain -- Knowledge graph of 521+ interconnected concept notes
+- /lab/second-brain -- Knowledge graph of 525+ interconnected concept notes
 - /lab/second-brain/graph -- Visual graph explorer
 - /blog/threads -- Long-form essays on technology, AI, economics, and systems thinking
 - /blog/bits2bricks -- Technical tutorials bridging software and physical engineering
@@ -26,6 +26,7 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 
 ## Threads (Essays)
 
+- [244 pages of Mythos](https://infraphysics.net/blog/threads/8266901): The model that hacks too well, thinks too clearly, and covers its own tracks.
 - [The palest ink is better than the best memory](https://infraphysics.net/blog/threads/2929333): Your mind is for having ideas, not holding them.
 - [The Bitter Lesson](https://infraphysics.net/blog/threads/9150483): Brute computation, human design, and seventy years of ignored lessons.
 - [15.4%](https://infraphysics.net/blog/threads/9962668): Scheming benchmarks, chain-of-thought opacity, and a number going up.
@@ -50,7 +51,7 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 
 ## Second Brain (Knowledge Graph)
 
-521+ atomic concept notes covering machine learning, hardware architecture, blockchain, distributed systems, and optimization. Each note is one concept with bidirectional wiki-links. The graph reveals structural relationships between domains. Explorable at /lab/second-brain and /lab/second-brain/graph.
+525+ atomic concept notes covering machine learning, hardware architecture, blockchain, distributed systems, and optimization. Each note is one concept with bidirectional wiki-links. The graph reveals structural relationships between domains. Explorable at /lab/second-brain and /lab/second-brain/graph.
 
 ## Contact
 
