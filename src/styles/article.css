@@ -167,6 +167,55 @@
   background: none;
   border: none;
 }
+/* Projects: page background is painted in --art-surface (grid removed in App.tsx),
+   so the box merges seamlessly — drop its border + radius to avoid a visible seam. */
+.article-projects .article-container {
+  border: none;
+  border-radius: 0;
+}
+/* Header bar (date + status) defaults to --art-surface-alt; match the page
+   background so it blends instead of reading as a separate strip.
+   Keep the bottom border line as a divider.
+   Inset it to the body text column width (the body is padded by --art-body-px). */
+.article-projects .article-header-bar {
+  background: var(--art-surface);
+  margin-left: 2rem;
+  margin-right: 2rem;
+  padding-left: 0;
+  padding-right: 0;
+}
+/* When there is a hero image, the bar spans the full image width (as before). */
+.article-projects .article-header-bar--has-hero {
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+/* Projects: titles, subtitles, tags and in-article headings are not shouted in all-caps. */
+.article-projects .article-title,
+.article-projects .article-subtitle,
+.article-projects .article-pill,
+.article-projects .article-content h1,
+.article-projects .article-content h2,
+.article-projects .article-content h3,
+.article-projects .article-content h4 {
+  text-transform: none;
+}
+/* Back link moved into the header bar. The nav row now holds the tags on the
+   left and the engagement buttons on the right, aligned to the top. */
+.article-projects .article-nav-row {
+  align-items: flex-start;
+  gap: 1rem;
+}
+.article-nav-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.article-nav-tags .article-pills {
+  margin-bottom: 0;
+}
 
 /* A2. Header bar */
 
@@ -190,7 +239,6 @@
   align-items: center;
   gap: 0.4rem;
   color: var(--art-accent);
-  text-transform: uppercase;
   letter-spacing: 0.1em;
 }
 
@@ -285,14 +333,14 @@
 
 .article-blog .article-nav-row {
   margin: 0 calc(-1 * var(--art-body-px));
-  padding: 0.55rem var(--art-body-px);
+  /* Flush the back link with the full-bleed image's left edge (no left indent). */
+  padding: 0.55rem 0;
   border-bottom: 1px solid var(--art-border);
 }
 
 .article-back-link {
   font-size: 0.75rem;
   color: var(--art-accent);
-  text-transform: uppercase;
   letter-spacing: 0.08em;
   text-decoration: none;
   transition: opacity 0.2s;
@@ -300,6 +348,10 @@
 
 .article-back-link:hover {
   opacity: 0.7;
+}
+/* Blog (bits2bricks + threads): black back link instead of the category accent. */
+.article-blog .article-back-link {
+  color: var(--art-text-title);
 }
 
 /* A5b. Engagement row (views, hearts, share — inline) */
@@ -427,11 +479,11 @@
   letter-spacing: 0.08em;
 }
 
-/* Topics → purple */
+/* Topics → gray, matching the project listing pills (--pill-topic-*) */
 .article-pill-topic {
-  border: 1px solid var(--art-purple-dim);
-  color: var(--art-purple);
-  background: var(--art-purple-bg);
+  border: 1px solid var(--pill-topic-border);
+  color: var(--pill-topic-text);
+  background: none;
 }
 
 /* Technologies → accent */
@@ -561,7 +613,7 @@
 
 /* Thin gray line (between meta and notes) */
 .article-divider-thin {
-  border-top: 1px solid var(--art-border);
+  border-top: 2px solid var(--art-divider-thick);
   margin-top: 0.75rem;
   margin-bottom: 0.75rem;
 }
@@ -584,9 +636,9 @@
 }
 
 .article-notes-line {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   color: var(--art-text-muted);
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 
@@ -747,6 +799,22 @@
 .article-bar-back-label {
   font-size: 0.75rem;
   letter-spacing: 0.01em;
+}
+
+.article-bar-logo {
+  display: flex;
+  align-items: center;
+  color: var(--art-text-mid);
+  transition: color 0.2s, transform 0.2s;
+}
+.article-bar-logo:hover {
+  color: var(--art-text-title);
+  transform: scale(1.08);
+}
+.article-bar-logo svg {
+  height: 1.6rem;
+  width: auto;
+  display: block;
 }
 
 .article-bar-controls {
@@ -1246,8 +1314,8 @@
   font-size: inherit;
   font-weight: 600;
   color: var(--art-text-title);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  text-transform: none;
+  letter-spacing: normal;
   margin-bottom: 0.4rem;
 }
 
@@ -1353,6 +1421,11 @@
   margin: 1rem 0;
   text-align: center;
   overflow-x: auto;
+  /* Without this, overflow-x:auto forces overflow-y to auto, so the horizontal
+     scrollbar steals vertical space and a spurious vertical scrollbar appears. */
+  overflow-y: hidden;
+  /* Room so the horizontal scrollbar (when present) doesn't clip the equation. */
+  padding-bottom: 0.25rem;
 }
 
 .article-content .math-block .katex-display {
@@ -1517,7 +1590,7 @@
   font-size: 2rem;
   letter-spacing: 0.15em;
   color: var(--art-text-mid);
-  margin: 2.5rem 0;
+  margin: 2.5rem 0 1.25rem;
 }
 
 /* B5e. Alphabetical ordered lists */
@@ -2069,6 +2142,14 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   .article-body {
     --art-body-px: 1rem;
     padding: 1rem var(--art-body-px) 1.5rem;
+  }
+  .article-projects .article-header-bar {
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
+  .article-projects .article-header-bar--has-hero {
+    margin-left: 0;
+    margin-right: 0;
   }
   .article-title {
     font-size: 1.75rem;

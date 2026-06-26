@@ -4,7 +4,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { formatDateTimeline } from '../../lib/date';
 import { Highlight, StatusBadge } from '../ui';
-import { GitHubIcon, FileTextIcon, PlayCircleIcon, EyeIcon, HeartIcon } from '../icons';
+import { EyeIcon, HeartIcon } from '../icons';
 import { postPath, STATUS_CONFIG } from '../../config/categories';
 import { ComplexityBar } from '../ui';
 import type { ArticleStats } from '../../hooks/useArticleStats';
@@ -25,14 +25,20 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
           <div key={post.id} className="listing-card project-card relative flex gap-6">
             {/* Timeline rail */}
             <div className="hidden sm:flex flex-col items-center flex-shrink-0 w-7">
-              {/* Line above node */}
-              {index > 0 && <div className="w-px flex-grow bg-th-border" />}
-              {index === 0 && <div className="flex-grow" />}
-              {/* Node */}
-              <div className="w-3.5 h-3.5 rounded-full border-2 bg-th-base flex-shrink-0" style={{ borderColor: accent }} />
-              {/* Line below node */}
-              {index < posts.length - 1 && <div className="w-px flex-grow bg-th-border" />}
-              {index === posts.length - 1 && <div className="flex-grow" />}
+              {/* Line above node — brightens toward the node */}
+              {index > 0
+                ? <div className="w-px flex-grow" style={{ background: `linear-gradient(to bottom, color-mix(in srgb, ${accent} 6%, transparent), color-mix(in srgb, ${accent} 40%, transparent))` }} />
+                : <div className="flex-grow" />}
+              {/* Node — glowing accent core, halo, and ring */}
+              <div className="relative flex items-center justify-center flex-shrink-0 my-2">
+                <span className="absolute rounded-full" style={{ width: 20, height: 20, background: accent, opacity: 0.12, filter: 'blur(5px)' }} />
+                <span className="absolute rounded-full" style={{ width: 13, height: 13, border: `1px solid ${accent}`, opacity: 0.45 }} />
+                <span className="rounded-full" style={{ width: 7, height: 7, background: accent, boxShadow: `0 0 7px ${accent}` }} />
+              </div>
+              {/* Line below node — fades away from the node */}
+              {index < posts.length - 1
+                ? <div className="w-px flex-grow" style={{ background: `linear-gradient(to bottom, color-mix(in srgb, ${accent} 40%, transparent), color-mix(in srgb, ${accent} 6%, transparent))` }} />
+                : <div className="flex-grow" />}
             </div>
 
             {/* Card content */}
@@ -75,7 +81,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
 
                   {/* Title */}
                   <Link to={postPath(post.category, post.id)} className="group listing-title-link">
-                    <h3 className="listing-card-title text-xl font-bold uppercase tracking-wide text-th-primary transition-colors leading-tight mb-3">
+                    <h3 className="listing-card-title text-xl font-bold tracking-wide text-th-primary transition-colors leading-tight mb-3">
                       <Highlight text={post.displayTitle || post.title} query={query} />
                     </h3>
                   </Link>
@@ -131,46 +137,6 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                     );
                   })()}
 
-                  {/* Divider + links */}
-                  {(post.github || post.caseStudy || post.demo) && (
-                    <div className="border-t border-th-border pt-3.5 flex items-center gap-5 text-sm">
-                      {post.github && (
-                        <a
-                          href={post.github}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-th-tertiary hover:text-th-heading transition-colors"
-                          onClick={e => e.stopPropagation()}
-                        >
-                          <GitHubIcon /> GitHub
-                        </a>
-                      )}
-                      {post.caseStudy && (
-                        <a
-                          href={post.caseStudy}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-th-tertiary accent-link transition-colors"
-                          style={{ '--ac-color': accent } as React.CSSProperties}
-                          onClick={e => e.stopPropagation()}
-                        >
-                          <FileTextIcon /> Case Study
-                        </a>
-                      )}
-                      {post.demo && (
-                        <a
-                          href={post.demo}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-th-tertiary accent-link transition-colors"
-                          style={{ '--ac-color': accent } as React.CSSProperties}
-                          onClick={e => e.stopPropagation()}
-                        >
-                          <PlayCircleIcon /> Demo
-                        </a>
-                      )}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
