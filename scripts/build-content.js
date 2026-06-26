@@ -55,8 +55,15 @@ customRenderer.image = function({ href, title, text }) {
     alt = alt.slice(0, pipeIndex).trim();
   }
 
+  // Escape HTML-significant chars so a quote/angle in the alt or caption can't break
+  // the attribute or inject a tag (e.g. an alt with "double quotes" silently truncated
+  // the whole figure). Not `&` — marked may already entity-encode it; avoid double-escaping.
+  const esc = (s) => s.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  alt = esc(alt);
+  caption = esc(caption);
+
   const styleAttr = style ? ` style="${style}"` : '';
-  const titleAttr = finalTitle ? ` title="${finalTitle}"` : '';
+  const titleAttr = finalTitle ? ` title="${esc(finalTitle)}"` : '';
 
   if (caption) {
     const figClass = className ? ` class="${className}"` : '';
@@ -88,6 +95,31 @@ customRenderer.table = function(token) {
 marked.setOptions({
   renderer: customRenderer,
   ...compilerConfig.marked,
+});
+
+// Strikethrough is DOUBLE-tilde only (~~text~~); a single `~` is ALWAYS literal.
+// marked's built-in strikethrough fires on a lone `~`, which silently corrupts two
+// unrelated tildes into a malformed <del> that truncates the whole article in the
+// browser (no build error). Two sources of stray single tildes make this a real trap:
+// KaTeX emits `~` in MathML (\tilde), and authors write `~` for "approximately"
+// (`~30W`, `~$6`). This inline extension intercepts every `~` before the built-in
+// tokenizer can: `~~…~~` → <del>, a lone `~` → literal text. See SYNTAX.md + CLAUDE.md.
+marked.use({
+  extensions: [{
+    name: 'strictStrikethrough',
+    level: 'inline',
+    start(src) { const i = src.indexOf('~'); return i < 0 ? undefined : i; },
+    tokenizer(src) {
+      const dbl = /^~~(?=\S)([\s\S]*?\S)~~/.exec(src);
+      if (dbl) {
+        return { type: 'del', raw: dbl[0], text: dbl[1], tokens: this.lexer.inlineTokens(dbl[1]) };
+      }
+      if (src[0] === '~') {
+        return { type: 'text', raw: '~', text: '~' };
+      }
+      return undefined;
+    },
+  }],
 });
 
 // ── Shiki highlighter ──
@@ -145,6 +177,7 @@ function processMarkdownFile(filePath) {
     thumbnail: frontmatter.thumbnail || null,
     thumbnailAspect: frontmatter.thumbnailAspect || null,
     thumbnailShading: frontmatter.thumbnailShading || null,
+    thumbnailFocus: frontmatter.thumbnailFocus ?? null,
     description: frontmatter.description || frontmatter.subtitle || '',
     content: htmlContent,
     status: frontmatter.status || null,
@@ -462,6 +495,37 @@ const categories = getAllCategoryConfigs(PAGES_DIR);
 // Validate fieldnotes + wiki-links (uses combined set for cross-reference checks)
 const allLinkedPosts = [...linkedRegularPosts, ...linkedFieldnotePosts];
 const validation = validateFieldnotes(fieldnotePosts, allLinkedPosts, compilerConfig.validation);
+
+// ── Syntax guard: detect custom-syntax tokens that survived compilation ──
+// These render as literal text instead of styled blocks (e.g. an unclosed {bkqt}),
+// which the compiler does NOT treat as an error. Non-fatal warnings, code blocks ignored.
+const SYNTAX_GUARD = [
+  { re: /\{\/?bkqt\b[^}]*\}/, label: 'literal {bkqt} tag — unclosed or malformed blockquote' },
+  { re: /\{\/?math\}/,        label: 'literal {math} tag — unclosed math block' },
+  { re: /\{shout:[^}]*\}/,    label: 'literal {shout:…} tag' },
+  { re: /\{dots\}/,           label: 'literal {dots} tag' },
+  { re: /\[\[[^\]\n]+\]\]/,   label: 'unresolved [[wiki-link]]' },
+];
+let syntaxWarnings = 0;
+for (const post of allLinkedPosts) {
+  // strip code/pre regions, where these tokens can legitimately appear as examples
+  const scan = String(post.content || '')
+    .replace(/<pre[\s\S]*?<\/pre>/g, '')
+    .replace(/<code[\s\S]*?<\/code>/g, '');
+  for (const { re, label } of SYNTAX_GUARD) {
+    const m = scan.match(re);
+    if (!m) continue;
+    if (syntaxWarnings === 0) console.log('\n\x1b[1m[SYNTAX]\x1b[0m \x1b[90mscripts/build-content.js\x1b[0m');
+    const where = post.address || post.id || post.displayTitle || '?';
+    console.log(`  \x1b[33mWARN \x1b[0m  [LITERAL_TAG] ${label} in "${where}" → ${m[0].slice(0, 60)}`);
+    syntaxWarnings++;
+  }
+}
+if (syntaxWarnings > 0) {
+  console.log('\n  \x1b[90mLegend:\x1b[0m');
+  console.log('  \x1b[90m  LITERAL_TAG — custom syntax leaked into output (check for a missing closing tag)\x1b[0m');
+  console.log(`\x1b[1m[SYNTAX]\x1b[0m \x1b[33m${syntaxWarnings} warning(s)\x1b[0m`);
+}
 
 const totalErrors = buildErrors.length + validation.errors;
 if (totalErrors > 0) {

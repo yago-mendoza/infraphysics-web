@@ -135,6 +135,10 @@ The build collects errors from two sources and fails if any exist:
 
 Non-zero errors → `process.exit(1)`. Warnings (e.g. missing parent segments) do NOT fail the build.
 
+### Syntax guard (`[SYNTAX]`)
+
+After link processing, a non-fatal scan flags custom-syntax tokens that **survived compilation** into the output HTML (code/`<pre>` regions excluded) — an unclosed or malformed `{bkqt}`/`{math}`, a stray `{shout:…}`/`{dots}`, or an unresolved `[[wiki-link]]`. These render as literal text instead of styled blocks, which the compiler does not otherwise treat as an error. Prints `[SYNTAX] WARN [LITERAL_TAG] … in "<id>"` and continues; it never fails the build.
+
 ### Interactive mode (`--interactive`)
 
 When run with `--interactive` (or via `npm run content:fix`), the build passes fixable issues to `resolve-issues.js` after validation. If the resolver modifies any files, the build exits cleanly without writing outputs (stale data in memory) and prints a reminder to rebuild. See `resolve-issues.js` below.

@@ -192,6 +192,12 @@ Related section uses `article-${targetCategory}` but `--art-accent` inherits fro
 ### YAML date auto-parsing
 YAML parsers (like `gray-matter`) auto-convert bare `date: 2026-02-15` into a JS `Date` object, which stringifies to a full ISO timestamp (`2026-02-15T00:00:00.000Z`). Always **quote dates** in frontmatter (`date: "2026-02-15"`) to keep them as plain strings. The build normalizes with `.slice(0, 10)` as a safety net, but quoting is the correct fix.
 
+### YAML colon-in-scalar → object (tldr crash)
+**Always quote every `tldr` bullet** (and any `description`/`subtitle`/string value containing `: `, or starting with `# [ { > | * &`). An unquoted scalar with `: ` (colon + space) is parsed as a `key: value` **mapping**, so the bullet arrives as an *object* → React throws `Objects are not valid as a React child` → blank "Something went wrong" page with **no build error**. The `[SYNTAX]` guard does not catch this (it's a frontmatter parse issue, not compiled-body syntax). Quoting is the fix. Full explanation in `src/data/pages/README.md` (Frontmatter → YAML quoting).
+
+### Strikethrough is double-tilde only — a lone `~` is always literal
+marked's built-in strikethrough fires on a **single** `~`, which silently pairs two unrelated tildes into a malformed `<del>` that **truncates the rest of the article** in the browser (no build error, the `[SYNTAX]` guard can't see it). Two everyday sources of stray single tildes: KaTeX emits `~` in MathML (`\tilde`), and authors write `~30W` / `~$6` for "approximately". **Root fix (permanent):** a custom marked inline tokenizer in `build-content.js` (`strictStrikethrough`) makes `~~…~~` the only strikethrough and a lone `~` literal text. Belt-and-suspenders: `processMath` also neutralizes `~` → `&#x7e;` in rendered KaTeX. Rule documented in `SYNTAX.md` (Strikethrough and the tilde rule). So: write `~approximately` freely; use `~~double~~` for an actual strikethrough.
+
 ### Blog category list duplicated for OG manifest
 `build-content.js` has a local `BLOG_CATS` set (used to build URL paths for `og-manifest.json`) that mirrors `BLOG_CATEGORIES` in `categories.tsx`. If a new blog category is added, update both. Also add the new route pattern to `public/_routes.json`.
 

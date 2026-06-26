@@ -18,6 +18,8 @@ interface BasePost {
   thumbnail?: string;
   thumbnailAspect?: string | null;
   thumbnailShading?: string | null;
+  /** Vertical crop anchor for the banner, % from top (0 = top, 50 = center, 100 = bottom). Only affects cover-cropped aspects (wide/banner/strip), not `full`. */
+  thumbnailFocus?: number | null;
   subtitle?: string | null;
   lead?: string | null;
   tldr?: string[] | string | null;

@@ -144,6 +144,8 @@ const AppLayout: React.FC = () => {
   const isSecondBrain = location.pathname.startsWith(secondBrainPath());
   const isSecondBrainGraph = location.pathname === '/lab/second-brain/graph';
   const isArticlePage = /^\/(blog|lab)\/[^/]+\/[^/]+/.test(location.pathname) && !isSecondBrain;
+  // Project detail pages drop the grid and paint the page in the box surface color
+  const isProjectArticle = isArticlePage && location.pathname.startsWith('/lab/projects/');
 
   const gridOffset = isSecondBrain && !isSecondBrainGraph
     ? SIDEBAR_WIDTH + SECOND_BRAIN_SIDEBAR_WIDTH
@@ -151,11 +153,14 @@ const AppLayout: React.FC = () => {
 
   const content = (
     <ErrorBoundary>
-    <div className={`min-h-screen flex relative overflow-x-hidden ${isBlog ? 'bg-th-blog' : 'bg-th-base'}`}>
+    <div
+      className={`min-h-screen flex relative overflow-x-hidden ${isProjectArticle ? '' : isBlog ? 'bg-th-blog' : 'bg-th-base'}`}
+      style={isProjectArticle ? { background: 'var(--art-surface)' } : undefined}
+    >
       {/* Background — Starfield on personal pages (fades with theme), DualGrid on lab/wiki */}
       <div className="hidden md:block">
         {isStarfieldPage && <Starfield sidebarWidth={SIDEBAR_WIDTH} visible={theme === 'dark'} />}
-        {showGrid && <DualGrid sidebarWidth={gridOffset} />}
+        {showGrid && !isProjectArticle && <DualGrid sidebarWidth={gridOffset} />}
       </div>
 
       {/* Hero pattern — geometric lines behind title area */}

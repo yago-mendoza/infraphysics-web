@@ -36,7 +36,7 @@ const PAGE_SIZE = 3;
 export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
   const [query, setQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title'>('newest');
-  const [showFilters, setShowFilters] = useState(category === 'projects');
+  const [showFilters, setShowFilters] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [selectedTechs, setSelectedTechs] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
@@ -58,7 +58,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
     setSelectedStatuses([]);
     setSelectedComplexity([]);
     setSortBy('newest');
-    setShowFilters(category === 'projects');
+    setShowFilters(false);
     setVisibleCount(PAGE_SIZE);
     setSelectedLang(null);
   }, [category]);

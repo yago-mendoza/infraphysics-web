@@ -9,6 +9,10 @@
 //   3. Duplicate trailing refs (A→B and B→A — redundant, keep only one)
 //   4. Redundant trailing refs (also mentioned in body text)
 //   5. Potential duplicate addresses (fuzzy similarity)
+//   6. Segment collisions (same last segment under different parents)
+//   7. Dead references ([[uid]] that no note has)
+//   8. Self references (a note linking to its own uid)
+//   9. Stale `distinct` entries (pointing to a missing address)
 
 import fs from 'fs';
 import path from 'path';
@@ -352,6 +356,41 @@ function checkSegmentCollisions(notes) {
   return collisions;
 }
 
+// Dead references — a [[uid]] (body or trailing) that no note actually has.
+// Skips cross-doc/post refs (contain "/") and external links (http(s)).
+function checkDeadRefs(notes) {
+  const knownUids = new Set(notes.map(n => n.id));
+  const dead = [];
+  for (const note of notes) {
+    for (const ref of note.allRefs) {
+      if (ref.includes('/') || /^https?:/i.test(ref)) continue; // cross-doc / external
+      if (!knownUids.has(ref)) {
+        const where = note.trailingRefs.includes(ref) ? 'trailing' : 'body';
+        dead.push({ note: note.address, ref, where });
+      }
+    }
+  }
+  return dead;
+}
+
+// Self-references — a note that links to its own uid (almost always a copy-paste slip).
+function checkSelfRefs(notes) {
+  return notes.filter(n => n.allRefs.includes(n.id)).map(n => n.address);
+}
+
+// Stale `distinct` — a distinct entry pointing to an address that no longer exists
+// (left behind by a rename/delete; pure noise that suppresses nothing real).
+function checkStaleDistinct(notes) {
+  const knownAddresses = new Set(notes.map(n => n.address));
+  const stale = [];
+  for (const note of notes) {
+    for (const target of (note.distinct || [])) {
+      if (!knownAddresses.has(target)) stale.push({ note: note.address, target });
+    }
+  }
+  return stale;
+}
+
 // --- Main ---
 
 console.log('\n=== Fieldnotes Integrity Audit ===\n');
@@ -446,6 +485,41 @@ if (collisions.length > 0) {
   issues += collisions.length;
 } else {
   console.log(`\x1b[32m[SEGMENT COLLISIONS]\x1b[0m No ambiguities found.\n`);
+}
+
+// 7. Dead references
+const deadRefs = checkDeadRefs(notes);
+if (deadRefs.length > 0) {
+  console.log(`\x1b[31m[DEAD REFS]\x1b[0m ${deadRefs.length} reference${deadRefs.length !== 1 ? 's' : ''} to a uid no note has:`);
+  for (const { note, ref, where } of deadRefs) {
+    console.log(`  "${note}" → [[${ref}]] (${where}) — no note with this uid`);
+  }
+  console.log('');
+  issues += deadRefs.length;
+} else {
+  console.log(`\x1b[32m[DEAD REFS]\x1b[0m All references resolve.\n`);
+}
+
+// 8. Self references
+const selfRefs = checkSelfRefs(notes);
+if (selfRefs.length > 0) {
+  console.log(`\x1b[33m[SELF REFS]\x1b[0m ${selfRefs.length} note${selfRefs.length !== 1 ? 's' : ''} referencing themselves:`);
+  for (const addr of selfRefs) console.log(`  ${addr}`);
+  console.log('');
+  issues += selfRefs.length;
+} else {
+  console.log(`\x1b[32m[SELF REFS]\x1b[0m None.\n`);
+}
+
+// 9. Stale distinct entries
+const staleDistinct = checkStaleDistinct(notes);
+if (staleDistinct.length > 0) {
+  console.log(`\x1b[33m[STALE DISTINCT]\x1b[0m ${staleDistinct.length} \`distinct\` entr${staleDistinct.length !== 1 ? 'ies' : 'y'} pointing to a missing address:`);
+  for (const { note, target } of staleDistinct) console.log(`  "${note}" — distinct: "${target}" (no such address)`);
+  console.log('');
+  issues += staleDistinct.length;
+} else {
+  console.log(`\x1b[32m[STALE DISTINCT]\x1b[0m None.\n`);
 }
 
 // Summary

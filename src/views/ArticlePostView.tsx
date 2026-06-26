@@ -7,7 +7,7 @@ import { formatDate, formatDateTerminal, calculateReadingTime } from '../lib';
 import { initBrainIndex, type BrainIndex } from '../lib/brainIndex';
 import { getActiveChain, ACTIVE_HEADING_THRESHOLD } from '../lib/headings';
 import { WikiContent } from '../components/WikiContent';
-import { CATEGORY_CONFIG, STATUS_CONFIG, sectionPath as getSectionPath, postPath, isBlogCategory } from '../config/categories';
+import { CATEGORY_CONFIG, sectionPath as getSectionPath, postPath, isBlogCategory } from '../config/categories';
 import { ArrowRightIcon, GitHubIcon, LinkedInIcon, TwitterIcon, RedditIcon, HackerNewsIcon, ClipboardIcon, CheckIcon, ShareIcon, HeartIcon, EyeIcon } from '../components/icons';
 
 import { ArticleHashtags } from '../components/article/ArticleHashtags';
@@ -100,7 +100,6 @@ const GiscusComments: React.FC = () => {
 };
 
 export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
-  const sectionPathUrl = getSectionPath(post.category);
   const location = useLocation();
   const navigate = useNavigate();
   const catCfg = CATEGORY_CONFIG[post.category];
@@ -141,7 +140,6 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   }, [post.id, post.category]);
 
   // Status label + dot color
-  const statusConfig = post.status ? (STATUS_CONFIG[post.status] || null) : null;
 
   const formattedDate = useMemo(() => formatDateTerminal(post.date), [post.date]);
   const readingTime = useMemo(() => calculateReadingTime(post.content), [post.content]);
@@ -151,11 +149,18 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const authorName = post.author || 'Yago Mendoza';
   const authorPath = authorName.toLowerCase() === 'yago mendoza' ? '/about' : '/contact';
 
-  const tldrArray: string[] = !post.tldr
-    ? []
+  // Banner vertical crop anchor — object-position Y% (0 = top, 50 = center, 100 = bottom).
+  // Only bites on cover-cropped aspects (wide/banner/strip); `full` shows the whole image.
+  const thumbFocusStyle = post.thumbnailFocus != null
+    ? { objectPosition: `50% ${post.thumbnailFocus}%` }
+    : undefined;
+
+  // tldr renders as a single compact paragraph. Legacy array values are joined into one.
+  const tldrText: string = !post.tldr
+    ? ''
     : Array.isArray(post.tldr)
-      ? post.tldr
-      : String(post.tldr).split('\n').map(l => l.trim()).filter(Boolean);
+      ? post.tldr.join(' ')
+      : String(post.tldr).trim();
 
   /*
    * Heading extraction + content enrichment
@@ -454,7 +459,6 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
     </ol>
   ) : null;
 
-  const backLabel = catCfg?.backLabel || 'RETURN_TO_ARCHIVES';
   const relatedLabel = catCfg?.relatedLabel || 'Related Articles';
 
   const shareUrl = `${window.location.origin}${location.pathname}`;
@@ -525,6 +529,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                 alt={post.displayTitle || post.title}
                 loading="lazy"
                 className="w-full h-auto rounded-lg"
+                style={thumbFocusStyle}
               />
             </div>
           )}
@@ -578,21 +583,6 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
       ) : (
       <article className="article-container">
 
-        {/* ── HEADER BAR (projects only) ── */}
-        {!isBlog && (
-          <div className="article-header-bar">
-            <span className="article-header-log">
-              // {formattedDate}
-            </span>
-            {statusConfig && (
-              <span className="article-header-status" style={{ color: statusConfig.dotColor }}>
-                <span className="article-status-dot" style={{ background: statusConfig.dotColor }} />
-                {statusConfig.label}
-              </span>
-            )}
-          </div>
-        )}
-
         {/* ── HERO IMAGE (projects only — grayscale) ── */}
         {!isBlog && post.thumbnail && (
           <div className={`article-hero thumb-${post.thumbnailAspect || 'full'} shade-${post.thumbnailShading || 'heavy'}`}>
@@ -601,6 +591,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               alt={post.displayTitle || post.title}
               loading="lazy"
               className="article-hero-img"
+              style={thumbFocusStyle}
             />
             <div className="article-hero-gradient" />
           </div>
@@ -609,23 +600,35 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
         {/* ── BODY ── */}
         <div className="article-body">
 
-          {/* Nav row: back link (projects only) + engagement buttons */}
-          <div className="article-nav-row">
-            {!isBlog && (
-              <Link to={sectionPathUrl} className="article-back-link">
-                &lt; {backLabel}
-              </Link>
-            )}
-            <div className="article-engagement-row">
-              {views != null && (
-                <span className="article-meta-views"><EyeIcon size={15} /> {views}</span>
-              )}
-              {hearts != null && (
-                <button onClick={toggleHeart} className="article-heart-btn" title={hearted ? 'Unlike' : 'Like'}>
-                  <HeartIcon size={15} filled={hearted} /> {hearts}
-                </button>
-              )}
-              {!isBlog && (
+          {/* Nav row (projects only): tags on the left, engagement buttons on the right.
+              Blog articles rely on the floating top bar's back link instead. */}
+          {!isBlog && (
+            <div className="article-nav-row">
+              <div className="article-nav-tags">
+                {post.tags && post.tags.length > 0 && (
+                  <div className="article-pills article-pills-topics">
+                    {post.tags.map(tag => (
+                      <span key={tag} className="article-pill article-pill-topic">{tag}</span>
+                    ))}
+                  </div>
+                )}
+                {post.technologies && post.technologies.length > 0 && (
+                  <div className="article-pills article-pills-tech">
+                    {post.technologies.map(tech => (
+                      <span key={tech} className="article-pill article-pill-tech">{tech}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="article-engagement-row">
+                {views != null && (
+                  <span className="article-meta-views"><EyeIcon size={15} /> {views}</span>
+                )}
+                {hearts != null && (
+                  <button onClick={toggleHeart} className="article-heart-btn" title={hearted ? 'Unlike' : 'Like'}>
+                    <HeartIcon size={15} filled={hearted} /> {hearts}
+                  </button>
+                )}
                 <a
                   href={post.github || 'https://github.com/yago-mendoza'}
                   target="_blank"
@@ -635,10 +638,10 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                 >
                   <GitHubIcon size={18} />
                 </a>
-              )}
-              {shareDropdown}
+                {shareDropdown}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Blog image — above meta/title (blog only) */}
           {isBlog && post.thumbnail && (
@@ -648,28 +651,9 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                 alt={post.displayTitle || post.title}
                 loading="lazy"
                 className="article-blog-image-img"
+                style={thumbFocusStyle}
               />
             </div>
-          )}
-
-          {/* Tags — pills for projects */}
-          {!isBlog && (
-            <>
-              {post.tags && post.tags.length > 0 && (
-                <div className="article-pills article-pills-topics">
-                  {post.tags.map(tag => (
-                    <span key={tag} className="article-pill article-pill-topic">{tag}</span>
-                  ))}
-                </div>
-              )}
-              {post.technologies && post.technologies.length > 0 && (
-                <div className="article-pills article-pills-tech">
-                  {post.technologies.map(tech => (
-                    <span key={tech} className="article-pill article-pill-tech">{tech}</span>
-                  ))}
-                </div>
-              )}
-            </>
           )}
 
           {/* META — above title for blog (moved to metabar below title), below for projects */}
@@ -714,12 +698,10 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               {/* Thin gray line between meta and notes */}
               <div className="article-divider-thin" />
 
-              {/* TLDR */}
-              {tldrArray.length > 0 && (
+              {/* TLDR — single compact paragraph */}
+              {tldrText && (
                 <div className="article-notes">
-                  {tldrArray.map((line, i) => (
-                    <p key={i} className="article-notes-line">— {line}</p>
-                  ))}
+                  <p className="article-notes-line">{tldrText}</p>
                 </div>
               )}
 

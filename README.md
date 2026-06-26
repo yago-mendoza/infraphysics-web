@@ -112,6 +112,7 @@ infraphysics-web/
       categories.generated.json
       data.ts                 # Runtime data loader
     public/
+      playgrounds/<article-id>/ # Self-contained interactive "playgrounds" (HTML/JS) per article, linked via [text](/playgrounds/<id>/<name>.html)
       fieldnotes/             # {uid}.json content files (served as static assets)
       fieldnotes-index.json   # Generated: fieldnote metadata index (HTTP-fetched at runtime)
       og-manifest.json        # Generated: URL path → OG metadata + full text body for crawlers

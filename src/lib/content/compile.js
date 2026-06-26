@@ -302,12 +302,19 @@ function escapeHtml(str) {
  * If katex is null (live preview), renders raw LaTeX in styled <code>.
  */
 export function processMath(markdown, katex) {
+  // KaTeX runs before marked.parse, so its rendered HTML is later seen by marked's
+  // inline tokenizers. A `\tilde`/`~` emits a literal `~` in the MathML, which marked's
+  // GFM strikethrough (single-tilde) pairs across two math expressions into a malformed
+  // <del> — silently truncating the article. Neutralize tildes to the entity (renders
+  // identically) so marked leaves the math alone.
+  const sanitizeMath = (html) => html.replace(/~/g, '&#x7e;');
+
   // Block math: {math}\n...\n{/math}
   let result = markdown.replace(/\{math\}\n([\s\S]*?)\n\{\/math\}/g, (_, expr) => {
     const trimmed = expr.trim();
     if (!katex) return `<div class="math-block"><code class="math-raw">${escapeHtml(trimmed)}</code></div>`;
     try {
-      return `<div class="math-block">${katex.renderToString(trimmed, { displayMode: true, throwOnError: false })}</div>`;
+      return `<div class="math-block">${sanitizeMath(katex.renderToString(trimmed, { displayMode: true, throwOnError: false }))}</div>`;
     } catch {
       return `<div class="math-block math-error"><code>${escapeHtml(trimmed)}</code></div>`;
     }
@@ -318,7 +325,7 @@ export function processMath(markdown, katex) {
     const trimmed = expr.trim();
     if (!katex) return `<code class="math-raw">${escapeHtml(trimmed)}</code>`;
     try {
-      return katex.renderToString(trimmed, { displayMode: false, throwOnError: false });
+      return sanitizeMath(katex.renderToString(trimmed, { displayMode: false, throwOnError: false }));
     } catch {
       return `<code class="math-error">${escapeHtml(trimmed)}</code>`;
     }
