@@ -15,18 +15,19 @@ Projects have the most category-specific fields: `status`, `technologies`, `gith
 | Field | Required | Type | What it does |
 |---|---|---|---|
 | `id` | yes | string | **7-digit numeric ID**, quoted (`"6184744"`). Same number as in the filename. Used in URLs (`/lab/projects/6184744`) and as the primary key. |
-| `displayTitle` | no | string | Human-readable title shown in UI. Falls back to `id`. |
+| `displayTitle` | no | string | Human-readable title shown in UI. Falls back to `id`. **Sentence case** — capitalize the first word and proper nouns only, never title case ("Building a custom CRM for a startup", not "Building a Custom CRM for a Startup"). |
 | `category` | yes | string | Must be `projects`. |
 | `date` | yes | string | ISO 8601 (`YYYY-MM-DD`), quoted. When the project was finished or published. |
 | `description` | yes | string | One-liner for cards and meta tags. |
 | `thumbnail` | no | string | Hero image URL. Prefer Cloudflare R2 (`cdn.infraphysics.net`). |
 | `thumbnailAspect` | no | string | Crop ratio: `full` (default), `wide` (16/7), `banner` (16/4), `strip` (16/2). |
 | `thumbnailShading` | no | string | Overlay: `heavy`, `light`, `none` (default). |
+| `thumbnailFocus` | no | number | Vertical crop anchor for the banner, % from top: `0` = top, `50` = center (default), `100` = bottom. Only bites on cover-cropped aspects (`wide`/`banner`/`strip`), not `full`. Use it to keep the important part of a tall image in frame. |
 | `subtitle` | no | string | Below the title in the article header. |
 | `tags` | no | string[] | Topic tags for filter system. `[tag1, tag2]`. |
 | `complexity` | no | number | Difficulty rating (1–10). Used for sorting/filtering. |
 | `featured` | no | boolean | Shows in "Latest Work" on home page. |
-| `tldr` | no | string/string[] | Key takeaway lines in the header area. |
+| `tldr` | no | string | A single compact summary paragraph in the header area. **Always quote it.** (Legacy `string[]` arrays still work — joined into one paragraph — but write new ones as one quoted string.) |
 | `related` | no | string[] | Post IDs (quoted numerics) for the "Related" section. |
 | `status` | no | string | Lifecycle badge. Values: `ongoing` (violet), `deployed` (green), `completed` (blue), `arrested` (red). Defined in `STATUS_CONFIG` (`config/categories.tsx`). |
 | `technologies` | no | string[] | Tech stack pills in the header. `[TypeScript, React, Vite]`. |
@@ -57,9 +58,7 @@ complexity: 4
 technologies: [React, TypeScript, Vite, Tailwind CSS]
 github: https://github.com/yago-mendoza/infraphysics-web
 featured: true
-tldr:
-  - This is the website you're reading right now.
-  - The interesting part is the Second Brain.
+tldr: "This is the website you're reading right now. The interesting part is the Second Brain."
 related: ["1112121"]
 ---
 ```

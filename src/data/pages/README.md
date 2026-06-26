@@ -35,6 +35,18 @@ Every markdown file starts with a YAML frontmatter block (`---`). Frontmatter sc
 - **[bits2bricks/README.md](bits2bricks/README.md)** — universal fields only
 - **Fieldnotes** — `uid`, `address`, `name`, `date`, `aliases`, `supersedes`, `distinct`. See [Second Brain](#second-brain-fieldnotes) below.
 
+### `tldr` is a single quoted paragraph
+
+`tldr` is **one compact paragraph**, not bullets. Write it as a single double-quoted string:
+
+```yaml
+tldr: "A simple model beats chance (ROC ~0.72): the edge over a dumb baseline crosses zero. The deliverable is the instrument, not the number."
+```
+
+It renders as one paragraph in the project header (only projects display `tldr`). Legacy multi-bullet `tldr:` arrays still work — the app joins them into a single paragraph — but new content should use the single-string form.
+
+**Always quote it** (and any string with a `:` or leading special char): an unquoted scalar containing `: ` (colon + space) is parsed by YAML as a `key: value` **mapping**, not a string. The value then reaches the app as an *object*, and React throws `Objects are not valid as a React child` — a blank "Something went wrong" page, with no build error. Quoting makes it an unambiguous string. The same rule applies to `description`, `subtitle`, and dates (`date: "2026-06-26"`): if a frontmatter value contains `:` , `#`, `[`, `{`, `>`, `|`, `*`, `&`, or starts with one, quote it.
+
 ---
 
 ## Content Types and Writing Guidance
@@ -105,7 +117,9 @@ Content flows between sections without repeating itself. When a topic spans mult
 
 These apply across all content types unless noted otherwise.
 
-**Capitalization.** Always use standard sentence case — capitalize the first word and proper nouns only. Never use title case where every word is capitalized ("The Architecture Of Modern Compilers"). This applies to headings, blockquote labels, table headers, and any user-facing text.
+**Capitalization.** Everything user-facing uses **sentence case** — capitalize the first word and proper nouns only. No exceptions by category or field. This covers the frontmatter `displayTitle` and `subtitle`, section headings (`#`/`##`/`###`), blockquote labels, table headers, and body text alike. Never title-case ("Building A Custom CRM For A Startup" or "The Architecture Of Modern Compilers"); write "Building a custom CRM for a startup" and "The architecture of modern compilers". This holds for **all three categories** — projects, threads, and bits2bricks.
+
+**Capitalization — list items.** Every list item starts with a capital letter, exactly like a sentence. This applies to bullets (`- `), numbered lists (`1. `), alphabetical lists (`a. `), and **both sides** of a definition-list entry (`TERM:: description`) — including when the item opens with accent text (`- --The cell state--::`) or bold (`- **The layer**`). Write "- The cell state:: The long-term ledger", never "- the cell state:: the long-term ledger". The **only** exception is when the first token is code, an identifier, or a term whose conventional spelling is lowercase (`` `mutex` ``, `npm`, `assessFits`, a variable name) — keep its real casing, and still capitalize the prose that follows it.
 
 **Blockquotes are for substantial content.** A blockquote must contain enough material to justify the visual weight of a colored container. One sentence is not enough. Two short sentences are not enough. If the content fits in a line or two, use an inline annotation (`^[explanation]`) instead — that's exactly what they're for. Annotations inside a blockquote do not count as interior content: a single sentence plus a footnote does not justify a blockquote.
 

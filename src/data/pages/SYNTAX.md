@@ -79,7 +79,7 @@ Pre-processors see `%%CBLK_0%%`, `%%HEADING_0%%`, `%%MATH_0%%` instead of the re
 
 ### Headings are immune
 
-Section headings (`#`, `##`, `###`, `####`) are **never processed** by any inline formatting rules. No accent text, colored text, inline code (backticks), or any other custom syntax will be applied inside a heading line. Headings are plain text only. Use standard capitalization and nothing else.
+Section headings (`#`, `##`, `###`, `####`) are **never processed** by any inline formatting rules. No accent text, colored text, inline code (backticks), or any other custom syntax will be applied inside a heading line. Headings are plain text only. Use **sentence case** — capitalize the first word and proper nouns only, never title case ("The state machine", not "The State Machine"). This holds for body headings and the frontmatter `displayTitle` in every category — nothing is title-cased. See the capitalization rules in [README.md](README.md#editorial-rules).
 
 ### H1 auto-numbering
 
@@ -175,6 +175,17 @@ Standard markdown italic (`*text*`). No custom syntax — just the built-in `<em
 **When to use it:** For tonal emphasis — as if you were raising your voice slightly. Also for titles of works, terms in a foreign language, or when introducing a new concept without giving it as much weight as bold.
 
 **Quick rule:** If you would say it out loud with more weight → italic. If you would highlight it with a marker in a book → bold. Bold is visual (you see it scanning the page). Italic is tonal (you hear it while reading). Examples: "it was *genuinely* terrifying", "it doesn't *think* at all".
+
+### Strikethrough and the tilde rule
+
+Strikethrough requires a **double tilde**: `~~text~~` → ~~text~~. A **single `~` is always literal text** — it is never strikethrough.
+
+This is a hard, normative rule enforced in the compiler (a custom marked inline tokenizer), and it exists for a reason: marked's default strikethrough fires on a lone `~`, which silently pairs two unrelated tildes into a malformed `<del>` that **truncates the rest of the article in the browser, with no build error**. Two everyday sources of stray single tildes make this a real trap:
+
+- **Math:** `\tilde{x}` / `\widetilde{x}` make KaTeX emit a literal `~` in the rendered output.
+- **Prose:** writing `~30W` or `~$6` to mean "approximately".
+
+Because single `~` is literal, you can write `~approximately` freely. If you ever genuinely need a struck-through word, use the double form `~~like this~~`.
 
 ### Why curly braces for the structured syntax?
 
@@ -408,6 +419,28 @@ Leave a blank line after the text to end the side-by-side layout and return to n
 
 ---
 
+## Internal links & playgrounds
+
+For links to other pages or assets **on this site**, use a **standard markdown link** with a root-relative path — `[text](/some/path)`. It passes through `marked` untouched and React Router lets the browser navigate normally.
+
+Do **not** use `[[...]]` for internal asset paths. The double-bracket syntax is reserved for three things only: fieldnotes/posts (`[[uid]]`, `[[uid|text]]`, `[[category/id|text]]`) and external links (`[[https://url|text]]`, which only fires on `http(s)`). A root-relative path like `/playgrounds/...` is none of those and would not resolve.
+
+### Playgrounds — self-contained interactive HTML
+
+You **can** drop a standalone interactive page into any article: a self-contained `.html` with inline JS/SVG/data (a live visualization, a toy you can poke, a tiny demo). These are called **playgrounds**. They live under `public/` and are served as-is at the site root by Vite — no import, no compile, just copied and served. Works for any category (projects, threads, bits2bricks), since they're keyed by article id, not by route.
+
+Organize them by the article they belong to, using the article's **id** as the subfolder (the same id used in the filename and URL):
+
+```
+public/playgrounds/<article-id>/<name>.html   →   linked as [text](/playgrounds/<article-id>/<name>.html)
+```
+
+Example: `public/playgrounds/7654321/telemetry-decoy.html` → `[see it](/playgrounds/7654321/telemetry-decoy.html)`.
+
+> Build-time syntax guard: if a custom block tag leaks into the output (e.g. an unclosed `{bkqt}` or `{math}`, or an unresolved `[[link]]`), the build prints a non-fatal `[SYNTAX] WARN [LITERAL_TAG] …` line naming the article. It does not fail the build — but a literal `{bkqt/…}` showing up in your prose means a closing `{/bkqt}` is missing.
+
+---
+
 ## Tables
 
 Standard GFM (GitHub-Flavored Markdown) table syntax. No custom table syntax.
@@ -456,6 +489,8 @@ Single backticks for inline code. Double backticks for inline code that contains
 
 All list types (bullets, numbers, alphabetical letters, definition lists) render with a base left indentation from the text margin.
 
+**Capitalization.** Every list item begins with a capital letter, like a sentence — bullets, numbered, alphabetical, and both sides of a definition entry. The lone exception is an item that opens with code or a conventionally-lowercase identifier (`` `mutex` ``, `npm`, `assessFits`). See the capitalization rules in [README.md](README.md#editorial-rules).
+
 ### Nesting with 2-space indentation
 
 Standard markdown lists (`- ` and `1. `) support nesting. Indent by **2 spaces** to create a child list:
@@ -490,19 +525,21 @@ Definition lists (`::` syntax) and alphabetical lists (`a. b. c.`) do **not** su
 Use `- TERM:: description` syntax to create definition lists. Every line in a contiguous block of `- ` lines must contain `:: ` for the block to be treated as a definition list. If any line lacks `:: `, the entire block is left as a regular bullet list.
 
 ```
-- latency:: the time between a request and its response
-- throughput:: the number of operations per unit of time
-- jitter:: the variation in latency over time
+- latency:: The time between a request and its response
+- throughput:: The number of operations per unit of time
+- jitter:: The variation in latency over time
 ```
 
 This produces a `<div class="defn-list">` wrapper containing `<p class="defn"><strong>TERM</strong> — description</p>` for each entry. The wrapper provides the base left indentation. The `:: ` separator is non-greedy — the term is everything before the first `:: `.
+
+**Capitalization.** Both the term and the description start with a capital letter, like a sentence (`- The cell state:: The long-term ledger`) — the same sentence-case rule that governs all body text. The only exception is a term whose conventional spelling is lowercase (`` `mutex` ``, an identifier, a variable name): keep its real casing, but still capitalize the description. See [README.md](README.md#editorial-rules).
 
 ### Inline formatting inside definitions
 
 Both the term and description support inline formatting: bold, italic, colored text, inline code, accent text, etc.
 
 ```
-- `mutex`:: a --mutual exclusion-- lock
+- `mutex`:: A --mutual exclusion-- lock
 - **RAII**:: {#3B82F6:Resource Acquisition Is Initialization} — a C++ pattern
 ```
 

@@ -15,13 +15,14 @@ Threads have several category-specific fields: `lang`, `lead`, `hidden`, and `co
 | Field | Required | Type | What it does |
 |---|---|---|---|
 | `id` | yes | string | **7-digit numeric ID**, quoted (`"5528103"`). Same number as in the filename. Used in URLs (`/blog/threads/5528103`) and as the primary key. |
-| `displayTitle` | no | string | Human-readable title shown in UI. Falls back to `id`. |
+| `displayTitle` | no | string | Human-readable title shown in UI. Falls back to `id`. **Sentence case** — capitalize the first word and proper nouns only, never title case. |
 | `category` | yes | string | Must be `threads`. |
 | `date` | yes | string | ISO 8601 (`YYYY-MM-DD`), quoted. Publication date. |
 | `lang` | no | string | Language code (`en`, `es`). Defaults to `en`. Non-English threads show a small language chip on the card. |
 | `thumbnail` | no | string | Hero image URL. Prefer Cloudflare R2 (`cdn.infraphysics.net`) or Unsplash. |
 | `thumbnailAspect` | no | string | Crop ratio: `full` (default), `wide` (16/7), `banner` (16/4), `strip` (16/2). |
 | `thumbnailShading` | no | string | Overlay: `heavy`, `light`, `none` (default). |
+| `thumbnailFocus` | no | number | Vertical crop anchor for the banner, % from top: `0` = top, `50` = center (default), `100` = bottom. Only bites on cover-cropped aspects (`wide`/`banner`/`strip`), not `full`. Use it to keep the important part of a tall image in frame. |
 | `subtitle` | no | string | Below the title in the article header. |
 | `lead` | no | string | Extended intro paragraph shown on the thread page. Longer than `description` — this is the hook, the editorial voice. Not used in cards or meta tags. |
 | `tags` | no | string[] | Topic tags for filter system. `[tag1, tag2]`. |

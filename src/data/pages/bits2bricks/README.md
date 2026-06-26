@@ -15,13 +15,14 @@ Bits2Bricks use universal fields plus `complexity`. No other category-specific e
 | Field | Required | Type | What it does |
 |---|---|---|---|
 | `id` | yes | string | **7-digit numeric ID**, quoted (`"5917362"`). Same number as in the filename. Used in URLs (`/blog/bits2bricks/5917362`) and as the primary key. |
-| `displayTitle` | no | string | Human-readable title shown in UI. Falls back to `id`. |
+| `displayTitle` | no | string | Human-readable title shown in UI. Falls back to `id`. **Sentence case** — capitalize the first word and proper nouns only, never title case. |
 | `category` | yes | string | Must be `bits2bricks`. |
 | `date` | yes | string | ISO 8601 (`YYYY-MM-DD`), quoted. Publication date. |
 | `description` | yes | string | One-liner for cards and meta tags. |
 | `thumbnail` | no | string | Hero image URL. Prefer Cloudflare R2 (`cdn.infraphysics.net`). |
 | `thumbnailAspect` | no | string | Crop ratio: `full` (default), `wide` (16/7), `banner` (16/4), `strip` (16/2). |
 | `thumbnailShading` | no | string | Overlay: `heavy`, `light`, `none` (default). |
+| `thumbnailFocus` | no | number | Vertical crop anchor for the banner, % from top: `0` = top, `50` = center (default), `100` = bottom. Only bites on cover-cropped aspects (`wide`/`banner`/`strip`), not `full`. Use it to keep the important part of a tall image in frame. |
 | `tags` | no | string[] | Topic tags for filter system. `[tag1, tag2]`. |
 | `subtitle` | no | string | Below the title in the article header. |
 | `related` | no | string[] | Post IDs (quoted numerics) for the "Related" section. |
