@@ -15,6 +15,7 @@ interface PreviewState {
   x: number;
   y: number;
   variant: 'default' | 'blue';
+  accent?: string;
 }
 
 const INITIAL_PREVIEW: PreviewState = {
@@ -25,6 +26,7 @@ const INITIAL_PREVIEW: PreviewState = {
   x: 0,
   y: 0,
   variant: 'default',
+  accent: '',
 };
 
 interface WikiContentProps {
@@ -130,7 +132,12 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
           const description = decodeURIComponent(link.getAttribute('data-description') || '');
           const hrefMatch = href.match(/^\/lab\/second-brain\/(.+)$/);
           const visited = hrefMatch ? !!isVisitedRef.current?.(hrefMatch[1]) : false;
-          setPreview({ visible: true, title, address, description, x: e.clientX, y: e.clientY, variant: visited ? 'blue' : 'default' });
+          // Card is portaled to <body>; read the article's accent here so it can be
+          // passed through (the portal can't inherit --art-accent by cascade).
+          const accent = containerRef.current
+            ? getComputedStyle(containerRef.current).getPropertyValue('--art-accent').trim()
+            : '';
+          setPreview({ visible: true, title, address, description, x: e.clientX, y: e.clientY, variant: visited ? 'blue' : 'default', accent });
         }
       } else {
         // Mouse is on non-link content — schedule hide

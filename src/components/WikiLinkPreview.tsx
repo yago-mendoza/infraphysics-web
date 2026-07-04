@@ -9,6 +9,7 @@ interface WikiLinkPreviewProps {
   x: number;
   y: number;
   variant?: 'default' | 'blue';
+  accent?: string;
 }
 
 export const WikiLinkPreview: React.FC<WikiLinkPreviewProps> = ({
@@ -19,6 +20,7 @@ export const WikiLinkPreview: React.FC<WikiLinkPreviewProps> = ({
   x,
   y,
   variant = 'default',
+  accent,
 }) => {
   if (!visible) return null;
 
@@ -44,8 +46,13 @@ export const WikiLinkPreview: React.FC<WikiLinkPreviewProps> = ({
 
   const cls = variant === 'blue' ? 'wiki-preview-card wiki-preview-blue' : 'wiki-preview-card';
 
+  // Portaled to <body>, so it can't inherit --wiki-link from the article wrapper.
+  // Pass the article's accent through explicitly so the card matches the category.
+  const cardStyle: React.CSSProperties = { left, top, pointerEvents: 'none' };
+  if (accent) (cardStyle as Record<string, string | number>)['--wiki-link'] = accent;
+
   return createPortal(
-    <div className={cls} style={{ left, top, pointerEvents: 'none' }}>
+    <div className={cls} style={cardStyle}>
       <div className="wiki-preview-title">{title}</div>
       <div className="wiki-preview-address">
         {!address.includes('//') && <span className="opacity-50">root · </span>}

@@ -41,7 +41,7 @@ export const BlogMetabar: React.FC<BlogMetabarProps> = ({
       {hearts != null && (
         <>
           <span className="article-blog-metabar-sep">&middot;</span>
-          <button onClick={toggleHeart} className="article-heart-btn" title={hearted ? 'Unlike' : 'Like'}>
+          <button onClick={toggleHeart} className={`article-heart-btn${hearted ? ' hearted' : ''}`} title={hearted ? 'Unlike' : 'Like'}>
             <HeartIcon size={15} filled={hearted} /> {hearts}
           </button>
         </>

@@ -589,6 +589,13 @@
   background: rgba(239, 68, 68, 0.06);
 }
 
+/* Already-liked state — persistent red fill (the heart icon fills with currentColor) */
+.article-heart-btn.hearted {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.06);
+}
+
 .article-heart-btn svg {
   transition: transform 0.15s ease, color 0.2s;
 }
@@ -1893,9 +1900,13 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   transition: border-color 0.2s, color 0.2s;
 }
 
-.article-content .doc-ref-projects:hover { color: var(--cat-projects-accent); border-bottom-color: var(--cat-projects-accent); }
-.article-content .doc-ref-threads:hover  { color: var(--cat-threads-accent); border-bottom-color: var(--cat-threads-accent); }
-.article-content .doc-ref-bits2bricks:hover { color: var(--cat-bits2bricks-accent); border-bottom-color: var(--cat-bits2bricks-accent); }
+.article-content .doc-ref-projects { color: var(--cat-projects-accent); border-bottom-color: color-mix(in srgb, var(--cat-projects-accent) 32%, transparent); }
+.article-content .doc-ref-threads  { color: var(--cat-threads-accent); border-bottom-color: color-mix(in srgb, var(--cat-threads-accent) 32%, transparent); }
+.article-content .doc-ref-bits2bricks { color: var(--cat-bits2bricks-accent); border-bottom-color: color-mix(in srgb, var(--cat-bits2bricks-accent) 32%, transparent); }
+
+.article-content .doc-ref-projects:hover { border-bottom-color: var(--cat-projects-accent); }
+.article-content .doc-ref-threads:hover  { border-bottom-color: var(--cat-threads-accent); }
+.article-content .doc-ref-bits2bricks:hover { border-bottom-color: var(--cat-bits2bricks-accent); }
 
 .article-content .doc-ref-external { color: #b0b0b0; border-bottom-color: rgba(156,163,175,0.35); }
 .article-content .doc-ref-external:hover { color: #d4d4d4; border-bottom-color: rgba(156,163,175,0.7); }
@@ -2634,6 +2645,11 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   font-size: 0.7rem;
   color: var(--art-text-mid);
   line-height: 1.5;
+  display: block;
+}
+
+.article-content .ctx-note-text::first-letter {
+  text-transform: uppercase;
 }
 
 .article-content .ctx-note-divider {
