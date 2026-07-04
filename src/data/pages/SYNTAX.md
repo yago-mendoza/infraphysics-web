@@ -437,6 +437,8 @@ public/playgrounds/<article-id>/<name>.html   →   linked as [text](/playground
 
 Example: `public/playgrounds/7654321/telemetry-decoy.html` → `[see it](/playgrounds/7654321/telemetry-decoy.html)`.
 
+> Playground links open in a **new tab** automatically. Any regular markdown link whose href starts with `/playgrounds/` or ends in `.html` gets `target="_blank" rel="noopener noreferrer"`, since these are self-contained pages served outside the SPA. Ordinary in-app links (`/blog/...`, `/lab/...`, anchors) are unaffected.
+
 > Build-time syntax guard: if a custom block tag leaks into the output (e.g. an unclosed `{bkqt}` or `{math}`, or an unresolved `[[link]]`), the build prints a non-fatal `[SYNTAX] WARN [LITERAL_TAG] …` line naming the article. It does not fail the build — but a literal `{bkqt/…}` showing up in your prose means a closing `{/bkqt}` is missing.
 
 ---

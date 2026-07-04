@@ -76,6 +76,16 @@ customRenderer.image = function({ href, title, text }) {
   return imgTag;
 };
 
+// Regular markdown links. Playground/static-HTML links open in a new tab by
+// default (they are self-contained pages served outside the SPA).
+customRenderer.link = function({ href, title, tokens }) {
+  const text = this.parser.parseInline(tokens);
+  const titleAttr = title ? ` title="${title.replace(/"/g, '&quot;')}"` : '';
+  const newTab = /^\/playgrounds\//.test(href) || /\.html($|[?#])/.test(href);
+  const tabAttr = newTab ? ' target="_blank" rel="noopener noreferrer"' : '';
+  return `<a href="${href}"${titleAttr}${tabAttr}>${text}</a>`;
+};
+
 customRenderer.table = function(token) {
   let headerCells = '';
   for (const cell of token.header) headerCells += this.tablecell(cell);
