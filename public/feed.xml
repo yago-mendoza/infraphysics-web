@@ -11,7 +11,7 @@
       <link>https://infraphysics.net/blog/bits2bricks/3819540</link>
       <guid>https://infraphysics.net/blog/bits2bricks/3819540</guid>
       <pubDate>Fri, 26 Jun 2026 00:00:00 GMT</pubDate>
-      <description>A patient, ground-up build of the LSTM — from a single neuron to a recurrent circuit with memory. What the four gates do, why we add the cell state, and what the network actually learns to produce.</description>
+      <description>A patient, ground-up build of the LSTM, from a single neuron to a recurrent circuit with memory. What the four gates do, why we add the cell state, and what the network actually learns to produce.</description>
       <category>bits2bricks</category>
     </item>
     <item>
@@ -19,7 +19,7 @@
       <link>https://infraphysics.net/lab/projects/7654321</link>
       <guid>https://infraphysics.net/lab/projects/7654321</guid>
       <pubDate>Fri, 26 Jun 2026 00:00:00 GMT</pubDate>
-      <description>A simulation-first rehearsal for forecasting a visual epileptic aura from the small visual events that may precede it — and a stricter measurement of what a model would actually be allowed to claim.</description>
+      <description>A simulation-first rehearsal for forecasting a visual epileptic aura from the small visual events that may precede it, and a stricter measurement of what a model would actually be allowed to claim.</description>
       <category>projects</category>
     </item>
     <item>
@@ -43,7 +43,7 @@
       <link>https://infraphysics.net/lab/projects/6184744</link>
       <guid>https://infraphysics.net/lab/projects/6184744</guid>
       <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
-      <description>How a systems engineer built a personal site with a custom markdown compiler, a second brain, and an AI development partner — and what went wrong along the way.</description>
+      <description>How a systems engineer built a personal site with a custom markdown compiler, a second brain, and an AI development partner (and what went wrong along the way).</description>
       <category>projects</category>
     </item>
     <item>
@@ -99,7 +99,7 @@
       <link>https://infraphysics.net/blog/bits2bricks/4028591</link>
       <guid>https://infraphysics.net/blog/bits2bricks/4028591</guid>
       <pubDate>Sun, 15 Feb 2026 00:00:00 GMT</pubDate>
-      <description>A ground-up explanation of how language models are trained after pretraining — SFT, DPO, RL, RLHF, reward hacking, KL divergence, and the DeepSeek-R1 pipeline.</description>
+      <description>A ground-up explanation of how language models are trained after pretraining: SFT, DPO, RL, RLHF, reward hacking, KL divergence, and the DeepSeek-R1 pipeline.</description>
       <category>bits2bricks</category>
     </item>
     <item>
@@ -131,7 +131,7 @@
       <link>https://infraphysics.net/blog/bits2bricks/5917362</link>
       <guid>https://infraphysics.net/blog/bits2bricks/5917362</guid>
       <pubDate>Sat, 07 Feb 2026 00:00:00 GMT</pubDate>
-      <description>A patient, ground-up explanation of transformer architecture — how tokens become predictions, what attention really computes, where facts live, and why it all scales.</description>
+      <description>A patient, ground-up explanation of transformer architecture: how tokens become predictions, what attention really computes, where facts live, and why it all scales.</description>
       <category>bits2bricks</category>
     </item>
     <item>

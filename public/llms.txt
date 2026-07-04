@@ -20,9 +20,9 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 
 ## Projects
 
-- [Can you forecast a seizure with a spreadsheet and an LSTM?](https://infraphysics.net/lab/projects/7654321): A simulation-first rehearsal for forecasting a visual epileptic aura from the small visual events that may precede it — and a stricter measurement of what a model would actually be allowed to claim.
+- [Can you forecast a seizure with a spreadsheet and an LSTM?](https://infraphysics.net/lab/projects/7654321): A simulation-first rehearsal for forecasting a visual epileptic aura from the small visual events that may precede it, and a stricter measurement of what a model would actually be allowed to claim.
 - [72 hours to find out if I could](https://infraphysics.net/lab/projects/3141592): A bespoke CRM for a health-tech startup, built solo in a 72-hour marathon. Half experiment in vibecoding, half real product. 23 tables, 8 state machines, and a stale-detection system that knows when you're neglecting a psychologist.
-- [I am not a web developer](https://infraphysics.net/lab/projects/6184744): How a systems engineer built a personal site with a custom markdown compiler, a second brain, and an AI development partner — and what went wrong along the way.
+- [I am not a web developer](https://infraphysics.net/lab/projects/6184744): How a systems engineer built a personal site with a custom markdown compiler, a second brain, and an AI development partner (and what went wrong along the way).
 - [A personal finance dashboard for the crash](https://infraphysics.net/lab/projects/1112121): A vanilla JS investment dashboard built in one session with Claude 4.6. No framework, no build step, no npm install. Just a folder you double-click.
 
 ## Threads (Essays)
@@ -44,11 +44,11 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 
 ## Bits2Bricks (Tutorials)
 
-- [LSTMs from scratch](https://infraphysics.net/blog/bits2bricks/3819540): A patient, ground-up build of the LSTM — from a single neuron to a recurrent circuit with memory. What the four gates do, why we add the cell state, and what the network actually learns to produce.
+- [LSTMs from scratch](https://infraphysics.net/blog/bits2bricks/3819540): A patient, ground-up build of the LSTM, from a single neuron to a recurrent circuit with memory. What the four gates do, why we add the cell state, and what the network actually learns to produce.
 - [The complete OpenClaw playbook](https://infraphysics.net/blog/bits2bricks/7463810): The full OpenClaw stack: architecture, VPS deployment, skills, channels, security, and every containment technique ranked by effort and protection.
-- [How LLMs learn](https://infraphysics.net/blog/bits2bricks/4028591): A ground-up explanation of how language models are trained after pretraining — SFT, DPO, RL, RLHF, reward hacking, KL divergence, and the DeepSeek-R1 pipeline.
+- [How LLMs learn](https://infraphysics.net/blog/bits2bricks/4028591): A ground-up explanation of how language models are trained after pretraining: SFT, DPO, RL, RLHF, reward hacking, KL divergence, and the DeepSeek-R1 pipeline.
 - [Claude Code from zero to production](https://infraphysics.net/blog/bits2bricks/7722440): The complete Claude Code stack: installation, CLAUDE.md, skills, hooks, permissions, MCP servers, agent teams, Cowork, UI tools, and the workflow that ties them together.
-- [Transformers from scratch](https://infraphysics.net/blog/bits2bricks/5917362): A patient, ground-up explanation of transformer architecture — how tokens become predictions, what attention really computes, where facts live, and why it all scales.
+- [Transformers from scratch](https://infraphysics.net/blog/bits2bricks/5917362): A patient, ground-up explanation of transformer architecture: how tokens become predictions, what attention really computes, where facts live, and why it all scales.
 - [MCP before and after](https://infraphysics.net/blog/bits2bricks/6184729): The Model Context Protocol turned every external service into a tool call. Here's what changed, what broke, and what's coming next.
 
 ## Second Brain (Knowledge Graph)
