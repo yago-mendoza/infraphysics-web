@@ -11,4 +11,4 @@ date: "2026-02-28"
 
 ## Interactions
 
-- [[QtZjVPKo|Transformer]] : : DiT brings the transformer into diffusion — replacing U-Nets with the same blocks that power LLMs
+- [[QtZjVPKo|Transformer]] : : DiT brings the transformer into diffusion, replacing U-Nets with the same blocks that power LLMs

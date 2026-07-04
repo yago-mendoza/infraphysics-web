@@ -6,9 +6,9 @@ date: "2026-03-06"
 ---
 - Train a small set of continuous "soft prompt" vectors prepended to the input, keep the model frozen.
 - Prefix-tuning: soft prompts at every layer. Prompt tuning (Lester et al.): only at the input [[haA3MDhG|embedding]] layer.
-- Much cheaper than [[esHo5jMx|fine-tuning]] — only the prompt vectors are trainable (a few thousand parameters)
+- Much cheaper than [[esHo5jMx|fine-tuning]]: only the prompt vectors are trainable (a few thousand parameters)
 - A learned prompt embedding can outperform hand-written prompts, especially on classification tasks.
 
 ## Interactions
 
-- [[ovLF1FzI|prompt engineering]] : : Prompt tuning replaces hand-crafted text with learned vectors — same goal (steer the model) but the "prompt" is continuous, not discrete tokens
+- [[ovLF1FzI|prompt engineering]] : : Prompt tuning replaces hand-crafted text with learned vectors, same goal (steer the model) but the "prompt" is continuous, not discrete tokens

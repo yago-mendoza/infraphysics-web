@@ -9,5 +9,5 @@ Google's APIs for embedding maps, geocoding, routing, and place data into applic
 - Geocoding API: address ↔ coordinates conversion
 - Directions API / Routes API: turn-by-turn routing, distance matrices, traffic-aware ETAs
 - Places API: search for businesses, autocomplete addresses, get reviews/photos/hours
-- Static Maps API: generate map images (no JavaScript needed — just a URL)
+- Static Maps API: generate map images (no JavaScript needed, just a URL)
 - Pricing gotcha: $200/month free tier covers moderate use, but high-traffic apps get expensive fast. Alternative: [[myPB47eI|OpenStreetMap]]-based solutions (Mapbox, Leaflet) for lower cost.

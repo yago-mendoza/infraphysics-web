@@ -5,10 +5,10 @@ name: "Transaction"
 date: "2025-03-08"
 ---
 - Lifecycle: wallet signs → RPC node receives → mempool → gossip to peers → validator includes in block → confirmed.
-- `eth_sendRawTransaction`: accepts a pre-signed transaction — the RPC node just relays it.
-- `eth_sendTransaction`: requires the node to have the signing key — legacy, rarely used now.
-- Valid signature alone isn't enough — sender must have ETH to cover `gas × gasPrice` (upfront cost)
-- Nonce: sequential counter per account — prevents replay and enforces transaction ordering.
+- `eth_sendRawTransaction`: accepts a pre-signed transaction. The RPC node just relays it.
+- `eth_sendTransaction`: requires the node to have the signing key. Legacy, rarely used now.
+- Valid signature alone isn't enough: sender must have ETH to cover `gas × gasPrice` (upfront cost)
+- Nonce: sequential counter per account, prevents replay and enforces transaction ordering.
 
 ## Interactions
 

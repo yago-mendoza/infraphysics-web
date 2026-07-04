@@ -5,7 +5,7 @@ name: "Causal Masking"
 date: "2026-03-06"
 ---
 Set the upper triangle of the attention matrix to -∞ (→ 0 after [[Sm8rH4nW|softmax]]) so tokens can't attend to future positions.
-- Effect: attention never carries information from later tokens back to earlier ones — preserves autoregressive property.
+- Effect: attention never carries information from later tokens back to earlier ones, preserving the autoregressive property.
 - The new token CAN attend to all previous tokens. Previous tokens CANNOT attend to the new one.
 - Enables [[89ceVDr1|KV cache]]: since previous tokens' representations are "closed" (won't change), we can cache their K and V.
 - Without causal masking ([[En6fL2qY|encoder]]-style): all tokens see all others → better enrichment of early positions, but can't do generation.

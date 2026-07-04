@@ -4,12 +4,12 @@ address: "Blockchain//Gossip"
 name: "Gossip"
 date: "2025-03-08"
 ---
-- Cascade propagation: a node tells its neighbors, they tell theirs — information spreads exponentially.
+- Cascade propagation: a node tells its neighbors, they tell theirs. Information spreads exponentially.
 - Both new transactions and newly created blocks propagate this way.
-- Primarily over TCP — reliable, ordered delivery is critical for reconstructing blocks correctly.
+- Primarily over TCP: reliable, ordered delivery is critical for reconstructing blocks correctly.
 - [[Wp2y5eP8|Bootnode]] initiates the cascade by introducing new nodes to a subset of peers.
-- Fully decentralized — no central broadcaster, no single point of failure.
+- Fully decentralized: no central broadcaster, no single point of failure.
 
 ## Interactions
 
-- [[Wp2y5eP8|Bootnode]] : : The bootnode seeds the initial gossip connections — after that, peers discover each other organically
+- [[Wp2y5eP8|Bootnode]] : : The bootnode seeds the initial gossip connections. After that, peers discover each other organically

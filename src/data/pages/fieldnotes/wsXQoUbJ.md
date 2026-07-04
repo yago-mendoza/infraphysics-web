@@ -11,4 +11,4 @@ date: "2026-03-07"
 
 ## Interactions
 
-- [[UHGnehtS|mechanistic interpretability]] : : Anthropic uses SAEs to find features causing buggy code — a direct application of interpretability to code safety
+- [[UHGnehtS|mechanistic interpretability]] : : Anthropic uses SAEs to find features causing buggy code, a direct application of interpretability to code safety

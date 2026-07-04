@@ -6,4 +6,4 @@ date: "2026-03-08"
 ---
 - Competition-level math problems from AMC and AIME contests.
 - Frontier variants: MATH level 5 (hardest subset), FrontierMath (unsolved research-level problems)
-- The benchmark that proved [[ct4swTMy|chain of thought]] and [[Kp4jIz9L|reasoning models]] actually help — dramatic accuracy jumps.
+- The benchmark that proved [[ct4swTMy|chain of thought]] and [[Kp4jIz9L|reasoning models]] actually help: dramatic accuracy jumps.

@@ -10,4 +10,4 @@ date: "2026-02-25"
 
 ## Interactions
 
-- [[ebRm86zw|hybrid search]] : : BM25 is the keyword half of hybrid search — catches exact term matches that semantic embeddings miss
+- [[ebRm86zw|hybrid search]] : : BM25 is the keyword half of hybrid search: catches exact term matches that semantic embeddings miss

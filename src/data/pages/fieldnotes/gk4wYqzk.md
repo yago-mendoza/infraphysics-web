@@ -11,4 +11,4 @@ date: "2026-02-06"
 
 ## Interactions
 
-- [[Et5mN8wJ]] : : Claude Code uses extended thinking for complex multi-step reasoning — the model generates internal reasoning chains before deciding which tools to call
+- [[Et5mN8wJ]] : : Claude Code uses extended thinking for complex multi-step reasoning: the model generates internal reasoning chains before deciding which tools to call

@@ -8,4 +8,4 @@ Application Programming Interface. A contract between two pieces of software: "s
 - [[Ex5rTm9K|External APIs]]: third-party services your app calls via HTTP (Google, Stripe, Sentry, etc.)
 - [[Ev3pNx7L|Event-driven APIs]]: your app fires an event, processing happens asynchronously in a job queue
 - Internal APIs: your own [[Bk9sTm2J|backend]] endpoints that your [[ISjyfjZ6|frontend]] calls
-- In [[Nx5tWs7J|Next.js]], API Routes define your internal API — deployed as [[Vf6kRm2D|Vercel Functions]]
+- In [[Nx5tWs7J|Next.js]], API Routes define your internal API, deployed as [[Vf6kRm2D|Vercel Functions]]

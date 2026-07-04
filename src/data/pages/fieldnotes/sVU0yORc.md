@@ -11,4 +11,4 @@ date: "2026-03-01"
 
 ## Interactions
 
-- [[pJmh7BBn|CLIP]] : : LLaVA uses CLIP as its vision encoder — CLIP extracts image features, a linear layer projects them into the LLM's embedding space
+- [[pJmh7BBn|CLIP]] : : LLaVA uses CLIP as its vision encoder: CLIP extracts image features, a linear layer projects them into the LLM's embedding space

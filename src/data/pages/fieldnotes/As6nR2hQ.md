@@ -4,7 +4,7 @@ address: "ML//Transformer//attention//attention sink"
 name: "Attention Sink"
 date: "2026-03-05"
 ---
-The first token walks into a transformer and somehow leaves with 80% of the attention — not because it's interesting, but because softmax needs somewhere to dump its spare change. The first token in a sequence absorbs a disproportionate amount of [[ml8njOQc|attention]] weight, regardless of its content. Even if it's a meaningless [[St5yK9jL|BOS]] token, attention heads allocate 20-80% of their weight to it.
+The first token walks into a transformer and somehow leaves with 80% of the attention, not because it's interesting, but because softmax needs somewhere to dump its spare change. The first token in a sequence absorbs a disproportionate amount of [[ml8njOQc|attention]] weight, regardless of its content. Even if it's a meaningless [[St5yK9jL|BOS]] token, attention heads allocate 20-80% of their weight to it.
 
 ##### Why it happens
 

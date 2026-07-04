@@ -10,4 +10,4 @@ date: "2018-09-10"
 
 ## Interactions
 
-- [[2oNdlB5L|Pre-training]] : : Pre-training is transfer learning at industrial scale — learn general language/vision, transfer to any downstream task
+- [[2oNdlB5L|Pre-training]] : : Pre-training is transfer learning at industrial scale: learn general language/vision, transfer to any downstream task

@@ -9,4 +9,4 @@ date: "2026-03-08"
 - It is a gentleman's agreement, not access control. Malicious bots ignore it. Well-behaved bots (Googlebot, GPTBot, ClaudeBot) respect it.
 - AI-era relevance: you can selectively block AI crawlers while allowing search engines. `User-agent: GPTBot / Disallow: /` blocks OpenAI's crawler from training on your content.
 - Common mistake: blocking crawlers from CSS/JS files makes your page unrenderable for Googlebot (it needs to render the page to index it).
-- The file itself is public — anyone can read your robots.txt to see what you are hiding. Do not use it for security.
+- The file itself is public. Anyone can read your robots.txt to see what you are hiding. Do not use it for security.

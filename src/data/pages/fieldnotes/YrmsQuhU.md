@@ -6,7 +6,7 @@ date: "2017-09-15"
 ---
 - Function that maps inputs to outputs through layers of learned weights.
 - Each layer: multiply by weight matrix, add bias, apply [[RXHPrtTB|activation function]]
-- Learns via [[aufHHy2p|backpropagation]] — nudge weights to reduce [[DxaRVjHg|loss]]
+- Learns via [[aufHHy2p|backpropagation]]: nudge weights to reduce [[DxaRVjHg|loss]]
 
 ## Interactions
 

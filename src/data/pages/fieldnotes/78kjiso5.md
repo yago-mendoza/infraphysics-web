@@ -6,7 +6,7 @@ date: "2018-06-15"
 ---
 - Encoder RNN compresses input to a fixed-size vector, decoder RNN generates output from it.
 - The architecture behind early Google Translate.
-- Bottleneck: entire input squeezed into one vector — [[ml8njOQc|attention]] was invented to fix this.
+- Bottleneck: entire input squeezed into one vector, which [[ml8njOQc|attention]] was invented to fix.
 
 ## Interactions
 

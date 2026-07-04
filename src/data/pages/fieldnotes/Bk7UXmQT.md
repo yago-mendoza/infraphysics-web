@@ -14,4 +14,4 @@ When a measure becomes a target, it ceases to be a good measure.
 
 ## Interactions
 
-- [[mCK28lZ6|constitutional AI]] : : Constitutional AI formalizes values into constitutions — Goodhart's curse says those constitutions will always be leaky approximations
+- [[mCK28lZ6|constitutional AI]] : : Constitutional AI formalizes values into constitutions. Goodhart's curse says those constitutions will always be leaky approximations

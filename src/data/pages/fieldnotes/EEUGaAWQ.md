@@ -10,4 +10,4 @@ date: "2024-01-20"
 
 ## Interactions
 
-- [[a0AXrxFY|Red teaming]] : : Red teaming proactively searches for jailbreaks before deployment — offense informs defense
+- [[a0AXrxFY|Red teaming]] : : Red teaming proactively searches for jailbreaks before deployment: offense informs defense

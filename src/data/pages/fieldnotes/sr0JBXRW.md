@@ -10,4 +10,4 @@ date: "2022-05-05"
 
 ## Interactions
 
-- [[JP0VCiWq|GAN]] : : Diffusion replaced GANs for image generation — more stable training, better quality, but orders of magnitude slower
+- [[JP0VCiWq|GAN]] : : Diffusion replaced GANs for image generation: more stable training, better quality, but orders of magnitude slower

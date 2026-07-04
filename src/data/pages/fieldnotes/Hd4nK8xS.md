@@ -6,7 +6,7 @@ date: "2026-03-08"
 ---
 One unit of [[dpYqVkke|multi-head attention]]: its own [[Pm5xH9bL|W_Q, W_K, W_V]] projections operating on a reduced dimension (e.g. 128-dim instead of 12288)
 - Why reduce? Each head can specialize in a different type of relationship (syntax, coreference, semantic, positional) by operating in its own subspace.
-- No explicit mechanism forces specialization — it **emerges** from training. If two heads learn the same thing, they don't reduce [[DxaRVjHg|loss]], so [[aufHHy2p|backprop]] pushes them to diversify.
+- No explicit mechanism forces specialization. It **emerges** from training. If two heads learn the same thing, they don't reduce [[DxaRVjHg|loss]], so [[aufHHy2p|backprop]] pushes them to diversify.
 
 ##### Emergent specialization
 
@@ -17,4 +17,4 @@ One unit of [[dpYqVkke|multi-head attention]]: its own [[Pm5xH9bL|W_Q, W_K, W_V]
 
 ## Interactions
 
-- [[Ih8nK5xW|induction head]] : : Induction heads are regular attention heads whose emergent specialization is pattern-copying — the best-understood example of head specialization
+- [[Ih8nK5xW|induction head]] : : Induction heads are regular attention heads whose emergent specialization is pattern-copying, the best-understood example of head specialization

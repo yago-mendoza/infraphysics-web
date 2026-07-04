@@ -10,4 +10,4 @@ date: "2023-09-05"
 
 ## Interactions
 
-- [[Bk7UXmQT|Goodhart's curse]] : : The central failure mode — optimize a proxy hard enough and it diverges from the real goal
+- [[Bk7UXmQT|Goodhart's curse]] : : The central failure mode: optimize a proxy hard enough and it diverges from the real goal

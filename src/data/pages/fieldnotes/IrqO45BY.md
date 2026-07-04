@@ -4,13 +4,13 @@ address: "Claude Code//.claude//skills"
 name: "Skills"
 date: "2026-02-06"
 ---
-- Reusable instruction packages invoked with `/name` in a session — each skill is a directory inside `.claude/skills/` containing a `SKILL.md` file.
+- Reusable instruction packages invoked with `/name` in a session: each skill is a directory inside `.claude/skills/` containing a `SKILL.md` file.
 - `SKILL.md` has YAML frontmatter + markdown instructions.
 - Name:: The slash command name (e.g. `commit` → `/commit`)
-- Description:: What it does — Claude also uses this to decide whether to auto-load the skill when relevant.
+- Description:: What it does. Claude also uses this to decide whether to auto-load the skill when relevant.
 - Disable-model-invocation:: If `true`, only the user can trigger it (not Claude on its own)
 - Argument-hint:: Shown to the user as placeholder (e.g. `"[filename]"`)
 - Allowed-tools:: Restrict which tools Claude can use while executing this skill.
-- The body is a prompt — can reference `$ARGUMENTS` and `$0`, `$1`, `$2` for positional args.
-- Skills are not scripts — they tell Claude what to do with existing tools, not deterministic execution.
+- The body is a prompt: can reference `$ARGUMENTS` and `$0`, `$1`, `$2` for positional args.
+- Skills are not scripts: they tell Claude what to do with existing tools, not deterministic execution.
 - Legacy path `.claude/commands/<name>.md` also works but lacks frontmatter features.

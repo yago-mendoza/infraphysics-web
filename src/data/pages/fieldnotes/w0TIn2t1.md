@@ -11,4 +11,4 @@ date: "2025-03-09"
 
 ## Interactions
 
-- [[Ixdu9hgo|ECDSA]] : : Blocks are signed with ECDSA — nodes verify the signature to confirm the proposer's identity before re-executing
+- [[Ixdu9hgo|ECDSA]] : : Blocks are signed with ECDSA: nodes verify the signature to confirm the proposer's identity before re-executing

@@ -10,5 +10,5 @@ date: "2026-02-06"
 - `.claude/settings.json`:: Shared (committed to git). Team-wide permissions, [[0C6FXSnp|hooks]] config.
 - `.claude/settings.local.json`:: Personal (gitignored). Local permission overrides, machine-specific paths. Merges on top of shared.
 - Permissions:: `allow` and `deny` arrays of tool patterns (e.g. `"Bash(git commit:*)"`, `"Bash(npm run:*)"`)
-- Hooks:: Event-to-script mappings — each event has an array of matchers pointing to scripts in `.claude/hooks/`.
+- Hooks:: Event-to-script mappings. Each event has an array of matchers pointing to scripts in `.claude/hooks/`.
 - Precedence (highest wins): managed (org) → CLI args → `settings.local.json` → `settings.json` → user `~/.claude/settings.json`.

@@ -12,4 +12,4 @@ date: "2026-02-24"
 
 ## Interactions
 
-- [[mydQy6ia|tool use]] : : ReAct formalized how models use tools — interleave reasoning about what to do with actually doing it
+- [[mydQy6ia|tool use]] : : ReAct formalized how models use tools: interleave reasoning about what to do with actually doing it

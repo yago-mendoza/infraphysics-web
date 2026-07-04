@@ -10,4 +10,4 @@ date: "2021-06-12"
 
 ## Interactions
 
-- [[j7ZpMrPl|H100]] : : The next generation — 2-3× training throughput plus dedicated Transformer Engine
+- [[j7ZpMrPl|H100]] : : The next generation: 2-3× training throughput plus dedicated Transformer Engine
