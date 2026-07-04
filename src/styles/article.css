@@ -201,6 +201,16 @@
 .article-projects .article-content h4 {
   text-transform: none;
 }
+/* Projects: lighter title/heading weights (less bold than the default). */
+.article-projects .article-title {
+  font-weight: 600;
+}
+.article-projects .article-content h1,
+.article-projects .article-content h2,
+.article-projects .article-content h3,
+.article-projects .article-content h4 {
+  font-weight: 500;
+}
 /* Back link moved into the header bar. The nav row now holds the tags on the
    left and the engagement buttons on the right, aligned to the top. */
 .article-projects .article-nav-row {
