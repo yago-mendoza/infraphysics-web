@@ -324,7 +324,11 @@ That gives the simulator a simple causal shape: EPVs raise short-term intensity;
 
 That last clause is the whole game. There is noise in the generator because there is noise in the kind of question being simulated. Without it, the task is too clean; with too much of it, no learner can do anything. The interesting regime is the annoying middle: enough structure that a simple model can beat chance, enough randomness that no model gets to feel prophetic. The simulator is built so the model can see the weather forming, not the lightning bolt itself.
 
-Four views of the toy world. The risk map and phase portrait trace how density and load evolve; the raster stacks the EPV streams session by session; and the session scatter spreads every window across its two clocks: the rare positive windows are the bright cluster drifting up and to the right.
+The risk map: each line is one simulated session, tracing how recent density and accumulated load evolve over a day. Most stay low; a few climb toward the danger corner.
+
+The event raster: EPV streams stacked one session per row, so bursts and quiet stretches line up across days.
+
+The phase portrait: how the fast clock (recent density) and the slow clock (accumulated load) push each other around over time.
 
 What the model actually estimatesThe model is not trying to predict the next flash. It is trying to estimate a local hazard: given the recent density of flashes and the slower state of the session, how dangerous is this window compared with a quiet one? That distinction matters because hazard can be real while exact timing stays stubbornly uncertain.
 
@@ -347,6 +351,8 @@ This is not an arbitrary convenience. In the language of the simulator it is an 
 That number is paired with a slower clock: accumulated load. The fast clock asks whether a burst is happening now. The slow clock asks whether the session has been simmering long enough for the same burst to matter more. A short dense burst on a fresh system is not the same object as the same burst after an hour of subthreshold activity. One is a spark, the other a spark in dry grass.
 
 The two clocks reading one EPV stream (top), with six more sessions for scale (bottom). Each tick is an EPV; the fast clock (recency-weighted density, cyan) spikes and decays, while the slow clock of accumulated load (amber) creeps up underneath. Aura sessions climb into a racha before the red bar; calm ones never do. This is the hypothesis drawn legibly, not evidence for it: that auras follow a racha is built into the simulator, so the figure shows the assumption the model is asked to recover, not a discovery.
+
+The session scatter: every window placed by its two clocks. The rare positive windows are the bright cluster drifting up and to the right, exactly the corner the model has to find.
 
 Around those clocks sit a few context variables: sleep, wake duration, screen exposure, session metadata. They are allowed in because a real logger would collect them. They are not allowed to dominate, because the simulated mechanism is intentionally event-centric. The claim being stress-tested is not "all of life predicts aura." It is narrower: local EPV density may contain a weak pre-aura signal. A small hypothesis is easier to kill.
 
