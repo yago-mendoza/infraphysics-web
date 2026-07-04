@@ -12,6 +12,8 @@ Mandatory triggers — when X happens, do Y.
 
 ### On writing or editing ARTICLES content
 
+**⛔ Standing rule, high priority: no em-dashes in prose.** Never use the em-dash (`—`) as a punctuation break in any body text you write for this site. The author strongly dislikes it and it reads as an AI tell. Use a parenthesis (aside), a period (new sentence), or a comma (light pause) instead, and rebuild the sentence so the punctuation fits its meaning. Routine exception: list-style separators (definition lists, tldr bullets, trailing refs). Otherwise only rare, PUNCTUAL exceptions, never by habit. Full guidance in [EDITORIAL-RUBRIC.md](_generation/EDITORIAL-RUBRIC.md) ("Second absolute rule"). This also applies to anything else you write (commit messages, UI copy).
+
 **1. Read the authoring docs first.** Never guess syntax, frontmatter, or editorial conventions from memory.
 
 | Doc | What to look up |
