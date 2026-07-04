@@ -306,7 +306,7 @@ So the first thing to build is not the predictor. It is the little world in whic
 
 A microscope shows you something about the world. A simulator shows you something about your assumptions. Confuse the two and every conclusion becomes fake. But keep the boundary clean and a simulator earns its keep for exactly the reason a microscope cannot: you can know the data-generating process and still ask whether your analysis is disciplined enough to recover only the claims it deserves.
 
-That discipline is not paranoia — it is what the literature keeps demonstrating (I come back to the specific papers near the end; here I only need their headline). The serious seizure-forecasting work is full of models that beat a random predictor in one setting and quietly deflate in another. Temporal models can find signal in EEG, but the signal is patient-specific, validation-sensitive, and far easier to overstate than to use. Payne et al. ran CNN/LSTM models over long-term intracranial EEG and reported performance above chance with strong patient-to-patient variability; Chambers et al. later tested LSTMs on unprocessed EEG and again framed the benefit as real but bounded, not magic. The lesson is not that LSTMs are bad. The lesson is that the validation protocol carries almost as much weight as the architecture.
+That discipline is not paranoia — it is what the literature keeps demonstrating (I come back to the specific papers near the end; here I only need their headline). The serious seizure-forecasting work is full of models that beat a random predictor in one setting and quietly deflate in another. Temporal models can find signal in EEG, but the signal is patient-specific, validation-sensitive, and far easier to overstate than to use. The lesson is not that LSTMs are bad. The lesson is that the validation protocol carries almost as much weight as the architecture.
 
 What synthetic data can and cannot doSynthetic data can test a pipeline, compare modeling choices, expose leakage, estimate sample-size pressure, and define which claims would be forbidden. It cannot discover a clinical fact. A model that "works" on data shaped by my own assumptions has not learned the brain — it has passed a sanity floor: in a world where the signal exists, the pipeline can see some of it. That is a low bar. It is also the bar most personal ML projects quietly skip.
 
@@ -330,19 +330,11 @@ What the model actually estimatesThe model is not trying to predict the next fla
 
 Why more synthetic data isn't more evidence
 
-The tempting objection writes itself: if the data are synthetic, why simulate scarcity? Why not generate a million windows and let the LSTM win or lose cleanly?
+The tempting objection writes itself: if the data are synthetic, why simulate scarcity? Why not generate a million windows and let the LSTM win or lose cleanly? Because more synthetic rows reduce Monte Carlo error, not epistemic error. A million windows from the same simulator tell you the simulator more precisely; they do not make the simulator more true.
 
-Because that would confuse two different uncertainties.
-
-More synthetic rows reduce Monte Carlo error. They do not reduce epistemic error. A million windows from the same simulator tell you the simulator more precisely; they do not make the simulator more true. If the question were "what happens under this exact data-generating process?" then yes, generate endlessly. But that is not the question I care about.
-
-The relevant question is harsher and more practical: under the kind of evidence budget a real logging project would actually have — few positives, correlated windows, uneven sessions, imperfect context — which claims survive? So the synthetic cohort is deliberately kept in the small-data regime. The sample size is not a limitation accidentally inherited from reality; it is part of the stress test. The generator can make as much data as I ask for, but large runs are used only to check the stability of the comparison — never treated as extra evidence about biology.
-
-Once the generator exists, synthetic rows are nearly free — and that is exactly why they are not evidence. The bottleneck is not the number of rows Python prints; it is the number of assumptions anchored tightly enough that a future real dataset could challenge them.
+So the synthetic cohort is deliberately kept in the small-data regime. The relevant question is the practical one — under the evidence budget a real logging project would actually have (few positives, correlated windows, uneven sessions), which claims survive? The sample size is not a limitation inherited from reality; it is part of the stress test. Large runs are used only to check the stability of the comparison, never as extra evidence about biology.
 
 2. The features
-
-Three sections on the numbers themselves — how they get built from raw events, which tempting one is a deliberate trap, and how the set is cut down to something a person can still argue with.
 
 Turning events into features
 
@@ -352,9 +344,7 @@ The main feature is a recency-weighted event rate: an exponentially-weighted mov
 
 This is not an arbitrary convenience. In the language of the simulator it is an observable proxy for the Hawkes intensity — the running estimate of how self-excited the local stream has become. The premise that "events matter when they cluster" becomes one number the model can read.
 
-That number is paired with a slower clock: accumulated load. The fast clock asks whether a burst is happening now. The slow clock asks whether the session has been simmering long enough for the same burst to matter more.
-
-The dual clockThere are two timescales, and the model needs both. A fast clock tracks recent density: is there a burst happening now? A slow clock tracks accumulation: how loaded is the session before this burst arrives? A short dense burst on a fresh system is not the same object as the same burst after an hour of subthreshold activity — one is a spark, the other may be a spark in dry grass.
+That number is paired with a slower clock: accumulated load. The fast clock asks whether a burst is happening now. The slow clock asks whether the session has been simmering long enough for the same burst to matter more — a short dense burst on a fresh system is not the same object as the same burst after an hour of subthreshold activity. One is a spark, the other a spark in dry grass.
 
 The two clocks reading one EPV stream (top), with six more sessions for scale (bottom). Each tick is an EPV; the fast clock — recency-weighted density, cyan — spikes and decays, while the slow clock of accumulated load — amber — creeps up underneath. Aura sessions climb into a racha before the red bar; calm ones never do. This is the hypothesis drawn legibly, not evidence for it: that auras follow a racha is built into the simulator, so the figure shows the assumption the model is asked to recover, not a discovery.
 
@@ -390,8 +380,6 @@ In rare-event work, feature selection is not a beauty contest; it is debt contro
 
 3. Validation and models
 
-With features in hand, the real work is scoring them without fooling yourself — the split first, then the models, then a diagnostic only a simulator allows.
-
 Splitting the data
 
 The easiest way to make this project look impressive is to split the data by row. It is also the easiest way to make the number meaningless.
@@ -418,23 +406,21 @@ The logistic model's decision surface over the two clocks. Risk rises up and to 
 
 The rarity makes it harsher than the number sounds. Even when the model concentrates risk, most alarms are still false, because most windows are non-events. The top-risk windows are enriched for positives, not purified. It is a metal detector that triples your odds in a field where almost every beep is still a bottle cap. A model can be directionally right and operationally useless at the same time.
 
-That is the result in a single line: statistically above chance, operationally unusable.
-
 So you reach for the LSTM. It is the tempting model because the data are sequential, and that temptation is not stupid: a stream of events really does have temporal structure, and a recurrent model is built to consume it. If you want one assembled gate by gate from a single neuron, that is bits2bricks/LSTMs from scratch — here it is just the obvious next thing to reach for. You would bet on it — a sequence model reading the raw stream should beat a four-feature logistic regression. That is the entire promise of deep learning.
 
 It does not pay rent.
 
 The LSTM can learn the simulated stream — that is not the problem. The problem is generalization under the evidence budget. With few positive sessions, the extra capacity mostly buys more ways to memorize local accidents. Under session-blocked validation, the heavier model shows no reliable edge over the small logistic model, and its apparent advantage over the threshold rule is unstable. The handcrafted clocks are already close to sufficient statistics for the simulated mechanism, while the LSTM has to learn those clocks from scarce, correlated windows. It has more freedom than evidence, so it spends the freedom badly.
 
-And to rule out that the network was simply mis-sized, I ran two LSTMs — a small one and one with roughly double the capacity. Neither earns its keep. Scored by PR-AUC (the metric that actually respects rare positives) and averaged over the session-blocked folds, the picture repeats across every forecast horizon: the four-feature logistic is the tallest bar, the one-feature rule sits just behind, and both LSTM sizes trail — worst in the hardest 5–15 minute window.
+Training loss keeps dropping while validation loss bottoms out early and drifts up — the network is memorizing scarce, correlated windows instead of the mechanism. This is "more freedom than evidence" made visible: the gap between the curves is the overfitting the bake-off then pays for, and early stopping is taken at the validation minimum, not the training one.
+
+And to rule out that the network was simply mis-sized or under-trained, I built both LSTMs the way you would if you wanted them to win. Each reads the raw EPV stream as a sequence instead of the handcrafted clocks, trains with a class-weighted cross-entropy so the rare positive windows are not drowned by the majority, and stops early on validation PR-AUC — not training loss — with the stopping fold held out under the same session-level split, so model selection never peeks at a test session. A small network at 16 hidden units, and one at roughly double the capacity, 32. Neither earns its keep. Scored by PR-AUC (the metric that actually respects rare positives) and averaged over the session-blocked folds, the picture repeats across every forecast horizon: the four-feature logistic is the tallest bar, the one-feature rule sits just behind, and both LSTM sizes trail — worst in the hardest 5–15 minute window.
 
 The bake-off. In all three horizons the four-feature logistic (cyan) is the highest bar; the two LSTM sizes (orange, red) never clear it and collapse hardest in the 5–15 minute window. Doubling the LSTM's capacity did not buy more skill — only more ways to overfit a scarce, correlated dataset. And mind the axis: even the winner sits near PR-AUC 0.1, which is real signal and still nowhere near a usable alarm.
 
 The bootstrap interval on the logistic model's edge over the dumb threshold crosses zero, and the LSTM is no cleaner. Said plainly: in this finite simulated study, I cannot rule out that the cleverer models add nothing meaningful over a density rule.
 
 That is not a verdict on LSTMs, or on brains, or on aura forecasting. It is a verdict on this evidence regime — and it is the cleanest result in the project precisely because it is not flattering, and because it travels. "At this sample size, capacity buys overfitting, not skill" is a fact about the volume of evidence, not about the body.
-
-Two kinds of claimSome claims travel out of a simulator: the validation must be session-blocked; the feature budget is small; a decoy feature can expose leakage; at this sample size, a complex model cannot be shown to beat a simple one; the uncertainty interval is wide. Other claims do not travel: context switching is not a real trigger; aura timing is biologically irreducible; this ROC estimates clinical performance. The whole discipline of the writeup is to say only the first kind out loud — and to treat the second kind as a hypothesis to test later, never a finding to bank now.
 
 Revealing the hidden state
 
@@ -449,8 +435,6 @@ This is not a statement about real brains. It is a statement about this generato
 Fragility versus timingThere is a difference between predicting that a system is fragile and predicting the exact moment it breaks. Most "risk" models are good at the first kind; this project demands the second. In this simulator, most of the remaining error lives in the timing problem. That does not prove reality works that way — it is a map of the wall, not a measurement of how tall it stands. It tells the next real experiment where to push: if richer sensors suddenly improve timing, the simulator was missing a driver; if not, the bottleneck may really be short-horizon stochasticity.
 
 4. Taking stock
-
-What survives all of that, measured against the real literature and against the fair suspicion that none of it was necessary.
 
 What the EEG literature contributes
 
@@ -488,7 +472,7 @@ What the project actually produced is not a predictor. It is a pipeline that is 
 
 I should be honest about the part that does not fit in a methods section. I wanted this to work. There is a particular pull to a problem like this — the sense that the signal is right there, that one more feature or one more layer will finally surface it — and that pull is exactly the thing a rare-event study has to be built to resist. Most of the discipline in this writeup, the session splits and the negative control and the dumb baseline I kept in the report even when it embarrassed the network, is really just scaffolding to protect the result from the person who wanted a different one. The number I trust most is the one I was least hoping for.
 
-A real version would be straightforward and annoying to run, which is usually a good sign. One button per event, pressed by whoever actually has the stream. One session boundary. Sleep and wake duration recorded before the outcome is known. Context switching kept as a negative-control candidate, not a pet theory. The feature budget fixed in advance. The threshold baseline kept in the report even when it embarrasses the LSTM. Validation by session, or not at all. Then ask whether the real stream lands above the synthetic sanity floor.
+A real version would be straightforward and annoying to run, which is usually a good sign. One button per event, pressed by whoever actually has the stream. One session boundary. Sleep and wake duration recorded before the outcome is known. Everything the synthetic pass just argued for — session-level validation, the negative control, the fixed feature budget, the dumb baseline kept in the report even when it embarrasses the LSTM — moved from principle to protocol. Then ask whether the real stream lands above the synthetic sanity floor.
 
 I am a systems person and not a clinician, and a neurologist would probably frame the whole thing differently. But the engineering lesson travels past brains.
 
@@ -5265,6 +5249,8 @@ Description: The Model Context Protocol turned every external service into a too
 first draft. the protocol is moving fast and the security story is catching up.
 26 · mar 11(1m 6d later)
 rewrote the attack surface section with real CVEs. added MCP Apps, OAuth 2.1, and the CLI/API/MCP trilemma.
+26 · jul 04(4m 29d later)
+added the data-plane argument to the trilemma. the token math everyone repeats is about tool definitions; the bigger one is that a CLI keeps file contents out of context entirely. changed how i default for file-heavy work.
 
 Before MCP, connecting an AI tool to anything external meant writing a bespoke integration. Every IDE plugin, every API wrapper, every file-access layer — someone had to build it from scratch, for that specific tool, and maintain it when the tool changed. If you wanted Claude to talk to your database and Cursor to talk to the same database, you wrote two integrations. If you added a third tool, you wrote a third. The N-times-M problem that haunts every interoperability story.
 
@@ -5434,6 +5420,8 @@ An API call is a direct HTTP request to a service. POST /v1/screenshots with a J
 An MCP server is a process that wraps a service in a standard protocol. It exposes tools — name, description, input schema — over JSON-RPC. The AI discovers what's available, reads the descriptions, and decides what to call. One protocol for everything. But those tool definitions live in the context window, and they're not free1.
 
 1A single MCP server with 8 tools can consume 800-2,000 tokens in tool definitions alone. Five servers with 8 tools each = 4,000-10,000 tokens before the model does anything useful. On a 200K context window that's ~5%. On a 32K window it's ~30%.
+
+Tool definitions are the cost everyone quotes. There's a sharper divide the descriptions above don't show, and it's about where the data lives. A CLI runs in your environment, so it works on files that are already on disk. To hand a 2,000-line source file to another service, the agent runs one command that reads the file and pipes it across — the contents never enter the model's context. MCP has no disk to reach for: whatever the agent sends has to travel through the context first. To move that same file it emits every line as tool-call arguments, token by token, before the server ever sees it. On large payloads that's the difference between a job that fits the window and one that doesn't — and it's why file-heavy work (refactors, log triage, moving data between apps) tends to stay on the CLI even after you've paid for the MCP.
 
 When each one wins
 
