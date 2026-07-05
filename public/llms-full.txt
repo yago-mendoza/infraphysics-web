@@ -6252,3 +6252,72 @@ What matters is the principle: the right unit of AI-assisted work is not a singl
 The reason it took this long to become practical is that until recently, the "communication protocol" between AI agents had to be a human copy-pasting text. That bottleneck is dissolving. Shared file systems, structured output, tool-use APIs, skills that encode handoff logic. The plumbing is finally catching up to the architecture.
 
 We are not at the fully automated pipeline yet. We are somewhere in the middle: human-in-the-loop orchestration, with the loop getting shorter. The developers who learn to design that loop well now will have a significant advantage when it tightens further. Because the hard part was never the AI. The hard part was always the specification.
+
+---
+
+## TrialGPT, or making clinical-trial search feel like booking a flight
+
+URL: https://infraphysics.net/lab/projects/2718281
+Category: projects
+Date: 2025-07-08
+Description: A clinical-trial matching tool: describe your case or upload a report, and TrialGPT finds relevant trials near you, checks the inclusion and exclusion criteria against your situation, and drafts a message to the trial coordinator.
+
+If you have ever tried to find a clinical trial for yourself or someone you love, you already know the search is quietly broken. The data is not the problem. There is a public registry, ClinicalTrials.gov, with hundreds of thousands of studies, comprehensive and free. The problem is that it was built for researchers, not for the people the research is for. Every trial hides behind a wall of inclusion and exclusion criteria written in clinician shorthand, and the only way to know whether you qualify is to read all of it, for every candidate, and cross it against your own medical history. Most people give up. The rest ask a doctor who has forty other things to do that afternoon.
+
+The pitch we kept coming back to was blunt: finding a clinical trial should feel like booking a flight. You say where you are and what you need, something does the searching and the filtering and the fine print, and you walk away with a short list and a way to act on it. That is the whole product. It is called TrialGPT, and it lives at trialgpt.app.
+
+I should say up front that I am not a clinician. I am a systems and standards person who wandered into healthcare through the back door, which is the wrong and the right qualification for a tool like this at once: wrong because I cannot read an oncology report the way an oncologist can, right because it forces me to treat every clinical judgment as something the machine must never pretend to make on its own.
+
+25 · apr 10(2m 28d earlier)
+started this after watching someone close to me lose a weekend to reading trial criteria by hand. that should not cost a weekend.
+
+1. The problem is the criteria, not the search
+
+Everyone assumes the hard part is finding trials. It is not. Full-text search over a registry is a solved problem, and a decent keyword query already returns a pile of candidates. The hard part is the pile. Each trial comes with a list of inclusion criteria (you must be like this) and exclusion criteria (you must not be like that), and eligibility is the intersection of dozens of those clauses against one messy human history. "ECOG performance status 0 to 1." "No prior treatment with a PD-1 inhibitor." "eGFR above 60." A patient does not know most of those words, and the ones they do know are scattered across three PDFs from two hospitals.
+
+So TrialGPT is not really a search engine. It is an eligibility reasoner with a search engine bolted to the front. The search narrows the field; the model does the part that used to require a person, reading each trial's criteria and checking them, one clause at a time, against what it knows about your case.
+
+2. What it actually does
+
+The flow is deliberately short, because every extra step is a place where a scared or exhausted person quits.
+
+The four steps
+Tell it about your case. Type it in your own words, or, for much better results, upload a medical report.
+
+It reads. The report is parsed into the clinical facts that criteria actually turn on: diagnosis, stage, prior treatments, key lab values, location.
+
+It matches. Relevant trials near you are retrieved from the public registry, and each one's inclusion and exclusion criteria are checked against your case, with a plain-language verdict per trial.
+
+It drafts the message. For a trial that fits, it writes a personal note to the trial coordinator that you can send straight from the page.
+
+No middlemen. No fine print. No wall of post-its taking over a desk.
+
+3. Reading the report is the whole game
+
+You can describe your situation in free text and it works, but uploading a report is where the quality jumps, and the reason is not glamorous. Free text is what a person remembers and chooses to mention. A report is what a clinician wrote down. The second is denser, more precise, and full of exactly the values that eligibility hinges on, the ones a patient would never think to volunteer because they do not know they matter.
+
+So a large part of the work is unglamorous extraction: pulling structured clinical facts out of unstructured documents, then turning those facts into something you can check a criterion against. This is where embeddings and retrieval earn their keep, and where a model that can read a messy PDF does something a keyword system simply cannot.
+
+4. Matching, not searching
+
+Under the hood this is a retrieval problem wearing a reasoning problem's clothes. RAG pulls the candidate trials and their criteria; the model runs the eligibility check. The honest framing we settled on is that TrialGPT produces a first pass, not a verdict. It is very good at discarding the trials you obviously do not qualify for and surfacing the handful worth a real conversation. It is not, and must not be, the thing that decides you are in.
+
+In HindsightThe temptation in a tool like this is to show a confident green "eligible" badge, because it feels helpful and it demos beautifully. It is also the single most dangerous thing you can build. An eligibility clause can turn on a lab value from last month or a drug you took two years ago, and the model only knows what the report told it. We kept walking the language back toward "worth checking" and away from "you qualify," and every time we did, the product got less impressive in a screenshot and more trustworthy in real life.
+
+5. The last mile nobody builds
+
+Here is the part I am most fond of, because it is the part everyone else skips. Finding the trial is only half the problem. The other half is that most people, having found a trial, still do nothing, because the next step is to cold-contact a research coordinator at a hospital and they have no idea what to say. So TrialGPT drafts the message for you: who you are, why you might fit this specific trial, and a clear ask, ready to send from the page. It is a small feature. It is also, I suspect, the difference between a tool people admire and a tool people use.
+
+6. A medical AI, seen from the EU AI Act
+
+I spend a good part of my working life on AI standards and the EU AI Act, so building a health-adjacent tool was less a side project than a very concrete exam. A system that helps route patients toward medical trials sits close to the high-risk end of that framework, and for good reason. It made a few decisions non-negotiable.
+
+The human stays in the loop, always: TrialGPT drafts, it never sends, and it never books. It does not diagnose, and it is careful never to sound like it does. It explains its reasoning per criterion instead of hiding behind a score, because "here is the clause, and here is why I think it applies to you" is something a person can check, while a bare confidence number is not. None of this makes the tool compliant by fiat, and I am wary of anyone who claims a checkbox does. But writing the thing while holding the regulation in the other hand changed what we built, and mostly for the better.
+
+The tool is a search-and-outreach assistant, not a medical device, and nothing it produces is clinical advice.
+
+7. Where it is
+
+TrialGPT went out in early testing: enough to work, rough enough that we wanted people to throw weird edge cases at it and try to break it. That is the right posture for something carrying this much responsibility. Get it in front of real cases, watch where the matching is too eager or too shy, and keep dragging the language back toward honesty.
+
+Booking a flight is a solved problem because someone decided the messy part, the fares and the filtering and the rules, was the software's job and not yours. Clinical trials deserve the same decision. That is all TrialGPT is trying to be.
