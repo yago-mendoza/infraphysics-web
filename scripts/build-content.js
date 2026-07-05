@@ -81,7 +81,7 @@ customRenderer.image = function({ href, title, text }) {
 customRenderer.link = function({ href, title, tokens }) {
   const text = this.parser.parseInline(tokens);
   const titleAttr = title ? ` title="${title.replace(/"/g, '&quot;')}"` : '';
-  const newTab = /^\/playgrounds\//.test(href) || /\.html($|[?#])/.test(href);
+  const newTab = /^https?:\/\//.test(href) || /^\/playgrounds\//.test(href) || /\.html($|[?#])/.test(href);
   const tabAttr = newTab ? ' target="_blank" rel="noopener noreferrer"' : '';
   return `<a href="${href}"${titleAttr}${tabAttr}>${text}</a>`;
 };

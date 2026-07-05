@@ -217,7 +217,7 @@ These replace the role that admonitions or callouts play in other systems. The o
 | `quote` | *(none)* | Category accent | Styled quotation with left bar and quotation mark icon |
 | `pullquote` | *(none)* | Category accent | Same as `quote` but half-width (stops mid-screen) |
 
-> **Blog articles (threads, bits2bricks):** All blockquote types render in the category accent color — there is no per-type color distinction. The types still work (labels, structure) but the visual color is always the section accent. Only projects uses the per-type color palette (green, amber, red, purple).
+> **Blog articles (threads, bits2bricks):** All blockquote types render in the category accent color — there is no per-type color distinction. The types still work (labels, structure) but the visual color is always the section accent. Only projects uses the per-type color palette (green, amber, red, purple). There is also a `{bkqt/foundation|Label}` type (Foundation 29 red), reserved for the rare case of framing external organizational context inside a project article.
 
 ### Quote and pullquote blockquotes
 
@@ -452,7 +452,7 @@ public/playgrounds/<article-id>/<name>.html   →   linked as [text](/playground
 
 Example: `public/playgrounds/7654321/telemetry-decoy.html` → `[see it](/playgrounds/7654321/telemetry-decoy.html)`.
 
-> Playground links open in a **new tab** automatically. Any regular markdown link whose href starts with `/playgrounds/` or ends in `.html` gets `target="_blank" rel="noopener noreferrer"`, since these are self-contained pages served outside the SPA. Ordinary in-app links (`/blog/...`, `/lab/...`, anchors) are unaffected.
+> **New-tab links.** A regular markdown link opens in a new tab (`target="_blank" rel="noopener noreferrer"`) when its href is **external** (`http(s)://…`), a **playground**, or a file ending in `.html`. Ordinary in-app links (`/blog/...`, `/lab/...`, anchors) stay in the SPA. The `[[https://url|text]]` form also opens externally in a new tab, additionally rendering an external-link icon.
 
 > Build-time syntax guard: if a custom block tag leaks into the output (e.g. an unclosed `{bkqt}` or `{math}`, or an unresolved `[[link]]`), the build prints a non-fatal `[SYNTAX] WARN [LITERAL_TAG] …` line naming the article. It does not fail the build — but a literal `{bkqt/…}` showing up in your prose means a closing `{/bkqt}` is missing.
 

@@ -78,6 +78,7 @@ const BKQT_TYPES = {
   warning:    { label: 'Warning' },
   danger:     { label: 'Danger' },
   keyconcept: { label: 'Key concept' },
+  foundation: { label: 'Foundation 29' },
   quote:      { label: null, isQuote: true },
   pullquote:  { label: null, isQuote: true },
 };
