@@ -217,7 +217,7 @@ These replace the role that admonitions or callouts play in other systems. The o
 | `quote` | *(none)* | Category accent | Styled quotation with left bar and quotation mark icon |
 | `pullquote` | *(none)* | Category accent | Same as `quote` but half-width (stops mid-screen) |
 
-> **Blog articles (threads, bits2bricks):** All blockquote types render in the category accent color — there is no per-type color distinction. The types still work (labels, structure) but the visual color is always the section accent. Only projects uses the per-type color palette (green, amber, red, purple). There is also a `{bkqt/foundation|Label}` type (Foundation 29 red), reserved for the rare case of framing external organizational context inside a project article.
+> **Blog articles (threads, bits2bricks):** All blockquote types render in the category accent color — there is no per-type color distinction. The types still work (labels, structure) but the visual color is always the section accent. Only projects uses the per-type color palette (green, amber, red, purple).
 
 ### Quote and pullquote blockquotes
 

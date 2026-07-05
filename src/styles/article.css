@@ -1369,7 +1369,6 @@
 .article-content .bkqt-warning    { --bkqt-color: #d97706; }
 .article-content .bkqt-danger     { --bkqt-color: #dc2626; }
 .article-content .bkqt-keyconcept { --bkqt-color: #a855f7; }
-.article-content .bkqt-foundation { --bkqt-color: #E4002B; }
 
 /* bkqt type colors — light overrides */
 [data-theme="light"] .article-content .bkqt-tip        { --bkqt-color: #15803d; }
