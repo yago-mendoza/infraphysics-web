@@ -514,7 +514,10 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   );
 
   return (
-    <div className={`article-page-wrapper article-${post.category}${isBlog ? ' article-blog' : ''} animate-fade-in`}>
+    <div
+      className={`article-page-wrapper article-${post.category}${isBlog ? ' article-blog' : ''} animate-fade-in`}
+      style={post.accent ? ({ ['--art-accent']: post.accent } as React.CSSProperties) : undefined}
+    >
       {createPortal(
         <div ref={progressRef} className="article-progress-bar" style={{ backgroundColor: `var(--cat-${post.category}-accent)` }} />,
         document.body
