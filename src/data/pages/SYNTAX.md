@@ -405,6 +405,8 @@ Without a title, images render inline as standard markdown.
 
 Add a pipe in the alt text to create a figure with a caption: `![alt text|Caption goes here](url "center")`. Everything after the pipe becomes a `<figcaption>`. Everything before is the actual alt text.
 
+> **Never put a `[[wiki-link]]` in an alt or caption.** The alt lives inside `![ ... ]`, so the `]]` of a wiki-link closes the alt bracket early and the whole image renders as literal `![…](…)` text (the wiki-link inside still resolves, which hides the breakage). Link the concept in nearby body prose instead. A build-time `[SYNTAX]` guard now flags any literal `](url)` that survives compilation.
+
 ### Side-by-side layouts
 
 When an image with a `left` or `right` position is immediately followed by text lines (no blank line between), the compiler wraps them in a flexbox container. The image floats to one side and the text flows beside it.

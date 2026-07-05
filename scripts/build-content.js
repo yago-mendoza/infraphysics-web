@@ -515,6 +515,7 @@ const SYNTAX_GUARD = [
   { re: /\{shout:[^}]*\}/,    label: 'literal {shout:…} tag' },
   { re: /\{dots\}/,           label: 'literal {dots} tag' },
   { re: /\[\[[^\]\n]+\]\]/,   label: 'unresolved [[wiki-link]]' },
+  { re: /\]\((?:https?:\/\/|\/)[^)\s]+(?:\s+"[^"]*")?\)/, label: 'literal markdown link/image survived (a [[wiki-link]] or stray "]" inside an alt/caption breaks the image)' },
 ];
 let syntaxWarnings = 0;
 for (const post of allLinkedPosts) {

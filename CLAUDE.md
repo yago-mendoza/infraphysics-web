@@ -173,6 +173,9 @@ Use `th-on-accent`, not `th-heading`. `th-heading` flips to near-black in light 
 
 Active traps that will break things silently if forgotten. Each one was hit at least once.
 
+### Wiki-links break image alt/captions
+An image's alt and caption live inside `![ ... ]`, so a `[[wiki-link]]` in there closes the alt bracket at its first `]` and the whole image renders as **literal `![…](…)` text** (the wiki-link inside still resolves via `processAllLinks`, which masks the breakage). Rule: **never put `[[…]]` in an image alt or caption** — link the concept in nearby body prose instead. A build-time `[SYNTAX]` guard now flags any literal `](url)` that survives compilation.
+
 ### Dynamic Tailwind interpolation
 `bg-${color}/20`, `text-${color}` work with CDN play mode but produce **zero CSS** under any build-time pipeline. Fix: pass hex as CSS custom properties on the element and resolve with plain CSS rules. Pattern: `--section-accent`, `--card-accent`, `--ac-color`.
 
