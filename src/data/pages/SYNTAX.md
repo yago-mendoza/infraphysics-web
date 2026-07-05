@@ -342,7 +342,7 @@ Write `[[uid]]` to link to a fieldnote concept, where `uid` is the note's stable
 
 **Resolution:** If the address maps to an existing fieldnote, the link becomes clickable with a dashed underline and a diamond icon (`◇`). Hovering shows a preview card with the concept's title, address path, and description. If unresolved, the link is greyed out with a question mark (`?`) and is not clickable.
 
-**Color:** In projects, wiki-links use the default violet/purple color. In blog articles (threads, bits2bricks), wiki-links use the category accent color (rose/blue) instead of purple.
+**Color:** Inside any article, wiki-links take that article's category accent color (lime for projects, rose for threads, blue for bits2bricks) instead of purple. In the Second Brain itself they stay violet/purple (the fieldnotes accent).
 
 **Validation:** The build script validates that every wiki-link in regular posts (threads, bits2bricks, projects) points to an existing fieldnote. Broken references cause build errors.
 
@@ -416,6 +416,19 @@ It can span multiple lines.
 ```
 
 Leave a blank line after the text to end the side-by-side layout and return to normal flow.
+
+**Captions work here too.** A `left`/`right` image can carry a caption with the pipe (`![alt|caption](url "left:300px")`); it renders as a `<figure>` with the caption underneath the image, and the text still flows beside it.
+
+### Image pairs (two images on one row)
+
+Put two `left`/`right` images on **adjacent lines, no blank line between them** (and nothing else in that block), to place them side by side, each taking half the row:
+
+```markdown
+![first|caption A](urlA "left")
+![second|caption B](urlB "right")
+```
+
+The row splits 50/50 (pixel widths are ignored for pairs; `left`/`right` only trigger the pairing and set source order). Each image can have its own caption. On narrow screens the pair stacks vertically.
 
 ---
 

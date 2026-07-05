@@ -346,34 +346,60 @@ export function applyPostProcessors(html, postProcessors) {
 
 // ── Side-by-side image layouts ──
 
+const SIDE_IMG_RE = /^!\[([^\]]*)\]\(([^\s)]+)\s+"(left|right):?(\d+px)?"\)\s*$/;
+
+// Parse a single positioned-image line into its parts. The alt may carry a
+// caption after a pipe: `![alt|caption](src "left:300px")`. Returns null if the
+// line is not a left/right positioned image.
+function parseSideImg(line) {
+  const m = line.trim().match(SIDE_IMG_RE);
+  if (!m) return null;
+  const [, altRaw, src, position, width] = m;
+  let alt = altRaw, caption = '';
+  const pipe = altRaw.indexOf('|');
+  if (pipe !== -1) { caption = altRaw.slice(pipe + 1).trim(); alt = altRaw.slice(0, pipe).trim(); }
+  return { alt: alt.replace(/"/g, '&quot;'), caption, src, position, width };
+}
+
 export function preprocessSideImages(markdown, markedInstance) {
   const blocks = markdown.split(/\n\n+/);
   const result = [];
 
+  const imgTag = (img) => `<img src="${img.src}" alt="${img.alt}" loading="lazy">`;
+  const figcap = (img) => img.caption ? `\n<figcaption>${markedInstance.parseInline(img.caption)}</figcaption>` : '';
+
   for (const block of blocks) {
-    const match = block.match(/^!\[([^\]]*)\]\(([^\s)]+)(?:\s+"(left|right):?(\d+px)?")?\)([\s\S]*)/);
+    const lines = block.split('\n');
+    const first = parseSideImg(lines[0]);
 
-    if (match && (match[3] === 'left' || match[3] === 'right')) {
-      const [, alt, src, position, width, restOfBlock] = match;
-      const widthStyle = width ? `width: ${width};` : '';
-      const textLines = restOfBlock.trim().split('\n').filter(l => l.trim());
+    if (!first) { result.push(block); continue; }
 
-      if (textLines.length > 0) {
-        const paragraphs = textLines.map(line => {
-          const processed = markedInstance.parseInline(line);
-          return `<p>${processed}</p>`;
-        }).join('\n');
+    const rest = lines.slice(1).filter((l) => l.trim());
+    const second = rest.length ? parseSideImg(rest[0]) : null;
 
-        result.push(`<div class="img-side-layout img-side-${position}">
-<img src="${src}" alt="${alt}" class="img-side-img" style="${widthStyle}" loading="lazy">
+    if (second && rest.length === 1) {
+      // Two positioned images on one line: a side-by-side pair (each 50%).
+      // Widths are ignored here; the row splits evenly. Captions are honored.
+      result.push(`<div class="img-pair">
+<figure class="img-pair-fig">${imgTag(first)}${figcap(first)}</figure>
+<figure class="img-pair-fig">${imgTag(second)}${figcap(second)}</figure>
+</div>`);
+    } else if (rest.length > 0) {
+      // Image + text side layout. The image may carry a caption (rendered as a
+      // figure); without one it stays a bare img to preserve the old output.
+      const widthStyle = first.width ? ` style="width: ${first.width};"` : '';
+      const sideImg = first.caption
+        ? `<figure class="img-side-img"${widthStyle}>${imgTag(first)}${figcap(first)}</figure>`
+        : `<img src="${first.src}" alt="${first.alt}" class="img-side-img"${widthStyle} loading="lazy">`;
+      const paragraphs = rest.map((line) => `<p>${markedInstance.parseInline(line)}</p>`).join('\n');
+      result.push(`<div class="img-side-layout img-side-${first.position}">
+${sideImg}
 <div class="img-side-content">
 ${paragraphs}
 </div>
 </div>`);
-      } else {
-        result.push(block);
-      }
     } else {
+      // Standalone positioned image: leave it for marked (float + caption).
       result.push(block);
     }
   }

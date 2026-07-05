@@ -324,11 +324,13 @@ That gives the simulator a simple causal shape: EPVs raise short-term intensity;
 
 That last clause is the whole game. There is noise in the generator because there is noise in the kind of question being simulated. Without it, the task is too clean; with too much of it, no learner can do anything. The interesting regime is the annoying middle: enough structure that a simple model can beat chance, enough randomness that no model gets to feel prophetic. The simulator is built so the model can see the weather forming, not the lightning bolt itself.
 
-The risk map: each line is one simulated session, tracing how recent density and accumulated load evolve over a day. Most stay low; a few climb toward the danger corner.
+The risk map: each simulated session as a trajectory through the density-load space; a few climb toward the danger corner.
 
-The event raster: EPV streams stacked one session per row, so bursts and quiet stretches line up across days.
+The phase portrait: how the fast clock (recent density) and the slow clock (accumulated load) push each other around.
 
-The phase portrait: how the fast clock (recent density) and the slow clock (accumulated load) push each other around over time.
+Those two are summaries of the latent state. The raw material underneath them is the event stream itself, one session per row:
+
+The event raster: EPV streams stacked session by session, so bursts and quiet stretches line up across days.
 
 What the model actually estimatesThe model is not trying to predict the next flash. It is trying to estimate a local hazard: given the recent density of flashes and the slower state of the session, how dangerous is this window compared with a quiet one? That distinction matters because hazard can be real while exact timing stays stubbornly uncertain.
 
