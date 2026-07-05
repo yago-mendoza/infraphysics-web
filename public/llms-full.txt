@@ -6268,8 +6268,9 @@ The pitch we kept coming back to was blunt: finding a clinical trial should feel
 
 I should say up front that I am not a clinician. I am a systems and standards person who wandered into healthcare through the back door, which is the wrong and the right qualification for a tool like this at once: wrong because I cannot read an oncology report the way an oncologist can, right because it forces me to treat every clinical judgment as something the machine must never pretend to make on its own.
 
-25 · jul 08(day zero)
-built at foundation 29, a nonprofit for patients with rare and hard-to-diagnose conditions, with Javier Logroño and Julián Isla. it exists because of julián's years fighting for a diagnosis for his son (his story).
+Built at Foundation 29, a nonprofit supporting people with rare and hard-to-diagnose conditions, together with Javier Logroño and Julián Isla.
+
+The project is deeply shaped by Julián's own experience: years spent searching for a diagnosis for his son, and the conviction that no family should have to navigate that journey alone.
 
 1. The hard part was never the search
 
