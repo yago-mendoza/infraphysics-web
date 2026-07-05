@@ -37,9 +37,6 @@ export interface ProjectPost extends BasePost {
   demo?: string;
   caseStudy?: string;
   technologies?: string[];
-  /** Optional per-article accent color override (any CSS color). Recolors the
-      whole article by overriding --art-accent on the page wrapper. */
-  accent?: string;
   duration?: string;
 }
 

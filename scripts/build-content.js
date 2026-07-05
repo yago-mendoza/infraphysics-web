@@ -192,7 +192,6 @@ function processMarkdownFile(filePath) {
     content: htmlContent,
     status: frontmatter.status || null,
     technologies: frontmatter.technologies || null,
-    accent: frontmatter.accent || null,
     tags: frontmatter.tags || null,
     github: frontmatter.github || null,
     demo: frontmatter.demo || null,

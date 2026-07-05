@@ -31,7 +31,6 @@ Projects have the most category-specific fields: `status`, `technologies`, `gith
 | `related` | no | string[] | Post IDs (quoted numerics) for the "Related" section. |
 | `status` | no | string | Lifecycle badge. Values: `ongoing` (violet), `deployed` (green), `completed` (blue), `arrested` (red). Defined in `STATUS_CONFIG` (`config/categories.tsx`). |
 | `technologies` | no | string[] | Tech stack pills in the header. `[TypeScript, React, Vite]`. |
-| `accent` | no | string | Per-article accent color override (any CSS color, e.g. `"#E4002B"`). Recolors the whole article (headings, links, ctx notes) by overriding `--art-accent` on the page wrapper. Use sparingly, for a real reason (an org's brand color). Omit to keep the category default (lime for projects). |
 | `github` | no | string | GitHub repo URL. Renders a clickable link in the header. |
 | `demo` | no | string | Live demo URL. Same treatment as `github`. |
 | `caseStudy` | no | string | External case study URL. |
