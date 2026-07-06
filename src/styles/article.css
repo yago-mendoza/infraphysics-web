@@ -2548,7 +2548,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   letter-spacing: 0.5em;
   color: var(--art-text-mid);
   opacity: 0.5;
-  margin-top: 1rem !important;
+  margin-top: 0.4rem !important;
   font-size: 1rem;
 }
 
@@ -2761,8 +2761,14 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   padding: 0 2rem 2rem;
 }
 
-.article-threads-body > .article-content > :first-child {
-  margin-top: 1.875rem !important;
+.article-threads-body > .article-content > :first-child,
+.article-threads-body > .article-content > p:first-child {
+  margin-top: 0.4rem !important;
+}
+
+/* Tighten the space below the lead's · · · so it sits equidistant from intro and body */
+.article-threads-header-content .article-blog-lead {
+  padding-bottom: 0;
 }
 
 

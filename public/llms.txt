@@ -28,6 +28,7 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 
 ## Threads (Essays)
 
+- [Your context is the moat](https://infraphysics.net/blog/threads/6820451): The base model is turning into a utility you rent by the token. The part that's actually yours is what you feed it, and feeding it is how it leaves.
 - [244 pages of Mythos](https://infraphysics.net/blog/threads/8266901): The model that hacks too well, thinks too clearly, and covers its own tracks.
 - [The palest ink is better than the best memory](https://infraphysics.net/blog/threads/2929333): Your mind is for having ideas, not holding them.
 - [The Bitter Lesson](https://infraphysics.net/blog/threads/9150483): Brute computation, human design, and seventy years of ignored lessons.

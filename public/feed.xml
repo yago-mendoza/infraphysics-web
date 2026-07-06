@@ -7,6 +7,14 @@
     <language>en</language>
     <atom:link href="https://infraphysics.net/feed.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Your context is the moat</title>
+      <link>https://infraphysics.net/blog/threads/6820451</link>
+      <guid>https://infraphysics.net/blog/threads/6820451</guid>
+      <pubDate>Mon, 06 Jul 2026 00:00:00 GMT</pubDate>
+      <description>The base model is turning into a utility you rent by the token. The part that's actually yours is what you feed it, and feeding it is how it leaves.</description>
+      <category>threads</category>
+    </item>
+    <item>
       <title>LSTMs from scratch</title>
       <link>https://infraphysics.net/blog/bits2bricks/3819540</link>
       <guid>https://infraphysics.net/blog/bits2bricks/3819540</guid>
