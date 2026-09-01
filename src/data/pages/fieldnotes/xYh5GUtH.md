@@ -1,7 +1,7 @@
 ---
 uid: "xYh5GUtH"
-address: "RAM//kernel space"
-name: "Kernel Space"
+address: "OS//kernel space"
+name: "kernel space"
 date: "2026-02-05"
 ---
 - Protected region of [[jBm8Zuu2|RAM]] reserved for the OS kernel, device drivers, and interrupt handlers.

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Microsoft Azure">
+  <defs><linearGradient id="az" x1="8" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse"><stop stop-color="#35c4f0"/><stop offset="1" stop-color="#0878d1"/></linearGradient></defs>
+  <path d="M25 8h17L27 53H9L25 8Z" fill="#0878d1"/>
+  <path d="m31 38 9-27 15 42H39L20 38h11Z" fill="url(#az)"/>
+</svg>

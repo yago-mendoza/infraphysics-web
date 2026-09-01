@@ -1,95 +1,58 @@
-// Site footer component — theme-aware
+// Compact colophon — closes the page without duplicating the entire navigation.
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Logo, GitHubIcon, ExternalLinkIcon } from '../icons';
-import { catAccentVar, secondBrainPath } from '../../config/categories';
+import { usePresence } from '../../hooks/usePresence';
 
 export const Footer: React.FC = () => {
   const { pathname } = useLocation();
+  const presence = usePresence();
   const isBlog = pathname.startsWith('/blog');
-  const isBlogArticle = /^\/blog\/[^/]+\/[^/]+/.test(pathname);
+  const isHome = pathname === '/home';
+  const isContact = pathname === '/contact';
+  const isProjectDetail = /^\/lab\/projects\/[^/]+$/.test(pathname);
+  const isArticle = /^\/blog\/[^/]+\/[^/]+$/.test(pathname);
+  const contactCopy = pathname.startsWith('/about')
+    ? 'Start a conversation →'
+    : isProjectDetail
+      ? 'Build something together →'
+      : isArticle
+        ? 'Discuss this idea →'
+        : pathname === '/writing'
+          ? 'Continue the conversation →'
+          : pathname === '/lab/projects'
+            ? 'Discuss a project →'
+            : 'Get in touch →';
 
   return (
-    <footer className={`w-full py-14 mt-18 relative z-20 ${isBlogArticle ? '' : 'border-t border-th-border'} ${isBlog ? 'bg-th-blog' : 'bg-th-base'}`}>
-      <div className="max-w-4xl mx-auto px-6">
-        {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-          {/* Brand */}
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-3 mb-4">
-              <Logo className="w-6 h-6 text-th-secondary" />
-              <span className="font-bold text-sm text-th-primary">InfraPhysics</span>
-            </div>
-            <p className="text-xs text-th-tertiary leading-relaxed mb-4 max-w-sm font-sans">
-              An engineer's working journal. Everything here is interconnected.
+    <footer className={`w-full relative z-20 ${isBlog ? 'bg-th-blog' : 'bg-transparent'}`}>
+      <div data-home-tachograph-anchor aria-hidden="true" />
+      <div className="max-w-[42rem] mx-auto px-6 pt-10 pb-28 md:pb-32">
+        <div className="border-t border-th-border pt-7 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-8 md:items-end">
+          <div>
+            <p className="text-xs uppercase tracking-[0.18em] text-th-tertiary mb-3">InfraPhysics</p>
+            <p className="max-w-lg text-sm leading-relaxed text-th-secondary font-sans">
+              A personal laboratory for systems, ideas and things worth making concrete.
             </p>
-            {/* Social Icons */}
-            <div className="flex items-center gap-3">
-              <a
-                href="https://github.com/yago-mendoza"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 text-th-tertiary hover:text-th-heading hover:bg-th-active rounded-sm transition-all"
-                aria-label="GitHub"
-              >
-                <GitHubIcon />
-              </a>
-              <a
-                href="https://linkedin.com/in/yago-mendoza"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 text-th-tertiary rounded-sm transition-all accent-link"
-                style={{ '--ac-color': '#0A66C2' } as React.CSSProperties}
-                aria-label="LinkedIn"
-              >
-                <ExternalLinkIcon />
-              </a>
-              <a
-                href="https://x.com/ymdatweets"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 text-th-tertiary hover:text-th-heading hover:bg-th-active rounded-sm transition-all"
-                aria-label="Twitter/X"
-              >
-                <ExternalLinkIcon />
-              </a>
+            {!isContact && <Link to="/contact" className="footer-contact-link inline-block mt-4 text-sm transition-colors">{contactCopy}</Link>}
+          </div>
+          <div className="md:text-right">
+            <div className="footer-social-links flex md:justify-end gap-4 text-xs text-th-tertiary mb-4">
+              <Link to="/notes" className="footer-notes-link font-mono tracking-[0.06em] hover:text-th-heading transition-colors">Notes →</Link>
+              {!isHome && <span className="footer-external-links">
+                <a href="https://github.com/yago-mendoza" target="_blank" rel="noopener noreferrer" className="footer-social-link transition-colors">GitHub</a>
+                <a href="https://linkedin.com/in/yago-mendoza" target="_blank" rel="noopener noreferrer" className="footer-social-link transition-colors">LinkedIn</a>
+                <a href="https://x.com/ymdatweets" target="_blank" rel="noopener noreferrer" className="footer-social-link transition-colors">X</a>
+              </span>}
             </div>
-          </div>
-
-          {/* Navigation */}
-          <div>
-            <h4 className="text-[10px] uppercase tracking-wider text-th-tertiary mb-4">Explore</h4>
-            <nav className="flex flex-col gap-2">
-              <Link to="/lab/projects" className="text-xs text-th-secondary transition-colors accent-link" style={{ '--ac-color': catAccentVar('projects') } as React.CSSProperties}>Projects</Link>
-              <Link to="/blog/threads" className="text-xs text-th-secondary transition-colors accent-link" style={{ '--ac-color': catAccentVar('threads') } as React.CSSProperties}>Threads</Link>
-              <Link to="/blog/bits2bricks" className="text-xs text-th-secondary transition-colors accent-link" style={{ '--ac-color': catAccentVar('bits2bricks') } as React.CSSProperties}>Bits2Bricks</Link>
-              <Link to={secondBrainPath()} className="text-xs text-th-secondary transition-colors accent-link" style={{ '--ac-color': catAccentVar('fieldnotes') } as React.CSSProperties}>Second Brain</Link>
-              <Link to="/contact" className="text-xs text-th-secondary hover:text-th-heading transition-colors">Contact</Link>
-            </nav>
-          </div>
-
-          {/* Contact */}
-          <div>
-            <h4 className="text-[10px] uppercase tracking-wider text-th-tertiary mb-4">Contact</h4>
-            <nav className="flex flex-col gap-2">
-              <a href="mailto:contact@infraphysics.net" className="text-xs text-th-secondary hover:text-th-heading transition-colors">
-                contact@infraphysics.net
-              </a>
-              <a href="https://github.com/yago-mendoza" target="_blank" rel="noopener noreferrer" className="text-xs text-th-secondary hover:text-th-heading transition-colors flex items-center gap-1">
-                GitHub <ExternalLinkIcon />
-              </a>
-            </nav>
-          </div>
-        </div>
-
-        {/* Bottom Bar */}
-        <div className="pt-6 border-t border-th-border flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="text-[10px] text-th-tertiary">
-            &copy; {new Date().getFullYear()} InfraPhysics. Built for the bricks.
-          </div>
-          <div className="text-[10px] text-th-tertiary">
-            Stack: React, TypeScript & Vite
+            <p className="footer-presence mb-4 items-center gap-2 font-mono text-[10px] tracking-[0.04em] text-th-muted md:justify-end">
+              <span>{presence.visits == null ? '—' : presence.visits.toLocaleString()} visits</span>
+              <i aria-hidden="true">·</i>
+              <span>{presence.visitors == null ? '—' : presence.visitors.toLocaleString()} visitors</span>
+              <i aria-hidden="true">·</i>
+              <span>{presence.pageViews == null ? '—' : presence.pageViews.toLocaleString()} views</span>
+            </p>
+            <p className="text-[9px] font-mono uppercase tracking-[0.14em] text-th-muted">Madrid · ES / EN · © {new Date().getFullYear()}</p>
           </div>
         </div>
       </div>

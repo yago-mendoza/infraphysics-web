@@ -18,6 +18,6 @@ Bundler and dev server for frontend. Does two different things depending on the 
 - Uses Rollup under the hood
 
 Vite only handles frontend. For backend (API, database), you need a separate process -- in the Cloudflare stack, that's [[Nx9sGt5L|Wrangler]].
----
+
 ## Interactions
 - [[Nx9sGt5L|Wrangler]] : : In development they run in two terminals: Vite (port 5173, frontend + HMR) and Wrangler (port 8788, API + D1). Vite proxies `/api/*` to Wrangler. In production, Wrangler/Pages serves everything together from `dist/`

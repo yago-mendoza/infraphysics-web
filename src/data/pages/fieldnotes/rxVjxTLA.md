@@ -6,9 +6,9 @@ date: "2026-02-15"
 ---
 
 ##### ROBOTICS
-- Known as --Proximal [[4vDsUzfM|Policy]] Optimisation--.
-- Learns through --exploration-- (*"proximal" steps*).
-- **[[4vDsUzfM|Policy]]** learns in a --physical environment-- ([[q3TzzAYI|NVIDIA]] *OMNIVERSE*)
+- Known as **Proximal [[4vDsUzfM|Policy]] Optimisation**.
+- Learns through **exploration** (*"proximal" steps*).
+- **[[4vDsUzfM|Policy]]** learns in a **physical environment** ([[q3TzzAYI|NVIDIA]] *OMNIVERSE*)
 
 ##### LLMs
 - The environment becomes here a RM trained via RLHF.

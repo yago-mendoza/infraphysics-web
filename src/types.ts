@@ -44,6 +44,10 @@ export interface ArticlePost extends BasePost {
   category: 'threads' | 'bits2bricks';
 }
 
+export type PostSummary = Post extends infer P
+  ? P extends Post ? Omit<P, 'content'> : never
+  : never;
+
 /* ── Fieldnote: lightweight metadata (no content) + full type ── */
 
 export interface ConnectionRef {

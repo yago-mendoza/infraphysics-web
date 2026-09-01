@@ -7,7 +7,7 @@ import { createPortal } from 'react-dom';
 import { type FieldNoteMeta } from '../types';
 import type { Connection, Neighborhood } from '../lib/brainIndex';
 import { exportNotesAsMarkdown, estimateWords } from '../lib/exportNotes';
-import { ClipboardIcon, CheckIcon } from './icons';
+import { ClipboardIcon, CheckIcon, CloseIcon } from './icons';
 
 type ZoneKey =
   | 'self' | 'parent' | 'siblings' | 'children'
@@ -147,7 +147,7 @@ const SVG_W = 480;
 const SVG_H = 300;
 const CX = 195;
 const CY = SVG_H / 2;
-const DOT_R = 3.5;
+const DOT_R = 4;
 const MAX_DOTS = 6;
 
 // Layout:
@@ -183,7 +183,7 @@ const ScopeGraph: React.FC<{
   onToggle: (key: ZoneKey) => void;
 }> = ({ zones, activeZones, onToggle }) => {
   return (
-    <svg width={SVG_W} height={SVG_H} className="mx-auto block">
+    <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="mx-auto block h-auto w-full max-w-[34rem]" role="img" aria-label="Choose the note relationships to include">
       {/* Lines from each zone to its connectsTo target */}
       {zones.filter(z => z.key !== 'self' && z.notes.length > 0).map(z => {
         const from = ZONE_POSITIONS[z.connectsTo];
@@ -203,7 +203,7 @@ const ScopeGraph: React.FC<{
 
       {/* Self node — always active, larger */}
       <circle cx={CX} cy={CY} r={8} fill="rgba(139,92,246,0.9)" />
-      <text x={CX} y={CY + 22} textAnchor="middle" fill="rgba(139,92,246,0.8)" fontSize={9} fontFamily="monospace">
+      <text x={CX} y={CY + 24} textAnchor="middle" fill="rgba(139,92,246,0.8)" fontSize={11} fontFamily="monospace">
         self
       </text>
 
@@ -260,7 +260,7 @@ const ScopeGraph: React.FC<{
               <text
                 x={pos.x + (dots[dots.length - 1]?.dx || 0) + 12}
                 y={pos.y + 3}
-                fill={textFill} fontSize={8} fontFamily="monospace"
+                fill={textFill} fontSize={9.5} fontFamily="monospace"
               >
                 +{overflow}
               </text>
@@ -270,7 +270,7 @@ const ScopeGraph: React.FC<{
               y={labelY}
               textAnchor="middle"
               fill={textFill}
-              fontSize={isExt ? 8 : 9}
+              fontSize={isExt ? 9.5 : 10.5}
               fontFamily="monospace"
             >
               {z.label} ({count})
@@ -323,6 +323,7 @@ export const CopyExportModal: React.FC<Props> = ({
 
   const wordEst = useMemo(() => estimateWords(selectedNotes), [selectedNotes]);
   const pct = totalNotes > 0 ? Math.round((selectedNotes.length / totalNotes) * 100) : 0;
+  const pctLabel = selectedNotes.length > 0 && pct === 0 ? '<1%' : `${pct}%`;
   const pctWidth = totalNotes > 0 ? Math.min((selectedNotes.length / totalNotes) * 100, 100) : 0;
 
   const handleCopy = useCallback(async () => {
@@ -348,50 +349,55 @@ export const CopyExportModal: React.FC<Props> = ({
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className="w-full max-w-xl mx-4 border overflow-hidden"
+        className="w-full max-w-2xl max-h-[calc(100dvh-2rem)] mx-4 border overflow-y-auto"
         style={{
           backgroundColor: 'var(--hub-sidebar-bg)',
           borderColor: 'rgba(139,92,246,0.3)',
         }}
       >
         {/* Header */}
-        <div className="px-5 py-3 border-b" style={{ borderColor: 'rgba(139,92,246,0.2)', backgroundColor: 'rgba(139,92,246,0.05)' }}>
-          <div className="text-[13px] font-semibold text-violet-400">Copy for context</div>
-          <div className="text-[11px] text-th-secondary mt-0.5">
-            {note.address || note.title}
+        <div className="px-5 py-4 border-b flex items-start justify-between gap-5" style={{ borderColor: 'rgba(139,92,246,0.2)', backgroundColor: 'rgba(139,92,246,0.05)' }}>
+          <div className="min-w-0">
+            <div className="text-[15px] font-semibold text-violet-400">Copy for context</div>
+            <div className="text-[12px] leading-relaxed text-th-secondary mt-1 break-words">
+              {note.address || note.title}
+            </div>
           </div>
+          <button onClick={onClose} className="p-1 text-th-tertiary hover:text-th-heading transition-colors" aria-label="Close copy dialog"><CloseIcon /></button>
         </div>
 
         {/* SVG scope graph */}
-        <div className="px-5 py-5">
+        <div className="px-4 py-5 sm:px-6">
           <ScopeGraph zones={zones} activeZones={activeZones} onToggle={toggleZone} />
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t flex items-center gap-3" style={{ borderColor: 'var(--bg-surface-alt)' }}>
+        <div className="px-5 py-4 border-t grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] items-center gap-4" style={{ borderColor: 'var(--bg-surface-alt)' }}>
           {/* Mode toggle */}
-          <div className="flex items-center gap-2 text-[10px]">
+          <div className="flex w-fit items-center gap-1 rounded-sm bg-th-surface-alt p-0.5 text-[11px]">
             <button
               onClick={() => setFullMode(false)}
-              className={`px-1.5 py-0.5 rounded-sm transition-colors ${!fullMode ? 'text-violet-400 bg-violet-400/10' : 'text-th-tertiary hover:text-th-secondary'}`}
+              aria-pressed={!fullMode}
+              className={`px-2 py-1 rounded-sm transition-colors ${!fullMode ? 'text-violet-400 bg-violet-400/10' : 'text-th-tertiary hover:text-th-secondary'}`}
             >
               metadata
             </button>
             <button
               onClick={() => setFullMode(true)}
-              className={`px-1.5 py-0.5 rounded-sm transition-colors ${fullMode ? 'text-violet-400 bg-violet-400/10' : 'text-th-tertiary hover:text-th-secondary'}`}
+              aria-pressed={fullMode}
+              className={`px-2 py-1 rounded-sm transition-colors ${fullMode ? 'text-violet-400 bg-violet-400/10' : 'text-th-tertiary hover:text-th-secondary'}`}
             >
               full
             </button>
           </div>
 
           {/* Stats + progress */}
-          <div className="flex items-center gap-2">
-            <span className="text-[9px] text-th-muted tabular-nums">
-              {selectedNotes.length} notes ~{wordEst > 1000 ? `${(wordEst / 1000).toFixed(1)}k` : wordEst} w
+          <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-center">
+            <span className="text-[10px] text-th-secondary tabular-nums">
+              {selectedNotes.length} {selectedNotes.length === 1 ? 'note' : 'notes'} · ~{wordEst > 1000 ? `${(wordEst / 1000).toFixed(1)}k` : wordEst} words
             </span>
-            <span className="text-[9px] text-th-muted tabular-nums">{pct}%</span>
-            <span className="inline-block w-12 h-1 rounded-full" style={{ backgroundColor: 'var(--bg-surface-alt)' }}>
+            <span className="text-[10px] text-th-muted tabular-nums">{pctLabel} of wiki</span>
+            <span className="inline-block w-16 h-1 rounded-full" style={{ backgroundColor: 'var(--bg-surface-alt)' }}>
               <span
                 className="block h-full rounded-full transition-all"
                 style={{ width: `${pctWidth}%`, backgroundColor: 'rgba(139,92,246,0.6)' }}
@@ -403,7 +409,7 @@ export const CopyExportModal: React.FC<Props> = ({
           <button
             onClick={handleCopy}
             disabled={copyState === 'copying' || selectedNotes.length === 0}
-            className="ml-auto flex items-center gap-1.5 text-[10px] px-3 py-1 border border-violet-400/50 text-violet-400 hover:bg-violet-400/10 transition-colors disabled:opacity-50"
+            className="sm:ml-auto flex w-fit items-center gap-1.5 text-[11px] px-3.5 py-2 border border-violet-400/50 text-violet-400 hover:bg-violet-400/10 transition-colors disabled:opacity-50"
           >
             {copyState === 'copied' && copyStats ? (
               <><CheckIcon size={12} /> {fmtNum(copyStats.chars)} chars · ~{fmtNum(copyStats.tokens)} tokens</>

@@ -1,0 +1,286 @@
+/* Final article layout layer. Keep this imported after article.css. */
+
+@media (min-width: 768px) {
+  .article-page-wrapper {
+    box-sizing: border-box !important;
+    margin-inline: auto !important;
+  }
+
+  .article-threads.article-page-wrapper {
+    width: 100% !important;
+    max-width: 104rem !important;
+  }
+
+  .article-threads .article-threads-card,
+  .article-threads .article-threads-header-content,
+  .article-threads .article-threads-body {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .article-threads .article-threads-header-content,
+  .article-threads .article-threads-body {
+    padding-inline: clamp(2rem, 4vw, 4rem) !important;
+  }
+
+  .article-blog:not(.article-threads).article-page-wrapper {
+    width: 100% !important;
+    max-width: 104rem !important;
+  }
+
+  .article-blog:not(.article-threads) .article-container,
+  .article-blog:not(.article-threads) .article-body {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .article-blog:not(.article-threads) .article-blog-image {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .article-projects.article-page-wrapper {
+    width: 100% !important;
+    max-width: 108rem !important;
+  }
+
+  .article-projects .article-container,
+  .article-projects .article-body {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .article-blog:not(.article-threads) .article-body,
+  .article-projects .article-body {
+    box-sizing: border-box !important;
+    padding-inline: clamp(2rem, 5vw, 5rem) !important;
+  }
+
+  .article-page-wrapper .article-content {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* Project heroes are illustrations, not viewport-filling cover photos. */
+  .article-projects .article-hero {
+    box-sizing: border-box;
+    width: calc(100% - (2 * clamp(2rem, 5vw, 5rem)));
+    max-width: 100%;
+    margin-inline: auto;
+  }
+}
+
+.article-page-wrapper .article-content > p,
+.article-page-wrapper .article-content > ul > li,
+.article-page-wrapper .article-content > ol > li,
+.article-page-wrapper .article-content section > p {
+  font-family: var(--font-serif) !important;
+  font-size: clamp(1.13rem, 1.25vw, 1.27rem) !important;
+  line-height: 1.78 !important;
+  letter-spacing: -0.008em !important;
+}
+
+/* Lift the complete reading system with the prose, not just top-level
+   paragraphs. These are intentionally modest increments so tables, notes and
+   captions remain secondary while no longer looking like interface microcopy. */
+.article-page-wrapper .article-subtitle {
+  font-size: clamp(1.08rem, 1.55vw, 1.26rem) !important;
+}
+
+.article-page-wrapper .article-blog-metabar,
+.article-page-wrapper .article-blog-lead p {
+  font-size: 1.09rem !important;
+}
+
+.article-page-wrapper .article-content .bkqt p,
+.article-page-wrapper .article-content .bkqt li,
+.article-page-wrapper .article-content .defn,
+.article-page-wrapper .article-content td,
+.article-page-wrapper .article-content th {
+  font-size: 1rem !important;
+}
+
+.article-page-wrapper .article-content figcaption,
+.article-page-wrapper .article-content .annotations,
+.article-page-wrapper .article-content .ann-note {
+  font-size: 0.82rem !important;
+  line-height: 1.55;
+}
+
+/* Category wrappers must not change the opening rhythm or title weight. */
+.article-page-wrapper .article-title { font-weight: 400 !important; }
+.article-page-wrapper .article-content > :first-child { margin-top: 0.4rem !important; }
+
+/* The article header uses the complete reading column. Legacy editorial skins
+   constrained titles to 16–17 characters and subtitles to 38rem, producing an
+   artificial empty strip on the right even when the page itself was wider. */
+.article-page-wrapper .article-title-block,
+.article-page-wrapper .article-title,
+.article-page-wrapper .article-subtitle {
+  width: 100%;
+  max-width: none !important;
+}
+
+/* Projects carry dense technical context, but their introductory hierarchy
+   should remain comfortably readable rather than collapsing into microcopy. */
+.article-projects .article-meta {
+  font-size: 0.76rem !important;
+  line-height: 1.45;
+}
+
+.article-projects .article-nav-row {
+  margin-bottom: 1.15rem !important;
+}
+
+.article-projects .article-title-block {
+  padding-top: 0.55rem !important;
+}
+
+.article-projects .article-notes-line {
+  font-size: 1.07rem !important;
+  line-height: 1.72;
+}
+
+.article-projects .article-notes {
+  padding-bottom: 0 !important;
+}
+
+/* Single project illustrations are always centered. Position hints control
+   width, never left/right text wrapping (which the reduced syntax removed). */
+.article-projects .article-content img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* A centered image that fills 100% of the prose column still reads as
+   left-anchored. Give ordinary single figures visible, balanced side air;
+   explicit full-width figures retain their breakout behaviour. */
+.article-page-wrapper .article-content figure:not(.img-full):not(.img-pair-fig) {
+  box-sizing: border-box;
+  display: grid !important;
+  justify-items: center;
+  width: 92% !important;
+  max-width: 100%;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.article-page-wrapper .article-content figure:not(.img-full):not(.img-pair-fig) > figcaption {
+  box-sizing: border-box;
+  width: 100%;
+  text-align: center;
+}
+
+.article-page-wrapper .article-content figure:not(.img-full):not(.img-pair-fig) > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* The sole composite image primitive: exactly two authored figures sharing
+   one balanced row. It stays inside wiki/article bounds and stacks on mobile. */
+.article-page-wrapper .article-content .img-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: clamp(0.8rem, 2vw, 1.4rem);
+  width: 100%;
+  margin: 2rem auto;
+}
+
+.article-page-wrapper .article-content .img-pair > figure.img-pair-item {
+  display: grid;
+  justify-items: center;
+  width: 100% !important;
+  min-width: 0;
+  margin: 0 !important;
+}
+
+.article-page-wrapper .article-content .img-pair img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-inline: auto;
+}
+
+.article-page-wrapper .article-content .img-pair figcaption {
+  width: 100%;
+  text-align: center;
+}
+
+@media (max-width: 767px) {
+  .article-page-wrapper .article-content figure:not(.img-full):not(.img-pair-fig) {
+    width: 100% !important;
+  }
+
+  .article-page-wrapper .article-content .img-pair {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Code blocks use a neutral technical header, never macOS window chrome. */
+.article-page-wrapper .article-content .code-terminal-dots {
+  display: none !important;
+}
+
+/* The legacy breakout used a 50% offset/translation. Once the article canvas
+   became wider that transform could leave editorial hero images off-centre. */
+.article-blog:not(.article-threads) .article-blog-image {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  transform: none !important;
+}
+
+/* Technical front-matter landscapes use an explicit geometric centre. This
+   avoids depending on the legacy negative body margins or cascade order. */
+.article-bits2bricks.article-blog .article-blog-image {
+  position: relative;
+  left: 50%;
+  width: min(72%, 47.5rem) !important;
+  max-width: calc(100vw - 3rem) !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  transform: translateX(-50%) !important;
+}
+
+.article-bits2bricks.article-blog .article-blog-image-img {
+  display: block;
+  width: 100%;
+  margin-inline: auto;
+  object-position: 50% center;
+}
+
+/* Compact tables sit on the article axis. Oversized tables still resolve auto
+   margins to zero and retain left-to-right scrolling from the first column. */
+.article-page-wrapper .article-content .table-wrapper > table,
+.article-page-wrapper .article-content > table {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+@media (max-width: 767px) {
+  .article-bits2bricks.article-blog .article-blog-image {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+.article-projects .article-content > p,
+.article-projects .article-content > ul > li,
+.article-projects .article-content > ol > li,
+.article-projects .article-content section > p {
+  font-size: clamp(1.16rem, 1.3vw, 1.3rem) !important;
+}
+
+@media (max-width: 767px) {
+  .article-page-wrapper .article-content > p,
+  .article-page-wrapper .article-content > ul > li,
+  .article-page-wrapper .article-content > ol > li,
+  .article-page-wrapper .article-content section > p {
+    font-size: 1.08rem !important;
+    line-height: 1.72 !important;
+  }
+}

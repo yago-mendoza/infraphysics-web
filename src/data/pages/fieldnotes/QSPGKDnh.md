@@ -1,7 +1,7 @@
 ---
 uid: "QSPGKDnh"
-address: "sensor"
-name: "Sensor"
+address: "Robotics//sensor"
+name: "sensor"
 date: "2026-02-05"
 ---
 Converts a physical quantity (temperature, acceleration, light, pressure) into an electrical signal.

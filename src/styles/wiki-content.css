@@ -69,24 +69,6 @@
 }
 
 /* Small-text (>) between list items — no visual break, stays in flow */
-.article-wiki .article-content .small-text {
-  margin-bottom: 0.15rem;
-}
-
-.article-wiki .article-content .small-text + ul,
-.article-wiki .article-content .small-text + ol {
-  margin-top: 0;
-}
-
-.article-wiki .article-content ul + .small-text,
-.article-wiki .article-content ol + .small-text {
-  margin-top: 0;
-}
-
-.article-wiki .article-content .small-text p {
-  margin-bottom: 0;
-}
-
 /* Code blocks — Linux terminal style (no macOS dots, slim bar, purple tint) */
 .article-wiki .article-content .code-terminal-dots {
   display: none;

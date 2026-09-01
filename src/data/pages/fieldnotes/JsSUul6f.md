@@ -1,7 +1,7 @@
 ---
 uid: "JsSUul6f"
-address: "Information Theory//entropy"
-name: "Entropy"
+address: "Math//information theory//entropy"
+name: "entropy"
 date: "2026-02-24"
 ---
 A measure of average uncertainty in a probability distribution: how many bits you need, on average, to identify an outcome.

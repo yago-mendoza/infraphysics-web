@@ -1,6 +1,6 @@
 ---
 uid: "hjMUh5ut"
-address: "electronics//semiconductor"
+address: "Hardware//electronics//semiconductor"
 name: "semiconductor"
 date: "2026-02-06"
 ---

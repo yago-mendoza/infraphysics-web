@@ -1,7 +1,7 @@
 ---
 uid: "2S1PZjWY"
-address: "CPU//register"
-name: "Register"
+address: "Hardware//CPU//register"
+name: "register"
 date: "2026-02-05"
 ---
 - A small, ultra-fast storage cell inside the [[Z9W6rweD|core]], typically 32 or 64 bits wide.

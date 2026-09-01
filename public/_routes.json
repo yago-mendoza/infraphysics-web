@@ -8,6 +8,8 @@
     "/about",
     "/lab/projects",
     "/lab/projects/*",
+    "/wiki",
+    "/wiki/*",
     "/lab/second-brain",
     "/lab/second-brain/*",
     "/blog/threads",

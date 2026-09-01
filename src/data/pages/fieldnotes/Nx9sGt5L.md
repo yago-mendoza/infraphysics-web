@@ -1,6 +1,6 @@
 ---
 uid: "Nx9sGt5L"
-address: "Cloud//Cloudflare//Wrangler"
+address: "Infrastructure//Cloudflare//Wrangler"
 name: "Wrangler"
 date: "2026-03-10"
 ---
@@ -18,12 +18,12 @@ date: "2026-03-10"
 - `wrangler d1 migrations apply --remote` --> applies migrations to the production [[Wn4pCx7H|D1]]
 
 **Local (development):**
-- `wrangler pages dev dist` --> simulates Cloudflare on your machine at `localhost:8788`. Acts as a local server like [[Wk6jPs2D|Node.js]]/[[Yg4rVn8L|Express]] would, but running code in an environment that mimics Workers -- same result as production.
+- `wrangler pages dev dist` **> simulates Cloudflare on your machine at `localhost:8788`. Acts as a local server like [[Wk6jPs2D|Node.js]]/[[Yg4rVn8L|Express]] would, but running code in an environment that mimics Workers ** same result as production.
 - Serves frontend (from `dist/`) + backend (functions/) + local D1, all on one port. No [[Qk4sTn9L|HMR]] for frontend -- serves pre-compiled files.
 - Wrangler has HMR for functions (API): change a handler, it reloads. But frontend needs manual rebuild.
-- **Two-terminal mode** (recommended for development): Terminal 1: [[Vp8rBm5J|Vite]] (`npm run dev`, port 5173) --> frontend with HMR. Terminal 2: Wrangler (`wrangler pages dev dist`, port 8788) --> API + D1 only. Vite [[Mn3gRp6H|proxies]] `/api/*` to Wrangler. Open `localhost:5173`, not 8788.
+- **Two-terminal mode** (recommended for development): Terminal 1: [[Vp8rBm5J|Vite]] (`npm run dev`, port 5173) **> frontend with HMR. Terminal 2: Wrangler (`wrangler pages dev dist`, port 8788) **> API + D1 only. Vite [[Mn3gRp6H|proxies]] `/api/*` to Wrangler. Open `localhost:5173`, not 8788.
 - In two-terminal mode, Wrangler doesn't actually need `dist/` (it's not serving frontend), but `wrangler pages dev` requires a directory argument. If `dist/` doesn't exist, an empty `mkdir dist` works fine.
----
+
 ## Interactions
 - [[Cm5rBw9D|Platform CLI]] : : Wrangler is Cloudflare's platform CLI -- like `vercel` is Vercel's or `netlify` is Netlify's
 - [[Rw4sVx7J|Direct Deploy]] : : Wrangler enables direct deploy -- `wrangler pages deploy dist` pushes to production without CI/CD

@@ -1,6 +1,6 @@
 ---
 uid: "jBm8Zuu2"
-address: "RAM"
+address: "Hardware//RAM"
 name: "RAM"
 date: "2026-02-05"
 ---

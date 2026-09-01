@@ -1,7 +1,7 @@
 ---
 uid: "NmSjnVn2"
-address: "Cloud//Supabase//Auth//handshake"
-name: "OAuth Handshake"
+address: "Infrastructure//Supabase//Auth//handshake"
+name: "handshake"
 date: "2026-03-15"
 ---
 The one-time exchange where Google and [[Sb7tRx5K|Supabase]] establish trust for a user. Happens once per user, at login. After this, everything flows.
@@ -15,6 +15,6 @@ The one-time exchange where Google and [[Sb7tRx5K|Supabase]] establish trust for
 - From here: every frontend request carries the session cookie → backend reads it → knows who the user is → uses stored Gmail tokens to call [[2DTZTKbQ|Gmail API]] → [[iegOPp9Q|RLS]] ensures each user only sees their own data
 
 One handshake. One time. Elegant. The reason we configured Client ID + Client Secret in Google Cloud: so Supabase can prove it's our legitimate service during this exchange.
----
+
 ## Interactions
 - [[odwaJwaf|Callback URL]] : : the callback URL is the specific address where Google delivers the authorization code. Without it, Google doesn't know where to send the handshake

@@ -1,6 +1,6 @@
 ---
 uid: "9SciTeo3"
-address: "ARM//Cortex-R"
+address: "Hardware//ARM//Cortex-R"
 name: "Cortex-R"
 date: "2026-02-05"
 ---

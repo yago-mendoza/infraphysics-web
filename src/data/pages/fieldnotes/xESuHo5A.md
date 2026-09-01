@@ -1,7 +1,7 @@
 ---
 uid: "xESuHo5A"
-address: "CPU//mutex"
-name: "Mutex"
+address: "OS//concurrency//mutex"
+name: "mutex"
 date: "2026-02-05"
 ---
 - A mutual exclusion primitive: a lock that serializes access to shared [[jBm8Zuu2|RAM]] regions across [[Z9W6rweD|core]] boundaries.

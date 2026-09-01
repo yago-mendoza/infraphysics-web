@@ -1,7 +1,8 @@
-// Second Brain Manager Sidebar — data exploration dashboard for /second-brain* routes
+// Wiki Console sidebar — data exploration dashboard for Second Brain routes
 
 import React, { useState, useRef, useEffect, useMemo, Suspense } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { secondBrainPath } from '../../config/categories';
 import { useHub } from '../../contexts/SecondBrainHubContext';
 import {
@@ -12,18 +13,26 @@ import {
   CloseIcon,
   IslandIcon,
   InfoIcon,
+  WikiBrainIcon,
 } from '../icons';
 import { SecondBrainGuide } from '../SecondBrainGuide';
 import { IslandDetector, type IslandDetectorHandle } from '../IslandDetector';
+import { TopologyOrbit } from '../graph/TopologyOrbit';
 import { useGraphRelevance } from '../../hooks/useGraphRelevance';
 import { useIsLocalhost } from '../../hooks/useIsLocalhost';
 import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../../constants/layout';
 import type { FieldNoteMeta } from '../../types';
-import type { TreeNode, FilterState, DirectorySortMode, ViewMode } from '../../hooks/useSecondBrainHub';
-import { serializeFilters } from '../../lib/filterParams';
+import type { TreeNode, FilterState, DirectorySortMode } from '../../hooks/useSecondBrainHub';
 
 // Lazy-load MiniGraph — heavy dep (react-force-graph-2d)
 const MiniGraph = React.lazy(() => import('../graph/MiniGraph'));
+
+type ConsolePanel = 'information' | 'topology';
+
+const CONSOLE_PANELS: { id: ConsolePanel; label: string; shortLabel: string }[] = [
+  { id: 'information', label: 'Graph information', shortLabel: 'Graph info' },
+  { id: 'topology', label: 'Topology', shortLabel: 'Topology' },
+];
 
 // --- Collapsible Section ---
 const Section: React.FC<{
@@ -401,12 +410,57 @@ const WordCountHistogram: React.FC<{
 export const SecondBrainSidebar: React.FC = () => {
   const hub = useHub();
   const navigate = useNavigate();
+  const location = useLocation();
   const isLocalhost = useIsLocalhost();
   const [guideOpen, setGuideOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [drawerMounted, setDrawerMounted] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [graphExpanded, setGraphExpanded] = useState(false);
+  const [graphExpandedVisible, setGraphExpandedVisible] = useState(false);
+  const [topologyExpanded, setTopologyExpanded] = useState(false);
+  const [consolePanel, setConsolePanel] = useState<ConsolePanel>(() => {
+    const requested = new URLSearchParams(window.location.search).get('console');
+    if (requested === 'topology' || requested === 'information') return requested;
+    return localStorage.getItem('wiki-console-panel') === 'topology' ? 'topology' : 'information';
+  });
   const { getPercentile, getIslands } = useGraphRelevance();
+
+  useEffect(() => { localStorage.setItem('wiki-console-panel', consolePanel); }, [consolePanel]);
+
+  const expandGraph = () => {
+    setMobileOpen(false);
+    setGraphExpanded(true);
+    requestAnimationFrame(() => requestAnimationFrame(() => setGraphExpandedVisible(true)));
+  };
+  const minimizeGraph = () => {
+    setGraphExpandedVisible(false);
+    window.setTimeout(() => setGraphExpanded(false), 360);
+  };
+
+  // Expanded visualizations are transient UI, not route state. Navigation must
+  // always restore the normal console and its scroll behavior.
+  useEffect(() => {
+    setGraphExpanded(false);
+    setGraphExpandedVisible(false);
+    setTopologyExpanded(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!graphExpanded && !topologyExpanded) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (graphExpanded) minimizeGraph();
+      setTopologyExpanded(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [graphExpanded, topologyExpanded]);
 
   // Swipe-to-close state for mobile drawer
   const drawerRef = useRef<HTMLElement>(null);
@@ -485,7 +539,10 @@ export const SecondBrainSidebar: React.FC = () => {
   useEffect(() => {
     const handler = (e: Event) => {
       const compId = (e as CustomEvent).detail?.componentId;
-      if (typeof compId === 'number') setTopologyFocus({ id: compId, flash: true });
+      if (typeof compId === 'number') {
+        setConsolePanel('topology');
+        setTopologyFocus({ id: compId, flash: true });
+      }
     };
     window.addEventListener('topology-focus', handler);
     return () => window.removeEventListener('topology-focus', handler);
@@ -529,11 +586,7 @@ export const SecondBrainSidebar: React.FC = () => {
     histogramNotes,
     hasActiveFilters,
     searchActive,
-    viewMode,
-    setViewMode,
   } = hub;
-
-  const isSimplified = viewMode === 'simplified';
 
   // Prune sidebar sections when any filter/scope/search is active
   const isFiltering = hasActiveFilters || !!directoryScope || searchActive;
@@ -563,36 +616,39 @@ export const SecondBrainSidebar: React.FC = () => {
     setFilterState(prev => ({ ...prev, [key]: value }));
   };
 
-  const modeToggle = (
-    <button
-      onClick={() => setViewMode(isSimplified ? 'technical' : 'simplified')}
-      className="flex items-center gap-1.5 text-[9px] text-violet-400/70 hover:text-violet-400 transition-colors whitespace-nowrap"
-      title={isSimplified ? 'Switch to technical view' : 'Switch to simple view'}
-    >
-      <span className="relative w-[22px] h-[12px] rounded-full bg-violet-400/20 flex-shrink-0">
-        <span
-          className="absolute top-[2px] w-[8px] h-[8px] rounded-full bg-violet-400 transition-[left] duration-200 ease-out"
-          style={{ left: isSimplified ? 2 : 12 }}
-        />
-      </span>
-      {isSimplified ? 'simple view' : 'technical view'}
-    </button>
+  const consoleTabs = (
+    <div className="grid grid-cols-2 border-t border-th-hub-border" role="tablist" aria-label="Wiki Console view">
+      {CONSOLE_PANELS.map(panel => (
+        <button
+          key={panel.id}
+          type="button"
+          role="tab"
+          aria-selected={consolePanel === panel.id}
+          title={panel.label}
+          onClick={() => setConsolePanel(panel.id)}
+          className={`relative min-w-0 border-r border-th-hub-border px-1 py-2 text-[8px] uppercase tracking-[.08em] transition-colors last:border-r-0 ${
+            consolePanel === panel.id
+              ? 'bg-violet-400/10 text-violet-300'
+              : 'text-th-muted hover:bg-th-surface hover:text-th-secondary'
+          }`}
+        >
+          <span className="block truncate">{panel.shortLabel}</span>
+          {consolePanel === panel.id && <i className="absolute inset-x-2 bottom-0 h-px bg-violet-400" />}
+        </button>
+      ))}
+    </div>
   );
 
   // Build highlight set from sortedResults when searching
   const graphHighlightIds = useMemo(() => {
-    if (!searchActive) return null;
+    if (!isFiltering) return null;
     return new Set(sortedResults.map(n => n.id));
-  }, [searchActive, sortedResults]);
+  }, [isFiltering, sortedResults]);
 
   // Build filtered ID set for mini graph — active when any filter reduces the result set
-  const graphFilteredIds = useMemo(() => {
-    if (!searchActive && !hub.hasActiveFilters && !hub.directoryScope) return null;
-    return new Set(sortedResults.map(n => n.id));
-  }, [searchActive, hub.hasActiveFilters, hub.directoryScope, sortedResults]);
-
   const sections = (
     <>
+      {consolePanel === 'information' && <>
       {/* Mini Graph — visual overview, highlights search matches */}
       <Section
         title="graph"
@@ -611,26 +667,29 @@ export const SecondBrainSidebar: React.FC = () => {
               Loading graph...
             </div>
           }>
-            <MiniGraph highlightIds={graphHighlightIds} filteredIds={graphFilteredIds} searchQuery={hub.query} />
+            <MiniGraph
+              highlightIds={graphHighlightIds}
+              filteredIds={null}
+              searchQuery={hub.query}
+            />
           </Suspense>
-          <a
-            href={`/lab/second-brain/graph${serializeFilters(hub.filterState, hub.query, hub.searchMode, hub.directoryScope)}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={expandGraph}
             className="absolute -bottom-1 -right-1 flex items-center gap-1 text-violet-400 hover:text-violet-300 transition-colors text-[10px] leading-none opacity-60 hover:opacity-100"
-            title="Open graph explorer"
+            title="Expand graph"
           >
             <span>Expand</span>
             <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
               <circle cx="3" cy="3" r="1.5" /><circle cx="9" cy="5" r="1.5" /><circle cx="5" cy="9" r="1.5" />
               <line x1="4.2" y1="3.8" x2="7.8" y2="4.5" /><line x1="4" y1="8" x2="7.8" y2="5.8" />
             </svg>
-          </a>
+          </button>
         </div>
       </Section>
 
       {/* Graph Stats — always global, technical only */}
-      {!isSimplified && <Section
+      <Section
         title="graph stats"
         icon={<BarChartIcon />}
         defaultOpen={true}
@@ -669,14 +728,14 @@ export const SecondBrainSidebar: React.FC = () => {
             setFilterState(prev => ({ ...prev, wordCountMin: min, wordCountMax: max }));
           }}
         />
-      </Section>}
+      </Section>
 
       {/* Directory Tree */}
       <Section
         title="directory"
         icon={<FolderIcon />}
         defaultOpen={true}
-        headerAction={isSimplified ? undefined :
+        headerAction={
           <span className="flex items-center gap-0.5">
             {([
               ['children', 'Sort by children count', <svg key="ch" className="block" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v8"/><path d="M4 14h16"/><circle cx="6" cy="19" r="3"/><circle cx="12" cy="19" r="3"/><circle cx="18" cy="19" r="3"/></svg>],
@@ -747,7 +806,7 @@ export const SecondBrainSidebar: React.FC = () => {
                       onConceptClick={signalDirectoryNav}
                       forceExpanded={directoryQuery.length > 0}
                       activePath={activePost?.address ?? null}
-                      getPercentile={isSimplified ? undefined : getPercentile}
+                      getPercentile={getPercentile}
                       collapseSignal={dirCollapseGen}
 
                     />
@@ -771,7 +830,7 @@ export const SecondBrainSidebar: React.FC = () => {
                         onConceptClick={signalDirectoryNav}
                         forceExpanded={directoryQuery.length > 0}
                         activePath={activePost?.address ?? null}
-                        getPercentile={isSimplified ? undefined : getPercentile}
+                        getPercentile={getPercentile}
                         collapseSignal={dirCollapseGen}
   
                       />
@@ -783,15 +842,24 @@ export const SecondBrainSidebar: React.FC = () => {
           );
         })()}
       </Section>
+      </>}
 
       {/* Topology — technical only */}
-      {!isSimplified && <Section
+      {consolePanel === 'topology' && <Section
         title="topology"
         icon={<IslandIcon />}
         defaultOpen={true}
         forceOpen={topologyFocus != null}
         headerAction={
           <span className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setTopologyExpanded(true)}
+              className="text-[8px] uppercase tracking-[.08em] text-violet-400/75 hover:text-violet-300"
+              title="Expand topology projection"
+            >
+              expand
+            </button>
             <button
               onClick={() => islandRef.current?.collapseAll()}
               className="text-th-muted hover:text-th-secondary transition-colors p-1 leading-none"
@@ -806,6 +874,17 @@ export const SecondBrainSidebar: React.FC = () => {
           </span>
         }
       >
+        <TopologyOrbit
+          notes={allFieldNotes}
+          highlightIds={resultIdSet}
+          activeNodeId={activePost?.id ?? null}
+          onOpenNode={id => navigate(secondBrainPath(id))}
+        />
+        <div className="my-2 flex items-center gap-2 text-[8px] uppercase tracking-[.08em] text-th-muted">
+          <span className="h-px flex-1 bg-th-hub-border" />
+          components & cuts
+          <span className="h-px flex-1 bg-th-hub-border" />
+        </div>
         <div className="flex items-center border border-th-hub-border px-2 py-1 bg-th-surface focus-within:border-th-border-active transition-colors mb-2">
           <input
             type="text"
@@ -844,7 +923,7 @@ export const SecondBrainSidebar: React.FC = () => {
       <button
         onClick={() => setMobileOpen(true)}
         className="md:hidden fixed bottom-4 right-4 z-40 w-11 h-11 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
-        aria-label="Open manager sidebar"
+        aria-label="Open Wiki Console"
       >
         <SlidersIcon />
       </button>
@@ -867,15 +946,16 @@ export const SecondBrainSidebar: React.FC = () => {
             {/* Header with close */}
             <div className="px-3 py-3 border-b border-th-hub-border flex-shrink-0">
               <div className="flex items-center justify-between">
-                <Link to={secondBrainPath()} className="group" onClick={() => setMobileOpen(false)}>
-                  <span className="text-[11px] lowercase tracking-wide font-semibold text-violet-400 group-hover:text-violet-300 transition-colors">second brain</span>{' '}
-                  <span className="text-[11px] lowercase tracking-wide text-th-muted font-normal">manager</span>
+                <Link to={secondBrainPath()} className="group flex items-center gap-1.5" onClick={() => setMobileOpen(false)}>
+                  <WikiBrainIcon className="text-violet-400 group-hover:text-violet-300 transition-colors" size={15} />
+                  <span><span className="text-[11px] lowercase tracking-wide font-semibold text-violet-400 group-hover:text-violet-300 transition-colors">wiki</span>{' '}
+                  <span className="text-[11px] lowercase tracking-wide text-th-muted font-normal">console</span></span>
                 </Link>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => setGuideOpen(true)}
                     className="text-violet-400 hover:text-violet-300 transition-colors flex-shrink-0 leading-[0]"
-                    title="How Second Brain works"
+                    title="How the Wiki works"
                   >
                     <InfoIcon size={11} />
                   </button>
@@ -888,11 +968,9 @@ export const SecondBrainSidebar: React.FC = () => {
                   </button>
                 </div>
               </div>
-              <div className="flex items-center justify-between mt-0.5">
-                {modeToggle}
-                <span className="text-[9px] text-th-muted">{stats.totalConcepts} concepts</span>
-              </div>
+              <div className="mt-1 text-right text-[9px] text-th-muted">{stats.totalConcepts} concepts</div>
             </div>
+            {consoleTabs}
             {/* Scrollable sections */}
             <div className="flex-1 overflow-y-auto thin-scrollbar hub-scrollbar">
               {sections}
@@ -904,7 +982,7 @@ export const SecondBrainSidebar: React.FC = () => {
       {/* Desktop sidebar — spacer keeps content pushed right */}
       <div className="hidden md:block flex-shrink-0" style={{ width: SECOND_BRAIN_SIDEBAR_WIDTH }} />
       <aside
-        className="hidden md:flex flex-col fixed top-0 h-screen border-r border-th-hub-border overflow-hidden"
+        className="hidden md:flex flex-col fixed top-12 h-[calc(100vh-3rem)] border-r border-th-hub-border overflow-hidden"
         style={{
           left: SIDEBAR_WIDTH,
           width: SECOND_BRAIN_SIDEBAR_WIDTH,
@@ -915,28 +993,70 @@ export const SecondBrainSidebar: React.FC = () => {
         {/* Header — h-7 first row aligns with the editing upbar */}
         <div className="border-b border-th-hub-border flex-shrink-0">
           <div className="px-3 h-7 flex items-center justify-between">
-            <Link to={secondBrainPath()} className="group">
-              <span className="text-[11px] lowercase tracking-wide font-semibold text-violet-400 group-hover:text-violet-300 transition-colors">second brain</span>{' '}
-              <span className="text-[11px] lowercase tracking-wide text-th-muted font-normal">manager</span>
+            <Link to={secondBrainPath()} className="group flex items-center gap-1.5">
+              <WikiBrainIcon className="text-violet-400 group-hover:text-violet-300 transition-colors" size={14} />
+              <span><span className="text-[11px] lowercase tracking-wide font-semibold text-violet-400 group-hover:text-violet-300 transition-colors">wiki</span>{' '}
+              <span className="text-[11px] lowercase tracking-wide text-th-muted font-normal">console</span></span>
             </Link>
             <button
               onClick={() => setGuideOpen(true)}
               className="text-violet-400 hover:text-violet-300 transition-colors flex-shrink-0 leading-[0]"
-              title="How Second Brain works"
+              title="How the Wiki works"
             >
               <InfoIcon size={11} />
             </button>
           </div>
-          <div className="px-3 pb-1.5 flex items-center justify-between">
-            {modeToggle}
-            <span className="text-[9px] text-th-muted">{stats.totalConcepts} concepts</span>
-          </div>
+          <div className="px-3 pb-1.5 text-right text-[9px] text-th-muted">{stats.totalConcepts} concepts</div>
+          {consoleTabs}
         </div>
         {/* Scrollable sections */}
         <div className="flex-1 overflow-y-auto thin-scrollbar hub-scrollbar">
           {sections}
         </div>
       </aside>
+
+      {graphExpanded && createPortal(
+        <div
+          className={`fixed inset-0 z-[80] bg-th-base transition-[opacity,transform,border-radius] duration-300 ease-[cubic-bezier(.22,1,.36,1)] ${graphExpandedVisible ? 'opacity-100 scale-100 rounded-none' : 'pointer-events-none opacity-0 scale-[.18] rounded-xl'}`}
+          style={{ transformOrigin: `${SIDEBAR_WIDTH + SECOND_BRAIN_SIDEBAR_WIDTH / 2}px 28%` }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Expanded Wiki graph"
+        >
+          <Suspense fallback={<div className="grid h-full place-items-center text-[10px] text-th-muted animate-pulse">Loading graph…</div>}>
+            <MiniGraph
+              expanded
+              highlightIds={graphHighlightIds}
+              filteredIds={null}
+              searchQuery={hub.query}
+              onNodeOpen={node => { minimizeGraph(); window.setTimeout(() => navigate(secondBrainPath(node.id)), 220); }}
+            />
+          </Suspense>
+          <div className="pointer-events-none absolute left-4 top-4 bg-th-base/90 px-2 py-1 text-[9px] font-mono uppercase tracking-[.14em] text-th-muted">Drag nodes · drag space · wheel to zoom · click to open</div>
+          <button type="button" onClick={minimizeGraph} className="absolute right-4 top-4 z-10 flex items-center gap-2 border border-violet-400/40 bg-th-base px-3 py-2 text-[10px] font-mono uppercase tracking-[.12em] text-violet-400 shadow-lg hover:bg-violet-400/10 transition-colors"><span aria-hidden="true">↙</span> Minimize</button>
+        </div>,
+        document.body,
+      )}
+
+      {topologyExpanded && createPortal(
+        <div className="fixed inset-0 z-[80] bg-th-base p-3 sm:p-5" role="dialog" aria-modal="true" aria-label="Expanded Wiki topology">
+          <TopologyOrbit
+            expanded
+            notes={allFieldNotes}
+            highlightIds={resultIdSet}
+            activeNodeId={activePost?.id ?? null}
+            onOpenNode={id => { setTopologyExpanded(false); navigate(secondBrainPath(id)); }}
+          />
+          <button
+            type="button"
+            onClick={() => setTopologyExpanded(false)}
+            className="absolute right-7 top-7 border border-violet-400/35 bg-th-base/90 px-3 py-2 text-[9px] uppercase tracking-[.12em] text-violet-300 hover:bg-violet-400/10"
+          >
+            minimize
+          </button>
+        </div>,
+        document.body,
+      )}
 
       <SecondBrainGuide isOpen={guideOpen} onClose={() => setGuideOpen(false)} isLocalhost={isLocalhost} />
     </>

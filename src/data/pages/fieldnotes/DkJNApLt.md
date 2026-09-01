@@ -1,6 +1,6 @@
 ---
 uid: "DkJNApLt"
-address: "Google//Search Console"
+address: "Tools//Google//Search Console"
 name: "Search Console"
 date: "2026-03-10"
 ---

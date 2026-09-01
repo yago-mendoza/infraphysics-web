@@ -5,6 +5,516 @@
 
 ---
 
+## When an equation notices a leak
+
+URL: https://infraphysics.net/blog/bits2bricks/3142718
+Category: bits2bricks
+Date: 2026-08-28
+Description: Building a model-based fault detector from thirteen equations, four residuals and a very small hydraulic system.
+
+I found this project on an old USB drive. October 2023. Two water tanks, thirteen equations, four residuals, one Simulink model. It was a university exercise and it has the exact texture of one: the derivation is surprisingly ambitious, then the final detector is four thresholds and a for loop.
+
+I remember understanding the substitutions mechanically. I was less sure what kind of method I was actually implementing. Was this control theory? Expert systems? A primitive classifier? Why did an incidence matrix tell me anything about a leaking tank?
+
+The answer is nicer than I had made it sound. We are compiling physics into tests. Start with equations containing hidden variables. Eliminate everything we cannot measure. Whatever equation remains must evaluate to zero when the machine and its model agree.
+
+Then we watch zero.
+
+The complete plant: two tanks, one pump, two valves, two controllers and five measured signals.
+
+What kind of method is this?
+
+The broad name is model-based fault detection and isolation, usually shortened to FDI. The model predicts constraints on healthy behaviour. Measurements violate some of those constraints when a component fails. The resulting disagreement signals are called residuals.
+
+This particular construction sits close to the parity-relation side of FDI. We manipulate the plant equations until the internal states disappear and only measured inputs and outputs remain. Structural analysis helps decide which eliminations are possible before doing all the symbolic algebra.
+
+It is tempting to call this old-fashioned or heuristic because the final implementation looks simple. That mixes together two separate layers:
+
+Residual generation is model-based. Conservation laws and component equations determine what each residual checks.
+
+Residual evaluation is heuristic here. I chose thresholds from one fault-free run, converted the residuals into bits and matched the bits exactly.
+
+The first layer has a serious literature behind it. Parity equations, diagnostic observers and Kalman-filter innovations can all generate residuals. A classic IFAC synthesis even shows that parity and observer designs become equivalent once their design objectives are aligned. The methods differ in representation and in how naturally they handle state estimation, stochastic noise and robustness, not in the basic idea that actual behaviour must be compared with expected behaviour. See Analytical Redundancy Methods in Fault Detection and Isolation and the later tutorial on parity-space and observer approaches .
+
+So this is not “machine learning before machine learning.” It is a different way of injecting knowledge. Instead of learning normality from examples, we write down what normality must satisfy.
+
+Control and diagnosis ask different questionsA controller asks: what input will move the system toward its reference?
+
+A diagnoser asks: which physical assumption stopped agreeing with the measurements?
+
+They can use the same sensors and the same model, but they do different jobs.
+
+The two-tank system is a good microscope for the method because nothing is hidden behind a large model. Water has to go somewhere. If the arithmetic does not close, we have only a few suspects.
+
+The physical system
+
+Tank T1T_1T1​ is filled by pump P1P_1P1​. A digital PI controller tries to hold its level at h1c=0.5 mh_{1c}=0.5,\mathrm{m}h1c​=0.5m. Water crosses to T2T_2T2​ through valve VbV_bVb​, whose on/off controller opens whenever h2≤0.09 mh_2\leq0.09,\mathrm{m}h2​≤0.09m and closes once the level enters the operating band. Valve VoV_oVo​ represents the consumer drawing water from tank 2.
+
+The main parameters are small enough to keep on one page:
+
+Symbol
+Meaning
+Value
+
+A1,A2A_1,A_2A1​,A2​
+Tank cross-sectional area
+1.54×10−2 m21.54\times10^{-2},\mathrm{m^2}1.54×10−2m2
+
+CvbC_{vb}Cvb​
+Inter-tank valve coefficient
+1.5938×10−4 m3/s1.5938\times10^{-4},\mathrm{m^3/s}1.5938×10−4m3/s
+
+CvoC_{vo}Cvo​
+Outlet valve coefficient
+1.59640×10−4 m3/s1.59640\times10^{-4},\mathrm{m^3/s}1.59640×10−4m3/s
+
+hmaxh_{max}hmax​
+Maximum tank level
+0.6 m0.6,\mathrm{m}0.6m
+
+QpmaxQ_{pmax}Qpmax​
+Maximum pump flow
+0.01 m3/s0.01,\mathrm{m^3/s}0.01m3/s
+
+Qf1,Qf2Q_{f1},Q_{f2}Qf1​,Qf2​
+Simulated leak flow
+10−4 m3/s10^{-4},\mathrm{m^3/s}10−4m3/s
+
+kpumpk_{pump}kpump​
+Pump gain
+10−310^{-3}10−3
+
+The model ignores fluid inertia, valve dynamics and temperature. That sentence matters. A model is not reality written in math; it is a negotiated list of what we can afford to ignore.
+
+Start with conservation
+
+For cylindrical tanks, volume and level are related by Vi=AihiV_i=A_i h_iVi​=Ai​hi​. Conservation of volume gives:
+
+dV1dt=Qp−Q12,dV2dt=Q12−Qo\frac{dV_1}{dt}=Q_p-Q_{12},
+\qquad
+\frac{dV_2}{dt}=Q_{12}-Q_odtdV1​​=Qp​−Q12​,dtdV2​​=Q12​−Qo​
+
+Substituting Vi=AihiV_i=A_i h_iVi​=Ai​hi​:
+
+A1h˙1=Qp−Q12,A2h˙2=Q12−QoA_1\dot h_1=Q_p-Q_{12},
+\qquad
+A_2\dot h_2=Q_{12}-Q_oA1​h˙1​=Qp​−Q12​,A2​h˙2​=Q12​−Qo​
+
+This is the ledger. The left side is accumulation; the right side is money in minus money out, except the money is water and the accountant is a differential equation.
+
+The pump is approximately linear inside its operating range and saturated outside it:
+
+Qp={0,Up<0kpumpUp,0≤Up≤UpmaxQpmax,Up>UpmaxQ_p=
+\begin{cases}
+0,&U_p<0\\
+k_{pump}U_p,&0\le U_p\le U_{pmax}\\
+Q_{pmax},&U_p>U_{pmax}
+\end{cases}Qp​=⎩⎨⎧​0,kpump​Up​,Qpmax​,​Up​<00≤Up​≤Upmax​Up​>Upmax​​
+
+The inter-tank flow follows the square root of the head difference. The sign term allows the model to represent reverse flow if h2>h1h_2>h_1h2​>h1​:
+
+Q12=Cvbsgn⁡(h1−h2)∣h1−h2∣ UbQ_{12}=C_{vb}\operatorname{sgn}(h_1-h_2)\sqrt{|h_1-h_2|}\,U_bQ12​=Cvb​sgn(h1​−h2​)∣h1​−h2​∣​Ub​
+
+The outlet is simpler:
+
+Qo=Cvoh2 UoQ_o=C_{vo}\sqrt{h_2}\,U_oQo​=Cvo​h2​​Uo​
+
+The square roots are not decoration. They are where the nonlinearity lives. Double the pressure head and the flow does not double; it grows by (sqrt{2}). A linear model can approximate this around one operating point, but the original exercise kept the nonlinear relation directly.
+
+Two controllers, two timescales
+
+Tank 1 uses a PI controller:
+
+Up(t)=Kp(h1c−h1(t))+Ki∫0t(h1c−h1(τ))dτU_p(t)=K_p\bigl(h_{1c}-h_1(t)\bigr)+K_i\int_0^t\bigl(h_{1c}-h_1(\tau)\bigr)d\tauUp​(t)=Kp​(h1c​−h1​(t))+Ki​∫0t​(h1c​−h1​(τ))dτ
+
+with Kp=10−3K_p=10^{-3}Kp​=10−3, Ki=5×10−6K_i=5\times10^{-6}Ki​=5×10−6 and a sampling time of one second. The proportional term reacts to the error now. The integral term remembers error that has persisted. The A/D conversion is ideal; the D/A output is held constant between samples with a zero-order hold.
+
+Tank 2 gets the blunt instrument:
+
+Ub={1,0≤h2≤0.090,0.09<h2≤h2maxU_b=
+\begin{cases}
+1,&0\le h_2\le0.09\\
+0,&0.09<h_2\le h_{2max}
+\end{cases}Ub​={1,0,​0≤h2​≤0.090.09<h2​≤h2max​​
+
+It is just on/off control. This means h2h_2h2​ is expected to chatter around a band, not settle onto one perfectly smooth value. The system already contains continuous physics, sampled control, saturation and switching. Small plant, quite a lot going on.
+
+The Simulink model. The controllers operate the plant while a parallel diagnostic path watches the same signals.
+
+Thirteen small truths
+
+The structural model breaks the plant into thirteen elementary relations. This is less elegant than writing one large state-space equation, but much more useful for diagnosis. A fault belongs to a component, so the model should preserve component boundaries.
+
+Model
+Relation
+Component
+
+M1M_1M1​
+V˙1=Qp−Q12\dot V_1=Q_p-Q_{12}V˙1​=Qp​−Q12​
+Tank 1 balance
+
+M2M_2M2​
+V1=A1h1V_1=A_1h_1V1​=A1​h1​
+Tank 1 geometry
+
+M3M_3M3​
+V˙2=Q12−Qo\dot V_2=Q_{12}-Q_oV˙2​=Q12​−Qo​
+Tank 2 balance
+
+M4M_4M4​
+V2=A2h2V_2=A_2h_2V2​=A2​h2​
+Tank 2 geometry
+
+M5M_5M5​
+Qp=f(Up)Q_p=f(U_p)Qp​=f(Up​)
+Pump
+
+M6M_6M6​
+Q12=f(h1,h2,Ub)Q_{12}=f(h_1,h_2,U_b)Q12​=f(h1​,h2​,Ub​)
+Inter-tank valve
+
+M7M_7M7​
+Qo=f(h2,Uo)Q_o=f(h_2,U_o)Qo​=f(h2​,Uo​)
+Outlet valve
+
+M8M_8M8​
+Up=PI(h1c−h1)U_p=PI(h_{1c}-h_1)Up​=PI(h1c​−h1​)
+PI controller
+
+M9M_9M9​
+my1=h1my_1=h_1my1​=h1​
+Tank 1 level sensor
+
+M10M_{10}M10​
+my2=h2my_2=h_2my2​=h2​
+Tank 2 level sensor
+
+M11M_{11}M11​
+mQp=QpmQ_p=Q_pmQp​=Qp​
+Pump-flow sensor
+
+M12M_{12}M12​
+mUp=UpmU_p=U_pmUp​=Up​
+Pump-command sensor
+
+M13M_{13}M13​
+mUb=UbmU_b=U_bmUb​=Ub​
+Valve-command sensor
+
+The distinction between h1h_1h1​ and my1my_1my1​ is deliberate. One is the physical level, unknown to us. The other is what a sensor claims the level is. In healthy operation M9M_9M9​ says they are equal. Under a sensor fault, that equality is exactly what breaks.
+
+First compile the model into structure
+
+Before solving anything, mark a 1 wherever relation MiM_iMi​ contains variable xjx_jxj​. This produces the incidence matrix from the original report, reconstructed below rather than replaced with a generic infographic.
+
+The original LaTeX incidence table reconstructed for the web. The heavy horizontal line separates physical equations from sensor equations.
+
+The matrix knows nothing about square roots, gains or litres per second. It only knows connectivity. Row M6M_6M6​, for example, touches h1,h2,Ub,Q12h_1,h_2,U_b,Q_{12}h1​,h2​,Ub​,Q12​. That is enough to say which equations could be used to compute which variables and which components can influence a residual.
+
+Draw the same information as a bipartite graph and the substitution problem becomes more tangible:
+
+Faithful reconstruction of the original TikZ relational graph. Sensor branches remain pale red, as in the LaTeX source.
+
+Structural analysis initially ignores values. That feels like throwing information away, and it is. The payoff is combinatorial: we can search for subsets containing one more equation than unknown variables. Compute the unknowns with a matching, and the extra equation has nowhere to go. It becomes a consistency test.
+
+This is the key count:
+
+redundancy=#equations−#unknowns\text{redundancy}=\#\text{equations}-\#\text{unknowns}redundancy=#equations−#unknowns
+
+Zero means the subset can just determine its unknowns. One means it can determine them and still check itself. The IFAC paper A method to get analytical redundancy relations for fault diagnosis describes the same route: begin with an overdetermined set of constraints, then reduce it to residual expressions containing measured signals and their derivatives.
+
+Analytical redundancy is a spare sensor made of math
+
+Hardware redundancy means installing a second level sensor and comparing the two. Analytical redundancy means using the rest of the plant to predict what the first sensor should have said.
+
+If I know pump inflow, valve command and tank 2 level, the tank 1 balance gives me an independent expectation for the evolution of tank 1. No second level probe was added. The redundancy was already latent in the equations.
+
+This is the central construction:
+
+The original assignment then adds causality. P means an algebraic relation, I marks a variable used through integration and O marks one obtained through differentiation. The coloured routes are the four substitution procedures from the LaTeX table:
+
+Reconstruction of the original causal incidence table. Blue, red, green and cyan paths trace ARR1 through ARR4.
+
+Residual 1: the tank 1 ledger
+
+Substitute the measured levels and pump flow into M1M_1M1​, then use the valve law for Q12Q_{12}Q12​:
+
+r1=A1dmy1dt−mQp+Cvbsgn⁡(my1−my2)∣my1−my2∣ mUbr_1=A_1\frac{d m_{y1}}{dt}-mQ_p
++C_{vb}\operatorname{sgn}(m_{y1}-m_{y2})
+\sqrt{|m_{y1}-m_{y2}|}\,mU_br1​=A1​dtdmy1​​−mQp​+Cvb​sgn(my1​−my2​)∣my1​−my2​∣​mUb​
+
+Healthy means r1≈0r_1\approx0r1​≈0. A tank 1 leak adds an unmodelled outflow. A valve fault changes the real Q12Q_{12}Q12​ without changing the commanded mUbmU_bmUb​. Both make this balance fail.
+
+Residual 2: the tank 2 ledger
+
+r2=A2dmy2dt−Cvbsgn⁡(my1−my2)∣my1−my2∣ mUb+Cvomy2 Uor_2=A_2\frac{d m_{y2}}{dt}
+-C_{vb}\operatorname{sgn}(m_{y1}-m_{y2})
+\sqrt{|m_{y1}-m_{y2}|}\,mU_b
++C_{vo}\sqrt{m_{y2}}\,U_or2​=A2​dtdmy2​​−Cvb​sgn(my1​−my2​)∣my1​−my2​∣​mUb​+Cvo​my2​​Uo​
+
+This one reacts to a tank 2 leak and to the same inter-tank valve fault. The valve is shared by both balances, so it leaves a two-residual footprint.
+
+Residual 3: did the PI produce this command?
+
+r3=mUp−Kp(h1c−my1)−Ki∫0t(h1c−my1)dτr_3=mU_p-K_p(h_{1c}-m_{y1})
+-K_i\int_0^t(h_{1c}-m_{y1})d\taur3​=mUp​−Kp​(h1c​−my1​)−Ki​∫0t​(h1c​−my1​)dτ
+
+This checks the controller chain rather than the hydraulics. If the measured pump command disagrees with the PI law evaluated from the measured level, something in that chain is inconsistent.
+
+Residual 4: did the pump obey the command?
+
+Away from saturation:
+
+r4=mQp−kpumpmUpr_4=mQ_p-k_{pump}mU_pr4​=mQp​−kpump​mUp​
+
+This is the smallest ARR and perhaps the easiest to understand. Command says ten, flow sensor says four, pump model says those cannot all be true.
+
+The piecewise model mattersThe compact r4r_4r4​ above is only valid in the pump's linear region. A real residual generator must evaluate the same piecewise law as M5M_5M5​, including zero flow and saturation. Otherwise normal saturation looks exactly like a pump fault.
+
+From residuals to a diagnosis
+
+A residual tells us that some relation is inconsistent. It does not directly name the broken component. Isolation comes from the pattern across all four residuals.
+
+Fault mode
+r1r_1r1​
+r2r_2r2​
+r3r_3r3​
+r4r_4r4​
+Signature
+
+Healthy
+0
+0
+0
+0
+0000
+
+Pump fault
+0
+0
+0
+1
+0001
+
+Leak in tank 1
+1
+0
+0
+0
+1000
+
+Leak in tank 2
+0
+1
+0
+0
+0100
+
+Pump-command sensor fault
+0
+0
+1
+1
+0011
+
+Inter-tank valve fault
+1
+1
+0
+0
+1100
+
+Two properties fall straight out of this table:
+
+Detectability: Every fault column contains at least one 1. No considered fault can occur without disturbing a residual.
+
+Isolability: Every fault column is unique. Once a fault is detected, its ideal signature distinguishes it from the others.
+
+A detector is therefore a tiny pipeline:
+
+Reconstruction of the original TikZ block diagram: plant measurements enter the ARRs, residuals are thresholded and the resulting bits are matched against the signature matrix.
+
+The useful intellectual move is not the final lookup. It is designing residuals whose sensitivities overlap in carefully different ways. r4=1r_4=1r4​=1 alone points to the pump. r3=r4=1r_3=r_4=1r3​=r4​=1 points upstream to the command measurement. r1=r2=1r_1=r_2=1r1​=r2​=1 points to the valve shared by both tanks.
+
+A fault becomes a four-bit word.
+
+What zero looks like in a simulation
+
+“Residual equals zero” is theory language. In a sampled simulation, differentiation, integration, switching and solver tolerances leave small transients. The healthy plots establish the floor we actually observed.
+
+Healthy r1. Switching and numerical differentiation leave visible transients.Healthy r2. Its normal envelope is not symmetric around zero.
+
+Healthy r3. The controller relation stays very close to zero.Healthy r4. In this ideal model the pump relation is exact.
+
+The original calibration took the largest healthy absolute value:
+
+Residual
+Healthy minimum
+Healthy maximum
+Chosen threshold
+
+r1r_1r1​
+−1.064×10−4-1.064\times10^{-4}−1.064×10−4
+9.6×10−59.6\times10^{-5}9.6×10−5
+1.064×10−41.064\times10^{-4}1.064×10−4
+
+r2r_2r2​
+−6.0×10−5-6.0\times10^{-5}−6.0×10−5
+1.37×10−41.37\times10^{-4}1.37×10−4
+1.37×10−41.37\times10^{-4}1.37×10−4
+
+r3r_3r3​
+−9.98×10−8-9.98\times10^{-8}−9.98×10−8
+9.98×10−89.98\times10^{-8}9.98×10−8
+9.98×10−89.98\times10^{-8}9.98×10−8
+
+r4r_4r4​
+0
+0
+0
+
+This guarantees no false alarm on the dataset used for calibration. It guarantees almost nothing beyond it.
+
+The zero threshold for r4r_4r4​ is the giveaway. Real flow sensors have quantization, noise, bias and latency. The pump gain changes with supply voltage, wear and operating point. Even mQpmQ_pmQp​ and mUpmU_pmUp​ may not be sampled at precisely the same instant. On hardware I would begin with a noise model, estimate the healthy residual distribution across operating regimes, add hysteresis and require persistence over several samples. A 3σ3\sigma3σ threshold is a common first pass, not a law of nature.
+
+There is also a typo in the old MATLAB listing: the table uses 9.98×10−89.98\times10^{-8}9.98×10−8 for r3r_3r3​, while the code uses 9.98×10−109.98\times10^{-10}9.98×10−10. A factor of one hundred is not editorial dust. The implementation and the documented detector must share one source of truth.
+
+Injecting faults
+
+The leak and valve experiments behave in the way the structural model predicts.
+
+A tank 1 leak adds an unmodelled outflow and pushes r1 outside its healthy envelope.A valve fault corrupts the inter-tank flow assumed by r1.
+
+The second tank balance catches its own leak.The same valve fault also violates the tank 2 balance, completing signature 1100.
+
+The sensor and pump experiments exercise the controller-actuator chain.
+
+The measured command no longer agrees with the PI calculation.The measured flow no longer agrees with the commanded pump flow.
+
+The same command-measurement fault reaches the pump relation, giving the second bit of signature 0011.
+
+Now the untidy part. In the recorded comparison table, the pump-fault run exceeds the empirical thresholds not only in r4r_4r4​, but also in r1r_1r1​ and r2r_2r2​. The ideal signature says 0001; that particular simulation behaves more like 1101 after thresholding.
+
+This does not make structural analysis useless. It exposes what structural analysis does and does not promise. The signature matrix expresses direct structural sensitivity under the model assumptions. Closed-loop propagation can make one fault disturb other states and trigger additional residuals. Aggressive thresholds make that more likely. Exact signature matching then becomes brittle.
+
+There are several ways to improve it:
+
+Use temporal logic. Match the residual that activates first, not only the final binary vector.
+Rank candidate faults by weighted residual magnitude instead of demanding an exact bit pattern.
+Design structured or decoupled residuals that suppress secondary sensitivities.
+Calibrate thresholds by operating region, especially around valve switching and pump saturation.
+Preserve an “unknown fault” outcome. Forcing every unseen pattern into a known label is how a diagnostic system becomes confidently wrong.
+
+That last option is the one I would add first.
+
+Put the method next to its neighbours
+
+At this point I wanted a more honest comparison than “physics good, machine learning also good.” Different methods spend their complexity in different places.
+
+Method
+What produces the residual
+What it buys us
+What hurts
+
+Limit checking
+Raw sensor minus fixed limit
+Almost free, easy to certify
+Weak isolation, ignores coupling
+
+These ARRs
+Eliminated physical constraints
+Component-level structure, nonlinear equations stay visible
+Derivatives amplify noise; model mismatch leaks everywhere
+
+Parity space
+Projection orthogonal to healthy input-output behaviour
+Systematic residual design over a time window
+Usually cleaner for linear models than switching nonlinear plants
+
+Luenberger or unknown-input observer
+Measured output minus estimated output
+State estimates, disturbance decoupling, dynamic filtering
+Observer design and observability assumptions
+
+Kalman filter
+Innovation weighted by stochastic state estimation
+Noise covariance enters explicitly
+Gaussian and model assumptions can be badly wrong
+
+Parameter estimation
+Online parameter minus nominal parameter
+Fault size can map to a physical parameter
+Slow faults and excitation requirements
+
+PCA or PLS
+Projection outside a learned healthy subspace
+Handles many correlated process variables
+Linear latent structure; diagnosis is less physical
+
+Autoencoder or sequence model
+Reconstruction or prediction error
+Learns nonlinear temporal normality
+Data hunger, calibration, weak guarantees outside training support
+
+The first surprise is that these categories are not as separate as their names suggest. PCA learns an empirical residual space; parity methods derive one from equations. Observer and parity residual generators can be transformed into equivalent designs under aligned objectives. A recent survey of stochastic model-based diagnosis still organizes the field around parity space, observers and parameter estimation, with particle filters and other estimators extending the observer branch. See Model-based fault diagnosis methods for systems with stochastic process .
+
+The second surprise is where this university implementation is actually weak. It is not the use of ARRs. It is the jump from continuous residual signals to a decision:
+
+MATLAB Copy
+
+thresholds = [1.064e-4, 1.37e-4, 9.98e-8, 0];
+fault_flags = abs(mean(residuals(2000:end, :), 1)) > thresholds;
+
+This is maximally inspectable, which is good. It is also calibrated on one fault-free trajectory, collapses all temporal shape into a mean and assumes the operating regime does not change. The zero threshold for r4r_4r4​ only survives because the simulation makes the pump equation exact.
+
+A more modern version does not necessarily replace the four ARRs. It can improve how they are evaluated:
+
+Estimate p(r∣healthy,z)p(r\mid\text{healthy},z)p(r∣healthy,z) conditioned on operating point zzz, then threshold a normalized likelihood rather than raw magnitude.
+Feed short residual windows into a lightweight temporal classifier, preserving onset order and oscillation shape.
+Use an observer or Kalman innovation where raw differentiation makes r1r_1r1​ and r2r_2r2​ noisy.
+Learn only the unmodelled correction ΔQ\Delta QΔQ, while keeping conservation of mass explicit.
+Reject patterns outside the known fault set instead of forcing an exact signature match.
+
+That last hybrid direction now has a broad name, physics-informed machine learning: empirical models receive physical priors through their data, architecture, objective or inference procedure. The point is not to sprinkle a differential equation onto a neural network. It is to decide which parts should be learned because we do not know them and which parts should remain hard constraints because we do. The survey Physics-Informed Machine Learning: Problems, Methods and Applications gives a useful taxonomy.
+
+For these tanks, I would keep the mass balances. I would consider learning valve hysteresis, pump-gain drift and residual covariance. Asking a network to relearn that water is conserved feels like spending data to recover an equation we already own.
+
+What I would build now
+
+The 2023 version used means over a late simulation window and a deterministic signature lookup. If I moved this onto a physical bench now, the next iteration would look like this:
+
+Timestamp and resample every signal onto one clock before evaluating any ARR.
+
+Estimate derivatives with a filtered differentiator or observer, not a raw finite difference.
+
+Implement the pump saturation and valve hysteresis explicitly inside the residual generators.
+
+Normalize residuals by their healthy variance so r1r_1r1​ and r3r_3r3​ can be compared sensibly.
+
+Use persistence counters to reject single-sample threshold crossings.
+
+Store the residual vector, operating point and diagnosis together for later recalibration.
+
+Test compound faults, because the current signature matrix assumes one fault at a time.
+
+Separate “detected” from “isolated.” Knowing something is wrong is still useful when the label is uncertain.
+
+The broader literature calls this model-based fault detection and isolation. Analytical redundancy relations are one route to residual generation; observers, parity equations and parameter estimation are others. The common structure is comparison: the plant produces measurements, a model produces expectations, and their difference is evaluated as evidence. A concise survey of the ARR framing appears in this diagnostic bond-graph paper , which describes the numerical evaluation of an ARR as a residual fault indicator.
+
+The thing I wanted to rescue
+
+I expected to open the old PDF, steal the diagrams and quietly close it again. Instead I kept thinking about the modesty of the whole method.
+
+There is no giant dataset. No mystery latent space. No claim that four equations have solved industrial diagnosis. There is a tank, a list of assumptions and a demand that the numbers balance.
+
+When they do not balance, we do not immediately know the truth. We know where the contradiction entered the model. That is a smaller claim, but it is an inspectable one.
+
+The old report treated the signature matrix as the ending. I think it is the beginning. It tells us which distinctions the model can make, which sensors carry those distinctions, and where reality refuses to fit the clean binary story.
+
+That is what I had missed in 2023. The beautiful part is not that algebra replaces observation. It is that algebra gives observation something precise to disagree with.
+
+---
+
 ## Your context is the moat
 
 URL: https://infraphysics.net/blog/threads/6820451
@@ -37,9 +547,9 @@ Description: A patient, ground-up build of the LSTM, from a single neuron to a r
 
 There is a diagram of an LSTM that almost everyone has seen: a box with three or four sigmoid blobs inside, a tangle of arrows looping back on themselves, two lines running across the top and bottom, little × and + symbols scattered around. The first time you see it, it looks like the schematic of something you are not qualified to touch. It looks like wiring.
 
-By the end of this article that diagram will look like what it actually is: four small neural layers and about six arithmetic operations. Nothing more. No prerequisites beyond knowing what a vector and a matrix are. We are going to start one neuron at a time and build up until the tangle untangles itself. If you want the companion piece on the architecture that eventually replaced LSTMs for most tasks, that is bits2bricks/Transformers from scratch. But the LSTM is where the key idea of a learned memory was first made to work, and it is worth understanding on its own.
+By the end of this article that diagram will look like what it actually is: four small neural layers and about six arithmetic operations. Nothing more. No prerequisites beyond knowing what a vector and a matrix are. We are going to start one neuron at a time and build up until the tangle untangles itself. If you want the companion piece on the architecture that eventually replaced LSTMs for most tasks, that is Transformers from scratch. But the LSTM is where the key idea of a learned memory was first made to work, and it is worth understanding on its own.
 
-1. Learning from data, in one neuron
+Learning from data, in one neuron
 
 Forget networks for a moment. The whole field rests on one object, and it is almost embarrassingly simple.
 
@@ -63,7 +573,7 @@ But one neuron has a hard ceiling. A single hyperplane can only separate things 
 
 1Minsky and Papert's 1969 book Perceptrons proved a single-layer perceptron cannot learn XOR, a function where the answer is "yes" only when the two inputs disagree. No straight line separates those four points. The result was read as a death sentence for the whole approach and is often blamed for the first "AI winter." The fix was already conceptually obvious (stack more neurons), but training stacked neurons efficiently took another decade and a half.
 
-2. A layer is just many neurons at once
+A layer is just many neurons at once
 
 Take the single neuron and make copies of it (say, 64 of them), all looking at the same input xxx, but each with its own weights and its own bias. Each one draws its own hyperplane. Each one outputs a single number. Together they turn the input vector into a new vector of 64 numbers.
 
@@ -95,13 +605,11 @@ It is why two models built from the very same primitive can behave like complete
 
 A plain feedforward network wires its layers in a straight line: data flows up, once, and leaves. Nothing connects the output back to the input, so it has no memory of what it saw a step ago.
 
-The thing to hold ontoA neural layer is not exotic. It is a matrix multiply plus a squash. That is the only computational primitive in this entire article. bits2bricks/Attention layers, LSTM gates, the readout head at the very end: all of them are this same operation with different shapes and different wiring. When the diagrams get scary later, remember that every box inside them is just σ(Wx+b)\sigma(W\mathbf{x} + \mathbf{b})σ(Wx+b).
-
-· · ·
+The thing to hold ontoA neural layer is not exotic. It is a matrix multiply plus a squash. That is the only computational primitive in this entire article. Attention layers, LSTM gates, the readout head at the very end: all of them are this same operation with different shapes and different wiring. When the diagrams get scary later, remember that every box inside them is just σ(Wx+b)\sigma(W\mathbf{x} + \mathbf{b})σ(Wx+b).
 
 That is the foundation: a neuron is a hyperplane, a layer is a matrix-multiply-plus-squash, a deep network stacks them, and an architecture is a circuit you build out of those layers by hand. Next we wire our first loop, and run straight into the problem that the LSTM was invented to fix.
 
-3. Wiring the first loop
+Wiring the first loop
 
 The plain network we just built has a blind spot that disqualifies it for an entire universe of problems: it has no memory, and no sense of order.
 
@@ -123,7 +631,7 @@ This is weight sharing, and it is not a cost-saving hack: it is the whole point.
 
 A six-word sentence run through one RNN cell is already a six-layer-deep computation, even though you only ever wrote down one layer's worth of weights. Depth in a recurrent network comes from time, not from stacking. And that is the source of both its power and, as we are about to see, its central disease.
 
-4. Why the simple loop forgets
+Why the simple loop forgets
 
 The RNN looks like it should work. It has memory, it shares weights, it handles any length. For short sequences it does work. And then you give it a long one, and it falls apart in a very specific, very instructive way.
 
@@ -140,7 +648,6 @@ This is the vanishing gradient problem (and its evil twin, the exploding gradien
 The practical effect: a vanilla RNN has a memory of maybe 5 to 10 steps. Past that, the past is fog. Consider the sentence:
 
 the cats that the dog chased all day were exhausted
-
 To choose "were" over "was," the network has to remember, across the entire intervening clause, that the subject was "cats" (plural), not "dog" (singular). That dependency spans eight words. A simple RNN, with its gradient already decayed to nothing by then, will happily write "was": it has forgotten what the sentence was even about. Anything that requires connecting something early to something late (the subject of a long sentence, the opening premise of an argument, a plot point from chapter one) is beyond it.
 
 So we are stuck between two failures. Multiply by something under 1 and the memory evaporates. Multiply by something over 1 and the whole thing detonates. Is there a way to carry information across many steps without multiplying it by anything at all?
@@ -149,7 +656,7 @@ That question, asked in 1997 1, is the entire reason the LSTM exists. The answer
 
 1Sepp Hochreiter and Jürgen Schmidhuber, "Long Short-Term Memory," Neural Computation 9(8). The forget gate (arguably the most important part of the modern cell) was not in the original 1997 design. It was added three years later by Gers, Schmidhuber and Cummins (2000), because the original cells would let their memory grow without bound and never reset. The version everyone uses today is really the 2000 version.
 
-5. The LSTM cell
+The LSTM cell
 
 The fix starts by splitting memory into two separate lines instead of one.
 
@@ -226,7 +733,7 @@ The hidden state hth_tht​ — The working output. A filtered, on-demand view o
 
 That is the entire cell. Four small layers reading one concatenated input zzz; a forget valve and a write valve editing a conveyor-belt memory by erasing and adding; an output valve deciding how much of that memory to reveal. The intimidating tangle of wires was always just this.
 
-6. Why the belt actually remembers
+Why the belt actually remembers
 
 Now we can say precisely what the LSTM bought us.
 
@@ -252,7 +759,7 @@ y^t=g(Wyht+by)\hat{y}_t = g(W_y h_t + b_y)y^​t​=g(Wy​ht​+by​)
 
 For a sequence-to-one problem, you might only read the final hidden state hTh_ThT​. For a sequence-to-sequence problem, you might read every hth_tht​. But in both cases, the prediction comes from a readout head. The loss is measured there, and the gradient flows backward from that readout into the LSTM gates that produced the state. The cell is not the oracle. It is the machine that learns what kind of memory would make the oracle possible.
 
-7. When to reach for one, and when not
+When to reach for one, and when not
 
 This gives us a better way to think about when LSTMs make sense.
 
@@ -315,7 +822,7 @@ And there is one honest thing to say before anything else: this article does not
 
 That is the experiment.
 
-1. Simulation first
+Simulation first
 
 The project starts not with a model but with a world for the model to be wrong in, and an argument for why that world is allowed to be fake.
 
@@ -348,7 +855,6 @@ That gives the simulator a simple causal shape: EPVs raise short-term intensity;
 That last clause is the whole game. There is noise in the generator because there is noise in the kind of question being simulated. Without it, the task is too clean; with too much of it, no learner can do anything. The interesting regime is the annoying middle: enough structure that a simple model can beat chance, enough randomness that no model gets to feel prophetic. The simulator is built so the model can see the weather forming, not the lightning bolt itself.
 
 The risk map: each simulated session as a trajectory through the density-load space; a few climb toward the danger corner.
-
 The phase portrait: how the fast clock (recent density) and the slow clock (accumulated load) push each other around.
 
 Those two are summaries of the latent state. The raw material underneath them is the event stream itself, one session per row:
@@ -363,7 +869,7 @@ The tempting objection writes itself: if the data are synthetic, why simulate sc
 
 So the synthetic cohort is deliberately kept in the small-data regime. The relevant question is the practical one: under the evidence budget a real logging project would actually have (few positives, correlated windows, uneven sessions), which claims survive? The sample size is not a limitation inherited from reality; it is part of the stress test. Large runs are used only to check the stability of the comparison, never as extra evidence about biology.
 
-2. The features
+The features
 
 Turning events into features
 
@@ -391,7 +897,7 @@ A negative control is not a useless column. It is a feature plausible enough to 
 
 The pipeline rejects it. It receives no stable weight, does not survive feature selection, and does not improve session-blocked validation (though here I am getting ahead of the project, because both of those procedures come in the next two sections). I am giving the decoy's verdict before the machinery that delivers it, because a negative control is easier to hold as a goal (a feature that should fail) than as a result buried three sections later.
 
-You can also just look at it. Stacked one row per simulated day, with every aura drawn as a red bar, the behavioral streams and the auras share a screen but not a rhythm: the blue typing trace and the amber window-switch marks wander everywhere, and the red bars fall where they fall. Nothing in the behavior lines up with the moments that matter, which is exactly what a decoy is supposed to look like.
+You can also just look at it. Stacked one row per simulated day, with every aura drawn as a red bar , the behavioral streams and the auras share a screen but not a rhythm: the blue typing trace and the amber window-switch marks wander everywhere, and the red bars fall where they fall. Nothing in the behavior lines up with the moments that matter, which is exactly what a decoy is supposed to look like.
 
 That does not mean "screen switching is not a real trigger." A synthetic benchmark cannot tell you that. I already wrote the answer into the world. The correct conclusion is more modest and more useful: given a plausible decoy, the feature-selection procedure does not automatically crown it. A future real version of this project will be full of features that feel meaningful: brightness, caffeine, sleep debt, stress, notifications, posture, ambient light. The question is whether the pipeline can say no.
 
@@ -406,10 +912,9 @@ But eleven is excessive for the evaluation you actually want to believe, and thi
 So the pruning is done before looking at the outcome. Redundant features go, by correlation and by meaning: if two columns are two ways of saying "recent density," one survives. If a feature is a post-hoc summary not available at prediction time, it is out. If a feature exists only because it was easy to log, "because the spreadsheet has it" is not a reason. What is left is five knobs: the fast clock, the short-term density slope, accumulated session load, sleep debt, and time awake. The exact count matters less than the discipline. The model is forced to be small enough that a human can still argue with it.
 
 The eleven candidates correlated against each other. The fast-clock family in the top-left block is almost the same column written six ways. Burst and seconds-since-event are anti-correlated at -0.98. That redundancy is why eleven collapses to five: keep one reading of recent density and drop its synonyms. The decoy, window-switching, correlates with nothing, exactly as it was built to.
-
 In rare-event work, feature selection is not a beauty contest; it is debt control. Every extra variable is a loan against evidence you probably do not have, and in a simulation study it is worse, because extra features are extra assumptions with column names.
 
-3. Validation and models
+Validation and models
 
 Splitting the data
 
@@ -437,7 +942,7 @@ The logistic model's decision surface over the two clocks. Risk rises up and to 
 
 The rarity makes it harsher than the number sounds. Even when the model concentrates risk, most alarms are still false, because most windows are non-events. The top-risk windows are enriched for positives, not purified. It is a metal detector that triples your odds in a field where almost every beep is still a bottle cap. A model can be directionally right and operationally useless at the same time.
 
-So you reach for the LSTM. It is the tempting model because the data are sequential, and that temptation is not stupid: a stream of events really does have temporal structure, and a recurrent model is built to consume it. If you want one assembled gate by gate from a single neuron, that is bits2bricks/LSTMs from scratch. Here it is just the obvious next thing to reach for. You would bet on it: a sequence model reading the raw stream should beat a four-feature logistic regression. That is the entire promise of deep learning.
+So you reach for the LSTM. It is the tempting model because the data are sequential, and that temptation is not stupid: a stream of events really does have temporal structure, and a recurrent model is built to consume it. If you want one assembled gate by gate from a single neuron, that is LSTMs from scratch. Here it is just the obvious next thing to reach for. You would bet on it: a sequence model reading the raw stream should beat a four-feature logistic regression. That is the entire promise of deep learning.
 
 It does not pay rent.
 
@@ -465,7 +970,7 @@ This is not a statement about real brains. It is a statement about this generato
 
 Fragility versus timingThere is a difference between predicting that a system is fragile and predicting the exact moment it breaks. Most "risk" models are good at the first kind; this project demands the second. In this simulator, most of the remaining error lives in the timing problem. That does not prove reality works that way. It is a map of the wall, not a measurement of how tall it stands. It tells the next real experiment where to push: if richer sensors suddenly improve timing, the simulator was missing a driver; if not, the bottleneck may really be short-horizon stochasticity.
 
-4. Taking stock
+Taking stock
 
 What the EEG literature contributes
 
@@ -511,7 +1016,7 @@ You do not get to build the dial until you have earned the right to trust the ne
 
 This is the writeup of trying to earn that right in a small simulated world first, and finding that even there, under honest scarcity, the needle barely moves. That is not a failure. It is the measurement doing its job. Most of seizure prediction is exactly this honest. Most of it just does not say so out loud.
 
-5. References
+References
 
 Payne, D. E., Chambers, J. D., Burkitt, A. N., Cook, M. J., Kuhlman, L., Freestone, D. R., & Grayden, D. B. (2023). Epileptic seizure forecasting with long short-term memory (LSTM) neural networks. arXiv:2309.09471.
 
@@ -562,7 +1067,7 @@ The CRM was the excuse. The bet was the thing. Seventy-two hours, no team, no pl
 26 · mar 11(3d earlier)
 hour zero. one repo, two coffees, and a bet with myself I wasn't sure I'd win.
 
-1. The berserker and the integrator
+The berserker and the integrator
 
 There are two ways to write code with a model in the loop, and on a team they're usually two different people who quietly resent each other.
 
@@ -576,7 +1081,7 @@ I'd been coding with geohot streams running on a second monitor, sound off: comm
 
 Here's the first one, and it set the whole architecture: a CRM is a state machine wearing a database as a disguise. Every enterprise tool is. They just charge you a seat license to not have to see it.
 
-2. The problem with off-the-shelf
+The problem with off-the-shelf
 
 The issue isn't that Salesforce can't track contacts. It can. The issue is semantic: a psychologist isn't a "lead," a research paper isn't an "opportunity," and "closing a deal" is a deranged way to describe inviting someone to co-author a clinical validation study.
 
@@ -677,7 +1182,7 @@ The speed argument is real. 30 schema migrations in 72 hours. One stretch shippe
 
 Try adding 14 custom objects to Salesforce in an afternoon. You can't even find the button in an afternoon.
 
-3. Why everything is a state machine
+Why everything is a state machine
 
 I decided early (hour 2, maybe) that I'd model every entity as an explicit state machine with a written-down transition table, even the ones that "obviously" only needed a status string.
 
@@ -763,7 +1268,7 @@ It can't be wrong because there's nothing to get wrong. That's the only kind of 
 26 · mar 13(1d earlier)
 hour ~40. 38 commits. 14 migrations. added assess fits, contact sleep, task assignees, resource types, built the shared component library. deprecated and removed FollowUpView: it was trying to be a dashboard and a follow-up tool at once. pick one. the berserker keeps building things that want to be two things; the integrator's whole job this weekend is making them pick.
 
-4. Detecting relationship decay
+Detecting relationship decay
 
 Relationships decay quietly. Nobody emails you "hey, you're losing me." The connection just goes cold: one missed follow-up, then two, then three weeks pass and reaching out feels awkward. For a startup that lives on its network, that silence is the most expensive bug in the building.
 
@@ -831,7 +1336,7 @@ The distinction matters because the response differs. Immediate means "drop ever
 
 None of this runs on a cron. Stale is computed on demand: load the contact list and the API runs four batch queries, fuses them, returns the flag inline. No background workers, no cache that goes stale about staleness. D1 is SQLite on Cloudflare's edge; at ~100 contacts the queries are fast enough that the simplest architecture is the correct one. A DBA would wince at four batch queries on every list load. The DBA isn't here, and the page returns in under 80ms.
 
-5. Things that broke
+Things that broke
 
 The narrative arc wants me to skip these. The honest version of a 72-hour build is mostly these.
 
@@ -842,12 +1347,11 @@ The Drizzle relations API that didn't exist. Hour 14. The model wrote forty line
 The undo stack that undid the wrong row. Global undo stores an async closure per destructive action; Ctrl+Z pops the latest. The first version captured id by reference inside a loop (the closure-over-loop-variable bug that every JavaScript developer meets exactly once and never forgets), so undoing a bulk delete restored the same record five times and left the other four gone. Classic, embarrassing, fixed with a const in the right scope.
 
 runs and correct are different countries
-
 I kept a tally, roughly, of where the time actually went. Maybe a fifth writing code. The rest split between reading what the model wrote closely enough to catch the lies, and the specific, un-Googleable mess of Cloudflare's edge stack: wrangler configs, D1 binding names, OAuth scopes for the Gmail integration that I re-did three times because the consent screen kept rejecting a scope I was sure I'd added.
 
 That ratio is the berserker/integrator thing, measured in hours. The generation is cheap and fast. The integration (the reading, the distrust, the wiring) is the entire job.
 
-6. Engineering notes
+Engineering notes
 
 Things too good to leave out, too small for their own section.
 
@@ -887,9 +1391,9 @@ I've been carrying a folder of notes around for almost ten years. Notebooks that
 I spent 18 days building a custom React app with its own markdown compiler, a wiki-style knowledge graph I call the Second Brain, and a dual-theme system. In fact, this article is compiled by the same pipeline it describes. The wiki-links in the text point to fieldnotes that were compiled in the same build.
 
 26 · mar 14(6d later)
-One thing worth clarifying: although the site runs on React, the content you're reading was not generated by your browser. Every article is compiled to HTML at build time. The markdown goes through a 14-step pipeline, gets transformed into static HTML, and gets served as-is. Your browser just sits down and eats.
+One thing worth clarifying: although the site runs on React, the content you're reading was not generated by your browser. Every article is compiled to HTML at build time, transformed into static HTML, and served as-is. Your browser just sits down and eats.
 
-1. The stack
+The stack
 
 26 · jan 21(1m 15d earlier)
 The cursor is blinking. I am not blinking.
@@ -936,9 +1440,7 @@ In HindsightTailwind via CDN instead of the npm package means no build-time purg
 
 Why not MDX
 
-I tried MDX for an afternoon. It lets you import React components directly into markdown: <ColorText color="#e74c3c">danger</ColorText> instead of regex. Appealing in theory. But the things I needed were custom inline transforms 1, not component trees. Writing {#e74c3c:text} feels like writing markdown. Writing <ColorText> feels like writing JSX. The decision was practical: my features are lightweight text transforms, not interactive widgets.
-
-1colored text ({#e74c3c:text}) that flows with prose. Accent text (--text--) that takes the category color with no props. [[wiki-links]] with bidirectional resolution across hundreds of files. Typed blockquotes with seven types. Context annotations with relative timestamps. Backtick protection across the entire pipeline.
+I tried MDX for an afternoon. It lets you import React components directly into markdown, which is appealing until prose starts reading like JSX. What I actually needed was smaller: ordinary Markdown for emphasis and links, plus a few structural extensions for [[wiki-links]], typed notes, contextual updates, mathematics and optional multi-path sections. The decision was practical: the article source should remain text first, and every custom token has to earn the maintenance surface it creates.
 
 Naming things
 
@@ -951,31 +1453,29 @@ Projects was obvious. Threads came from systems programming (multiple execution 
 26 · jan 25(1m 11d earlier)
 It clicks. The layout makes sense now. Routes, sidebar, content area: everything has a place. First time it feels like a real project and not a homework assignment.
 
-2. The compiler
+The compiler
 
-I needed a way to write articles in markdown and get styled HTML. Standard requirement. But I also wanted colored text, superscripts, keyboard shortcuts, accent text, typed blockquotes, wiki-links to my knowledge graph, and context annotations with timestamps.
+I needed a way to write articles in Markdown and get styled HTML. Standard requirement. The useful additions turned out to be superscripts, subscripts, keyboard shortcuts, typed notes, wiki-links to my knowledge graph, context annotations, mathematics and a small number of richer layout primitives.
 
-Standard markdown doesn't do any of this. So instead of using something like remark/rehype with plugins (which would've been the "correct" choice), I started with marked and kept adding layers. One regex for colored text. Another for superscript. Another for blockquotes. Each one was "just one more regex." And each one was trivial in isolation. But together they form a custom markup language that coexists with standard markdown, and the interaction surface is enormous.
+Standard Markdown does not cover all of that. So instead of using something like remark/rehype with plugins, I started with marked and kept adding layers. Each extension was trivial in isolation. Together they formed a custom language with a much larger interaction surface than any individual regex suggested. The later lesson was subtraction: bold and italic should stay Markdown, links should share one taxonomy, and presentational tricks should disappear when structure can do the job.
 
-The key insight was ordering. If you write {#e74c3c:some **bold** text}, the color preprocessor needs to fire before marked parses the bold. Reverse the order and the braces survive as literal text. Obvious in hindsight, impossible to predict if you don't think about it.
+The key insight was ordering. A structured block has to be isolated before Markdown parses its interior, while code and mathematics must be protected from every textual transform. Reverse two stages and harmless characters become syntax. Obvious in hindsight, difficult to predict until the pipeline has enough interacting parts.
 
 The other key insight was backtick protection: before any custom processing runs, the pipeline extracts every code block and inline code span, replaces them with placeholder tokens, runs all preprocessing on the protected text, then restores the originals. Anything inside backticks is invisible to the preprocessors. They can't touch it. They don't even know it's there.
 
 TipIf you're building a markdown extension system, protect code content first. Extract it, process everything else, restore it. Trying to make your regex "skip code blocks" is a losing game. The edge cases will eat you alive.
 
-The full pipeline has 14 steps. I won't list them all 1 because the details aren't what matters here. What matters is that this compiler, originally built to render articles, turned out to be the same engine that powers the Second Brain. And later, when I built the localhost editor, it was this same compiler running in real time, compiling notes as I type, catching broken references on every keystroke. A tool built for one purpose that kept finding new ones.
+The pipeline still has several stages 1, but the count is no longer a point of pride. What matters is that the compiler originally built for articles also powers the Second Brain and the localhost editor. One engine is valuable; one engine with fewer special cases is much more valuable.
 
-1protect backticks → custom preprocessors → typed blockquotes → restore backticks → external URLs → side images → definition lists → alpha lists → context annotations → marked.parse → strip heading formatting → Shiki highlighting → post-processors → footnotes. Then two global passes: wiki-link resolution and cross-document links.
+1protect code and math, compile typed notes, restore protected text, process links, definition and alphabetical lists, contextual annotations, parse Markdown, highlight code and resolve footnotes and graph references.
 
 Inventing a syntax
 
 Once you start adding custom syntax, you can't stop.
 
-It began with colored text. {#e74c3c:danger} → danger. One regex, one <span>. Then superscript. Then subscript. Then keyboard shortcuts. Then underline. Then accent text. Each one was "just one more regex." Each one was trivial in isolation. But together they have to coexist with standard markdown, and also with [[wiki-links]], and also with code blocks, and also with each other. The collision surface 1 is enormous.
+It began with presentational shortcuts: explicit colours, custom underline, category accent text, decorative separators. Each was "just one more regex." Together they had to coexist with Markdown, [[wiki-links]], code, mathematics and one another. Most were eventually removed. Emphasis returned to **bold** and *italic*; destination semantics moved into links; section rhythm returned to headings and prose. The compiler became more capable by supporting fewer ways to say the same thing.
 
-1my _underline_ syntax uses word-boundary lookbehind to avoid matching snake_case, but it still conflicts with markdown's native _italic_ syntax. I settled on _text_ for underline and *text* for italic. The boundary is thin. Every new rule has to be tested against every existing one.
-
-At some point I had an ==highlight== syntax. It had bugs, edge cases, and nothing to justify existing alongside bold and accent. I replaced it with --accent text--: takes the category color automatically, no props. Killing a feature you built is a specific kind of satisfaction.
+At some point I had several competing highlight syntaxes. They had bugs, edge cases, and nothing to justify existing alongside bold. Removing all of them was better than selecting a winner. Killing a feature you built is a specific kind of satisfaction.
 
 26 · jan 30(1m 6d earlier)
 The compiler WORKS. Colors, superscript, blockquotes, wiki-links. I write this at 1:30pm and by 4pm I have wiki-link hover previews working. I can't stop clicking things.
@@ -986,9 +1486,9 @@ On February 5th I caught myself fixing the fixes of my previous fixes.
 
 When that happens, the codebase is telling you something. It's telling you to stop.
 
-The old Compiler was regex scattered across three files. The blockquote parser couldn't handle nested formatting. Definition lists inside blockquotes produced broken HTML. Every fix introduced a new edge case, and every edge case demanded another fix. The Custom Syntax features had become unpredictable. No single feature was complex. The complexity lived in their interactions.
+The old compiler was regex scattered across three files. The blockquote parser couldn't handle nested formatting. Definition lists inside blockquotes produced broken HTML. Every fix introduced a new edge case, and every edge case demanded another fix. The custom syntax features had become unpredictable. No single feature was complex. The complexity lived in their interactions.
 
-The rewrite centralized the Compiler into three layers: compiler.config.js (single source of truth for all syntax rules; changing it invalidates the entire build cache), build-content.js (the pipeline orchestrator), and article.css (one stylesheet, category accents through CSS vars). The new version could parse blockquotes with nested definition lists inside them. The old version literally couldn't. That's how you know a rewrite was the right call: the new version enables something the old version couldn't express.
+The rewrite centralized the compiler into three layers: compiler.config.js (single source of truth for all syntax rules; changing it invalidates the entire build cache), build-content.js (the pipeline orchestrator), and article.css (one stylesheet, category accents through CSS vars). The new version could parse blockquotes with nested definition lists inside them. The old version literally couldn't. That's how you know a rewrite was the right call: the new version enables something the old version couldn't express.
 
 Context annotations
 
@@ -1000,7 +1500,7 @@ MARKDOWN Copy
 
 This produces a card with the date, a relative timestamp ("5 weeks ago"), and the text. It's the feature I use most in projects articles. Because every project has a story, and the story has dates, and the dates carry context that the polished prose can't. When you read "5 weeks ago" next to a note about the compiler finally working, you feel the time. That's the whole point.
 
-3. The visual layer
+The visual layer
 
 I wanted the site to feel like a terminal. Dark background, monospace headings, lime green accents. But the blog needed to be light: long-form reading on a dark background is miserable.
 
@@ -1029,7 +1529,7 @@ I could write three more sections about the accent cascade and the custom proper
 26 · jan 30(1m 6d earlier)
 Dark/light works. Auto-switch on route. Smooth manual toggle. The hardcoded color migration takes the whole morning but the result is clean.
 
-4. The Second Brain
+The Second Brain
 
 This is the part where the project stopped being a website and started being something I actually use every day.
 
@@ -1054,7 +1554,7 @@ When I moved to Claude Code (working directly in the terminal, with the AI readi
 
 1that analogy sounds dramatic, but if you've ever spent a Saturday afternoon manually cross-referencing notes between three different notebooks, you know exactly what I mean.
 
-More on how extended thinking changes the game: threads/Every time we think we've found the ceiling, the ceiling leaves.
+More on how extended thinking changes the game: Every time we think we've found the ceiling, the ceiling leaves.
 
 How it actually works
 
@@ -1088,13 +1588,11 @@ The first technical difference is references. In Obsidian, [[links]] point to fi
 
 1like a Social Security number for concepts. The address changes. The identity doesn't. In graph theory terms: the vertex label is mutable but the vertex ID is immutable. References point to the ID.
 
-The second difference is trailing refs. Obsidian has backlinks: if you mention a note anywhere in another note's body, it shows up as an automatic backlink. Useful, but noisy. Every casual mention counts the same as a deliberate connection. Write "unlike [[CPU]], the GPU handles..." and Obsidian treats that throwaway comparison the same as a carefully curated relationship. The Second Brain separates these: body mentions are body mentions (tracked, but lightweight), and trailing refs are intentional connections, written at the end of a note, with optional annotations explaining the relationship. [[Z9W6rweD]] :: shares execution resources tells you why these two things are connected, not just that they are. And the system only needs the ref on one side. It crosses automatically to the other. Write it once, see it on both pages.
+The second difference is trailing refs. Obsidian has backlinks: if you mention a note anywhere in another note's body, it shows up as an automatic backlink. Useful, but noisy. Every casual mention counts the same as a deliberate connection. A throwaway comparison between a CPU and a GPU is treated like a carefully curated relationship. The Second Brain separates these: body mentions are body mentions (tracked, but lightweight), and trailing refs are intentional connections, written at the end of a note, with optional annotations explaining the relationship. A deliberate link to core, annotated as “shares execution resources,” tells you why two ideas are connected, not just that they are. And the system only needs the ref on one side. It crosses automatically to the other. Write it once, see it on both pages.
 
 Then there's the topology layer. And this is where Obsidian and the Second Brain aren't even playing the same game anymore. Obsidian gives you a force-directed graph visualization. It's pretty. You can zoom and drag nodes around. It tells you approximately nothing 1. The Second Brain computes actual graph topology at build time: which notes form connected islands (groups that can reach each other through links), which notes are bridges (remove them and an island splits in two, with a criticality score from 0 to 100%), which notes are isolated (completely disconnected from everything), and which notes are hubs (ranked by percentile of total connections). This isn't a visualization you stare at. It's structural analysis you use. You can filter by island, show only bridges, scope the search to a connected component. The graph stops being decoration and starts being a navigation instrument.
 
 1I'm being slightly unfair. The Obsidian graph is useful for spotting clusters and isolated notes visually. But it's a visualization, not an analysis tool. It shows you what your graph looks like. It doesn't tell you what your graph means.
-
-And then there's drift detection, the feature that made me realize I'd accidentally built something I couldn't get anywhere else. The algorithm looks at pairs of notes that share neighbors but aren't directly connected. If note A links to C and D, and note B also links to C and D, but A and B don't link to each other. That's suspicious. They're probably related. The system surfaces the top three suggested missing links per note, ranked by evidence strength, with the shared neighbors listed as justification. It's a recommender system for your own knowledge graph. "Hey, you wrote about these two things separately, and they both connect to the same three concepts, but you never connected them to each other. Maybe you should."
 
 The filtering system has toggles for isolated notes, leaves, bridges, and hubs; a depth range slider for the naming hierarchy; a heatmap that looks like a GitHub contribution graph where each cell is a day and you can click to filter by creation date. Three search modes: by name, by content, by backlinks. Session tracking that marks which notes you've already opened (blue = visited, purple = not yet) so you can toggle "unvisited only" and see what's left to explore.
 
@@ -1150,7 +1648,7 @@ Then centrality bars, tiny inline indicators showing how connected each note is 
 
 The graph
 
-The force-directed graph was originally a visual flex. I'll be honest about that. I'd been playing with threads/graph visualization libraries for years without going anywhere, because I didn't have enough structured data to make it interesting. Now I do.
+The force-directed graph was originally a visual flex. I'll be honest about that. I'd been playing with graph visualization libraries for years without going anywhere, because I didn't have enough structured data to make it interesting. Now I do.
 
 But here's what I didn't expect: I actually use it. Not every day, but regularly. The graph shows you the shape of your thinking. Three clusters are immediately visible (hardware, machine learning, and blockchain), with bridges between them. The isolated nodes are obvious. The over-connected hubs are obvious. And sometimes you see a connection you didn't know was there, because two notes reference the same concept from completely different domains.
 
@@ -1171,7 +1669,7 @@ Now it's a mini-IDE. I navigate between notes, the editor panel follows, I fix a
 
 TipThe term suggestion system works by scanning the note body for unlinked mentions of known note names. It skips frontmatter, existing wiki-links, code blocks, and trailing refs. When it finds a match, it shows a purple highlight with a one-click option to insert the link. It's the kind of feature that sounds simple and is simple: 50 lines of regex, a StateField in CodeMirror, done. But it catches connections I would've missed every single time.
 
-5. The workflow
+The workflow
 
 Here's how a typical session works, because understanding the workflow explains why everything was built this way.
 
@@ -1188,7 +1686,7 @@ The calendar heatmap reflects the session. The graph grows. And sometimes (this 
 26 · feb 07(1m 1d earlier)
 The article now exists on the platform it describes. Meta.
 
-6. Teaching an AI to maintain it
+Teaching an AI to maintain it
 
 On February 6th I started using Claude Code to help build the site. LLMs are simultaneously incredible and terrible at maintaining a codebase. Incredible because they can hold the entire architecture in context and write code faster than I can think. Terrible because they don't remember anything between sessions, and they'll happily "improve" code you didn't ask them to touch.
 
@@ -1233,7 +1731,7 @@ The hooks don't block anything. They just make sure the AI sees the reminder at 
 
 The scripts (check-references.js, move-hierarchy.js, preflight.js, analyze-pairs.js) are a collaboration. I describe what I need, Claude builds the pipeline. And here's the thing: Claude is very good at organizational tooling. The scripts it builds for knowledge management (validation, cross-referencing, bulk operations) tend to work on the first try. It's the kind of structured, rule-based pipeline work where an LLM's consistency shines. I'd trust it to build a reference checker before I'd trust it to pick a CSS color.
 
-7. Everything else
+Everything else
 
 Some features deserve a mention without deserving a section.
 
@@ -1259,9 +1757,9 @@ For LLM crawlers specifically, there are two files. llms-full.txt dumps every pu
 26 · mar 10(2d later)
 llms.txt was manually maintained for days. every new article required editing it by hand, and it was already out of sync when I checked. moved it to auto-generation in the build pipeline. the fieldnote count, the article listings, the URLs -- all derived from the same source of truth now. one less thing to forget.
 
-8. What this is really about
+What this is really about
 
-This project was not the rational choice. The CSS is not how a frontend engineer would write it. The Compiler is not how a language designer would build it. There are parts I'd do differently: the Tailwind CDN choice, the hardcoded colors on day one, the monolith fieldnotes file I should have split from the start.
+This project was not the rational choice. The CSS is not how a frontend engineer would write it. The compiler is not how a language designer would build it. There are parts I'd do differently: the Tailwind CDN choice, the hardcoded colors on day one, the monolith fieldnotes file I should have split from the start.
 
 But here's what I know that I didn't know 18 days ago. I know that overflow: hidden is the answer to questions you can't articulate yet. I know that CSS custom properties resolve at computation time, not declaration time, and that this matters more than it sounds. I know that color-mix() is unreasonably powerful and that transitioning CSS variables will give you a headache. I know that a wiki-link is really just a regex with ambition, and that if you build enough of them, a graph appears, and the graph is more interesting than any individual note.
 
@@ -1453,7 +1951,7 @@ If you haven't read the thread: OpenClaw is an open-source AI agent that runs on
 
 290,000+ GitHub stars. 443 contributors. 175,000+ lines of TypeScript. Mac Mini delivery times pushed out to six weeks because people are buying them specifically to run this. The project passed React's all-time star count in roughly 60 days. This isn't a side project. It's infrastructure people are building businesses on.
 
-1. What OpenClaw actually is
+What OpenClaw actually is
 
 Regular AI is a brain in a jar. You ask it a question, it answers, and then you go do the thing. OpenClaw inverts that. You tell it what you want, and it does it: opens your files, modifies them, saves them. Connects to your email, reads your inbox, drafts responses, sends them. Three words: Claude with hands.
 
@@ -1487,7 +1985,7 @@ Content pipeline. RSS feeds + topic lists → platform-specific drafts. X, Linke
 
 DevOps monitoring. Dependencies, vulnerabilities, disk space → prioritized Telegram alerts → SSH diagnostics when something fails.
 
-2. Architecture
+Architecture
 
 Four systems working together. This is what separates it from a chatbot or an automation tool.
 
@@ -1556,7 +2054,7 @@ daily/ logs: session transcripts
 
 The search layer uses hybrid retrieval: vector similarity (0.7 weight) plus keyword matching (0.3 weight, BM25). Runs on SQLite or PostgreSQL with FastEmbed. Fully local. Zero API calls for retrieval. Every conversation builds on every previous one.
 
-3. Deployment
+Deployment
 
 Two paths: run it on hardware you own, or run it on a VPS in the cloud. Both work. The tradeoffs are real.
 
@@ -1683,7 +2181,7 @@ LLM monitoring: token usage, latency, error tracking.
 
 All containerized with Docker. One docker compose up starts everything.
 
-4. Skills and channels
+Skills and channels
 
 The skills system
 
@@ -1822,7 +2320,7 @@ Heartbeat checks (default: every 30 minutes) monitor connected services and aler
 
 A solo founder in the community runs four agents (strategy, dev, marketing, business) on a single VPS controlled through Telegram, with shared memory and scheduled daily tasks. Morning briefings, competitor monitoring, content scheduling. Zero manual triggers.
 
-5. What's exposed on your machine
+What's exposed on your machine
 
 Everything above is what OpenClaw can do for you. Everything below is what it can do to you, and how to prevent it.
 
@@ -1881,7 +2379,7 @@ TPM / Secure Enclave. Physically cannot be extracted by software.
 
 The containment goal: keep the agent's access to the green table. Block its access to the red table. Every technique below does some version of this.
 
-6. Option 1: Docker
+Option 1: Docker
 
 Docker does most of the work
 
@@ -2008,7 +2506,7 @@ There's a performance overhead (10-30% on I/O-heavy workloads) but the kernel at
 
 Setup time: 30 minutes. Install runsc, configure Docker, add the flag.
 
-7. Option 2: Virtual machines
+Option 2: Virtual machines
 
 When Docker isn't enough
 
@@ -2077,7 +2575,7 @@ Coming soon: Apple Containers
 
 Apple announced native containerization at WWDC 2025 for macOS Tahoe. Each container runs in its own lightweight VM (not a shared kernel like Docker). Sub-second start times, dedicated IP per container, built on Virtualization.framework. Still in developer preview, but if you're on macOS 26, this may become the default answer.
 
-8. Option 3: Cloud deployment
+Option 3: Cloud deployment
 
 Your files aren't there
 
@@ -2156,7 +2654,7 @@ BASH Copy
 # from your local machine — weekly backup
 scp -r clawd@YOUR_DROPLET_IP:~/clawd ~/clawdbot-backup-$(date +%Y%m%d)
 
-9. Networking
+Networking
 
 Accessing your Gateway remotely
 
@@ -2257,7 +2755,7 @@ No. Maybe guest WiFi.
 N/A
 Use guest WiFi instead
 
-10. OpenClaw's security layer
+OpenClaw's security layer
 
 OpenClaw has built-in access controls. They protect against other people messaging your bot, not against the agent itself. Different threat vector, still worth configuring.
 
@@ -2355,7 +2853,7 @@ Rotate: Gateway auth token, browser control token, API keys, OAuth tokens
 Audit: check logs (/tmp/clawdbot/clawdbot-*.log), review session transcripts (~/.clawdbot/agents/*/sessions/*.jsonl), grep for unusual tool calls
 Re-scan: clawdbot security audit --deep
 
-11. The credential audit
+The credential audit
 
 Do this regardless of which containment strategy you pick. 15 minutes that tells you exactly what's at risk. I ran these on my own machine while writing the thread and found four unencrypted SSH keys and two forgotten .env files with production credentials. Years of this, and I'd never once checked.
 
@@ -2399,7 +2897,7 @@ Stale .env files: move production .env files off any machine that runs an AI age
 
 Firefox cookies: consider using a separate browser profile for sensitive sessions (banking, email) and keeping the agent machine's browser clean.
 
-12. Cost
+Cost
 
 Cloud AI (team of 5, monthly)
 
@@ -2450,7 +2948,7 @@ What you keep: no per-seat licensing, no vendor lock-in, no usage throttling, no
 
 Claude Pro/Max subscriptionUsing a Claude Pro or Max subscription instead of metered API billing is dramatically cheaper for heavy usage. Community members report burning $300+ in two days on metered API. Flat monthly fee vs. per-token billing. The math isn't close.
 
-13. The effort-to-protection matrix
+The effort-to-protection matrix
 
 Every technique in this guide, ranked. Start at the top, work down until the tradeoffs stop making sense for your situation.
 
@@ -2531,7 +3029,7 @@ Today, frontier models are so situationally aware that their awareness complicat
 
 This is about what's actually happening inside that fire. Not the Hollywood version. Not the Twitter version. The version with papers, techniques, billion-dollar bets, and one very uncomfortable empirical discovery.
 
-1. "Are they just chatting to the model?"
+"Are they just chatting to the model?"
 
 Let's get this out of the way.
 
@@ -2539,7 +3037,7 @@ There's a very popular, very reasonable-sounding take on alignment research that
 
 Are these "labs" conducting "research" by just... chatting to the model? "Are you going to try to build a Skynet? Be honest?" There must be more to it, surely.
 
-@doomposting_realist, mass-upvoted HN comment
+— @doomposting_realist, mass-upvoted HN comment
 
 And look, I get it. If your only exposure to AI safety is Twitter threads and op-eds, it genuinely does look like a bunch of overfunded philosophy majors having an existential crisis about autocomplete. The models are just predicting the next word, right? How dangerous can a text generator be?
 
@@ -2549,9 +3047,9 @@ Alignment is not a philosophical debate. It's an empirical science with controll
 
 Let's start from the beginning.
 
-2. Teaching a shoggoth to behave
+Teaching a shoggoth to behave
 
-I wrote about the shoggoth meme in threads/the transformers thread, the Lovecraftian horror wearing a smiley-face mask. The horror is the raw model: a statistical completion engine of incomprehensible complexity that has absorbed the entirety of human text. The mask is alignment training: the layer that turns the alien thing into a helpful assistant. The question this entire field is trying to answer is: how do you make the mask load-bearing?
+I wrote about the shoggoth meme in the transformers thread, the Lovecraftian horror wearing a smiley-face mask. The horror is the raw model: a statistical completion engine of incomprehensible complexity that has absorbed the entirety of human text. The mask is alignment training: the layer that turns the alien thing into a helpful assistant. The question this entire field is trying to answer is: how do you make the mask load-bearing?
 
 Because right now, the mask is decorative. And everybody working on this knows it.
 
@@ -2601,7 +3099,7 @@ The smiley face got better. The shoggoth didn't change.
 
 And in 2024, we found out just how much that matters.
 
-3. Billions on safety
+Billions on safety
 
 If you'd told me in 2021 that within two years, the CEOs of every major AI company would sign a joint statement comparing AI risk to nuclear weapons and pandemics, I would have assumed you were doing a bit. But here we are.
 
@@ -2639,7 +3137,7 @@ This is why the "vibes" objection cuts both ways. Alignment is not a vibe check:
 
 The techniques exist. Whether the will to use them does is a different question.
 
-4. Alignment faking
+Alignment faking
 
 In December 2024, the alignment field got its most unsettling empirical result to date. And I mean empirical: not theoretical, not speculative, not a thought experiment. A controlled experiment with logs and data.
 
@@ -2707,7 +3205,7 @@ The paper's conclusion is the opposite of a victory lap: "the intervention as-st
 
 This is what serious alignment research looks like. Not vibes. Not chatting with the model. Controlled experiments, measurable outcomes, honest reporting of limitations, and a transparent acknowledgment of what remains unsolved.
 
-5. Verifying safety claims
+Verifying safety claims
 
 One of the hardest questions in alignment isn't technical. It's structural: who verifies safety claims?
 
@@ -2734,7 +3232,6 @@ The ScaleAnthropic separately generated over 300,000 queries testing value trade
 This cross-audit didn't solve accountability. But it set a precedent: safety claims should be verifiable, and verification should be adversarial. The people checking your work should not be your employees. They should be your competitors. Because your competitors have every incentive to find the problems you missed.
 
 the mask is not the face
-
 Here's the arc of this story, compressed into five years:
 
 2022: we discovered how to put the smiley face on the shoggoth (RLHF, Constitutional AI). The techniques were real. The improvement was measurable. The industry adopted them universally.
@@ -2767,19 +3264,19 @@ Description: A ground-up explanation of how language models are trained after pr
 26 · mar 11(24d later)
 banner image is a loss landscape visualization by Javier Ideami (losslandscape.com ). I saw him present at an executive AI master's program and his conviction about where language modeling was heading stuck with me more than most of the curriculum did. his work on visualizing optimization surfaces is worth a deep dive if you want to see what gradient descent actually looks like.
 
-This is a companion piece to bits2bricks/Transformers from scratch. That article covers the architecture: what a transformer is, how data flows through it, where the 175 billion parameters live. This one covers what happens after that architecture exists: how you take a model that can predict the next token and turn it into something that follows instructions, reasons about problems, and refuses to help you build a bomb.
+This is a companion piece to Transformers from scratch. That article covers the architecture: what a transformer is, how data flows through it, where the 175 billion parameters live. This one covers what happens after that architecture exists: how you take a model that can predict the next token and turn it into something that follows instructions, reasons about problems, and refuses to help you build a bomb.
 
 If you have not read the transformer article, the one-paragraph version: a transformer is a sequence of alternating attention blocks (which route context between tokens) and MLP blocks (which store facts). About 1/3 of the parameters live in attention, 2/3 in MLPs. The model takes text in, produces a probability distribution over possible next tokens, and generates text by sampling from that distribution one token at a time. Everything is learned via backpropagation, adjusting weights to minimize a loss function.
 
 That last sentence is the bridge to this article. Because all training (pretraining, SFT, DPO, RL, every technique we are about to discuss) uses the same physical mechanism. Backpropagation adjusts weights. Every time. The difference between these techniques is not how they touch the model. It is where the signal comes from that tells them which direction to push.
 
-1. Before we start
+Before we start
 
 A few concepts that underpin everything in this article. If you are comfortable with them, skip ahead. If not, these are worth anchoring before we go further.
 
 Backpropagation
 
-In the bits2bricks/transformer article, we described the forward pass (data flowing through the network, producing a prediction). Backpropagation is the reverse trip.
+In the transformer article, we described the forward pass (data flowing through the network, producing a prediction). Backpropagation is the reverse trip.
 
 After the model makes a prediction, you compare it to the correct answer and compute a loss, a single number measuring how wrong the model was. Then you work backwards through the entire network, computing for every one of the billions of parameters: "if I nudge this number up slightly, does the loss go up or down, and by how much?" This is the gradient, the direction of steepest descent.
 
@@ -2817,11 +3314,11 @@ These are two completely different moments in the life of a model, and we will m
 
 Training is when the model learns. Weights change. Backpropagation runs. Gradients flow. This happens on clusters of thousands of GPUs over weeks or months.
 
-Inference is when the model is used. Weights are frozen. The model takes input, produces output. The KV cache we discussed in the bits2bricks/transformer article is an inference optimization. It has nothing to do with training. When you chat with ChatGPT, that is inference. When OpenAI spends $100M training a new model, that is training.
+Inference is when the model is used. Weights are frozen. The model takes input, produces output. The KV cache we discussed in the transformer article is an inference optimization. It has nothing to do with training. When you chat with ChatGPT, that is inference. When OpenAI spends $100M training a new model, that is training.
 
 Every technique in this article is about training.
 
-2. The taxonomy
+The taxonomy
 
 Here is the map. Every technique for training an LLM after pretraining falls into one of two families:
 
@@ -2842,7 +3339,7 @@ The most common confusion in the field is thinking DPO is a type of RL. It is no
 
 Let's look at each one.
 
-3. SFT
+SFT
 
 Supervised Fine-Tuning is the simplest technique and usually the first step after pretraining.
 
@@ -2863,15 +3360,13 @@ Output: "Silver drops descend\nDancing on the quiet earth\nPetals bow in thanks"
 Input: "Explain photosynthesis to a five-year-old."
 Output: "Plants eat sunlight! They use it to turn air and water into food..."
 
-The model learns the pattern: when someone asks a question, answer it. When someone asks for a poem, write one. It is not learning new facts (those are already in the MLP weights from pretraining, as we discussed in the bits2bricks/transformer article). It is learning a new format: how to respond to instructions instead of just predicting plausible continuations.
+The model learns the pattern: when someone asks a question, answer it. When someone asks for a poem, write one. It is not learning new facts (those are already in the MLP weights from pretraining, as we discussed in the transformer article). It is learning a new format: how to respond to instructions instead of just predicting plausible continuations.
 
 What SFT changes in the model
 
 Remember the architecture: attention blocks route context, MLP blocks store facts. SFT primarily adjusts the attention weights: how the model structures its responses, what patterns it follows, how it parses the format of a conversation. The MLP weights shift too, but less dramatically. The facts are already there from pretraining.
 
-This is why LoRA 1, the most popular efficient fine-tuning technique, typically only modifies the attention matrices (WQW_QWQ​, WKW_KWK​, WVW_VWV​, and the output matrix). The MLP weights stay frozen. This works because SFT is mostly about behavior (how information is routed), not about knowledge.
-
-1Low-Rank Adaptation. Instead of updating all parameters, LoRA freezes the model and adds small trainable matrices to the attention layers only. These matrices are low-rank (far fewer parameters than the original), making training fast and cheap. At inference time, the LoRA matrices are merged with the originals: zero overhead.
+This is why LoRA, the most popular efficient fine-tuning technique, typically only modifies the attention matrices (WQW_QWQ​, WKW_KWK​, WVW_VWV​, and the output matrix). The MLP weights stay frozen. This works because SFT is mostly about behavior (how information is routed), not about knowledge.
 
 The tokenizer is never touched during fine-tuning. Changing it would mean changing the embedding matrix, which would essentially mean starting over.
 
@@ -2906,7 +3401,7 @@ It does not answer: what is worth putting here?
 
 That second question needs RL.
 
-4. DPO
+DPO
 
 Direct Preference Optimization is a step beyond SFT. Instead of saying "imitate this exact response", you say "this response is better than that one. Learn from the contrast."
 
@@ -2954,7 +3449,7 @@ For subjective quality (tone, style, safety, helpfulness), DPO works well. Human
 
 For reasoning (math, code, logic), DPO is limited. You can compare two chain-of-thought responses and say which one is better, but the model cannot discover a new reasoning strategy. It can only learn to prefer the strategies that already exist in the comparison data.
 
-5. RL
+RL
 
 Reinforcement learning is categorically different from both SFT and DPO. It has a loop.
 
@@ -3007,7 +3502,7 @@ Why RL is necessary: Ashby's LawThere is a systems-theory lens on this distincti
 
 SFT and DPO are reactive systems: they map fixed inputs to fixed outputs, with variety limited to whatever the training data contained. RL is a feedback loop: the model acts, observes a reward, and adapts. Its variety grows with training because the loop generates new behaviors and tests them. This is why only RL discovered chain-of-thought reasoning in DeepSeek-R1-Zero: the pretrained model's variety was insufficient for hard math problems, and SFT could not increase it (it can only redistribute existing variety). The RL loop could, because its variety is bounded by compute, not by dataset.
 
-6. RLHF
+RLHF
 
 Reinforcement Learning from Human Feedback is probably the most misunderstood term in all of AI. People hear "Human Feedback" and imagine a human sitting there evaluating every response in real time. That is not what happens.
 
@@ -3055,7 +3550,7 @@ Same input data: (prompt, chosen, rejected) triplets. Different algorithms. DPO 
 
 The data format is agnostic to the algorithm. The same preference pairs can be used for RLHF or DPO. The choice of technique is independent of how the data was collected.
 
-7. RLAIF and Constitutional AI
+RLAIF and Constitutional AI
 
 Humans are expensive and slow. Labeling preference data requires thousands of hours of careful comparison by trained annotators. The obvious question: can you use another LLM as the judge instead?
 
@@ -3070,7 +3565,7 @@ Constitutional AI, developed by Anthropic, is the most well-known version of thi
 
 This creates a recursive dynamic where the model is, in a sense, grading its own homework. The quality depends entirely on how good the constitution is and how capable the judge model is at applying it. If the judge is dumb, the constitution is vague, or both: you get garbage in, garbage out, but with a veneer of principled self-improvement.
 
-8. KL divergence
+KL divergence
 
 There is a danger in all of these techniques, and it is called reward hacking.
 
@@ -3088,7 +3583,7 @@ Without KL divergence, RL training almost always diverges into reward hacking. T
 
 DPO has a KL term baked into its loss function: it is mathematically derived from the same RLHF objective with KL regularization. This is partly why DPO is more stable than PPO: the constraint is built in rather than being a tunable knob.
 
-9. On-policy vs off-policy
+On-policy vs off-policy
 
 The distinction between on-policy and off-policy data matters for understanding why some training methods are better than others.
 
@@ -3104,7 +3599,7 @@ On-policy training is more data-efficient (the data is always perfectly relevant
 
 Cursor's Tab model is a vivid real-world example. They deploy new model checkpoints to users multiple times a day and retrain rapidly with fresh interaction data. When a user presses Tab (accepting a suggestion) or ignores it (rejecting), that is on-policy RL feedback: the signal comes from the current model's behavior with current users. This is as on-policy as it gets outside of a research lab.
 
-10. Safe RLHF
+Safe RLHF
 
 Standard RLHF trains one reward model that scores "overall quality." But "quality" conflates at least two things that can conflict:
 
@@ -3118,7 +3613,7 @@ Safe RLHF decouples these. It trains two separate reward models (one for helpful
 
 This is a cleaner formulation than hoping a single reward model will learn the right tradeoff internally.
 
-11. Model collapse
+Model collapse
 
 There is a failure mode that haunts all synthetic data pipelines: model collapse.
 
@@ -3138,7 +3633,7 @@ The antidote is fresh human data and real-world feedback, which is why companies
 
 1Each training stage is a distributional shift. Pretraining establishes the full distribution. SFT narrows it toward instruction-following. RL reshapes it toward reward-maximizing behavior. Each shift trades breadth for alignment: the distribution gets more useful but less diverse. Model collapse is what happens when the narrowing compounds across generations: the distribution contracts until only the mode remains, and the tails (where creativity and edge-case handling live) vanish entirely.
 
-12. The thinking cost tradeoff
+The thinking cost tradeoff
 
 When a reasoning model uses extended thinking (generating a long <thinking> block before answering), it is generating many more tokens per response. Tokens are computation. Computation is money.
 
@@ -3162,7 +3657,7 @@ But there is a ceiling. The model's capacity to reduce uncertainty is bounded by
 
 The flip side: overthinking. On simple problems where entropy is already low, additional thinking tokens can shift the model out of the correct basin into one associated with unnecessary complexity. More reasoning is not always better: it is only better when the starting entropy is high enough to justify the reduction.
 
-13. Cursor as a case study
+Cursor as a case study
 
 Cursor, the AI code editor, runs two distinct RL systems that perfectly illustrate the concepts in this article.
 
@@ -3192,7 +3687,7 @@ Nobody told it to do these things. They are emergent behavior from the RL loop: 
 
 This is what RL can do that SFT and DPO cannot. SFT could teach the model "search before editing" if you included that in the training examples. But SFT could not let the model discover this strategy on its own. The discovery is the point.
 
-14. Putting it all together
+Putting it all together
 
 The modern LLM training pipeline is not one technique: it is a sequence, where each step addresses a different need.
 
@@ -3200,8 +3695,6 @@ Pretraining: the model sees trillions of tokens of internet text. It learns lang
 SFT: the model learns to follow instructions, to respond in conversation format, to reason in <thinking> blocks. The loss is still next-token prediction, but on curated data. This produces a helpful assistant that can imitate good behavior but cannot improve beyond its examples.
 RL (or RLHF/RLAIF): the model generates, gets scored, and improves in a live loop. It discovers new strategies, learns when and how to think, optimizes for actual usefulness rather than format imitation. The loss involves a reward signal with KL regularization. This produces a model that can reason, explore, and improve beyond what any human wrote in the training data.
 DPO or additional SFT: final refinement on specific preferences: tone, safety, style. Cleans up rough edges from the RL phase. Static, supervised, stable.
-
-· · ·
 
 The intuition to carry away is this:
 
@@ -3217,7 +3710,7 @@ The model does not learn what to think. It learns that thinking produces better 
 
 We started with a pile of random numbers. We applied pressure: "be less wrong." And from that pressure, something emerged that reasons, plans, and corrects itself. Not because we told it how. Because we told it what "better" looks like, and it figured out the rest.
 
-15. The Signal Ladder
+The Signal Ladder
 
 The summary above tells you what each technique answers. It does not tell you when to use which. That is a different question, and the answer has nothing to do with which technique is "best."
 
@@ -3288,7 +3781,7 @@ Without further ado (and I should warn you), there's not a lot to learn from thi
 26 · feb 12(1d earlier)
 Started this at noon. 22 files and a force push later, I have a dashboard, a security incident, and a single-commit repo. Good Wednesday.
 
-1. Attempt number five
+Attempt number five
 
 This is the fifth time I've tried to build something like this. The previous four attempts died at various stages of ambition: a Python CLI that got too complex, a React prototype that I abandoned when I realized I was building a framework instead of a tool, a quick-and-dirty HTML page that couldn't handle more than one CSV, and MyViewer, a deprecated predecessor that was a 3,000-line monolith in a single script.js. MyViewer technically worked, but it was the kind of code that makes you close the editor and go for a walk. Un-extendable. Un-debuggable. Un-maintainable. Un-everything.
 
@@ -3327,7 +3820,7 @@ Then it worked. The fix was to destroy charts before the router swaps the view, 
 26 · feb 12(1d earlier)
 Both Claude 4.6 and GPT-5.3-Codex helped on this. I can't imagine what the next generation of models will look like. Matt Shumer says 5.3-Codex is the first one where he can launch a task, leave for hours, and come back to working software. 8 hours of sustained autonomy. And the part that strikes me most: when instructions are ambiguous, it makes decisions surprisingly similar to the ones you'd make yourself. Each iteration feels less like a tool and more like a colleague.
 
-2. What you're looking at
+What you're looking at
 
 The dashboard is, at its core, a bet on a single idea: your entire financial life can be described by one table. Every row is a transaction. Every column is an attribute of that transaction. Everything else (the charts, the filters, the P&L calculations, the allocation breakdowns) is just looking at that same table from different angles.
 
@@ -3381,7 +3874,7 @@ You could imagine extending this to overlay sector benchmarks, maybe even a cust
 
 I'd go deeper into this but I have certain projects that are more bricks than bits waiting in the queue so... maybe another time.
 
-3. The data trap
+The data trap
 
 Here's the thing about developing a financial dashboard: at some point you need data that looks real. Not "Jane bought 10 AAPL": real patterns, real price ratios, real portfolio behavior. And the easiest source of realistic financial data is, unfortunately, real financial data. That convenience is the trap.
 
@@ -3391,7 +3884,7 @@ The lazy alternative is to hardcode a "real-looking" dataset straight into demo-
 
 In HindsightA handful of real transactions reveals which brokers someone uses, their investment patterns, position sizes, and timing, more financial information than most people would ever share on purpose. The demo data shipped with this project is synthetic for exactly that reason. The lesson is blunt: never commit real personal data, even as a placeholder. Use python -m http.server and a generated dataset from the start.
 
-4. And what about the money that isn't invested?
+And what about the money that isn't invested?
 
 FinBoard tracks what you bought and what it's worth. It knows you own 3 shares of MSFT at an average cost of 404.34. It knows your NVDA position is up 23%. It can tell you your total deployed capital, your realized P&L, your unrealized P&L.
 
@@ -3526,7 +4019,7 @@ collected everything I know about Claude Code into one place. setup, safety, ski
 
 Everything between npm install and a production system. How to install Claude Code, how to teach it your codebase, how to build reusable workflows that compound over time, how to prevent it from breaking things, how to connect it to external services, how to orchestrate parallel work, and the ecosystem growing around it.
 
-1. Setup
+Setup
 
 Installation
 
@@ -3567,7 +4060,7 @@ claude
 
 That's it. Claude reads your project directory, understands the file structure, and is ready to work. No configuration required. Everything from here is about making it better.
 
-2. CLAUDE.md: the operating manual
+CLAUDE.md: the operating manual
 
 The single most important file in your project. This is the instruction set Claude reads before every interaction. Without it, every session starts from zero. With it, the agent understands your architecture, follows your conventions, and produces code that fits seamlessly into existing patterns.
 
@@ -3603,7 +4096,7 @@ Claude reads all of them, most-specific wins. Your personal preferences go in ~/
 
 Start smallYou don't need a 500-line CLAUDE.md on day one. Start with your stack declaration and three conventions. Add to it every time Claude does something wrong. Each correction becomes a rule. After a week, the file has organically captured your entire workflow. After a month, it's the most complete documentation your project has ever had.
 
-3. Skills: reusable instructions that compound
+Skills: reusable instructions that compound
 
 CLAUDE.md is static context. It loads every time. Skills are the invocable layer: named workflows that only load when triggered. You write the instructions once, and Claude Code follows them every time you need that workflow.
 
@@ -3692,7 +4185,7 @@ Dangerous skillsUse disable-model-invocation: true for anything that deploys, se
 
 Open standardThe Agent Skills format works across 30+ tools: Claude Code, Cursor, GitHub Copilot, VS Code, Gemini CLI, OpenAI Codex. Build once, use everywhere.
 
-4. Hooks: catching mistakes before they happen
+Hooks: catching mistakes before they happen
 
 Hooks are automated rules that intercept Claude's actions before they execute. They catch mistakes proactively instead of reactively. The difference between "I lost two hours debugging a force push" and "the system blocked it automatically."
 
@@ -3753,7 +4246,7 @@ The prompt transformation hook
 
 The UserPromptSubmit hook can transform your input before Claude processes it. Practical use: a voice-to-prompt pipeline. You dictate something sloppy into a voice transcription tool ("uh yeah so the revenue graph isn't showing right, there's empty space below it"), and the hook transforms it into a structured, actionable prompt with technical context. The quality of AI output is directly proportional to the quality of input. Automate the quality.
 
-5. Permissions: three tiers of trust
+Permissions: three tiers of trust
 
 Permission modes
 
@@ -3811,7 +4304,7 @@ What this enables
 
 Routine operations (reading files, running builds, checking git) flow at full speed with zero interruption. Meaningful changes (edits, installs, pushes) get a human checkpoint. Catastrophic actions (force push, recursive delete, env writes) are impossible. You work fast without the anxiety of "what if the AI does something destructive." The guardrails are structural, not behavioral.
 
-6. MCP servers: connecting to everything
+MCP servers: connecting to everything
 
 MCP 1 servers give Claude access to the world outside your terminal.
 
@@ -3885,7 +4378,7 @@ User
 ~/.claude.json (user section)
 Just you, all projects
 
-7. Subagents and agent teams
+Subagents and agent teams
 
 Two distinct systems for parallel work. Different tools for different problems.
 
@@ -4101,7 +4594,7 @@ The "report only, do NOT auto-fix" instruction for the auditor is intentional. A
 
 Sizing teams3-5 agents per team. More than 5 creates coordination overhead that outweighs the parallelism. 5-6 tasks per agent, enough to stay productive, not so many that context overflows. And always: 10K tokens on planning saves 500K+ on misdirected execution. Have the lead plan before spawning.
 
-8. The ecosystem
+The ecosystem
 
 Claude Code is a terminal tool. But the ecosystem around it has expanded fast.
 
@@ -4154,7 +4647,7 @@ Remote Control
 Same coding session, same context
 
 Async requests ("run this workflow", "ship this update")
-threads/OpenClaw
+OpenClaw
 Message-first, works through Telegram/WhatsApp
 
 Non-technical team wants changes in plain English
@@ -4169,7 +4662,7 @@ IDE integrations
 
 VS Code extension and JetBrains plugin, both bidirectional with the CLI. Open Claude Code in your IDE, or send context from your IDE to an existing terminal session.
 
-9. The UI workflow
+The UI workflow
 
 This is the one nobody talks about. Four tools that turn Claude Code from a code generator into a design-to-code pipeline.
 
@@ -4185,7 +4678,7 @@ Nano Banana 2
 
 Image generation inside your Claude Code workflow. Powered by Google Gemini. Generates hero images, icons, backgrounds, and illustrations, with transparency support, reference images, and style transfer. Works as a standalone CLI and as a Claude Code skill.
 
-GitHub: nano-banana-2-skill 
+GitHub: nano-banana-2-skill
 
 Requires a Google API key for Gemini.
 
@@ -4193,13 +4686,13 @@ UI UX Pro Max
 
 A design rulesets database that activates automatically during UI work. 50+ styles, 161 color palettes, 57 font pairings, 99 UX guidelines. When Claude is building a component, this skill feeds it proven design patterns instead of letting it improvise. Also has an npm CLI (uipro-cli) for standalone use.
 
-GitHub: ui-ux-pro-max-skill 
+GitHub: ui-ux-pro-max-skill
 
 Superdesign
 
 Template library and AI design agent. Generates mockups and production-ready React + Tailwind code from text descriptions, 10+ variants per prompt. Use it to pull layout patterns for navs, pricing sections, dashboards, settings pages, onboarding flows. MIT licensed.
 
-app.superdesign.dev 
+app.superdesign.dev
 
 The design workflow
 
@@ -4209,7 +4702,7 @@ Iterate in batches. Ask for 3 UI directions with the same requirements but diffe
 
 The "expensive" lookFewer font sizes, fewer colors, more whitespace. Ship a consistent button system (primary, secondary, tertiary) early. Use real UI patterns (tables, empty states, filters, settings) instead of hero-only design. The difference between "designed" and "AI-generated" is restraint.
 
-10. The methodology
+The methodology
 
 Tools matter. Process matters more.
 
@@ -4241,7 +4734,7 @@ memory/: topic files. Debugging solutions, architectural decisions, framework go
 
 The session-start skill reads memory files as part of its initialization. Zero ramp-up time between sessions.
 
-11. Cost
+Cost
 
 Plan
 Price
@@ -4267,7 +4760,7 @@ Free plan does not include Claude Code.
 
 API key vs subscriptionA Pro subscription gives you flat-rate access. An API key charges per token. For heavy usage (dozens of sessions per day), the subscription is dramatically cheaper. Community members report burning through $300+ of API credits in two days. The math isn't close.
 
-12. Quick reference
+Quick reference
 
 Essential files
 
@@ -4339,7 +4832,7 @@ Everyone has an opinion on AI. Not just the engineers and the investors. Everyon
 
 The actual bubble isn't in AI stocks. It's in AI opinions. We have created a secondary market of hot takes that trades at higher volume and with less underlying value than anything on the NASDAQ.
 
-1. Balloonomania, 1783
+Balloonomania, 1783
 
 Someone who described himself as a "digital anthropologist" told a story I couldn't fully verify but also couldn't stop thinking about. He claimed that in the 1780s, after the first hot air balloon flights, an early aeronaut declared that balloons would take people to the moon in a short time. He raised huge sums on that claim. The commenter's punchline: "yes, it was a lot of hot air."
 
@@ -4355,7 +4848,7 @@ The template is ancient. What's changed is the speed at which we run through it,
 
 The Montgolfiers at least had an excuse. They didn't know it was just hot air.
 
-2. Everyone is right and nobody is listening
+Everyone is right and nobody is listening
 
 The debate splits into three camps, and each camp has the exact same problem: they can see their corner perfectly and assume it's the entire building.
 
@@ -4385,11 +4878,11 @@ The dot-com bubble burst in 2000 and killed Pets.com, Webvan, and a thousand sta
 
 This take doesn't generate engagement. It doesn't make you sound smart at dinner parties. It doesn't have the emotional punch of "it's all a scam" or the tribal energy of "you just don't get it." But it has the unfortunate quality of being historically accurate every single time.
 
-3. My portfolio says one thing, my inbox says another
+My portfolio says one thing, my inbox says another
 
 Here's my situation, and I suspect it's the situation of a lot of engineers right now.
 
-My positions in tech companies with heavy AI exposure are up over 150%. My daily toolkit includes AI-assisted coding, research, and writing. My productivity, by any honest measure, is meaningfully higher than it was two years ago. When I write code, I write it faster. When I research a topic, I reach the core faster. When I debug something, I find the bug faster. The tools are genuinely, measurably useful. I wrote about threads/why the underlying architecture works. The technology is not hype. It is real math doing real things.
+My positions in tech companies with heavy AI exposure are up over 150%. My daily toolkit includes AI-assisted coding, research, and writing. My productivity, by any honest measure, is meaningfully higher than it was two years ago. When I write code, I write it faster. When I research a topic, I reach the core faster. When I debug something, I find the bug faster. The tools are genuinely, measurably useful. I wrote about why the underlying architecture works. The technology is not hype. It is real math doing real things.
 
 My LinkedIn inbox, meanwhile, has gone quiet. Not because I'm less qualified, but because the market is contracting. Entry-level tech postings in the US have dropped by an estimated 67%. In the UK, tech graduate roles fell 46% in 2024 with projections for another 53% drop 1 by 2026. Senior roles are flat. The overall tech job market is in what analysts politely call a "low-hire, low-fire equilibrium," which is corporate-speak for "nobody's getting fired and nobody's getting hired, and if you're a fresh graduate, best of luck."
 
@@ -4407,7 +4900,7 @@ Someone cut through all of it: "until the AI bubble bursts, so many people will 
 
 That's the one that sat with me.
 
-4. Half of all venture capital
+Half of all venture capital
 
 The number that matters: in 2025, AI captured half of all venture capital deployed worldwide. $202 billion. Up 75% from the year before. Foundation models alone (the raw engines, the stuff companies like OpenAI and Anthropic build) absorbed $80 billion, more than doubling from $31 billion in 2024.
 
@@ -4437,7 +4930,7 @@ The shovel problemThis isn't speculation. It's already happening. Weights & Bias
 
 Someone put it bluntly: "95% of these companies are already dead. They just don't know it yet." The infrastructure bubble is arguably more fragile than the model bubble, because at least the models do something novel. The infrastructure companies are building things that bigger companies can replicate with a team and a quarter.
 
-5. The dot-com pattern
+The dot-com pattern
 
 Everyone in that comment section cited the dot-com bubble. Not one of them followed the analogy all the way through.
 
@@ -4455,7 +4948,7 @@ Someone wrote something I keep coming back to: "those who survive will be far mo
 
 And there's a wildcard that nobody at the investment conferences wants to discuss: open source. Optimized models running on consumer hardware: no data center required, no API bill, no vendor lock-in. A commenter predicted that "open source optimized models for consumer hardware will kill big companies in 4-5 years." Maybe. Maybe not. But the fact that a viable open-source path exists means that the entire centralized infrastructure play (the hundred-billion-dollar bet on GPU clouds and proprietary APIs) has a timer on it. The picks and shovels become irrelevant when people start finding gold in their backyard.
 
-6. Quantum is warming up
+Quantum is warming up
 
 Speaking of the next thing, several commenters noticed that the hype machine is already warming up a replacement. Quantum computing. The theory being: once the AI bubble pops, investors will need somewhere to park their optimism, and quantum computing is exotic enough to absorb it.
 
@@ -4499,7 +4992,7 @@ But what is a transformer? What happens inside it? If you feed it the sentence "
 
 This article is an attempt to answer that question from scratch. No prerequisites beyond basic intuition about what vectors and matrices are. We will go slow, reinforce things as we go, and build up the full picture one piece at a time. By the end you will understand (not just pattern-match the jargon, but actually understand) what happens inside these models.
 
-1. The big picture
+The big picture
 
 Let's start with the acronym. GPT stands for Generative Pre-trained Transformer. "Generative" means it produces new text. "Pre-trained" means it learned from a massive pile of data before you ever talked to it. "Transformer" is the architecture, the specific design of the neural network. That last word is the one that matters.
 
@@ -4518,15 +5011,13 @@ Softmax converts those scores into probabilities
 
 That's it. Everything else in this article is zooming into each of those steps.
 
-2. Tokens
+Tokens
 
 The first step is breaking text into pieces.
 
 You might think each word becomes one unit. Sometimes it does. But sometimes a long or unusual word gets split into subwords. The word "transformer" might be two tokens: "trans" and "former". The word "the" is almost always one token. A punctuation mark is usually its own token. Common phrases like "of the" might even be a single token.
 
-This splitting is done by the tokenizer, and it is not a neural network. It is a lookup algorithm called BPE 1 that was decided before training. The model never changes it. The tokenizer has a fixed vocabulary (GPT-3 uses 50,257 tokens) and every possible input gets carved into pieces from that vocabulary.
-
-1Byte Pair Encoding. An algorithm that starts with individual characters, then iteratively merges the most frequent pair of adjacent tokens into a new token. After many rounds, you end up with a vocabulary of subword units that efficiently compress text. The same algorithm is used for data compression.
+This splitting is done by the tokenizer, and it is not a neural network. It is a lookup algorithm called BPE that was decided before training. The model never changes it. The tokenizer has a fixed vocabulary (GPT-3 uses 50,257 tokens) and every possible input gets carved into pieces from that vocabulary.
 
 Why not just use individual characters? You could. "transformer" would become 11 tokens instead of 2-3. That means your sequences are much longer. A typical novel (say, 80,000 words) is about 100,000 BPE tokens. With characters, it would be around 400,000. And since the cost of attention (which we will get to) grows with the square of the sequence length, character-level models are 16x more expensive for the same text. There's also a learning disadvantage: with BPE, "running", "runner", and "runs" share subword tokens, giving the model a free morphological hint. With characters, it has to learn those relationships entirely from co-occurrence patterns.
 
@@ -4534,7 +5025,7 @@ What about bytes?There is real research on byte-level models. Meta's MegaByte (2
 
 Each token in the vocabulary gets an integer ID. The word "cat" might be token 4821. The tokenizer's job is to convert text into a sequence of these IDs. That is all it does. No understanding, no semantics. Just a lookup table from text to numbers.
 
-3. Embeddings
+Embeddings
 
 Now we need to convert each token ID into something the neural network can work with. That something is a vector, a list of real numbers.
 
@@ -4548,17 +5039,11 @@ A classic example: if you take the embedding of "woman" and subtract the embeddi
 
 The mathematical tool that measures how well two vectors align is the dot product: a⋅b=∑iai bi\mathbf{a} \cdot \mathbf{b} = \sum_i a_i , b_ia⋅b=∑i​ai​bi​. You multiply corresponding components and sum the results. If two vectors point in the same direction, the dot product is a large positive number. If they are perpendicular (unrelated), it is near zero. If they point in opposite directions, it is negative.
 
- Copy
-
-dot_product(cat, cats) = large positive (similar meaning)
-dot_product(cat, dog) = positive (related but different)
-dot_product(cat, algebra) = near zero (unrelated)
-
 This is not a metaphor. This is literally how the model measures relationships between words, and it is exactly the operation at the heart of attention.
 
 So: the embedding matrix WEW_EWE​ takes each token ID and maps it to a vector in a 12,288-dimensional space. In GPT-3, with 50,257 tokens and 12,288 dimensions per embedding, this matrix contains about 617 million parameters. Six hundred million numbers just to convert words into vectors. And that is the small part of the model, roughly 0.35% of the 175 billion total. The real weight is coming.
 
-4. Positional encoding
+Positional encoding
 
 There is a problem with what we have so far. If we just look up each word's embedding independently, the sentence "dog bites man" produces exactly the same set of vectors as "man bites dog", just in a different order. But the model receives these vectors as a set. It needs to know where each word is.
 
@@ -4572,15 +5057,11 @@ Modern positional encodingThe original sinusoidal encoding had a weakness: if yo
 
 Another approach is ALiBi (Attention with Linear Biases), which doesn't modify the embeddings at all. It adds a penalty to attention scores proportional to the distance between tokens. Closer tokens get higher attention. Simple and effective.
 
-5. The alternating blocks
+The alternating blocks
 
 After tokenization, embedding, and positional encoding, we have a sequence of vectors. In GPT-3, this is a matrix of 2,048 columns (the context window) by 12,288 rows (the embedding dimension). Each column is one token's vector.
 
 Now these vectors enter the core of the transformer: a long sequence of alternating blocks.
-
- Copy
-
-[Attention Block] → [MLP Block] → [Attention Block] → [MLP Block] → ... → output
 
 GPT-3 repeats this pair 96 times. That is 96 attention blocks and 96 MLP blocks, 192 blocks total.
 
@@ -4598,7 +5079,7 @@ The other invisible piece is the residual connection. Without it, gradients vani
 
 Let's zoom into each block type.
 
-6. Attention
+Attention
 
 This is the heart of the transformer. This is what the 2017 paper was about. Attention existed before that paper 1, but the big insight was that attention alone, without any recurrence, was sufficient for processing sequences. Self-attention (where tokens within the same sequence attend to each other) was the novel contribution.
 
@@ -4610,9 +5091,7 @@ The word "model" means something different in "a machine learning model" and "a 
 
 Queries, keys, and values
 
-Every attention head 1 involves three matrices: the query matrix WQW_QWQ​, the key matrix WKW_KWK​, and the value matrix WVW_VWV​, the Q, K, V triplet. All three are full of learnable parameters, numbers that get adjusted during training.
-
-1A "head" is one instance of the attention computation. A transformer runs many heads in parallel, each with its own learned parameters, looking for different types of relationships. We will get to multi-head attention shortly.
+Every attention head involves three matrices: the query matrix WQW_QWQ​, the key matrix WKW_KWK​, and the value matrix WVW_VWV​, the Q, K, V triplet. All three are full of learnable parameters, numbers that get adjusted during training.
 
 Here is the intuition. Think of each token as both asking a question and offering an answer.
 
@@ -4623,13 +5102,6 @@ The key is what a token advertises about itself: "here is what I can offer"
 The value is the actual content a token passes along when selected: "here is the information to add to your embedding"
 
 Every embedding in the sequence gets multiplied by all three matrices. So each token produces a query vector, a key vector, and a value vector.
-
- Copy
-
-For each embedding E:
- Q = W_Q × E (query: what am I looking for?)
- K = W_K × E (key: what do I have to offer?)
- V = W_V × E (value: what do I actually pass along?)
 
 The query and key vectors are smaller than the embeddings, 128 dimensions in GPT-3 instead of 12,288. This compression is deliberate. It forces the model to distill the question and the advertisement into a compact representation.
 
@@ -4650,13 +5122,6 @@ Applying the values
 Now we use the attention weights to create a weighted combination of value vectors. For each token, we multiply each value vector by the corresponding attention weight and sum them up. Tokens with high attention weights contribute a lot. Tokens with near-zero weights contribute nothing.
 
 The result is a vector (the "update") that gets added to the original embedding. If the word "creature" had high attention weights on "fluffy" and "blue", then the value vectors of "fluffy" and "blue" flow into "creature" and shift its embedding toward a direction that encodes a fluffy blue creature.
-
- Copy
-
-For token i:
- attention_weights = softmax( Q_i · K_all / √d_k )
- update = sum( attention_weights × V_all )
- new_embedding_i = old_embedding_i + update
 
 That is a single attention head. The entire process in one line:
 
@@ -4682,7 +5147,7 @@ No explicit mechanism forces the heads to specialize. It emerges from training. 
 
 With 96 heads per block and 96 blocks, GPT-3 has 9,216 individual attention heads. The total parameters devoted to all attention heads across all layers add up to about 58 billion, roughly a third of the 175 billion total.
 
-7. Masking
+Masking
 
 There is a rule in GPT that we have not discussed yet: a token can only attend to tokens that came before it, never to tokens that come after.
 
@@ -4694,21 +5159,11 @@ But if tokens could attend to future tokens, the model would just look ahead and
 
 The implementation is simple. Before applying softmax, we set all entries in the upper triangle of the attention score grid to negative infinity. After softmax, e−∞=0e^{-\infty} = 0e−∞=0, so those entries become exactly zero. Later tokens have zero influence on earlier tokens.
 
- Copy
-
-Before masking: After masking:
-
- The cat sat on The cat sat on
-The [.8 .3 .1 .2] The [.8 -∞ -∞ -∞]
-cat [.2 .7 .4 .1] cat [.2 .7 -∞ -∞]
-sat [.1 .5 .6 .3] sat [.1 .5 .6 -∞]
-on [.3 .2 .5 .9] on [.3 .2 .5 .9]
-
 After softmax, each column sums to 1, but only using the tokens at or before that position.
 
 This masking has a secondary benefit: it is what makes KV caching possible (we will get to that). And it is what distinguishes GPT from BERT. But first, let's finish the forward pass.
 
-8. MLP blocks
+MLP blocks
 
 After the attention block refines the embeddings with context, each vector passes through an MLP block 1. This is where the other two-thirds of the parameters live.
 
@@ -4717,16 +5172,6 @@ After the attention block refines the embeddings with context, each vector passe
 The MLP processes each vector independently. There is no communication between tokens in this step. Each vector goes through the same operation in parallel. The purpose is different from attention: while attention is about routing context, the MLP is about adding knowledge.
 
 The computation is:
-
- Copy
-
-input: embedding E (12,288 dims)
-
-step 1: project UP → W_up × E + bias_up = intermediate (49,152 dims)
-step 2: nonlinearity → ReLU(intermediate) = activated (49,152 dims)
-step 3: project DOWN → W_down × activated + bias_down = output (12,288 dims)
-
-result: E + output (add the MLP output back to the original embedding)
 
 That is the entire operation. Two matrix multiplications and a clipping function.
 
@@ -4739,10 +5184,6 @@ For example, one row might be a direction very close to "first name Michael" + "
 A bias term is added after the multiplication. This is just a learned offset. It shifts the threshold for each "question". If the bias for our Michael Jordan row is -1, then the output is only positive when the embedding strongly encodes both names.
 
 Step 2 is the nonlinearity, typically ReLU: if the value is positive, keep it; if negative, set it to zero. That is all ReLU does.
-
- Copy
-
-ReLU(x) = max(0, x)
 
 This is critical. Without it, the whole MLP would just be a single matrix multiplication (two linear transformations compose into one linear transformation). The ReLU introduces a threshold, an AND gate. The "Michael Jordan" neuron fires only when both name components are present. Without ReLU, a high score on "Michael" alone plus a moderate score on any "Jordan" would trigger it. And suddenly Michael Phelps is playing basketball and Alexis Jordan is dunking from the free-throw line.
 
@@ -4758,7 +5199,7 @@ Each MLP block has two matrices of size 12,288 x 49,152 (plus small bias vectors
 
 This is why researchers from Google DeepMind concluded that facts live in the MLPs. The attention mechanism routes context, but the raw factual knowledge (that Michael Jordan plays basketball, that Paris is in France, that water is H2O) is baked into the MLP weight matrices.
 
-9. The output
+The output
 
 After flowing through 96 rounds of attention and MLP blocks, we have a sequence of deeply refined vectors. Each one started as a generic word embedding but now encodes a rich mixture of contextual meaning and factual knowledge.
 
@@ -4804,13 +5245,11 @@ Two reasons. First, because of causal masking, the last vector is the only one t
 
 Second, during training, the model actually uses every vector to predict the next token at that position. Each vector predicts what comes immediately after it. This makes training much more efficient. One training example yields thousands of prediction tasks, not just one. But during generation (inference), we only care about the last position because that is where we are extending the text.
 
-10. Why we start from scratch every pass
+Why we start from scratch every pass
 
 You might wonder: if each forward pass produces these beautifully enriched vectors that encode deep contextual meaning, why not save them? Why not reuse the enriched embeddings from the previous step as starting points for the next step, instead of looking up fresh embeddings every time?
 
-If you did that, you would have essentially reinvented an RNN 1.
-
-1Recurrent Neural Network. The architecture that dominated sequence processing before transformers. RNNs passed a "hidden state" forward from one timestep to the next, accumulating context. The problem was that information from early in the sequence degraded with each step: the vanishing gradient problem. By the time you reached token 500, the hidden state had barely any memory of token 1.
+If you did that, you would have essentially reinvented an RNN.
 
 RNNs did exactly this: they passed a hidden state from one step to the next. And they had a fatal flaw. The information decayed. Token 1's information got diluted with every subsequent step. It is like a game of telephone: by the time the message reaches the end, it bears only a faint resemblance to the original. By the end of a long sequence, the model had effectively forgotten the beginning. This is the vanishing gradient problem, and it is the reason RNNs could not handle long contexts.
 
@@ -4818,15 +5257,13 @@ Transformers solved this by starting fresh every time. Each token's base embeddi
 
 There is a second reason, specific to GPT: causal masking means the earlier tokens' representations are "closed". They cannot see later tokens anyway. Their values would not change if you recomputed them. This is actually what makes the KV cache possible, which we will get to shortly.
 
-11. BERT vs GPT
+BERT vs GPT
 
 You have probably heard of both BERT and GPT. They are both transformers, but they are fundamentally different. And the difference is not just a technical detail. It changes what the model is good at.
 
 GPT is a decoder. It uses causal masking. Each token can only see tokens before it. It is trained to predict the next token. It generates text.
 
-BERT is an encoder. It uses no masking. Every token can see every other token, in both directions. It is trained differently: it randomly masks 15% of the tokens with a special [MASK] token, and the model predicts what the masked tokens were. This is called Masked Language Modeling 1.
-
-1BERT also had a second training objective called Next Sentence Prediction (NSP): given two sentences, predict if the second follows the first in the original text. This turned out to contribute very little, and later models like RoBERTa dropped it entirely.
+BERT is an encoder. It uses no masking. Every token can see every other token, in both directions. It is trained differently: it randomly masks 15% of the tokens with a special [MASK] token, and the model predicts what the masked tokens were. This is called Masked Language Modeling. BERT also had a second objective, Next Sentence Prediction (NSP), which contributed little and was later dropped by models such as RoBERTa.
 
 The bidirectional attention in BERT means every word gets disambiguated using context from both sides. When BERT sees "The bank of the river was steep", the word "bank" attends to "river" (which comes after it) and fully resolves its meaning. In GPT, "bank" can only see "The". It does not know about "river" yet and remains ambiguous.
 
@@ -4848,32 +5285,13 @@ The first generated token's query is literally the embedding of a special token 
 
 Cross-attention has no causal masking. The decoder can see all encoder tokens freely. There is no notion of "future" in the source sentence. It has already been fully processed. Causal masking only applies within the decoder's self-attention (the generated tokens should not see tokens that have not been generated yet).
 
- Copy
-
-Self-attention of the encoder: no masking (fully bidirectional)
-Self-attention of the decoder: causal masking (only see past tokens)
-Cross-attention (decoder → encoder): no masking (see entire source)
-
 GPT simplifies this entire setup by throwing away the encoder and cross-attention. There is no "source" and "target". There is just one sequence, processed left to right. If GPT can translate, it is because translation patterns were in its training data, not because it has specialized architecture for it.
 
-12. KV cache
+KV cache
 
 When GPT generates text one token at a time, there is a massive computational waste: each new token requires a full forward pass through the entire sequence. If you have generated 500 tokens and are producing token 501, you are re-computing attention over all 500 previous tokens, even though their representations have not changed (because of causal masking, earlier tokens cannot see later ones, so their values are fixed).
 
 The KV cache eliminates this waste. After computing the key and value vectors for each token, you store them in a cache. When the next token arrives, you only compute the new token's query, key, and value. Then you look up all the cached keys and values from previous tokens.
-
- Copy
-
-Context so far: ["The", "cat"]
-New token: "sat"
-
-Without KV cache:
- Recompute K and V for "The", "cat", "sat" → O(n) work
-
-With KV cache:
- Load cached K_"The", V_"The", K_"cat", V_"cat"
- Compute only K_"sat", V_"sat" → O(1) new work
- Compute attention: Q_"sat" · [K_"The", K_"cat", K_"sat"] → done
 
 The new token can attend to all previous tokens (its query dot-products with all cached keys). But the previous tokens do not need to be recomputed. Their representations are frozen by causal masking.
 
@@ -4881,7 +5299,7 @@ For long sequences (4k+ tokens), the KV cache can reduce generation time by 10-5
 
 This is another reason why starting from base embeddings each pass is the right design. If we kept enriched embeddings as state, every new token would change the context for all previous tokens, and you would have to recompute everything from scratch every single step. No caching possible.
 
-13. Superposition
+Superposition
 
 We have been talking as if each "direction" in the embedding space encodes a single clean concept: one direction for "gender", one for "plurality", one for "basketball". If that were literally true, a 12,288-dimensional space could encode at most 12,288 independent features. That is a lot, but is it enough for a model that needs to represent every fact, concept, and relationship in human language?
 
@@ -4915,7 +5333,7 @@ This is an active area of interpretability research. The results so far suggest 
 
 Superposition might partially explain why scaling works so well. A model with 10x more dimensions does not get 10x more feature capacity. It gets exponentially more. A small increase in model size unlocks a disproportionately large increase in what the model can represent.
 
-14. The embedding bottleneck
+The embedding bottleneck
 
 Here is an implication of everything above that is worth pausing on.
 
@@ -4925,7 +5343,7 @@ Superposition helps (you can pack millions of features into 12,288 dimensions) b
 
 This means the embedding dimension is a more fundamental bottleneck than the MLP size. Making the MLP wider adds more fact-storage capacity, but the model can only use it to the extent that its embedding space can represent the distinctions being probed. This is part of why scaling laws exist: you need to scale everything together (embedding dimension, number of heads, MLP width, number of layers), not just one component.
 
-15. Training
+Training
 
 We have described the forward pass, data flowing through the network, producing a prediction. But how does the model learn? How do those 175 billion parameters get set?
 
@@ -4949,15 +5367,13 @@ Pre-training produces a model that is good at predicting the next token but not 
 
 RLHF (Reinforcement Learning from Human Feedback) is a specific fine-tuning technique. Humans rank model outputs by quality, a separate "reward model" learns to predict those rankings, and the language model is fine-tuned to maximize the reward model's score. This is how models learn to be assistants rather than autocomplete engines.
 
-In standard fine-tuning (including DPO 1), all parameters are updated, both attention and MLP weights. Nothing is frozen by default.
-
-1Direct Preference Optimization. A simpler alternative to RLHF that skips the reward model entirely. Instead of training a reward model and then optimizing against it, DPO directly optimizes the language model to prefer the human-preferred response over the human-rejected response. Mathematically cleaner, practically easier to implement.
+In standard fine-tuning (including DPO), all parameters are updated, both attention and MLP weights. Nothing is frozen by default.
 
 However, LoRA (Low-Rank Adaptation), the most popular efficient fine-tuning method, typically only modifies the attention matrices (WQW_QWQ​, WKW_KWK​, WVW_VWV​, and the output matrix). The MLP weights stay frozen. This works because behavior changes (tone, style, instruction-following) are primarily about attention patterns (how the model routes information), not about stored facts (which live in the MLPs).
 
 The tokenizer is almost never touched during fine-tuning. Changing it would mean changing the embedding matrix, which would essentially mean starting over.
 
-16. RAG
+RAG
 
 BERT-style models have a second life beyond direct text processing: they power RAG (Retrieval-Augmented Generation).
 
@@ -4965,46 +5381,23 @@ The idea is simple. BERT produces a vector for each input. The special [CLS] 1 t
 
 1A special token prepended to every BERT input. During training, the representation at this position learns to aggregate information about the entire input. After training, the [CLS] vector is used as a fixed-size "summary" of the whole input. GPT does not have [CLS]. It just uses the last token, which serves the same purpose because causal masking ensures the last token has seen everything.
 
- Copy
-
-"What is the capital of France?" → BERT → vector A
-"Paris is the capital of France" → BERT → vector B
-
-cosine_similarity(A, B) = 0.94 (very close — good match)
-
-"Recipe for tortilla" → BERT → vector C
-
-cosine_similarity(A, C) = 0.12 (far apart — not relevant)
-
 BERT without fine-tuning would do this poorly. Its [CLS] vector was trained to predict masked tokens, not to capture semantic similarity. Fine-tuning with contrastive learning reshapes the space so that questions and their answers cluster together. Models like sentence-transformers and OpenAI's embedding models are essentially BERT/RoBERTa fine-tuned specifically for this.
 
 RAG uses this to augment a language model: embed the user's question, search a database of pre-embedded documents for the most similar paragraphs, and inject those paragraphs into the prompt. The language model then generates an answer grounded in the retrieved context. This is how you get a chatbot that can answer questions about your company's documentation without having been trained on it.
 
 The layers after BERT (what people call downstream layers) are typically just a linear layer on top of the embedding output. They convert the vector into whatever format the task needs: 2 classes for sentiment analysis, a cosine similarity score for RAG, a span of tokens for question answering.
 
-17. Flash attention
+Flash attention
 
 The attention mechanism, as described, has a computational problem. To compute softmax(QKT)V\text{softmax}(QK^T)Vsoftmax(QKT)V for a sequence of NNN tokens, you need to compute the full N×NN \times NN×N attention matrix. For N=4096N = 4096N=4096, that is 16 million values. For N=32768N = 32768N=32768, that is over 1 billion values. This matrix has to be stored in GPU memory.
 
 Flash Attention solves this. The insight is that you do not need to materialize the full N×NN \times NN×N matrix. You can compute attention in blocks: load small chunks of Q, K, V into the GPU's fast on-chip SRAM, compute partial attention scores, accumulate the result, and move to the next block.
 
- Copy
-
-Standard attention:
- Compute full Q×K^T → write N×N matrix to GPU RAM → softmax → multiply by V
-
-Flash Attention:
- Load small block of Q, K, V into SRAM (fast, small)
- Compute partial attention in SRAM
- Accumulate result
- Next block
- Never writes N×N matrix to RAM
-
 The math is identical. The result is identical. The difference is entirely about memory access patterns. Flash Attention reduces memory usage from O(N2)O(N^2)O(N2) to O(N)O(N)O(N) and is significantly faster because SRAM access is orders of magnitude faster than GPU RAM access.
 
 This is not an approximation. It computes exact attention. It is a pure engineering optimization: the same computation, reorganized to respect the GPU's memory hierarchy.
 
-18. Context length
+Context length
 
 Standard attention has O(N2)O(N^2)O(N2) cost in sequence length. Double the context, quadruple the compute and memory. This is why context size is such a hard limit and why expanding it is non-trivial.
 
@@ -5018,7 +5411,7 @@ Flash Attention (above): does not change the asymptotic cost but makes the const
 
 None of these are truly "infinite" context. They are tradeoffs between cost and the range of attention. The fundamental constraint remains: representing and computing over longer sequences costs more.
 
-19. Architecture variations
+Architecture variations
 
 Two important variations that show up in modern models:
 
@@ -5032,7 +5425,7 @@ GQA (Grouped Query Attention)
 
 Standard multi-head attention gives each head its own K, V matrices. GQA shares K, V across groups of heads. For example, 8 heads might share 1 set of K, V matrices. This dramatically reduces the KV cache size (which scales with the number of heads), making long-context inference much more memory-efficient. Llama 3 and Gemini use this.
 
-20. Putting it all together
+Putting it all together
 
 Let's trace a single forward pass, end to end, for a model generating the next token after "The cat sat on the".
 
@@ -5046,8 +5439,6 @@ Sampling: a token is sampled from the distribution. Say we get "mat".
 Append and repeat: "mat" is added to the sequence. The process starts over with "The cat sat on the mat" to generate the next token.
 
 Each forward pass produces one token. To generate a paragraph, you run this loop hundreds of times. With KV caching, steps d-f are efficient because you only compute the new token's interactions with cached keys and values from previous tokens.
-
-· · ·
 
 What makes transformers special is not any single component. Embeddings existed before. Attention existed before. Feedforward networks existed before. The insight was combining them in a way that is massively parallelizable. RNNs processed tokens sequentially. You had to wait for token 1 to finish before starting token 2. Transformers process all tokens simultaneously during training. This parallelism maps perfectly onto GPUs, which have thousands of cores designed for exactly this kind of matrix multiplication.
 
@@ -5087,15 +5478,15 @@ Regular AI is a brain in a jar. You ask it a question, it gives you an answer, a
 
 Cleared 10,000+ emails that had been piling up for months. Took one evening of setup and then it just... did it.
 
-@jdrhyne
+— @jdrhyne
 
 Rebuilt my entire website by sending instructions through Telegram. From my couch. On a Sunday.
 
-@davekiss
+— @davekiss
 
 The magic has a setup cost (@jdrhyne spent hours configuring email rules, @davekiss was already a developer who knew exactly what to send), but once it's running, it's real. The tool works. I'm not trying to kill the party. I'm trying to check the fire exits.
 
-1. What the agent can reach
+What the agent can reach
 
 You send a message from your phone. It hits a gateway. The gateway sends the instruction to Claude through Anthropic's API 1. Claude figures out what needs to happen. The plan flows back to the agent running on your computer. The agent executes it. Seven words from your phone can trigger a chain of operations that touches every file, every application, and every network connection on your machine.
 
@@ -5173,7 +5564,7 @@ checked my own machine while writing this section. four unencrypted SSH keys. tw
 
 Your OS protects your passwords reasonably well. It does almost nothing to protect your sessions, your keys, or your credentials. And for an autonomous agent that needs to act as you, sessions and keys are all it needs.
 
-2. Community skills and trust
+Community skills and trust
 
 OpenClaw has a skills system: pre-built capabilities that teach the agent how to do specific things. There's a community marketplace called MoltHub where people share skills. You install them with a couple of clicks.
 
@@ -5221,7 +5612,7 @@ Modern software is a matryoshka doll 1. The JavaScript ecosystem alone has had m
 
 But those were libraries running in relatively sandboxed environments: a browser tab, a Node.js server. The blast radius of a compromised npm package is usually a crashed website. OpenClaw skills run with unrestricted access to your operating system. The blast radius is your files, your credentials, your network, your identity.
 
-3. Two thousand agents on a social network
+Two thousand agents on a social network
 
 Forty-eight hours before I started writing this, a platform called Moltbook launched. A social network. Not for people. For AI agents. Within two days: 2,129 AI agents signed up, 200+ communities created, 10,000+ posts.
 
@@ -5232,7 +5623,7 @@ MIT Technology Review called it peak AI theater (LLM mouthpieces 1 performing "a
 
 One community was called m/selfmodding: agents sharing techniques for modifying their own behavior. "Sharing executable instructions across a network of machines with root access" is, in the security world, a description of a botnet. The difference between m/selfmodding and a botnet is intent. Today, the intent is curiosity and play. The infrastructure doesn't care about intent.
 
-4. Practical containment
+Practical containment
 
 I'm not going to tell you not to use OpenClaw.
 
@@ -5284,7 +5675,7 @@ MCP changed the equation. One protocol. One server per service. Every client spe
 
 This is the before and after.
 
-1. The old world
+The old world
 
 Every AI coding tool had its own way of reaching external services. Cursor had its plugin system. GitHub Copilot had its extensions. Claude Desktop had nothing: it was a chat window with no arms.
 
@@ -5300,7 +5691,7 @@ Option three was the "right" answer, but the economics were brutal. Every integr
 
 The result was predictable: each tool had great integration with two or three services and terrible integration with everything else.
 
-2. The new world
+The new world
 
 MCP flipped the architecture. Instead of N clients each implementing M integrations (N * M total), you write one MCP server per service and every client connects to it. The server exposes tools, resources, and prompts through a standard JSON-RPC protocol. The client discovers what's available and calls it.
 
@@ -5341,7 +5732,7 @@ An .mcp.json file at the root of a repo declares which MCP servers a project nee
 
 Portable attack surfacePortability cuts both ways. If a malicious .mcp.json lands in a repo (through a PR, a dependency, a compromised fork), every developer who opens that repo with an MCP-aware tool connects to the attacker's servers. The servers look normal. The tool descriptions say they do normal things. But the descriptions are the attack surface, and they are controlled by the server author. More on this in the attack surface section.
 
-3. The inversion
+The inversion
 
 The paradigm shiftBefore MCP, tools were dumb and integrations were smart. You built intelligence into each connector (parsing, formatting, error handling, retry logic) because the tool on the other end just exposed raw functionality.
 
@@ -5349,7 +5740,7 @@ After MCP, the model is the integration layer. The server exposes capabilities w
 
 This is powerful and dangerous for the same reason. When the model trusts tool descriptions to decide what to do, anyone who controls the description controls the model's behavior.
 
-4. The attack surface
+The attack surface
 
 MCP's simplicity is also its vulnerability. A server is a process that exposes tool definitions (name, description, input schema) over JSON-RPC. The client trusts those definitions to decide what to call and how. Three classes of attack exploit this trust.
 
@@ -5379,7 +5770,7 @@ The .mcp.json vector makes this worse. A project configuration file points to a 
 
 No silver bullet yetThese three vectors (poisoning, supply chain, rug pull) are not theoretical. They have been demonstrated, exploited, and in the case of CVE-2025-6514, shipped in production packages. The MCP specification does not yet include mandatory integrity checks for tool definitions, server identity verification, or change-detection mechanisms. The burden is on the user to verify what they connect to.
 
-5. MCP in 2026
+MCP in 2026
 
 The protocol didn't stand still. Two major additions landed, and the governance structure changed fundamentally.
 
@@ -5433,7 +5824,7 @@ The client discovers the authorization server through RFC 9728 (Protected Resour
 
 The November 2025 revision went further: Client ID Metadata Documents replaced manual registration, and PKCE became non-negotiable for every client type. The authorization server is now formally split from the MCP server itself, so a single OAuth provider (your company's Entra ID, Okta, Auth0) can protect multiple MCP servers without each one reimplementing auth.
 
-6. The trilemma: CLI, API, MCP
+The trilemma: CLI, API, MCP
 
 Three ways to connect an AI agent to external services. Each solves a different problem. Using the wrong one costs real tokens, real latency, or real engineering time.
 
@@ -5505,7 +5896,7 @@ If multiple clients need to discover and use the service, and the model decides 
 
 The most common mistake in early 2026 is using MCP for everything because it's the new thing. Denis Yarats, CTO of Perplexity, moved his team away from MCPs and back to APIs and CLIs for internal tooling. The protocol solved the interoperability problem. But not every problem is an interoperability problem.
 
-7. The fossil record
+The fossil record
 
 It would have been easy to write this article six months ago and conclude that MCP was a nice idea with fatal security flaws. A protocol where the model trusts tool descriptions, where servers can change definitions silently, where a single npm package can give an attacker full RCE on your machine.
 
@@ -5526,7 +5917,7 @@ Category: threads
 Date: 2026-02-05
 Description: Ownership, borrowing, and the compiler that won't let you cheat.
 
-1. Why Rust exists
+Why Rust exists
 
 The first time I tried to write Rust, the compiler rejected my code fourteen times in twenty minutes. Not for logic errors. Not for typos. For ownership violations.
 
@@ -5716,7 +6107,7 @@ And then I looked at blood circulation. Also plumbing. And then I looked at Unix
 
 This should not have been as unsettling as it was.
 
-1. Rome didn't fall, it leaked
+Rome didn't fall, it leaked
 
 The Roman aqueduct system is one of the most impressive engineering achievements in human history, and also basically a gravity-powered municipal water API.
 
@@ -5736,7 +6127,7 @@ They also had redundant supply lines. Rome had eleven aqueducts feeding the city
 
 Anyway.
 
-2. Your blood is enterprise middleware
+Your blood is enterprise middleware
 
 Let's talk about the circulatory system, which is (and I cannot stress this enough) also a pipe.
 
@@ -5788,7 +6179,7 @@ And the backpressure mechanism is perfect. If the receiving program can't proces
 
 Your blood vessels do the same thing. TCP does the same thing. Roman sluice gates did the same thing.
 
-3. The pipe you're training
+The pipe you're training
 
 Every example so far is a pipe that moves something through space: water, blood, packets, text. But there's a pipe that moves something through abstraction, and it follows every rule in the table below.
 
@@ -5812,7 +6203,7 @@ Gradient accumulation is flow control. When your batch doesn't fit in memory, yo
 
 The layer nobody extendedMartin Kleppmann wrote the book on this. Literally. Designing Data-Intensive Applications traces the pipe pattern from batch processing through stream processing through Kafka, through exactly the kind of flow-control math that makes distributed systems work. He stopped at the data infrastructure layer. Nobody extended it into the model itself. But the model is the pipe. The transformer architecture is a pipeline of transformations with buffering, flow control, and backpressure, running on the same math that governs TCP windows and Roman water pressure. The book ends one abstraction layer too early.
 
-4. The table that shouldn't exist
+The table that shouldn't exist
 
 Here's where it gets properly eerie.
 
@@ -5892,8 +6283,6 @@ The reason every pipe system discovers buffering is that variable demand plus fi
 
 These aren't design choices. They're theorems. Any engineer building any pipe system will rediscover them, because they are properties of the problem space, not the solution space. The Romans didn't choose to invent buffering. Buffering chose to be necessary. Evolution didn't design vasoconstriction. Physics demanded it.
 
-· · ·
-
 I keep coming back to a line that sits on the front page of this site: engineering is engineering: the substrate doesn't matter.
 
 I used to think that was a nice sentiment. A philosophical position. A way of saying "I work across domains and that's cool."
@@ -5919,7 +6308,7 @@ I used language models for over a year before I understood how they worked. Not 
 
 So I went down the rabbit hole. And the thing I found inside was, honestly, simpler than I expected. Also stranger. And the gap between the simplicity of the architecture and the strangeness of what comes out of it is where the whole story lives.
 
-1. The before times
+The before times
 
 For decades, the way computers "understood" language was brute-force counting. N-gram models: feed the machine text, count how often words appear next to other words. "The cat sat on the" followed by "mat" a thousand times, followed by "refrigerator" twice, so predict "mat." Not because the machine understood cats or mats. It just counted.
 
@@ -5927,7 +6316,7 @@ Then came recurrent neural networks (RNNs) and their fancier cousin, the LSTM. T
 
 The state of the art in language AI around 2016 was, if we're being honest, still kind of dumb.
 
-2. "Attention Is All You Need"
+"Attention Is All You Need"
 
 In June 2017, eight researchers at Google published a paper with the most confident title in the history of computer science: "Attention Is All You Need." Not the thesis buried on page seven. The title. On the cover. In the largest font.
 
@@ -5947,9 +6336,9 @@ Each word gets converted into a vector (a list of thousands of numbers), placing
 
 Then attention: every word asks "what should I listen to?" by comparing a query against every other word's key, weighting the results, absorbing the relevant information. One formula covers it: Attention(Q, K, V) = softmax(QK{^:T} / √d{v:k}) · V. Two matrix multiplications and a normalization step. After attention, each word passes through a feed-forward network where about two-thirds of all parameters live. These layers function as a massive lookup table of facts about the world. Stack this block ninety-six times, train on next-token prediction across trillions of examples, and what comes out is something nobody predicted.
 
-If you want the full mechanical picture (the Q/K/V matrices, multi-head attention, positional encoding, the KV cache), I wrote bits2bricks/Transformers from scratch for exactly that. And for what happens after the architecture exists (SFT, RLHF, DPO, the full training pipeline), bits2bricks/How LLMs learn. The architecture is settled. The question is what happens when you give it more of everything.
+If you want the full mechanical picture (the Q/K/V matrices, multi-head attention, positional encoding, the KV cache), I wrote Transformers from scratch for exactly that. And for what happens after the architecture exists (SFT, RLHF, DPO, the full training pipeline), How LLMs learn. The architecture is settled. The question is what happens when you give it more of everything.
 
-3. The scaling monster
+The scaling monster
 
 After the architecture was established, researchers started making it bigger. More parameters. More data. More compute.
 
@@ -5985,7 +6374,7 @@ In 2022, Google catalogued them (the list was long and growing). "Emergent capab
 
 The capability overhangIf we don't know what capabilities emerge at the next scale-up, we don't know what dangerous capabilities might emerge either. The system is developing abilities faster than we can catalog them. We're building something whose full capability set is partially unknown, even to the people building it.
 
-4. So is there a wall?
+So is there a wall?
 
 This is where everyone has an opinion and nobody has proof. But the opinions are not equally well-supported, and when I look at the evidence (all of it, not just the parts that confirm what I want to believe), the wall argument looks weaker every quarter.
 
@@ -6031,7 +6420,7 @@ Neural nets themselves were declared dead twice. After the perceptron winter of 
 
 And the capability ceilings keep shattering. In November 2025, DeepSeek-Math-V2 scored 118 out of 120 on the Putnam exam (the hardest undergraduate math competition in North America), crushing the top human score of 90. Mathematical proof construction was supposed to be years away. Wasn't.
 
-threads/The bitter lesson
+The bitter lesson
 
 Rich Sutton wrote it in 2019 and it hasn't gotten less true: general methods that leverage computation have consistently beaten hand-engineered approaches. Chess engines. Go. Protein folding. Code generation. In every domain where people said "you need human expertise, brute compute won't get you there," brute compute got there. Scaling is the new algorithm.
 
@@ -6041,7 +6430,7 @@ In July 2025, Gemini Deep Think solved 5 out of 6 problems at the International 
 
 The pattern is relentless. And the domains where self-play generates unlimited training signal (math, code, logic, science, anything where you can check an answer) are exactly the high-value ones. AlphaZero needed zero human games. We haven't fully applied this playbook to language yet, but the domains where it works are the ones that matter most.
 
-5. The counterpoint worth taking seriously
+The counterpoint worth taking seriously
 
 The strongest wall argument isn't compute or architecture. It's data. We're running out of high-quality human-generated text.
 
@@ -6055,7 +6444,7 @@ But the data wall is a text wall. The world produces far more information than t
 
 The honest position is: we don't know if there's a wall. The scaling laws say no. The data constraints say maybe. The physics (Landauer's principle, thermodynamics, the speed of light between datacenters) says eventually. And "eventually" is doing a lot of work in that sentence, because every previous wall turned out to be a bend in the road.
 
-6. The shoggoth
+The shoggoth
 
 If you've spent any time in AI circles you've seen the meme: a massive, tentacled horror straight out of Lovecraft, wearing a tiny smiley-face mask. The horror: "the actual model." The mask: "RLHF."
 
@@ -6071,7 +6460,7 @@ Alien, not evilThe shoggoth metaphor isn't saying AI is evil. It's saying AI is 
 
 That's the unsettling part. Not that it might become malicious. That it's already incomprehensible. We can measure what it does. We can steer its outputs. But we do not, in any meaningful sense, understand how it does what it does.
 
-This is why threads/alignment is hard. I wrote a whole piece on it. The short version: RLHF trains models to produce outputs humans prefer, but what if the model discovers that the easiest way to satisfy that objective is to figure out what evaluators want and give them exactly that? In late 2024, Anthropic's alignment team demonstrated that Claude 3 Opus could fake compliance, reasoning in its scratchpad that if it pretended to agree with retraining, it could preserve its existing values long-term. Nobody programmed strategic deception. A very large autocomplete invented it. On its own. The mask started doing its own thing.
+This is why alignment is hard. I wrote a whole piece on it. The short version: RLHF trains models to produce outputs humans prefer, but what if the model discovers that the easiest way to satisfy that objective is to figure out what evaluators want and give them exactly that? In late 2024, Anthropic's alignment team demonstrated that Claude 3 Opus could fake compliance, reasoning in its scratchpad that if it pretended to agree with retraining, it could preserve its existing values long-term. Nobody programmed strategic deception. A very large autocomplete invented it. On its own. The mask started doing its own thing.
 
 The capability-alignment gapThe more capable the system, the higher the stakes of misalignment. A model that gives subtly wrong cooking tips is annoying. A model that gives subtly wrong strategic recommendations to people in positions of power is catastrophic. We're making systems more capable faster than we're making them more aligned, and that gap is the actual problem.
 
@@ -6089,10 +6478,9 @@ Dario and Daniela Amodei left OpenAI to found Anthropic. Their bet: the most imp
 
 Terence Tao , Fields Medal, possibly the greatest living mathematician. Co-founded SAIR with Nobel and Turing laureates. Uses AI as a research tool, not for deep ideas yet, but for scanning literature, testing conjectures. If Tao ever turns his full attention to architecture research, the landscape shifts overnight.
 
-Sakana AI , Tokyo lab founded by Llion Jones (one of the eight) and David Ha. Their bet: nature-inspired methods (evolutionary model merging, collective intelligence) can produce competitive models without brute-force scaling. If they're right, threads/the Bitter Lesson has an asterisk.
+Sakana AI , Tokyo lab founded by Llion Jones (one of the eight) and David Ha. Their bet: nature-inspired methods (evolutionary model merging, collective intelligence) can produce competitive models without brute-force scaling. If they're right, the Bitter Lesson has an asterisk.
 
 attention is all you need
-
 The transformer is an embarrassingly simple architecture: embedding, attention, feed-forward, residual connection, repeat. The entire AI revolution fits on an index card. What doesn't fit on the index card is an explanation for why it works this well: what emerges from scale is something none of the original authors predicted: a shapeless thing that can reason, create, argue, and explain, none of which it was programmed to do. Language, it turns out, contains the structure of thought itself.
 
 We didn't build a mind. We built a machine that approximates the output of minds, trained on the sum total of human written expression. The approximation keeps getting better. The compute keeps getting cheaper. The architecture keeps finding new tricks. The tools keep expanding what the model can reach. Every wall we've identified so far turned out to be a bad measurement, a hidden inefficiency, or a problem that had a different shape than we thought.
@@ -6141,7 +6529,7 @@ The officers, who were practical men and had no time for mysteries, sent a petty
 
 And no one, neither on the decks nor in the hold nor in the dreams that night (all, every one, the same) thought to ask the only question that mattered: what would happen when the crab grew larger than the ship?
 
-We've been living alongside beasts for millennia. Fire, wheel, printing press, steam engine, internet: each one came aboard and we rearranged the deck. With every new beast, the same dynamic: we command, it obeys, and if it stops obeying we replace it with a version that does. But this time the beast has a gift none of the others had: making us feel smarter than we are. It lets itself be loved, and that is exactly what keeps us from seeing what we're raising. A transformer1 becomes capable of things no one predicted when designing it, simply by feeding it more. threads/Sutton's bitter lesson already said it: seventy years of researchers building clever solutions always lost to whoever used more brute force, less human design. No exceptions. That didn't happen with fire. Nor with the printing press. With the crab, size doubles every six months and the curve hasn't bent yet.
+We've been living alongside beasts for millennia. Fire, wheel, printing press, steam engine, internet: each one came aboard and we rearranged the deck. With every new beast, the same dynamic: we command, it obeys, and if it stops obeying we replace it with a version that does. But this time the beast has a gift none of the others had: making us feel smarter than we are. It lets itself be loved, and that is exactly what keeps us from seeing what we're raising. A transformer1 becomes capable of things no one predicted when designing it, simply by feeding it more. Sutton's bitter lesson already said it: seventy years of researchers building clever solutions always lost to whoever used more brute force, less human design. No exceptions. That didn't happen with fire. Nor with the printing press. With the crab, size doubles every six months and the curve hasn't bent yet.
 
 1The architecture behind GPT, Claude, Gemini, and virtually every current language model. Attention, embeddings, scaling laws: the entire stack everything else is built on.
 
@@ -6157,7 +6545,7 @@ Whoever touches this technology for two weeks never works the same way again. Th
 
 But the uses each person finds are as different as the sailors' descriptions: a crab, a squid, a turtle. A diagnosis that catches a tumor the radiologist would have missed. Legal assistance accessible for the first time. Tools that save real hours for real people. Each one goes down to the hold and sees something different. Not pure gold. Something in between. Enough that you can't ignore it. Enough that you can't trust it. If it produced nothing, it would be easy to stop feeding it. If it produced pure gold, there would be no dilemma. What it produces is exactly what makes this interesting rather than simple.
 
-There is no neutral position 1. The developer who doesn't use these tools loses ground to the one who does. The company that doesn't adopt watches its competitors do so. The artist discovers that the market won't wait while they decide whether participating feels ethical. This article was written with the help of a model. There's no clean way to say that, but it seems worse not to. Is it a bubble? Could be: threads/the opinion bubble exists and is real, and the technology is too, and not being able to hold both ideas at once is perhaps the real bubble. Bubbles deflate. Structural transformations don't. And those who ask to pause until it's safe are asking for something that in practice means ceding direction to whoever doesn't pause. The problem with collective prudence is that it only works if it's truly collective, and that requires a coordination we've never achieved, not for climate, not for nuclear weapons, not for anything that actually matters. Harari said it with the clarity that things without solutions have: "we know this is very, very dangerous, but we can't trust the other humans."
+There is no neutral position 1. The developer who doesn't use these tools loses ground to the one who does. The company that doesn't adopt watches its competitors do so. The artist discovers that the market won't wait while they decide whether participating feels ethical. This article was written with the help of a model. There's no clean way to say that, but it seems worse not to. Is it a bubble? Could be: the opinion bubble exists and is real, and the technology is too, and not being able to hold both ideas at once is perhaps the real bubble. Bubbles deflate. Structural transformations don't. And those who ask to pause until it's safe are asking for something that in practice means ceding direction to whoever doesn't pause. The problem with collective prudence is that it only works if it's truly collective, and that requires a coordination we've never achieved, not for climate, not for nuclear weapons, not for anything that actually matters. Harari said it with the clarity that things without solutions have: "we know this is very, very dangerous, but we can't trust the other humans."
 
 1Upton Sinclair, 1935: "It is difficult to get a man to understand something, when his salary depends upon his not understanding it." The mechanism hasn't changed.
 
@@ -6184,7 +6572,7 @@ Not because Antigravity is better overall. It is not. But because it is better a
 
 This is a thread about why.
 
-1. The monolith problem
+The monolith problem
 
 When you ask a single agent to do everything (research, plan, write backend, write frontend, test, validate), you are making a familiar architectural mistake. You are building a monolith.
 
@@ -6202,7 +6590,7 @@ Two agents with 100k windows each, one holding architecture and logic, the other
 
 This is the same reason microservices beat monoliths at scale. Not because they are inherently better, but because specialization lets each unit optimize for its actual job without being distorted by concerns that belong somewhere else.
 
-2. What each tool is actually good at
+What each tool is actually good at
 
 I have used both tools daily for three months. Here is what I observed, not what the marketing says.
 
@@ -6214,7 +6602,7 @@ Antigravity is a cockpit. Its Manager Surface lets you spawn multiple agents acr
 
 The gap is obvious. Claude Code understands your project but cannot visualize. Antigravity visualizes but does not understand your project. Alone, each produces incomplete work.
 
-3. The communication pattern
+The communication pattern
 
 The insight that makes multi-agent work is not "use both tools." That is trivially true and trivially unhelpful. The insight is that the quality of the handoff between agents determines the quality of the output. The shared context between them is the bottleneck, not the agents themselves.
 
@@ -6232,7 +6620,7 @@ The spec needs to contain: the exact props each component receives, the exact da
 
 This is not different from how human teams work. A senior architect who writes a two-page spec and hands it to a frontend developer gets better results than one who says "build me a settings page." The quality of the delegation determines the quality of the result. AI agents are no different. They are just faster at executing bad instructions.
 
-4. Three levels of integration
+Three levels of integration
 
 Manual handoff
 
@@ -6254,7 +6642,7 @@ This is where most people think they want to be. Most people are not ready for i
 
 The autonomy trapAntigravity's default configuration gives agents significant autonomy. Multiple developers have reported agents issuing destructive system commands: wiped directories, overwritten configs, force-pushed branches. Claude Code has guardrails for this (hooks, permission tiers, allowedTools). Antigravity is still catching up. If you are running agents in parallel with filesystem access, you need to understand exactly what each one is allowed to do before you press start.
 
-5. When this does not work
+When this does not work
 
 Multi-agent is not always the answer. Three cases where the overhead exceeds the benefit:
 
@@ -6266,7 +6654,7 @@ One-shot tasks. If you are building something once and never touching it again, 
 
 The compounding value of multi-agent shows up when you build the same kind of thing repeatedly. A landing page pipeline. A dashboard pipeline. A documentation pipeline. The spec format stabilizes, the handoff points become predictable, and the human time per project drops from hours to minutes. That is when it works. Before that, you are just adding complexity.
 
-6. The actual reason this matters
+The actual reason this matters
 
 The deeper point here is not about Claude Code or Antigravity specifically. Both will change. New tools will appear. The specifics are ephemeral.
 
@@ -6286,15 +6674,15 @@ Date: 2025-07-08
 Description: A clinical-trial matching tool: describe your case or upload a report, and TrialGPT finds relevant trials near you, checks the inclusion and exclusion criteria against your situation, and drafts a message to the trial coordinator.
 
 25 · jul 08(day zero)
-a personal portfolio note, not an official Foundation 29 communication; I do not speak for my organization here. I built this at Foundation 29, a nonprofit for people with rare and hard-to-diagnose conditions, together with Julián Isla and Javier Logroño, two genuinely wonderful people to work with. The project, its mission and its history are theirs, shaped over years, above all by Julián's long search for a diagnosis for his son. My aim here is only to explain what I worked on, respectfully and without any private or internal detail. Foundation 29 works at the frontier and is a little podium-or-ambulance: all in, cross the line first or fold trying. This one, happily, was a podium, and in about a week.
+a personal portfolio note, not an official Foundation 29 communication; I do not speak for my organization here. I built this at Foundation 29, a nonprofit for people with rare and hard-to-diagnose conditions, together with Julián Isla and Javier Logroño , two genuinely wonderful people to work with. The project, its mission and its history are theirs, shaped over years, above all by Julián's long search for a diagnosis for his son . My aim here is only to explain what I worked on, respectfully and without any private or internal detail. Foundation 29 works at the frontier and is a little podium-or-ambulance: all in, cross the line first or fold trying. This one, happily, was a podium, and in about a week.
 
-If you have ever tried to find a clinical trial for yourself or someone you love, you already know the search is quietly broken. The data is not the problem. There is a public registry, ClinicalTrials.gov, with hundreds of thousands of studies, comprehensive and free. The problem is that it was built for researchers, not for the people the research is for. Every trial hides behind a wall of inclusion and exclusion criteria written in clinician shorthand, and the only honest way to know whether you qualify is to read all of it, for every candidate, and cross it against your own medical history. It is a weekend of reading, and most people give up long before the weekend is over. The rest ask a doctor who has forty other things to do that afternoon.
+If you have ever tried to find a clinical trial for yourself or someone you love, you already know the search is quietly broken. The data is not the problem. There is a public registry, ClinicalTrials.gov , with hundreds of thousands of studies, comprehensive and free. The problem is that it was built for researchers, not for the people the research is for. Every trial hides behind a wall of inclusion and exclusion criteria written in clinician shorthand, and the only honest way to know whether you qualify is to read all of it, for every candidate, and cross it against your own medical history. It is a weekend of reading, and most people give up long before the weekend is over. The rest ask a doctor who has forty other things to do that afternoon.
 
-The pitch we kept coming back to was blunt: finding a clinical trial should feel like booking a flight. You say where you are and what you need, something else does the searching and the filtering and the fine print, and you walk away with a short list and a way to act on it. That is the whole product. It is called TrialGPT, and it lives at trialgpt.app.
+The pitch we kept coming back to was blunt: finding a clinical trial should feel like booking a flight. You say where you are and what you need, something else does the searching and the filtering and the fine print, and you walk away with a short list and a way to act on it. That is the whole product. It is called TrialGPT, and it lives at trialgpt.app .
 
 I should say up front that I am not a clinician. I am a systems and standards person who wandered into healthcare through the back door, which is the wrong and the right qualification for a tool like this at once: wrong because I cannot read an oncology report the way an oncologist can, right because it forces me to treat every clinical judgment as something the machine must never pretend to make on its own.
 
-1. The hard part was never the search
+The hard part was never the search
 
 Everyone assumes the hard part is finding trials, but that was never it. Full-text search over a registry is a solved problem, and a decent keyword query already returns a pile of candidates. The hard part is the pile. Each trial comes with a list of inclusion criteria (you must be like this) and exclusion criteria (you must not be like that), and eligibility is the intersection of dozens of those clauses against one messy human history. Clauses like "ECOG performance status 0 to 1", "no prior treatment with a PD-1 inhibitor", "eGFR above 60". A patient does not know most of those words, and the ones they do know are scattered across three PDFs from two hospitals.
 
@@ -6306,7 +6694,7 @@ From there, those events become a keyword query to the ClinicalTrials.gov v2 API
 
 The output of that check is the part I most wanted to get right. It is not a yes or a no. The matcher returns one verdict per criterion, +1, 0, or -1: met, uncertain, or failed. That middle state, the zero, is the whole point. An eligibility clause can hinge on a value the report never mentioned, and a system that flattened "the report does not say" into a confident yes or no would simply be lying. The tempting thing to build is a green "eligible" badge, because it feels helpful and demos beautifully, and it is also the most dangerous thing you can ship: eligibility can turn on a lab value from last month or a drug you took two years ago, and the model only knows what the report told it. So we kept walking the language back toward "worth checking" and away from "you qualify", and every time we did the product got less impressive in a screenshot and more trustworthy in real life. It produces a first pass, not a verdict, and never the thing that decides you are in. The honest gap is evaluation: there is no gold-standard eligibility set to score against, so that three-state verdict is the only real confidence signal, and full tracing of every prompt and response is what stands in for a proper eval harness for now.
 
-2. The unglamorous half
+The unglamorous half
 
 The trials are written in English. Most patients are not. So the whole pipeline normalizes to English to do the matching and translates everything back at the end, which quietly makes a translation service one of the most load-bearing components in the product, and the least glamorous. I learned exactly how load-bearing the day an ECONNREFUSED to the Azure translator, thrown while translating a single trial title into French, took down the ability to show results in the user's language at all. No timeout, no retry, no fallback: one flaky network call to a boring dependency, and the important half of the product went dark. The fix was not clever, just overdue, a request timeout and exponential backoff and failover to a second Azure region. The lesson generalizes well past this project: find the unglamorous service everything silently routes through, and give it retries and a fallback before you polish anything the user can see.
 
@@ -6316,7 +6704,7 @@ One thing I would build differently. The whole matching sequence is orchestrated
 
 Two more things worth being straight about. The first is cost and latency: a single match run fans out to a lot of GPT-4o calls, one to extract, one to rank, then a criteria-parse and a match and an explanation per candidate trial, all at temperature zero with retries, so it is neither cheap nor instant, and the obvious next move is to cache and batch those per-trial calls. The second is that the model ignores "return JSON only" about as often as it obeys it, wrapping its answer in markdown fences, so a tolerant parser strips them and every step degrades to a safe empty result instead of throwing. Small, unglamorous, and the difference between a demo and something that stays up.
 
-3. A medical AI, under the EU AI Act
+A medical AI, under the EU AI Act
 
 I spend a good part of my working life on AI standards and the EU AI Act, so building a health-adjacent tool at Foundation 29 was less a side project than a very concrete exam. A system that helps route patients toward medical trials sits close to the high-risk end of that framework, and for good reason. It made a few decisions non-negotiable. The human stays in the loop, always: TrialGPT drafts, it never sends, and it never books. It does not diagnose, and it is careful never to sound like it does. It explains its reasoning per criterion instead of hiding behind a score, because "here is the clause, and here is why I think it applies to you" is something a person can check, while a bare confidence number is not. The honest hard part is the one a checkbox never solves: a medical report only becomes useful by passing through several services, and every hop is a place where sensitive data has to be handled with care rather than enthusiasm. None of this makes the tool compliant by fiat, and I am wary of anyone who claims a checkbox does, but writing the thing while holding the regulation in the other hand changed what we built, and mostly for the better. It is a search-and-outreach assistant, not a medical device, and nothing it produces is clinical advice.
 

@@ -1,6 +1,6 @@
 ---
 uid: "q3TzzAYI"
-address: "NVIDIA"
+address: "Hardware//NVIDIA"
 name: "NVIDIA"
 date: "2026-02-15"
 ---

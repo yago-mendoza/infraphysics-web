@@ -1,6 +1,6 @@
 ---
 uid: "JD6PRNFD"
-address: "Cloud//Supabase//Auth"
+address: "Infrastructure//Supabase//Auth"
 name: "Auth"
 date: "2026-03-15"
 ---
@@ -15,6 +15,6 @@ date: "2026-03-15"
 - The reason this works: we went to Credentials in [[Ng9LJhY5|Google Cloud Console]] and gave it the Client Secret. That's how Supabase can prove it's our legitimate service during the handshake. Google Cloud is where we registered our app and said "trust Supabase when it sends you our users."
 
 Elegant. One handshake per user, one time, everything flows after that. [[iegOPp9Q|RLS]] on the database side ensures each user only sees their own data.
----
+
 ## Interactions
 - [[Oa3kTm7D|OAuth 2.0]] : : Supabase Auth wraps the OAuth handshake into a managed flow: you configure credentials once and Supabase handles the code exchange, token storage, and session management automatically

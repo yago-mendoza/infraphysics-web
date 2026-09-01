@@ -1,6 +1,6 @@
 ---
 uid: "U99MuNPb"
-address: "Google//Analytics"
+address: "Tools//Google//Analytics"
 name: "Analytics"
 date: "2026-03-10"
 ---

@@ -1,6 +1,6 @@
 ---
 uid: "Pp6rDx2H"
-address: "Cloud//edge computing//PoP"
+address: "Infrastructure//edge computing//PoP"
 name: "PoP"
 date: "2026-03-12"
 ---

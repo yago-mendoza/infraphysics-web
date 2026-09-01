@@ -1,6 +1,6 @@
 ---
 uid: "7wngT1lE"
-address: "ARM//Cortex-A"
+address: "Hardware//ARM//Cortex-A"
 name: "Cortex-A"
 date: "2026-02-05"
 ---

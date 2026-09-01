@@ -1,7 +1,7 @@
 ---
 uid: "2oN0bPZY"
-address: "Information Theory//channel capacity"
-name: "Channel Capacity"
+address: "Math//information theory//channel capacity"
+name: "channel capacity"
 date: "2026-03-06"
 ---
 The maximum rate at which information can be transmitted reliably through a noisy channel, Shannon's most famous result (1948)

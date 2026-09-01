@@ -1,6 +1,6 @@
 ---
 uid: "B5zrSBqy"
-address: "Crypto//Key Pair"
+address: "Security//cryptography//Key Pair"
 name: "Key Pair"
 date: "2025-06-14"
 ---

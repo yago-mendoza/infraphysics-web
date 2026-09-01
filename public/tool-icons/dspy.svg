@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="DSPy">
+  <g stroke="#ff3b30" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="7" y="7" width="50" height="50" rx="1.5"/>
+    <path d="M32 7v13.2c-1.5-1.8-3.7-3-6.2-3a6.3 6.3 0 0 0 0 12.6c2.5 0 4.7-1.1 6.2-3V32H19.1c1.7 1.5 2.8 3.6 2.8 6a6.2 6.2 0 0 1-12.4 0c0-2.4 1.1-4.5 2.8-6H7"/>
+    <path d="M57 32H44.8c1.7-1.5 2.8-3.6 2.8-6a6.2 6.2 0 0 0-12.4 0c0 2.4 1.1 4.5 2.8 6H32v12.1c1.5-1.7 3.6-2.8 6-2.8a6.2 6.2 0 0 1 0 12.4c-2.4 0-4.5-1.1-6-2.8V57"/>
+  </g>
+</svg>

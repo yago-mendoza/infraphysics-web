@@ -1,6 +1,6 @@
 ---
 uid: "Up9sTm4H"
-address: "Cloud//Upstash"
+address: "Infrastructure//Upstash"
 name: "Upstash"
 date: "2026-03-12"
 ---

@@ -10,6 +10,7 @@ export interface SectionRendererProps {
   getMatchCount: (content: string, query: string) => number;
   accent: string;
   stats?: Record<string, ArticleStats>;
+  projectVariant?: 1 | 2 | 3 | 4 | 5;
 }
 
 export { Bits2BricksGrid } from './Bits2BricksGrid';

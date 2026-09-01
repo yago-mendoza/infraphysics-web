@@ -4,7 +4,7 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { posts } from '../data/data';
 import { Category } from '../types';
-import { calculateReadingTime, stripHtml, accentChipStyle } from '../lib';
+import { stripHtml, accentChipStyle } from '../lib';
 import { getSearchExcerpt, countMatches } from '../lib/search';
 import { CATEGORY_CONFIG, STATUS_CONFIG, COMPLEXITY_LEVELS, getComplexityLevel, catAccentVar, type CategoryDisplayConfig } from '../config/categories';
 import { useTheme } from '../contexts/ThemeContext';
@@ -22,6 +22,7 @@ import type { SectionRendererProps } from '../components/sections';
 
 interface SectionViewProps {
   category: Category;
+  projectVariant?: 1 | 2 | 3 | 4 | 5;
 }
 
 const SECTION_RENDERERS: Record<string, React.FC<SectionRendererProps>> = {
@@ -30,10 +31,10 @@ const SECTION_RENDERERS: Record<string, React.FC<SectionRendererProps>> = {
   bits2bricks: Bits2BricksGrid,
 };
 
-const PAGE_SIZE = 3;
+const PAGE_SIZE = 12;
 
 
-export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
+export const SectionView: React.FC<SectionViewProps> = ({ category, projectVariant }) => {
   const [query, setQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title'>('newest');
   const [showFilters, setShowFilters] = useState(false);
@@ -64,6 +65,10 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
   }, [category]);
 
   const sectionPosts = useMemo(() => posts.filter(p => p.category === category), [category]);
+  const searchableText = useMemo(() => new Map(sectionPosts.map(post => [
+    post.id,
+    `${post.displayTitle || post.title}\u0000${post.description}\u0000${stripHtml(post.content)}`.toLowerCase(),
+  ])), [sectionPosts]);
   const stats = useArticleStats(sectionPosts);
 
   const hasMultipleLangs = useMemo(() => {
@@ -81,15 +86,12 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
   }, [sectionPosts]);
 
   const filteredPosts = useMemo(() => {
-    let result = sectionPosts;
+    // Filtering/sorting must never mutate the category's cached source array.
+    let result = [...sectionPosts];
 
     if (query) {
       const lowerQuery = query.toLowerCase();
-      result = result.filter(p =>
-        (p.displayTitle || p.title).toLowerCase().includes(lowerQuery) ||
-        p.description.toLowerCase().includes(lowerQuery) ||
-        stripHtml(p.content).toLowerCase().includes(lowerQuery)
-      );
+      result = result.filter(p => searchableText.get(p.id)?.includes(lowerQuery));
     }
 
     if (selectedTopics.length > 0) {
@@ -125,7 +127,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
     });
 
     return result;
-  }, [sectionPosts, query, sortBy, selectedTopics, selectedTechs, selectedStatuses, selectedComplexity, selectedLang]);
+  }, [sectionPosts, searchableText, query, sortBy, selectedTopics, selectedTechs, selectedStatuses, selectedComplexity, selectedLang]);
 
   const topicCounts = useMemo(() => {
     const map: Record<string, number> = {};
@@ -160,27 +162,22 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
   const visiblePosts = filteredPosts.slice(0, visibleCount);
   const hasMore = visibleCount < filteredPosts.length;
 
-  const [loading, setLoading] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!hasMore || loading) return;
+    if (!hasMore) return;
     const el = sentinelRef.current;
     if (!el) return;
 
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) {
-        setLoading(true);
-        setTimeout(() => {
-          setVisibleCount(prev => prev + PAGE_SIZE);
-          setLoading(false);
-        }, 800);
+        setVisibleCount(prev => prev + PAGE_SIZE);
       }
     }, { rootMargin: '200px' });
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [hasMore, loading, visibleCount]);
+  }, [hasMore, visibleCount]);
 
   const getExcerpt = getSearchExcerpt;
   const getMatchCount = countMatches;
@@ -196,7 +193,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
   return (
     <div className={`animate-fade-in section-${category}`}>
       {/* Breadcrumb */}
-      <nav className="mb-6 text-xs text-th-tertiary flex items-center gap-2">
+      <nav className="mb-8 text-[10px] text-th-muted flex items-center gap-2 uppercase tracking-[0.18em]">
         <Link to="/home" className="hover:text-th-secondary transition-colors">home</Link>
         <span className="text-th-muted">/</span>
         <span className="text-th-muted">{category === 'threads' || category === 'bits2bricks' ? 'blog' : 'lab'}</span>
@@ -205,21 +202,18 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
       </nav>
 
       {/* Header */}
-      <header className="mb-8 pb-6 border-b border-th-border">
+      <header className="mb-10 pb-8 border-b border-th-border">
         <div className="flex flex-col md:flex-row md:items-baseline md:justify-between gap-2 md:gap-4 mb-3">
           <h1
-            className="text-2xl md:text-4xl font-bold tracking-tight title-l-frame uppercase"
-            style={category !== 'projects' ? { fontFamily: "'Roboto Slab', Georgia, serif", fontWeight: 700, textTransform: 'none' as const } : undefined}
+            className="text-[2.65rem] md:text-[3.9rem] font-serif font-normal tracking-[-0.04em] leading-none"
           >
-            <span style={{ color: `var(--cat-${category}-accent)` }}>{categoryInfo.title}</span>
+            <span className="text-th-heading">{categoryInfo.title}</span>
           </h1>
-          <div className="flex items-center gap-4 text-xs text-th-tertiary" style={category !== 'projects' ? { fontFamily: "'Roboto Slab', Georgia, serif" } : undefined}>
+          <div className="flex items-center gap-4 text-[10px] font-mono uppercase tracking-wider text-th-tertiary">
             <span>{filteredPosts.length} {filteredPosts.length === 1 ? 'entry' : 'entries'}</span>
-            <span className="text-th-muted">&middot;</span>
-            <span>{filteredPosts.reduce((acc, p) => acc + calculateReadingTime(p.content), 0)} min total</span>
           </div>
         </div>
-        <p className="text-sm text-th-secondary leading-relaxed max-w-2xl" style={category !== 'projects' ? { fontFamily: "'Roboto Slab', Georgia, serif" } : { fontFamily: "'JetBrains Mono', monospace" }}>
+        <p className="text-sm md:text-base text-th-secondary leading-relaxed max-w-2xl font-sans">
           {categoryInfo.description}
         </p>
       </header>
@@ -392,18 +386,11 @@ export const SectionView: React.FC<SectionViewProps> = ({ category }) => {
       )}
 
       {/* Delegated renderer */}
-      <Renderer posts={visiblePosts} query={query} getExcerpt={getExcerpt} getMatchCount={getMatchCount} accent={accent} stats={stats} />
+      <Renderer posts={visiblePosts} query={query} getExcerpt={getExcerpt} getMatchCount={getMatchCount} accent={accent} stats={stats} projectVariant={projectVariant} />
 
       {/* Infinite scroll sentinel */}
       {hasMore && (
-        <div ref={sentinelRef} className="flex justify-center py-10">
-          {loading && (
-            <svg className="animate-spin h-5 w-5 text-th-tertiary" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.5" className="opacity-20" />
-              <path d="M12 2a10 10 0 019.95 9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
-          )}
-        </div>
+        <div ref={sentinelRef} className="h-20" aria-hidden="true" />
       )}
     </div>
   );

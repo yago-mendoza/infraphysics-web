@@ -1,7 +1,7 @@
 ---
 uid: "HJEZD7NK"
-address: "Crypto"
-name: "Crypto"
+address: "Security//cryptography"
+name: "cryptography"
 date: "2025-06-14"
 ---
 - Cryptographic primitives that make blockchain trustless: signing, verification, hashing.

@@ -69,7 +69,6 @@ infraphysics-web/
       NeighborhoodGraph.tsx   # SVG graph + detail panel (parent/siblings/children)
       RelevanceLeaderboard.tsx # Unified note list (family/all modes) with centrality indicators
       BridgeScoreBadge.tsx    # Colored dot indicating centrality tier (bridge/connector/peripheral)
-      DriftDetector.tsx       # "Missing links?" suggestions based on neighbor overlap
       InfoPopover.tsx         # Contextual help popovers (singleton, portal-based)
       SecondBrainGuide.tsx   # Consolidated guide modal for Second Brain (replaces scattered InfoPopovers)
       IslandDetector.tsx      # Topology sidebar: connected components, articulation points (bridges)
@@ -112,6 +111,7 @@ infraphysics-web/
       categories.generated.json
       data.ts                 # Runtime data loader
     public/
+      articles/<article-id>/  # Local image assets grouped by article ID
       playgrounds/<article-id>/ # Self-contained interactive "playgrounds" (HTML/JS) per article, linked via [text](/playgrounds/<id>/<name>.html)
       fieldnotes/             # {uid}.json content files (served as static assets)
       fieldnotes-index.json   # Generated: fieldnote metadata index (HTTP-fetched at runtime)
@@ -169,13 +169,13 @@ infraphysics-web/
 | `npm run obsidian:export` | Export fieldnotes to Obsidian vault structure |
 | `npm run obsidian:import` | Import Obsidian vault back to fieldnotes |
 
-The build pipeline compiles posts and fieldnotes through a shared 14-step transformation (backtick protection, custom syntax preprocessors, blockquotes, marked, Shiki highlighting, link resolution). Results are cached in `.content-cache.json` by file mtime — subsequent builds only recompile files that changed. Full pipeline and cache details: **[scripts/README.md](scripts/README.md)**
+The build pipeline compiles posts and fieldnotes through one shared transformation: protected Markdown, the small editorial grammar, Marked, Shiki and link resolution. Results are cached in `.content-cache.json`; changes to compiler code or configuration invalidate that cache. Full pipeline details: **[scripts/README.md](scripts/README.md)**
 
 ---
 
 ### Writing content
 
-All article and fieldnote markdown lives in `src/data/pages/`. The compiler supports a **custom syntax superset** on top of standard GFM: colored text, accent text, typed blockquotes, definition lists, alphabetical lists, context annotations, wiki-links, cross-document links, image positioning, and inline footnotes. Authoring hub (frontmatter, content types, editorial rules): **[src/data/pages/README.md](src/data/pages/README.md)**. Syntax reference (all 16 features, edge cases): **[src/data/pages/SYNTAX.md](src/data/pages/SYNTAX.md)**
+All article and fieldnote Markdown lives in `src/data/pages/`. Standard Markdown does most of the work; the deliberately small extension adds typed notes, optional tabbed sections, definition/alphabetical lists, context annotations, Wiki and cross-document links, single/pair images, mathematics and inline footnotes. Authoring hub: **[src/data/pages/README.md](src/data/pages/README.md)**. Normative syntax reference: **[src/data/pages/SYNTAX.md](src/data/pages/SYNTAX.md)**
 
 ---
 
@@ -228,6 +228,8 @@ Hosted on **Cloudflare Pages** (SPA + serverless functions). No `wrangler.toml` 
 | `VIEWS` | KV Namespace | `functions/api/views/`, `functions/api/reactions/`, `functions/api/stats.ts` |
 
 The `VIEWS` KV namespace stores all engagement data: view counts (`views:{slug}`), heart counts (`hearts:{slug}`), and IP dedup keys (`seen:{hash}`, `heart:{hash}` with 24h TTL). All API functions share this single namespace.
+
+Site-wide analytics include documented historical baselines from before the global endpoint existed. On 2026-09-01, the 27 published article counters summed to 249 verified views. A conservative allowance of 51 untracked views across Home, About, Writing, Wiki, index and Contact routes produces a 300-page-view baseline. Because sessions and unique visitors cannot be reconstructed from article counters, their 130-visit and 100-visitor baselines are explicitly estimates, based on roughly three pages per historical visitor and a modest return-visit rate. Live analytics accumulate on top of these frozen values.
 
 **Routing:** `public/_routes.json` controls which paths invoke the Pages Function vs serve static assets. API paths (`/api/*`) and article paths (for OG tags) route to the Function; everything else is served directly from the build output.
 
@@ -320,7 +322,7 @@ npm run build        # build content + production build
 
 **Local editor:** The Vite dev server automatically loads `vite-plugins/fieldnote-editor.js`, which exposes the fieldnote CRUD API at `/api/fieldnotes/*`. No extra setup — just `npm run dev` and the editor UI appears on Second Brain note pages.
 
-**KV APIs in dev:** The view count and reaction endpoints (`/api/views/*`, `/api/reactions/*`) only work when deployed to Cloudflare Pages with the `VIEWS` KV binding. In local dev, these calls fail silently — articles render without engagement data.
+**KV APIs in dev:** Cloudflare Pages Functions are not available behind Vite. Localhost therefore reads the canonical counters from `https://infraphysics.net` over CORS. Local article views use `GET` so previewing does not alter production analytics; reaction toggles still target the canonical API. A failed request remains unavailable (`null`) and is never displayed as a false zero.
 
 ---
 
@@ -345,4 +347,4 @@ Future features under consideration:
 
 - [ ] **LLM Conversational Assistant** — AI-powered search/Q&A over site content. MVP: Cloudflare Worker proxy to Claude Haiku API with system prompt + post summaries. Future: RAG with vector embeddings for semantic search. Includes "Ask Yago" persona mode.
 - [ ] **Stripe Donations** — One-time support via Stripe Payment Link (zero backend). Button in footer or `/about`. No memberships or auth initially.
-- [ ] **Global Graph View** — Force-directed visualization of the entire Second Brain knowledge graph (D3.js). Nodes sized by backlink count, clusters emerge from connection density. Accessible from `/lab/second-brain/graph` or as a modal.
+- [x] **Wiki Console graph views** — Force-directed information map, centrality layers, and topology projection embedded at `/wiki`.

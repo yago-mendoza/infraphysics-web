@@ -1,7 +1,7 @@
 ---
 uid: "5hSqc1Yd"
-address: "sensor//camera"
-name: "Camera"
+address: "Robotics//sensor//camera"
+name: "camera"
 date: "2026-02-15"
 ---
 - [[MTfcKkH5|chip]] with a resin window over an array of photo-diodes.

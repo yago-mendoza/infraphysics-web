@@ -48,8 +48,8 @@ export function buildGraphData(
   const addLink = (src: string, tgt: string, type: EdgeType, annotation?: string | null) => {
     // For body/interaction, use sorted key to dedup bidirectional
     const key = type === 'hierarchy'
-      ? `h:${src}>${tgt}`
-      : `${type}:${[src, tgt].sort().join('-')}`;
+      ? `h:${src}\u0000${tgt}`
+      : `${type}:${[src, tgt].sort().join('\u0000')}`;
     if (linkSet.has(key)) return;
     linkSet.add(key);
     links.push({ source: src, target: tgt, type, annotation });

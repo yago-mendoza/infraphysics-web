@@ -1,6 +1,6 @@
 ---
 uid: "azuwblly"
-address: "CPU//mutex//GIL"
+address: "OS//concurrency//mutex//GIL"
 name: "GIL"
 date: "2026-02-05"
 ---

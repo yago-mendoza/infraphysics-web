@@ -102,6 +102,7 @@ export async function initBrainIndex(freshData?: FieldNoteMeta[]): Promise<Brain
 
     // First pass: collect all declared trailing ref connections
     const declaredConnections = new Map<string, Map<string, string | null>>(); // noteId → Map<targetId, annotation>
+    const incomingDeclared = new Map<string, Map<string, string | null>>();
     allFieldNotes.forEach(note => {
       const refs = note.trailingRefs || [];
       if (refs.length === 0) return;
@@ -111,6 +112,8 @@ export async function initBrainIndex(freshData?: FieldNoteMeta[]): Promise<Brain
         const annotation = ref.annotation;
         if (targetId !== note.id) { // Skip self-refs
           map.set(targetId, annotation);
+          if (!incomingDeclared.has(targetId)) incomingDeclared.set(targetId, new Map());
+          incomingDeclared.get(targetId)!.set(note.id, annotation);
         }
       });
       declaredConnections.set(note.id, map);
@@ -137,19 +140,13 @@ export async function initBrainIndex(freshData?: FieldNoteMeta[]): Promise<Brain
         });
       }
 
-      // From other notes' trailing refs that point to this note (bilateral reverse)
-      declaredConnections.forEach((theirRefs, otherId) => {
+      // Reverse declarations use a pre-built incoming index: O(V + E), not O(V²).
+      incomingDeclared.get(note.id)?.forEach((annotation, otherId) => {
         if (otherId === note.id || seen.has(otherId)) return;
-        if (theirRefs.has(note.id)) {
-          const other = noteById.get(otherId);
-          if (!other) return;
-          seen.add(otherId);
-          connections.push({
-            note: other,
-            annotation: null, // this note didn't declare the connection
-            reverseAnnotation: theirRefs.get(note.id) ?? null,
-          });
-        }
+        const other = noteById.get(otherId);
+        if (!other) return;
+        seen.add(otherId);
+        connections.push({ note: other, annotation: null, reverseAnnotation: annotation });
       });
 
       if (connections.length > 0) {

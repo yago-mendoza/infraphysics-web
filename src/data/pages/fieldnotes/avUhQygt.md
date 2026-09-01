@@ -1,7 +1,7 @@
 ---
 uid: "avUhQygt"
-address: "Information Theory"
-name: "Information Theory"
+address: "Math//information theory"
+name: "information theory"
 date: "2026-03-02"
 ---
 Founded by Claude Shannon in "A Mathematical Theory of Communication" (1948), the paper that launched the digital age.

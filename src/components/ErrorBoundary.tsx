@@ -3,6 +3,7 @@ import { secondBrainPath } from '../config/categories';
 
 interface Props {
   children: React.ReactNode;
+  resetKey?: string;
 }
 
 interface State {
@@ -24,6 +25,16 @@ export class ErrorBoundary extends (React.Component as new (props: Props) => {
 
   static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('[ErrorBoundary]', error, info.componentStack);
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    if (this.state.hasError && prevProps.resetKey !== this.props.resetKey) {
+      this.setState({ hasError: false, error: null });
+    }
   }
 
   render() {

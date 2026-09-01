@@ -11,6 +11,6 @@ Code that runs on a server, not in the browser. If it runs in the browser, it's 
 - In [[Nx5tWs7J|Next.js]], frontend and backend live in the same project. API Routes are backend code deployed as serverless functions. The full stack in one repo.
 - In a [[Vp8rBm5J|Vite]] + [[Rc4pBn9L|React]] project (like InfraPhysics), there's no backend. Content compiles to static files at build time. [[Fs8tBm3G|Cloudflare Pages]] serves them. The only server-side logic is an edge function injecting OpenGraph meta tags for crawlers.
 - The backend is where you connect to [[Pg6tRw2H|PostgreSQL]], [[Pc7sTm2K|Pinecone]], [[Sb7tRx5K|Supabase]], whatever data layer you need. The frontend calls the backend's API.
----
+
 ## Interactions
 - [[ISjyfjZ6|frontend]] : : frontend runs in the browser, backend runs on the server. Same language (JavaScript) can do both. What matters is where it executes, not what it's written in.

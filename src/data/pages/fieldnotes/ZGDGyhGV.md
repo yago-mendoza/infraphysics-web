@@ -17,4 +17,4 @@ The editor doesn't compile anything itself. It's a comfortable interface for wri
 ## Interactions
 
 - [[Qk4sTn9L|HMR]] : : HMR closes the feedback loop: file change on disk triggers recompilation and browser update without a full page reload
-- [[JkzQf7qt|Custom Syntax]] : : the editor lets you write in the full custom syntax (colored text, blockquotes, wiki-links) and see it rendered after the build pipeline processes it
+- [[JkzQf7qt|Custom Syntax]] : : the editor previews the same minimal syntax as production, including typed notes, mathematics and wiki-links

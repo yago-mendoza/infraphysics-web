@@ -1,7 +1,7 @@
 ---
 uid: "IcUoe3YA"
-address: "component//clock"
-name: "Clock"
+address: "Hardware//electronics//component//clock"
+name: "clock"
 date: "2026-02-15"
 ---
 - Piezoelectric effect: applying voltage to quartz crystal makes it vibrate at exactly 32,768 Hz.

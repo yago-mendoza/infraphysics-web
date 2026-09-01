@@ -1,7 +1,7 @@
 ---
 uid: "uuLCFmtk"
-address: "sensor//smart sensor"
-name: "Smart Sensor"
+address: "Robotics//sensor//smart sensor"
+name: "smart sensor"
 date: "2026-02-05"
 ---
 A [[QSPGKDnh|sensor]] with on-board signal conditioning, ADC, and a small processor (often [[OQmzx1Vg|Cortex-M]]) on the same die or package.

@@ -4,8 +4,9 @@ import React, { useEffect, useRef, useMemo, useState, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FieldNoteMeta } from '../types';
 import { resolveWikiLinks } from '../lib/wikilinks';
-import { secondBrainPath } from '../config/categories';
+import { secondBrainUidFromPath } from '../config/categories';
 import { WikiLinkPreview } from './WikiLinkPreview';
+import '../styles/editorial-primitives.css';
 
 interface PreviewState {
   visible: boolean;
@@ -14,8 +15,6 @@ interface PreviewState {
   description: string;
   x: number;
   y: number;
-  variant: 'default' | 'blue';
-  accent?: string;
 }
 
 const INITIAL_PREVIEW: PreviewState = {
@@ -25,9 +24,26 @@ const INITIAL_PREVIEW: PreviewState = {
   description: '',
   x: 0,
   y: 0,
-  variant: 'default',
-  accent: '',
 };
+
+const HEADING_LINK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+
+function withHeadingLinks(html: string): string {
+  const seen = new Map<string, number>();
+  return html.replace(/<(h[1-5])(\s[^>]*)?>([\s\S]*?)<\/\1>/gi, (match, tag, attrs = '', inner) => {
+    if (/heading-anchor-link/.test(inner)) return match;
+    const plain = inner.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ').trim();
+    let slug = plain.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/(^-|-$)/g, '') || 'section';
+    const count = seen.get(slug) || 0;
+    seen.set(slug, count + 1);
+    if (count) slug = `${slug}-${count}`;
+    const existingId = attrs.match(/\sid="([^"]+)"/)?.[1];
+    const id = existingId || `section-${slug}`;
+    const nextAttrs = existingId ? attrs : `${attrs} id="${id}"`;
+    const label = plain.replace(/"/g, '&quot;');
+    return `<${tag}${nextAttrs}><button class="heading-anchor-link" type="button" data-heading-id="${id}" aria-label="Copy link to ${label}">${HEADING_LINK_ICON}</button>${inner}</${tag}>`;
+  });
+}
 
 interface WikiContentProps {
   html: string;
@@ -42,15 +58,16 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const [preview, setPreview] = useState<PreviewState>(INITIAL_PREVIEW);
+  const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Two resolution modes:
   //   1. Article context: allFieldNotes provided → resolves wiki-links client-side
   //   2. Second Brain context: allFieldNotes omitted → html already pre-resolved by fetchNoteContent()
   const resolvedHtml = useMemo(() => {
-    if (!allFieldNotes) return html;
+    if (!allFieldNotes) return withHeadingLinks(html);
     const { html: processed } = resolveWikiLinks(html, allFieldNotes);
-    return processed;
+    return withHeadingLinks(processed);
   }, [html, allFieldNotes]);
 
   // Kill preview on route change or content change
@@ -63,15 +80,16 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
   // 1-frame purple flash because the class was stripped on re-render then re-added next frame.
   const visitedStyles = useMemo(() => {
     if (!isVisited) return '';
-    const hrefRegex = /href="\/lab\/second-brain\/([^"]+)"/g;
+    const hrefRegex = /href="((?:\/wiki|\/lab\/second-brain)\/([^"]+))"/g;
     const selectors: string[] = [];
     const seen = new Set<string>();
     let m;
     while ((m = hrefRegex.exec(resolvedHtml)) !== null) {
-      const noteId = m[1];
+      const href = m[1];
+      const noteId = m[2];
       if (!seen.has(noteId) && isVisited(noteId)) {
         seen.add(noteId);
-        selectors.push(`a.wiki-ref-resolved[href="${secondBrainPath(noteId)}"]`);
+        selectors.push(`a.wiki-ref-resolved[href="${href}"]`);
       }
     }
     if (selectors.length === 0) return '';
@@ -84,6 +102,41 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
     return () => window.removeEventListener('scroll', kill, true);
   }, []);
 
+  useEffect(() => {
+    document.documentElement.classList.toggle('editorial-lightbox-open', !!lightbox);
+    if (!lightbox) return () => document.documentElement.classList.remove('editorial-lightbox-open');
+    const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setLightbox(null); };
+    document.addEventListener('keydown', close);
+    return () => {
+      document.removeEventListener('keydown', close);
+      document.documentElement.classList.remove('editorial-lightbox-open');
+    };
+  }, [lightbox]);
+
+  // Break out only primitives that would otherwise need horizontal scrolling.
+  // The class is measured from their real rendered content, not guessed by type.
+  useEffect(() => {
+    const root = containerRef.current;
+    if (!root) return;
+    const measure = () => {
+      const wiki = !!root.closest('.article-wiki');
+      root.querySelectorAll<HTMLElement>('.code-terminal, .table-wrapper').forEach(node => {
+        if (wiki) { node.classList.remove('is-wide'); return; }
+        node.classList.remove('is-wide');
+        const content = node.matches('.code-terminal')
+          ? node.querySelector<HTMLElement>('pre')
+          : node.querySelector<HTMLElement>('table');
+        if (content && content.scrollWidth > node.clientWidth + 2) node.classList.add('is-wide');
+      });
+    };
+    const frame = requestAnimationFrame(measure);
+    window.addEventListener('resize', measure);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('resize', measure);
+    };
+  }, [resolvedHtml]);
+
   const clearHide = useCallback(() => {
     if (hideTimer.current) { clearTimeout(hideTimer.current); hideTimer.current = null; }
   }, []);
@@ -93,8 +146,6 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
   navigateRef.current = navigate;
   const onWikiLinkClickRef = useRef(onWikiLinkClick);
   onWikiLinkClickRef.current = onWikiLinkClick;
-  const isVisitedRef = useRef(isVisited);
-  isVisitedRef.current = isVisited;
 
   // Track the currently hovered wiki link href + element for click navigation.
   const hoveredLinkRef = useRef<{ el: HTMLElement; href: string } | null>(null);
@@ -130,14 +181,7 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
           const title = decodeURIComponent(link.getAttribute('data-title') || '');
           const address = decodeURIComponent(link.getAttribute('data-address') || '');
           const description = decodeURIComponent(link.getAttribute('data-description') || '');
-          const hrefMatch = href.match(/^\/lab\/second-brain\/(.+)$/);
-          const visited = hrefMatch ? !!isVisitedRef.current?.(hrefMatch[1]) : false;
-          // Card is portaled to <body>; read the article's accent here so it can be
-          // passed through (the portal can't inherit --art-accent by cascade).
-          const accent = containerRef.current
-            ? getComputedStyle(containerRef.current).getPropertyValue('--art-accent').trim()
-            : '';
-          setPreview({ visible: true, title, address, description, x: e.clientX, y: e.clientY, variant: visited ? 'blue' : 'default', accent });
+          setPreview({ visible: true, title, address, description, x: e.clientX, y: e.clientY });
         }
       } else {
         // Mouse is on non-link content — schedule hide
@@ -158,11 +202,33 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
     };
 
     const onClick = (e: MouseEvent) => {
+      const headingAnchor = (e.target as HTMLElement).closest('.heading-anchor-link') as HTMLButtonElement | null;
+      if (headingAnchor) {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = headingAnchor.dataset.headingId;
+        if (!id) return;
+        const url = `${window.location.origin}${window.location.pathname}${window.location.search}#${id}`;
+        history.replaceState(null, '', `#${id}`);
+        navigator.clipboard.writeText(url).then(() => {
+          headingAnchor.classList.add('is-copied');
+          setTimeout(() => headingAnchor.classList.remove('is-copied'), 1200);
+        }).catch(() => {});
+        return;
+      }
+
+      const contentImage = (e.target as HTMLElement).closest('img') as HTMLImageElement | null;
+      if (contentImage && contentImage.closest('.article-content')) {
+        e.preventDefault();
+        setLightbox({ src: contentImage.currentSrc || contentImage.src, alt: contentImage.alt || '' });
+        return;
+      }
+
       // Copy button (shared class for code blocks + blockquotes)
       const copyBtn = (e.target as HTMLElement).closest('.copy-btn') as HTMLButtonElement | null;
       if (copyBtn) {
         const svgIcon = copyBtn.querySelector('svg')?.outerHTML || '';
-        const terminal = copyBtn.closest('.code-terminal');
+        const terminal = copyBtn.closest('.code-terminal, .code-block');
         const text = terminal ? (terminal.querySelector('code')?.textContent || '') : '';
         navigator.clipboard.writeText(text).then(() => {
           copyBtn.innerHTML = `${svgIcon} Copied`;
@@ -189,8 +255,8 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
         if (href) {
           if (onWikiLinkClickRef.current) {
             // Second Brain context — trail management + same-tab navigation
-            const match = href.match(/^\/lab\/second-brain\/(.+)$/);
-            if (match) onWikiLinkClickRef.current(match[1]);
+            const noteId = secondBrainUidFromPath(href);
+            if (noteId) onWikiLinkClickRef.current(noteId);
             navigateRef.current(href);
           } else {
             // Article context — open in new tab
@@ -220,6 +286,11 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
         dangerouslySetInnerHTML={{ __html: resolvedHtml }}
       />
       <WikiLinkPreview {...preview} />
+      {lightbox && (
+        <button className="editorial-lightbox" type="button" onClick={() => setLightbox(null)} aria-label="Close enlarged image">
+          <img src={lightbox.src} alt={lightbox.alt} />
+        </button>
+      )}
     </>
   );
 };

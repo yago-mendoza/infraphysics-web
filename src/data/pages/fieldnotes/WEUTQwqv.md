@@ -1,6 +1,6 @@
 ---
 uid: "WEUTQwqv"
-address: "GPU"
+address: "Hardware//GPU"
 name: "GPU"
 date: "2026-02-05"
 ---

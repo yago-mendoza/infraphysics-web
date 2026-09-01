@@ -1,8 +1,8 @@
 ---
 uid: "MJj4QZ6J"
-address: "LAPTOP//UI"
+address: "Hardware//laptop//UI"
 name: "UI"
-distinct: ["UI"]
+distinct: ["Web Dev//UI"]
 date: "2026-02-05"
 ---
 - Interface channel linking human intent to machine response.

@@ -1,7 +1,7 @@
 ---
 uid: "Kv8cRm3Q"
-address: "Cloud"
-name: "Cloud"
+address: "Infrastructure"
+name: "Infrastructure"
 date: "2026-03-10"
 ---
 Cloud computing -- renting compute, storage, and networking from a provider instead of owning the hardware. The provider manages the physical infrastructure; you manage the software (or less, depending on the abstraction level).

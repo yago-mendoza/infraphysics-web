@@ -17,7 +17,7 @@ export const ThanksView: React.FC = () => {
         className="px-6 py-2.5 bg-th-active border border-th-border rounded-sm text-th-heading text-sm
                    transition-all hover:bg-th-active-hover hover:border-th-border-hover"
       >
-        Back to home
+        <span aria-hidden="true">‹</span> Back to home
       </Link>
     </div>
   );

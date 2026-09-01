@@ -1,6 +1,6 @@
 ---
 uid: "ORK3Ok1m"
-address: "hardware"
+address: "Hardware"
 name: "Hardware"
 date: "2026-02-06"
 ---

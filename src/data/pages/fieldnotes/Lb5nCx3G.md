@@ -1,6 +1,6 @@
 ---
 uid: "Lb5nCx3G"
-address: "Cloud//AWS//Lambda"
+address: "Infrastructure//AWS//Lambda"
 name: "Lambda"
 date: "2026-03-12"
 ---
@@ -10,6 +10,6 @@ date: "2026-03-12"
 - Execution limit: up to 15 minutes (vs Workers' 30s paid / 5min max)
 - [[Vc3pLx8B|Vercel]] Functions are Lambda under the hood: Vercel abstracts the deployment, AWS runs the code
 - Pricing: per invocation + per GB-second of compute. Free tier: 1M requests/month
----
+
 ## Interactions
 - [[Lk2rXj6D|Workers]] : : Lambda uses containers (heavier, cold starts, 15min max). Workers use V8 isolates (lighter, near-zero cold start, 5min max). Lambda is more capable; Workers is faster to start.

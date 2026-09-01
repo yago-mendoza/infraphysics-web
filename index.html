@@ -61,6 +61,7 @@
               'th-hub-border':  'var(--hub-sidebar-border)',
               'th-overlay':     'var(--overlay-bg)',
               'th-on-accent':   'var(--text-on-accent)',
+              'th-nav-accent':  'var(--nav-accent)',
             },
           },
         },
@@ -76,26 +77,35 @@
         --font-blog-heading: 'Roboto Slab', Georgia, 'Times New Roman', serif;
         --font-blog-body: 'SF Pro Display', -apple-system, system-ui, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
 
+        /* Site identity + data signals (shared by every route) */
+        --brand-oxide:        #c8462d;
+        --brand-oxide-strong: #d65a36;
+        --signal-blue:        #63a7d8;
+        --signal-green:       #5f9d78;
+        --shadow-color:       rgba(0,0,0,0.42);
+        --page-grid-ink:      rgba(241,237,228,0.025);
+        --page-glow:          rgba(180,61,35,0);
+
         /* Backgrounds */
-        --bg-base:        #000000;
-        --bg-blog:        #0a0a0a;
-        --bg-surface:     rgba(255,255,255,0.02);
-        --bg-surface-alt: rgba(255,255,255,0.04);
-        --bg-elevated:    rgba(255,255,255,0.06);
+        --bg-base:        #151715;
+        --bg-blog:        #101210;
+        --bg-surface:     rgba(236,231,218,0.035);
+        --bg-surface-alt: rgba(236,231,218,0.06);
+        --bg-elevated:    rgba(236,231,218,0.08);
         --bg-active:      rgba(255,255,255,0.10);
         --bg-active-hover:rgba(255,255,255,0.15);
 
         /* Text */
-        --text-heading:   #ffffff;
-        --text-primary:   #e8eaed;
-        --text-secondary: #9ca3af;
-        --text-tertiary:  #6b7280;
-        --text-muted:     #4b5563;
+        --text-heading:   #f1ede4;
+        --text-primary:   #e5e1d8;
+        --text-secondary: #aaa99f;
+        --text-tertiary:  #777a71;
+        --text-muted:     #555951;
 
         /* Borders */
-        --border-default: rgba(255,255,255,0.10);
-        --border-hover:   rgba(255,255,255,0.20);
-        --border-active:  rgba(255,255,255,0.25);
+        --border-default: rgba(236,231,218,0.13);
+        --border-hover:   rgba(236,231,218,0.26);
+        --border-active:  rgba(236,231,218,0.34);
 
         /* Grid */
         --grid-small: rgba(255,255,255,0.03);
@@ -142,7 +152,7 @@
 
         /* Category accents */
         --cat-projects-accent:    #a3e635;
-        --cat-threads-accent:     #E84057;
+        --cat-threads-accent:     #c8462d;
         --cat-bits2bricks-accent: #3B82F6;
         --cat-fieldnotes-accent:  #A78BFA;
 
@@ -151,6 +161,7 @@
 
         /* Text on fixed-color accent surfaces (badges, FABs) — always white for contrast */
         --text-on-accent:   #ffffff;
+        --nav-accent:       var(--brand-oxide);
 
         /* Editor panel */
         --editor-bg:        rgba(0, 0, 0, 0.3);
@@ -167,21 +178,27 @@
       }
 
       [data-theme="light"] {
-        color-scheme: light;
+        --brand-oxide:        #9b3f24;
+        --brand-oxide-strong: #b94b2b;
+        --signal-blue:        #1d6598;
+        --signal-green:       #377657;
+        --shadow-color:       rgba(32,35,31,0.16);
+        --page-grid-ink:      rgba(32,35,31,0.03);
+        --page-glow:          rgba(180,61,35,0.07);
 
-        --bg-base:        #ffffff;
-        --bg-blog:        #fafaf9;
-        --bg-surface:     #f3f4f6;
-        --bg-surface-alt: #e5e7eb;
-        --bg-elevated:    #d1d5db;
+        --bg-base:        #f1eee7;
+        --bg-blog:        #ebe8df;
+        --bg-surface:     #e8e4da;
+        --bg-surface-alt: #ded9ce;
+        --bg-elevated:    #d4cfc3;
         --bg-active:      rgba(0,0,0,0.12);
         --bg-active-hover:rgba(0,0,0,0.18);
 
-        --text-heading:   #111827;
-        --text-primary:   #1f2937;
-        --text-secondary: #4b5563;
-        --text-tertiary:  #6b7280;
-        --text-muted:     #6b7280;
+        --text-heading:   #20231f;
+        --text-primary:   #30342f;
+        --text-secondary: #5a5d56;
+        --text-tertiary:  #74766e;
+        --text-muted:     #85867d;
 
         --border-default: rgba(0,0,0,0.18);
         --border-hover:   rgba(0,0,0,0.30);
@@ -226,13 +243,14 @@
         --wiki-unresolved:      #6b7280;
 
         --cat-projects-accent:    #4d7c0f;
-        --cat-threads-accent:     #C93A4D;
+        --cat-threads-accent:     #9b3f24;
         --cat-bits2bricks-accent: #2563eb;
         --cat-fieldnotes-accent:  #7C3AED;
 
         --wiki-link-visited:      #2563eb;
 
         --text-on-accent:   #ffffff;
+        --nav-accent:       var(--brand-oxide);
 
         --editor-bg:        #f8f8f8;
         --editor-border:    #d1d5db;
@@ -248,6 +266,17 @@
 
       html {
         scrollbar-gutter: stable;
+        overflow-y: scroll;
+        font-size: 14.5px;
+      }
+
+      input, textarea, select { color-scheme: dark; }
+      [data-theme="light"] input,
+      [data-theme="light"] textarea,
+      [data-theme="light"] select { color-scheme: light; }
+
+      @media (max-width: 767px) {
+        html { font-size: 14px; }
       }
 
       body {
@@ -276,10 +305,13 @@
       /* Center main content — content shrinks first, margins stay fixed */
       @media (min-width: 768px) {
         .main-center-viewport {
-          max-width: min(64rem, calc(100% - 4rem));
+          max-width: min(40rem, calc(100% - 4rem));
           margin-left: auto;
           margin-right: auto;
         }
+      }
+      @media (min-width: 1440px) {
+        .main-center-viewport { max-width: 42rem; }
       }
     </style>
 <link rel="stylesheet" href="/index.css">

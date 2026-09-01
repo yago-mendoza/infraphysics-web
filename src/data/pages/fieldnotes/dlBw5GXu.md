@@ -1,6 +1,6 @@
 ---
 uid: "dlBw5GXu"
-address: "compiler//pipeline"
+address: "infraphysics//compiler//pipeline"
 name: "pipeline"
 date: "2026-02-05"
 ---

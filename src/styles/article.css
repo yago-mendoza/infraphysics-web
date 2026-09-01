@@ -813,6 +813,23 @@
 .article-bar-back:hover {
   color: var(--art-text-title);
 }
+.article-bar-context-arrow {
+  width:1.15rem;
+  height:1rem;
+  flex:none;
+  overflow:visible;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.1;
+  stroke-linecap:square;
+  stroke-linejoin:miter;
+}
+.article-bar-context-chevron {
+  flex: none;
+  font-size: 1.35rem;
+  line-height: 1;
+  transform: translateY(-0.04em);
+}
 .article-bar-back-label {
   font-size: 0.75rem;
   letter-spacing: 0.01em;
@@ -1364,73 +1381,11 @@
 }
 
 /* bkqt type colors — dark */
-.article-content .bkqt-note       { --bkqt-color: var(--art-accent); }
-.article-content .bkqt-tip        { --bkqt-color: #22c55e; }
-.article-content .bkqt-warning    { --bkqt-color: #d97706; }
-.article-content .bkqt-danger     { --bkqt-color: #dc2626; }
-.article-content .bkqt-keyconcept { --bkqt-color: #a855f7; }
-
-/* bkqt type colors — light overrides */
-[data-theme="light"] .article-content .bkqt-tip        { --bkqt-color: #15803d; }
-[data-theme="light"] .article-content .bkqt-warning    { --bkqt-color: #b45309; }
-[data-theme="light"] .article-content .bkqt-danger     { --bkqt-color: #b91c1c; }
-[data-theme="light"] .article-content .bkqt-keyconcept { --bkqt-color: #7c3aed; }
-
-/* B3a. Quote / pullquote blockquotes */
-
-.article-content .bkqt-quote,
-.article-content .bkqt-pullquote {
-  --bkqt-color: var(--art-accent);
-  margin: 1rem 0;
-}
-
-.article-content .bkqt-quote .bkqt-body,
-.article-content .bkqt-pullquote .bkqt-body {
-  padding: 1.25rem;
-}
-
-.article-content .bkqt-quote .bkqt-body::before,
-.article-content .bkqt-pullquote .bkqt-body::before {
-  content: '\201C';
-  display: block;
-  font-size: 4rem;
-  height: 2rem;
-  line-height: 3.5rem;
-  color: var(--art-accent);
-  opacity: 0.35;
-  font-family: Georgia, 'Times New Roman', serif;
-}
-
-.article-content .bkqt-quote p,
-.article-content .bkqt-pullquote p {
-  font-style: italic;
-  font-size: 1.05rem;
-  color: var(--art-text-bright);
-}
-
-.article-content .bkqt-pullquote {
-  max-width: 55%;
-}
-
-.article-content .bkqt-attrib {
-  display: block;
-  font-size: 0.72rem;
-  font-style: normal;
-  font-weight: 500;
-  color: var(--art-text-mid);
-  margin-top: 0.5rem;
-  letter-spacing: 0.03em;
-  text-align: right;
-}
-
-.article-content .bkqt-attrib::before {
-  content: '— ';
-}
-
-[data-theme="light"] .article-content .bkqt-quote .bkqt-body::before,
-[data-theme="light"] .article-content .bkqt-pullquote .bkqt-body::before {
-  opacity: 0.25;
-}
+.article-content .bkqt-note,
+.article-content .bkqt-tip,
+.article-content .bkqt-warning,
+.article-content .bkqt-danger,
+.article-content .bkqt-keyconcept { --bkqt-color: var(--art-accent); }
 
 /* B3b. Math blocks */
 
@@ -1463,28 +1418,6 @@
   color: #f87171;
 }
 
-/* B3c. Small text (> markdown blocks) */
-
-.article-content .small-text {
-  margin-bottom: 1rem;
-}
-
-.article-content .small-text p {
-  font-size: 0.875rem;
-  font-style: italic;
-  color: var(--art-text-mid);
-  line-height: 1.4;
-  margin-bottom: 1rem;
-}
-
-/* When small-text interrupts a list, the gap to the next list should match
-   normal bullet spacing (0.5rem), not the default 1rem block margin.
-   Negative margin-top avoids collapse: 1rem + (-0.5rem) = 0.5rem. */
-.article-content .small-text + ul,
-.article-content .small-text + ol {
-  margin-top: -0.5rem;
-}
-
 /* B3c. Inline annotations (^[explanation] → superscript + notes) */
 
 .article-content .ann-ref {
@@ -1493,7 +1426,8 @@
   font-weight: 600;
   font-style: italic;
   cursor: default;
-  margin-left: 0.25em;
+  margin-left: 0.08em;
+  margin-right: 0.04em;
 }
 
 .article-content .annotations {
@@ -1591,24 +1525,9 @@
 
 /* B5c. Shout — centered uppercase callout */
 
-.article-content .shout {
-  text-align: center;
-  text-transform: uppercase;
-  font-size: 0.875rem;
-  letter-spacing: 0.08em;
-  color: var(--art-text-body);
-  margin: 2.5rem 0;
-}
 
 /* B5d. Dots separator — Medium-style centered · · · */
 
-.article-page-wrapper .article-content p.dots-sep {
-  text-align: center;
-  font-size: 2rem;
-  letter-spacing: 0.15em;
-  color: var(--art-text-mid);
-  margin: 2.5rem 0 1.25rem;
-}
 
 /* B5e. Alphabetical ordered lists */
 
@@ -1865,15 +1784,9 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 /* B13. Accent-colored text (--text--) */
 
-.article-content .accent-text {
-  color: var(--art-accent);
-}
 
 /* B13b. Accent-text adapts color inside blockquotes */
 
-.article-content .bkqt .accent-text {
-  color: var(--bkqt-color);
-}
 
 /* B14. <kbd> keyboard */
 
@@ -1932,66 +1845,6 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   stroke: currentColor;
   fill: none;
 }
-
-/* B18. Side image layouts */
-
-.article-content .img-side-layout .img-side-img {
-  border-radius: 2px;
-  border: 1px solid var(--art-border);
-}
-
-.article-content .img-side-layout .img-side-content p {
-  color: var(--art-text-body);
-}
-
-/* Side image carrying a caption (rendered as a figure instead of a bare img). */
-.article-content .img-side-layout figure.img-side-img {
-  margin: 0;
-  flex-shrink: 0;
-  max-width: 50%;
-  border: none;
-}
-.article-content .img-side-layout figure.img-side-img img {
-  display: block;
-  width: 100%;
-  border-radius: 2px;
-  border: 1px solid var(--art-border);
-}
-
-/* B18b. Image pair: two positioned images side by side, splitting the row 50/50. */
-.article-content .img-pair {
-  display: flex;
-  gap: 1.5rem;
-  align-items: flex-start;
-  margin: 1.5rem 0;
-}
-.article-content .img-pair .img-pair-fig {
-  flex: 1 1 0;
-  min-width: 0;
-  margin: 0;
-}
-.article-content .img-pair .img-pair-fig img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 2px;
-  border: 1px solid var(--art-border);
-}
-
-/* Captions shared by side layouts and pairs. */
-.article-content .img-side-layout figcaption,
-.article-content .img-pair figcaption {
-  margin-top: 0.5rem;
-  font-size: 0.8rem;
-  line-height: 1.4;
-  color: var(--art-text-mid);
-  text-align: center;
-}
-
-@media (max-width: 640px) {
-  .article-content .img-pair { flex-direction: column; }
-}
-
 
 /* ─────────────────────────────────────────────────
    C. BOTTOM SECTIONS
@@ -2251,6 +2104,332 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   }
 }
 
+/* Long-form editorial base. Threads retain their own card format; final
+   category overrides are closed after the legacy sizing rules below. */
+.article-blog:not(.article-threads).article-page-wrapper {
+  width:100%;
+  max-width:min(74rem,100%);
+  font-family:var(--font-sans);
+}
+
+.article-blog:not(.article-threads) .article-container {
+  overflow:visible;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+}
+
+.article-blog:not(.article-threads) .article-body {
+  width:min(100%,48rem);
+  margin-inline:auto;
+  padding:clamp(1rem,3vw,2rem) clamp(.75rem,3vw,1.5rem) 3rem;
+}
+
+.article-blog:not(.article-threads) .article-blog-image {
+  width:min(68rem,calc(100vw - 3rem));
+  margin:0 0 clamp(2rem,5vw,4rem) 50%;
+  transform:translateX(-50%);
+  overflow:hidden;
+  border:1px solid var(--border-default);
+  border-radius:0;
+  background:var(--bg-surface);
+}
+
+.article-blog:not(.article-threads) .article-blog-image-img {
+  display:block;
+  width:100%;
+  max-height:min(72vh,42rem);
+  object-fit:cover;
+  filter:none;
+}
+
+.article-blog:not(.article-threads) .article-title-block {
+  margin:clamp(1.4rem,4vw,2.8rem) 0 1.2rem;
+  padding:0;
+}
+
+.article-blog:not(.article-threads) .article-title {
+  max-width:17ch;
+  color:var(--text-heading);
+  font-family:var(--font-serif);
+  font-size:clamp(2.6rem,6vw,4.8rem);
+  font-weight:400;
+  line-height:.98;
+  letter-spacing:-.045em;
+}
+
+.article-blog:not(.article-threads) .article-subtitle {
+  max-width:38rem;
+  margin-top:1.15rem;
+  color:var(--text-secondary);
+  font-family:var(--font-sans);
+  font-size:clamp(1rem,1.7vw,1.2rem);
+  font-weight:400;
+  line-height:1.55;
+}
+
+.article-blog:not(.article-threads) .article-blog-metabar {
+  margin:1.4rem 0 clamp(2.4rem,5vw,4rem);
+  padding:1rem 0;
+  border-block:1px solid var(--border-default);
+  background:transparent;
+}
+
+.article-blog:not(.article-threads) .article-content {
+  color:var(--text-primary);
+  font-family:var(--font-sans);
+}
+
+.article-blog:not(.article-threads) .article-content p,
+.article-blog:not(.article-threads) .article-content li {
+  color:var(--text-primary);
+  font-family:var(--font-sans);
+  line-height:1.75;
+}
+
+.article-blog:not(.article-threads) .article-content h1,
+.article-blog:not(.article-threads) .article-content h2,
+.article-blog:not(.article-threads) .article-content h3,
+.article-blog:not(.article-threads) .article-content h4 {
+  color:var(--text-heading);
+  font-family:var(--font-serif);
+  font-weight:400;
+  letter-spacing:-.025em;
+}
+
+.article-blog:not(.article-threads) + .article-related {
+  width:min(68rem,calc(100vw - 3rem));
+  max-width:none;
+  margin:clamp(3rem,7vw,6rem) auto 0;
+  padding-top:1.4rem;
+  border-top:1px solid var(--border-default);
+}
+
+@media (max-width:640px) {
+  .article-blog:not(.article-threads) .article-body { padding-inline:.25rem; }
+  .article-blog:not(.article-threads) .article-blog-image { width:calc(100vw - 2rem); }
+  .article-blog:not(.article-threads) .article-title { font-size:clamp(2.45rem,13vw,3.65rem); }
+}
+
+/* Canonical desktop reading width. Keep this as the final sizing rule: older
+   category skins above must not collapse long-form content back to 48rem. */
+@media (min-width:768px) {
+  .article-projects.article-page-wrapper,
+  .article-blog:not(.article-threads).article-page-wrapper {
+    width:100%;
+    max-width:min(96rem,100%);
+  }
+
+  .article-projects .article-body,
+  .article-blog:not(.article-threads) .article-body {
+    width:min(100%,72rem);
+    padding-left:clamp(1.5rem,3vw,2rem);
+    padding-right:clamp(1.5rem,3vw,2rem);
+  }
+
+  .article-threads.article-page-wrapper {
+    width:100%;
+    max-width:min(74rem,100%);
+  }
+
+  .article-threads .article-threads-header-content,
+  .article-threads .article-threads-body {
+    padding-left:clamp(2rem,4vw,3rem);
+    padding-right:clamp(2rem,4vw,3rem);
+  }
+}
+
+/* Definitive article sizing — intentionally last so legacy category rules
+   cannot collapse the reading canvas back to 48rem. */
+@media (min-width:768px) {
+  .article-threads.article-page-wrapper { width:100%; max-width:min(72rem,100%); }
+  .article-threads .article-threads-header-content,
+  .article-threads .article-threads-body { padding-inline:clamp(3rem,6vw,5rem); }
+
+  .article-blog:not(.article-threads).article-page-wrapper { width:100%; max-width:min(96rem,100%); }
+  .article-blog:not(.article-threads) .article-body { width:min(100%,68rem); }
+  .article-blog:not(.article-threads) .article-blog-image { width:min(88rem,calc(100vw - 3rem)); }
+
+  .article-projects.article-page-wrapper { width:100%; max-width:min(100rem,100%); }
+  .article-projects .article-body { width:min(100%,68rem); }
+}
+
+/* Definitive editorial prose closure. */
+.article-page-wrapper .article-content > p,
+.article-page-wrapper .article-content > ul > li,
+.article-page-wrapper .article-content > ol > li,
+.article-page-wrapper .article-content section > p {
+  font-family:var(--font-serif);
+  font-size:clamp(1.08rem,1.2vw,1.22rem);
+  line-height:1.78;
+  letter-spacing:-.008em;
+}
+
+/* Wider article canvases. Reading columns grow modestly; visual and technical
+   material gets the larger surrounding canvas it needs. */
+@media (min-width:768px) {
+  .article-threads.article-page-wrapper { max-width:min(60rem,100%); }
+  .article-threads .article-threads-header-content,
+  .article-threads .article-threads-body { padding-left:clamp(2.5rem,5vw,4rem); padding-right:clamp(2.5rem,5vw,4rem); }
+
+  .article-blog:not(.article-threads).article-page-wrapper { max-width:min(82rem,100%); }
+  .article-blog:not(.article-threads) .article-body { width:min(100%,54rem); }
+  .article-blog:not(.article-threads) .article-blog-image { width:min(74rem,calc(100vw - 3rem)); }
+
+  .article-projects.article-page-wrapper { max-width:min(90rem,100%); }
+  .article-projects .article-body { width:min(100%,56rem); }
+}
+
+/* Editorial reading rhythm: generous serif prose, while structural and
+   technical elements retain their purpose-built sans/mono typography. */
+.article-page-wrapper .article-content > p,
+.article-page-wrapper .article-content > ul > li,
+.article-page-wrapper .article-content > ol > li,
+.article-page-wrapper .article-content section > p {
+  color:var(--text-primary);
+  font-family:var(--font-serif);
+  font-size:clamp(1.08rem,1.2vw,1.22rem);
+  font-weight:400;
+  line-height:1.78;
+  letter-spacing:-.008em;
+}
+.article-page-wrapper .article-content > p { margin-block:0 1.65em; }
+.article-page-wrapper .article-content > p + p { margin-top:.15em; }
+.article-page-wrapper .article-content > ul,
+.article-page-wrapper .article-content > ol { margin-block:1.25rem 1.8rem; }
+.article-page-wrapper .article-content > ul > li,
+.article-page-wrapper .article-content > ol > li { margin-bottom:.55em; }
+.article-page-wrapper .article-content strong { color:var(--text-heading); font-weight:650; }
+.article-page-wrapper .article-content table,
+.article-page-wrapper .article-content pre,
+.article-page-wrapper .article-content code,
+.article-page-wrapper .article-content .code-block,
+.article-page-wrapper .article-content .defn,
+.article-page-wrapper .article-content figcaption { letter-spacing:normal; }
+
+.article-page-wrapper .article-title-block { padding-top:clamp(1.25rem,3vw,2.25rem); }
+.article-page-wrapper .article-subtitle,
+.article-page-wrapper .article-blog-lead { line-height:1.62; }
+
+@media (max-width:767px) {
+  .article-page-wrapper .article-content > p,
+  .article-page-wrapper .article-content > ul > li,
+  .article-page-wrapper .article-content > ol > li,
+  .article-page-wrapper .article-content section > p { font-size:1.04rem; line-height:1.72; }
+}
+
+/* Editorial article surface — aligned with the Home system rather than the
+   earlier terminal skin. The compiler remains compatible, but typography,
+   spacing and hierarchy are intentionally quieter. */
+.article-projects.article-page-wrapper {
+  max-width:min(82rem,100%);
+  --art-accent:var(--cat-projects-accent);
+  font-family:var(--font-sans);
+}
+.article-projects .article-container { background:transparent; }
+.article-projects .article-hero {
+  border:1px solid var(--border-default);
+  background:var(--bg-surface);
+}
+.article-projects .article-hero-gradient { display:none; }
+.article-projects .article-hero-img,
+[data-theme="light"] .article-projects .article-hero-img { filter:none; }
+.article-projects .article-body {
+  width:min(100%,48rem);
+  margin-inline:auto;
+  padding:clamp(2.2rem,5vw,4.8rem) clamp(1rem,4vw,2rem) 3rem;
+}
+.article-projects .article-nav-row {
+  margin-bottom:clamp(2.5rem,5vw,4rem);
+  padding-bottom:1rem;
+  border-bottom:1px solid var(--border-default);
+}
+.article-projects .article-pill {
+  padding:.24rem .46rem;
+  border-color:var(--border-default);
+  border-radius:.2rem;
+  background:transparent;
+  color:var(--text-tertiary);
+  font:8px/1.2 var(--font-mono);
+  letter-spacing:.05em;
+}
+.article-projects .article-pill-tech { color:var(--text-secondary); }
+.article-projects .article-title {
+  max-width:16ch;
+  color:var(--text-heading);
+  font-family:var(--font-serif);
+  font-size:clamp(2.7rem,7vw,5.4rem);
+  font-weight:400;
+  line-height:.96;
+  letter-spacing:-.045em;
+}
+.article-projects .article-subtitle {
+  max-width:38rem;
+  margin-top:1.2rem;
+  color:var(--text-secondary);
+  font-family:var(--font-sans);
+  font-size:clamp(1rem,1.7vw,1.25rem);
+  line-height:1.55;
+}
+.article-projects .article-meta {
+  margin-top:1.5rem;
+  padding-bottom:1rem;
+  color:var(--text-tertiary);
+  border-bottom:1px solid var(--border-default);
+  font:8px/1.2 var(--font-mono);
+  letter-spacing:.08em;
+}
+.article-projects .article-divider-thin { display:none; }
+.article-projects .article-notes {
+  margin:1.3rem 0 0;
+  padding:0 0 1.4rem 1rem;
+  border:0;
+  border-left:1px solid var(--art-accent);
+  background:transparent;
+}
+.article-projects .article-notes-line {
+  color:var(--text-secondary);
+  font-family:var(--font-sans);
+  font-size:.9rem;
+  line-height:1.65;
+}
+.article-projects .article-divider-thick {
+  height:1px;
+  margin:clamp(2.5rem,6vw,4.5rem) 0;
+  background:var(--border-default);
+}
+.article-projects .article-content { color:var(--text-primary); font-family:var(--font-sans); }
+.article-projects .article-content p { color:var(--text-primary); font-family:var(--font-sans); font-size:clamp(.92rem,1.2vw,1.02rem); line-height:1.78; }
+.article-projects .article-content h1,
+.article-projects .article-content h2,
+.article-projects .article-content h3,
+.article-projects .article-content h4 {
+  color:var(--text-heading);
+  font-family:var(--font-serif);
+  letter-spacing:-.025em;
+}
+.article-projects .article-content h2 { font-size:clamp(1.8rem,4vw,2.5rem); }
+.article-projects .article-content h3 { font-size:clamp(1.35rem,3vw,1.8rem); }
+.article-projects .article-content table { font-size:.76rem; }
+.article-projects .article-content th { color:var(--text-heading); background:transparent; }
+.article-projects .article-content td,.article-projects .article-content th { padding:.7rem .55rem; border-color:var(--border-default); }
+.article-projects + .article-related { max-width:82rem; margin-inline:auto; }
+.article-related-card,.article-related-card * { transform:none !important; }
+
+/* Essays share the editorial rhythm but retain their category accent. */
+.article-blog.article-page-wrapper { font-family:var(--font-sans); }
+.article-blog .article-title { font-family:var(--font-serif); font-weight:400; letter-spacing:-.04em; }
+.article-blog .article-content p { font-family:var(--font-sans); line-height:1.78; }
+.article-blog .article-content h1,
+.article-blog .article-content h2,
+.article-blog .article-content h3 { font-family:var(--font-serif); font-weight:400; letter-spacing:-.025em; }
+
+@media (max-width:640px) {
+  .article-projects .article-body { padding-inline:.45rem; }
+  .article-projects .article-nav-row { align-items:flex-start; }
+  .article-projects .article-title { font-size:clamp(2.45rem,13vw,3.7rem); }
+}
+
 /* D2. Reading progress bar — mobile only, below fixed navbar */
 .article-progress-bar {
   display: none;
@@ -2404,11 +2583,6 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 .article-threads .article-content .bkqt-body {
   padding: 1.2rem 0rem 1.2rem 1.2rem;
-}
-
-.article-threads .article-content .bkqt-quote .bkqt-body,
-.article-threads .article-content .bkqt-pullquote .bkqt-body {
-  background: none;
 }
 
 /* E2d. Threads blockquote label — block above text, bold sans (not inline monospace) */
@@ -2595,6 +2769,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
     font-size: 1.15rem;
   }
 }
+
 @media (max-width: 767px) {
   .article-blog .article-title {
     font-size: 1.6rem;
@@ -2954,21 +3129,6 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
     font-size: 1rem;
     line-height: 1.55;
   }
-  .article-content .shout {
-    font-size: 1rem;
-  }
-
-  /* Small text — same size as body */
-  .article-content .small-text p {
-    font-size: 1rem;
-    line-height: 1.55;
-  }
-  .article-blog .article-content .small-text p,
-  .article-threads .article-content .small-text p {
-    font-size: 1.05rem;
-    line-height: 1.55;
-  }
-
   /* Footnotes (annotations) — same size as body */
   .article-content .ann-note {
     font-size: 1rem;
@@ -3022,14 +3182,6 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
     font-size: 1rem;
   }
 
-  /* Pullquote */
-  .article-content .bkqt-pullquote p {
-    font-size: 0.95rem;
-  }
-  .article-content .bkqt-attrib {
-    font-size: 0.78rem;
-  }
-
   /* Figcaption */
   .article-content figcaption {
     font-size: 0.75rem;
@@ -3044,18 +3196,33 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   .article-projects .article-content p,
   .article-projects .article-content li,
   .article-projects .article-content td,
-  .article-projects .article-content .defn,
-  .article-projects .article-content .shout {
+  .article-projects .article-content .defn {
     font-size: 0.95rem;
   }
   .article-projects .article-content .bkqt {
-    font-size: 0.95rem;
-  }
-  .article-projects .article-content .small-text p {
     font-size: 0.95rem;
   }
   .article-projects .article-content .ann-note {
     font-size: 0.95rem;
   }
 
+}
+
+/* Final long-form cascade closure. */
+.article-blog:not(.article-threads).article-page-wrapper { max-width:min(74rem,100%); }
+.article-blog:not(.article-threads) .article-container { overflow:visible; border:0; background:transparent; box-shadow:none; }
+.article-blog:not(.article-threads) .article-body { width:min(100%,48rem); margin-inline:auto; padding:clamp(1rem,3vw,2rem) clamp(.75rem,3vw,1.5rem) 3rem; }
+.article-blog:not(.article-threads) .article-blog-image { width:min(68rem,calc(100vw - 3rem)); margin:0 0 clamp(2rem,5vw,4rem) 50%; transform:translateX(-50%); border-radius:0; }
+.article-blog:not(.article-threads) .article-title { max-width:17ch; font-family:var(--font-serif); font-size:clamp(2.6rem,6vw,4.8rem); font-weight:400; line-height:.98; letter-spacing:-.045em; }
+.article-blog:not(.article-threads) .article-content p,
+.article-blog:not(.article-threads) .article-content li { font-family:var(--font-sans); line-height:1.75; }
+.article-blog:not(.article-threads) .article-content h1,
+.article-blog:not(.article-threads) .article-content h2,
+.article-blog:not(.article-threads) .article-content h3,
+.article-blog:not(.article-threads) .article-content h4 { font-family:var(--font-serif); font-weight:400; letter-spacing:-.025em; }
+
+@media (max-width:640px) {
+  .article-blog:not(.article-threads) .article-body { padding-inline:.25rem; }
+  .article-blog:not(.article-threads) .article-blog-image { width:calc(100vw - 2rem); }
+  .article-blog:not(.article-threads) .article-title { font-size:clamp(2.45rem,13vw,3.65rem); }
 }

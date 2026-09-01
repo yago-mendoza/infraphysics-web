@@ -163,51 +163,6 @@ function run() {
     relevance[a] = scores.slice(0, TOP_N);
   }
 
-  // Drift detection: find pairs not directly connected but with high neighbor overlap
-  const driftSuggestions = {};
-  const DRIFT_JACCARD_MIN = 0.25;
-  const DRIFT_SHARED_MIN = 2;
-  const DRIFT_TOP = 5;
-
-  for (const a of uids) {
-    const neighborsA = adj.get(a) || new Set();
-    if (neighborsA.size === 0) continue;
-
-    const candidates = [];
-
-    for (const b of uids) {
-      if (b === a) continue;
-      if (neighborsA.has(b)) continue; // skip directly connected
-
-      const neighborsB = adj.get(b) || new Set();
-      if (neighborsB.size === 0) continue;
-
-      // Jaccard index of neighbor sets
-      const via = [];
-      for (const n of neighborsA) {
-        if (neighborsB.has(n)) via.push(n);
-      }
-      const sharedCount = via.length;
-      if (sharedCount < DRIFT_SHARED_MIN) continue;
-
-      const unionSize = neighborsA.size + neighborsB.size - sharedCount;
-      const jaccard = unionSize > 0 ? sharedCount / unionSize : 0;
-      if (jaccard < DRIFT_JACCARD_MIN) continue;
-
-      candidates.push({
-        uid: b,
-        score: Math.round(jaccard * 10000) / 10000,
-        sharedCount,
-        via: via.slice(0, 3),
-      });
-    }
-
-    if (candidates.length > 0) {
-      candidates.sort((x, y) => y.score - x.score || y.sharedCount - x.sharedCount);
-      driftSuggestions[a] = candidates.slice(0, DRIFT_TOP);
-    }
-  }
-
   // --- Island Detection: connected components + articulation points (Tarjan) ---
 
   // Step 1: Connected components via BFS
@@ -344,10 +299,9 @@ function run() {
     isolatedUids,
   };
 
-  const driftCount = Object.keys(driftSuggestions).length;
-  const output = { centrality, relevance, driftSuggestions, islands };
+  const output = { centrality, relevance, islands };
   fs.writeFileSync(OUTPUT_FILE, JSON.stringify(output));
-  console.log(`  Graph relevance: ${N} notes, ${Object.keys(relevance).length} with scores, ${driftCount} with drift, ${cuts.length} bridges → ${OUTPUT_FILE}`);
+  console.log(`  Graph relevance: ${N} notes, ${Object.keys(relevance).length} with scores, ${cuts.length} bridges → ${OUTPUT_FILE}`);
 }
 
 run();

@@ -1,6 +1,6 @@
 ---
 uid: "HzLb0Y6y"
-address: "Crypto//Seed Phrase"
+address: "Blockchain//Wallet//Seed Phrase"
 name: "Seed Phrase"
 date: "2025-06-14"
 ---

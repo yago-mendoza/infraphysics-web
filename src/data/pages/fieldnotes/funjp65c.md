@@ -1,7 +1,7 @@
 ---
 uid: "funjp65c"
-address: "component"
-name: "Component"
+address: "Hardware//electronics//component"
+name: "component"
 date: "2026-02-06"
 ---
 - A discrete functional unit (physical or logical) that can be identified, characterized, and composed with others to form a system.

@@ -3,7 +3,7 @@
 import React, { Suspense, useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { secondBrainPath } from '../config/categories';
+import { secondBrainPath, secondBrainUidFromPath } from '../config/categories';
 import { useHub } from '../contexts/SecondBrainHubContext';
 import { useNavigationTrail } from '../hooks/useNavigationTrail';
 import { WikiContent } from '../components/WikiContent';
@@ -12,7 +12,6 @@ import { NeighborhoodGraph, type Zone } from '../components/NeighborhoodGraph';
 import { RelevanceLeaderboard, type FamilyItem } from '../components/RelevanceLeaderboard';
 import { BridgeScoreBadge } from '../components/BridgeScoreBadge';
 
-import { DriftDetector } from '../components/DriftDetector';
 import { useGraphRelevance } from '../hooks/useGraphRelevance';
 import type { SortMode, SearchMode, FilterState, ViewMode } from '../hooks/useSecondBrainHub';
 import { SearchIcon, PencilIcon, DiceIcon, ClipboardIcon, CheckIcon } from '../components/icons';
@@ -47,6 +46,7 @@ let _autoSaveOnSwitch = true;
 
 const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: 'a-z', label: 'A\u2013Z' },
+  { value: 'centrality', label: 'central' },
   { value: 'newest', label: 'newest' },
   { value: 'oldest', label: 'oldest' },
   { value: 'most-links', label: 'most links' },
@@ -814,11 +814,11 @@ const GridCard = React.memo<{
         {noteLabel(note)}
       </span>
     </div>
-    {note.addressParts && note.addressParts.length > 1 && (
-      <div className="text-[10px] text-th-tertiary mb-1">
-        {displayAddress(note.address!)}
-      </div>
-    )}
+    <div className="text-[10px] text-th-tertiary mb-1">
+      {(note.addressParts?.length ?? note.address?.split('//').length ?? 1) === 1
+        ? '/root'
+        : displayAddress(note.address || note.title)}
+    </div>
     {note.description && (
       <div className="text-xs text-th-secondary line-clamp-2 font-sans">
         {note.description}
@@ -890,7 +890,7 @@ export const SecondBrainView: React.FC = () => {
   const isSimplified = viewMode === 'simplified';
 
   const navigate = useNavigate();
-  const { getRelevance, getDrift, getPercentile, getNoteTopology } = useGraphRelevance();
+  const { getRelevance, getPercentile, getNoteTopology } = useGraphRelevance();
   const { trail, scheduleReset, scheduleExtend, truncateTrail, clearTrail, isOverflowing } =
     useNavigationTrail({ activePost, directoryNavRef });
   const isLocalhost = useIsLocalhost();
@@ -1061,8 +1061,8 @@ export const SecondBrainView: React.FC = () => {
     e.preventDefault();
     const href = link.getAttribute('href');
     if (!href) return;
-    const match = href.match(/^\/lab\/second-brain\/(.+)$/);
-    if (match) handleWikiLinkClick(match[1]);
+    const noteId = secondBrainUidFromPath(href);
+    if (noteId) handleWikiLinkClick(noteId);
     navigate(href);
   }, [handleWikiLinkClick, navigate]);
 
@@ -1126,9 +1126,25 @@ export const SecondBrainView: React.FC = () => {
   // Mobile "back to top" button — visible when scrolled past threshold
   const [showScrollTop, setShowScrollTop] = useState(false);
   useEffect(() => {
-    const handler = () => setShowScrollTop(window.scrollY > 400);
+    let visible = window.scrollY > 400;
+    let frame = 0;
+    setShowScrollTop(visible);
+    const handler = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const next = window.scrollY > 400;
+        if (next !== visible) {
+          visible = next;
+          setShowScrollTop(next);
+        }
+      });
+    };
     window.addEventListener('scroll', handler, { passive: true });
-    return () => window.removeEventListener('scroll', handler);
+    return () => {
+      window.removeEventListener('scroll', handler);
+      if (frame) cancelAnimationFrame(frame);
+    };
   }, []);
 
   // Listen for HMR fieldnote updates — force re-render after brainIndex refresh
@@ -1550,27 +1566,11 @@ export const SecondBrainView: React.FC = () => {
               trail tracks where you've been.
             </p>
             <p className="text-sm text-th-muted mt-5 italic">Long learning.</p>
-            <div className="mt-8 grid grid-cols-2 gap-3">
-              <button
-                onClick={() => dismissWelcome('simplified')}
-                className="py-4 px-3 border border-violet-500/30 rounded-lg hover:bg-violet-500/10 hover:border-violet-500/50 transition-colors text-left"
-              >
-                <div className="text-sm font-semibold text-violet-400 mb-1">Simplified</div>
-                <div className="text-[11px] text-th-secondary leading-relaxed">Clean browsing. Search, read, follow links.</div>
-              </button>
-              <button
-                onClick={() => dismissWelcome('technical')}
-                className="py-4 px-3 border border-violet-500/30 rounded-lg hover:bg-violet-500/10 hover:border-violet-500/50 transition-colors text-left"
-              >
-                <div className="text-sm font-semibold text-violet-400 mb-1">Technical</div>
-                <div className="text-[11px] text-th-secondary leading-relaxed">Full power: topology, filters, graphs, analytics.</div>
-              </button>
-            </div>
             <button
               onClick={() => dismissWelcome('technical')}
-              className="mt-4 w-full text-center text-[11px] text-th-muted hover:text-th-secondary transition-colors"
+              className="mt-8 w-full border border-violet-500/30 px-4 py-3 text-center text-[11px] uppercase tracking-[.12em] text-violet-300 hover:border-violet-500/55 hover:bg-violet-500/10 transition-colors"
             >
-              Skip &mdash; you can change this later in settings.
+              Enter the Wiki
             </button>
           </div>
         </div>,
@@ -1722,15 +1722,11 @@ export const SecondBrainView: React.FC = () => {
                 </div>
               </div>
 
-              {/* ─── Interactions + Drift Detector ─── */}
-              {(() => {
-                const driftEntries = isSimplified ? [] : getDrift(activePost!.id);
-                const hasDrift = driftEntries.length > 0;
-                if (effectiveConnections.length === 0 && !hasDrift) return null;
-                return (
+              {/* Curated interactions */}
+              {effectiveConnections.length > 0 && (
                   <div>
                     <hr className="border-t border-th-border my-6" />
-                    {effectiveConnections.length > 0 && (() => {
+                    {(() => {
                       const renderItem = (conn: Connection, icon: string, annotationText: string | null) => {
                         const v = isVisited(conn.note.id);
                         return (
@@ -1799,20 +1795,8 @@ export const SecondBrainView: React.FC = () => {
                         </div>
                       );
                     })()}
-                    {!isSimplified && effectiveConnections.length > 0 && hasDrift && (
-                      <hr className="border-t border-th-border my-6" />
-                    )}
-                    {!isSimplified && (
-                      <DriftDetector
-                        entries={driftEntries}
-                        noteById={noteById}
-                        onNoteClick={handleConnectionClick}
-                        isVisited={isVisited}
-                      />
-                    )}
                   </div>
-                );
-              })()}
+              )}
             </div>
           </div>
 

@@ -1,7 +1,7 @@
 ---
 uid: "ZzRsypXy"
-address: "manufacturing//fab"
-name: "Fab"
+address: "Hardware//manufacturing//fab"
+name: "fab"
 date: "2026-02-05"
 ---
 Semiconductor fabrication facility (foundry) that manufactures [[MTfcKkH5|chip]] dies from silicon wafers.

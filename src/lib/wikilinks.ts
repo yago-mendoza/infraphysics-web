@@ -8,9 +8,8 @@ export function resolveWikiLinks(
   html: string,
   allFieldNotes: FieldNoteMeta[],
   noteMap?: Map<string, FieldNoteMeta>,
-): { html: string; resolvedRefs: string[]; unresolvedRefs: string[] } {
+): { html: string; resolvedRefs: string[] } {
   const resolvedRefs: string[] = [];
-  const unresolvedRefs: string[] = [];
 
   const processed = html.replace(
     /<a class="wiki-ref" data-uid="([^"]+)">([^<]+)<\/a>/g,
@@ -22,13 +21,12 @@ export function resolveWikiLinks(
         const title = encodeURIComponent(target.name || target.displayTitle || displayText);
         const desc = encodeURIComponent(target.description || '');
         const address = encodeURIComponent(target.address || '');
-        return `<a class="wiki-ref wiki-ref-resolved" href="${secondBrainPath(target.id)}" data-uid="${uid}" data-title="${title}" data-description="${desc}" data-address="${address}">${displayText}${WIKI_REF_ICON_HTML}</a>`;
+        return `<a class="wiki-ref wiki-ref-resolved" href="${secondBrainPath(target.id)}" data-uid="${uid}" data-title="${title}" data-description="${desc}" data-address="${address}"><span class="wiki-ref-label">${displayText}</span>${WIKI_REF_ICON_HTML}</a>`;
       } else {
-        unresolvedRefs.push(uid);
-        return `<span class="wiki-ref wiki-ref-unresolved" data-uid="${uid}" title="Note does not exist">${displayText}<sup class="wiki-ref-icon">?</sup></span>`;
+        return displayText;
       }
     }
   );
 
-  return { html: processed, resolvedRefs, unresolvedRefs };
+  return { html: processed, resolvedRefs };
 }

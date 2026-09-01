@@ -1,8 +1,8 @@
 // Layout components barrel exports
 
-export * from './DualGrid';
-export * from './Starfield';
 export * from './Sidebar';
 export * from './MobileNav';
 export * from './Footer';
 export * from './ArticleFloatingBar';
+export * from './AmbientRails';
+export * from './WikiTopBar';

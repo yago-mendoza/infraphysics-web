@@ -1,6 +1,6 @@
 ---
 uid: "kQcY7a5n"
-address: "Crypto//HD Wallet"
+address: "Blockchain//Wallet//HD Wallet"
 name: "HD Wallet"
 date: "2025-06-14"
 ---

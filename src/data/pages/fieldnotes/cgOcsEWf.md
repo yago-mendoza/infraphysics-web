@@ -1,6 +1,6 @@
 ---
 uid: "cgOcsEWf"
-address: "networking//LAN"
+address: "Networks//LAN"
 name: "LAN"
 date: "2025-02-04"
 ---

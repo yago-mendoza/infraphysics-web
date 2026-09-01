@@ -3,12 +3,12 @@
 import { useState, useMemo, useCallback, useRef, useEffect, useLayoutEffect, useDeferredValue } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FieldNoteMeta } from '../types';
-import { secondBrainPath } from '../config/categories';
+import { secondBrainPath, secondBrainUidFromPath } from '../config/categories';
 import { initBrainIndex, fetchNoteContent, getCachedNoteContent, prefetchNoteContent, type BrainIndex, type Connection, type Neighborhood } from '../lib/brainIndex';
 import { useGraphRelevance } from './useGraphRelevance';
 
 export type SearchMode = 'name' | 'content' | 'backlinks';
-export type SortMode = 'a-z' | 'most-links' | 'fewest-links' | 'depth' | 'shuffle' | 'newest' | 'oldest';
+export type SortMode = 'a-z' | 'centrality' | 'most-links' | 'fewest-links' | 'depth' | 'shuffle' | 'newest' | 'oldest';
 export type DirectorySortMode = 'children' | 'alpha' | 'depth';
 export type ViewMode = 'simplified' | 'technical';
 
@@ -64,7 +64,7 @@ function seededShuffle<T>(arr: T[], seed: number): T[] {
 export const useSecondBrainHub = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { getIslands } = useGraphRelevance();
+  const { getIslands, getCentrality } = useGraphRelevance();
   const [query, setQuery] = useState('');
   const [showNewNote, setShowNewNote] = useState(false);
   // Deferred query — React keeps the input responsive while the filter
@@ -97,10 +97,7 @@ export const useSecondBrainHub = () => {
   const globalStats = index?.globalStats ?? { totalConcepts: 0, totalLinks: 0, isolatedCount: 0, avgRefs: 0, maxDepth: 0, density: 0, mostConnectedHub: null };
 
   // Parse ID from pathname since this hook runs outside <Routes>
-  const id = useMemo(() => {
-    const match = location.pathname.match(/^\/lab\/second-brain\/(.+)$/);
-    return match ? match[1] : undefined;
-  }, [location.pathname]);
+  const id = useMemo(() => secondBrainUidFromPath(location.pathname) ?? undefined, [location.pathname]);
   const [searchMode, setSearchMode] = useState<SearchMode>('name');
 
   // Content search gets an extra 150ms debounce on top of useDeferredValue
@@ -122,12 +119,10 @@ export const useSecondBrainHub = () => {
   const [directorySortMode, setDirectorySortMode] = useState<DirectorySortMode>('alpha');
   const [shuffleSeed, setShuffleSeed] = useState(() => Math.floor(Math.random() * 0xffffffff));
 
-  // View mode: simplified vs technical (persisted in localStorage)
-  const [viewMode, setViewModeState] = useState<ViewMode>(() => {
-    const stored = localStorage.getItem('sb-view-mode');
-    if (stored === 'simplified' || stored === 'technical') return stored;
-    return 'technical';
-  });
+  // The Console panels now provide progressive disclosure, so there is one
+  // canonical full Wiki view. Keep this compatibility field until consumers no
+  // longer branch on it, but never restore the retired simplified mode.
+  const [viewMode, setViewModeState] = useState<ViewMode>('technical');
   const setViewMode = useCallback((mode: ViewMode) => {
     setViewModeState(mode);
     localStorage.setItem('sb-view-mode', mode);
@@ -489,6 +484,9 @@ export const useSecondBrainHub = () => {
       case 'a-z':
         sorted.sort((a, b) => (a.address || a.title).localeCompare(b.address || b.title));
         break;
+      case 'centrality':
+        sorted.sort((a, b) => getCentrality(b.id) - getCentrality(a.id));
+        break;
       case 'most-links':
         sorted.sort((a, b) => {
           const aLinks = (a.references?.length || 0) + (backlinksMap.get(a.id) || []).length;
@@ -518,7 +516,7 @@ export const useSecondBrainHub = () => {
         break;
     }
     return sorted;
-  }, [filteredNotes, sortMode, shuffleSeed, backlinksMap]);
+  }, [filteredNotes, sortMode, shuffleSeed, backlinksMap, getCentrality]);
 
   // --- Reshuffle ---
   const reshuffle = useCallback(() => {

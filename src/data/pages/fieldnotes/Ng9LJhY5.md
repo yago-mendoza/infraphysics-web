@@ -1,6 +1,6 @@
 ---
 uid: "Ng9LJhY5"
-address: "Google//Cloud Console"
+address: "Tools//Google//Cloud Console"
 name: "Cloud Console"
 date: "2026-03-10"
 ---

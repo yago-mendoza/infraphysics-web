@@ -13,8 +13,7 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 - /home -- Landing page and navigation hub
 - /about -- Background, beliefs, and expertise areas
 - /lab/projects -- Engineering projects with technical deep-dives
-- /lab/second-brain -- Knowledge graph of 549+ interconnected concept notes
-- /lab/second-brain/graph -- Visual graph explorer
+- /wiki -- Knowledge graph and visual explorer for 553+ interconnected concept notes
 - /blog/threads -- Long-form essays on technology, AI, economics, and systems thinking
 - /blog/bits2bricks -- Technical tutorials bridging software and physical engineering
 
@@ -26,7 +25,7 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 - [A personal finance dashboard for the crash](https://infraphysics.net/lab/projects/1112121): A vanilla JS investment dashboard built in one session with Claude 4.6. No framework, no build step, no npm install. Just a folder you double-click.
 - [Making clinical-trial search feel like booking a flight](https://infraphysics.net/lab/projects/2718281): A clinical-trial matching tool: describe your case or upload a report, and TrialGPT finds relevant trials near you, checks the inclusion and exclusion criteria against your situation, and drafts a message to the trial coordinator.
 
-## Threads (Essays)
+## Essays
 
 - [Your context is the moat](https://infraphysics.net/blog/threads/6820451): The base model is turning into a utility you rent by the token. The part that's actually yours is what you feed it, and feeding it is how it leaves.
 - [244 pages of Mythos](https://infraphysics.net/blog/threads/8266901): The model that hacks too well, thinks too clearly, and covers its own tracks.
@@ -46,6 +45,7 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 
 ## Bits2Bricks (Tutorials)
 
+- [When an equation notices a leak](https://infraphysics.net/blog/bits2bricks/3142718): Building a model-based fault detector from thirteen equations, four residuals and a very small hydraulic system.
 - [LSTMs from scratch](https://infraphysics.net/blog/bits2bricks/3819540): A patient, ground-up build of the LSTM, from a single neuron to a recurrent circuit with memory. What the four gates do, why we add the cell state, and what the network actually learns to produce.
 - [The complete OpenClaw playbook](https://infraphysics.net/blog/bits2bricks/7463810): The full OpenClaw stack: architecture, VPS deployment, skills, channels, security, and every containment technique ranked by effort and protection.
 - [How LLMs learn](https://infraphysics.net/blog/bits2bricks/4028591): A ground-up explanation of how language models are trained after pretraining: SFT, DPO, RL, RLHF, reward hacking, KL divergence, and the DeepSeek-R1 pipeline.
@@ -55,7 +55,7 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 
 ## Second Brain (Knowledge Graph)
 
-549+ atomic concept notes covering machine learning, hardware architecture, blockchain, distributed systems, and optimization. Each note is one concept with bidirectional wiki-links. The graph reveals structural relationships between domains. Explorable at /lab/second-brain and /lab/second-brain/graph.
+553+ atomic concept notes covering machine learning, hardware architecture, blockchain, distributed systems, and optimization. Each note is one concept with bidirectional wiki-links. The graph reveals structural relationships between domains. Explorable at /wiki.
 
 ## Contact
 

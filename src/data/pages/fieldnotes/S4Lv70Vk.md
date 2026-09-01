@@ -1,7 +1,7 @@
 ---
 uid: "S4Lv70Vk"
-address: "electronics//chip//desktop CPU"
-name: "Desktop CPU"
+address: "Hardware//chip//desktop CPU"
+name: "desktop CPU"
 date: "2026-02-15"
 ---
 - A standalone processor ([[Jkr1CFGJ|MPU]]) with external [[jBm8Zuu2|RAM]] and discrete [[6YzJQiig|ASIC]] helpers on the [[26t2rDup|PCB]]

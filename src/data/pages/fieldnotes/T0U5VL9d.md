@@ -1,6 +1,6 @@
 ---
 uid: "T0U5VL9d"
-address: "Docker//Port Mapping"
+address: "Infrastructure//Docker//Port Mapping"
 name: "Port Mapping"
 date: "2025-02-03"
 ---

@@ -1,7 +1,7 @@
 ---
 uid: "LxUj37D3"
-address: "GPU//discrete"
-name: "Discrete"
+address: "Hardware//GPU//discrete"
+name: "discrete"
 date: "2026-02-05"
 ---
 A standalone [[WEUTQwqv|GPU]] on its own PCB with dedicated GDDR/HBM memory.

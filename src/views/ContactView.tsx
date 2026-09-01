@@ -1,180 +1,59 @@
-// Contact page — form, social links, theme-aware
-
 import React, { useState } from 'react';
-import { GitHubIcon, LinkedInIcon, TwitterIcon } from '../components/icons';
+import { ContactLogoSculpture } from '../components/ContactLogoSculpture';
 
 export const ContactView: React.FC = () => {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'error'>('idle');
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setStatus('submitting');
-
-    const form = e.currentTarget;
-    const data = new FormData(form);
-
     try {
-      const res = await fetch('https://formspree.io/f/xojwnobl', {
-        method: 'POST',
-        body: data,
-        headers: { Accept: 'application/json' },
-      });
-
-      if (res.ok) {
-        window.location.href = '/thanks';
-      } else {
-        setStatus('error');
-      }
-    } catch {
-      setStatus('error');
-    }
+      const response = await fetch('https://formspree.io/f/xojwnobl', { method: 'POST', body: new FormData(event.currentTarget), headers: { Accept: 'application/json' } });
+      if (!response.ok) throw new Error('Request failed');
+      window.location.href = '/thanks';
+    } catch { setStatus('error'); }
   };
 
   return (
-    <div className="flex flex-col animate-fade-in">
-      <section className="pt-6 md:pt-10 pb-16">
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-th-heading mb-3">
-          Let's talk
-        </h1>
-        <p className="text-th-secondary text-sm font-sans mb-2 max-w-lg leading-relaxed">
-          Whether it's a question, a collaboration idea, or just a conversation worth having — drop me a line.
-          I typically respond within a few days.
-        </p>
-        <p className="text-th-secondary text-sm font-sans mb-12 max-w-lg leading-relaxed">
-          I'm especially interested in conversations about distributed systems, complexity science, optimization and software/hardware projects.
-        </p>
+    <div className="animate-fade-in max-w-[40rem] mx-auto contact-editorial-shell contact-sculpture-shell">
+      <ContactLogoSculpture />
+      <div className="contact-content-layer">
+      <header className="pt-4 pb-12 md:pb-16 border-b border-th-border">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-th-tertiary mb-5">Contact / Madrid</p>
+        <h1 className="max-w-3xl text-[2.85rem] md:text-[4.15rem] font-serif font-normal tracking-[-0.045em] leading-[0.96] text-th-heading">Bring an interesting problem.</h1>
+        <p className="mt-7 max-w-2xl text-lg leading-relaxed text-th-secondary font-sans">Systems, infrastructure, robotics, research, technical writing, strange ideas with a concrete edge—or simply a conversation worth having.</p>
+      </header>
 
-        {/* Contact Form */}
-        <form onSubmit={handleSubmit} className="max-w-lg mb-14">
-          {/* Honeypot — hidden from humans, bots fill it, Formspree discards those */}
-          <input type="text" name="_gotcha" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
-          <div className="flex flex-col gap-5">
-            <div>
-              <label htmlFor="name" className="block text-xs text-th-tertiary uppercase tracking-wider mb-2">
-                Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                required
-                className="w-full px-4 py-3 bg-th-surface-alt border border-th-border rounded-sm text-th-heading text-sm
-                           placeholder-th-muted outline-none transition-colors
-                           focus:border-th-border-active focus:bg-th-elevated"
-                placeholder="Your name"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-xs text-th-tertiary uppercase tracking-wider mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                required
-                className="w-full px-4 py-3 bg-th-surface-alt border border-th-border rounded-sm text-th-heading text-sm
-                           placeholder-th-muted outline-none transition-colors
-                           focus:border-th-border-active focus:bg-th-elevated"
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="message" className="block text-xs text-th-tertiary uppercase tracking-wider mb-2">
-                Message
-              </label>
-              <textarea
-                id="message"
-                name="message"
-                required
-                rows={5}
-                className="w-full px-4 py-3 bg-th-surface-alt border border-th-border rounded-sm text-th-heading text-sm
-                           placeholder-th-muted outline-none transition-colors resize-y
-                           focus:border-th-border-active focus:bg-th-elevated"
-                placeholder="What's on your mind?"
-              />
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-[14rem_minmax(0,1fr)] gap-10 md:gap-16 py-10">
+        <aside>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-th-tertiary mb-5">Direct routes</p>
+          <div className="space-y-3 text-sm">
+            <a href="mailto:contact@infraphysics.net" className="block text-th-heading hover:text-red-500 transition-colors">Email ↗</a>
+            <a href="https://linkedin.com/in/yago-mendoza" target="_blank" rel="noopener noreferrer" className="block text-th-secondary hover:text-th-heading transition-colors">LinkedIn ↗</a>
+            <a href="https://github.com/yago-mendoza" target="_blank" rel="noopener noreferrer" className="block text-th-secondary hover:text-th-heading transition-colors">GitHub ↗</a>
+            <a href="https://x.com/ymdatweets" target="_blank" rel="noopener noreferrer" className="block text-th-secondary hover:text-th-heading transition-colors">X ↗</a>
           </div>
+        </aside>
 
-          {status === 'error' && (
-            <p className="text-red-400 text-xs mt-3">
-              Something went wrong. You can also reach me at contact@infraphysics.net.
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={status === 'submitting'}
-            className="mt-6 px-6 py-2.5 bg-th-active border border-th-border rounded-sm text-th-heading text-sm
-                       transition-all hover:bg-th-active-hover hover:border-th-border-hover
-                       disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {status === 'submitting' ? 'Sending...' : 'Send message'}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <label className="block">
+            <span className="block text-[10px] uppercase tracking-[0.16em] text-th-tertiary mb-2">Your name</span>
+            <input name="name" required className="w-full bg-transparent border-0 border-b border-th-border px-0 py-3 text-th-heading outline-none focus:border-th-heading transition-colors" />
+          </label>
+          <label className="block">
+            <span className="block text-[10px] uppercase tracking-[0.16em] text-th-tertiary mb-2">Email</span>
+            <input type="email" name="email" required className="w-full bg-transparent border-0 border-b border-th-border px-0 py-3 text-th-heading outline-none focus:border-th-heading transition-colors" />
+          </label>
+          <label className="block">
+            <span className="block text-[10px] uppercase tracking-[0.16em] text-th-tertiary mb-2">What are you thinking about?</span>
+            <textarea name="message" required rows={6} className="w-full bg-transparent border border-th-border p-4 text-th-heading outline-none resize-y focus:border-th-heading transition-colors" />
+          </label>
+          {status === 'error' && <p className="text-sm text-red-500">The form failed. Email contact@infraphysics.net directly.</p>}
+          <button type="submit" disabled={status === 'submitting'} className="text-sm text-th-heading border-b border-th-heading pb-1 hover:text-red-500 hover:border-red-500 transition-colors disabled:opacity-50">
+            {status === 'submitting' ? 'Sending…' : 'Send message →'}
           </button>
-
-          <p className="mt-6 text-xs text-th-muted leading-relaxed">
-            Not a form person? —{' '}
-            <a href="mailto:contact@infraphysics.net" className="text-th-tertiary hover:text-th-heading transition-colors">
-              contact@infraphysics.net
-            </a>
-            {' '}or{' '}
-            <a href="mailto:yagomj@gmail.com" className="text-th-tertiary hover:text-th-heading transition-colors">
-              yagomj@gmail.com
-            </a>
-            {' '}work just as well.
-          </p>
         </form>
-
-        {/* Elsewhere */}
-        <div className="mb-14">
-          <h2 className="text-xs text-th-tertiary uppercase tracking-wider mb-6">Elsewhere</h2>
-
-          <div className="flex flex-col gap-4">
-            <a
-              href="https://linkedin.com/in/yago-mendoza"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 text-th-secondary hover:text-th-heading transition-colors group"
-            >
-              <span className="p-2 border border-th-border rounded-sm group-hover:border-th-border-active transition-colors">
-                <LinkedInIcon />
-              </span>
-              <span className="text-sm font-sans">linkedin.com/in/<span className="text-th-heading">yago-mendoza</span></span>
-            </a>
-
-            <a
-              href="https://github.com/yago-mendoza"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 text-th-secondary hover:text-th-heading transition-colors group"
-            >
-              <span className="p-2 border border-th-border rounded-sm group-hover:border-th-border-active transition-colors">
-                <GitHubIcon />
-              </span>
-              <span className="text-sm font-sans">github.com/<span className="text-th-heading">yago-mendoza</span></span>
-            </a>
-
-            <a
-              href="https://x.com/ymdatweets"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 text-th-secondary hover:text-th-heading transition-colors group"
-            >
-              <span className="p-2 border border-th-border rounded-sm group-hover:border-th-border-active transition-colors">
-                <TwitterIcon />
-              </span>
-              <span className="text-sm font-sans">x.com/<span className="text-th-heading">@ymdatweets</span></span>
-            </a>
-          </div>
-        </div>
-
-        {/* Tiny copyright footer */}
-        <div className="pt-6 border-t border-th-border text-[10px] text-th-muted">
-          &copy; {new Date().getFullYear()} InfraPhysics
-        </div>
-      </section>
+      </div>
+      </div>
     </div>
   );
 };

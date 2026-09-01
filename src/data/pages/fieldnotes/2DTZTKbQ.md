@@ -1,6 +1,6 @@
 ---
 uid: "2DTZTKbQ"
-address: "Google//Gmail API"
+address: "Tools//Google//Gmail API"
 name: "Gmail API"
 date: "2026-03-10"
 ---

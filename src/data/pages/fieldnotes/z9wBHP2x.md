@@ -1,6 +1,6 @@
 ---
 uid: "z9wBHP2x"
-address: "NVIDIA//A100"
+address: "Hardware//NVIDIA//A100"
 name: "A100"
 date: "2021-06-12"
 ---

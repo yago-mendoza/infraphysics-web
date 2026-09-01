@@ -1,6 +1,6 @@
 ---
 uid: "uMaVCTAm"
-address: "networking//Gateway"
+address: "Networks//Gateway"
 name: "Gateway"
 date: "2025-02-04"
 ---

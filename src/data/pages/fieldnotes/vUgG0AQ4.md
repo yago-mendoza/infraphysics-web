@@ -3,7 +3,7 @@ uid: "vUgG0AQ4"
 address: "Blockchain//Wallet//Network"
 name: "Network"
 date: "2025-07-07"
-distinct: ["Docker//Network"]
+distinct: ["Infrastructure//Docker//Network"]
 ---
 - Switching networks in Metamask = changing the RPC endpoint URL + Chain ID.
 - Metamask has zero knowledge of Docker networks. It only understands RPC URLs and chainIds.

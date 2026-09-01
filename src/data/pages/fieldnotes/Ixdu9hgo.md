@@ -1,6 +1,6 @@
 ---
 uid: "Ixdu9hgo"
-address: "Crypto//ECDSA"
+address: "Security//cryptography//ECDSA"
 name: "ECDSA"
 date: "2025-06-14"
 ---

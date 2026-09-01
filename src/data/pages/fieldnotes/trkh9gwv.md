@@ -1,6 +1,6 @@
 ---
 uid: "trkh9gwv"
-address: "electronics//chip//SoC"
+address: "Hardware//chip//SoC"
 name: "SoC"
 date: "2026-02-05"
 ---

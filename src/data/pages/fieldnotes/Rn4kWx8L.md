@@ -1,6 +1,6 @@
 ---
 uid: "Rn4kWx8L"
-address: "Cloud//Resend"
+address: "Infrastructure//Resend"
 name: "Resend"
 date: "2026-03-12"
 ---

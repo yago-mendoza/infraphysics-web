@@ -1,6 +1,6 @@
 ---
 uid: "Sb7tRx5K"
-address: "Cloud//Supabase"
+address: "Infrastructure//Supabase"
 name: "Supabase"
 date: "2026-03-12"
 ---

@@ -1,7 +1,7 @@
 ---
 uid: "TklVb4w3"
-address: "networking"
-name: "Networking"
+address: "Networks"
+name: "Networks"
 date: "2026-02-06"
 ---
 - The practice and infrastructure of connecting computing devices so they can exchange data.

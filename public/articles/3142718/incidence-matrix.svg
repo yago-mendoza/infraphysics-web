@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 720" role="img" aria-labelledby="title desc">
+  <title id="title">Incidence matrix of the two-tank system</title><desc id="desc">Faithful reconstruction of the LaTeX incidence table relating thirteen elementary models to physical and measured variables.</desc>
+  <rect width="1500" height="720" fill="#fff"/>
+  <style>.g{stroke:#222;stroke-width:1;fill:none}.dash{stroke:#777;stroke-dasharray:5 5}.h{font:italic 18px Georgia,serif;fill:#111}.m{font:17px Georgia,serif;fill:#111}.one{font:16px Georgia,serif;fill:#111}.cap{font:18px Georgia,serif;fill:#111}.note{font:14px Georgia,serif;fill:#555}</style>
+  <text class="cap" x="750" y="35" text-anchor="middle">Incidence matrix</text><text class="note" x="750" y="58" text-anchor="middle">Rows are elementary relations. Columns are unknown and measured variables.</text>
+  <g transform="translate(42 90)">
+    <rect class="g" width="1416" height="560"/>
+    <path class="g" d="M96 0V560M184 0V560M272 0V560M360 0V560M448 0V560M536 0V560M624 0V560M712 0V560M800 0V560M888 0V560M976 0V560M1064 0V560M1152 0V560M1240 0V560M1328 0V560"/>
+    <path class="g" d="M0 42H1416M0 82H1416M0 122H1416M0 162H1416M0 202H1416M0 242H1416M0 282H1416M0 322H1416M0 362H1416M0 402H1416M0 442H1416M0 482H1416M0 522H1416"/>
+    <path stroke="#111" stroke-width="3" d="M0 362H1416"/>
+    <g class="h" text-anchor="middle"><text x="140" y="28">h₁</text><text x="228" y="28">h₂</text><text x="316" y="28">V₁</text><text x="404" y="28">V₂</text><text x="492" y="28">Qₚ</text><text x="580" y="28">Uₚ</text><text x="668" y="28">U_b</text><text x="756" y="28">Q₁₂</text><text x="844" y="28">Qₒ</text><text x="932" y="28">my₁</text><text x="1020" y="28">my₂</text><text x="1108" y="28">mQₚ</text><text x="1196" y="28">mUₚ</text><text x="1284" y="28">mU_b</text></g>
+    <g class="m" text-anchor="middle"><text x="48" y="69">M₁</text><text x="48" y="109">M₂</text><text x="48" y="149">M₃</text><text x="48" y="189">M₄</text><text x="48" y="229">M₅</text><text x="48" y="269">M₆</text><text x="48" y="309">M₇</text><text x="48" y="349">M₈</text><text x="48" y="389">M₉</text><text x="48" y="429">M₁₀</text><text x="48" y="469">M₁₁</text><text x="48" y="509">M₁₂</text><text x="48" y="549">M₁₃</text></g>
+    <g class="one" text-anchor="middle">
+      <text x="316" y="69">1</text><text x="492" y="69">1</text><text x="756" y="69">1</text>
+      <text x="140" y="109">1</text><text x="316" y="109">1</text>
+      <text x="404" y="149">1</text><text x="756" y="149">1</text><text x="844" y="149">1</text>
+      <text x="228" y="189">1</text><text x="404" y="189">1</text>
+      <text x="492" y="229">1</text><text x="580" y="229">1</text>
+      <text x="140" y="269">1</text><text x="228" y="269">1</text><text x="668" y="269">1</text><text x="756" y="269">1</text>
+      <text x="228" y="309">1</text><text x="844" y="309">1</text>
+      <text x="140" y="349">1</text><text x="580" y="349">1</text>
+      <text x="140" y="389">1</text><text x="932" y="389">1</text>
+      <text x="228" y="429">1</text><text x="1020" y="429">1</text>
+      <text x="492" y="469">1</text><text x="1108" y="469">1</text>
+      <text x="580" y="509">1</text><text x="1196" y="509">1</text>
+      <text x="668" y="549">1</text><text x="1284" y="549">1</text>
+    </g>
+    <text class="note" x="1372" y="185" text-anchor="middle" transform="rotate(90 1372 185)">physical model</text><text class="note" x="1372" y="455" text-anchor="middle" transform="rotate(90 1372 455)">sensor equations</text>
+  </g>
+</svg>

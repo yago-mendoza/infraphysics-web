@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import type { Post } from '../types';
 import { postPath } from '../config/categories';
+import { engagementApiUrl } from '../lib/engagementApi';
 
 export interface ArticleStats {
   views: number;
-  hearts: number;
 }
 
-/** Bulk-fetches views + hearts for a list of posts (used by listing grids). */
+/** Bulk-fetches the only public list metric: deduplicated views. */
 export function useArticleStats(posts: Post[]): Record<string, ArticleStats> {
   const [stats, setStats] = useState<Record<string, ArticleStats>>({});
 
@@ -17,7 +17,7 @@ export function useArticleStats(posts: Post[]): Record<string, ArticleStats> {
 
     const slugs = posts.map(p => postPath(p.category, p.id));
 
-    fetch('/api/stats', {
+    fetch(engagementApiUrl('/api/stats'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ slugs }),

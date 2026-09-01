@@ -1,6 +1,6 @@
 # Fieldnotes Management Guide
 
-Developer reference for managing the fieldnotes knowledge graph. This covers the operational side — creating, renaming, deleting, and auditing notes. For the **content authoring format** (frontmatter, syntax, trailing refs, wiki-links), see the [Second Brain section in the pages README](../README.md#second-brain-fieldnotes). For **build pipeline internals** (14-step compilation, cache, Shiki config), see [scripts/README.md](../../../scripts/README.md).
+Developer reference for managing the fieldnotes knowledge graph. This covers the operational side — creating, renaming, deleting, and auditing notes. For the **content authoring format** (frontmatter, syntax, trailing refs, wiki-links), see the [Second Brain section in the pages README](../README.md#second-brain-fieldnotes). For **build pipeline internals** (shared compilation, cache and Shiki config), see [scripts/README.md](../../../scripts/README.md).
 
 ---
 
@@ -377,11 +377,11 @@ Some text here.      ← this line breaks the trailing ref sequence
 Only one of the two colliding notes needs the `distinct` entry. Adding it to both is harmless but redundant.
 
 ```yaml
-# In networking//cache — suppresses collision with CPU//cache
-distinct: ["CPU//cache"]
+# In Networks//cache — suppresses collision with Hardware//CPU//cache
+distinct: ["Hardware//CPU//cache"]
 ```
 
-You do **not** also need to add `distinct: ["networking//cache"]` to the CPU//cache note.
+You do **not** also need to add `distinct: ["Networks//cache"]` to the Hardware//CPU//cache note.
 
 ### Filename convention uses UIDs
 
@@ -451,4 +451,4 @@ node scripts/check-references.js # audit
 
 - **Name ambiguity:** Multiple notes can share the same `name`. Import reports ambiguous links and leaves them unresolved. Fix manually after import.
 - **Path characters:** Note names with `:`, `?`, `*` are sanitized to `_` during export. The original names are preserved in frontmatter.
-- **Custom syntax:** `{bkqt}`, `{#hex:text}`, `{kbd:key}` etc. are left as-is during export (Obsidian won't render them, but they survive the roundtrip).
+- **Editorial syntax:** typed boxes such as `{bkqt/tip}`, keyboard tokens such as `{kbd:key}`, and other supported primitives are left as-is during export so they survive the roundtrip.

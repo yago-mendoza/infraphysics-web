@@ -9,7 +9,7 @@
 //   - marked: the configured marked instance
 //
 // ── Protection order ──
-// Preprocessors (underline, accent-text, etc.) run on raw markdown and can
+// The small set of inline preprocessors runs on raw markdown and can
 // collide with syntax they don't own. Three zones are shielded with placeholders
 // BEFORE preprocessors execute:
 //
@@ -78,8 +78,6 @@ const BKQT_TYPES = {
   warning:    { label: 'Warning' },
   danger:     { label: 'Danger' },
   keyconcept: { label: 'Key concept' },
-  quote:      { label: null, isQuote: true },
-  pullquote:  { label: null, isQuote: true },
 };
 
 function processBlockquoteContent(content, placeholders, markedInstance) {
@@ -156,10 +154,6 @@ export function processCustomBlockquotes(markdown, placeholders, markedInstance)
   return markdown.replace(regex, (_, type, customLabel, content) => {
     const config = BKQT_TYPES[type];
     const body = processBlockquoteContent(content, placeholders, markedInstance);
-    if (config.isQuote) {
-      const attrib = customLabel ? `<span class="bkqt-attrib">${customLabel.trim()}</span>` : '';
-      return `<div class="bkqt bkqt-${type}"><div class="bkqt-body">${body}${attrib}</div></div>`;
-    }
     const label = customLabel ? customLabel.trim() : config.label;
     return `<div class="bkqt bkqt-${type}"><div class="bkqt-body"><span class="bkqt-label">${label}</span>${body}</div></div>`;
   });
@@ -197,11 +191,7 @@ const CROSS_DOC_CATEGORIES = {
   bits2bricks: { path: '/blog/bits2bricks' },
 };
 
-const CROSS_DOC_ICONS = {
-  projects: `<svg class="doc-ref-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
-  threads: `<svg class="doc-ref-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
-  bits2bricks: `<svg class="doc-ref-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5"/></svg>`,
-};
+const CROSS_DOC_ICON = `<svg class="doc-ref-icon" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M280-280h280v-80H280v80Zm0-160h400v-80H280v80Zm0-160h400v-80H280v80Zm-80 480q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"/></svg>`;
 
 /**
  * Process all [[link]] references in HTML.
@@ -229,7 +219,7 @@ export function processAllLinks(html, uidToMeta, wikiLinksConfig, buildErrors) {
       }
 
       const href = `${config.path}/${slug.trim()}`;
-      return `<a class="doc-ref doc-ref-${category}" href="${href}" target="_blank" rel="noopener noreferrer">${category}/${displayText.trim()}</a>`;
+      return `<a class="doc-ref doc-ref-${category}" href="${href}" target="_blank" rel="noopener noreferrer">${CROSS_DOC_ICON}${displayText.trim()}</a>`;
     }
 
     // UID-based wiki-ref
@@ -334,77 +324,11 @@ export function processMath(markdown, katex) {
   return result;
 }
 
-// ── Post-processors ──
-
-export function applyPostProcessors(html, postProcessors) {
-  let result = html;
-  for (const rule of postProcessors) {
-    result = result.replace(rule.pattern, rule.replace);
-  }
-  return result;
-}
-
-// ── Side-by-side image layouts ──
-
-const SIDE_IMG_RE = /^!\[([^\]]*)\]\(([^\s)]+)\s+"(left|right):?(\d+px)?"\)\s*$/;
-
-// Parse a single positioned-image line into its parts. The alt may carry a
-// caption after a pipe: `![alt|caption](src "left:300px")`. Returns null if the
-// line is not a left/right positioned image.
-function parseSideImg(line) {
-  const m = line.trim().match(SIDE_IMG_RE);
-  if (!m) return null;
-  const [, altRaw, src, position, width] = m;
-  let alt = altRaw, caption = '';
-  const pipe = altRaw.indexOf('|');
-  if (pipe !== -1) { caption = altRaw.slice(pipe + 1).trim(); alt = altRaw.slice(0, pipe).trim(); }
-  return { alt: alt.replace(/"/g, '&quot;'), caption, src, position, width };
-}
-
-export function preprocessSideImages(markdown, markedInstance) {
-  const blocks = markdown.split(/\n\n+/);
-  const result = [];
-
-  const imgTag = (img) => `<img src="${img.src}" alt="${img.alt}" loading="lazy">`;
-  const figcap = (img) => img.caption ? `\n<figcaption>${markedInstance.parseInline(img.caption)}</figcaption>` : '';
-
-  for (const block of blocks) {
-    const lines = block.split('\n');
-    const first = parseSideImg(lines[0]);
-
-    if (!first) { result.push(block); continue; }
-
-    const rest = lines.slice(1).filter((l) => l.trim());
-    const second = rest.length ? parseSideImg(rest[0]) : null;
-
-    if (second && rest.length === 1) {
-      // Two positioned images on one line: a side-by-side pair (each 50%).
-      // Widths are ignored here; the row splits evenly. Captions are honored.
-      result.push(`<div class="img-pair">
-<figure class="img-pair-fig">${imgTag(first)}${figcap(first)}</figure>
-<figure class="img-pair-fig">${imgTag(second)}${figcap(second)}</figure>
-</div>`);
-    } else if (rest.length > 0) {
-      // Image + text side layout. The image may carry a caption (rendered as a
-      // figure); without one it stays a bare img to preserve the old output.
-      const widthStyle = first.width ? ` style="width: ${first.width};"` : '';
-      const sideImg = first.caption
-        ? `<figure class="img-side-img"${widthStyle}>${imgTag(first)}${figcap(first)}</figure>`
-        : `<img src="${first.src}" alt="${first.alt}" class="img-side-img"${widthStyle} loading="lazy">`;
-      const paragraphs = rest.map((line) => `<p>${markedInstance.parseInline(line)}</p>`).join('\n');
-      result.push(`<div class="img-side-layout img-side-${first.position}">
-${sideImg}
-<div class="img-side-content">
-${paragraphs}
-</div>
-</div>`);
-    } else {
-      // Standalone positioned image: leave it for marked (float + caption).
-      result.push(block);
-    }
-  }
-
-  return result.join('\n\n');
+export function protectReferencePipesInTables(markdown) {
+  return markdown.split('\n').map(line => {
+    if (!/^\s*\|/.test(line)) return line;
+    return line.replace(/\[\[([^\]\n]+?)\|([^\]\n]+?)\]\]/g, (_match, target, label) => `[[${target}%%REF_PIPE%%${label}]]`);
+  }).join('\n');
 }
 
 // ── Definition lists ──
@@ -431,28 +355,42 @@ export function processDefinitionLists(markdown, markedInstance) {
 // ── Alphabetical lists ──
 
 export function processAlphabeticalLists(markdown, markedInstance) {
-  return markdown.replace(
-    /^([a-zA-Z])\. .+(?:\n\n?[a-zA-Z]\. .+)*/gm,
-    (block) => {
-      const lines = block.split('\n').filter(l => l.trim());
-      const firstChar = lines[0][0];
-      const isUpper = firstChar >= 'A' && firstChar <= 'Z';
-      const startCode = (isUpper ? 'A' : 'a').charCodeAt(0);
+  const lines = markdown.split('\n');
+  const output = [];
+  for (let index = 0; index < lines.length;) {
+    const first = lines[index].match(/^([aA])\. (.+)$/);
+    if (!first) { output.push(lines[index++]); continue; }
 
-      if (firstChar !== 'a' && firstChar !== 'A') return block;
-      for (let i = 0; i < lines.length; i++) {
-        const expected = String.fromCharCode(startCode + i);
-        if (!lines[i].startsWith(expected + '. ')) return block;
-      }
+    const isUpper = first[1] === 'A';
+    const startCode = (isUpper ? 'A' : 'a').charCodeAt(0);
+    const items = [first[2]];
+    let cursor = index + 1;
+    let expectedOffset = 1;
 
-      const type = isUpper ? 'A' : 'a';
-      const items = lines.map(l => {
-        const content = l.replace(/^[a-zA-Z]\. /, '');
-        return `<li>${markedInstance.parseInline(content)}</li>`;
-      }).join('');
-      return `<ol type="${type}">${items}</ol>`;
+    while (cursor < lines.length) {
+      let candidate = cursor;
+      if (!lines[candidate].trim() && candidate + 1 < lines.length) candidate++;
+      const expected = String.fromCharCode(startCode + expectedOffset);
+      const match = lines[candidate].match(new RegExp(`^${expected}\\. (.+)$`));
+      if (!match) break;
+      items.push(match[1]);
+      expectedOffset++;
+      cursor = candidate + 1;
     }
-  );
+
+    if (items.length < 2) { output.push(lines[index++]); continue; }
+    const type = isUpper ? 'A' : 'a';
+    output.push(`<ol type="${type}">${items.map(item => `<li>${markedInstance.parseInline(item)}</li>`).join('')}</ol>`);
+    index = cursor;
+  }
+  return output.join('\n');
+}
+
+export function normalizeListIndentation(markdown) {
+  return markdown.replace(/^( +)(?=(?:[-+*]|\d+\.)\s)/gm, (_match, spaces) => {
+    const levels = Math.max(1, Math.ceil(spaces.length / 2));
+    return ' '.repeat(levels * 4);
+  });
 }
 
 // ── Context annotations ──
@@ -513,14 +451,6 @@ export function stripHeadingFormatting(html) {
   return html.replace(/<(h[1-4])(\s[^>]*)?>(.+?)<\/\1>/gi, (match, tag, attrs, inner) => {
     const plain = inner.replace(/<[^>]*>/g, '');
     return `<${tag}${attrs || ''}>${plain}</${tag}>`;
-  });
-}
-
-export function numberH1Headings(html) {
-  let counter = 0;
-  return html.replace(/<h1(\s[^>]*)?>(.+?)<\/h1>/gi, (match, attrs, inner) => {
-    counter++;
-    return `<h1${attrs || ''}>${counter}. ${inner}</h1>`;
   });
 }
 
@@ -593,7 +523,7 @@ export function highlightCodeBlocks(html, highlighter) {
 // ── Main compilation pipeline ──
 
 /**
- * Compile raw markdown through the 14-step pipeline.
+ * Compile raw markdown through the content pipeline.
  *
  * @param {string} rawMd - raw markdown content (no frontmatter)
  * @param {string} articleDate - date string for context annotations
@@ -613,14 +543,21 @@ export function compileMarkdown(rawMd, articleDate, options) {
   const withBkqt = processCustomBlockquotes(withMath, placeholders, markedInstance);
   const restored = restoreBackticks(withBkqt, placeholders);
   const withUrls = processExternalUrls(restored);
-  const withSide = preprocessSideImages(withUrls, markedInstance);
-  const withDefs = processDefinitionLists(withSide, markedInstance);
+  const withSafeTableRefs = protectReferencePipesInTables(withUrls);
+  const withDefs = processDefinitionLists(withSafeTableRefs, markedInstance);
   const withAlpha = processAlphabeticalLists(withDefs, markedInstance);
   const withCtx = processContextAnnotations(withAlpha, articleDate, markedInstance);
-  const parsed = markedInstance.parse(withCtx);
+  const withListIndent = normalizeListIndentation(withCtx);
+  const parsed = markedInstance.parse(withListIndent)
+    .replace(/%%REF_PIPE%%/g, '|')
+    // A pair is deliberately the only supported multi-image layout. Keeping
+    // the grouping here makes authoring independent from fragile left/right
+    // floats and lets the same markup collapse cleanly on small screens.
+    .replace(
+      /(<figure class="img-pair-item">[\s\S]*?<\/figure>)\s*(<figure class="img-pair-item">[\s\S]*?<\/figure>)/g,
+      '<div class="img-pair">$1$2</div>',
+    );
   const clean = stripHeadingFormatting(parsed);
-  const numbered = numberH1Headings(clean);
-  const highlighted = highlightCodeBlocks(numbered, highlighter);
-  const postProcessed = applyPostProcessors(highlighted, compilerConfig.postProcessors);
-  return processOutsideCode(postProcessed, processAnnotations);
+  const highlighted = highlightCodeBlocks(clean, highlighter);
+  return processOutsideCode(highlighted, processAnnotations);
 }

@@ -11,6 +11,6 @@ date: "2026-03-12"
 - Contrast with React + [[Vp8rBm5J|Vite]]: React manda un bundle JS al navegador y el DOM se construye allí: el HTML inicial está vacío, React lo monta en el cliente. Astro manda el HTML ya montado desde el servidor: el navegador lo pinta directamente, sin esperar a JS. Less JS = faster load.
 - Contrast with [[Nx5tWs7J|Next.js]]: Next.js is full-stack (frontend + [[Bk9sTm2J|backend]] + SSR). Astro is frontend-only and static-first. For apps with lots of interactivity (dashboards, editors), Next.js or React make more sense.
 - InfraPhysics (React + Vite) would be a natural candidate for Astro: mostly static content with a few interactive islands (Second Brain, graph, search). But it works fine as-is.
----
+
 ## Interactions
 - [[Rn8tKx5D|Rendering]] : : Astro is SSG by default: the HTML arrives with the content already inside. A pure React SPA (CSR) sends an empty shell and JS builds the page in the browser. Crawlers and tools like WebFetch can read Astro pages; they can't read CSR pages because they don't execute JS.

@@ -1,6 +1,6 @@
 ---
 uid: "IjOYtr23"
-address: "Docker//Lifecycle"
+address: "Infrastructure//Docker//Lifecycle"
 name: "Lifecycle"
 date: "2025-02-03"
 ---

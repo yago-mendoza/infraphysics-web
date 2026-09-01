@@ -1,7 +1,7 @@
 ---
 uid: oInUhOGM
-address: "GPU//architecture"
-name: "Architecture"
+address: "Hardware//GPU//architecture"
+name: "architecture"
 date: "2026-02-05"
 ---
 - The internal design of a [[WEUTQwqv|GPU]]: streaming multiprocessors ([[q3TzzAYI|NVIDIA]]) or compute units (AMD) grouped into warps/wavefronts executing in lockstep.

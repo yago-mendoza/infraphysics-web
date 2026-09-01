@@ -1,7 +1,7 @@
 ---
 uid: "0C6FXSnp"
-address: "Claude Code//.claude//hooks"
-name: "Hooks"
+address: "Tools//Claude Code//.claude//hooks"
+name: "hooks"
 date: "2026-02-06"
 ---
 - Event-driven scripts that Claude Code runs automatically at lifecycle points. Written in JavaScript (or shell), they live in `.claude/hooks/`.

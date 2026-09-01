@@ -1,7 +1,7 @@
 ---
 uid: "nlro5GOJ"
-address: "component//capacitor"
-name: "Capacitor"
+address: "Hardware//electronics//component//capacitor"
+name: "capacitor"
 date: "2026-02-15"
 ---
 - Condensador; stores and releases electrical charge to keep voltage smooth.

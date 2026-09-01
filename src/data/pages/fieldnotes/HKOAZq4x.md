@@ -1,7 +1,7 @@
 ---
 uid: "HKOAZq4x"
-address: "Cloud//Supabase//credentials"
-name: "Supabase Credentials"
+address: "Infrastructure//Supabase//credentials"
+name: "credentials"
 date: "2026-03-15"
 ---
 The three pieces that connect your app to [[Sb7tRx5K|Supabase]]. Think of it as: address, front door key, and master key.

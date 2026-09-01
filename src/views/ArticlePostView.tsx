@@ -21,6 +21,7 @@ import { useReaction } from '../hooks/useReaction';
 import { useTheme } from '../contexts/ThemeContext';
 import Giscus from '@giscus/react';
 import '../styles/article.css';
+import '../styles/article-layout.css';
 
 interface ArticlePostViewProps {
   post: Post;
@@ -213,17 +214,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
     // Hierarchical numbering (1, 1.1, 1.2, 2, 2.1, …)
     const minLevel = Math.min(...raw.map(h => h.level));
-    const maxDepth = Math.max(...raw.map(h => h.level)) - minLevel + 1;
-    const counters = new Array(maxDepth).fill(0);
-
-    const headings = raw.map(h => {
-      const depth = h.level - minLevel;
-      counters[depth]++;
-      for (let i = depth + 1; i < maxDepth; i++) counters[i] = 0;
-      const parts: number[] = [];
-      for (let i = 0; i <= depth; i++) parts.push(counters[i]);
-      return { ...h, number: parts.join('.'), depth };
-    });
+    const headings = raw.map(h => ({ ...h, number: '', depth: h.level - minLevel }));
 
     return { headings, contentWithIds: finalProcessed };
   }, [post.content, isBlog]);
@@ -291,7 +282,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
       const heading = (e.target as HTMLElement).closest('.heading-toc-link') as HTMLElement | null;
       if (!heading) return;
       // Don't intercept clicks on actual links inside headings
-      if ((e.target as HTMLElement).closest('a')) return;
+      if ((e.target as HTMLElement).closest('a, button')) return;
       const tocId = heading.dataset.tocId;
       if (!tocId) return;
 
@@ -410,7 +401,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
   useKeyboardShortcuts(articleShortcuts);
 
-  // Related posts — from target category, explicit frontmatter IDs or random fallback
+  // Related posts — explicit editorial links first, deterministic topic overlap second.
   const targetCategory = catCfg?.relatedCategory || post.category;
   const targetCatCfg = CATEGORY_CONFIG[targetCategory];
   const relatedSectionPath = getSectionPath(targetCategory);
@@ -419,20 +410,25 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const recommendedPosts = useMemo(() => {
     const pool = posts.filter(p => p.category === targetCategory && p.id !== post.id);
 
-    // If frontmatter specifies explicit IDs, resolve them (preserving order)
+    // Explicit editorial links may cross category boundaries. Resolve them
+    // globally and preserve the author's order; category fallback stays below.
     if (post.related?.length) {
       const explicit = post.related
-        .map(id => pool.find(p => p.id === id))
+        .map(id => posts.find(p => p.id === id && !(p.id === post.id && p.category === post.category)))
         .filter((p): p is Post => p !== undefined);
       if (explicit.length > 0) return explicit.slice(0, 3);
     }
 
-    // Fallback: Fisher-Yates shuffle for unbiased random pick
-    for (let i = pool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
-    }
-    return pool.slice(0, 3);
+    const topics = new Set((post.tags || []).map(tag => tag.toLowerCase()));
+    return pool
+      .map(candidate => ({
+        candidate,
+        overlap: (candidate.tags || []).reduce((score, tag) => score + (topics.has(tag.toLowerCase()) ? 1 : 0), 0),
+      }))
+      .sort((a, b) => b.overlap - a.overlap
+        || new Date(b.candidate.date).getTime() - new Date(a.candidate.date).getTime())
+      .slice(0, 3)
+      .map(({ candidate }) => candidate);
   }, [post, targetCategory]);
 
   const tocHeadings = headings;
@@ -451,7 +447,6 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               document.getElementById(h.id)?.scrollIntoView({ behavior: 'instant', block: 'start' });
             }}
           >
-            <span className="article-toc-num">{h.number}</span>
             {h.text}
           </a>
         </li>
@@ -682,7 +677,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
           {/* Meta bar (blog non-threads only — threads has its own in header card) */}
           {isBlog && post.category !== 'threads' && (
-            <BlogMetabar date={post.date} authorName={authorName} authorPath={authorPath} readingTime={readingTime} views={null} hearts={null} hearted={hearted} toggleHeart={toggleHeart} shareDropdown={shareDropdown} formatDate={formatDate} />
+            <BlogMetabar date={post.date} authorName={authorName} authorPath={authorPath} readingTime={readingTime} views={views} hearts={hearts} hearted={hearted} toggleHeart={toggleHeart} shareDropdown={shareDropdown} formatDate={formatDate} />
           )}
 
           {/* Lead text (blog non-threads only — threads has its own in header card) */}
@@ -752,7 +747,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                   src={rec.thumbnail || ''}
                   alt={rec.displayTitle || rec.title}
                   loading="lazy"
-                  className="w-full h-full object-cover transition-transform scale-[1.03] group-hover:scale-100"
+                  className="w-full h-full object-cover"
                 />
               </div>
               <div className="article-related-info">

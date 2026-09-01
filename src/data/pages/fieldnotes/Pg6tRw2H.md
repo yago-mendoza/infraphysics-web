@@ -10,6 +10,6 @@ date: "2026-03-12"
 - Strong concurrency model (MVCC), designed for heavy multi-user workloads
 - The combination of relational queries + pgvector means you can do SQL JOINs, complex filters, AND [[Cs3jT7bR|cosine similarity]] search in a single query. All in one DB. The tradeoff: not as fast at pure vector search as dedicated [[TIQNpwbS|vector databases]] like [[Pc7sTm2K|Pinecone]]
 - Common pattern: PostgreSQL for everything (relational + vectors via pgvector) when simplicity matters. PostgreSQL + Pinecone (via synced IDs) when vector scale matters.
----
+
 ## Interactions
 - [[Pc7sTm2K|Pinecone]] : : common pattern: PostgreSQL for relational data + Pinecone for vector search, synced via IDs. Or: pgvector to do both in one DB, trading scale for simplicity

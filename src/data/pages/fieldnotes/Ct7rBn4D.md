@@ -1,7 +1,7 @@
 ---
 uid: "Ct7rBn4D"
-address: "Cloud//Cloudflare//Workers//CPU time"
-name: "CPU Time"
+address: "Infrastructure//Cloudflare//Workers//CPU time"
+name: "CPU time"
 date: "2026-03-12"
 ---
 The time a [[Lk2rXj6D|Worker]] actually uses the CPU. NOT the same as wall time (total elapsed time from request to response).

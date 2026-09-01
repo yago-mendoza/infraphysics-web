@@ -10,6 +10,6 @@ Embedded [[Sv2nKx8R|SQL]] database engine. No separate server needed -- the data
 - Ideal for: mobile apps (Android/iOS use it by default), desktop apps, prototypes, low-to-medium volumes
 - Main limitation: single writer at a time (no concurrent writes)
 - [[Wn4pCx7H|D1]] is SQLite running at the [[Tm6yRs2K|edge]] -- Cloudflare uses it as the engine for its simplicity and lightness
----
+
 ## Interactions
 - [[Wn4pCx7H|D1]] : : D1 is SQLite at Cloudflare's edge -- same engine, same SQL syntax, but managed as a service instead of a local file

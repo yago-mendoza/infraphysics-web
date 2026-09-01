@@ -1,6 +1,6 @@
 ---
 uid: "Ne3pWm6D"
-address: "Cloud//Neon"
+address: "Infrastructure//Neon"
 name: "Neon"
 date: "2026-03-12"
 ---

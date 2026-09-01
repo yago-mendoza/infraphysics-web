@@ -1,13 +1,18 @@
 // Theme context — dark/light toggle with per-zone persistence
-// Two independent theme memories: blog zone (default light) and app zone (default dark)
+// Independent theme memories: blog (light), app (dark), and wiki (dark).
 
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { isSecondBrainPath } from '../config/categories';
 
 type Theme = 'dark' | 'light';
-type Zone = 'blog' | 'app';
+type Zone = 'blog' | 'app' | 'wiki';
 
-const ZONE_DEFAULTS: Record<Zone, Theme> = { blog: 'light', app: 'dark' };
-const ZONE_KEYS: Record<Zone, string> = { blog: 'theme-blog', app: 'theme-app' };
+const ZONE_DEFAULTS: Record<Zone, Theme> = { blog: 'light', app: 'dark', wiki: 'dark' };
+const ZONE_KEYS: Record<Zone, string> = { blog: 'theme-blog', app: 'theme-app', wiki: 'theme-wiki' };
+
+const zoneFromPath = (path: string): Zone => path.startsWith('/blog')
+  ? 'blog'
+  : isSecondBrainPath(path) ? 'wiki' : 'app';
 
 function readZoneTheme(zone: Zone): Theme {
   try {
@@ -36,7 +41,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [theme, setThemeState] = useState<Theme>(() => {
     // Read zone from current URL before React Router mounts
-    const zone: Zone = window.location.pathname.startsWith('/blog') ? 'blog' : 'app';
+    const zone = zoneFromPath(window.location.pathname);
     zoneRef.current = zone;
     const initial = readZoneTheme(zone);
     document.documentElement.setAttribute('data-theme', initial);
@@ -75,9 +80,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setThemeState(next);
     });
 
-    setTimeout(() => {
-      document.documentElement.classList.remove('theme-transitioning');
-    }, 1100);
+    const root = document.documentElement;
+    const finish = (event?: TransitionEvent) => {
+      if (event && event.target !== root) return;
+      if (event && event.propertyName !== '--bg-base') return;
+      root.classList.remove('theme-transitioning');
+      root.removeEventListener('transitionend', finish);
+      window.clearTimeout(fallback);
+    };
+    root.addEventListener('transitionend', finish);
+    const fallback = window.setTimeout(() => finish(), 1250);
   }, []);
 
   return (

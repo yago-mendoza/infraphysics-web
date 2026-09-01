@@ -1,6 +1,6 @@
 ---
 uid: "Aw2pDx6F"
-address: "Cloud//AWS"
+address: "Infrastructure//AWS"
 name: "AWS"
 date: "2026-03-12"
 ---

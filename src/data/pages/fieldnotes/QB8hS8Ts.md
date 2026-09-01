@@ -1,7 +1,7 @@
 ---
 uid: "QB8hS8Ts"
-address: "storage"
-name: "Storage"
+address: "Hardware//storage"
+name: "storage"
 date: "2026-02-06"
 ---
 Persistent retention of data beyond power cycles.

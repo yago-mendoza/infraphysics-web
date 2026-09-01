@@ -1,6 +1,6 @@
 ---
 uid: "Vf6kRm2D"
-address: "Cloud//Vercel//Vercel Functions"
+address: "Infrastructure//Vercel//Vercel Functions"
 name: "Vercel Functions"
 date: "2026-03-12"
 ---

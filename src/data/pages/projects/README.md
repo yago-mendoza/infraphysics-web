@@ -78,12 +78,11 @@ related: ["1112121"]
 - **`{bkqt/tip}`** — the default. Lessons, tricks, patterns. The reader *learns* something.
 - **`{bkqt/keyconcept}`** — for foundational concepts the rest of the article builds on.
 - **`{bkqt/danger}` / `{bkqt/warning}`** — only if the *reader* is exposed to real risk. A mistake *you* made is not a danger to them. Use `{bkqt/danger|In Hindsight}` (always that exact label) for your own bad decisions — prescindible blocks that add context but aren't required for the narrative.
-- **`{bkqt/quote}`** — sparingly. One per article max.
+- **Markdown quotes (`>`)** — sparingly, using the single restrained left-border treatment.
 
 ### Flow tools
 
 - **Footnotes `^[explanation]`** — for parenthetical material that would break the sentence rhythm. Better than actual parentheses.
-- **Small text `> ...`** — for dispensable technical details (keybindings, exact class names, implementation minutiae). If removing it doesn't hurt the story, it belongs in small text.
 - **Context annotations `>> date - text`** — story beats, not documentation. Keep them short and human. See dedicated section below.
 
 ### Context annotations in projects

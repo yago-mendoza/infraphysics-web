@@ -25,14 +25,14 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
     relatedCategory: 'bits2bricks',
   },
   threads: {
-    title: 'Threads',
+    title: 'Essays',
     description: <>Essays, takes, and personal rants about ideas that won't sit still. When something deserves more depth than an essay can give it, check bits2bricks.</>,
     icon: <ThreadIcon />,
     accentVar: 'var(--cat-threads-accent)',
-    backLabel: 'RETURN_TO_THREADS',
-    relatedLabel: 'Related Threads',
+    backLabel: 'Back to essays',
+    relatedLabel: 'Related essays',
     relatedCategory: 'threads',
-    breadcrumbLabel: 'threads',
+    breadcrumbLabel: 'essays',
   },
   bits2bricks: {
     title: 'Bits2Bricks',
@@ -67,9 +67,24 @@ export const sectionPath = (category: string): string =>
 export const catAccentVar = (cat: string): string =>
   CATEGORY_CONFIG[cat]?.accentVar ?? '#9ca3af';
 
-/** Path to a Second Brain page, or the index if no uid provided */
+/** Canonical public Wiki route. Keep route knowledge here, not in components. */
+export const WIKI_PATH = '/wiki';
+export const LEGACY_WIKI_PATH = '/lab/second-brain';
+
+/** Path to a Wiki concept, or the Wiki index if no uid is provided. */
 export const secondBrainPath = (uid?: string): string =>
-  uid ? `/lab/second-brain/${uid}` : '/lab/second-brain';
+  uid ? `${WIKI_PATH}/${uid}` : WIKI_PATH;
+
+export const isSecondBrainPath = (pathname: string): boolean =>
+  pathname === WIKI_PATH || pathname.startsWith(`${WIKI_PATH}/`)
+  || pathname === LEGACY_WIKI_PATH || pathname.startsWith(`${LEGACY_WIKI_PATH}/`);
+
+export const secondBrainUidFromPath = (pathname: string): string | null => {
+  for (const base of [WIKI_PATH, LEGACY_WIKI_PATH]) {
+    if (pathname.startsWith(`${base}/`)) return pathname.slice(base.length + 1) || null;
+  }
+  return null;
+};
 
 /* ── Complexity metadata — maps 1-10 to audience labels ── */
 

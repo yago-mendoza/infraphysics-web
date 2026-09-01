@@ -1,0 +1,336 @@
+/* Minimal editorial primitives shared by articles and Wiki notes. */
+
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4,
+.article-content h5 {
+  position: relative;
+}
+
+.heading-anchor-link {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 0.45rem);
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: 0;
+  color: var(--art-text-muted);
+  background: transparent;
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity 120ms ease, color 120ms ease;
+  cursor: pointer;
+}
+
+.heading-anchor-link svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+
+.article-content :is(h1,h2,h3,h4,h5):hover .heading-anchor-link,
+.heading-anchor-link:focus-visible,
+.heading-anchor-link.is-copied {
+  opacity: 1;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+[data-theme="light"] .article-content :is(h1,h2,h3,h4,h5):hover .heading-anchor-link,
+[data-theme="light"] .heading-anchor-link:focus-visible,
+[data-theme="light"] .heading-anchor-link.is-copied {
+  color: #374151;
+}
+
+/* Link meaning is carried by its icon, never by colour. */
+.article-content a:not(.doc-ref):not(.wiki-ref) {
+  color: inherit;
+  border: 0;
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+.article-content a:not(.doc-ref):not(.wiki-ref):hover {
+  color: inherit;
+  text-decoration-color: currentColor;
+}
+
+.article-content .doc-ref {
+  color: inherit !important;
+  border: 0 !important;
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+.article-content :is(.doc-ref-external, .doc-ref-inpage) {
+  color: inherit !important;
+  text-decoration-color: currentColor;
+}
+
+.article-content :is(.doc-ref-external, .doc-ref-inpage):hover {
+  color: inherit !important;
+  text-decoration-color: currentColor;
+}
+
+.article-content :is(.doc-ref-projects, .doc-ref-threads, .doc-ref-bits2bricks) {
+  color: inherit !important;
+  text-decoration-line: underline !important;
+  text-decoration-thickness: 1px !important;
+  text-decoration-color: currentColor !important;
+  text-underline-offset: 0.18em !important;
+}
+
+.article-content :is(.doc-ref-projects, .doc-ref-threads, .doc-ref-bits2bricks):hover {
+  color: inherit !important;
+  text-decoration-color: currentColor !important;
+}
+
+.article-content .wiki-ref-resolved {
+  color: #b0b0b0 !important;
+  padding: 0.06em 0.16em;
+  background: color-mix(in srgb, currentColor 5%, transparent);
+  border-bottom: 0 !important;
+  text-decoration: none !important;
+  transition: color 140ms ease, background-color 140ms ease;
+}
+
+.article-content .wiki-ref-resolved:hover {
+  color: #d4d4d4 !important;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+[data-theme="light"] .article-content .wiki-ref-resolved {
+  color: #6b7280 !important;
+}
+
+[data-theme="light"] .article-content .wiki-ref-resolved:hover {
+  color: #374151 !important;
+}
+
+.article-content .wiki-ref-resolved .wiki-ref-label {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+  text-underline-offset: 0.18em;
+}
+
+.article-content .wiki-ref-resolved:hover .wiki-ref-label {
+  text-decoration-color: currentColor;
+}
+
+.article-content .doc-ref-icon,
+.article-content .wiki-ref-icon {
+  width: 0.92em;
+  height: 0.92em;
+  margin-right: 0.12em;
+  vertical-align: -0.05em;
+}
+
+/* Cross-document links use a solid page glyph. Keep this separate from the
+   stroked external-link icon: the legacy external rule otherwise erases the
+   filled Material symbol in both themes. */
+.article-content :is(.doc-ref-projects, .doc-ref-threads, .doc-ref-bits2bricks) .doc-ref-icon {
+  display: inline-block;
+  width: 1.08em !important;
+  height: 1.08em !important;
+  margin-right: 0.1em !important;
+  margin-left: 0 !important;
+  vertical-align: -0.12em !important;
+  color: currentColor;
+  fill: currentColor !important;
+  stroke: none !important;
+  opacity: 1 !important;
+}
+
+.article-content .doc-ref-external .doc-ref-icon {
+  margin-right: 0;
+  margin-left: 0.18em;
+  fill: none !important;
+  stroke: currentColor !important;
+}
+
+.article-content .wiki-ref-resolved .wiki-ref-icon {
+  width: 1.2em;
+  height: 1.2em;
+  margin-right: 0;
+  margin-left: 0.08em;
+  vertical-align: -0.21em;
+  color: inherit !important;
+  fill: currentColor !important;
+  stroke: none !important;
+  opacity: 1 !important;
+}
+
+/* Lists share one indentation grid regardless of marker kind. */
+.article-content :is(ul, ol) {
+  padding-left: 1.45rem;
+}
+
+.article-content :is(ul, ol) :is(ul, ol) {
+  padding-left: 1.35rem;
+}
+
+.article-content ol li {
+  padding-left: 0.18rem;
+}
+
+.article-content ol { list-style-type: decimal !important; }
+.article-content ol[type="a"] { list-style-type: lower-alpha !important; }
+.article-content ol[type="A"] { list-style-type: upper-alpha !important; }
+.article-content ol > li { display: list-item !important; }
+
+/* Boxes keep their semantic labels but use restrained geometry. */
+.article-content .bkqt {
+  border: 1px solid color-mix(in srgb, var(--bkqt-color, var(--art-accent)) 48%, var(--art-border)) !important;
+  border-left: 1px solid color-mix(in srgb, var(--bkqt-color, var(--art-accent)) 68%, var(--art-border)) !important;
+  box-shadow: none;
+}
+
+[data-theme="dark"] .article-content .bkqt,
+.dark .article-content .bkqt {
+  border-color: color-mix(in srgb, var(--bkqt-color, var(--art-accent)) 68%, white 8%);
+}
+
+.article-content .editorial-quote {
+  margin: 1.5rem 0;
+  padding: 0.1rem 0 0.1rem 1.15rem;
+  border-left: 3px solid var(--art-accent);
+  color: var(--art-text-mid);
+}
+
+.article-content .editorial-quote > :first-child { margin-top: 0; }
+.article-content .editorial-quote > :last-child { margin-bottom: 0; }
+
+/* Code stays in-column unless its measured content genuinely overflows. */
+.article-content .code-terminal {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  margin: 1.6rem 0 1.8rem;
+  transform: none;
+  border: 1px solid var(--art-border);
+  border-radius: 2px;
+  background: var(--art-surface-alt);
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.article-content .code-terminal.is-wide {
+  width: min(calc(100% + 4rem), calc(100vw - 2rem)) !important;
+  max-width: calc(100vw - 2rem) !important;
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+
+.article-content .code-terminal-dots { display: none; }
+.article-content .code-terminal-bar {
+  min-height: 1.9rem;
+  padding: 0.3rem 0.65rem;
+  border-bottom: 1px solid var(--art-border);
+  background: transparent;
+}
+
+.article-content .code-terminal pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.article-content .code-terminal pre code { white-space: pre !important; }
+
+/* Tables size to their content, then break out and scroll only when necessary. */
+.article-content .table-wrapper {
+  box-sizing: border-box;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 1.5rem 0 1.8rem;
+  transform: none;
+  overflow-x: auto;
+}
+
+.article-content .table-wrapper.is-wide {
+  width: min(calc(100% + 4rem), calc(100vw - 2rem)) !important;
+  max-width: calc(100vw - 2rem) !important;
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+
+.article-content table {
+  width: max-content !important;
+  min-width: min(100%, 24rem);
+  table-layout: auto;
+}
+
+.article-content :is(th, td) {
+  text-align: left;
+  white-space: normal;
+  max-width: 28rem;
+}
+
+.article-content th[align="right"],
+.article-content td[align="right"] { text-align: right; }
+
+/* Full-width body images may break out of the prose column. */
+.article-content figure.img-full {
+  width: min(calc(100% + 4rem), calc(100vw - 3rem));
+  max-width: calc(100vw - 3rem);
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+
+.article-content img {
+  cursor: zoom-in;
+}
+
+.editorial-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 4rem);
+  border: 0;
+  background: rgba(0, 0, 0, 0.84);
+  backdrop-filter: blur(4px);
+  cursor: zoom-out;
+}
+
+.editorial-lightbox-open :is(.global-nav-shell, .article-floating-bar, .wiki-topbar) {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.editorial-lightbox img {
+  max-width: 100%;
+  max-height: 92vh;
+  object-fit: contain;
+  box-shadow: 0 24px 80px rgba(0,0,0,.45);
+}
+
+/* Wiki uses every primitive but never escapes its own content column. */
+.article-wiki {
+  --art-accent: #a855f7;
+}
+
+[data-theme="light"] .article-wiki { --art-accent: #7c3aed; }
+
+.article-wiki .article-content :is(.code-terminal, .table-wrapper, figure.img-full) {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  transform: none;
+}
+
+@media (max-width: 640px) {
+  .heading-anchor-link { position: static; display: inline-block; margin-right: 0.35rem; transform: none; opacity: 0.55; vertical-align: middle; }
+}

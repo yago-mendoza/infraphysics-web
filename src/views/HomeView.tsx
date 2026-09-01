@@ -1,19 +1,51 @@
 // Home page view — minimalist cosmic landing
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { posts } from '../data/data';
-import { Post } from '../types';
-import { initBrainIndex, type BrainIndex } from '../lib/brainIndex';
+import { postSummaries as posts } from '../data/postSummaries';
+import type { PostSummary } from '../types';
 import { ArrowRightIcon, SearchIcon } from '../components/icons';
-import { CATEGORY_CONFIG, catAccentVar, postPath, sectionPath, secondBrainPath } from '../config/categories';
+import { CATEGORY_CONFIG, catAccentVar, postPath, sectionPath } from '../config/categories';
 import { getSearchExcerpt, countMatches } from '../lib';
 import { Highlight } from '../components/ui';
-import { HomeTour } from '../components/HomeTour';
+import { HomeVisualLab, type HomeVisualVariant } from '../components/HomeVisualLab';
+import { shortNotes } from '../data/notes';
 
 const categoryKeys = ['projects', 'threads', 'bits2bricks'] as const;
+type FieldVariant = 1 | 2 | 3 | 4 | 5;
+const fieldCoordinates = [
+  { label: 'control', x: 48, y: 48, evidence: 'Industrial engineering, dynamic systems and control-oriented modelling.' },
+  { label: 'robotics', x: 58, y: 38, evidence: 'ROS 2, sensing and the integration layer between software and machines.' },
+  { label: 'networks', x: 63, y: 55, evidence: 'Distributed-systems research and operating Hyperledger Besu infrastructure.' },
+  { label: 'infrastructure', x: 78, y: 72, evidence: 'Multi-provider AI systems, Azure deployment, observability and failure handling.' },
+  { label: 'intelligence', x: 88, y: 84, evidence: 'Clinical AI evaluation, product ownership and evidence for ship/no-ship decisions.' },
+  { label: 'brains', x: 38, y: 24, evidence: 'An active research interest spanning cognition, learning and representation.' },
+  { label: 'materials', x: 20, y: 34, evidence: 'Engineering foundations in physical constraints, simulation and failure modes.' },
+  { label: 'failure', x: 72, y: 66, evidence: 'Reliability thinking across safety-critical, operational and AI systems.' },
+];
 
-export const HomeView: React.FC = () => {
+type FieldItem = (typeof fieldCoordinates)[number];
+const FieldPoints: React.FC<{ projections?: boolean; active?: string | null; onActivate?: (item: FieldItem) => void }> = ({ projections = false, active, onActivate }) => <>{fieldCoordinates.map((item, index) => {
+  const content = <>{projections && <><i className="field-projection-x" /><i className="field-projection-y" /></>}<b>{String(index + 1).padStart(2, '0')}</b><span>{item.label}</span></>;
+  const props = { className: `field-plot-point${active === item.label ? ' is-active' : ''}${active && active !== item.label ? ' is-muted' : ''}`, style: { '--fx': `${item.x}%`, '--fy': `${100 - item.y}%`, '--point-index': index } as React.CSSProperties };
+  return onActivate ? <button type="button" {...props} key={item.label} onMouseEnter={() => onActivate(item)} onFocus={() => onActivate(item)} onClick={() => onActivate(item)}>{content}</button> : <div {...props} key={item.label}>{content}</div>;
+})}</>;
+const AxisLabels = () => <><span className="field-axis-label field-axis-label-y-top">used in real systems</span><span className="field-axis-label field-axis-label-y-bottom">studied &amp; explored</span><span className="field-axis-label field-axis-label-x-left">background</span><span className="field-axis-label field-axis-label-x-right">current focus</span></>;
+
+const FieldOfView: React.FC<{ variant: FieldVariant }> = ({ variant }) => {
+  const [active, setActive] = useState<FieldItem | null>(null);
+  const evidence = active?.evidence ?? 'Move through the map to see the work behind each domain.';
+  const activeQuadrant = active
+    ? (active.x >= 50 ? 1 : 0) + (active.y < 48 ? 2 : 0)
+    : -1;
+  if (variant === 1) return <section className="home-field-index field-plot-study field-plot-minimal field-plot-interactive pb-14 md:pb-20"><div className="field-plot-caption"><span>Where practice meets curiosity.</span><small>Relative positions, not proficiency scores</small></div><div className="field-plot"><i className="field-axis-x" /><i className="field-axis-y" /><AxisLabels /><FieldPoints active={active?.label} onActivate={setActive} /></div><div className="field-evidence-editorial"><strong>{active?.label ?? 'Field of view'}</strong><p>{evidence}</p></div></section>;
+  if (variant === 2) return <section className="home-field-index field-plot-study field-plot-grid pb-14 md:pb-20"><div className="field-plot"><i className="field-axis-x" /><i className="field-axis-y" /><AxisLabels /><FieldPoints /><p>direction, not rank</p></div></section>;
+  if (variant === 3) return <section className="home-field-index field-plot-study field-plot-quadrants field-plot-interactive field-plot-split pb-14 md:pb-20"><div className="field-plot-caption"><span>Field of view</span><small>Evidence on demand</small></div><div className="field-split-layout"><div className="field-plot"><i className="field-axis-x" /><i className="field-axis-y" /><div className="field-quadrant-labels" aria-hidden="true">{['FOUNDATIONS', 'DEPLOYMENT', 'EXPLORATION', 'EMERGING PRACTICE'].map((label, index) => <span key={label} className={index === activeQuadrant ? 'is-active' : ''}>{label}</span>)}</div><AxisLabels /><FieldPoints active={active?.label} onActivate={setActive} /></div><aside><small>{active ? 'Selected domain' : 'Read the map'}</small><strong>{active?.label ?? 'Practice × attention'}</strong><p>{evidence}</p></aside></div></section>;
+  if (variant === 4) return <section className="home-field-index field-plot-study field-plot-topographic field-plot-interactive pb-14 md:pb-20"><div className="field-plot-caption"><span>Attention landscape</span><small>Hover or focus to isolate evidence</small></div><div className="field-plot"><svg className="field-contours" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"><ellipse cx="74" cy="22" rx="25" ry="17"/><ellipse cx="74" cy="22" rx="18" ry="12"/><ellipse cx="74" cy="22" rx="11" ry="7"/><ellipse cx="35" cy="42" rx="25" ry="14"/><ellipse cx="35" cy="42" rx="16" ry="9"/><path d="M0 49C18 39 31 57 51 48s31-26 49-17"/></svg><i className="field-axis-x" /><i className="field-axis-y" /><AxisLabels /><FieldPoints active={active?.label} onActivate={setActive} /><div className="field-evidence-overlay"><strong>{active?.label ?? 'Select a domain'}</strong><span>{evidence}</span></div></div></section>;
+  return <section className="home-field-index field-plot-study field-plot-blueprint field-plot-interactive pb-14 md:pb-20"><div className="field-plot-caption"><span>Operational coordinates</span><small>YM / FOV / 05</small></div><div className="field-plot"><i className="field-axis-x" /><i className="field-axis-y" /><AxisLabels /><FieldPoints projections active={active?.label} onActivate={setActive} /><p>direction, not rank</p></div><div className="field-evidence-console"><span>{active ? `0${fieldCoordinates.indexOf(active) + 1}` : '--'}</span><strong>{active?.label ?? 'Awaiting selection'}</strong><p>{evidence}</p></div></section>;
+};
+
+export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVariant?: FieldVariant }> = ({ visualVariant, fieldVariant = 1 }) => {
   const featuredPosts = useMemo(() =>
     posts
       .filter(p => p.featured)
@@ -30,50 +62,23 @@ export const HomeView: React.FC = () => {
     return counts;
   }, []);
 
-  // Second Brain stats — loaded from async brain index
-  const [brainStats, setBrainStats] = useState({ notes: 0, connections: 0 });
-  useEffect(() => {
-    initBrainIndex().then(idx => {
-      setBrainStats({
-        notes: idx.globalStats.totalConcepts,
-        connections: idx.globalStats.totalLinks,
-      });
-    }).catch(() => {});
-  }, []);
-
   // Unified search
   const [searchQuery, setSearchQuery] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
-
-  // Recent article history from localStorage
-  const recentPosts = useMemo(() => {
-    try {
-      const raw = localStorage.getItem('infraphysics:article-history');
-      if (!raw) return [];
-      const history: { category: string; id: string }[] = JSON.parse(raw);
-      const resolved: Post[] = [];
-      for (const h of history) {
-        const post = posts.find(p => p.category === h.category && p.id === h.id);
-        if (post) resolved.push(post);
-      }
-      return resolved.slice(0, 7);
-    } catch { return []; }
-  }, []);
 
   const searchResults = useMemo(() => {
     const q = searchQuery.trim();
     if (!q) return null;
 
     const allPosts = posts;
-    const matches: { post: Post; matchCount: number; excerpt: string | null }[] = [];
+    const matches: { post: PostSummary; matchCount: number; excerpt: string | null }[] = [];
     const counts: Record<string, number> = { projects: 0, threads: 0, bits2bricks: 0 };
 
     for (const post of allPosts) {
       const mc = countMatches(post.displayTitle || post.title || '', q)
-        + countMatches(post.description || '', q)
-        + countMatches(post.content || '', q);
+        + countMatches(post.description || '', q);
       if (mc === 0) continue;
-      const excerpt = getSearchExcerpt(post.content || '', q) || getSearchExcerpt(post.description || '', q);
+      const excerpt = getSearchExcerpt(post.description || '', q);
       matches.push({ post, matchCount: mc, excerpt });
       counts[post.category] = (counts[post.category] || 0) + 1;
     }
@@ -84,46 +89,63 @@ export const HomeView: React.FC = () => {
 
   return (
     <>
-    <HomeTour />
-    <div className="flex flex-col animate-fade-in font-sans">
-
+    <div className={`flex flex-col animate-fade-in font-sans home-editorial-shell ${visualVariant ? `home-experiment home-experiment-${visualVariant}` : ''}`}>
       {/* Hero */}
-      <section className="pt-12 md:pt-20 pb-12 md:pb-20">
-        <div className="max-w-xl">
+      <section className="relative pt-4 md:pt-12 pb-14 md:pb-20 min-h-[62vh] flex items-end home-hero" {...(visualVariant === 1 ? { 'data-clickable-above': '[data-home-pattern-boundary]', 'data-clickable-offset': '48' } : {})}>
+        {visualVariant && <div className={`home-visual-experiment home-visual-${visualVariant}`} aria-hidden="true"><HomeVisualLab variant={visualVariant} interactivePointer /></div>}
+        <div className="relative z-10 w-full">
+          <div>
           {/* Identity anchor */}
-          <div className="flex items-center gap-4 mb-8">
-            <div className="relative w-[4.5rem] h-[4.5rem] shrink-0">
-              <div className="absolute inset-0 rounded-full bg-violet-400/10 blur-2xl scale-125" />
-              <img src="https://avatars.githubusercontent.com/yago-mendoza" alt="Yago Mendoza" className="relative w-full h-full rounded-full border border-th-border object-cover" />
+          <div className="flex items-end gap-5 mb-10 home-identity-anchor">
+            <div className="relative w-20 h-24 shrink-0 home-identity-portrait">
+              <div className="absolute -right-2 -bottom-2 w-full h-full border" style={{ borderColor: 'color-mix(in srgb, var(--brand-oxide-strong) 72%, transparent)' }} aria-hidden="true" />
+              <img src="https://avatars.githubusercontent.com/yago-mendoza" alt="Yago Mendoza" className="relative w-full h-full border border-th-border object-cover grayscale contrast-110" />
             </div>
             <div>
-              <p className="text-xl font-bold tracking-tight text-th-heading">Yago Mendoza</p>
-              <p className="text-sm text-th-tertiary font-sans">Industrial engineer &middot; Systems builder</p>
+              <p className="text-xl tracking-tight text-th-heading">Yago Mendoza</p>
+              <p className="text-xs text-th-tertiary font-mono tracking-wide">industrial engineer · polymathing</p>
               <Link to="/about" className="inline-flex items-center gap-1 text-xs text-th-secondary hover:text-th-heading transition-colors mt-1">
-                More about me <ArrowRightIcon />
+                Who I am <ArrowRightIcon />
               </Link>
             </div>
           </div>
 
-          <h1 className="text-[3.1rem] md:text-5xl font-bold tracking-tight leading-tight mb-2">
-            <span className="text-th-heading">From systems to atoms</span>
+          <h1 data-home-pattern-boundary className="font-serif text-[3.15rem] md:text-[4.55rem] font-normal tracking-[-0.045em] leading-[0.94] mb-6 max-w-4xl">
+            <span className="text-th-heading">From systems to bits</span>
             <br />
             <span className="text-th-secondary">and back.</span>
           </h1>
 
-          <p className="text-sm text-th-tertiary italic tracking-wide mb-8">
-            Engineering is engineering. The substrate doesn't matter.
+          <p className="text-sm text-th-tertiary tracking-wide mb-7 max-w-xl">
+            Engineering is engineering. The substrate doesn&rsquo;t matter.
           </p>
 
-          <p className="text-th-secondary leading-relaxed text-base max-w-lg">
-            I picked up code because every engineer should &mdash; not to become a developer, but to move faster. Now I build at the boundary. This is my <span className="text-th-heading font-semibold">lab</span>, my <span className="text-th-heading font-semibold">notebook</span>, and my <span className="text-th-heading font-semibold">proof of work</span>.
+          <p className="text-th-secondary leading-relaxed text-base max-w-xl mb-4">
+            I picked up code because every engineer should&mdash;not to become a developer, but to move faster. Now I build at the boundary. This is my lab, my notebook, and my proof of work.
           </p>
+
+          <p className="text-th-tertiary leading-relaxed text-sm max-w-xl">
+            For the things that refuse to stay in one discipline.{' '}
+            I build, study and explain systems: robotics, control, infrastructure, intelligence, networks, brains and whatever else becomes too interesting to leave alone.
+          </p>
+          </div>
+          <aside className="hidden">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-th-tertiary mb-4">A personal laboratory</p>
+            <p className="text-sm leading-relaxed text-th-secondary">For ideas that survive curiosity long enough to become public.</p>
+            <div className="mt-8 space-y-2 text-[10px] font-mono text-th-tertiary">
+              <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500" /> Madrid, Spain</div>
+              <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-blue-500" /> Systems / robotics / intelligence</div>
+              <Link to="/contact" className="inline-block pt-3 text-th-heading hover:text-red-500 transition-colors">Open a conversation →</Link>
+            </div>
+          </aside>
         </div>
       </section>
 
       {/* Categories */}
-      <section className="pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
-        <h2 className="text-xs text-th-tertiary uppercase tracking-wider mb-5 md:mb-8">Explore</h2>
+      <section className="home-directory-section pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
+        <div className="home-editorial-heading">
+          <h2>Explore</h2>
+        </div>
 
         {/* Search input */}
         <div className="flex-1 group flex items-center border border-th-border px-3 py-2.5 focus-within:border-th-border-active transition-colors bg-th-surface-alt mb-6">
@@ -134,7 +156,7 @@ export const HomeView: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Escape') { setSearchQuery(''); searchRef.current?.blur(); } }}
-            placeholder="Search across all categories..."
+            placeholder="Search published work..."
             spellCheck={false}
             autoComplete="off"
             className="w-full bg-transparent border-none ml-2.5 text-sm focus:outline-none placeholder-th-tertiary text-th-primary"
@@ -197,25 +219,23 @@ export const HomeView: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {categoryKeys.map(key => {
+            <div className="home-entry-list border-y border-th-border">
+              {categoryKeys.map((key, index) => {
                 const config = CATEGORY_CONFIG[key];
                 return (
                   <Link
                     key={key}
                     to={sectionPath(key)}
-                    className="card-link group p-5"
+                    className="group flex items-center gap-5 py-5 border-b last:border-b-0 border-th-border transition-colors"
                   >
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className="text-th-secondary group-hover:text-th-primary transition-colors">{config.icon}</span>
-                      <h3 className="text-th-heading font-semibold">{config.title}</h3>
-                    </div>
-                    <p className="text-th-secondary text-sm leading-relaxed line-clamp-2 mb-3 font-sans">
-                      {config.description}
-                    </p>
-                    <span className="text-xs text-th-tertiary">
-                      {categoryCounts[key]} {categoryCounts[key] === 1 ? 'post' : 'posts'}
+                    <span className="text-[10px] font-mono text-th-muted w-7">0{index + 1}</span>
+                    <span className="text-th-tertiary group-hover:text-th-heading transition-colors">{config.icon}</span>
+                    <span className="flex-1 min-w-0">
+                      <span className="block text-th-heading group-hover:text-th-primary transition-colors">{config.title}</span>
+                      <span className="block text-th-tertiary text-sm leading-relaxed line-clamp-1 font-sans mt-1">{config.description}</span>
                     </span>
+                    <span className="hidden sm:block text-[10px] font-mono text-th-muted">{categoryCounts[key]} pieces</span>
+                    <ArrowRightIcon />
                   </Link>
                 );
               })}
@@ -224,152 +244,54 @@ export const HomeView: React.FC = () => {
         )}
       </section>
 
-      {/* Second Brain */}
-      <section className="pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
-        <div className="rounded-lg border border-violet-500/20 bg-violet-500/[0.03] p-6 md:p-8 overflow-hidden">
-          <div className="flex items-start justify-between gap-8">
-            <div className="flex-1 min-w-0">
-              <h2 className="text-base text-violet-400 tracking-wide mb-3">My public knowledge graph.</h2>
-              <p className="text-th-secondary text-sm leading-relaxed font-sans mb-4">
-                Atomic, cross-linked notes on everything I study &mdash; from infrastructure and physics to distributed systems. Browse how ideas connect across domains. Start anywhere, follow the links.
-              </p>
-              <div className="flex items-center gap-6 mb-5">
-                <span className="text-sm text-th-tertiary">
-                  <span className="text-violet-400 font-mono font-semibold">{brainStats.notes}</span> notes
-                </span>
-                <span className="text-sm text-th-tertiary">
-                  <span className="text-violet-400 font-mono font-semibold">{brainStats.connections}</span> connections
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  to={secondBrainPath()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium border border-violet-500/30 bg-violet-500/10 text-violet-400 hover:bg-violet-500/20 hover:border-violet-500/50 transition-all"
-                >
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
-                    <rect x="1" y="1" width="4" height="4" rx="0.5" />
-                    <rect x="7" y="1" width="4" height="4" rx="0.5" />
-                    <rect x="1" y="7" width="4" height="4" rx="0.5" />
-                    <rect x="7" y="7" width="4" height="4" rx="0.5" />
-                  </svg>
-                  Browse brain
-                </Link>
-                <Link
-                  to="/lab/second-brain/graph"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium border border-violet-500/30 text-violet-400/80 hover:bg-violet-500/10 hover:border-violet-500/50 hover:text-violet-400 transition-all"
-                >
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
-                    <circle cx="3" cy="3" r="1.5" />
-                    <circle cx="9" cy="5" r="1.5" />
-                    <circle cx="5" cy="9" r="1.5" />
-                    <line x1="4.2" y1="3.7" x2="7.8" y2="4.5" />
-                    <line x1="3.8" y1="4.3" x2="5" y2="7.5" />
-                    <line x1="6.5" y1="8.5" x2="7.8" y2="6.2" />
-                  </svg>
-                  Graph 2D
-                </Link>
-                <Link
-                  to="/lab/second-brain/graph"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium border border-violet-500/30 text-violet-400/80 hover:bg-violet-500/10 hover:border-violet-500/50 hover:text-violet-400 transition-all"
-                  onClick={() => sessionStorage.setItem('graph-dimension', '3d')}
-                >
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
-                    <path d="M6 1L11 4V8L6 11L1 8V4L6 1Z" />
-                    <line x1="6" y1="1" x2="6" y2="11" />
-                    <line x1="1" y1="4" x2="11" y2="4" />
-                  </svg>
-                  Graph 3D
-                </Link>
-              </div>
-            </div>
-            <div className="hidden md:block shrink-0 w-32 h-32 opacity-30">
-              <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-                <line x1="60" y1="30" x2="30" y2="70" stroke="#8b5cf6" strokeWidth="1" />
-                <line x1="60" y1="30" x2="90" y2="55" stroke="#8b5cf6" strokeWidth="1" />
-                <line x1="30" y1="70" x2="75" y2="90" stroke="#8b5cf6" strokeWidth="1" />
-                <line x1="90" y1="55" x2="75" y2="90" stroke="#8b5cf6" strokeWidth="1" />
-                <line x1="30" y1="70" x2="15" y2="40" stroke="#8b5cf6" strokeWidth="0.75" />
-                <line x1="90" y1="55" x2="105" y2="30" stroke="#8b5cf6" strokeWidth="0.75" />
-                <line x1="75" y1="90" x2="100" y2="100" stroke="#8b5cf6" strokeWidth="0.75" />
-                <line x1="60" y1="30" x2="45" y2="10" stroke="#8b5cf6" strokeWidth="0.75" />
-                <circle cx="60" cy="30" r="4" fill="#8b5cf6" />
-                <circle cx="30" cy="70" r="3.5" fill="#8b5cf6" />
-                <circle cx="90" cy="55" r="3.5" fill="#8b5cf6" />
-                <circle cx="75" cy="90" r="3" fill="#8b5cf6" />
-                <circle cx="15" cy="40" r="2" fill="#7c3aed" />
-                <circle cx="105" cy="30" r="2" fill="#7c3aed" />
-                <circle cx="100" cy="100" r="2" fill="#7c3aed" />
-                <circle cx="45" cy="10" r="2" fill="#7c3aed" />
-              </svg>
-            </div>
+      {/* Selected work */}
+      <section className="home-work-section pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
+        <div className="home-editorial-heading">
+          <div>
+            <h2>Selected work</h2>
+            <p>A few useful places to start.</p>
           </div>
+          <Link to="/writing">View all →</Link>
         </div>
-      </section>
 
-      {/* Latest Work */}
-      <section className="pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
-        <h2 className="text-lg md:text-xl text-th-heading font-semibold tracking-tight mb-1">What I Write About</h2>
-        <p className="text-th-tertiary text-sm font-sans mb-5 md:mb-8">Infrastructure, physics, and building things that work.</p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {featuredPosts.map(post => {
-            const accent = catAccentVar(post.category);
-            return (
-            <Link
-              key={`${post.category}-${post.id}`}
-              to={postPath(post.category, post.id)}
-              className="card-link group p-5 flex flex-col"
-            >
-              {post.thumbnail && (
-                <div className="mb-4">
-                  <img
-                    src={post.thumbnail}
-                    alt={post.displayTitle || post.title}
-                    loading="lazy"
-                    className="w-full h-32 object-cover rounded"
-                  />
-                </div>
-              )}
-
-              <div className="flex items-center gap-2 mb-3">
-                <span
-                  className="inline-block px-2 py-0.5 text-[10px] uppercase border rounded-sm"
-                  style={{ color: accent, borderColor: `color-mix(in srgb, ${accent} 30%, transparent)`, backgroundColor: `color-mix(in srgb, ${accent} 10%, transparent)` }}>
-                  {post.category}
-                </span>
-              </div>
-
-              <h3 className="text-th-heading font-semibold leading-snug mb-2 group-hover-accent transition-colors"
-                style={{ '--ac-color': accent } as React.CSSProperties}>
-                {post.displayTitle || post.title}
-              </h3>
-
-              <p className="text-th-secondary text-sm leading-relaxed line-clamp-2 font-sans">
-                {post.description}
-              </p>
-
-              <span className="inline-flex items-center gap-1 mt-auto pt-4 text-xs text-th-tertiary group-hover-accent transition-colors"
-                style={{ '--ac-color': accent } as React.CSSProperties}>
-                Read <ArrowRightIcon />
+        <div className="home-selected-list edu-entry-list edu-article-list">
+          {featuredPosts.map(post => (
+            <Link key={`${post.category}-${post.id}`} to={postPath(post.category, post.id)} className="edu-entry-row">
+              <span className="edu-entry-mark edu-entry-mark-article" aria-hidden="true"><i /><i /><i /><i /></span>
+              <span className="edu-entry-copy">
+                <time>{post.date}</time>
+                <strong>{post.displayTitle || post.title}</strong>
               </span>
             </Link>
-            );
-          })}
+          ))}
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
-        <p className="text-th-secondary text-sm font-sans">
-          Interested in collaborating?{' '}
-          <Link
-            to="/contact"
-            className="text-th-heading hover:text-blue-400 transition-colors underline underline-offset-4 decoration-th-border"
-          >
-            Get in touch
-          </Link>.
-        </p>
+      {/* Synthesis after the evidence: slightly wider than the editorial column. */}
+      <div className="home-field-wide">
+        <FieldOfView variant={fieldVariant} />
+      </div>
+
+      {/* Notes — intentionally absent from global navigation */}
+      <section className="home-notes-section border-t border-th-border pt-8 md:pt-12 pb-12 md:pb-20">
+        <div className="home-editorial-heading">
+          <div>
+            <p className="text-[9px] font-mono uppercase tracking-[0.18em] text-th-tertiary mb-2">Unfiltered log</p>
+            <h2><Link to="/notes" aria-label="Open Notes">Notes</Link></h2>
+          </div>
+        </div>
+        <div className="home-notes-list">
+          {shortNotes.slice(0, 4).map((note, index) => (
+            <Link key={note.id} to={`/notes/${note.id}`} className="home-note-row group">
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <strong>{note.title}</strong>
+              <time>{note.date}</time>
+              <span aria-hidden="true">↗</span>
+            </Link>
+          ))}
+        </div>
       </section>
+
     </div>
     </>
   );

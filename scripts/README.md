@@ -1,391 +1,83 @@
-# Build Scripts
+# Content tooling
 
-## `build-content.js`
+Operational reference for the build-time content pipeline. Supported authoring syntax is documented only in [`src/data/pages/SYNTAX.md`](../src/data/pages/SYNTAX.md); fieldnote workflows live in [`fieldnotes/README.md`](../src/data/pages/fieldnotes/README.md).
 
-Main content compiler. Transforms markdown into pre-rendered HTML with syntax highlighting, custom syntax processing, and link resolution.
-
-### Pipeline (14 steps)
-
-Both regular posts and fieldnotes pass through the same `compileMarkdown()` pipeline, in this exact order:
-
-| # | Step | Phase | What it does |
-|---|---|---|---|
-| 1 | `protectBackticks` | Pre-marked | Shields fenced code blocks (` ``` `) and inline code (`` ` ``, ` `` `) with `%%CBLK_N%%` placeholders so no preprocessor touches code content |
-| 2 | `applyPreProcessors` | Pre-marked | Runs regex rules from `compiler.config.js` (color, accent, underline, etc.). Heading lines (`# ...`) are temporarily replaced with `%%HEADING_N%%` so inline syntax never modifies them |
-| 3 | `processCustomBlockquotes` | Pre-marked | Converts `{bkqt/TYPE}...{/bkqt}` blocks into typed blockquotes (note, tip, warning, danger, keyconcept, quote, pullquote). Supports definition lists and alpha lists inside blockquotes |
-| 4 | `restoreBackticks` | Pre-marked | Restores `%%CBLK_N%%` → original code content |
-| 5 | `processExternalUrls` | Pre-marked | Converts `[[https://...\|text]]` into `<a class="doc-ref doc-ref-external">` with external link icon. Runs before marked to prevent URL auto-linking corruption |
-| 6 | `preprocessSideImages` | Pre-marked | Detects `![alt](src "left/right:width")` followed by text (no empty line). Wraps into `<div class="img-side-layout">` flexbox container |
-| 7 | `processDefinitionLists` | Pre-marked | Converts `- TERM:: description` blocks into `<div class="defn-list">` with `<p class="defn">` items |
-| 8 | `processAlphabeticalLists` | Pre-marked | Converts sequential `a. / A.` lines into `<ol type="a/A">` |
-| 9 | `processContextAnnotations` | Pre-marked | Converts `>> YY.MM.DD - text` lines into `<div class="ctx-note">` with avatar, date formatting, and relative time computation vs article date |
-| 10 | `marked.parse` | Marked | Standard GFM parsing. Custom renderer overrides: `blockquote` → `<div class="small-text">` (not `<blockquote>`), `image` → position classes + figcaption support |
-| 11 | `stripHeadingFormatting` | Post-marked | Removes all inline HTML tags from `<h1>`-`<h4>` content (no `<code>`, `<em>`, `<strong>` inside headings) |
-| 12 | `highlightCodeBlocks` | Post-marked | Shiki dual-theme highlighting. Wraps in `.code-terminal` with macOS dots, language label, copy button |
-| 13 | `applyPostProcessors` | Post-marked | Runs post-processor regex rules from `compiler.config.js` (currently empty) |
-| 14 | `processAnnotations` | Post-marked | Converts `{{ref\|explanation}}` into superscript notes. Works inside `<p>`, `<li>`, and `<td>` elements. Uses balanced-bracket parser for nesting. Runs inside `processOutsideCode` to skip `<pre>`/`<code>` |
-
-### Image renderer
-
-The custom marked renderer handles image positioning via the title field:
-
-```markdown
-![alt](src "right")         → <img class="img-float-right">
-![alt](src "left:300px")    → <img class="img-float-left" style="width:300px">
-![alt](src "center")        → <img class="img-center">
-![alt](src "full")          → <img class="img-full">
-![alt|Caption](src "center") → <figure class="img-center"><img><figcaption>Caption</figcaption></figure>
-```
-
-Positions: `right`, `left`, `center`, `full`. Optional width suffix (e.g. `right:250px`). Pipe `|` in alt text splits into alt + figcaption.
-
-### Blockquote types
-
-```markdown
-{bkqt/note}           → <div class="bkqt bkqt-note"> with "Note:" label
-{bkqt/tip}            → "Tip:" label
-{bkqt/warning}        → "Warning:" label
-{bkqt/danger}         → "Danger:" label
-{bkqt/keyconcept}     → "Key concept:" label
-{bkqt/quote|Author}   → No label, attribution span
-{bkqt/pullquote}      → No label, styled as pullquote
-{bkqt/note|Custom}    → Custom label overrides default
-```
-
-Content inside blockquotes supports definition lists (`- term:: desc`), alphabetical lists (`a. / A.`), numbered lists, and standard markdown. Paragraphs separated by double newlines. Lines separated by single newlines get `bkqt-cont` class.
-
-### Link processing
-
-`processAllLinks` runs on ALL compiled HTML (regular + fieldnotes) after individual compilation. It resolves `[[...]]` links in a single pass:
-
-| Pattern | Type | Output |
-|---|---|---|
-| `[[projects/slug\|Display]]` | Cross-doc link | `<a class="doc-ref doc-ref-projects" href="/lab/projects/slug">projects/Display</a>` |
-| `[[threads/slug\|Display]]` | Cross-doc link | `<a class="doc-ref doc-ref-threads" href="/blog/threads/slug">threads/Display</a>` |
-| `[[bits2bricks/slug\|Display]]` | Cross-doc link | `<a class="doc-ref doc-ref-bits2bricks" href="/blog/bits2bricks/slug">bits2bricks/Display</a>` |
-| `[[uid]]` | Wiki-ref | `<a class="wiki-ref" data-uid="uid">name</a>` |
-| `[[uid\|Custom]]` | Wiki-ref | `<a class="wiki-ref" data-uid="uid">Custom</a>` |
-
-Cross-doc links **require** display text (`|Display`). Missing display text produces a build error. Each cross-doc category has its own SVG icon. All link processing is wrapped in `processOutsideCode` to skip `<pre>`/`<code>` blocks.
-
-### Outputs
-
-| Output | Location | Contents |
-|---|---|---|
-| Regular posts | `src/data/posts.generated.json` | Projects, threads, bits2bricks with full HTML content. No fieldnotes. |
-| Fieldnotes index | `src/data/fieldnotes-index.generated.json` | Metadata array (id/uid, name, address, addressParts, references, trailingRefs, searchText, description). No `content` field. |
-| Fieldnote content | `public/fieldnotes/{uid}.json` | `{ "content": "<html>" }` per note. Served as static assets. Stale files auto-cleaned. |
-| Categories | `src/data/categories.generated.json` | Category config from `_category.yaml` files. |
-| OG manifest | `public/og-manifest.json` | URL path → OG metadata (title, description, thumbnail, category) for all articles + fieldnotes. Consumed by the Cloudflare Pages Function for social previews. |
-
-### Fieldnote metadata extraction
-
-Each fieldnote `.md` file produces:
-
-- **id**: the `uid` from frontmatter (8-char alphanumeric, e.g. `OkJJJyxX`)
-- **name**: from frontmatter (fallback: last address segment)
-- **displayTitle**: the `name` field
-- **description**: first non-heading, non-image text line (wiki-refs stripped to plain text)
-- **references**: all `[[...]]` addresses found in body
-- **trailingRefs**: `[[...]]` links on the last contiguous lines (used for "see also" display)
-- **searchText**: full HTML stripped of tags, lowercased (for client-side search)
-
-### Incremental cache
-
-**Cache file:** `.content-cache.json` (git-ignored)
-
-```json
-{
-  "version": 1,
-  "configHash": "<sha256-16 of compiler.config.js>",
-  "posts":      { "<relative-path>": { "mtime": <ms>, "result": { ... } } },
-  "fieldnotes": { "<filename>":      { "mtime": <ms>, "metadata": { ... }, "preLinkHtml": "..." } }
-}
-```
-
-Cache logic:
-- `configHash`: first 16 chars of SHA-256 of `compiler.config.js`. If it changes → full rebuild.
-- Per-file `mtime` (milliseconds): if mtime matches → reuse cached output, skip compilation.
-- `preLinkHtml`: fieldnotes store pre-link HTML so link resolution can always re-run.
-- `processAllLinks` always runs on ALL content (link targets may change when notes are added/removed).
-- Force full rebuild: `--force` flag or delete `.content-cache.json`.
-
-### Shiki
-
-10 languages loaded: typescript, javascript, python, rust, go, yaml, json, html, css, bash.
-
-Per-language dual-theme pairs (`--shiki-dark` / `--shiki-light`):
-
-| Language | Dark | Light |
-|---|---|---|
-| TypeScript, JavaScript | one-dark-pro | one-light |
-| Python | catppuccin-mocha | catppuccin-latte |
-| Rust | rose-pine | rose-pine-dawn |
-| Go | min-dark | min-light |
-| YAML, JSON | github-dark | github-light |
-| **Default** (HTML, CSS, bash, unknown) | vitesse-dark | vitesse-light |
-
-Unknown languages fall back to default themes gracefully (no build error). Code blocks without a language tag get the terminal wrapper but no highlighting.
-
-### Build error handling
-
-The build collects errors from two sources and fails if any exist:
-1. **Build errors** (`buildErrors[]`): missing `address` in fieldnote frontmatter, cross-doc links missing display text
-2. **Validation errors**: from `validate-fieldnotes.js` (see below)
-
-Non-zero errors → `process.exit(1)`. Warnings (e.g. missing parent segments) do NOT fail the build.
-
-### Syntax guard (`[SYNTAX]`)
-
-After link processing, a non-fatal scan flags custom-syntax tokens that **survived compilation** into the output HTML (code/`<pre>` regions excluded) — an unclosed or malformed `{bkqt}`/`{math}`, a stray `{shout:…}`/`{dots}`, or an unresolved `[[wiki-link]]`. These render as literal text instead of styled blocks, which the compiler does not otherwise treat as an error. Prints `[SYNTAX] WARN [LITERAL_TAG] … in "<id>"` and continues; it never fails the build.
-
-### Interactive mode (`--interactive`)
-
-When run with `--interactive` (or via `npm run content:fix`), the build passes fixable issues to `resolve-issues.js` after validation. If the resolver modifies any files, the build exits cleanly without writing outputs (stale data in memory) and prints a reminder to rebuild. See `resolve-issues.js` below.
-
----
-
-## `compiler.config.js`
-
-Centralized configuration consumed by `build-content.js`. Changing this file invalidates the entire cache (triggers full rebuild via `configHash`).
-
-### Sections
-
-#### `marked`
-Options passed to `marked.setOptions()`:
-- `gfm: true` — GitHub Flavored Markdown (tables, strikethrough, autolinks)
-- `breaks: false` — single newlines do NOT produce `<br>` (need double newline for paragraph break)
-
-#### `wikiLinks`
-- `enabled`: master toggle for all `[[...]]` link processing
-- `pattern`: regex for matching wiki-links (`/\[\[([^\]]+)\]\]/g`)
-
-#### `imagePositions`
-- `positions`: allowed position keywords (`right`, `left`, `center`, `full`)
-- `titlePattern`: regex to extract position + optional width from image title field
-- `classMap`: position → CSS class mapping (`center` → `img-center`, `right` → `img-float-right`, etc.)
-
-#### `preProcessors`
-Regex rules applied BEFORE `marked.parse`, in order. Heading lines are protected (never modified).
-
-| Name | Syntax | Output |
-|---|---|---|
-| text-color | `{#ff0:text}` or `{#red:text}` | `<span style="color:#ff0">text</span>` |
-| superscript | `{^:text}` | `<sup>text</sup>` |
-| subscript | `{v:text}` | `<sub>text</sub>` |
-| keyboard | `{kbd:text}` | `<kbd>text</kbd>` |
-| shout | `{shout:text}` | `<p class="shout">text</p>` |
-| underline | `_text_` | `<span style="text-decoration:underline">text</span>` |
-| accent-text | `--text--` | `<span class="accent-text">text</span>` |
-
-**Order matters**: curly-brace patterns (`{...}`) run first (unambiguous delimiters), then bare-delimiter patterns (`_..._`, `--...--`). The underline regex uses negative lookbehind/ahead (`(?<!\w)` / `(?!\w)`) to avoid matching mid-word underscores. The accent-text regex uses negative lookbehind/ahead to avoid matching CSS `---` separators.
-
-#### `postProcessors`
-Regex rules applied AFTER `marked.parse` (on HTML). Currently empty — reserved for future use.
-
-#### `validation`
-Boolean flags controlling which validation checks run:
-- `validateRegularPostWikiLinks`: check that `[[wiki-refs]]` in regular posts point to existing fieldnote addresses
-- `validateFieldnoteRefs`: check that `[[refs]]` inside fieldnotes point to existing fieldnote addresses
-- `validateParentSegments`: warn when a parent address segment (e.g. `CPU` in `CPU//ALU`) has no dedicated fieldnote file
-
----
-
-## `validate-fieldnotes.js`
-
-Seven-phase content integrity checker. Called automatically at the end of every build. Errors fail the build; warnings and info are logged but allowed.
-
-Returns `{ errors, warnings, infos, issues }` where `issues` is a structured array of all detected problems. Each issue has `{ code, severity, promptable, ...context }`. The `issues` array is consumed by `resolve-issues.js` for interactive fixing.
-
-Output uses colored severity labels with bracketed error codes:
-
-![Validation output in terminal](../docs/validate-fieldnotes-term-err-view.jpg)
-
-- `ERROR [BROKEN_REF]` / `[BROKEN_WIKILINK]` / `[BARE_TRAILING_REF]` (red) — fails the build
-- `WARN [MISSING_PARENT]` / `[SELF_REF]` / `[STALE_DISTINCT]` / `[CIRCULAR_REF]` (yellow) — logged, build continues
-- `HIGH` / `MED` / `LOW [SEGMENT_COLLISION]` / `[ALIAS_COLLISION]` / `[ALIAS_ALIAS_COLLISION]` (red/yellow/dim) — collision tiers, treated as warnings
-- `INFO [ISOLATED_NOTE]` (cyan) — informational, build continues
-
-A legend of active error codes is printed after the issues. If fixable issues exist, a hint is shown: `(N fixable — run npm run content:fix)`.
-
-For the full 7-phase breakdown (what each phase catches, severity, error codes, example output), see **[fieldnotes/README.md — Build-Time Validation](../src/data/pages/fieldnotes/README.md#build-time-validation)**.
-
-### Configuration
-
-All validation flags live in `compiler.config.js` under `validation`:
-
-| Flag | Default | Effect |
-|---|---|---|
-| `validateRegularPostWikiLinks` | `true` | Check wiki-refs in posts → fieldnotes |
-| `validateFieldnoteRefs` | `true` | Check refs inside fieldnotes → fieldnotes |
-| `validateParentSegments` | `true` | Warn if parent address prefixes lack blocks |
-| `detectCircularRefs` | `false` | DFS cycle detection (noisy in knowledge graphs) |
-| `detectSegmentCollisions` | `true` | Shared segments across different hierarchies |
-| `detectIsolated` | `true` | Notes with no connections |
-| `segmentCollisionExclusions` | `[...]` | Segment names too generic to flag |
-
----
-
-## `resolve-issues.js`
-
-Interactive issue resolver. Called by `build-content.js` when `--interactive` is set (via `npm run content:fix`). Not run standalone.
-
-Exports `resolveIssues(issues)` which consumes the structured `issues[]` array from `validateFieldnotes()` and prompts the user to fix each promptable issue.
-
-### Supported flows
-
-Every prompt also accepts **(q)** to quit early — changes already written are kept, remaining issues are skipped.
-
-| Issue code | Prompt options | What it does |
-|---|---|---|
-| `SEGMENT_COLLISION` | **(d)** different, **(s)** same, **(k)** skip | **d**: adds `distinct: [...]` to one note's frontmatter (picks deepest note as target). **s**: queues merge instructions for the end-of-session summary. **k**: no action. |
-| `ALIAS_COLLISION` / `ALIAS_ALIAS_COLLISION` | **(k)** skip | Informational — manual resolution required. |
-| `MISSING_PARENT` | **(c)** create, **(k)** skip | **c**: creates stub `.md` with `address` + `date` frontmatter. **k**: no action. |
-
-### End-of-session summary
-
-After all prompts (or on quit), the resolver prints:
-1. **Files modified count** + rebuild reminder
-2. **Pending merges block** — if any `(s)` "same concept" responses were given, all merge instructions are collected into a bordered, copyable text block with step-by-step commands ready to paste into Claude or run manually.
-
-### Implementation details
-
-- **Frontmatter modification**: regex-based editing (preserves quoting style). Handles missing `distinct` field, inline arrays, and already-present entries.
-- **Stub note creation**: generates a random 8-char UID, creates `{uid}.md` with `uid`, `address`, `name`, `date` frontmatter.
-- **Non-TTY guard**: skips prompts and prints a hint to use `npm run content:fix`.
-- **Quit / Ctrl+C**: graceful — changes already on disk are preserved, pending merges still print.
-
----
-
-## `check-references.js`
-
-Optional deep audit script (not part of `npm run build`). Run manually. For the full developer workflow (when to run this, how to act on results, cascading effects), see **[src/data/pages/fieldnotes/README.md](../src/data/pages/fieldnotes/README.md)**.
+## Commands
 
 ```bash
-node scripts/check-references.js
+npm run content       # compile content and validate references
+npm run content:fix   # compile and offer interactive fixes
+npm run build         # content + production Vite build
 ```
 
-### Checks
+Delete `.content-cache.json` or pass `--force` to `build-content.js` when a full content rebuild is required.
 
-| # | Check | What it finds |
-|---|---|---|
-| 1 | **Isolated** | Notes with no incoming or outgoing references |
-| 2 | **Weak parents** | Address segments without dedicated notes |
-| 3 | **Duplicate trailing refs** | A→B and B→A (redundant; trailing refs should exist on only ONE side) |
-| 4 | **Redundant trailing refs** | `[[ref]]` in both body and trailing section |
-| 5 | **Potential duplicates** | Addresses with >80% Levenshtein similarity |
-| 6 | **Segment collisions** | Same segment name at different hierarchy paths (same algorithm as Phase 5 of the build validator) |
+## Compiler
 
-Checks 1-5 are informational. Check 6 uses the same collision detection and tier classification as Phase 6 of the build validator, including `distinct` suppression and supersedes exclusion.
+`build-content.js` reads Markdown/front matter, calls `compileMarkdown()` from `src/lib/content/compile.js`, resolves the graph after all files are known, validates content and writes generated assets.
 
----
+The active per-document pipeline is:
 
-## `analyze-pairs.js`
+1. Protect fenced and inline code.
+2. Apply superscript, subscript and keyboard inline rules.
+3. Render mathematics and typed notes.
+4. Restore protected code.
+5. Protect/resolve structured URLs and reference pipes.
+6. Render definition lists, alphabetical lists and dated context annotations.
+7. Normalize nested-list indentation.
+8. Parse GitHub-Flavored Markdown.
+9. Clean heading markup and apply Shiki highlighting.
+10. Render paragraph-scoped footnotes.
+11. Resolve Wiki and cross-document references after every document is compiled.
 
-Relationship analyzer for fieldnote pairs. Answers "how are A and B connected?" by checking structural, trailing ref, and body mention relationships.
+`compiler.config.js` contains only active configuration: marked options, Wiki-link matching, image positions, the three inline preprocessors and validation flags. Changing it invalidates the content cache.
 
-```bash
-# Pair mode — analyze consecutive pairs
-node scripts/analyze-pairs.js "CPU" "RAM" "GPU" "CPU//core"
+## Outputs
 
-# All mode — every relationship for one address
-node scripts/analyze-pairs.js "CPU" --all
-```
-
-### Relationship types
-
-| Category | What it detects |
+| Output | Purpose |
 |---|---|
-| **Structural** | parent→child, ancestor→descendant, siblings (shared parent), root peers |
-| **Trailing** | A→B and/or B→A trailing refs, with `::` annotations displayed |
-| **Body** | A mentions B in body text (not trailing), B mentions A |
+| `src/data/posts.generated.json` | Full compiled Projects, Essays and Technical content |
+| `src/data/posts-index.generated.json` | Lightweight listing/search metadata |
+| `src/data/fieldnotes-index.generated.json` | Fieldnote metadata without full bodies |
+| `public/fieldnotes/{uid}.json` | One compiled body per fieldnote |
+| `src/data/categories.generated.json` | Category configuration |
+| `src/data/graph-relevance.generated.json` | Graph relevance and bridge metrics |
+| `public/og-manifest.json` | Social metadata lookup |
+| `public/sitemap.xml` | Search sitemap |
+| `public/feed.xml` | RSS feed |
 
-### Address resolution
+Generated files must not be edited by hand.
 
-The script resolves addresses using a four-step fallback chain:
+## Cache
 
-1. **Exact** — `"CPU"` matches `address: "CPU"`
-2. **Case-insensitive** — `"cpu"` matches `address: "CPU"`
-3. **Alias** — `"processor"` matches if a note has `aliases: ["processor"]`
-4. **Last segment** — `"core"` matches `CPU//core` (warns if ambiguous)
+`.content-cache.json` stores the compiler configuration hash and per-file modification time. Unchanged files reuse pre-link HTML; global link resolution still runs because a newly added or renamed note can affect other documents.
 
-Ambiguous matches produce a warning listing all candidates — no silent guess.
+## Validation
 
----
+`validate-fieldnotes.js` runs automatically. Errors fail the build; warnings and informational findings do not. Active checks are controlled by `compiler.config.js`:
 
-## `preflight.js`
+- Regular-post and fieldnote Wiki references.
+- Missing parent segments.
+- Segment and alias collisions.
+- Optional circular-reference detection.
+- Isolated-note reporting.
 
-Pre-creation briefing tool. Run before creating or enriching fieldnotes to understand the current state of relevant notes at a glance.
+Malformed or retired syntax leaking into output is caught by the syntax guard. Run `npm run content:fix` for issues supported by the interactive resolver.
 
-```bash
-# Brief existing notes (fuzzy address resolution)
-node scripts/preflight.js "MCU" "NPU" "sensor"
+## Scripts
 
-# Collision check for proposed new addresses
-node scripts/preflight.js --new "sensor//lidar" "NVIDIA//CUDA"
-
-# Mixed — brief existing + collision check for new
-node scripts/preflight.js "MCU" "sensor" --new "sensor//lidar"
-```
-
-### Output sections
-
-| Section | What it shows |
+| Script | Role |
 |---|---|
-| **Body** | Full note content (excluding trailing ref section) |
-| **Trailing refs** | Outgoing and incoming refs, with `:: annotations`. Flags bilateral duplicates with a warning. |
-| **Interaction candidates** | Body lines containing contrast language ("vs", "unlike", "contrast with", "differs from", etc.) that may belong as trailing ref interactions instead |
-| **Cross-refs** | For all queried notes, shows trailing ref and mention status between every pair |
-| **Collision check** (`--new`) | Exact match, last-segment collision, and missing parent checks for proposed addresses |
+| `build-content.js` | Compilation, global link resolution and generated outputs |
+| `validate-fieldnotes.js` | Graph/content integrity checks |
+| `resolve-issues.js` | Interactive fixes emitted by validation |
+| `preflight.js` | Address and collision checks before creating notes |
+| `move-hierarchy.js` | Planned/dry-run hierarchy moves and reference updates |
+| `rename-address.js` | Simple address rename workflow |
+| `check-references.js` | Reference inspection |
+| `analyze-pairs.js` | Relationship inspection |
+| `compute-graph-relevance.js` | Graph scoring data |
+| `obsidian-export.js` / `obsidian-import.js` | Obsidian synchronization |
+| `migrate-to-uids.js` | Historical UID migration utility |
 
-Uses the same four-step fuzzy address resolution as `analyze-pairs.js` (exact, case-insensitive, alias, last-segment).
-
----
-
-## `move-hierarchy.js`
-
-Cascading hierarchy rename. Moves a fieldnote **and all its descendants** to a new address prefix in a single atomic operation. Wraps the same logic as `rename-address.js` but cascades automatically — no manual per-child calls needed.
-
-```bash
-# Dry-run (default) — shows full plan, writes nothing
-node scripts/move-hierarchy.js "chip" "component//chip"
-
-# Apply — executes all renames
-node scripts/move-hierarchy.js "chip" "component//chip" --apply
-```
-
-### What it does (5 steps)
-
-| # | Step | What it does |
-|---|---|---|
-| 1 | Build rename map | Finds root note (`address === oldPrefix`) + all descendants (`address.startsWith(oldPrefix + "//")`) |
-| 2 | Validate | Checks: root exists, no target filename/ID collisions, old ≠ new |
-| 3 | Update address fields | For each moved note, updates `address:` in frontmatter |
-| 4 | Update frontmatter refs | Replaces old addresses in `distinct:` and `supersedes:` arrays across ALL notes |
-| 5 | Rename files | Renames `.md` files to match new addresses (after all content updates) |
-
-Longer addresses are processed first in steps 4-5 to prevent partial matches.
-
-### Edge cases
-
-| Case | Behavior |
-|---|---|
-| Root has no children | Works like `rename-address.js` — moves just the root |
-| Deep nesting (3+ levels) | All descendants found by prefix scan, regardless of depth |
-| Moving to root (`CPU//cache` → `cache`) | Prefix replacement works — children follow |
-| Same-level rename (`chip` → `circuit`) | Cascades to children: `chip//MCU` → `circuit//MCU` |
-| Address has `/` (`I/O` → `hardware//I/O`) | `escapeRegex()` handles it — children `I/O//DMA` → `hardware//I/O//DMA` |
-| Target file exists | Error before any writes |
-| No root note | Error: "No fieldnote with address 'X'" |
-| `distinct`/`supersedes` entries | Auto-updated in all notes |
-| `\| display text` in refs | Preserved (same capture group as rename-address.js) |
-| `:: annotations` in trailing refs | Preserved automatically (outside `[[ ]]` brackets) |
-
-### Comparison with `rename-address.js`
-
-| | `rename-address.js` | `move-hierarchy.js` |
-|---|---|---|
-| **Scope** | Single note | Root + all descendants |
-| **Children** | Not touched — must rename individually | Automatically included |
-| **Updates** | Frontmatter only (address, distinct, supersedes) | Frontmatter only (address, distinct, supersedes) |
-| **Use case** | Leaf note rename, alias change | Hierarchy restructuring, moving branches |
+Detailed flags and edge cases for fieldnote operations remain in the fieldnotes management guide rather than being duplicated here.

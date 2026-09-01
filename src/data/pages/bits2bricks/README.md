@@ -65,7 +65,8 @@ related: ["4028591"]
      - When to show vs tell
 -->
 
-*No tone lessons recorded yet. This section grows from feedback on published bits2bricks articles.*
+- **Do not confuse accessibility with compression.** When adapting a substantial technical report, preserve the derivation, component model and points where theory disagrees with the experiment. The conversational voice should carry the technical depth, not replace it.
+- **Give old work a present-tense reason to exist.** A recovered project becomes more interesting when the author explains what they misunderstood then, what they would build differently now and how the older method relates to current practice.
 
 ---
 
@@ -79,7 +80,8 @@ related: ["4028591"]
      - Ideal section length for tutorials
 -->
 
-*No structural lessons recorded yet. This section grows from feedback on published bits2bricks articles.*
+- **Rebuild missing technical figures.** If the source report used incidence matrices, causal graphs or block diagrams to carry the reasoning, recreate equivalent web-native diagrams. Result plots alone are evidence, not explanation.
+- **Preserve the source's visual grammar.** When rebuilding a LaTeX/TikZ figure, reproduce its actual matrix, graph topology, causal markings, colours and labels. Do not replace it with a generic explanatory infographic merely covering the same topic.
 
 ---
 
@@ -89,7 +91,7 @@ Bits2Bricks lean heavily on:
 - **Code blocks** with language identifiers for implementation steps
 - **Alphabetical lists** (`a. b. c.`) for ordered procedures
 - **Definition lists** (`- TERM:: desc`) for introducing terminology
-- **Side-by-side images** for diagrams alongside explanation text
+- **Image pairs** (`"pair"`) for two diagrams that should be compared directly; prose never sits beside an image
 - **`{bkqt/tip}`** for practical shortcuts and gotchas
 
 Generic blockquote labels ("Note", "Tip", "Warning") are fine in bits2bricks — the format is utilitarian.

@@ -24,7 +24,19 @@ const { titlePattern, classMap } = compilerConfig.imagePositions;
 
 previewRenderer.blockquote = function (token) {
   const body = this.parser.parse(token.tokens);
-  return `<div class="small-text">${body}</div>\n`;
+  return `<blockquote class="editorial-quote">${body}</blockquote>\n`;
+};
+
+previewRenderer.hr = function () { return ''; };
+
+const PREVIEW_EXTERNAL_ICON = `<svg class="doc-ref-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14 21 3"/></svg>`;
+previewRenderer.link = function ({ href, title, tokens }) {
+  const text = this.parser.parseInline(tokens);
+  const external = /^https?:\/\//.test(href);
+  const inPage = href.startsWith('#');
+  const titleAttr = title ? ` title="${title.replace(/"/g, '&quot;')}"` : '';
+  const classAttr = external ? ' class="doc-ref doc-ref-external"' : inPage ? ' class="doc-ref doc-ref-inpage"' : '';
+  return `<a${classAttr} href="${href}"${titleAttr}${external ? ' target="_blank" rel="noopener noreferrer"' : ''}>${text}${external ? ` ${PREVIEW_EXTERNAL_ICON}` : ''}</a>`;
 };
 
 previewRenderer.image = function ({ href, title, text }) {

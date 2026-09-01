@@ -1,6 +1,6 @@
 ---
 uid: "LR9wgzYo"
-address: "peripheral//STM32"
+address: "Hardware//peripheral//STM32"
 name: "STM32"
 date: "2026-02-05"
 ---

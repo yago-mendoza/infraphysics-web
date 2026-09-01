@@ -1,193 +1,62 @@
-// Mobile hamburger menu navigation component — theme-aware
+// Mobile navigation — same calm editorial shell as desktop.
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
-import {
-  Logo,
-  UserIcon,
-  GearIcon,
-  ThreadIcon,
-  GradCapIcon,
-  DiamondIcon,
-  MailIcon,
-  MenuIcon,
-  CloseIcon,
-  HomeIcon,
-  SunIcon,
-  MoonIcon,
-  SearchIcon,
-  GitHubIcon,
-  DiceIcon,
-} from '../icons';
-import { catAccentVar, secondBrainPath } from '../../config/categories';
-import { CATEGORY_ACCENTS } from '../../constants/theme';
-import { useNavigate } from 'react-router-dom';
-
+import { CloseIcon, ExternalLinkIcon, Logo, MenuIcon, MoonIcon, SunIcon } from '../icons';
+import { secondBrainPath } from '../../config/categories';
 
 export const MobileNav: React.FC<{ onOpenSearch?: () => void }> = ({ onOpenSearch }) => {
+  const [open, setOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
-  const isSecondBrain = location.pathname.startsWith(secondBrainPath());
-  const showGitHub = !isSecondBrain && (location.pathname.startsWith('/lab/projects') || location.pathname === '/about');
-
-  const handleRandomNote = useCallback(async () => {
-    try {
-      const res = await fetch('/fieldnotes-index.json');
-      const notes: { id: string }[] = await res.json();
-      if (notes.length === 0) return;
-      const random = notes[Math.floor(Math.random() * notes.length)];
-      navigate(secondBrainPath(random.id));
-    } catch { /* noop */ }
-  }, [navigate]);
-  const [isOpen, setIsOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);   // controls DOM presence
-  const [visible, setVisible] = useState(false);    // controls CSS transition state
   const { theme, toggleTheme } = useTheme();
-
-  // Open: mount first, then trigger visible on next frame
-  // Close: remove visible first, then unmount after transition
+  useEffect(() => { setOpen(false); setAboutOpen(false); }, [location.pathname]);
   useEffect(() => {
-    if (isOpen) {
-      setMounted(true);
-      requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
-    } else {
-      setVisible(false);
-      const id = setTimeout(() => setMounted(false), 250);
-      return () => clearTimeout(id);
-    }
-  }, [isOpen]);
+    document.body.style.overflow = open ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
 
-  const close = useCallback(() => setIsOpen(false), []);
-
-  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
-
-  const NavLink = ({ to, basePath, accent: linkAccent, icon, children }: { to: string, basePath?: string, accent: string, icon: React.ReactNode, children: React.ReactNode }) => {
-    const active = isActive(basePath ?? to);
-    return (
-      <Link
-        to={active && basePath ? basePath : to}
-        onClick={() => setIsOpen(false)}
-        className={`flex items-center gap-2.5 py-2.5 px-3 rounded-sm text-sm transition-all [&_svg]:w-4 [&_svg]:h-4 ${
-          active ? 'bg-th-elevated font-medium' : 'text-th-secondary hover:bg-th-surface-alt'
-        }`}
-        style={active ? { color: linkAccent } : undefined}
-      >
-        <span className={active ? undefined : 'text-th-tertiary'} style={active ? { color: linkAccent } : undefined}>{icon}</span>
-        <span>{children}</span>
-      </Link>
-    );
-  };
-
-  const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-    <div className="text-[9px] uppercase tracking-[0.2em] text-th-tertiary px-3 pt-3 pb-0.5 select-none">
-      {children}
-    </div>
-  );
+  const links = [
+    ['/home', 'Home'], ['/about', 'About'], ['/writing', 'Writing'],
+    ['/lab/projects', 'Projects'], [secondBrainPath(), 'Wiki'], ['/contact', 'Contact'],
+  ] as const;
 
   return (
-    <div className="md:hidden fixed top-0 left-0 right-0 z-50">
-      {/* Mobile Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-th-base border-b border-th-border">
-        <Link to="/home" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-th-active rounded-sm flex items-center justify-center">
-            <Logo className="w-5 h-5" color="var(--text-primary)" />
-          </div>
-          <span className="font-bold text-sm text-th-primary">InfraPhysics</span>
+    <div className="global-nav-shell md:hidden fixed inset-x-0 bottom-3 z-50 px-3">
+      <div className="h-12 px-4 flex items-center justify-between bg-th-base/95 backdrop-blur-md border border-th-border rounded-md shadow-xl">
+        <Link to="/home" className="flex items-center gap-2" aria-label="InfraPhysics home">
+          <Logo className="w-4 h-4" color="var(--text-heading)" />
+          <span className="text-sm text-th-heading">{links.find(([to]) => location.pathname === to || location.pathname.startsWith(to + '/'))?.[1] ?? 'InfraPhysics'}</span>
         </Link>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onOpenSearch}
-            className="p-2 hover:bg-th-active rounded-sm transition-colors text-th-secondary"
-            aria-label="Search"
-          >
-            <SearchIcon />
-          </button>
-          <button
-            onClick={toggleTheme}
-            className="p-2 hover:bg-th-active rounded-sm transition-colors text-th-secondary"
-            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          >
-            {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-          </button>
-          {isSecondBrain && (
-            <button
-              onClick={handleRandomNote}
-              className="p-2 hover:bg-th-active rounded-sm transition-colors text-th-secondary"
-              aria-label="Random fieldnote"
-            >
-              <DiceIcon />
-            </button>
-          )}
-          {showGitHub && (
-            <a
-              href="https://github.com/yago-mendoza"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 hover:bg-th-active rounded-sm transition-colors text-th-secondary"
-              aria-label="GitHub"
-            >
-              <GitHubIcon />
-            </a>
-          )}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="p-2 hover:bg-th-active rounded-sm transition-colors text-th-secondary"
-            aria-label="Toggle menu"
-          >
-            <MenuIcon />
-          </button>
+        <div className="flex items-center gap-1 text-th-tertiary">
+          <button onClick={() => setOpen(true)} className="flex items-center gap-2 pl-3 border-l border-th-border text-xs" aria-label="Open navigation">Menu <MenuIcon /></button>
         </div>
       </div>
 
-      {/* Mobile Menu Panel — slides down from top */}
-      {mounted && (
-        <>
-          <div
-            className={`fixed inset-0 bg-th-overlay z-40 transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}
-            onClick={close}
-          />
-          <div
-            className="fixed top-0 left-0 right-0 z-50 bg-th-sidebar border-b border-th-border shadow-lg transition-transform duration-300 ease-out"
-            style={{ transform: visible ? 'translateY(0)' : 'translateY(-100%)' }}
-          >
-            {/* Close header inside the panel */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-th-border">
-              <Link to="/home" onClick={close} className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-th-active rounded-sm flex items-center justify-center">
-                  <Logo className="w-5 h-5" color="var(--text-primary)" />
-                </div>
-                <span className="font-bold text-sm text-th-primary">InfraPhysics</span>
-              </Link>
-              <button
-                onClick={close}
-                className="p-2 hover:bg-th-active rounded-sm transition-colors text-th-secondary"
-                aria-label="Close menu"
-              >
-                <CloseIcon />
-              </button>
-            </div>
-
-            <nav className="flex flex-col p-3 gap-0.5">
-              <NavLink to="/home" accent={CATEGORY_ACCENTS.meta} icon={<HomeIcon />}>Home</NavLink>
-
-              {/* LAB */}
-              <SectionLabel>lab</SectionLabel>
-              <NavLink to="/lab/projects" basePath="/lab/projects" accent={catAccentVar('projects')} icon={<GearIcon />}>Projects</NavLink>
-              <NavLink to={secondBrainPath()} accent={CATEGORY_ACCENTS.secondBrain} icon={<DiamondIcon />}>2<sup>nd</sup> brain</NavLink>
-
-              {/* BLOG */}
-              <SectionLabel>blog</SectionLabel>
-              <NavLink to="/blog/threads" basePath="/blog/threads" accent={catAccentVar('threads')} icon={<ThreadIcon />}>Threads</NavLink>
-              <NavLink to="/blog/bits2bricks" basePath="/blog/bits2bricks" accent={catAccentVar('bits2bricks')} icon={<GradCapIcon />}>Bits2Bricks</NavLink>
-
-              {/* META */}
-              <SectionLabel>meta</SectionLabel>
-              <NavLink to="/about" accent={CATEGORY_ACCENTS.meta} icon={<UserIcon />}>About</NavLink>
-              <NavLink to="/contact" accent={CATEGORY_ACCENTS.meta} icon={<MailIcon />}>Contact</NavLink>
-            </nav>
+      {open && (
+        <div className="fixed inset-0 bg-th-base z-50 px-5 py-4 animate-fade-in overflow-y-auto">
+          <div className="flex items-center justify-between pb-5 border-b border-th-border">
+            <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-th-tertiary">Navigate</span>
+            <button onClick={() => setOpen(false)} className="p-2 text-th-secondary" aria-label="Close navigation"><CloseIcon /></button>
           </div>
-        </>
+          <nav className="py-8">
+            {links.map(([to, label], index) => label === 'About' ? (
+              <div key={to} className="border-b border-th-border">
+                <button type="button" onClick={() => setAboutOpen(v => !v)} className="grid w-full grid-cols-[2rem_1fr_auto] items-baseline py-4 text-left">
+                  <span className="text-[9px] font-mono text-th-muted">0{index + 1}</span><span className="text-3xl font-serif text-th-heading">About</span><span className="text-th-muted">{aboutOpen ? '−' : '+'}</span>
+                </button>
+                {aboutOpen && <div className="pb-4 pl-8 grid gap-1"><Link to="/about" className="py-2 text-lg text-th-secondary">Profile <small className="block text-[10px] text-th-muted">Ideas and direction</small></Link><Link to="/about/cv" className="py-2 text-lg text-th-secondary">Experience / CV <small className="block text-[10px] text-th-muted">Work and education</small></Link><Link to="/about/stack" className="py-2 text-lg text-th-secondary">Stack <small className="block text-[10px] text-th-muted">Tools and systems</small></Link></div>}
+              </div>
+            ) : <Link key={to} to={to} className="grid grid-cols-[2rem_1fr] items-baseline py-4 border-b border-th-border"><span className="text-[9px] font-mono text-th-muted">0{index + 1}</span><span className="flex items-center gap-2 text-3xl font-serif text-th-heading">{label}{label === 'Wiki' && <ExternalLinkIcon className="wiki-context-icon" />}</span></Link>)}
+          </nav>
+          <div className="flex items-center justify-between pt-4 text-xs text-th-tertiary">
+            <span>Madrid · ES / EN</span>
+            <button onClick={toggleTheme} className="flex items-center gap-2 text-th-secondary">
+              {theme === 'dark' ? <SunIcon /> : <MoonIcon />} Theme
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

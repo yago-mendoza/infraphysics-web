@@ -7,6 +7,14 @@
     <language>en</language>
     <atom:link href="https://infraphysics.net/feed.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>When an equation notices a leak</title>
+      <link>https://infraphysics.net/blog/bits2bricks/3142718</link>
+      <guid>https://infraphysics.net/blog/bits2bricks/3142718</guid>
+      <pubDate>Fri, 28 Aug 2026 00:00:00 GMT</pubDate>
+      <description>Building a model-based fault detector from thirteen equations, four residuals and a very small hydraulic system.</description>
+      <category>bits2bricks</category>
+    </item>
+    <item>
       <title>Your context is the moat</title>
       <link>https://infraphysics.net/blog/threads/6820451</link>
       <guid>https://infraphysics.net/blog/threads/6820451</guid>

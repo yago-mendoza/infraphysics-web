@@ -147,7 +147,7 @@ FILES=(
   "src/data/pages/bits2bricks/custom-syntax-pcb.md"
   # Fieldnote files are now named {uid}.md — pick a representative one
   # Check uid-map.json or ls src/data/pages/fieldnotes/ for current filenames
-  # "src/data/pages/fieldnotes/egoxqpmC.md"  # CPU//ALU
+  # "src/data/pages/fieldnotes/egoxqpmC.md"  # Hardware//CPU//ALU
 )
 
 # ── Recopilar stats ───────────────────────────────────────────────────

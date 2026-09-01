@@ -28,8 +28,11 @@ const { titlePattern, classMap } = compilerConfig.imagePositions;
 
 customRenderer.blockquote = function(token) {
   const body = this.parser.parse(token.tokens);
-  return `<div class="small-text">${body}</div>\n`;
+  return `<blockquote class="editorial-quote">${body}</blockquote>\n`;
 };
+
+// Horizontal rules are intentionally not part of the minimal editorial set.
+customRenderer.hr = function() { return ''; };
 
 customRenderer.image = function({ href, title, text }) {
   let className = '';
@@ -76,14 +79,29 @@ customRenderer.image = function({ href, title, text }) {
   return imgTag;
 };
 
+const MARKDOWN_EXTERNAL_ICON = `<svg class="doc-ref-icon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
+const MARKDOWN_DOCUMENT_ICON = `<svg class="doc-ref-icon" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M280-280h280v-80H280v80Zm0-160h400v-80H280v80Zm0-160h400v-80H280v80Zm-80 480q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"/></svg>`;
+
 // Regular markdown links. Playground/static-HTML links open in a new tab by
 // default (they are self-contained pages served outside the SPA).
 customRenderer.link = function({ href, title, tokens }) {
   const text = this.parser.parseInline(tokens);
   const titleAttr = title ? ` title="${title.replace(/"/g, '&quot;')}"` : '';
   const newTab = /^https?:\/\//.test(href) || /^\/playgrounds\//.test(href) || /\.html($|[?#])/.test(href);
+  const inPage = href.startsWith('#');
   const tabAttr = newTab ? ' target="_blank" rel="noopener noreferrer"' : '';
-  return `<a href="${href}"${titleAttr}${tabAttr}>${text}</a>`;
+  const articleMatch = href.match(/^\/(?:lab\/(projects)|blog\/(threads|bits2bricks))\//);
+  const articleCategory = articleMatch ? (articleMatch[1] || articleMatch[2]) : '';
+  const classAttr = articleMatch
+    ? ` class="doc-ref doc-ref-${articleCategory}"`
+    : newTab
+      ? ' class="doc-ref doc-ref-external"'
+      : inPage
+        ? ' class="doc-ref doc-ref-inpage"'
+        : '';
+  const iconBefore = articleMatch ? `${MARKDOWN_DOCUMENT_ICON}` : '';
+  const iconAfter = newTab && !articleMatch ? ` ${MARKDOWN_EXTERNAL_ICON}` : '';
+  return `<a${classAttr} href="${href}"${titleAttr}${tabAttr}>${iconBefore}${text}${iconAfter}</a>`;
 };
 
 customRenderer.table = function(token) {
@@ -170,11 +188,23 @@ function processAllLinks(html) {
 
 const PAGES_DIR = path.join(__dirname, '../src/data/pages');
 const OUTPUT_FILE = path.join(__dirname, '../src/data/posts.generated.json');
+const POSTS_INDEX_FILE = path.join(__dirname, '../src/data/posts-index.generated.json');
 const CATEGORIES_OUTPUT = path.join(__dirname, '../src/data/categories.generated.json');
 
 function processMarkdownFile(filePath) {
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   const { data: frontmatter, content } = matter(fileContent);
+
+  // A wiki-link already exposes the concept's dedicated explanation. Chaining an
+  // inline footnote onto the same term creates two competing explanatory actions.
+  const wikiFootnotePattern = /\[\[[^\]\n]+\]\][ \t]*\^\[/g;
+  for (const match of content.matchAll(wikiFootnotePattern)) {
+    const line = content.slice(0, match.index).split('\n').length;
+    const relativePath = path.relative(PAGES_DIR, filePath).replace(/\\/g, '/');
+    const msg = `${relativePath}:${line} chains an inline footnote directly after a wiki-link`;
+    console.error(`  \x1b[31mERROR: ${msg}\x1b[0m`);
+    buildErrors.push(msg);
+  }
 
   const htmlContent = compileMarkdown(content, frontmatter.date);
 
@@ -370,8 +400,13 @@ function extractFieldnoteMeta(filename, filePath) {
 const CACHE_FILE = path.join(__dirname, '../.content-cache.json');
 
 function computeConfigHash() {
-  const configContent = fs.readFileSync(path.join(__dirname, 'compiler.config.js'), 'utf-8');
-  return createHash('sha256').update(configContent).digest('hex').slice(0, 16);
+  const compilerFiles = [
+    path.join(__dirname, 'compiler.config.js'),
+    path.join(__dirname, 'build-content.js'),
+    path.join(__dirname, '../src/lib/content/compile.js'),
+  ];
+  const compilerSource = compilerFiles.map(file => fs.readFileSync(file, 'utf-8')).join('\n/* compiler boundary */\n');
+  return createHash('sha256').update(compilerSource).digest('hex').slice(0, 16);
 }
 
 function loadCache() {
@@ -499,6 +534,9 @@ const linkedFieldnotePosts = fieldnotePosts.map(post => ({
   content: processOutsideCode(post.content, processAllLinks),
   trailingRefs: (post.trailingRefs || []).map(r => r.annotation ? { ...r, annotation: processAllLinks(r.annotation) } : r),
 }));
+// Hidden posts remain in the full payload so internal tools can render them,
+// but must never leak into public indexes, discovery feeds, or SEO outputs.
+const publicRegularPosts = linkedRegularPosts.filter(post => !post.hidden);
 
 const categories = getAllCategoryConfigs(PAGES_DIR);
 
@@ -514,6 +552,7 @@ const SYNTAX_GUARD = [
   { re: /\{\/?math\}/,        label: 'literal {math} tag — unclosed math block' },
   { re: /\{shout:[^}]*\}/,    label: 'literal {shout:…} tag' },
   { re: /\{dots\}/,           label: 'literal {dots} tag' },
+  { re: /\{\/?optional\b[^}]*\}|\{\/?option\b[^}]*\}/, label: 'literal optional-section tag — malformed or unclosed block' },
   { re: /\[\[[^\]\n]+\]\]/,   label: 'unresolved [[wiki-link]]' },
   { re: /\]\((?:https?:\/\/|\/)[^)\s]+(?:\s+"[^"]*")?\)/, label: 'literal markdown link/image survived (a [[wiki-link]] or stray "]" inside an alt/caption breaks the image)' },
 ];
@@ -556,6 +595,11 @@ if (interactive && validation.issues.some(i => i.promptable)) {
 // Output 1: posts.generated.json (regular posts only — no fieldnotes)
 fs.writeFileSync(OUTPUT_FILE, JSON.stringify(linkedRegularPosts, null, 2));
 
+// Lightweight metadata for Home/Writing. Keeping article bodies out of the
+// initial route avoids parsing the complete corpus before it is needed.
+const postsIndex = publicRegularPosts.map(({ content, ...meta }) => meta);
+fs.writeFileSync(POSTS_INDEX_FILE, JSON.stringify(postsIndex, null, 2));
+
 // Output 2: fieldnotes-index.generated.json (metadata only — no content)
 const fieldnotesIndex = linkedFieldnotePosts.map(({ content, searchText, ...meta }) => ({ ...meta, searchText }));
 fs.writeFileSync(FIELDNOTES_INDEX_FILE, JSON.stringify(fieldnotesIndex, null, 2));
@@ -597,6 +641,7 @@ function htmlToText(html) {
     .replace(/<\/(?:p|div|h[1-6]|li|tr|blockquote)>/gi, '\n')
     .replace(/<[^>]+>/g, '')
     .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
+    .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .replace(/[ \t]+/g, ' ')
     .trim();
@@ -621,7 +666,7 @@ Site sections:
 
 Projects — Engineering projects with technical deep-dives. InfraPhysics Web (custom markdown compiler, wiki-link knowledge graph, AI-assisted development) and FinBoard (zero-dependency personal finance dashboard).
 
-Threads — Long-form essays on technology, AI, economics, and systems thinking. Topics include transformer architecture, AI alignment, Rust and memory safety, AI agent security, scaling laws, reward hacking, and the neuroscience of learning.
+Essays — Long-form writing on technology, AI, economics, and systems thinking. Topics include transformer architecture, AI alignment, Rust and memory safety, AI agent security, scaling laws, reward hacking, and the neuroscience of learning.
 
 Bits2Bricks — Technical tutorials bridging software and physical engineering. How LLMs learn (SFT, DPO, RL, RLHF), transformers from scratch, and AI agent containment.
 
@@ -675,7 +720,7 @@ LinkedIn: https://linkedin.com/in/yago-mendoza
 X: https://x.com/ymdatweets`,
 };
 
-for (const post of linkedRegularPosts) {
+for (const post of publicRegularPosts) {
   const urlPath = `/${catGroup(post.category)}/${post.category}/${post.id}`;
   ogManifest[urlPath] = {
     t: post.displayTitle || post.title,
@@ -689,14 +734,14 @@ for (const post of linkedRegularPosts) {
 
 // Section listing pages — so crawlers see article directories
 const sectionListings = {
-  '/blog/threads': { t: 'Threads', d: 'Long-form essays on technology, AI, economics, and systems thinking by Yago Mendoza.' },
+  '/blog/threads': { t: 'Essays', d: 'Long-form essays on technology, AI, economics, and systems thinking by Yago Mendoza.' },
   '/blog/bits2bricks': { t: 'Bits2Bricks', d: 'Technical tutorials bridging software and physical engineering by Yago Mendoza.' },
   '/lab/projects': { t: 'Projects', d: 'Engineering projects with technical deep-dives by Yago Mendoza.' },
-  '/lab/second-brain': { t: 'Second Brain', d: 'Knowledge graph of 300+ interconnected concept notes on ML, hardware, blockchain, and systems.' },
+  '/wiki': { t: 'Wiki', d: 'Knowledge graph of 300+ interconnected concept notes on ML, hardware, blockchain, and systems.' },
 };
 for (const [urlPath, meta] of Object.entries(sectionListings)) {
   const sectionCat = urlPath.split('/').pop();
-  const sectionPosts = linkedRegularPosts.filter(p => p.category === sectionCat);
+  const sectionPosts = publicRegularPosts.filter(p => p.category === sectionCat);
   const listing = sectionPosts.map(p => `- ${p.displayTitle || p.title}: ${p.description || ''}`).join('\n');
   ogManifest[urlPath] = {
     t: meta.t,
@@ -709,7 +754,7 @@ for (const [urlPath, meta] of Object.entries(sectionListings)) {
 }
 
 for (const note of fieldnotesIndex) {
-  const urlPath = `/lab/second-brain/${note.id}`;
+  const urlPath = `/wiki/${note.id}`;
   ogManifest[urlPath] = {
     t: note.title,
     d: note.description || '',
@@ -734,7 +779,7 @@ const staticPages = [
   { loc: '/about', priority: '0.8', changefreq: 'monthly' },
   { loc: '/contact', priority: '0.5', changefreq: 'yearly' },
   { loc: '/lab/projects', priority: '0.9', changefreq: 'weekly' },
-  { loc: '/lab/second-brain', priority: '0.8', changefreq: 'daily' },
+  { loc: '/wiki', priority: '0.8', changefreq: 'daily' },
   { loc: '/blog/threads', priority: '0.9', changefreq: 'weekly' },
   { loc: '/blog/bits2bricks', priority: '0.9', changefreq: 'weekly' },
 ];
@@ -743,13 +788,13 @@ const sitemapEntries = [];
 for (const page of staticPages) {
   sitemapEntries.push(`  <url><loc>${SITE_URL}${page.loc}</loc><changefreq>${page.changefreq}</changefreq><priority>${page.priority}</priority></url>`);
 }
-for (const post of linkedRegularPosts) {
+for (const post of publicRegularPosts) {
   const urlPath = `/${catGroup(post.category)}/${post.category}/${post.id}`;
   const lastmod = post.date ? `<lastmod>${post.date.slice(0, 10)}</lastmod>` : '';
   sitemapEntries.push(`  <url><loc>${SITE_URL}${urlPath}</loc>${lastmod}<changefreq>monthly</changefreq><priority>0.7</priority></url>`);
 }
 for (const note of fieldnotesIndex) {
-  const urlPath = `/lab/second-brain/${note.id}`;
+  const urlPath = `/wiki/${note.id}`;
   const lastmod = note.date ? `<lastmod>${note.date.slice(0, 10)}</lastmod>` : '';
   sitemapEntries.push(`  <url><loc>${SITE_URL}${urlPath}</loc>${lastmod}<changefreq>weekly</changefreq><priority>0.5</priority></url>`);
 }
@@ -759,7 +804,7 @@ fs.writeFileSync(SITEMAP_FILE, sitemapXml);
 
 // Output 8: public/feed.xml (RSS feed for AI aggregators and readers)
 const FEED_FILE = path.join(__dirname, '../public/feed.xml');
-const feedItems = linkedRegularPosts
+const feedItems = publicRegularPosts
   .filter(p => p.date)
   .sort((a, b) => b.date.localeCompare(a.date))
   .slice(0, 30)
@@ -794,7 +839,7 @@ fs.writeFileSync(FEED_FILE, feedXml);
 
 // Output 9: public/llms-full.txt (full content for LLM crawlers)
 const LLMS_FULL_FILE = path.join(__dirname, '../public/llms-full.txt');
-const llmsFullSections = linkedRegularPosts
+const llmsFullSections = publicRegularPosts
   .filter(p => p.date)
   .sort((a, b) => b.date.localeCompare(a.date))
   .map(p => {
@@ -816,7 +861,7 @@ fs.writeFileSync(LLMS_FULL_FILE, llmsFullContent);
 
 // Output 10: public/llms.txt (curated summary + auto-generated article listings)
 const LLMS_FILE = path.join(__dirname, '../public/llms.txt');
-const llmsListing = (cat) => linkedRegularPosts
+const llmsListing = (cat) => publicRegularPosts
   .filter(p => p.category === cat && p.date)
   .sort((a, b) => b.date.localeCompare(a.date))
   .map(p => {
@@ -841,8 +886,7 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 - /home -- Landing page and navigation hub
 - /about -- Background, beliefs, and expertise areas
 - /lab/projects -- Engineering projects with technical deep-dives
-- /lab/second-brain -- Knowledge graph of ${linkedFieldnotePosts.length}+ interconnected concept notes
-- /lab/second-brain/graph -- Visual graph explorer
+- /wiki -- Knowledge graph and visual explorer for ${linkedFieldnotePosts.length}+ interconnected concept notes
 - /blog/threads -- Long-form essays on technology, AI, economics, and systems thinking
 - /blog/bits2bricks -- Technical tutorials bridging software and physical engineering
 
@@ -850,7 +894,7 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 
 ${llmsListing('projects')}
 
-## Threads (Essays)
+## Essays
 
 ${llmsListing('threads')}
 
@@ -860,7 +904,7 @@ ${llmsListing('bits2bricks')}
 
 ## Second Brain (Knowledge Graph)
 
-${linkedFieldnotePosts.length}+ atomic concept notes covering machine learning, hardware architecture, blockchain, distributed systems, and optimization. Each note is one concept with bidirectional wiki-links. The graph reveals structural relationships between domains. Explorable at /lab/second-brain and /lab/second-brain/graph.
+${linkedFieldnotePosts.length}+ atomic concept notes covering machine learning, hardware architecture, blockchain, distributed systems, and optimization. Each note is one concept with bidirectional wiki-links. The graph reveals structural relationships between domains. Explorable at /wiki.
 
 ## Contact
 
@@ -872,6 +916,7 @@ ${linkedFieldnotePosts.length}+ atomic concept notes covering machine learning, 
 fs.writeFileSync(LLMS_FILE, llmsContent);
 
 console.log(`Generated ${linkedRegularPosts.length} posts → ${OUTPUT_FILE}`);
+console.log(`Generated lightweight post index → ${POSTS_INDEX_FILE}`);
 console.log(`Generated ${linkedFieldnotePosts.length} fieldnotes → ${FIELDNOTES_INDEX_FILE} + public/fieldnotes/`);
 console.log(`Generated ${Object.keys(categories).length} categories → ${CATEGORIES_OUTPUT}`);
 console.log(`Generated ${Object.keys(ogManifest).length} entries → ${OG_MANIFEST_FILE}`);

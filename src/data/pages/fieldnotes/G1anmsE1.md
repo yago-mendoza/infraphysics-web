@@ -1,7 +1,7 @@
 ---
 uid: "G1anmsE1"
-address: "Cloud//Supabase//SDK"
-name: "Supabase SDK"
+address: "Infrastructure//Supabase//SDK"
+name: "SDK"
 date: "2026-03-15"
 distinct: ["Web Dev//SDK"]
 ---

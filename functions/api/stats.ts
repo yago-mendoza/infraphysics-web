@@ -1,6 +1,6 @@
 // Cloudflare Pages Function — bulk stats endpoint.
 // POST /api/stats with { slugs: ["/lab/projects/foo", ...] }
-// Returns { [slug]: { views: number, hearts: number } }
+// Returns { [slug]: { views: number } }
 
 interface Env {
   VIEWS: KVNamespace;
@@ -49,17 +49,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   // Cap at 50 to avoid abuse
   const capped = slugs.slice(0, 50);
 
-  // Fetch all views and hearts in parallel
-  const results: Record<string, { views: number; hearts: number }> = {};
+  // Listing pages deliberately expose views only. Reactions remain available
+  // through their dedicated endpoint without doubling KV reads here.
+  const results: Record<string, { views: number }> = {};
   await Promise.all(
     capped.map(async (slug) => {
-      const [viewsVal, heartsVal] = await Promise.all([
-        env.VIEWS.get(`views:${slug}`),
-        env.VIEWS.get(`hearts:${slug}`),
-      ]);
+      const viewsVal = await env.VIEWS.get(`views:${slug}`);
       results[slug] = {
         views: viewsVal ? parseInt(viewsVal, 10) : 0,
-        hearts: heartsVal ? parseInt(heartsVal, 10) : 0,
       };
     })
   );

@@ -1,6 +1,6 @@
 ---
 uid: "Vz4rGs7L"
-address: "Cloud//Cloudflare//Vectorize"
+address: "Infrastructure//Cloudflare//Vectorize"
 name: "Vectorize"
 date: "2026-03-12"
 ---
@@ -10,6 +10,6 @@ date: "2026-03-12"
 - Integrates with [[Lk2rXj6D|Workers]] and Workers AI for inference → embed → store → search, all on Cloudflare
 - Limitation: no hybrid search (BM25 + vectors in one query). For that you'd need D1 (FTS5 full-text search) + Vectorize together, two products for what [[Wv9rDn4H|Weaviate]] does in one.
 - The Cloudflare answer to [[Pv3kBx9D|pgvector]]: instead of adding vectors to your SQL database, it's a dedicated vector service alongside your SQL database
----
+
 ## Interactions
 - [[Pv3kBx9D|pgvector]] : : pgvector adds vectors to your SQL database (one system, one query). Vectorize is a standalone vector DB at the edge (separate system, separate query). Different approach to the same problem.

@@ -13,7 +13,7 @@ import {
   ChevronUpIcon,
   ChevronDownIcon,
 } from '../icons';
-import { sectionPath } from '../../config/categories';
+import { CATEGORY_CONFIG, sectionPath } from '../../config/categories';
 import { getActiveChain, ACTIVE_HEADING_THRESHOLD } from '../../lib/headings';
 
 interface ArticleFloatingBarProps {
@@ -33,6 +33,9 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
   const headings = article?.headings ?? [];
   const topHeadings = headings.filter(h => h.depth === 0);
   const isThreads = article?.post?.category === 'threads';
+  const backLabel = article?.post?.category
+    ? CATEGORY_CONFIG[article.post.category]?.backLabel ?? 'Back to archive'
+    : 'Back to archive';
   const hasToc = isThreads ? topHeadings.length >= 4 : headings.length >= 2;
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
 
@@ -42,6 +45,7 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
   // Snapshot active heading when TOC opens + track scroll while open
   useEffect(() => {
     if (!tocOpen || headings.length < 2) return;
+    let frame = 0;
 
     const computeActive = () => {
       let activeId = '';
@@ -70,8 +74,18 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
       });
     }
 
-    window.addEventListener('scroll', computeActive, { passive: true });
-    return () => window.removeEventListener('scroll', computeActive);
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        computeActive();
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
   }, [tocOpen, headings]);
 
   // Navigation
@@ -176,11 +190,9 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
       {/* Fixed top bar */}
       <div className="article-floating-bar article-floating-bar--visible">
         {/* Left: back to section */}
-        <Link to={backUrl} className="article-bar-back" title="Back to archive">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-          <span className="article-bar-back-label">Back to archive</span>
+        <Link to={backUrl} className="article-bar-back" title={backLabel}>
+          <span className="article-bar-context-chevron" aria-hidden="true">‹</span>
+          <span className="article-bar-back-label">{backLabel}</span>
         </Link>
 
         {/* Center: page search */}

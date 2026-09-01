@@ -1,7 +1,7 @@
 ---
 uid: "X0GHHYNe"
-address: "electronics//chip//microcomputer"
-name: "Microcomputer"
+address: "Hardware//chip//microcomputer"
+name: "microcomputer"
 date: "2026-02-15"
 ---
 - Small single-board computer that runs a full OS (Linux); educational and prototyping platform.

@@ -16,32 +16,22 @@ export default {
 
   // Image positioning (title-based)
   imagePositions: {
-    positions: ['right', 'left', 'center', 'full'],
-    titlePattern: /^(right|left|center|full):?(\d+px)?$/,
+    positions: ['center', 'full', 'pair'],
+    titlePattern: /^(center|full|pair)$/,
     classMap: {
       center: 'img-center',
       full: 'img-full',
-      right: 'img-float-right',
-      left: 'img-float-left',
+      pair: 'img-pair-item',
     },
   },
 
   // Pre-processors: applied BEFORE marked.parse (on raw markdown)
   // Order matters: curly-brace patterns first (unambiguous), then bare-delimiter patterns
   preProcessors: [
-    { name: 'text-color',       pattern: /\{#([a-fA-F0-9]{3,6}|[a-z]+):([^}]+)\}/g,  replace: '<span style="color:#$1">$2</span>' },
     { name: 'superscript',      pattern: /\{\^:([^}]+)\}/g,                             replace: '<sup>$1</sup>' },
     { name: 'subscript',        pattern: /\{v:([^}]+)\}/g,                              replace: '<sub>$1</sub>' },
     { name: 'keyboard',         pattern: /\{kbd:([^}]+)\}/g,                            replace: '<kbd>$1</kbd>' },
-    { name: 'shout',            pattern: /\{shout:([^}]+)\}/g,                          replace: '<p class="shout">$1</p>' },
-    { name: 'dots',             pattern: /^\{dots\}$/gm,                                replace: '<p class="dots-sep">\u00b7 \u00b7 \u00b7</p>' },
-    { name: 'underline',        pattern: /(?<!\w)_([^_\n]+?)_(?!\w)/g,                  replace: '<span style="text-decoration:underline">$1</span>' },
-    { name: 'accent-text',      pattern: /(?<!-)--((?:(?!--)[^\n])+?)--(?!-)/g,                  replace: '<span class="accent-text">$1</span>' },
   ],
-
-  // Post-processors: applied AFTER marked.parse (on HTML output)
-  // Note: code-terminal wrapping + Shiki highlighting is handled in build-content.js
-  postProcessors: [],
 
   // Validation flags
   validation: {

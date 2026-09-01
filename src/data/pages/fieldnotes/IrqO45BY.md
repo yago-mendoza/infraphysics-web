@@ -1,7 +1,7 @@
 ---
 uid: "IrqO45BY"
-address: "Claude Code//.claude//skills"
-name: "Skills"
+address: "Tools//Claude Code//.claude//skills"
+name: "skills"
 date: "2026-02-06"
 ---
 - Reusable instruction packages invoked with `/name` in a session: each skill is a directory inside `.claude/skills/` containing a `SKILL.md` file.

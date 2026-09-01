@@ -1,7 +1,7 @@
 ---
 uid: "sNxMwfUX"
-address: "manufacturing//firmware"
-name: "Firmware"
+address: "Hardware//manufacturing//firmware"
+name: "firmware"
 date: "2026-02-05"
 ---
 Software permanently stored in a device's non-volatile memory (flash, EEPROM): the first code that runs at power-on.

@@ -1,7 +1,7 @@
 ---
 uid: "2TNcXgxM"
-address: "electronics//actuator"
-name: "Actuator"
+address: "Robotics//actuator"
+name: "actuator"
 date: "2026-02-15"
 ---
 

@@ -9,7 +9,7 @@ JavaScript engine developed by Google. Compiles JS/TypeScript to machine code an
 - In Node.js: V8 + system APIs (filesystem, HTTP, streams) --> backend server
 - In Workers: V8 + Cloudflare APIs (D1, R2, KV) --> edge functions
 - Same engine, different [[Hd9cNw6K|runtimes]]: JS executes the same way, but the available APIs change
----
+
 ## Interactions
 - [[Lk2rXj6D|Workers]] : : Workers use V8 isolates (not Node.js) -- they start in ~0ms because each request is a lightweight isolate, not a full process
 - [[Wk6jPs2D|Node.js]] : : Node.js packages V8 with system APIs (fs, http, crypto). Workers packages V8 with Cloudflare APIs. Same engine, different runtime.

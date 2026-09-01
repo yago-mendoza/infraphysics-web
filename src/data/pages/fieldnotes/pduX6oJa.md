@@ -1,6 +1,6 @@
 ---
 uid: "pduX6oJa"
-address: "Docker//Network"
+address: "Infrastructure//Docker//Network"
 name: "Network"
 date: "2025-02-03"
 distinct: ["Blockchain//Wallet//Network"]

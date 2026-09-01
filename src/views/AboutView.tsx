@@ -1,184 +1,69 @@
-// About page — bio, philosophy, and CTA
-
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { RotatingTitle } from '../components/RotatingTitle';
+import { AboutTopBar } from '../components/AboutTopBar';
 
-export const AboutView: React.FC = () => {
-  return (
-    <div className="flex flex-col animate-fade-in">
+const territories = ['systems thinking', 'control', 'robotics', 'infrastructure', 'AI', 'networks', 'mathematics', 'brains'];
 
-      {/* Hero: Photo + Name + Rotating subtitle */}
-      <section className="pb-16">
-        <div className="relative mb-16 pt-4">
-          {/* Quote above photo on mobile, beside on desktop */}
-          <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-6">
-            {/* Mobile: quote first, then photo+name row */}
-            <div className="md:hidden">
-              <div className="flex justify-end mb-4">
-                <blockquote className="max-w-[75%] pl-5 pr-1">
-                  <p className="text-th-secondary text-sm leading-relaxed italic text-right">
-                    <span
-                      className="relative top-2 text-4xl leading-[0] align-top text-th-heading/40 select-none mr-1"
-                      style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
-                      aria-hidden="true"
-                    >&ldquo;</span>
-                    My competitive advantage is that I'm having fun.
-                    <span
-                      className="relative -top-2 text-4xl leading-[0] align-bottom text-th-heading/40 select-none ml-0.5"
-                      style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
-                      aria-hidden="true"
-                    >&rdquo;</span>
-                  </p>
-                </blockquote>
-              </div>
-              <div className="flex items-center gap-4 mt-6">
-                <div className="relative w-16 h-16 shrink-0">
-                  <div className="absolute inset-0 rounded-full bg-violet-400/10 blur-2xl scale-125" />
-                  <img src="https://avatars.githubusercontent.com/yago-mendoza" alt="Yago Mendoza" className="relative w-full h-full rounded-full border border-th-border object-cover" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold tracking-tight text-th-heading">Yago Mendoza</h1>
-                  <p className="text-xs text-th-secondary font-sans"><RotatingTitle /></p>
-                </div>
-              </div>
-            </div>
-
-            {/* Desktop: photo left, quote right */}
-            <div className="relative w-36 h-36 shrink-0 hidden md:block">
-              <div className="absolute inset-0 rounded-full bg-violet-400/10 blur-2xl scale-125" />
-              <img src="https://avatars.githubusercontent.com/yago-mendoza" alt="Yago Mendoza" className="relative w-full h-full rounded-full border border-th-border object-cover" />
-            </div>
-            <blockquote className="relative pl-6 pr-6 hidden md:block">
-              <span
-                className="absolute -left-1 -top-2 text-6xl leading-none text-th-heading select-none"
-                style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
-                aria-hidden="true"
-              >&ldquo;</span>
-              <p className="text-th-secondary text-xl leading-relaxed italic">
-                My competitive advantage is<br /> that I'm having fun.
-                <span className="relative inline-block w-0">
-                  <span className="absolute left-0 -bottom-9 text-6xl leading-none text-th-heading select-none" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }} aria-hidden="true">&rdquo;</span>
-                </span>
-              </p>
-            </blockquote>
-          </div>
-
-          {/* Name + subtitle — desktop only (mobile version is in the photo row above) */}
-          <h1 className="hidden md:block text-5xl font-bold tracking-tight text-th-heading mb-2">
-            Yago Mendoza
-          </h1>
-          <p className="hidden md:block text-base text-th-secondary h-6 mb-5 font-sans">
-            <RotatingTitle />
-          </p>
-
-          {/* Tagline */}
-          <p className="text-sm md:text-base text-th-primary leading-relaxed max-w-xl font-sans">
-              I'm into building things and making them move faster. I use AI to unlock compute, document everything I learn, and publish it here—because building in public is how I think best, and if it helps make complex topics more approachable along the way, even better.
-          </p>
+export const AboutView: React.FC = () => (
+  <>
+  <div className="animate-fade-in max-w-4xl mx-auto about-page">
+    <header className="relative isolate pt-4 pb-14 md:pb-20 about-system-header">
+      <AboutTopBar active="profile" />
+      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_15rem] gap-10 md:gap-16 items-end">
+        <div>
+          <h1 className="text-5xl md:text-7xl font-serif font-normal tracking-[-0.045em] leading-[0.95] text-th-heading">An engineer<br />following systems.</h1>
+          <p className="mt-7 max-w-xl text-lg leading-relaxed text-th-secondary font-sans">I move between disciplines to find the structure underneath them: constraints, feedback, capacity, failure and the ways a system changes when reality pushes back.</p>
         </div>
+        <figure className="relative w-40 md:w-full aspect-[4/5]">
+          <span className="about-aperture" aria-hidden="true">
+            <i className="field-aperture-disc" style={{ '--aperture': '17px' } as React.CSSProperties}><b /></i>
+          </span>
+          <div className="absolute inset-0 translate-x-2 translate-y-2 border" style={{ borderColor: 'color-mix(in srgb, var(--brand-oxide-strong) 68%, transparent)' }} aria-hidden="true" />
+          <img src="https://avatars.githubusercontent.com/yago-mendoza" alt="Yago Mendoza" className="relative w-full h-full object-cover grayscale contrast-110 border border-th-border" />
+        </figure>
+      </div>
+    </header>
 
-        {/* The Journey */}
-        <div className="mb-14">
-          <h2 className="text-xs text-th-tertiary uppercase tracking-wider mb-6">The Journey</h2>
+    <section className="grid grid-cols-1 md:grid-cols-[10rem_minmax(0,1fr)] gap-5 md:gap-10 py-10 border-t border-th-border">
+      <h2 className="text-[10px] uppercase tracking-[0.2em] text-th-tertiary">The point of view</h2>
+      <div className="space-y-5 text-base leading-relaxed text-th-secondary font-sans">
+        <p>I trained in industrial engineering, where a design eventually meets materials, energy, people, time and failure. That perspective stayed with me as my interests expanded into software, data, AI and intelligence.</p>
+        <p>I am less interested in collecting domains than in understanding what transfers between them. A bottleneck in a supply chain, a control loop, a data-centre limit and a cognitive constraint are different problems—but they reward the same habit of looking for structure.</p>
+        <p>Most things here exist because they became too interesting to leave alone.</p>
+      </div>
+    </section>
 
-          <div className="space-y-8 max-w-2xl font-sans">
-            <div>
-              <h3 className="text-th-heading font-semibold mb-2">The Convergence</h3>
-              <p className="text-th-secondary leading-relaxed">
-                I learned to build by watching systems fail. My industrial engineering training: design from the failure point backward: find the bottleneck, then architect around it. Hardware and software aren't separate worlds to me; they're two sides of the same constraint. The critical problems live where bits meet atoms.
-              </p>
-              
-            </div>
+    <section className="grid grid-cols-1 md:grid-cols-[10rem_minmax(0,1fr)] gap-5 md:gap-10 py-10 border-t border-th-border">
+      <h2 className="text-[10px] uppercase tracking-[0.2em] text-th-tertiary">Field of view</h2>
+      <div className="flex flex-wrap gap-x-5 gap-y-3">
+        {territories.map((item, index) => (
+          <span key={item} className="inline-flex items-center gap-2 text-sm text-th-secondary">
+            <span className={`w-1.5 h-1.5 rounded-full ${index % 3 === 0 ? 'bg-red-500' : index % 3 === 1 ? 'bg-blue-500' : 'bg-th-muted'}`} />
+            {item}<span className="text-[9px] font-mono text-th-muted">0{index + 1}</span>
+          </span>
+        ))}
+      </div>
+    </section>
 
-            <div>
-              <h3 className="text-th-heading font-semibold mb-2">The Work</h3>
-              <p className="text-th-secondary leading-relaxed">
-              Those worlds are converging faster than anyone expected. AI, infrastructure, distributed systems. This is where I build. I'm drawn to problems where software meets physical limits. Whether it's in a hyperscale data center or a constrained edge device, I want to understand the physics, not just abstract it away.
-              </p>
-            </div>
+    <section className="grid grid-cols-1 md:grid-cols-[10rem_minmax(0,1fr)] gap-5 md:gap-10 py-10 border-y border-th-border">
+      <h2 className="text-[10px] uppercase tracking-[0.2em] text-th-tertiary">Working principles</h2>
+      <ol className="space-y-5">
+        {[
+          'Look for the constraint before optimizing the surface.',
+          'Make complexity traversable; do not pretend it is simple.',
+          'Use models to think, then let reality correct the model.',
+          'Build enough to discover what explanation alone cannot.',
+          'Keep what survives curiosity; discard the rest.',
+        ].map((principle, index) => (
+          <li key={principle} className="grid grid-cols-[2rem_1fr] gap-3 text-base text-th-secondary font-sans">
+            <span className="text-[9px] font-mono text-th-muted pt-1">0{index + 1}</span><span>{principle}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
 
-            <div>
-              <h3 className="text-th-heading font-semibold mb-2">The Record</h3>
-              <p className="text-th-secondary leading-relaxed">
-                This site is a living, interconnected record. I document the process because clear thinking requires writing it down. I'm not an expert in any of this—I'm a generalist who stacks knowledge across domains and connects the dots. This site reflects that: work in progress, not finished reference.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* What I Believe */}
-        <div className="mb-14">
-          <h2 className="text-xs text-th-tertiary uppercase tracking-wider mb-6">What I Believe</h2>
-
-          <div className="space-y-4 max-w-2xl font-sans">
-            <div className="flex gap-3">
-              <span className="text-th-tertiary shrink-0 mt-0.5">—</span>
-              <p className="text-th-secondary leading-relaxed">To truly build, you have to understand the full stack—not just your slice of it. Removing black boxes, from hardware to the models running on it, is what gives you real agency over what you're building.</p>
-            </div>
-            <div className="flex gap-3">
-              <span className="text-th-tertiary shrink-0 mt-0.5">—</span>
-              <p className="text-th-secondary leading-relaxed">The bottleneck is rarely software—it's physics. We cannot cheat thermodynamics. The real work is building infrastructure that satisfies physical constraints at scale, from data centers to edge devices. That's what actually accelerates progress.</p>
-            </div>
-            <div className="flex gap-3">
-              <span className="text-th-tertiary shrink-0 mt-0.5">—</span>
-              <p className="text-th-secondary leading-relaxed">Intelligence should be as ubiquitous and invisible as electricity. Making compute a silent, fundamental resource—that's the infrastructure I want to build.</p>
-            </div>
-            <div className="flex gap-3">
-              <span className="text-th-tertiary shrink-0 mt-0.5">—</span>
-              <p className="text-th-secondary leading-relaxed">Complexity is debt, not progress. The instinct to question what exists before optimizing it—to ask why before how—matters more than any specific skill.</p>
-            </div>
-            <div className="flex gap-3">
-              <span className="text-th-tertiary shrink-0 mt-0.5">—</span>
-              <p className="text-th-secondary leading-relaxed">The patterns that scale are the ones that transfer. The same structural thinking that optimizes a supply chain can redesign a data pipeline—not because the tools overlap, but because the constraints do. I trust principles over specialization.</p>
-            </div>
-            <div className="flex gap-3">
-              <span className="text-th-tertiary shrink-0 mt-0.5">—</span>
-              <p className="text-th-secondary leading-relaxed">In a world of infinite problems and finite time, passion is the only sustainable filter. I work on what I can't stop thinking about—because that's the only way to outlast hard problems. Obsession compounds.</p>
-            </div>
-            <div className="flex gap-3">
-              <span className="text-th-tertiary shrink-0 mt-0.5">—</span>
-              <p className="text-th-secondary leading-relaxed">The future is bright.</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Beyond the Stack */}
-        <div className="mb-14">
-          <h2 className="text-xs text-th-tertiary uppercase tracking-wider mb-6">Beyond the Stack</h2>
-
-          <div className="space-y-6 max-w-2xl font-sans">
-            <p className="text-th-secondary leading-relaxed">
-              I study how organizations scale, how technologies fail, and how to make hard things feel simple. It turns out patterns surface everywhere. The best engineers I know aren't just good at code—they're good at understanding why systems exist the way they do.
-            </p>
-            <p className="text-th-secondary leading-relaxed">
-              Outside of engineering, I try to keep things simple. I read because good writing forces clear thinking, and I write to figure out what I actually believe. Most of what I learn gets documented because patterns are easier to catch when they're on paper. Memory is terrible at version control.
-            </p>
-            <p className="text-th-secondary leading-relaxed">
-              I lift weights, eat well, sleep enough. Boring fundamentals, but they work. The goal in all of it is the same: understand better, need less.
-            </p>
-          </div>
-        </div>
-
-        {/* CTA */}
-        <div className="pt-8 border-t border-th-border">
-          <p className="text-th-secondary text-sm font-sans">
-            Want to connect? Head to the{' '}
-            <Link to="/contact" className="text-th-heading hover:text-blue-400 transition-colors underline underline-offset-4 decoration-th-border">
-              contact page
-            </Link>
-            {' '}or find me on{' '}
-            <a
-              href="https://x.com/ymdatweets"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-th-heading hover:text-blue-400 transition-colors underline underline-offset-4 decoration-th-border"
-            >
-              &#x1D54F;
-            </a>.
-          </p>
-        </div>
-      </section>
-    </div>
-  );
-};
+    <section className="py-12 md:py-16">
+      <p className="max-w-xl text-2xl md:text-3xl font-serif leading-tight text-th-heading">If you are working on a difficult system or an idea that crosses boundaries, I would probably like to hear about it.</p>
+    </section>
+  </div>
+  </>
+);

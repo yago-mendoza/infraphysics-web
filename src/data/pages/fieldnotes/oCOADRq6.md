@@ -1,7 +1,7 @@
 ---
 uid: "oCOADRq6"
-address: "RAM//user space"
-name: "User Space"
+address: "OS//user space"
+name: "user space"
 date: "2026-02-05"
 ---
 - Unprivileged region of [[jBm8Zuu2|RAM]] where application processes live.

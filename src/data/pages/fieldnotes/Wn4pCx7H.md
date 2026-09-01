@@ -1,6 +1,6 @@
 ---
 uid: "Wn4pCx7H"
-address: "Cloud//Cloudflare//D1"
+address: "Infrastructure//Cloudflare//D1"
 name: "D1"
 date: "2026-03-10"
 ---

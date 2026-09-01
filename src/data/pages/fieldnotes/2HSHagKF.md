@@ -1,6 +1,6 @@
 ---
 uid: "2HSHagKF"
-address: "Crypto//Keystore"
+address: "Blockchain//Wallet//Keystore"
 name: "Keystore"
 date: "2025-10-11"
 ---

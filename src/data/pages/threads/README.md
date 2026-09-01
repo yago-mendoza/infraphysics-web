@@ -122,7 +122,7 @@ In threads, the article `date` is the publication date. Context annotations (`>>
 ### Emphasis patterns
 
 Threads lean heavily on:
-- **Accent text** (`--key claims--`) for revelations and surprising facts
+- **Bold text** (`**key claims**`) for terms and conclusions worth retaining
 - **Inline footnotes** (`^[explanation]`) for definitions and tangential context
 - **Typed blockquotes** for core arguments that need visual weight
 - **Bold** for proper nouns and terms introduced for the first time

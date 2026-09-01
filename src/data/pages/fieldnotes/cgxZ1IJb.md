@@ -1,7 +1,7 @@
 ---
 uid: "cgxZ1IJb"
-address: "CPU//mutex//event loop"
-name: "Event Loop"
+address: "OS//concurrency//mutex//event loop"
+name: "event loop"
 date: "2026-02-05"
 ---
 A single-threaded concurrency model: one [[Z9W6rweD|core]] runs a loop that dispatches callbacks when [[zS3Nqz7G|I/O]] operations complete.

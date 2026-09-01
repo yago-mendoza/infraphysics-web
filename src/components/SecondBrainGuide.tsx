@@ -34,7 +34,8 @@ const SECTIONS: Section[] = [
             <p>The <strong className={tipStrong}>grid</strong> is your starting point. Each card represents one concept. Click any card to read the full note and explore its connections.</p>
             <p>You don't need to browse manually — <strong className={tipStrong}>just start typing</strong> on your keyboard and the search bar opens automatically. Results filter live as you type.</p>
             <p>As you explore, the interface tracks where you've been: <span style={{ color: 'var(--wiki-link-visited)' }}>blue</span> names are notes you've already visited this session, <span className={tipAccent}>purple</span> ones are still unvisited. You'll see these colors everywhere — on grid cards, inside notes, and on the graph.</p>
-            <p>The sidebar header has a <strong className={tipStrong}>mode toggle</strong> (<span className={tipAccent}>simple</span> / <span className={tipAccent}>technical</span>). Simplified mode shows just search, sort, and the directory tree — no topology, filters, or analytics. Switch anytime; your choice is remembered.</p>
+            <p>The <strong className={tipStrong}>Wiki Console</strong> separates graph information and topology into dedicated views. Switching views changes the analysis layer without rebuilding the underlying knowledge graph.</p>
+            <p>On the mini graph, every node sits on a <span className={tipAccent}>purple</span> scale — the lighter the node, the more central the concept. While you search or filter, matching nodes turn <span style={{ color: '#a3e635' }}>lime</span> live; the rest keep their purple. The <strong className={tipStrong}>central</strong> sort option orders results from most to least central.</p>
             <p>You can switch between light and dark themes anytime. Use the theme button in the header, or press <code className={tipCode}>Shift+T</code> on desktop.</p>
           </div>
         ),
@@ -146,17 +147,6 @@ const SECTIONS: Section[] = [
             <p>A regular link just says "A mentions B." An interaction is a <strong className={tipStrong}>curated, annotated relationship</strong> — it describes <em>how</em> two concepts relate. For example: "contrasts with", "depends on", "is an example of".</p>
             <p>Interactions are <strong className={tipStrong}>bilateral</strong>: if note A has an interaction with note B, it automatically shows up on both sides. You don't need to add it twice.</p>
             <p>Click any name in the interactions list to jump to that concept.</p>
-          </div>
-        ),
-      },
-      {
-        label: 'Missing Links',
-        content: (
-          <div className="space-y-3">
-            <p>At the bottom of some notes you'll see <strong className={tipStrong}>Missing Links</strong> — these are suggestions for connections that probably <em>should</em> exist but haven't been created yet.</p>
-            <p>The algorithm behind it is simple: if two notes share many neighbors (they're both linked to the same concepts) but aren't linked to <em>each other</em>, they're likely related. The more neighbors they share, the stronger the suggestion.</p>
-            <p>Each suggestion shows a <strong className={tipStrong}>"via"</strong> annotation listing the shared neighbors that triggered it — so you can see <em>why</em> the connection is being suggested.</p>
-            <p>Only the top 3 strongest suggestions are shown, ranked by how many neighbors they have in common.</p>
           </div>
         ),
       },

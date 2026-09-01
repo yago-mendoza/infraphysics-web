@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { engagementApiUrl } from '../lib/engagementApi';
 
 interface ReactionState {
   hearts: number | null;
@@ -8,6 +9,7 @@ interface ReactionState {
 
 /** Heart reaction toggle for a single article. */
 export function useReaction(slug: string): ReactionState {
+  // `null` means unavailable/loading. It must never masquerade as a genuine 0.
   const [hearts, setHearts] = useState<number | null>(null);
   const [hearted, setHearted] = useState(false);
 
@@ -23,11 +25,11 @@ export function useReaction(slug: string): ReactionState {
     interacted.current = false;
     let cancelled = false;
 
-    fetch(`/api/reactions${slug}`)
+    fetch(engagementApiUrl(`/api/reactions${slug}`))
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!cancelled && !interacted.current && data) {
-          setHearts(data.hearts ?? 0);
+          setHearts(data.hearts ?? null);
           setHearted(!!data.hearted);
         }
       })
@@ -46,7 +48,7 @@ export function useReaction(slug: string): ReactionState {
     setHearted(next);
     setHearts(prev => prev == null ? prev : (next ? prev + 1 : Math.max(0, prev - 1)));
 
-    fetch(`/api/reactions${slug}`, { method: 'POST' })
+    fetch(engagementApiUrl(`/api/reactions${slug}`), { method: 'POST' })
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data) {

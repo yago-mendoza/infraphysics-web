@@ -1,7 +1,7 @@
 ---
 uid: "Rk1s9uJq"
-address: "manufacturing"
-name: "Manufacturing"
+address: "Hardware//manufacturing"
+name: "manufacturing"
 date: "2026-02-05"
 ---
 The physical processes that turn a chip design into a packaged, testable product.

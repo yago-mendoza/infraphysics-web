@@ -1,6 +1,6 @@
 ---
 uid: "Cr6kNm2H"
-address: "Cloud//Vercel//Cron Jobs"
+address: "Infrastructure//Vercel//Cron Jobs"
 name: "Cron Jobs"
 date: "2026-03-12"
 ---

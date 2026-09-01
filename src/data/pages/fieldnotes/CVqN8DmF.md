@@ -1,6 +1,6 @@
 ---
 uid: "CVqN8DmF"
-address: "Google//Maps Platform"
+address: "Tools//Google//Maps Platform"
 name: "Maps Platform"
 date: "2026-03-10"
 ---

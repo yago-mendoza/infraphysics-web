@@ -1,9 +1,9 @@
 ---
 uid: sda8Dgkj
-address: "UI"
+address: "Web Dev//UI"
 name: "UI"
 date: "2026-02-13"
-distinct: ["LAPTOP//UI"]
+distinct: ["Hardware//laptop//UI"]
 ---
 
 The definition of insanity is opening this note again and expecting content.

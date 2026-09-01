@@ -1,7 +1,7 @@
 ---
 uid: "edK1Fj7n"
-address: "cybersecurity//steganography"
-name: "Steganography"
+address: "Security//steganography"
+name: "steganography"
 date: "2026-02-15"
 ---
 Hiding data inside innocent-looking media by manipulating bits the human eye can't distinguish.

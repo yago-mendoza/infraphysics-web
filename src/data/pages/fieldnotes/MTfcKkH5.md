@@ -1,7 +1,7 @@
 ---
 uid: "MTfcKkH5"
-address: "electronics//chip"
-name: "Chip"
+address: "Hardware//chip"
+name: "chip"
 date: "2026-02-05"
 ---
 Monolithic piece of silicon carrying integrated circuits.

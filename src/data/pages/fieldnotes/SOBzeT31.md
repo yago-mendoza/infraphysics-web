@@ -1,6 +1,6 @@
 ---
 uid: "SOBzeT31"
-address: "UI//Schema-Driven UI"
+address: "Web Dev//UI//Schema-Driven UI"
 name: "Schema-Driven UI"
 date: "2026-03-19"
 ---

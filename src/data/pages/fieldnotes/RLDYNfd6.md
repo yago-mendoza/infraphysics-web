@@ -11,6 +11,6 @@ date: "2026-03-14"
 - The sibling of [[Pv3kBx9D|pgvector]]: pgvector adds vector search to Postgres, pg_trgm adds fuzzy text search. Both are "extend Postgres instead of adding another system" plays.
 - Common pattern: use pg_trgm for user-facing search (names, titles, short text) and full-text search (`tsvector`) for body content. They stack: different tools for different jobs.
 - At 300 rows it's instant. At 1M rows it's still fast with the GIN index. You need dedicated search (Elasticsearch, Meilisearch) only at serious scale.
----
+
 ## Interactions
 - [[Pv3kBx9D|pgvector]] : : both are PostgreSQL extensions that add search capabilities: pgvector for semantic (embedding) similarity, pg_trgm for syntactic (character) similarity. Same philosophy: extend Postgres instead of bolting on another system

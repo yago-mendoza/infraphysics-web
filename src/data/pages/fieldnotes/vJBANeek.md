@@ -1,6 +1,6 @@
 ---
 uid: "vJBANeek"
-address: "Claude Code//.claude"
+address: "Tools//Claude Code//.claude"
 name: ".claude"
 date: "2026-02-06"
 ---

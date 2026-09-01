@@ -1,7 +1,7 @@
 ---
 uid: "x6yC1n1U"
-address: "I/O//syscall"
-name: "Syscall"
+address: "OS//syscall"
+name: "syscall"
 date: "2026-02-05"
 ---
 - A system call: the controlled gate between [[oCOADRq6|user space]] and [[xYh5GUtH|kernel space]]

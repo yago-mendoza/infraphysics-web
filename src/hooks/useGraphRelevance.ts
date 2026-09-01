@@ -5,13 +5,6 @@ interface RelevanceEntry {
   score: number;
 }
 
-export interface DriftEntry {
-  uid: string;
-  score: number;
-  sharedCount: number;
-  via: string[];
-}
-
 export type BridgeTier = 'bridge' | 'connector' | 'peripheral';
 
 export interface IslandComponent {
@@ -51,7 +44,6 @@ export interface IslandsData {
 interface GraphRelevanceData {
   centrality: Record<string, number>;
   relevance: Record<string, RelevanceEntry[]>;
-  driftSuggestions: Record<string, DriftEntry[]>;
   islands?: IslandsData;
 }
 
@@ -70,7 +62,7 @@ async function loadData() {
     const mod = await import('../data/graph-relevance.generated.json');
     cached = mod.default as GraphRelevanceData;
   } catch {
-    cached = { centrality: {}, relevance: {}, driftSuggestions: {} };
+    cached = { centrality: {}, relevance: {} };
   }
   loading = false;
   notifyListeners();
@@ -102,10 +94,6 @@ export function useGraphRelevance() {
 
   const getCentrality = useCallback((uid: string): number => {
     return cached?.centrality[uid] ?? 0;
-  }, []);
-
-  const getDrift = useCallback((uid: string): DriftEntry[] => {
-    return cached?.driftSuggestions?.[uid] || [];
   }, []);
 
   const getBridgeTier = useCallback((uid: string): BridgeTier => {
@@ -161,5 +149,5 @@ export function useGraphRelevance() {
     };
   }, [isolatedSet, componentMap, cutMap]);
 
-  return { getRelevance, getCentrality, getDrift, getBridgeTier, getPercentile, getIslands, getNoteTopology, loaded: !!cached };
+  return { getRelevance, getCentrality, getBridgeTier, getPercentile, getIslands, getNoteTopology, loaded: !!cached };
 }

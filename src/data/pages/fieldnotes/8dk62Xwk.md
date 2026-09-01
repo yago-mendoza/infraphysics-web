@@ -1,7 +1,7 @@
 ---
 uid: "8dk62Xwk"
-address: "electronics//robot"
-name: "Robot"
+address: "Robotics"
+name: "Robotics"
 date: "2026-02-15"
 ---
 - Collections of [[QSPGKDnh|sensor]]s, [[2TNcXgxM|actuator]]s, and [[MTfcKkH5|chip]]s distributed across multiple [[26t2rDup|PCB]]s.

@@ -1,6 +1,6 @@
 ---
 uid: "Jkr1CFGJ"
-address: "electronics//chip//MPU"
+address: "Hardware//chip//MPU"
 name: "MPU"
 date: "2026-02-05"
 ---

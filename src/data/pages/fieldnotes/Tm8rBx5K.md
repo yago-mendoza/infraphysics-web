@@ -1,7 +1,7 @@
 ---
 uid: "Tm8rBx5K"
-address: "Cloud//timeout"
-name: "Timeout"
+address: "Infrastructure//timeout"
+name: "timeout"
 date: "2026-03-12"
 ---
 The maximum time a [[Jn4xWp7B|serverless]] function is allowed to run before the platform kills it. If the function hasn't responded by then, it dies: no graceful shutdown, no retry.

@@ -10,6 +10,6 @@ Extension for [[Pg6tRw2H|PostgreSQL]] that adds vector columns, storage, and sim
 - The killer feature: `SELECT * FROM docs WHERE category='X' ORDER BY embedding <-> query_vector LIMIT 5`, relational filtering AND vector search in one query. No syncing IDs between two systems.
 - Uses [[wV5gFH9z|HNSW]] indexes for approximate nearest neighbor search
 - The tradeoff vs [[Pc7sTm2K|Pinecone]]/[[Wv9rDn4H|Weaviate]]: pgvector is slower at pure vector search scale (millions of [[haA3MDhG|embeddings]]), but you get everything in one database
----
+
 ## Interactions
 - [[TIQNpwbS|vector database]] : : pgvector turns PostgreSQL into a lightweight vector database: same capabilities, less scale, but zero infrastructure overhead and no ID-syncing between systems

@@ -36,7 +36,7 @@ const hints: HintDef[] = [
     text: (
       <>
         Purple links connect to the{' '}
-        <span className="text-violet-400 font-semibold">Second Brain</span>{' '}
+        <span className="text-violet-400 font-semibold">Wiki</span>{' '}
         — a web of concepts behind the articles.
       </>
     ),
@@ -57,7 +57,7 @@ const hints: HintDef[] = [
   // 2. More categories — after scrolling 80% of an article, if only 1 category visited
   {
     id: 'more-categories',
-    text: 'Liked this? There\'s more — threads, tutorials, and 200+ connected notes.',
+    text: 'Liked this? There\'s more — essays, tutorials, and 200+ connected notes.',
     shouldShow: (pathname) => {
       if (!/^\/(lab|blog)\/[^/]+\/[^/]+/.test(pathname)) return false;
       if (pathname.startsWith(secondBrainPath())) return false;
@@ -105,7 +105,7 @@ const hints: HintDef[] = [
   // 4. Search finds Second Brain — after 5+ searches without clicking a brain result
   {
     id: 'search-power',
-    text: 'Search also finds concepts from the Second Brain — try a technical term.',
+    text: 'Search also finds concepts from the Wiki — try a technical term.',
     shouldShow: () => {
       if (ls('infraphysics:brain-result-clicked') === '1') return false;
       return lsInt('infraphysics:search-uses') >= 2;
@@ -128,7 +128,7 @@ export const RetentionHints: React.FC = () => {
     setVisible(false);
     setMounted(false);
 
-    // Skip on home page (HomeTour handles that)
+    // Keep the already information-dense Home free of onboarding overlays.
     if (pathname === '/home' || pathname === '/') return;
 
     // Small delay to let the page settle

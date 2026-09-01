@@ -1,6 +1,6 @@
 ---
 uid: "Qc71eVI9"
-address: "Google//Admin Console"
+address: "Tools//Google//Admin Console"
 name: "Admin Console"
 date: "2026-03-10"
 ---

@@ -1,6 +1,7 @@
 // SVG icon components
 
 import React from 'react';
+import { WIKI_REF_ICON_PATH } from '../../lib/icons';
 
 export const Logo: React.FC<{ className?: string; color?: string }> = ({ className, color }) => (
   <svg
@@ -26,8 +27,8 @@ export const GitHubIcon: React.FC<{ className?: string; size?: number }> = ({ cl
   </svg>
 );
 
-export const ExternalLinkIcon: React.FC = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+export const ExternalLinkIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg className={className} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="square" strokeLinejoin="miter">
     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
     <polyline points="15 3 21 3 21 9"></polyline>
     <line x1="10" y1="14" x2="21" y2="3"></line>
@@ -71,6 +72,20 @@ export const ArrowRightIcon: React.FC = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="5" y1="12" x2="19" y2="12"></line>
     <polyline points="12 5 19 12 12 19"></polyline>
+  </svg>
+);
+
+export const ContextArrowIcon: React.FC<{ className?: string; direction?: 'back' | 'forward' }> = ({ className, direction = 'back' }) => (
+  <svg className={className} viewBox="0 0 18 16" aria-hidden="true">
+    <g transform={direction === 'forward' ? 'translate(18 0) scale(-1 1)' : undefined}>
+      <path d="M8.5 3 3.5 8l5 5M3.5 8h9M15.5 2.5l-2.5 11" />
+    </g>
+  </svg>
+);
+
+export const BackChevronIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg className={className} viewBox="0 -960 960 960" aria-hidden="true">
+    <path d="M640-80 240-480l400-400 71 71-329 329 329 329-71 71Z" />
   </svg>
 );
 
@@ -184,6 +199,12 @@ export const UserIcon: React.FC = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
     <circle cx="12" cy="7" r="4"></circle>
+  </svg>
+);
+
+export const WikiBrainIcon: React.FC<{ className?: string; size?: number }> = ({ className, size = 16 }) => (
+  <svg className={className} xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true">
+    <path d={WIKI_REF_ICON_PATH} />
   </svg>
 );
 

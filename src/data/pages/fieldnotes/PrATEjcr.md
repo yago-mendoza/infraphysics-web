@@ -1,7 +1,7 @@
 ---
 uid: "PrATEjcr"
-address: "peripheral"
-name: "Peripheral"
+address: "Hardware//peripheral"
+name: "peripheral"
 date: "2026-02-05"
 ---
 - External or on-chip hardware block that extends a processor's capabilities: timers, UARTs, SPI, I2C, ADC, DAC, PWM controllers.

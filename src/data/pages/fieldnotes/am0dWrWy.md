@@ -1,6 +1,6 @@
 ---
 uid: "am0dWrWy"
-address: "Crypto//Derivation Path"
+address: "Blockchain//Wallet//Derivation Path"
 name: "Derivation Path"
 date: "2025-06-14"
 ---

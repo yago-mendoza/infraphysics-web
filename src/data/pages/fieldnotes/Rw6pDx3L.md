@@ -1,6 +1,6 @@
 ---
 uid: "Rw6pDx3L"
-address: "Cloud//Railway"
+address: "Infrastructure//Railway"
 name: "Railway"
 date: "2026-03-12"
 ---
