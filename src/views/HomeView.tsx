@@ -47,7 +47,7 @@ const FieldOfView: React.FC<{ variant: FieldVariant }> = ({ variant }) => {
   return <section className="home-field-index field-plot-study field-plot-blueprint field-plot-interactive pb-14 md:pb-20"><div className="field-plot-caption"><span>Operational coordinates</span><small>YM / FOV / 05</small></div><div className="field-plot"><i className="field-axis-x" /><i className="field-axis-y" /><AxisLabels /><FieldPoints projections active={active?.label} onActivate={setActive} /><p>direction, not rank</p></div><div className="field-evidence-console"><span>{active ? `0${fieldCoordinates.indexOf(active) + 1}` : '--'}</span><strong>{active?.label ?? 'Awaiting selection'}</strong><p>{evidence}</p></div></section>;
 };
 
-export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVariant?: FieldVariant; startVariant?: number }> = ({ visualVariant, fieldVariant = 1, startVariant = 0 }) => {
+export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVariant?: FieldVariant }> = ({ visualVariant, fieldVariant = 1 }) => {
   const selectedWorkPosts = useMemo(() => selectedWorkIds
     .map(id => posts.find(post => post.id === id))
     .filter((post): post is PostSummary => Boolean(post)), []);
@@ -140,8 +140,8 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
         </div>
       </section>
 
-      {/* Start here: four doors. /s1 … /s8 compare layouts. */}
-      <StartHere variant={startVariant} />
+      {/* Start here: four doors in one rotating card. */}
+      <StartHere />
 
       {/* Categories */}
       <section className="home-directory-section pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
@@ -228,12 +228,13 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
                   <Link
                     key={key}
                     to={sectionPath(key)}
-                    className="group flex items-center gap-5 py-5 border-b last:border-b-0 border-th-border transition-colors"
+                    className="home-directory-row group flex items-center gap-5 py-5 border-b last:border-b-0 border-th-border transition-colors"
+                    style={{ '--ac-color': catAccentVar(key) } as React.CSSProperties}
                   >
                     <span className="text-[10px] font-mono text-th-muted w-7">0{index + 1}</span>
-                    <span className="text-th-tertiary group-hover:text-th-heading transition-colors">{config.icon}</span>
+                    <span className="home-directory-icon transition-colors">{config.icon}</span>
                     <span className="flex-1 min-w-0">
-                      <span className="block text-th-heading group-hover:text-th-primary transition-colors">{config.title}</span>
+                      <span className="home-directory-title block text-th-heading transition-colors">{config.title}</span>
                       <span className="block text-th-tertiary text-sm leading-relaxed line-clamp-1 font-sans mt-1">{config.description}</span>
                     </span>
                     <span className="hidden sm:block text-[10px] font-mono text-th-muted">{categoryCounts[key]} pieces</span>
@@ -246,7 +247,12 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
         )}
       </section>
 
-      {/* Selected work */}
+      {/* Synthesis after the evidence: slightly wider than the editorial column. */}
+      <div className="home-field-wide">
+        <FieldOfView variant={fieldVariant} />
+      </div>
+
+      {/* Ideas in public */}
       <section className="home-work-section pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
         <div className="home-editorial-heading">
           <div>
@@ -268,13 +274,8 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
         </div>
       </section>
 
-      {/* Synthesis after the evidence: slightly wider than the editorial column. */}
-      <div className="home-field-wide">
-        <FieldOfView variant={fieldVariant} />
-      </div>
-
       {/* Closing plate: the wiki as sponsor of the whole thing. */}
-      <WikiBanner variant={startVariant} />
+      <WikiBanner />
 
     </div>
     </>

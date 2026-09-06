@@ -72,7 +72,7 @@ infraphysics-web/
       ExperimentalCursor.tsx  # Optional custom cursor (user preference)
       wiki/                   # Second Brain: WikiContent, WikiLinkPreview, NeighborhoodGraph, RelevanceLeaderboard, BridgeScoreBadge, NavigationTrail, CopyExportModal, SecondBrainGuide
       personal/               # Personal pages: AboutTopBar, ContactLogoSculpture, GraphThumb, HomeVisualLab,
-                              #   StartHere (/s1…/s8 layouts) and WikiBanner (closing plate)
+                              #   StartHere (rotating four-door card) and WikiBanner (closing plate)
       article/                # ArticleBreadcrumbs, ArticleHashtags, BlogMetabar
       sections/               # SearchResultsList, ProjectsList, EssaysList, Bits2BricksGrid
       layout/                 # Sidebar, MobileNav, Footer, AmbientRails, ArticleFloatingBar, WikiTopBar, SecondBrainSidebar
@@ -160,8 +160,8 @@ infraphysics-web/
       editorial-primitives.css # Shared editorial typography primitives
       wiki-content.css        # Wiki/second-brain content delta overrides
       editor.css              # CodeMirror overrides for wikinote editor
-      start-here.css          # Home "Start here" variants (/s1 … /s8)
-      wiki-banner.css         # Home closing wiki plate variants (/s1 … /s8)
+      start-here.css          # Home "Start here" card and circuit layout
+      wiki-banner.css         # Home closing wiki plate
     config/                   # Categories config, analytics, content entities
     constants/                # Layout, theme constants
     contexts/                 # Theme, article, Second Brain hub, cursor preference

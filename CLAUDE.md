@@ -101,7 +101,7 @@ Append relevant lessons to the **Gotchas** section below. Update or remove stale
 
 ## Routes
 
-- Personal: `/home`, `/about`, `/contact`, `/thanks`. `/s1`…`/s8` render Home with alternative "Start here" and wiki-banner layouts (`StartHere.tsx`, `WikiBanner.tsx`) for comparison.
+- Personal: `/home`, `/about`, `/contact`, `/thanks`
 - Lab: `/lab/projects` (dark theme)
 - Blog: `/blog/essays`, `/blog/bits2bricks` (light theme)
 - Wiki: `/wiki`, `/wiki/:uid` (legacy `/lab/second-brain/*` URLs redirect here)
