@@ -82,7 +82,9 @@ Footnote numbering restarts per paragraph.
 | Subscript | `{v:2}` |
 | Keyboard key | `{kbd:Ctrl+C}` |
 | Inline math | `\(E = mc^2\)` |
-| Block math | `{math}` … `{/math}` on separate lines |
+| Block math | `{math}` … `{/math}` on separate lines, with a blank line before `{math}` and after `{/math}` |
+
+A block-math fence placed directly between list items or paragraphs (no blank lines around it) ends the list and leaves everything after it as literal text: bold, links and further bullets stop rendering. Always isolate the fence with blank lines.
 
 ## Lists
 

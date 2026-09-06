@@ -71,7 +71,8 @@ infraphysics-web/
       RetentionHints.tsx      # Contextual nudges for undiscovered features (scroll depth, wikilinks, search)
       ExperimentalCursor.tsx  # Optional custom cursor (user preference)
       wiki/                   # Second Brain: WikiContent, WikiLinkPreview, NeighborhoodGraph, RelevanceLeaderboard, BridgeScoreBadge, NavigationTrail, CopyExportModal, SecondBrainGuide
-      personal/               # Personal pages: AboutTopBar, ContactLogoSculpture, GraphThumb, HomeVisualLab
+      personal/               # Personal pages: AboutTopBar, ContactLogoSculpture, GraphThumb, HomeVisualLab,
+                              #   StartHere (/s1…/s8 layouts) and WikiBanner (closing plate)
       article/                # ArticleBreadcrumbs, ArticleHashtags, BlogMetabar
       sections/               # SearchResultsList, ProjectsList, EssaysList, Bits2BricksGrid
       layout/                 # Sidebar, MobileNav, Footer, AmbientRails, ArticleFloatingBar, WikiTopBar, SecondBrainSidebar
@@ -161,6 +162,8 @@ infraphysics-web/
       wiki-content.css        # Wiki/second-brain content delta overrides
       editor.css              # CodeMirror overrides for wikinote editor
       essay-lab.css           # Experimental essay typography lab (/r2, /r4 … /r14), driven by --lab-* variables
+      start-here.css          # Home "Start here" variants (/s1 … /s8)
+      wiki-banner.css         # Home closing wiki plate variants (/s1 … /s8)
     config/                   # Categories config, analytics, content entities
     constants/                # Layout, theme constants
     contexts/                 # Theme, article, Second Brain hub, cursor preference

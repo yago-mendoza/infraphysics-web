@@ -101,7 +101,7 @@ Append relevant lessons to the **Gotchas** section below. Update or remove stale
 
 ## Routes
 
-- Personal: `/home`, `/about`, `/contact`, `/thanks`
+- Personal: `/home`, `/about`, `/contact`, `/thanks`. `/s1`…`/s8` render Home with alternative "Start here" and wiki-banner layouts (`StartHere.tsx`, `WikiBanner.tsx`) for comparison.
 - Lab: `/lab/projects` (dark theme)
 - Blog: `/blog/essays`, `/blog/bits2bricks` (light theme)
 - Wiki: `/wiki`, `/wiki/:uid` (legacy `/lab/second-brain/*` URLs redirect here)
@@ -236,3 +236,6 @@ The content type was renamed to "wikinotes" in code, docs, scripts and the `/cre
 
 ### Essay typography is pinned at the end of `article-layout.css`
 The essays type system (Lora body and subtitle, Newsreader title and headings, 40rem column, drop cap, quiet meta row) is one block at the very end of `src/styles/article-layout.css`, using `.article-essays.article-page-wrapper …` selectors with `!important`. It has to sit last and be that specific because `global.css` and earlier `article.css` blocks also pin essay type with `!important`. Editing font sizes, families or the column width for essays anywhere else will silently lose to this block; change it here.
+
+### Block math needs blank lines around it
+A `{math}` … `{/math}` fence written directly between list items or paragraphs (no blank line before `{math}` or after `{/math}`) closes the block and the compiler emits everything after it as literal text: `**bold**`, `[links](url)` and the following bullets stay unrendered, and the build prints no error (only the `[SYNTAX]` guard notices when a markdown link survives). Always put a blank line before `{math}` and after `{/math}`. Documented in `SYNTAX.md` (Chemical and mathematical forms).

@@ -9,8 +9,8 @@ import { CATEGORY_CONFIG, catAccentVar, postPath, sectionPath } from '../config/
 import { getSearchExcerpt, countMatches } from '../lib';
 import { Highlight } from '../components/ui';
 import { HomeVisualLab, type HomeVisualVariant } from '../components/personal/HomeVisualLab';
-import { GraphThumb, wikiNoteCount } from '../components/personal/GraphThumb';
-import { secondBrainPath } from '../config/categories';
+import { StartHere } from '../components/personal/StartHere';
+import { WikiBanner } from '../components/personal/WikiBanner';
 
 const categoryKeys = ['projects', 'essays', 'bits2bricks'] as const;
 const selectedWorkIds = ['2718281', '3142718', '3141592', '6184744', '5917362'] as const;
@@ -47,14 +47,10 @@ const FieldOfView: React.FC<{ variant: FieldVariant }> = ({ variant }) => {
   return <section className="home-field-index field-plot-study field-plot-blueprint field-plot-interactive pb-14 md:pb-20"><div className="field-plot-caption"><span>Operational coordinates</span><small>YM / FOV / 05</small></div><div className="field-plot"><i className="field-axis-x" /><i className="field-axis-y" /><AxisLabels /><FieldPoints projections active={active?.label} onActivate={setActive} /><p>direction, not rank</p></div><div className="field-evidence-console"><span>{active ? `0${fieldCoordinates.indexOf(active) + 1}` : '--'}</span><strong>{active?.label ?? 'Awaiting selection'}</strong><p>{evidence}</p></div></section>;
 };
 
-export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVariant?: FieldVariant }> = ({ visualVariant, fieldVariant = 1 }) => {
+export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVariant?: FieldVariant; startVariant?: number }> = ({ visualVariant, fieldVariant = 1, startVariant = 0 }) => {
   const selectedWorkPosts = useMemo(() => selectedWorkIds
     .map(id => posts.find(post => post.id === id))
     .filter((post): post is PostSummary => Boolean(post)), []);
-  // Pinned piece: the newest post flagged `featured: true` in its frontmatter.
-  const pinnedPost = useMemo(() => posts
-    .filter(post => post.featured && (post.category === 'essays' || post.category === 'bits2bricks'))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0] ?? null, []);
 
   // Post counts per category
   const categoryCounts = useMemo(() => {
@@ -144,36 +140,8 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
         </div>
       </section>
 
-      {/* Spotlight: the graph and the pinned piece, side by side */}
-      <section className="home-spotlight-section border-t border-th-border pt-8 md:pt-12 pb-10 md:pb-16">
-        <div className="home-editorial-heading">
-          <div>
-            <h2>Start here</h2>
-            <p>Two doors: the graph, and the piece I most want you to read.</p>
-          </div>
-        </div>
-        <div className="home-spotlight-grid home-field-wide">
-          {pinnedPost && (
-            <Link to={postPath(pinnedPost.category, pinnedPost.id)} className="home-spotlight-card home-spotlight-pinned">
-              <span className="home-spotlight-visual home-spotlight-thumb">{pinnedPost.thumbnail ? <img src={pinnedPost.thumbnail} alt="" loading="lazy" /> : <i>E/01</i>}</span>
-              <span className="home-spotlight-copy">
-                <small>Pinned {pinnedPost.category === 'essays' ? 'essay' : 'piece'} · <time>{pinnedPost.date}</time></small>
-                <strong>{pinnedPost.displayTitle || pinnedPost.title}</strong>
-                {pinnedPost.subtitle && <span>{pinnedPost.subtitle}</span>}
-                <em>Read it ↗</em>
-              </span>
-            </Link>
-          )}
-          <Link to={secondBrainPath()} className="home-spotlight-card home-spotlight-wiki">
-            <span className="home-spotlight-visual"><GraphThumb className="graph-thumb" /></span>
-            <span className="home-spotlight-copy">
-              <small>Wiki · {wikiNoteCount} notes</small>
-              <strong>One graph, every concept I keep.</strong>
-              <em>Open the second brain ↗</em>
-            </span>
-          </Link>
-        </div>
-      </section>
+      {/* Start here: four doors. /s1 … /s8 compare layouts. */}
+      <StartHere variant={startVariant} />
 
       {/* Categories */}
       <section className="home-directory-section pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
@@ -304,6 +272,9 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
       <div className="home-field-wide">
         <FieldOfView variant={fieldVariant} />
       </div>
+
+      {/* Closing plate: the wiki as sponsor of the whole thing. */}
+      <WikiBanner variant={startVariant} />
 
     </div>
     </>

@@ -150,13 +150,15 @@ const AppLayout: React.FC = () => {
   // /r2, /r4 … /r14: essay style lab, rendered as a blog article page (light zone, floating bar).
   const isStyleLab = /^\/r\d+$/.test(location.pathname);
   const isBlog = location.pathname.startsWith('/blog') || isStyleLab;
-  const isHome = location.pathname === '/' || location.pathname === '/home';
+  // /s1 … /s8: Home with alternative "Start here" and wiki-banner layouts, for comparison.
+  const isStartLab = /^\/s\d+$/.test(location.pathname);
+  const isHome = location.pathname === '/' || location.pathname === '/home' || isStartLab;
   const isAbout = location.pathname === '/about' || location.pathname.startsWith('/about/');
   const hasSystemField = isAbout
     || location.pathname.startsWith('/blog/essays')
     || location.pathname.startsWith('/blog/bits2bricks')
     || location.pathname.startsWith('/lab/projects');
-  const clockHome = location.pathname === '/home';
+  const clockHome = location.pathname === '/home' || isStartLab;
   const isSecondBrain = isSecondBrainPath(location.pathname);
   const isArticlePage = (/^\/(blog|lab)\/[^/]+\/[^/]+/.test(location.pathname) || isStyleLab) && !isSecondBrain;
   // Project detail pages drop the grid and paint the page in the box surface color
@@ -214,6 +216,7 @@ const AppLayout: React.FC = () => {
             <Routes>
               <Route path="/" element={<Navigate to="/home" replace />} />
               <Route path="/home" element={<HomeView visualVariant={1} fieldVariant={3} />} />
+              {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <React.Fragment key={i}><Route path={`/s${i}`} element={<HomeView visualVariant={1} fieldVariant={3} startVariant={i} />} /></React.Fragment>)}
               <Route path="/writing" element={<Navigate to="/blog/essays" replace />} />
               <Route path="/blog" element={<Navigate to="/blog/essays" replace />} />
               <Route path="/about" element={<AboutView />} />
