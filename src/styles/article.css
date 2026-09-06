@@ -2562,13 +2562,18 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   /* No dashed rule under the whole link: the label carries a dotted underline
      (editorial-primitives.css) and the brain icon stays clean. */
   border-bottom: 0 !important;
-  background-image: linear-gradient(to top, color-mix(in srgb, var(--art-accent) 14%, transparent) 0 .28em, transparent .28em);
+  background-image: linear-gradient(to top, color-mix(in srgb, var(--art-accent) 30%, transparent) 0 .34em, transparent .34em);
   transition: color .15s ease, background-image .15s ease;
+}
+
+/* One marker only: the label keeps no dotted rule of its own (editorial-primitives.css). */
+.article-page-wrapper:not(.article-wiki) .wiki-ref-resolved .wiki-ref-label {
+  text-decoration: none;
 }
 
 .article-page-wrapper:not(.article-wiki) .wiki-ref-resolved:hover {
   color: color-mix(in srgb, var(--art-accent) 62%, var(--text-heading)) !important;
-  background-image: linear-gradient(to top, color-mix(in srgb, var(--art-accent) 24%, transparent) 0 .34em, transparent .34em);
+  background-image: linear-gradient(to top, color-mix(in srgb, var(--art-accent) 44%, transparent) 0 .34em, transparent .34em);
 }
 
 .article-page-wrapper:not(.article-wiki) .wiki-ref-resolved .wiki-ref-icon {

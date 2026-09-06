@@ -185,7 +185,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, projectVaria
   const categoryInfo = CATEGORY_CONFIG[category] ?? {
     title: category, description: '', icon: null,
     accentVar: '#9ca3af',
-    backLabel: 'RETURN', relatedLabel: 'Related', relatedCategory: '',
+    relatedLabel: 'Related', relatedCategory: '',
   } satisfies CategoryDisplayConfig;
   const accent = catAccentVar(category);
   const Renderer = SECTION_RENDERERS[category] || ProjectsList;

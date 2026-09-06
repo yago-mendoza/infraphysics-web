@@ -57,6 +57,7 @@ infraphysics-web/
     obsidian-export.js        # Export wikinotes to Obsidian vault structure
     obsidian-import.js        # Import Obsidian vault back to wikinotes
     compute-graph-relevance.js # Build-time PageRank + proximity → graph-relevance.generated.json
+    compute-graph-thumb.js    # Build-time static layout of the wiki graph → graph-thumb.generated.json (Home spotlight)
     README.md                 # Build pipeline docs, cache format
   dev-scripts/
     dump-context.sh           # Dev tool: export codebase to a single TXT for LLM context
@@ -70,7 +71,7 @@ infraphysics-web/
       RetentionHints.tsx      # Contextual nudges for undiscovered features (scroll depth, wikilinks, search)
       ExperimentalCursor.tsx  # Optional custom cursor (user preference)
       wiki/                   # Second Brain: WikiContent, WikiLinkPreview, NeighborhoodGraph, RelevanceLeaderboard, BridgeScoreBadge, NavigationTrail, CopyExportModal, SecondBrainGuide
-      personal/               # Personal pages: AboutTopBar, ContactLogoSculpture, HomeVisualLab
+      personal/               # Personal pages: AboutTopBar, ContactLogoSculpture, GraphThumb, HomeVisualLab
       article/                # ArticleBreadcrumbs, ArticleHashtags, BlogMetabar
       sections/               # SearchResultsList, ProjectsList, EssaysList, Bits2BricksGrid
       layout/                 # Sidebar, MobileNav, Footer, AmbientRails, ArticleFloatingBar, WikiTopBar, SecondBrainSidebar
@@ -80,7 +81,6 @@ infraphysics-web/
       graph/                  # Shared force-directed 2D/3D graph explorer (MiniGraph) and data hooks
     views/
       HomeView.tsx            # Landing page
-      WritingView.tsx         # Unified writing index (/writing)
       SectionView.tsx         # Category listing (projects, essays, bits2bricks)
       PostView.tsx            # Single post renderer
       ArticlePostView.tsx     # Article body renderer (wiki-links, hover previews)
@@ -111,6 +111,7 @@ infraphysics-web/
       posts-index.generated.json  # Post metadata without bodies
       fieldnotes-index.generated.json  # Wikinote metadata (no content)
       graph-relevance.generated.json   # PageRank + proximity per wikinote
+      graph-thumb.generated.json       # Static wiki graph picture for the Home spotlight
       categories.generated.json
       data.ts                 # Runtime data loader
     public/

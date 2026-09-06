@@ -13,14 +13,15 @@ import {
   ChevronUpIcon,
   ChevronDownIcon,
 } from '../icons';
-import { CATEGORY_CONFIG, sectionPath } from '../../config/categories';
 import { getActiveChain, ACTIVE_HEADING_THRESHOLD } from '../../lib/headings';
 
 interface ArticleFloatingBarProps {
   onOpenSearch: () => void;
+  /** Last non-article page visited in this tab; null when the article was opened directly. */
+  returnTo: string | null;
 }
 
-export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSearch }) => {
+export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSearch, returnTo }) => {
   const { theme, toggleTheme } = useTheme();
   const { article } = useArticleContext();
   const location = useLocation();
@@ -33,9 +34,7 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
   const headings = article?.headings ?? [];
   const topHeadings = headings.filter(h => h.depth === 0);
   const isEssays = article?.post?.category === 'essays';
-  const backLabel = article?.post?.category
-    ? CATEGORY_CONFIG[article.post.category]?.backLabel ?? 'Back to archive'
-    : 'Back to archive';
+  const backLabel = returnTo ? 'Back' : 'Back home';
   const hasToc = isEssays ? topHeadings.length >= 4 : headings.length >= 2;
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
 
@@ -90,7 +89,7 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
 
   // Navigation
   const category = article?.post?.category || '';
-  const backUrl = category ? sectionPath(category) : '/home';
+  const backUrl = returnTo ?? '/home';
 
   // Focus input when search opens
   useEffect(() => {
@@ -242,16 +241,7 @@ export const ArticleFloatingBar: React.FC<ArticleFloatingBarProps> = ({ onOpenSe
                 <CloseIcon />
               </button>
             </div>
-          ) : (
-            <button
-              className="article-bar-find-prompt"
-              onClick={search.openSearch}
-              title="Find in page (Ctrl+F)"
-            >
-              <SearchIcon />
-              <span>Find in page</span>
-            </button>
-          )}
+          ) : null}
         </div>
 
         {/* Right: controls */}

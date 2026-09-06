@@ -26,7 +26,7 @@ const WikiIcon = () => <WikiBrainIcon size={22} />;
 export const CONTENT_ENTITY_PRESENTATION: Record<ContentEntityKind, EntityPresentation> = {
   projects: { label: 'Projects', accentVar: 'var(--cat-projects-accent)', Icon: GearIcon },
   essays: { label: 'Essays', accentVar: 'var(--cat-essays-accent)', Icon: FileTextIcon },
-  bits2bricks: { label: 'Technical', accentVar: 'var(--cat-bits2bricks-accent)', Icon: FileTextIcon },
+  bits2bricks: { label: 'Bits2Bricks', accentVar: 'var(--cat-bits2bricks-accent)', Icon: FileTextIcon },
   wiki: { label: 'Wiki', accentVar: 'var(--cat-fieldnotes-accent)', Icon: WikiIcon },
   writing: { label: 'Writing', accentVar: 'var(--text-secondary)', Icon: FileTextIcon },
 };

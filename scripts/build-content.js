@@ -1037,3 +1037,6 @@ console.log(`Generated agent profile → ${AGENT_PROFILE_FILE}`);
 
 // Output 6: graph-relevance.generated.json (PageRank + proximity + shared neighbors)
 await import('./compute-graph-relevance.js');
+
+// Output 7: graph-thumb.generated.json (static wiki graph miniature for the Home spotlight)
+await import('./compute-graph-thumb.js');

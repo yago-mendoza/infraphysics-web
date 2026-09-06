@@ -18,9 +18,7 @@ export const Footer: React.FC = () => {
       ? 'Build something together →'
       : isArticle
         ? 'Discuss this idea →'
-        : pathname === '/writing'
-          ? 'Continue the conversation →'
-          : pathname === '/lab/projects'
+        : pathname === '/lab/projects'
             ? 'Discuss a project →'
             : 'Get in touch →';
 

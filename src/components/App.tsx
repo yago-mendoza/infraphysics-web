@@ -16,7 +16,6 @@ import { HomeVisualLab } from './personal/HomeVisualLab';
 import { HomeView } from '../views/HomeView';
 
 // Lazy-loaded heavy views (code-split into separate chunks)
-const WritingView = React.lazy(() => import('../views/WritingView').then(m => ({ default: m.WritingView })));
 const AboutView = React.lazy(() => import('../views/AboutView').then(m => ({ default: m.AboutView })));
 const CvView = React.lazy(() => import('../views/CvView').then(m => ({ default: m.CvView })));
 const StackView = React.lazy(() => import('../views/StackView').then(m => ({ default: m.StackView })));
@@ -50,11 +49,21 @@ const LegacyEssaysRedirect: React.FC = () => {
   return <Navigate to={`/blog/essays/`} replace />;
 };
 
+const ARTICLE_ROUTE = /^\/(?:blog|lab)\/[^/]+\/[^/]+/;
+const ARTICLE_RETURN_KEY = 'infraphysics:article-return-to';
+
 const AppLayout: React.FC = () => {
   const location = useLocation();
   const previousLocationRef = useRef(location);
+  // Where the article "Back" button goes: the last non-article page visited in this tab.
+  const [articleReturnTo, setArticleReturnTo] = useState<string | null>(() => { try { return sessionStorage.getItem(ARTICLE_RETURN_KEY); } catch { return null; } });
   useEffect(() => {
     const previous = previousLocationRef.current;
+    if (ARTICLE_ROUTE.test(location.pathname) && previous.pathname !== location.pathname && !ARTICLE_ROUTE.test(previous.pathname)) {
+      const target = `${previous.pathname}${previous.search}${previous.hash}`;
+      setArticleReturnTo(target);
+      try { sessionStorage.setItem(ARTICLE_RETURN_KEY, target); } catch { /* optional navigation memory */ }
+    }
     if (isSecondBrainPath(location.pathname) && !isSecondBrainPath(previous.pathname)) {
       try { sessionStorage.setItem('infraphysics:wiki-return-to', `${previous.pathname}${previous.search}${previous.hash}`); } catch { /* optional navigation memory */ }
     }
@@ -144,7 +153,6 @@ const AppLayout: React.FC = () => {
   const isHome = location.pathname === '/' || location.pathname === '/home';
   const isAbout = location.pathname === '/about' || location.pathname.startsWith('/about/');
   const hasSystemField = isAbout
-    || location.pathname === '/writing'
     || location.pathname.startsWith('/blog/essays')
     || location.pathname.startsWith('/blog/bits2bricks')
     || location.pathname.startsWith('/lab/projects');
@@ -159,7 +167,7 @@ const AppLayout: React.FC = () => {
     <ErrorBoundary resetKey={location.pathname}>
     {aestheticCursor && !isSecondBrain && <ExperimentalCursor />}
     <div
-      className={`min-h-screen overflow-x-hidden flex relative ${hasSystemField ? 'about-active ' : ''}${clockHome ? 'home2-active ' : ''}${isHome ? 'home-light-zone bg-transparent' : isProjectArticle ? '' : isBlog ? 'bg-th-blog' : 'bg-transparent'}`}
+      className={`min-h-screen overflow-x-hidden flex relative ${hasSystemField ? 'about-active ' : ''}${location.pathname.startsWith('/lab/projects') ? 'projects-zone ' : ''}${clockHome ? 'home2-active ' : ''}${isHome ? 'home-light-zone bg-transparent' : isProjectArticle ? '' : isBlog ? 'bg-th-blog' : 'bg-transparent'}`}
       style={isProjectArticle ? { backgroundColor: 'var(--art-surface)' } : undefined}
     >
       {!isArticlePage && <AmbientRails />}
@@ -170,8 +178,9 @@ const AppLayout: React.FC = () => {
         <WikiTopBar onOpenSearch={openSearch} />
       ) : isArticlePage ? (
         <>
-          <MobileNav onOpenSearch={openSearch} />
-          <ArticleFloatingBar onOpenSearch={openSearch} />
+          <MobileNav onOpenSearch={openSearch} revealOnScrollUp />
+          <Sidebar onOpenSearch={openSearch} revealOnScrollUp />
+          <ArticleFloatingBar onOpenSearch={openSearch} returnTo={articleReturnTo} />
         </>
       ) : (
         <>
@@ -205,8 +214,8 @@ const AppLayout: React.FC = () => {
             <Routes>
               <Route path="/" element={<Navigate to="/home" replace />} />
               <Route path="/home" element={<HomeView visualVariant={1} fieldVariant={3} />} />
-              <Route path="/writing" element={<WritingView />} />
-              <Route path="/blog" element={<Navigate to="/writing" replace />} />
+              <Route path="/writing" element={<Navigate to="/blog/essays" replace />} />
+              <Route path="/blog" element={<Navigate to="/blog/essays" replace />} />
               <Route path="/about" element={<AboutView />} />
               <Route path="/about/cv" element={<CvView />} />
               <Route path="/about/stack" element={<StackView />} />

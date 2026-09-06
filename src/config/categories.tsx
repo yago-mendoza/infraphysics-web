@@ -8,7 +8,6 @@ export interface CategoryDisplayConfig {
   description: React.ReactNode;
   icon: React.ReactNode;
   accentVar: string;          // CSS var reference, e.g. 'var(--cat-projects-accent)'
-  backLabel: string;
   relatedLabel: string;
   relatedCategory: string; // Target category for "Related" section
   breadcrumbLabel?: string;
@@ -20,7 +19,6 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
     description: <>Things I build. Design decisions, dead ends and what stuck as it actually happened.</>,
     icon: <GearIcon />,
     accentVar: 'var(--cat-projects-accent)',
-    backLabel: 'Back to archive',
     relatedLabel: 'Related Lessons',
     relatedCategory: 'bits2bricks',
   },
@@ -29,7 +27,6 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
     description: <>Essays, takes, and personal rants about ideas that won't sit still. When something deserves more depth than an essay can give it, check bits2bricks.</>,
     icon: <ThreadIcon />,
     accentVar: 'var(--cat-essays-accent)',
-    backLabel: 'Back to essays',
     relatedLabel: 'Related essays',
     relatedCategory: 'essays',
     breadcrumbLabel: 'essays',
@@ -39,7 +36,6 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
     description: "Subjects I needed to understand, explained the way I wish someone had explained them to me. One topic at a time, taken apart until it clicks.",
     icon: <GradCapIcon />,
     accentVar: 'var(--cat-bits2bricks-accent)',
-    backLabel: 'Back to archive',
     relatedLabel: 'Related Projects',
     relatedCategory: 'projects',
     breadcrumbLabel: 'bits2bricks',

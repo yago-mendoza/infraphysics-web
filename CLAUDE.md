@@ -222,6 +222,12 @@ The graph is bidirectional even when an interaction is written on only one note.
 ### Bulk-editing wikinote frontmatter catches README.md too
 `src/data/pages/fieldnotes/README.md` contains a literal `distinct:` line inside a yaml example block, so any bulk script that pattern-matches frontmatter across `fieldnotes/*.md` will silently rewrite the documentation example. Exclude `README.md` (filenames of real notes are always 8-char UIDs). Also: after any `move-hierarchy`/`rename-address` batch, `distinct` entries elsewhere go stale because they store addresses, not UIDs — the build's `STALE_DISTINCT` warnings list every one; fix them before committing.
 
+### Home spotlight graph is a build-time picture, not the live graph
+The wiki miniature on `/home` is inline SVG drawn from `src/data/graph-thumb.generated.json`, produced by `scripts/compute-graph-thumb.js` at the end of every build (seeded layout, so it is identical across builds). It mirrors the wiki's root palette and edge colours by copying the constants from `useGraphData.ts`; if those change, update the script too. The pinned piece next to it is the newest post with `featured: true` in its frontmatter.
+
+### Article "Back" goes to the last non-article page of the tab
+`AppLayout` stores the previous route in `sessionStorage` (`infraphysics:article-return-to`) whenever an article is entered from a non-article page, and passes it to `ArticleFloatingBar`. Article-to-article navigation keeps the original origin. With no origin (direct link) the button reads "Back home" and goes to `/home`. There is no per-category back label any more.
+
 ### Wikinotes are still called `fieldnotes` on disk and in the category key
 The content type was renamed to "wikinotes" in code, docs, scripts and the `/create-wikinote` skill (Sep 2026), but every path and data contract kept the old name on purpose: `src/data/pages/fieldnotes/`, `public/fieldnotes/{uid}.json`, `fieldnotes-index.json`, the `Category` value `'fieldnotes'` (used by `og-manifest.json` and the edge function), the `/api/fieldnotes/*` dev endpoints and `--cat-fieldnotes-accent`. Do not "fix" those to wikinotes: they are deployed URLs and cached CDN paths. Identifiers say wikinote, paths and keys say fieldnotes.
 

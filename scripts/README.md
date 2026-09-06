@@ -42,6 +42,7 @@ The active per-document pipeline is:
 | `public/fieldnotes/{uid}.json` | One compiled body per wikinote |
 | `src/data/categories.generated.json` | Category configuration |
 | `src/data/graph-relevance.generated.json` | Graph relevance and bridge metrics |
+| `src/data/graph-thumb.generated.json` | Static layout of the whole wiki graph (positions, root colours, typed edges) drawn as inline SVG on the Home spotlight |
 | `public/og-manifest.json` | Social metadata lookup |
 | `public/sitemap.xml` | Search sitemap |
 | `public/feed.xml` | RSS feed |
@@ -77,6 +78,7 @@ Malformed or retired syntax leaking into output is caught by the syntax guard. R
 | `check-references.js` | Reference inspection |
 | `analyze-pairs.js` | Relationship inspection |
 | `compute-graph-relevance.js` | Graph scoring data |
+| `compute-graph-thumb.js` | Deterministic force layout of the wiki graph for the Home spotlight |
 | `obsidian-export.js` / `obsidian-import.js` | Obsidian synchronization |
 
 Detailed flags and edge cases for wikinote operations remain in the wikinotes management guide rather than being duplicated here.

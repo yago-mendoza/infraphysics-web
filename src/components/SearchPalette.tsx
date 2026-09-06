@@ -203,7 +203,6 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
       { label: 'About', keywords: ['profile', 'bio', 'me', 'yago'], icon: <UserIcon />, path: '/about' },
       { label: 'Experience / CV', keywords: ['resume', 'career', 'work', 'education', 'degree'], icon: <UserIcon />, path: '/about/cv' },
       { label: 'Stack', keywords: ['skills', 'tools', 'technology', 'software', 'hardware'], icon: <UserIcon />, path: '/about/stack' },
-      { label: 'Writing', keywords: ['articles', 'blog', 'posts', 'read'], icon: <ContentEntityIcon kind="writing" />, path: '/writing' },
       { label: 'View Projects', keywords: ['portfolio', 'builds', 'work', 'lab'], icon: <ContentEntityIcon kind="projects" />, path: sectionPath('projects'), hideWhen: () => currentCategory === 'projects' },
       { label: 'View Essays', keywords: ['essays', 'articles', 'opinion', 'longform'], icon: <ContentEntityIcon kind="essays" />, path: sectionPath('essays'), hideWhen: () => currentCategory === 'essays' },
       { label: 'View Bits2Bricks', keywords: ['technical', 'engineering', 'tutorials', 'bits'], icon: <ContentEntityIcon kind="bits2bricks" />, path: sectionPath('bits2bricks'), hideWhen: () => currentCategory === 'bits2bricks' },
