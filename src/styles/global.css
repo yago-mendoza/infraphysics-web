@@ -1382,7 +1382,7 @@ a.stack-row:hover .stack-arrow { color:var(--brand-oxide); transition-delay:75ms
 .project-exhibition-copy > .project-exhibition-tags { margin-top:.85rem; gap:.75rem; }
 .project-exhibition-card { position:relative; padding-top:0; border-top:0; }
 .project-exhibition-card::before { display:none; }
-.project-exhibition-card .index-ruler { position:absolute; left:0; right:0; top:-1.15rem; z-index:2; pointer-events:none; }
+.project-exhibition-card .index-ruler { position:absolute; left:0; right:0; top:-.8rem; z-index:2; pointer-events:none; }
 .project-exhibition-image img { transform:none !important; transition:none; }
 .project-exhibition-card:hover img { filter:grayscale(16%); transform:none !important; }
 /* --thumb-zoom comes from frontmatter thumbnailZoom (EssaysList sets it inline); 1 = no zoom */
