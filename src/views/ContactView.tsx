@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ContactLogoSculpture } from '../components/ContactLogoSculpture';
+import { ContactLogoSculpture } from '../components/personal/ContactLogoSculpture';
 
 export const ContactView: React.FC = () => {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'error'>('idle');

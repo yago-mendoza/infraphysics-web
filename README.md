@@ -28,6 +28,7 @@ Personal website and knowledge system. Articles, projects, field notes, and a se
 ```
 infraphysics-web/
   .claude/
+    hooks/                      # Claude Code hooks (pre-commit build, fieldnote edit guards)
     skills/
       commit/SKILL.md             # /commit — atomic commit proposal workflow
       create-fieldnote/SKILL.md   # /create-fieldnote — process raw input into fieldnotes
@@ -39,6 +40,8 @@ infraphysics-web/
     api/views/[[slug]].ts       # View counter API (KV-backed, IP-deduped per 24h)
     api/reactions/[[slug]].ts   # Heart reaction toggle API (KV-backed, IP-deduped)
     api/stats.ts                # Bulk stats endpoint (POST slugs → views + hearts)
+    api/analytics.ts            # Lightweight analytics ingest
+    api/presence.ts             # Live presence counter
   vite-plugins/
     fieldnote-editor.js         # Dev server plugin: fieldnote CRUD API (localhost only, 6 endpoints)
   scripts/
@@ -46,7 +49,6 @@ infraphysics-web/
     build-content.js          # Markdown → JSON pipeline (triple output)
     validate-fieldnotes.js    # Reference integrity checks
     resolve-issues.js         # Interactive issue resolver (segment collisions, missing parents)
-    migrate-to-uids.js        # One-time migration: address-based → UID-based refs
     rename-address.js         # Rename fieldnote address (frontmatter only — refs use stable UIDs)
     check-references.js       # Detect isolated notes, weak parents, stale refs
     analyze-pairs.js          # Relationship analyzer for fieldnote pairs
@@ -56,60 +58,65 @@ infraphysics-web/
     obsidian-import.js        # Import Obsidian vault back to fieldnotes
     compute-graph-relevance.js # Build-time PageRank + proximity → graph-relevance.generated.json
     README.md                 # Build pipeline docs, cache format
-  docs/
-    validate-fieldnotes-term-err-view.jpg  # Validation output screenshot
   dev-scripts/
     dump-context.sh           # Dev tool: export codebase to a single TXT for LLM context
+    og-banner.html            # Template for article OG banners
+  room/                       # Design room: editorial + visual direction, roadmap, decisions (versioned)
   src/
     components/
       App.tsx                 # Router + layout shell
       ErrorBoundary.tsx       # React error boundary (prevents white-screen crashes)
-      WikiContent.tsx         # HTML renderer with wiki-link resolution + hover preview
-      WikiLinkPreview.tsx     # Floating preview card (portal)
-      NeighborhoodGraph.tsx   # SVG graph + detail panel (parent/siblings/children)
-      RelevanceLeaderboard.tsx # Unified note list (family/all modes) with centrality indicators
-      BridgeScoreBadge.tsx    # Colored dot indicating centrality tier (bridge/connector/peripheral)
-      InfoPopover.tsx         # Contextual help popovers (singleton, portal-based)
-      SecondBrainGuide.tsx   # Consolidated guide modal for Second Brain (replaces scattered InfoPopovers)
-      CopyExportModal.tsx     # Scope-selector modal for exporting note context to clipboard (LLM-friendly)
-      NavigationTrail.tsx     # Breadcrumb trail for concept navigation
       SearchPalette.tsx       # Global search overlay (Cmd+K)
       RetentionHints.tsx      # Contextual nudges for undiscovered features (scroll depth, wikilinks, search)
-      HomeTour.tsx            # Guided tour for landing page
-      RotatingTitle.tsx       # Animated header widget
+      ExperimentalCursor.tsx  # Optional custom cursor (user preference)
+      wiki/                   # Second Brain: WikiContent, WikiLinkPreview, NeighborhoodGraph, RelevanceLeaderboard, BridgeScoreBadge, NavigationTrail, CopyExportModal, SecondBrainGuide
+      personal/               # Personal pages: AboutTopBar, ContactLogoSculpture, HomeVisualLab
       article/                # ArticleBreadcrumbs, ArticleHashtags, BlogMetabar
-      sections/               # SearchResultsList, ProjectsList, ThreadsList, Bits2BricksGrid
-      layout/                 # Sidebar, MobileNav, Footer, ArticleFloatingBar, Starfield, DualGrid
-      ui/                     # SearchBar, StatusBadge, Highlight
+      sections/               # SearchResultsList, ProjectsList, EssaysList, Bits2BricksGrid
+      layout/                 # Sidebar, MobileNav, Footer, AmbientRails, ArticleFloatingBar, WikiTopBar, SecondBrainSidebar
+      ui/                     # StatusBadge, Highlight, ComplexityBar
       icons/                  # SVG icon components
       editor/                 # Fieldnote editor (localhost only): CodeMirror, diagnostics, term detection, navigation, trailing refs, new note panel, delete confirmation
-      graph/                  # Shared force-directed 2D/3D graph explorer and data hooks
+      graph/                  # Shared force-directed 2D/3D graph explorer (MiniGraph) and data hooks
     views/
       HomeView.tsx            # Landing page
-      SectionView.tsx         # Category listing (projects, threads, bits2bricks)
+      WritingView.tsx         # Unified writing index (/writing)
+      NotesView.tsx           # Short notes reader (/notes, /notes/:id)
+      SectionView.tsx         # Category listing (projects, essays, bits2bricks)
       PostView.tsx            # Single post renderer
-      SecondBrainView.tsx     # Fieldnotes explorer
-      XNotesView.tsx          # Experimental X-style timeline for short notes (/x)
+      ArticlePostView.tsx     # Article body renderer (wiki-links, hover previews)
+      SecondBrainView.tsx     # Fieldnotes explorer (/wiki)
       AboutView.tsx           # About page
+      CvView.tsx              # CV page (/about/cv)
+      StackView.tsx           # Tooling stack page (/about/stack)
       ContactView.tsx         # Contact form (Formspree)
+      ThanksView.tsx          # Post-submit thank-you page
+      EssayStyleLabView.tsx   # Experimental: /r2, /r4 … /r14 typography variants of one essay (essay-lab.css)
+    legacy/
+      home-visuals/           # Retired home visual engine, kept for reference (see its README)
     data/
       pages/
         README.md               # Authoring hub (frontmatter, content types, editorial rules, pipeline)
         SYNTAX.md               # Syntax reference (16 custom features, edge cases, quick ref)
         projects/             # .md posts + _category.yaml
           README.md             # Projects editorial voice
-        threads/              # .md posts + _category.yaml
-          README.md             # Threads editorial voice
+        essays/              # .md posts + _category.yaml
+          README.md             # Essays editorial voice
         bits2bricks/          # .md posts + _category.yaml
           README.md             # Bits2Bricks editorial voice
         fieldnotes/           # Individual {uid}.md files (1 per concept, UID-named)
           README.md             # Fieldnotes management guide (scripts, workflows, errors)
-        home/                 # _home-featured.yaml
+      notes.ts                # Short notes (hand-written TS array, no markdown pipeline)
+      agent-profile.json      # Author profile consumed by views and crawlers
+      postSummaries.ts        # Lightweight post index for listings
       posts.generated.json    # Regular posts only (no fieldnotes)
+      posts-index.generated.json  # Post metadata without bodies
       fieldnotes-index.generated.json  # Fieldnote metadata (no content)
+      graph-relevance.generated.json   # PageRank + proximity per fieldnote
       categories.generated.json
       data.ts                 # Runtime data loader
     public/
+      avatar.jpg              # Self-hosted portrait for the home identity anchor (240px, preloaded from index.html)
       articles/<article-id>/  # Local image assets grouped by article ID
       playgrounds/<article-id>/ # Self-contained interactive "playgrounds" (HTML/JS) per article, linked via [text](/playgrounds/<id>/<name>.html)
       fieldnotes/             # {uid}.json content files (served as static assets)
@@ -121,6 +128,7 @@ infraphysics-web/
       llms-full.txt           # Generated: all articles in full plain text
       robots.txt              # Crawler directives + sitemap reference
       _routes.json            # Cloudflare Pages routing (which paths invoke the Function)
+      _redirects              # 301s for legacy /blog/threads/* URLs -> /blog/essays/*
     lib/
       headings.ts             # Shared heading utilities (getActiveChain, ACTIVE_HEADING_THRESHOLD)
       wikilinks.ts            # Runtime wiki-link resolver
@@ -128,6 +136,8 @@ infraphysics-web/
       color.ts                # Color utilities (accentChipStyle)
       date.ts                 # Date formatting
       search.ts               # Search utilities
+      filterParams.ts         # URL filter param (de)serialization
+      engagementApi.ts        # Views / hearts / stats API client
       brainIndex.ts           # Fieldnotes index (singleton, lazy init, 7 in-memory Maps, HMR-aware)
       exportNotes.ts          # Export fieldnotes as LLM-friendly markdown (htmlToText, batch export)
       projectPresentation.ts # Canonical project topics/technology presentation
@@ -137,20 +147,26 @@ infraphysics-web/
       useSecondBrainHub.ts    # Core hub hook: index, search, sort, filter, tree and prefetch
       useNavigationTrail.ts   # Breadcrumb trail with popstate tracking
       useGraphRelevance.ts    # PageRank + proximity data (module-level singleton, lazy import)
+      useKeyboardShortcuts.ts # Global keyboard shortcuts (search, theme toggle)
       useArticleSearch.ts     # In-page search with DOM tree walker + highlight
       useArticleStats.ts      # Bulk view/heart stats fetch for section listings
       useViewCount.ts         # Per-article view counter (POST on mount, IP-deduped)
       useReaction.ts          # Heart toggle with optimistic update + revert
+      usePresence.ts          # Live presence counter
       useIsLocalhost.ts       # Localhost detection for editor gating
     styles/
+      global.css              # Global styles (theme tokens, images, wiki-links, animations, components). Linked from index.html
       article.css             # Article post view styles (terminal/cyberpunk theme)
+      article-layout.css      # Article page grid and reading column
+      editorial-primitives.css # Shared editorial typography primitives
       wiki-content.css        # Wiki/second-brain content delta overrides
       editor.css              # CodeMirror overrides for fieldnote editor
-      x-notes.css             # Isolated styling for the experimental /x timeline
-    config/                   # Categories config
+      essay-lab.css           # Experimental essay typography lab (/r2, /r4 … /r14), driven by --lab-* variables
+    config/                   # Categories config, analytics, content entities
     constants/                # Layout, theme constants
+    contexts/                 # Theme, article, Second Brain hub, cursor preference
     types.ts                  # TypeScript interfaces (Post, Category, etc.)
-  index.css                   # Global styles (images, wiki-links, animations, components)
+  index.html                  # App shell, Tailwind CDN config, theme tokens
   package.json
 ```
 
@@ -285,7 +301,7 @@ The site is an SPA — without server-side rendering, crawlers see an empty `<di
 - **`<head>`**: OG tags, Twitter cards, canonical URL, and JSON-LD structured data (Article + BreadcrumbList for posts, WebSite for `/home`, ProfilePage with Person schema for `/about`)
 - **`<body>`**: Full article text in semantic `<article>` HTML with heading, paragraphs, date, and author footer — so AI crawlers can read and index the actual content, not just metadata
 
-The build generates `public/og-manifest.json` mapping every URL to its metadata **plus full plain text body** for regular posts. For fieldnotes, the edge function fetches individual `public/fieldnotes/{uid}.json` at runtime and strips HTML. Section pages (`/blog/threads`, `/lab/projects`, etc.) include article listings.
+The build generates `public/og-manifest.json` mapping every URL to its metadata **plus full plain text body** for regular posts. For fieldnotes, the edge function fetches individual `public/fieldnotes/{uid}.json` at runtime and strips HTML. Section pages (`/blog/essays`, `/lab/projects`, etc.) include article listings.
 
 **Additional discovery files (all generated at build time):**
 

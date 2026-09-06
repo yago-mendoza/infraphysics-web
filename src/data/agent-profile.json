@@ -5,7 +5,7 @@
   "identity": {
     "name": "Yago Mendoza",
     "headline": "Industrial engineer and applied AI engineer",
-    "image": "https://avatars.githubusercontent.com/yago-mendoza",
+    "image": "https://infraphysics.net/avatar.jpg",
     "email": "contact@infraphysics.net",
     "location": "Spain",
     "sameAs": [
@@ -175,13 +175,12 @@
     "3142718",
     "3141592",
     "6184744",
-    "5917362",
-    "9461728"
+    "5917362"
   ],
   "contentSemantics": {
     "projects": "First-person engineering work and the strongest evidence of things built or operated.",
     "bits2bricks": "Technical explanations intended to make mechanisms traversable.",
-    "threads": "Essays and arguments. They represent the author's analysis, not an employer or formal reference source.",
+    "essays": "Essays and arguments. They represent the author's analysis, not an employer or formal reference source.",
     "wiki": "Atomic learning notes and conceptual connections. Coverage indicates active study, not equal professional proficiency in every topic."
   }
 }

@@ -135,7 +135,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
   const pathname = location.pathname;
   const isHome = pathname === '/home' || pathname === '/';
   const currentCategory = useMemo(() => {
-    const m = pathname.match(/^\/(?:lab|blog)\/(projects|threads|bits2bricks)/);
+    const m = pathname.match(/^\/(?:lab|blog)\/(projects|essays|bits2bricks)/);
     return m ? m[1] : null;
   }, [pathname]);
 
@@ -206,7 +206,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
       { label: 'Stack', keywords: ['skills', 'tools', 'technology', 'software', 'hardware'], icon: <UserIcon />, path: '/about/stack' },
       { label: 'Writing', keywords: ['articles', 'blog', 'posts', 'read'], icon: <ContentEntityIcon kind="writing" />, path: '/writing' },
       { label: 'View Projects', keywords: ['portfolio', 'builds', 'work', 'lab'], icon: <ContentEntityIcon kind="projects" />, path: sectionPath('projects'), hideWhen: () => currentCategory === 'projects' },
-      { label: 'View Essays', keywords: ['threads', 'articles', 'opinion', 'longform'], icon: <ContentEntityIcon kind="threads" />, path: sectionPath('threads'), hideWhen: () => currentCategory === 'threads' },
+      { label: 'View Essays', keywords: ['essays', 'articles', 'opinion', 'longform'], icon: <ContentEntityIcon kind="essays" />, path: sectionPath('essays'), hideWhen: () => currentCategory === 'essays' },
       { label: 'View Bits2Bricks', keywords: ['technical', 'engineering', 'tutorials', 'bits'], icon: <ContentEntityIcon kind="bits2bricks" />, path: sectionPath('bits2bricks'), hideWhen: () => currentCategory === 'bits2bricks' },
       { label: 'Open Source / GitHub', keywords: ['code', 'repository', 'repo', 'source'], icon: <GitHubIcon size={22} />, path: 'https://github.com/infraphysics', external: true },
       { label: 'Wiki', keywords: ['knowledge', 'brain', 'fieldnotes', 'concepts'], icon: <ContentEntityIcon kind="wiki" />, path: secondBrainPath() },

@@ -8,11 +8,11 @@ import { ArrowRightIcon, SearchIcon } from '../components/icons';
 import { CATEGORY_CONFIG, catAccentVar, postPath, sectionPath } from '../config/categories';
 import { getSearchExcerpt, countMatches } from '../lib';
 import { Highlight } from '../components/ui';
-import { HomeVisualLab, type HomeVisualVariant } from '../components/HomeVisualLab';
+import { HomeVisualLab, type HomeVisualVariant } from '../components/personal/HomeVisualLab';
 import { shortNotes } from '../data/notes';
 
-const categoryKeys = ['projects', 'threads', 'bits2bricks'] as const;
-const selectedWorkIds = ['2718281', '3142718', '3141592', '6184744', '5917362', '9461728'] as const;
+const categoryKeys = ['projects', 'essays', 'bits2bricks'] as const;
+const selectedWorkIds = ['2718281', '3142718', '3141592', '6184744', '5917362'] as const;
 type FieldVariant = 1 | 2 | 3 | 4 | 5;
 const fieldCoordinates = [
   { label: 'control', x: 48, y: 48, evidence: 'Industrial engineering, dynamic systems and control-oriented modelling.' },
@@ -70,7 +70,7 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
 
     const allPosts = posts;
     const matches: { post: PostSummary; matchCount: number; excerpt: string | null }[] = [];
-    const counts: Record<string, number> = { projects: 0, threads: 0, bits2bricks: 0 };
+    const counts: Record<string, number> = { projects: 0, essays: 0, bits2bricks: 0 };
 
     for (const post of allPosts) {
       const mc = countMatches(post.displayTitle || post.title || '', q)
@@ -97,7 +97,7 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
           <div className="flex items-end gap-5 mb-10 home-identity-anchor">
             <div className="relative w-20 h-24 shrink-0 home-identity-portrait">
               <div className="absolute -right-2 -bottom-2 w-full h-full border" style={{ borderColor: 'color-mix(in srgb, var(--brand-oxide-strong) 72%, transparent)' }} aria-hidden="true" />
-              <img src="https://avatars.githubusercontent.com/yago-mendoza" alt="Yago Mendoza" className="relative w-full h-full border border-th-border object-cover grayscale contrast-110" />
+              <img src="/avatar.jpg" alt="Yago Mendoza" width={240} height={240} loading="eager" fetchPriority="high" decoding="async" className="relative w-full h-full border border-th-border object-cover grayscale contrast-110" />
             </div>
             <div>
               <p className="text-xl tracking-tight text-th-heading">Yago Mendoza</p>

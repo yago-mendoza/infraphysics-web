@@ -19,7 +19,7 @@ export const ComplexityBar: React.FC<ComplexityBarProps> = ({ value, category })
 
   const level = Math.ceil(value / 2);     // 1–5
   const isUpper = value % 2 === 0;        // even = upper end of range
-  const accent = category ? catAccentVar(category) : 'var(--cat-threads-accent)';
+  const accent = category ? catAccentVar(category) : 'var(--cat-essays-accent)';
 
   return (
     <span className="inline-flex items-center gap-1">

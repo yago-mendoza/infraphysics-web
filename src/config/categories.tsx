@@ -24,14 +24,14 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
     relatedLabel: 'Related Lessons',
     relatedCategory: 'bits2bricks',
   },
-  threads: {
+  essays: {
     title: 'Essays',
     description: <>Essays, takes, and personal rants about ideas that won't sit still. When something deserves more depth than an essay can give it, check bits2bricks.</>,
     icon: <ThreadIcon />,
-    accentVar: 'var(--cat-threads-accent)',
+    accentVar: 'var(--cat-essays-accent)',
     backLabel: 'Back to essays',
     relatedLabel: 'Related essays',
-    relatedCategory: 'threads',
+    relatedCategory: 'essays',
     breadcrumbLabel: 'essays',
   },
   bits2bricks: {
@@ -46,9 +46,9 @@ export const CATEGORY_CONFIG: Record<string, CategoryDisplayConfig> = {
   },
 };
 
-export const BLOG_CATEGORIES = new Set(['threads', 'bits2bricks']);
+export const BLOG_CATEGORIES = new Set(['essays', 'bits2bricks']);
 
-/** Whether a category uses the blog layout (threads, bits2bricks) */
+/** Whether a category uses the blog layout (essays, bits2bricks) */
 export const isBlogCategory = (cat: string): boolean => BLOG_CATEGORIES.has(cat);
 
 /** Route group for a category — 'blog' or 'lab' */
@@ -59,7 +59,7 @@ export const categoryGroup = (category: string): 'lab' | 'blog' =>
 export const postPath = (category: string, id: string): string =>
   `/${categoryGroup(category)}/${category}/${id}`;
 
-/** Full path to a section listing, e.g. /blog/threads */
+/** Full path to a section listing, e.g. /blog/essays */
 export const sectionPath = (category: string): string =>
   `/${categoryGroup(category)}/${category}`;
 

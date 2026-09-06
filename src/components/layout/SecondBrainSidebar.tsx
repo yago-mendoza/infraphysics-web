@@ -14,7 +14,7 @@ import {
   InfoIcon,
   WikiBrainIcon,
 } from '../icons';
-import { SecondBrainGuide } from '../SecondBrainGuide';
+import { SecondBrainGuide } from '../wiki/SecondBrainGuide';
 import { useGraphRelevance } from '../../hooks/useGraphRelevance';
 import { useIsLocalhost } from '../../hooks/useIsLocalhost';
 import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../../constants/layout';
@@ -477,7 +477,7 @@ export const SecondBrainSidebar: React.FC = () => {
   const [wikiLinkPreviewId, setWikiLinkPreviewId] = useState<string | null>(null);
   const [calendarPreviewIds, setCalendarPreviewIds] = useState<Set<string> | null>(null);
   const [graphColorMode, setGraphColorMode] = useState<GraphColorMode>(() =>
-    localStorage.getItem('wiki-graph-colormode') === 'roots' ? 'roots' : 'centrality',
+    localStorage.getItem('wiki-graph-colormode') === 'centrality' ? 'centrality' : 'roots',
   );
   const { getPercentile } = useGraphRelevance();
   useEffect(() => { localStorage.setItem('wiki-graph-colormode', graphColorMode); }, [graphColorMode]);
@@ -840,18 +840,11 @@ export const SecondBrainSidebar: React.FC = () => {
               cameraAnchorIds={previewPathIds ?? previewRootIds ?? calendarPreviewIds ?? wikiLinkHighlightIds}
               onAreaPreview={setMiniAreaIds}
               colorMode="roots"
+              onExpand={expandGraph}
               onNodeSelect={openGraphNode}
               activeNodeId={activePost?.id ?? null}
             />
           </Suspense>
-          <button
-            type="button"
-            onClick={expandGraph}
-            className="absolute bottom-0.5 right-0.5 z-10 grid h-6 w-6 place-items-center border border-th-hub-border bg-th-base text-violet-400 opacity-55 shadow-sm transition-[opacity,color,background-color] hover:bg-violet-400/10 hover:text-violet-300 hover:opacity-100"
-            title="Expand graph"
-          >
-            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"><path d="M4.5 1.5h-3v3M7.5 10.5h3v-3M1.5 4.5l3-3M10.5 7.5l-3 3" /></svg>
-          </button>
         </div>
       </Section></div>}
 
@@ -1149,6 +1142,7 @@ export const SecondBrainSidebar: React.FC = () => {
               activeRoot={scopedRoot}
               onAreaPreview={setMiniAreaIds}
               onMinimize={() => minimizeGraph()}
+              onColorModeChange={setGraphColorMode}
               activeNodeId={graphSelectionCleared ? null : activePost?.id ?? null}
               onNodeSelect={node => { setGraphSelectionCleared(false); minimizeGraph(false); openGraphNode(node); }}
               onNodeOpen={node => { setGraphSelectionCleared(false); minimizeGraph(false); window.setTimeout(() => navigate(secondBrainPath(node.id)), 220); }}

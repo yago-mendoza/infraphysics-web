@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
    ARTICLE POST VIEW — Terminal/Cyberpunk Theme
-   Unified template for all article categories (projects, threads, bits2bricks)
+   Unified template for all article categories (projects, essays, bits2bricks)
    Responds to light/dark via CSS custom properties (--art-*)
 
    ESTRUCTURA:
@@ -88,20 +88,20 @@
    Projects = lime (default in :root, no overrides needed)
    ───────────────────────────────────────────────── */
 
-/* Threads — rose (derived vars recalculate via color-mix on .article-page-wrapper) */
-.article-threads { --art-accent: var(--cat-threads-accent); }
+/* Essays — rose (derived vars recalculate via color-mix on .article-page-wrapper) */
+.article-essays { --art-accent: var(--cat-essays-accent); }
 
 /* Bits2Bricks — blue */
 .article-bits2bricks { --art-accent: var(--cat-bits2bricks-accent); }
 
 /* TOC panel & indicator — rendered outside .article-page-wrapper, re-scope accent */
 .article-lateral-toc.article-projects    { --art-accent: var(--cat-projects-accent); }
-.article-lateral-toc.article-threads     { --art-accent: var(--cat-threads-accent); }
+.article-lateral-toc.article-essays     { --art-accent: var(--cat-essays-accent); }
 .article-lateral-toc.article-bits2bricks { --art-accent: var(--cat-bits2bricks-accent); }
 
 /* Related section — re-scope accent so it follows targetCategory, not page category */
 .article-related.article-projects    { --art-accent: var(--cat-projects-accent); }
-.article-related.article-threads     { --art-accent: var(--cat-threads-accent); }
+.article-related.article-essays     { --art-accent: var(--cat-essays-accent); }
 .article-related.article-bits2bricks { --art-accent: var(--cat-bits2bricks-accent); }
 
 
@@ -112,7 +112,7 @@
 /* A0. Page wrapper (contains box + related outside) */
 
 /* Derived accent/purple vars live here (not on :root) so that category
-   overrides on the same element (.article-threads, .article-bits2bricks)
+   overrides on the same element (.article-essays, .article-bits2bricks)
    are resolved BEFORE the color-mix derivations are computed. */
 .article-page-wrapper {
   max-width: 52rem;
@@ -359,7 +359,7 @@
 .article-back-link:hover {
   opacity: 0.7;
 }
-/* Blog (bits2bricks + threads): black back link instead of the category accent. */
+/* Blog (bits2bricks + essays): black back link instead of the category accent. */
 .article-blog .article-back-link {
   color: var(--art-text-title);
 }
@@ -1824,11 +1824,11 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 }
 
 .article-content .doc-ref-projects { color: var(--cat-projects-accent); border-bottom-color: color-mix(in srgb, var(--cat-projects-accent) 32%, transparent); }
-.article-content .doc-ref-threads  { color: var(--cat-threads-accent); border-bottom-color: color-mix(in srgb, var(--cat-threads-accent) 32%, transparent); }
+.article-content .doc-ref-essays  { color: var(--cat-essays-accent); border-bottom-color: color-mix(in srgb, var(--cat-essays-accent) 32%, transparent); }
 .article-content .doc-ref-bits2bricks { color: var(--cat-bits2bricks-accent); border-bottom-color: color-mix(in srgb, var(--cat-bits2bricks-accent) 32%, transparent); }
 
 .article-content .doc-ref-projects:hover { border-bottom-color: var(--cat-projects-accent); }
-.article-content .doc-ref-threads:hover  { border-bottom-color: var(--cat-threads-accent); }
+.article-content .doc-ref-essays:hover  { border-bottom-color: var(--cat-essays-accent); }
 .article-content .doc-ref-bits2bricks:hover { border-bottom-color: var(--cat-bits2bricks-accent); }
 
 .article-content .doc-ref-external { color: #b0b0b0; border-bottom-color: rgba(156,163,175,0.35); }
@@ -2104,28 +2104,28 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   }
 }
 
-/* Long-form editorial base. Threads retain their own card format; final
+/* Long-form editorial base. Essays retain their own card format; final
    category overrides are closed after the legacy sizing rules below. */
-.article-blog:not(.article-threads).article-page-wrapper {
+.article-blog:not(.article-essays).article-page-wrapper {
   width:100%;
   max-width:min(74rem,100%);
   font-family:var(--font-sans);
 }
 
-.article-blog:not(.article-threads) .article-container {
+.article-blog:not(.article-essays) .article-container {
   overflow:visible;
   border:0;
   background:transparent;
   box-shadow:none;
 }
 
-.article-blog:not(.article-threads) .article-body {
+.article-blog:not(.article-essays) .article-body {
   width:min(100%,48rem);
   margin-inline:auto;
   padding:clamp(1rem,3vw,2rem) clamp(.75rem,3vw,1.5rem) 3rem;
 }
 
-.article-blog:not(.article-threads) .article-blog-image {
+.article-blog:not(.article-essays) .article-blog-image {
   width:min(68rem,calc(100vw - 3rem));
   margin:0 0 clamp(2rem,5vw,4rem) 50%;
   transform:translateX(-50%);
@@ -2135,7 +2135,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   background:var(--bg-surface);
 }
 
-.article-blog:not(.article-threads) .article-blog-image-img {
+.article-blog:not(.article-essays) .article-blog-image-img {
   display:block;
   width:100%;
   max-height:min(72vh,42rem);
@@ -2143,12 +2143,12 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   filter:none;
 }
 
-.article-blog:not(.article-threads) .article-title-block {
+.article-blog:not(.article-essays) .article-title-block {
   margin:clamp(1.4rem,4vw,2.8rem) 0 1.2rem;
   padding:0;
 }
 
-.article-blog:not(.article-threads) .article-title {
+.article-blog:not(.article-essays) .article-title {
   max-width:17ch;
   color:var(--text-heading);
   font-family:var(--font-serif);
@@ -2158,7 +2158,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   letter-spacing:-.045em;
 }
 
-.article-blog:not(.article-threads) .article-subtitle {
+.article-blog:not(.article-essays) .article-subtitle {
   max-width:38rem;
   margin-top:1.15rem;
   color:var(--text-secondary);
@@ -2168,36 +2168,36 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   line-height:1.55;
 }
 
-.article-blog:not(.article-threads) .article-blog-metabar {
+.article-blog:not(.article-essays) .article-blog-metabar {
   margin:1.4rem 0 clamp(2.4rem,5vw,4rem);
   padding:1rem 0;
   border-block:1px solid var(--border-default);
   background:transparent;
 }
 
-.article-blog:not(.article-threads) .article-content {
+.article-blog:not(.article-essays) .article-content {
   color:var(--text-primary);
   font-family:var(--font-sans);
 }
 
-.article-blog:not(.article-threads) .article-content p,
-.article-blog:not(.article-threads) .article-content li {
+.article-blog:not(.article-essays) .article-content p,
+.article-blog:not(.article-essays) .article-content li {
   color:var(--text-primary);
   font-family:var(--font-sans);
   line-height:1.75;
 }
 
-.article-blog:not(.article-threads) .article-content h1,
-.article-blog:not(.article-threads) .article-content h2,
-.article-blog:not(.article-threads) .article-content h3,
-.article-blog:not(.article-threads) .article-content h4 {
+.article-blog:not(.article-essays) .article-content h1,
+.article-blog:not(.article-essays) .article-content h2,
+.article-blog:not(.article-essays) .article-content h3,
+.article-blog:not(.article-essays) .article-content h4 {
   color:var(--text-heading);
   font-family:var(--font-serif);
   font-weight:400;
   letter-spacing:-.025em;
 }
 
-.article-blog:not(.article-threads) + .article-related {
+.article-blog:not(.article-essays) + .article-related {
   width:min(68rem,calc(100vw - 3rem));
   max-width:none;
   margin:clamp(3rem,7vw,6rem) auto 0;
@@ -2206,34 +2206,34 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 }
 
 @media (max-width:640px) {
-  .article-blog:not(.article-threads) .article-body { padding-inline:.25rem; }
-  .article-blog:not(.article-threads) .article-blog-image { width:calc(100vw - 2rem); }
-  .article-blog:not(.article-threads) .article-title { font-size:clamp(2.45rem,13vw,3.65rem); }
+  .article-blog:not(.article-essays) .article-body { padding-inline:.25rem; }
+  .article-blog:not(.article-essays) .article-blog-image { width:calc(100vw - 2rem); }
+  .article-blog:not(.article-essays) .article-title { font-size:clamp(2.45rem,13vw,3.65rem); }
 }
 
 /* Canonical desktop reading width. Keep this as the final sizing rule: older
    category skins above must not collapse long-form content back to 48rem. */
 @media (min-width:768px) {
   .article-projects.article-page-wrapper,
-  .article-blog:not(.article-threads).article-page-wrapper {
+  .article-blog:not(.article-essays).article-page-wrapper {
     width:100%;
     max-width:min(96rem,100%);
   }
 
   .article-projects .article-body,
-  .article-blog:not(.article-threads) .article-body {
+  .article-blog:not(.article-essays) .article-body {
     width:min(100%,72rem);
     padding-left:clamp(1.5rem,3vw,2rem);
     padding-right:clamp(1.5rem,3vw,2rem);
   }
 
-  .article-threads.article-page-wrapper {
+  .article-essays.article-page-wrapper {
     width:100%;
     max-width:min(74rem,100%);
   }
 
-  .article-threads .article-threads-header-content,
-  .article-threads .article-threads-body {
+  .article-essays .article-essays-header-content,
+  .article-essays .article-essays-body {
     padding-left:clamp(2rem,4vw,3rem);
     padding-right:clamp(2rem,4vw,3rem);
   }
@@ -2242,13 +2242,13 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 /* Definitive article sizing — intentionally last so legacy category rules
    cannot collapse the reading canvas back to 48rem. */
 @media (min-width:768px) {
-  .article-threads.article-page-wrapper { width:100%; max-width:min(72rem,100%); }
-  .article-threads .article-threads-header-content,
-  .article-threads .article-threads-body { padding-inline:clamp(3rem,6vw,5rem); }
+  .article-essays.article-page-wrapper { width:100%; max-width:min(72rem,100%); }
+  .article-essays .article-essays-header-content,
+  .article-essays .article-essays-body { padding-inline:clamp(3rem,6vw,5rem); }
 
-  .article-blog:not(.article-threads).article-page-wrapper { width:100%; max-width:min(96rem,100%); }
-  .article-blog:not(.article-threads) .article-body { width:min(100%,68rem); }
-  .article-blog:not(.article-threads) .article-blog-image { width:min(88rem,calc(100vw - 3rem)); }
+  .article-blog:not(.article-essays).article-page-wrapper { width:100%; max-width:min(96rem,100%); }
+  .article-blog:not(.article-essays) .article-body { width:min(100%,68rem); }
+  .article-blog:not(.article-essays) .article-blog-image { width:min(88rem,calc(100vw - 3rem)); }
 
   .article-projects.article-page-wrapper { width:100%; max-width:min(100rem,100%); }
   .article-projects .article-body { width:min(100%,68rem); }
@@ -2268,13 +2268,13 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 /* Wider article canvases. Reading columns grow modestly; visual and technical
    material gets the larger surrounding canvas it needs. */
 @media (min-width:768px) {
-  .article-threads.article-page-wrapper { max-width:min(60rem,100%); }
-  .article-threads .article-threads-header-content,
-  .article-threads .article-threads-body { padding-left:clamp(2.5rem,5vw,4rem); padding-right:clamp(2.5rem,5vw,4rem); }
+  .article-essays.article-page-wrapper { max-width:min(60rem,100%); }
+  .article-essays .article-essays-header-content,
+  .article-essays .article-essays-body { padding-left:clamp(2.5rem,5vw,4rem); padding-right:clamp(2.5rem,5vw,4rem); }
 
-  .article-blog:not(.article-threads).article-page-wrapper { max-width:min(82rem,100%); }
-  .article-blog:not(.article-threads) .article-body { width:min(100%,54rem); }
-  .article-blog:not(.article-threads) .article-blog-image { width:min(74rem,calc(100vw - 3rem)); }
+  .article-blog:not(.article-essays).article-page-wrapper { max-width:min(82rem,100%); }
+  .article-blog:not(.article-essays) .article-body { width:min(100%,54rem); }
+  .article-blog:not(.article-essays) .article-blog-image { width:min(74rem,calc(100vw - 3rem)); }
 
   .article-projects.article-page-wrapper { max-width:min(90rem,100%); }
   .article-projects .article-body { width:min(100%,56rem); }
@@ -2308,8 +2308,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 .article-page-wrapper .article-content figcaption { letter-spacing:normal; }
 
 .article-page-wrapper .article-title-block { padding-top:clamp(1.25rem,3vw,2.25rem); }
-.article-page-wrapper .article-subtitle,
-.article-page-wrapper .article-blog-lead { line-height:1.62; }
+.article-page-wrapper .article-subtitle { line-height:1.62; }
 
 @media (max-width:767px) {
   .article-page-wrapper .article-content > p,
@@ -2451,7 +2450,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 /* ─────────────────────────────────────────────────
    E. BLOG LAYOUT (.article-blog)
-   Scoped overrides for threads + bits2bricks
+   Scoped overrides for essays + bits2bricks
    ───────────────────────────────────────────────── */
 
 /* E1. Blog layout — slightly narrower than projects */
@@ -2491,9 +2490,9 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   font-weight: 600;
 }
 
-/* E2b. Blog/Threads body text — sans-serif, larger base */
+/* E2b. Blog/Essays body text — sans-serif, larger base */
 .article-blog .article-content,
-.article-threads .article-content {
+.article-essays .article-content {
   font-family: var(--font-blog-body);
 }
 
@@ -2506,15 +2505,15 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 .article-blog .article-content ol li,
 .article-blog .article-content ol[type="a"] li,
 .article-blog .article-content ol[type="A"] li,
-.article-threads .article-content p,
-.article-threads .article-content li,
-.article-threads .article-content td,
-.article-threads .article-content .bkqt,
-.article-threads .article-content .bkqt-body,
-.article-threads .article-content ul li,
-.article-threads .article-content ol li,
-.article-threads .article-content ol[type="a"] li,
-.article-threads .article-content ol[type="A"] li {
+.article-essays .article-content p,
+.article-essays .article-content li,
+.article-essays .article-content td,
+.article-essays .article-content .bkqt,
+.article-essays .article-content .bkqt-body,
+.article-essays .article-content ul li,
+.article-essays .article-content ol li,
+.article-essays .article-content ol[type="a"] li,
+.article-essays .article-content ol[type="A"] li {
   font-size: 1.05rem;
 }
 
@@ -2560,14 +2559,15 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
    perceptual contrast in both directions: darker in light, brighter in dark. */
 .article-page-wrapper:not(.article-wiki) .wiki-ref-resolved {
   color: color-mix(in srgb, var(--art-accent) 78%, var(--text-heading)) !important;
-  border-bottom: 1px dashed color-mix(in srgb, var(--art-accent) 72%, var(--text-heading)) !important;
+  /* No dashed rule under the whole link: the label carries a dotted underline
+     (editorial-primitives.css) and the brain icon stays clean. */
+  border-bottom: 0 !important;
   background-image: linear-gradient(to top, color-mix(in srgb, var(--art-accent) 14%, transparent) 0 .28em, transparent .28em);
-  transition: color .15s ease, border-color .15s ease, background-image .15s ease;
+  transition: color .15s ease, background-image .15s ease;
 }
 
 .article-page-wrapper:not(.article-wiki) .wiki-ref-resolved:hover {
   color: color-mix(in srgb, var(--art-accent) 62%, var(--text-heading)) !important;
-  border-bottom-color: color-mix(in srgb, var(--art-accent) 88%, var(--text-heading)) !important;
   background-image: linear-gradient(to top, color-mix(in srgb, var(--art-accent) 24%, transparent) 0 .34em, transparent .34em);
 }
 
@@ -2576,38 +2576,38 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   opacity: .92;
 }
 
-/* E2c. Threads body — monospace (inherits from .article-page-wrapper) */
+/* E2c. Essays body — monospace (inherits from .article-page-wrapper) */
 
-.article-threads .article-title {
+.article-essays .article-title {
   font-family: var(--font-blog-heading);
   font-weight: 400;
   color: var(--text-heading);
 }
 
-.article-threads .article-content h1,
-.article-threads .article-content h2,
-.article-threads .article-content h3,
-.article-threads .article-content h4 {
+.article-essays .article-content h1,
+.article-essays .article-content h2,
+.article-essays .article-content h3,
+.article-essays .article-content h4 {
   font-family: var(--font-blog-heading);
   font-style: normal;
   font-weight: 600;
   color: var(--text-heading);
 }
 
-/* Threads feedback — monospace (inherits) */
+/* Essays feedback — monospace (inherits) */
 
-.article-threads .article-toc-label,
-.article-threads .article-toc-link {
+.article-essays .article-toc-label,
+.article-essays .article-toc-link {
   font-family: var(--font-blog-body);
   font-style: normal;
 }
 
-.article-threads .article-content .bkqt-body {
+.article-essays .article-content .bkqt-body {
   padding: 1.2rem 0rem 1.2rem 1.2rem;
 }
 
-/* E2d. Threads blockquote label — block above text, bold sans (not inline monospace) */
-.article-threads .article-content .bkqt-label {
+/* E2d. Essays blockquote label — block above text, bold sans (not inline monospace) */
+.article-essays .article-content .bkqt-label {
   display: block;
   font-family: var(--font-blog-body);
   font-size: 1.05rem;
@@ -2713,13 +2713,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   color: var(--art-text-title);
 }
 
-/* E4c. Blog lead — italic intro text below metabar, border-bottom before body */
-.article-blog-lead {
-  padding: 1rem 0;
-  margin: 0;
-}
-
-/* Collapse top margin of first element after lead so line sits equidistant */
+/* Collapse top margin of the first content element so it sits equidistant from the header */
 .article-blog .article-content > p:first-child,
 .article-blog .article-content > h1:first-child,
 .article-blog .article-content > h2:first-child,
@@ -2728,24 +2722,6 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   margin-top: 1rem !important;
 }
 
-.article-blog-lead p {
-  margin: 0;
-  font-family: var(--font-blog-body);
-  font-size: 1.05rem;
-  font-style: italic;
-  color: var(--art-text-body);
-  line-height: 1.6;
-}
-
-.article-blog-lead-dots {
-  text-align: center;
-  font-style: normal !important;
-  letter-spacing: 0.5em;
-  color: var(--art-text-mid);
-  opacity: 0.5;
-  margin-top: 0.4rem !important;
-  font-size: 1rem;
-}
 
 /* E4d. Blog share button — pill shape with label */
 .article-blog .article-share-btn {
@@ -2913,7 +2889,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 }
 
 /* E7. Blog TOC — same box as projects, depth-scaled sizing
-   Body is 0.9rem (blog) / 0.95rem (threads); TOC stays below body.
+   Body is 0.9rem (blog) / 0.95rem (essays); TOC stays below body.
    Consistent 0.05rem step between depths. */
 .article-toc--blog .article-toc-label {
   font-family: var(--font-blog-body);
@@ -2936,36 +2912,32 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 
 /* ─────────────────────────────────────────────────
-   F. THREADS TWO-PANEL LAYOUT
+   F. ESSAYS TWO-PANEL LAYOUT
    Header card (wider) + body card (offset right)
    ───────────────────────────────────────────────── */
 
 /* F1. Unified card */
-.article-threads-card {
+.article-essays-card {
   background: var(--art-surface);
   border: 1px solid var(--art-border);
   overflow: hidden;
 }
-.article-blog .article-threads-card {
+.article-blog .article-essays-card {
   background: none;
   border: none;
 }
 
 /* F2. Body section — inside the card, same padding as header */
-.article-threads-body {
+.article-essays-body {
   --art-body-px: 2rem;
   padding: 0 2rem 2rem;
 }
 
-.article-threads-body > .article-content > :first-child,
-.article-threads-body > .article-content > p:first-child {
+.article-essays-body > .article-content > :first-child,
+.article-essays-body > .article-content > p:first-child {
   margin-top: 0.4rem !important;
 }
 
-/* Tighten the space below the lead's · · · so it sits equidistant from intro and body */
-.article-threads-header-content .article-blog-lead {
-  padding-bottom: 0;
-}
 
 
 /* F3. Meta + engagement wrapper */
@@ -2977,7 +2949,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 /* Desktop: metabar and engagement on same line */
 @media (min-width: 768px) {
-  .article-threads-meta-engagement {
+  .article-essays-meta-engagement {
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -2986,24 +2958,24 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
     padding: 0.75rem 0;
   }
 
-  .article-threads-meta-engagement .article-blog-metabar {
+  .article-essays-meta-engagement .article-blog-metabar {
     flex: 1;
     border: none;
     padding: 0;
   }
 
-  .article-threads-engagement {
+  .article-essays-engagement {
     padding: 0;
   }
 }
 
 /* Mobile: wrapper disappears, engagement floats to top via order */
 @media (max-width: 767px) {
-  .article-threads-meta-engagement {
+  .article-essays-meta-engagement {
     display: contents;
   }
 
-  .article-threads-engagement {
+  .article-essays-engagement {
     order: -1;
     justify-content: space-between;
     padding: 0.5rem 0;
@@ -3011,14 +2983,14 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 }
 
 /* F4. Header content area */
-.article-threads-header-content {
+.article-essays-header-content {
   display: flex;
   flex-direction: column;
   padding: 1.5rem 2rem 0;
 }
 
 /* F5. Byline */
-.article-threads-byline {
+.article-essays-byline {
   font-family: var(--font-blog-heading);
   font-style: italic;
   font-weight: 400;
@@ -3027,18 +2999,18 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   margin: 0 0 0.25rem;
 }
 
-.article-threads-byline-link {
+.article-essays-byline-link {
   color: var(--art-text-mid);
   text-decoration: none;
   transition: color 0.2s;
 }
 
-.article-threads-byline-link:hover {
+.article-essays-byline-link:hover {
   color: var(--art-text-title);
 }
 
 /* F6. Dateline */
-.article-threads-dateline {
+.article-essays-dateline {
   font-family: var(--font-blog-heading);
   font-weight: 400;
   font-size: 0.7rem;
@@ -3049,32 +3021,32 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   margin-bottom: 1rem;
 }
 
-.article-threads-dateline-sep {
+.article-essays-dateline-sep {
   color: var(--art-text-muted);
 }
 
 /* F7. (removed — share icons consolidated into dropdown) */
 
 /* F8. Image — flush to card edges, above header content (legacy, no longer used at top) */
-.article-threads-image {
+.article-essays-image {
   border-bottom: 1px solid var(--art-border);
   overflow: hidden;
 }
 
-.article-threads-image img {
+.article-essays-image img {
   width: 100%;
   display: block;
   object-fit: cover;
 }
 
 /* F8b. End-of-article image — after content, before feedback */
-.article-threads-end-image {
+.article-essays-end-image {
   margin-top: 3rem;
   overflow: hidden;
   border-radius: 4px;
 }
 
-.article-threads-end-image img {
+.article-essays-end-image img {
   width: 100%;
   display: block;
   object-fit: cover;
@@ -3082,16 +3054,16 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 /* F9. Responsive */
 @media (max-width: 767px) {
-  .article-threads-card {
+  .article-essays-card {
     margin-top: 0.5rem;
   }
 
-  .article-threads-body {
+  .article-essays-body {
     --art-body-px: 0.5rem;
     padding: 0 0.5rem 1.5rem;
   }
 
-  .article-threads-header-content {
+  .article-essays-header-content {
     padding: 1rem 0.5rem 0;
   }
 }
@@ -3100,7 +3072,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 /* ─────────────────────────────────────────────────
    G. DESKTOP CONTENT SIZING
    Placed AFTER all category overrides so it wins the cascade.
-   Uniform font sizes across projects, threads, bits2bricks.
+   Uniform font sizes across projects, essays, bits2bricks.
    Only font-family differs between categories.
    ───────────────────────────────────────────────── */
 @media (min-width: 768px) {
@@ -3110,7 +3082,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
     line-height: 1.55;
   }
   .article-blog .article-content p,
-  .article-threads .article-content p {
+  .article-essays .article-content p {
     font-size: 1.05rem;
     line-height: 1.55;
   }
@@ -3125,11 +3097,11 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   .article-blog .article-content ol li,
   .article-blog .article-content ol[type="a"] li,
   .article-blog .article-content ol[type="A"] li,
-  .article-threads .article-content li,
-  .article-threads .article-content ul li,
-  .article-threads .article-content ol li,
-  .article-threads .article-content ol[type="a"] li,
-  .article-threads .article-content ol[type="A"] li {
+  .article-essays .article-content li,
+  .article-essays .article-content ul li,
+  .article-essays .article-content ol li,
+  .article-essays .article-content ol[type="a"] li,
+  .article-essays .article-content ol[type="A"] li {
     font-size: 1.05rem;
     line-height: 1.55;
   }
@@ -3140,7 +3112,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
     line-height: 1.55;
   }
   .article-blog .article-content td,
-  .article-threads .article-content td {
+  .article-essays .article-content td {
     font-size: 1.05rem;
     line-height: 1.55;
   }
@@ -3156,7 +3128,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
     line-height: 1.55;
   }
   .article-blog .article-content .ann-note,
-  .article-threads .article-content .ann-note {
+  .article-essays .article-content .ann-note {
     font-size: 1.05rem;
     line-height: 1.55;
   }
@@ -3192,14 +3164,14 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
     line-height: 1.55;
   }
   .article-blog .article-content .bkqt,
-  .article-threads .article-content .bkqt {
+  .article-essays .article-content .bkqt {
     font-size: 1.05rem;
     line-height: 1.55;
   }
 
   /* Blockquote label — uniform across categories */
   .article-content .bkqt-label,
-  .article-threads .article-content .bkqt-label {
+  .article-essays .article-content .bkqt-label {
     font-size: 1rem;
   }
 
@@ -3230,20 +3202,20 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 }
 
 /* Final long-form cascade closure. */
-.article-blog:not(.article-threads).article-page-wrapper { max-width:min(74rem,100%); }
-.article-blog:not(.article-threads) .article-container { overflow:visible; border:0; background:transparent; box-shadow:none; }
-.article-blog:not(.article-threads) .article-body { width:min(100%,48rem); margin-inline:auto; padding:clamp(1rem,3vw,2rem) clamp(.75rem,3vw,1.5rem) 3rem; }
-.article-blog:not(.article-threads) .article-blog-image { width:min(68rem,calc(100vw - 3rem)); margin:0 0 clamp(2rem,5vw,4rem) 50%; transform:translateX(-50%); border-radius:0; }
-.article-blog:not(.article-threads) .article-title { max-width:17ch; font-family:var(--font-serif); font-size:clamp(2.6rem,6vw,4.8rem); font-weight:400; line-height:.98; letter-spacing:-.045em; }
-.article-blog:not(.article-threads) .article-content p,
-.article-blog:not(.article-threads) .article-content li { font-family:var(--font-sans); line-height:1.75; }
-.article-blog:not(.article-threads) .article-content h1,
-.article-blog:not(.article-threads) .article-content h2,
-.article-blog:not(.article-threads) .article-content h3,
-.article-blog:not(.article-threads) .article-content h4 { font-family:var(--font-serif); font-weight:400; letter-spacing:-.025em; }
+.article-blog:not(.article-essays).article-page-wrapper { max-width:min(74rem,100%); }
+.article-blog:not(.article-essays) .article-container { overflow:visible; border:0; background:transparent; box-shadow:none; }
+.article-blog:not(.article-essays) .article-body { width:min(100%,48rem); margin-inline:auto; padding:clamp(1rem,3vw,2rem) clamp(.75rem,3vw,1.5rem) 3rem; }
+.article-blog:not(.article-essays) .article-blog-image { width:min(68rem,calc(100vw - 3rem)); margin:0 0 clamp(2rem,5vw,4rem) 50%; transform:translateX(-50%); border-radius:0; }
+.article-blog:not(.article-essays) .article-title { max-width:17ch; font-family:var(--font-serif); font-size:clamp(2.6rem,6vw,4.8rem); font-weight:400; line-height:.98; letter-spacing:-.045em; }
+.article-blog:not(.article-essays) .article-content p,
+.article-blog:not(.article-essays) .article-content li { font-family:var(--font-sans); line-height:1.75; }
+.article-blog:not(.article-essays) .article-content h1,
+.article-blog:not(.article-essays) .article-content h2,
+.article-blog:not(.article-essays) .article-content h3,
+.article-blog:not(.article-essays) .article-content h4 { font-family:var(--font-serif); font-weight:400; letter-spacing:-.025em; }
 
 @media (max-width:640px) {
-  .article-blog:not(.article-threads) .article-body { padding-inline:.25rem; }
-  .article-blog:not(.article-threads) .article-blog-image { width:calc(100vw - 2rem); }
-  .article-blog:not(.article-threads) .article-title { font-size:clamp(2.45rem,13vw,3.65rem); }
+  .article-blog:not(.article-essays) .article-body { padding-inline:.25rem; }
+  .article-blog:not(.article-essays) .article-blog-image { width:calc(100vw - 2rem); }
+  .article-blog:not(.article-essays) .article-title { font-size:clamp(2.45rem,13vw,3.65rem); }
 }

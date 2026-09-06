@@ -187,7 +187,7 @@ export function processExternalUrls(markdown) {
 
 const CROSS_DOC_CATEGORIES = {
   projects:    { path: '/lab/projects' },
-  threads:     { path: '/blog/threads' },
+  essays:     { path: '/blog/essays' },
   bits2bricks: { path: '/blog/bits2bricks' },
 };
 
@@ -205,7 +205,7 @@ export function processAllLinks(html, uidToMeta, wikiLinksConfig, buildErrors) {
   if (wikiLinksConfig && !wikiLinksConfig.enabled) return html;
 
   return html.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (match, ref, displayText) => {
-    const crossDocMatch = ref.match(/^(projects|threads|bits2bricks)\/(.*)/);
+    const crossDocMatch = ref.match(/^(projects|essays|bits2bricks)\/(.*)/);
 
     if (crossDocMatch) {
       const [, category, slug] = crossDocMatch;

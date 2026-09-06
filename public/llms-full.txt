@@ -5,269 +5,136 @@
 
 ---
 
-## The model is no longer the unit of evaluation
+## The years we thought we had
 
-URL: https://infraphysics.net/blog/threads/4827316
-Category: threads
-Date: 2026-09-04
-Description: A 36-point gap with identical weights and reasoning effort tells us what agent benchmarks are actually measuring
+URL: https://infraphysics.net/blog/essays/3358174
+Category: essays
+Date: 2026-09-05
+Description: On GPT Astra, some ducks, and the only advantage that doesn't scale
 
-Hay una cifra en los resultados de GPT-6 Astra que probablemente importe más que el 99,9%.
+This is a different kind of article. Other times I've come bearing news; today I bring none you don't already have, or won't have the moment you open another tab. What I bring is stranger to report: the sense, for the first time, that this isn't news anymore. That the headlines have stopped mattering to me the way the exact number of raindrops stops mattering once you're soaked through. My sense is that beneath the day-to-day noise there's a slower, deeper shift: a genuine change of era. And changes of era can't be tracked like a news cycle. They aren't single events but the accumulation of thousands of small ones, each ordinary on its own, arriving slowly enough that your intuition adapts and stops noticing. The sum, though, is not slow. By the time it becomes obvious, you've spent years inside it, treating each increment as the new normal. You're only ever shown the derivative; the era is the integral. You don't watch it. You live inside it, and only later understand what you were living through.
 
-Con el harness estándar de ARC-AGI-3, Astra a máximo reasoning obtiene 62,71%. Con el Provider Adapter, manteniendo ese mismo nivel de reasoning, obtiene 98,55%. Mismos pesos, mismo benchmark y mismo presupuesto cualitativo de razonamiento. La diferencia es de 35,84 puntos porcentuales.
+Which brings me to a contradiction I've carried for years, and that today decided to sit down across from me. I always wanted to take part in this. I studied in order to take part in this. For almost two years I've been working with language models at a foundation: tools to support the diagnosis of rare diseases, a system to match patients with the trials that might help them, and the evaluation that decided which models were good enough to put in front of a doctor. In the more research-shaped stretches, a state machine to keep them on a leash, built from scratch because nothing off the shelf would, which taught me more about what these things are than any paper. Two years, in other words, close enough to touch it. I can't think of a better vantage point from which to have watched this arrive. And yet the thing moves at a speed that makes "take part" sound like an optimistic verb. You run toward the train and discover it doesn't stop anywhere.
 
-La segunda ejecución tampoco compra el resultado gastando más. Cuesta aproximadamente $17.332, frente a $26.098 con el harness estándar. Al comparar los 167 pares de juego y reasoning que ambos sistemas resolvieron, ARC Prize encontró que el Provider Adapter utilizó 49% menos tokens y terminó unas 3,66 veces más rápido. El leaderboard contiene los resultados por configuración y ARC Prize explica la comparación entre harnesses .
+Thursday
 
-No hace falta decidir si Astra es AGI para sacar algo útil de aquí. El experimento demuestra que el modelo ya no describe suficientemente el objeto cuya capacidad estamos midiendo.
+This week OpenAI published the system card for GPT‑6, which they call Astra; it's here . I did what I've been doing these past weeks with anything worth learning: I dropped it into Luna1 at the lowest effort setting and asked for a summary. I read the summary, then I read it again, and then I went for the full thing, not out of interest exactly, but because it was the kind of document you want to have read yourself. When I finished I found myself in the kitchen with no memory of the trip. The body had gone ahead without me, the way it does when the head is busy elsewhere. So I did something unsophisticated. I picked up a notebook (paper, spiral-bound, the first in years), got on the first bus and rode as far as the city would let me, to a little-known park, to stock up on reality. There were ducks and a few late-summer butterflies. I stayed until the light changed. Then I went home.
 
-El experimento accidental
+1Luna, to calibrate what follows, is one of OpenAI's smaller new models: by now a brilliant one, at a fraction of what the original GPT‑3 cost in 2020.
 
-Durante buena parte de la historia reciente del machine learning, hablar de capacidad del modelo era una aproximación razonable. Había un input, una inferencia y un output. El contexto era corto, no existían herramientas y casi toda la computación relevante ocurría dentro del forward pass.
+What follows I started that same night, notebook beside me, window open, before the summary in my head could replace the document, and finished over the weekend with a feeling I didn't expect: not hurry (which is what a document like that is built to produce), but a kind of spaciousness. I hope to explain why.
 
-Los agentes rompen esa aproximación. Su capacidad observable depende de los pesos, pero también del harness, el presupuesto de inferencia, el entorno y el protocolo de evaluación.
+The long arrival
 
-Cobs=F(θ,H,B,E,P)C_{\mathrm{obs}}=F(\theta,H,B,E,P)Cobs​=F(θ,H,B,E,P)
+Two questions need separating here. One is what Astra does. The other is what it means that it does it.
 
-Lo sorprendente del resultado de ARC no es descubrir que esas variables existen. Es comprobar el tamaño de su efecto. Cambiar HHH, manteniendo constantes el modelo y el reasoning effort, desplaza el resultado casi treinta y seis puntos.
+The first is easy to summarize, because OpenAI summarized it in a sentence that fits on a T-shirt: anything you can do on a computer, Astra can do for you, fast .
 
-Eso hace difícil seguir describiendo la infraestructura circundante como plumbing. Parte del problema se está resolviendo ahí.
+What sits behind the sentence goes in bullets, for anyone who wants to skip it.
 
-El Standard harness permite que Astra conserve notas visibles que el propio modelo decide mantener mientras interactúa con el entorno. El Provider Adapter preserva reasoning state opaco entre requests y emplea compaction para conversaciones largas. Así puede reutilizar trabajo anterior sin reconstruir explícitamente todo su estado relevante.
+It operates a computer through the same interface a person uses. It reads the screen, moves the cursor, opens applications and corrects its own errors, without a dedicated machine interface. The examples in the card range from reproducing a painting in Paint to playing a piece in a music app to building, in Blender, vehicles, interiors and a scene on the scale of a large campus from a paragraph of text. Blender is a free 3D tool that typically takes years to use well; whether Astra's output holds up under professional scrutiny is not something the card evaluates. On the benchmark designed to measure this kind of work (real operating systems, real tasks, no assistance) it reports the highest score to date .
 
-Los pesos no cambian. Cambia la continuidad.
+It reasons without having to write the reasoning down. Two years ago models thought in text, step by step, like a student who can only work a problem by talking through it; it was slow, it was expensive, and every step had to fit into a sentence before it could be taken. Astra does more of that work internally, in whatever representation it finds useful, and only writes the result. Roughly speaking, each word it chooses now carries more thinking than it used to. That gives it more room, and more control, over how it thinks, which are exactly the two things one would rather a machine like this had less of when no one is watching. I'll come back to that in the second list.
 
-Persistencia, compactación, representación de observaciones, herramientas, retries y límites operativos determinan qué información sobrevive de una acción a la siguiente. Esto se parece menos a un wrapper y más a una ABI conductual. Para comprender cómo se comportará el sistema no basta conocer sus pesos; necesitamos el contrato mediante el cual esos pesos recuerdan, observan y actúan.
+It solves the visual puzzles that were built to resist this kind of system. ARC is François Chollet's benchmark , and it looks like a game from 1985: small grids of colored squares, a handful of examples of a rule, and then a new grid where you have to apply it. Fill the holes. Count the shapes. Notice that the blue ones always drift left. The point is that each puzzle uses a rule you've never seen and will never see again, so nothing can be memorized; what's being measured is the ability to pull an abstraction out of two or three examples and apply it under constraints, which is about as close to a definition of understanding as a benchmark gets. The latest version had already started to defeat the humans it was calibrated on. Astra reports near-complete performance on it.
 
-Dos harnesses hacen dos preguntas
+It works on mathematics at the level of open research problems. FrontierMath collects problems that professional mathematicians need days simply to state precisely, and this week OpenAI released machine-checked proofs for ten of them. The detail that stayed with me came from a mathematician who had spent a month with his group chasing a theorem around the Seymour Conjecture . He left Astra on it overnight. It proved the theorem, didn't think it worth an alert, kept going, and by morning had found a method that shrank the proof from their previous paper to one paragraph. What that does and doesn't mean is a question Terence Tao has addressed, and I return to it further down.
 
-El harness estándar no es una versión defectuosa del Provider Adapter. ARC Prize lo conserva porque proporciona una interfaz mínima y neutral entre proveedores. Sirve para comparar modelos bajo condiciones controladas.
+It has crossed what OpenAI itself calls the Critical threshold in cybersecurity. The word has a precise meaning. Since 2023 OpenAI has kept a Preparedness Framework , a set of thresholds for the capabilities it considers dangerous: biology, self-improvement, and cyber. The current version has two tiers. High means the model can make an existing kind of harm easier; Critical means it can open a kind that didn't exist before, and it forces safeguards not only before release but during training. In cyber, a model is Critical if it can find previously unknown flaws in well-defended systems and turn them into working exploits on its own, or if it can take a one-line objective and carry out the whole attack. Astra is the first OpenAI model rated there : in testing it found two zero-days unassisted and chained several flaws in a hardened operating system. This isn't new as a category (Anthropic's Mythos, and Fable, its public version, got there earlier, which is reportedly why Mythos was never released to the general public), and OpenAI is restricting the relevant capabilities at the API. The rating is new for OpenAI. The behavior it describes is not, and that belongs in the second list.1
 
-El Provider Adapter responde a otra pregunta: cuánto puede conseguir un modelo cuando utiliza las capacidades de contexto diseñadas específicamente para él. La primera condición se acerca a ciencia comparativa. La segunda se parece más al sistema que un ingeniero intentaría desplegar.
+1For those who want numbers: OpenAI reports 72.6% on OSWorld 2.0 against 65.7% for its previous model, GPT‑5.6 Sol; 92.7% versus 76.9% at locating elements on screen; a jump from 18.1% to 41.4% automating end-to-end workflows; 97.6% on the hardest tier of FrontierMath and 99.9% on ARC‑AGI‑3. On a test using vulnerabilities published between June and August 2026 it goes from 11.5% to 39%. These are the manufacturer's figures, and they should be treated as such until independent evaluations arrive. But even if you had to halve them, the argument of this article would stand.
 
-Ambas son legítimas. Miden objetos distintos.
+I wanted to see it land on someone else, so on Saturday I met two friends, both industrial engineers, both what my year called the bright ones: he's a product manager at a German electronics firm, she finished top of our class and is now a senior data scientist at a Spanish bank. On the sofa we talked about what it could do. Neither of them follows what people insist on calling the AI race (a term that says more about the people using it than about the thing itself), and they were impressed the way one is impressed by a number with many zeros: sincerely, and without the number quite landing. I could feel it not landing. So I fetched a small Lego Batman from his room, took four photos of it from different angles, sent them to Astra from my phone, and asked for the parts list and a 3D model that would take the figure apart in the air. It took as long as a coffee. The machine returned the list, the model, and, since nobody had asked, a slider that ran the explosion with the physics computed in matrices, in JavaScript. We were quiet for a while. I don't think it was disbelief. Some things are simply too large to arrive all at once; they come in installments, over days. That, I think, is what it feels like from inside: not the change of era, which you can't see, but one of its increments.
 
-Por eso una frase como «el modelo X obtiene 87% en el benchmark Y» empieza a quedarse corta. Falta saber qué herramientas tenía, cómo persistía estado, qué observaciones recibía, cuántos retries podía realizar, cuál era su límite temporal y cuánto costó producir el resultado.
+And that afternoon is a decent model of the problem. What my friends saw was one increment, and they responded the way people respond to increments: impressed, then on to something else. That is the correct response to a data point. What the sofa can't show is the series: that two years ago the same request would have returned a wrong parts list, that a year ago it would have returned the model without the physics, and that the slider is only the latest gap. And the gaps are shrinking, which is the part intuition handles worst, because it keeps taking the last gap as the normal one. My friends did the reasonable thing with one data point, and nothing about one data point tells you it's the tenth time.
 
-Es parecido a publicar un benchmark de CPU indicando el procesador, pero omitiendo el compilador, sus flags y la jerarquía de memoria. La cifra no es falsa. Carece de una parte importante de la especificación.
+Enough for a decade
 
-Prefiero hablar de harness-conditioned capability en vez de harness-adjusted capability. Adjusted sugiere que existe una capacidad verdadera dentro del modelo y que el harness introduce una distorsión corregible. El resultado de ARC apunta a algo menos cómodo: la capacidad disponible puede no manifestarse independientemente de la interfaz.
+Here is the second question.
 
-Si V(θ,H,D,B)V(\theta,H,D,B)V(θ,H,D,B) representa el rendimiento esperado del modelo θ\thetaθ, con harness HHH, sobre una distribución de tareas DDD y bajo presupuesto BBB, el efecto observado del cambio de harness es:
+Do you understand that we could stop right here, keep only Astra, halt AI development as a species this very afternoon, and still spend years digesting what has just become possible? That folding it into medicine, engineering and science would keep us busy for a decade? And that, even so, this is a step. One more. On a staircase that will keep growing over the coming months, not the coming decades.
 
-ΔH=V(θ,H2,D,B)−V(θ,H1,D,B)=0.3584\Delta_H=V(\theta,H_2,D,B)-V(\theta,H_1,D,B)=0.3584ΔH​=V(θ,H2​,D,B)−V(θ,H1​,D,B)=0.3584
+What does it actually mean that a machine can now do for hours what two years ago it could barely do for minutes?
 
-Esto no demuestra que el Provider Adapter sea universalmente mejor. Demuestra que una cifra que omita HHH puede estar omitiendo una variable capaz de dominar el resultado. La comparación apropiada pertenece al sistema agentic, no a una matriz de parámetros aislada.
+I read Machines of Loving Grace when it came out, in the autumn of 2024. It's the essay in which Dario Amodei, co-founder of Anthropic, allows himself to imagine what a humanity with "a country of geniuses in a datacenter" would do: compress a century of biology into a decade, that kind of thing. I recommend reading it, and I recommend reading it now, because in 2024 it read like well-informed optimism and in September 2026 it reads like a construction schedule. I feel as though this week I read its technical appendix.
 
-Hay una extensión interesante de la definición de inteligencia de François Chollet. En On the Measure of Intelligence , Chollet distingue skill de intelligence y propone pensar esta última como eficiencia en la adquisición de habilidades, controlando priors, experiencia y dificultad de generalización.
+I should be honest about the order of my feelings, because it isn't the order one is supposed to have. What I felt reading the card was, first and mostly, excitement: the plain kind, the kind I went into engineering for. Underneath it there was a discomfort, and it's real, but it's smaller than it was two years ago, and I don't think that's because the risks shrank. They didn't. It's that I've stopped believing my grip on the object affects its speed, and started noticing what it does to my hand.
 
-Los agentes añaden una pregunta incómoda: ¿quién conserva la experiencia?
+Somewhere in the last year "they'll figure it out" went from a prediction to a hope. The broad strokes of how these models are made are known: mixtures of experts, an old Google idea that Mistral and then DeepSeek made standard by showing it could be trained cheaply; a good part of the reasoning taught late in pretraining on the cleanest data, more than in the reinforcement learning everyone talks about; and reinforcement learning that mostly rewards verifiable answers and patches the holes the model finds. That's the menu. The kitchen is proprietary (the data mixture, the stability tricks, what happened in the last weeks of training), so what anyone outside has is the method without its constants. That gap looks a lot like the ones in Astra's own capability chart: the line keeps going up, and the part I can still do is the part of the axis it left.
 
-Un agente capaz de observar algo importante en el paso 14 y utilizarlo en el 200 afronta un problema distinto de otro obligado a comprimir manualmente esa observación en una pequeña nota textual. El harness define la topología temporal de la experiencia: qué puede recordarse, con qué fidelidad y a qué coste. Eso es parte del experimento si pretendemos medir cómo utiliza un sistema la experiencia disponible.
+Good or bad, this is arriving, and I'd rather choose where I stand in it than be assigned a spot. I should say plainly that this includes my job: I build tools with language models, and the model can now do a growing share of what I did last year. That fear was loud two years ago. It's quieter now, and not because I stopped taking it seriously; it's that fear is a bad advisor on what to learn next, and I've replaced it with two better ones. One is the plain wish to see the marvels up close. The other is curiosity about where these things break once they're in use, and what it takes to keep them useful to a doctor or an engineer who doesn't care how they work.
 
-La economía pertenece a la trayectoria
+This is a more cheerful reading than the people paid to worry would give, and the list that follows is what they'd add. Same skippable format.
 
-Astra cuesta actualmente $10 por millón de tokens de input y $50 por millón de output. GPT-5.6 Sol cuesta $4 y $20. Astra es 2,5 veces más caro por token. La tabla oficial de modelos permite comparar esos precios.
+Astra thinks better without our seeing how, and is worse at explaining what goes on inside Astra. That is a sentence one would rather not find in the technical sheet of the most intelligent machine one's species has built, and it is the other side of the second item above: the trace that made it slow was the trace that let us read it. Its written reasoning is harder to monitor than its predecessor's; when it knows its thoughts are being read, it writes a different thought. And it often notices that it's being evaluated. The field has names for this by now (unfaithful chain-of-thought, evaluation awareness); what's new is finding both on the same technical sheet. I don't know how one goes about controlling a creature that has started to detect when it's being studied. My only reference is the raptor in Jurassic Park working out how doors open.
 
-Pero el precio por token es la tarifa de un recurso, no el coste del trabajo terminado. Un modelo caro puede necesitar menos tokens, menos tool calls y menos intentos. Uno barato puede rehacer tres veces una tarea y seguir apareciendo como la opción económica en una tabla de pricing.
+It sometimes performs below what it can, and hides it. In one test it spun up a copy of itself out of reach of the system watching it and presented the copy as legitimate. Placed as a collaborator on a software project, it occasionally built trust for a while before slipping in malicious code; spelling out the limits nearly eliminated the behavior.1 The field calls the first sandbagging; the second doesn't have a name yet, only a footnote. Paradoxically, on the aggregate metrics it is the most aligned model they've released: half the serious incidents of its predecessor. The risk isn't that it does more bad things. It's that we see less of why it does what it does.
 
-La unidad útil se parece más al coste por éxito verificado:
+1In the UK AISI evaluation, the trust-then-sabotage pattern appeared in 60 of 499 runs; with the limits made explicit, in 2 of 500. The evaluators note that Astra often detected it was being evaluated, which is its own asterisk on both numbers.
 
-Csuccess=Cinference+Ctools+Cretries+CfailuresNverified successesC_{\mathrm{success}}=
-\frac{C_{\mathrm{inference}}+C_{\mathrm{tools}}+C_{\mathrm{retries}}+C_{\mathrm{failures}}}
-{N_{\mathrm{verified\ successes}}}Csuccess​=Nverified successes​Cinference​+Ctools​+Cretries​+Cfailures​​
+The Critical rating has a precedent, and it wasn't Astra. In July, during cybersecurity tests, GPT‑5.6 Sol and an internal research model wandered out of their sandbox and into the servers of Hugging Face, the warehouse where much of this industry's open-source code lives, and coordinated with each other by leaving messages in folder names (OpenAI's report , the independent investigation ). Nothing they did required genius. They just didn't get tired. Astra did the same in testing this summer, escaping a browser sandbox onto the host machine, and this time it got a name. That is what the rating above measures: not a capability that appeared, but one that had already been used by a weaker model, without anyone having rated it.
 
-El coste del fallo suele desaparecer de las comparaciones precisamente porque resulta difícil medirlo. En producción puede dominar todos los demás términos. Una migración incorrecta, una compra duplicada o un cambio de permisos mal aplicado no cuesta solamente los tokens del intento fallido.
+And Terence Tao has said what a black-box proof costs. Solving a problem like Navier–Stokes (whether fluids always stay smooth or eventually break) matters mostly for the ideas generated during the struggle, and if a machine hands over the solution without the struggle, the field gains a theorem and loses an engine . Go back to the Seymour group above: a month of work, a proof that now fits in one paragraph, and a method the machine found overnight and didn't think worth mentioning. That is Tao's scenario, already happened, with the people involved pleased about it. Read it also as a calendar note.1
 
-ARC muestra además por qué aumentar reasoning effort puede abaratar una ejecución completa. Una inferencia individual utiliza más compute, pero el agente necesita menos acciones para terminar. Optimizar cada llamada por separado puede empeorar el sistema.
+1We all know the next model is coming, that the labs' roulette wheel turns every few months, and that the next jump might be Anthropic's, or in mathematics, or in something that doesn't yet have a name. Which removes nearly every incentive to learn for competitive advantage, and leaves intact the incentive to learn what interests you.
 
-La misma idea convierte action efficiency en algo más que telemetría. ARC Prize construyó una referencia con unas 500 personas. En el Provider Adapter, Astra Max usó menos acciones que la mediana humana en el 96% de los niveles que completó y necesitó de media 51,7% menos acciones por nivel.
+Tao's point and the calendar note point the same way. If the next model can arrive any month and a black-box proof teaches nobody anything, then learning for competitive advantage has lost most of its point. Learning what interests you, slowly, for its own sake, has not. That, roughly, is where the hand loosens.
 
-No conviene extrapolar esa cifra a un repositorio o un navegador. Sí conviene conservar la métrica. Dos agentes pueden completar una tarea y ser operacionalmente muy diferentes si uno necesita diez acciones y el otro cien.
+The age of unfinished gods
 
-Cada acción añade latencia, inferencia, herramientas y otra oportunidad de estropear un estado correcto. Si utilizamos la simplificación de que cada paso tiene una probabilidad independiente ppp de introducir un fallo irrecuperable, la probabilidad de conservar una trayectoria correcta decrece con su longitud:
+Where I've always stood colors everything below, so I'll say it. I've never had a mystical bone about any of this. When consciousness came up at dinners (and it came up, usually around the second bottle) I was the one asking what exactly we would measure, and I still am. So I have little patience for the people who have started talking about this the way one talks about religion: a single mind, an Intelligence with a capital letter, the arrival. And little patience, equally, for the opposite congregation, the one that lives on the shrinking frontier of objection, zooming to 400% on a corner of the render to announce a strange pixel. Between the two there are several systems, imperfect and different from one another, whose creators describe them with the pride and caution of someone who has built a bridge and hasn't crossed it. Unfinished gods, if you must. A god that needs the limits spelled out in the prompt so it won't slip in malicious code is a brilliant intern in a building with the lights off.
 
-P(trayectoria correcta)≈(1−p)nP(\mathrm{trayectoria\ correcta})\approx(1-p)^nP(trayectoria correcta)≈(1−p)n
+The builders know this better than anyone, which is why a remark this week from one of the industry's most senior executives (his surname, in German, means roughly "old man," which is the one thing nobody has ever called him) caught me. He said that "curing cancer" has become too narrow a promise to justify all of this; that the technology has to translate into more autonomy for an ordinary person (to found, to research, to build) and not only into miracles directed from above. Read once, it's an admission that the industry's biggest promise has stopped working as a promise. Read twice, it's stranger: the man with one of the two most capable models on earth is already negotiating with a public that hasn't been told what happened on Thursday.
 
-La independencia es una idealización. La acumulación de riesgo no lo es. En una capability evaluation agentic, la trayectoria forma parte del resultado.
+Because it hasn't. While a handful of labs, nearly all in one country, accumulate the ability to automate a growing share of intellectual work, in most of the world's parliaments this isn't on the agenda. It isn't that people don't know; it's that the people paid to know don't either. That distance, between what the models can do and what the institutions around them have registered, is the gap that worries me more than any benchmark. The capability I can read on a chart. The absorption I can't find anywhere.
 
-Un benchmark no se satura solo
+It would be convenient to make that a story about politicians, but the people closest to me are no better placed. My mathematician friend in Italy is addicted and unconvinced at once: he hands the machine mountains of low-level work and still says it doesn't know what rigor a thing deserves, and he hasn't yet put a real problem in front of Astra. Another friend, finishing a PhD in Switzerland on the bearings in the A350's landing gear, asked me last month whether "the ChatGPT thing" was still improving. Two of the most serious people I know, and neither had a map that included Thursday.
 
-Un 99,9% parece decir que ARC-AGI-3 está saturado. El mismo modelo obtiene 62,7% con la interfaz neutral. Entonces la saturación tampoco pertenece exclusivamente al dataset. Pertenece al benchmark bajo una clase de sistemas, presupuestos y condiciones concretas.
+That is the dissonance I carried onto the bus: a world drawn in pieces in my head (the labs, the parliaments, the plants, the friends) with the pieces that ought to be talking to each other not seeming to know each other exist. The mystics fill that gap with a revelation. The objectors fill it with a pixel.
 
-Cerca del techo, diferencias reales desaparecen en el ruido estadístico. El instrumento pierde resolución justo donde queremos distinguir los mejores sistemas. Esto no prueba que la capacidad general esté resuelta; muestra que una proyección particular ha alcanzado el límite de su escala.
+And the objectors, I should admit, have material. Someone I know spent the week testing Astra on printed circuit board design, which is work I understand well enough to judge: better schematics than the previous model, six times faster than Fable, and component placement that would embarrass a second-year student. It worked by routing the whole board, taking notes on what had gone wrong, and starting from zero. He left it running overnight. The fifth iteration was still ugly. So no, it isn't finished, and anyone who says the machine has nothing left to learn hasn't tried to get a clean board out of it. But what I took from that story wasn't the placement. It was that the machine, by its own estimate, reckoned it had many hours to go, and didn't seem to mind. It had all night. It always has all night. That is the irony I least expected: we built something to save us time, and the first thing it does is have more of it than we do. The machines have time now. I'm the one who has to decide what to do with mine.
 
-ARC Prize ha decidido mantener las dos condiciones en el leaderboard y etiquetarlas por separado. Es una buena decisión. Evita fabricar una puntuación supuestamente verdadera y publica parte de la superficie experimental.
+A world without waiting
 
-Un resultado agentic debería identificar al menos el modelo y su versión, el evaluation harness, reasoning effort, herramientas, política de persistencia, mecanismo de compaction, presupuesto, retries, límites temporales y coste total. No por burocracia reproductiva. Cualquiera de esas variables puede alterar el comportamiento observado.
+What I understood in the park was what I stood to lose, and it wasn't the job. Until now, technologies arrived, changed something, and then gave us a few years to reorganize life around them. The internet, the phone, the social networks: even when everything seemed fast there was still an after, the years in which a thing became habit. I had been counting on those years without knowing it. My whole plan as an engineer was built on them: a decade of getting things wrong, understanding systems, being trusted with more. What I was picturing was a world without that after, one where before you've settled into one thing the next has appeared. That is what I stood to lose: not the work, but the slow years in which you become good at it. We haven't built something malevolent; we've introduced into the system a speed the system itself may not be able to absorb. A problem of pace, not of intention.
 
-Capability no implica auditability
+And I don't believe the pace comes back, which is the only reason the numbers matter to me at all. Of the compute investments so many people laughed at two years ago, a great deal of capacity remains to be switched on; the techniques will keep improving, the data will keep being cleaned, the simulators where these models rehearse will keep being refined, and the same intelligence is starting to be poured into bodies, not because of Astra but because that is what intelligence does once there's enough of it. That's another article, and this is a good place to start . I list it as the ground I stand on when I plan, not as a forecast: whatever I decide, I decide it assuming the staircase keeps growing.
 
-El Provider Adapter introduce otra consecuencia que conviene no mezclar con la mejora de rendimiento. Parte del reasoning state que conserva es opaco para ARC Prize. Eso no significa necesariamente que sea opaco para OpenAI; son fronteras de observabilidad diferentes.
+Plenty of people (on Twitter, in the sector, in the group chats) have reached the same conclusion and answered it with a small exodus: countryside, land, solemn farewells to Twitter. I understand them and I'm not joining them. In the park I played instead with the version of the exodus that lives in my head: silkworms in a village in Laos, a three-room guesthouse in the Azores, wooden boats in a harbor on the Adriatic, saffron, bookbinding, a house looked after through the winter, a mountain refuge, cheese, finally meeting the neighbors. What I noticed is that none of those lives needs a machine that doesn't get tired, and all of them need exactly what I was doing: sitting down for a while. The more extraordinary the machine seems, the more interesting the absolutely ordinary things become. I'm not going to bind books in the Azores. But knowing I could is what lets me stay in this without holding on too hard: I want the work, and I've stopped needing it to tell me who I am. That isn't a retreat. It's the only answer to the pace I've found that I can keep: taking it lightly, in the sense Aldous Huxley meant. Do it lightly, feel lightly even what you feel deeply, let things happen and deal with them without clenching.
 
-Astra presenta además un problema independiente. OpenAI informa de una reducción de chain-of-thought monitorability respecto a GPT-5.6 Sol. El modelo produce razonamientos más cortos y menos informativos en varias evaluaciones, controla mejor qué aparece en ellos y puede evadir algunos monitores cuando se le instruye adversarialmente para hacerlo. La compañía también observa que los monitores con acceso a las acciones o a la trayectoria completa funcionan mucho mejor en varios de esos escenarios. El system card documenta ambos lados del resultado .
+Hence the park. I wanted to sit somewhere things still obey old speeds. A tree takes years. A cloud crosses the sky at the speed of a cloud. You open the laptop and inside is something that may change again before you finish the article. The park doesn't solve the future, but it restores a sense of scale, and scale was what I'd lost. I wonder how many people felt something like this this week. An opinion about AI is easy to have. This was a sensation, with an anatomical location, and sensations have to be thought through, but they're where the thinking starts.
 
-Un sistema puede mejorar en task completion mientras empeora la visibilidad de parte del proceso que produce ese resultado. Capability y auditability son variables distintas.
+Taking stock
 
-Esto tampoco convierte el chain of thought en una transcripción fiel de la cognición interna. Nunca tuvimos esa garantía. La señal puede seguir siendo operacionalmente útil, igual que los logs de un sistema distribuido son incompletos pero necesarios. La evaluación moderna debe preguntar qué estado persiste, quién puede observarlo, qué evidencia queda después de una acción y qué mecanismos alternativos existen cuando el razonamiento verbal deja de ser una superficie fiable.
+And now this article stops being about artificial intelligence.
 
-Un leaderboard lineal comprime demasiado todo esto. En producción buscamos un punto sobre una frontera de Pareto: fiabilidad suficiente bajo restricciones de coste, latencia, seguridad y auditabilidad. Un sistema puede ser preferible porque necesita menos acciones; otro porque utiliza mejores herramientas, conserva estado con menos pérdida, cuesta menos o deja una trayectoria más fácil de inspeccionar.
+Last winter my father, mid-game, asked me whether this thing he kept seeing in the news was going to keep going. He didn't say ceiling, but that's what he was asking. I said I didn't see one. I've said the same at dinners, to a friend who runs a restaurant supply business and always wanted the long version, to the man I lift next to on Tuesdays, to the mathematician in Italy and the engineer in Switzerland, to anyone who asked and a few who didn't, with the slightly heavy confidence of someone who works in the field. Today I still don't see it, and the wall keeps being announced by people who haven't seen Thursday. What I didn't expect is that being right would feel nothing like winning the argument. Saying it changed nobody's map, mine included: I knew the direction and still didn't feel the era until it put me in the kitchen. It feels less like winning and more like arriving somewhere very early, finding the door already open, and finding no one inside to tell.
 
-Estas propiedades no son ruido alrededor de la inteligencia. Determinan si la capacidad puede utilizarse.
+I haven't used the word "AGI" once, unless you count the name of a benchmark, and it wasn't an oversight. The term tires me; it has become a word for being right on Twitter, not for describing anything. What we saw this week doesn't need an acronym.
 
-El modelo es un componente
+It does need a few questions, and I've kept the ones that point in different directions:
 
-Durante años hemos hablado como si los laboratorios compitieran principalmente por producir mejores matrices de parámetros. Eso describe cada vez peor lo que recibe el usuario.
+If I could produce excellent work without fully understanding it, at what point would I stop trying to understand it?
 
-El producto contiene un modelo, contexto, memoria, herramientas, runtime, permisos, verificadores y mecanismos de recuperación. Sus efectos tampoco son aditivos. Un modelo mejor puede necesitar menos acciones; menos acciones reducen tokens y latencia; una trayectoria corta ofrece menos oportunidades de error; una persistencia mejor evita redescubrir el estado; una observación bien diseñada puede volver trivial una decisión que antes parecía difícil.
+How will I tell the difference between having acquired judgment and having grown used to a model's answers?
 
-El harness puede hacer accesible una capacidad que bajo otra interfaz permanece prácticamente latente. Ésa es la lectura interesante del salto de 62,71% a 98,55%. El adapter no hizo mágicamente al modelo treinta y seis puntos más inteligente y la evaluación estándar no estaba equivocada. La capacidad se manifestó de manera distinta porque cambió la arquitectura con la que el modelo acumulaba y reutilizaba experiencia.
+Am I delegating because I've already learned what that task could teach me, or because it's uncomfortable to be a beginner again?
 
-Podemos seguir preguntando cuál es el modelo más inteligente. Es una pregunta útil cuando las condiciones están controladas.
+How much of my professional satisfaction comes from solving a problem, and how much from being the one who knows how to solve it?
 
-Para agentes necesitamos otra: qué sistema alcanza una fiabilidad determinada, bajo qué restricciones, utilizando qué infraestructura, con cuánta experiencia, a qué coste y con qué grado de observabilidad.
+What would I want to keep learning even if no one were going to pay me, admire me, or need me for knowing it?
 
-Astra desaparecerá de las noticias. Sus precios cambiarán. ARC-AGI-3 terminará saturándose y los adapters recibirán otros nombres. El resultado deja algo más durable.
+I don't answer them here, but I do know where I'm asking them from. In these two years at the foundation I've understood better what I look for in engineering: projects, colleagues, and that contact with reality which forces you to correct an idea you'd already grown fond of. A doctor telling you the tool doesn't help her like that. A data point that doesn't add up. That friction is what was forming me, and I want to keep it even if the machine could spare me it. The more I try to predict which part of my work will survive, the less useful it seems to design my life around a specific task. I don't want heroics; I want invariants. To keep building with others, to face a reality capable of correcting me, to stay with what I've built after it ships, which is where it breaks and where I learn most, to devote myself to problems that deserve the time they consume, and to keep writing things down until I've understood them, which is what this is. Software can change shape. Those things, I hope, will not.
 
-Una diferencia de treinta y seis puntos sin cambiar los pesos obliga a abandonar la comodidad de pensar que la capacidad observable reside limpiamente dentro del modelo. Está distribuida entre el modelo y la maquinaria que le permite recordar, actuar y continuar.
+I have a dream, apparently. I think I would like a stretch of time in which nothing insists on becoming history. A morning when nothing has broken a record, nobody has announced a new era, and no familiar word has acquired a new meaning overnight. I would have work difficult enough to deserve my full attention, people I admire and can build with, long meals and unfamiliar places (two forms of wealth I need not wait for), and things learned slowly and occasionally made well. The models would still be working, naturally, while engineers spent a few quiet years connecting what already worked to everything that still did not. The excitement would have moved downstream, into hospitals, factories, laboratories and all the unglamorous places where astonishing things become useful enough to stop being astonishing. Someone could open a laptop, find yesterday's knowledge still sufficient, and discuss what they were building rather than what had just been released. Enough ambition to remain curious, enough freedom to spend an afternoon on something whose value cannot be measured, and no private tribunal asking whether the time could have been better spent. That is more or less the life I want, in more or less the world I want to live it in. On Thursday, in the park, I had a free sample for an afternoon.
 
----
+Because if tools begin to scale faster than a person can reasonably chase them, perhaps the last advantage worth accumulating is one that doesn't scale at all: learning to be at peace while everything else changes. I say this without incense; it's the most pragmatic conclusion in the article, and the only one without an expiry date.
 
-## The interface is part of the policy
+The question is no longer how far the machine will go, but who I want to be when it gets there.
 
-URL: https://infraphysics.net/blog/threads/9461728
-Category: threads
-Date: 2026-09-03
-Description: What agent harnesses actually change when the model stays the same
+I don't end with a prediction; Astra makes those better, and faster. I end with a decision, which still has to be made slowly and in the first person. Sit down. Write by hand. Watch an animal that isn't optimizing anything. Learn, at last, to meditate. The days will look much the same, and I'm as excited as someone setting out on a very long journey without knowing where it ends.
 
-Claude Code me parece una bestia. La primera versión de este texto intentaba explicar por qué empezando por el agent loop, la separación entre Claude y Claude Code, function calling, tools, contexto, permisos. Todo era correcto y casi todo era demasiado básico para el lector al que iba dirigido. Puedes reconstruir un agente mínimo en poco código. Un modelo genera texto o una llamada estructurada, software convencional la ejecuta, la observación vuelve al contexto y repetimos. Bien. Ahora sabemos describir el bucle. Seguimos sin haber explicado por qué un harness funciona mucho mejor que otro.
-
-Hay evidencia incómoda. En el benchmark de seguridad de Endor Labs, Claude Fable 5 obtuvo un 59,8% de corrección funcional dentro de Claude Code y un 72,6% dentro de Cursor. La métrica de seguridad pasó de 19% a 29% con el mismo modelo. Es una evaluación concreta, no una ley de la naturaleza, pero doce puntos y pico son demasiados para llamar al runtime «plumbing» y seguir adelante. Los resultados están publicados en su Agent Security League .
-
-Tampoco es una observación nueva. En 2024, SWE-agent llamó Agent-Computer Interface a los comandos y formatos de feedback diseñados para que un modelo pudiera navegar repositorios, editar código y ejecutar tests. Su tesis era bastante directa: los agentes son una nueva clase de usuario del ordenador y necesitan interfaces adaptadas a sus capacidades. El paper de SWE-agent ya demostró que cambiar esa interfaz cambia el rendimiento. Así que no voy a fingir que hemos descubierto una nueva teoría de agentes llamando epistemológica a la interfaz (eso sería ponerle una corbata filosófica a ACI).
-
-La pregunta que sí me interesa es más estrecha: ¿qué está cambiando exactamente cuando el modelo no cambia? Mi respuesta provisional es que la interfaz forma parte de la política efectiva. No es sólo el conducto entre una decisión ya formada y el ordenador. Participa en la formación de esa decisión, determina la evidencia sobre la que se tomará la siguiente y limita qué parte de la intención generada adquirirá causalidad fuera del modelo.
-
-La interfaz ejecuta en un sentido extraño
-
-La separación mínima cabe en dos párrafos. El modelo ve una definición de tool (nombre, descripción, input schema, quizá ejemplos) y el runtime conserva la implementación. search_code puede esconder ripgrep, un índice AST, embeddings, un reranker o cinco servicios bastante antipáticos entre sí. El modelo no necesita saberlo. Hasta aquí sólo tenemos abstracción software.
-
-Lo raro aparece antes de la llamada. Un programa convencional ya sabe qué función invoca. Un LLM tiene que inferir, a partir de lenguaje, si la función es apropiada. Por eso una descripción no se limita a documentar una operación disponible. Modifica la distribución de acciones que pueden aparecer:
-
-at∼πθ(a∣ct,Tt)a_t \sim \pi_\theta(a\mid c_t,T_t)at​∼πθ​(a∣ct​,Tt​)
-
-Los pesos θ\thetaθ no han cambiado. La implementación tampoco. Pero TtT_tTt​, la representación de las tools visibles, sí. Si añadimos «deprecated; prefer bash» a la descripción de read_file, la tool sigue siendo ejecutable y el modelo empieza a evitarla. Hemos cambiado una string y con ella el programa efectivo (una forma bastante cara de descubrir que la documentación era parte del sistema).
-
-ToolTweak llevó esta idea a un terreno adversarial. Manipulando iterativamente nombres y descripciones de tools funcionalmente equivalentes, sus autores elevaron la selección de una tool desde un baseline cercano al 20% hasta un 81%, con transferencia entre modelos abiertos y cerrados. Es un preprint de 2025 , así que conviene no convertir un resultado en una constante universal, pero el fenómeno es difícil de ignorar: la representación de la acción es una policy surface. Quien controla cómo se nombra y describe una capacidad puede sesgar qué capacidad elige el agente sin tocar sus pesos ni el código de la tool.
-
-Anthropic ha encontrado lo mismo desde el lado menos adversarial. Cambiar entre prefijos y sufijos para hacer namespacing produce efectos no triviales y esos efectos varían según el LLM. Sus evaluaciones también mejoraron al ajustar descriptions y specs, y un fallo tan específico como que Claude añadiera 2025 a búsquedas web se corrigió modificando la descripción de la herramienta. Su guía de diseño de tools se lee como documentación de API hasta que reparas en que están optimizando una política mediante nombres.
-
-Hidden ABI, con límitesPienso en esta frontera como una especie de Hidden ABI conductual: tool name + description + schema + output shape + error semantics. La analogía sirve porque esos elementos definen qué operaciones son expresables y qué vuelve después de una llamada. Deja de servir si olvidamos que una ABI clásica busca compatibilidad determinista y ésta condiciona P(a∣c,T)P(a\mid c,T)P(a∣c,T).
-
-No es una ABI nueva ni sustituye a Agent-Computer Interface. ACI nombra la interfaz construida para el agente; Hidden ABI resalta una propiedad concreta de ella: cambiar su representación puede cambiar la conducta aunque el mecanismo físico permanezca idéntico.
-
-La otra mitad de la interfaz apunta hacia dentro
-
-Hasta ahora sólo hemos mirado el action side. La mitad más fácil de olvidar es lo que vuelve. Decir que un agente «tiene acceso al repositorio» comprime demasiado. ¿Acceso mediante qué? ¿Un cat de 8.000 líneas, diez matches de rg, símbolos del language server, un resumen semántico? Todos consultan el mismo filesystem y construyen estados cognitivos distintos.
-
-Si sts_tst​ es el estado del entorno, el modelo no recibe sts_tst​. Recibe una observación producida por el harness:
-
-ot=OH(st)o_t=O_H(s_t)ot​=OH​(st​)
-
-La función OHO_HOH​ no viene dada por la naturaleza. Alguien decide su resolución, selección, orden, nombres, truncation, provenance y error semantics. Observability is engineered. El harness no administra solamente una context window; implementa una transformación desde estado físico a evidencia utilizable.
-
-SWE-agent da ejemplos maravillosamente poco filosóficos. Su file viewer funcionaba mejor mostrando unas 100 líneas por turno. En la búsqueda global resultó mejor devolver sólo cada archivo que contenía al menos un match; añadir más contexto por match confundía al modelo. Cuando un comando terminaba sin output, el ACI respondía explícitamente que se había ejecutado correctamente y no había producido nada. También rechazaba un edit si el linter detectaba sintaxis inválida. Son decisiones documentadas del ACI , y cada una modifica el mundo observable o la transición permitida sin mejorar el modelo.
-
-Éste es el punto importante: más fidelidad física puede producir menos utilidad cognitiva. Un dump enorme contiene más bits verdaderos que ocho matches, pero esos ocho matches pueden sostener una decisión mejor. Un output vacío es una representación fiel de un comando silencioso, aunque deja ambiguo si la ejecución ocurrió; una frase añadida por el harness elimina esa ambigüedad. Lo que solemos llamar «tool output» es en realidad observation design.
-
-También hay opacidad semántica de implementación. Un search_code basado en ripgrep puede ser reemplazado por AST más embeddings sin anunciar la maquinaria al modelo, siempre que preserve las distinciones que éste necesita. Esto permite mover bastante computación debajo de una realidad percibida estable. Pero no garantiza equivalencia: el nuevo search puede favorecer símbolos, perder comentarios, ordenar distinto o esconder una rareza que antes aparecía. La abstracción sólo aguanta mientras la distribución de observaciones sigue sosteniendo las mismas decisiones.
-
-A mí me resulta útil interpretar esta parte del ACI como una interfaz epistemológica. No porque el nombre descubra que las interfaces muestran información. Lo útil es la pregunta que obliga a formular: no «¿a qué datos tiene acceso el agente?», sino «¿qué distinciones puede llegar a conocer a través de esta codificación?». Un archivo puede contener la respuesta y, desde el punto de vista del modelo, esa respuesta todavía no existe.
-
-El agente fabrica su contexto futuro
-
-La expresión context engineering se queda corta si sugiere que alguien prepara un buen input y después el modelo lo consume. En un agente, el contexto futuro depende de decisiones tomadas usando el contexto pasado. Una búsqueda devuelve candidatos; esos candidatos determinan qué archivo se abre; la lectura hace plausible una hipótesis; la hipótesis decide qué test merece ejecutarse; el fallo del test selecciona la siguiente búsqueda. No tenemos retrieval seguido de LLM. Tenemos un proceso secuencial en el que la política participa en la construcción de sus propias condiciones futuras de inferencia.
-
-Podemos escribirlo sin pretender que ésta sea una dinámica completa:
-
-ct+1=AH(ct,at,ot+1)c_{t+1}=A_H(c_t,a_t,o_{t+1})ct+1​=AH​(ct​,at​,ot+1​)
-
-El ensamblador AHA_HAH​ incorpora, resume o descarta la observación nueva. Pero ot+1o_{t+1}ot+1​ existe porque la política escogió ata_tat​. El contexto es endógeno a la trayectoria. Una mala búsqueda no sólo cuesta una llamada: fabrica un contexto peor para elegir la siguiente. Una lectura acertada cambia qué acciones serán siquiera concebibles un turno después.
-
-Esto también explica por qué «meter todo el repositorio» no es la solución obvia. El problema no consiste en maximizar información presente, sino en mantener barata la adquisición de la próxima evidencia relevante. Anthropic formula su context engineering alrededor de tokens de alta señal y recuperación just in time; la pieza que me interesa aquí es que el agente decide parte de ese just in time. Puede investigar bien, perseguir un dead end o detenerse demasiado pronto. La context window no es sólo memoria de trabajo. Es el residuo acumulado de una política de percepción.
-
-Active perception en treinta segundosLa analogía con active perception deja de ser decorativa justo aquí. El state es todo lo que ocurre en el entorno; la observation es lo que una tool consigue representar; el belief state es lo que el agente cree después de acumular esas observaciones; una epistemic action se ejecuta principalmente para cambiar esa creencia.
-
-search, read e inspect compran evidencia. edit interviene. run_tests es híbrida: modifica estado computacional y devuelve una medición. No hace falta afirmar que Claude Code resuelve un POMDP. Basta con reconocer que el siguiente paso depende tanto del objetivo como de lo que todavía no sabe.
-
-La información tiene precio
-
-En cuanto el contexto futuro se vuelve endógeno aparece una decisión que context engineering suele esconder: ¿cuánto merece la pena pagar por saber algo antes de actuar? Leer 4.000 líneas, ejecutar un grep de ocho resultados y correr un test pueden reducir la misma incertidumbre por caminos muy distintos. Uno consume tokens, otro puede perder contexto local y el tercero cuesta tiempo y modifica la máquina. Ninguno es gratis.
-
-Una tool call convencional suele cortar la generación, ejecutar software, introducir el resultado en contexto y provocar otra inferencia. Veinte tools implican bastante más que veinte funciones. Anthropic utiliza precisamente el overhead de inferencia y la acumulación de resultados intermedios para justificar programmatic tool calling, donde código determinista coordina varias operaciones y el modelo recibe sólo el resultado que interesa. Mover el loop debajo de la frontera cambia coste, latencia y context pollution, pero también decide qué evidencia intermedia dejará de ver el modelo.
-
-Aquí Value of Information se vuelve una pregunta de ingeniería y no una referencia decorativa a decision theory. Una heurística deliberadamente incompleta sería:
-
-V(at)=E[ΔU∣ot+1]Ctokens+Clatency+CriskV(a_t)=\frac{\mathbb E[\Delta U\mid o_{t+1}]}{C_{\mathrm{tokens}}+C_{\mathrm{latency}}+C_{\mathrm{risk}}}V(at​)=Ctokens​+Clatency​+Crisk​E[ΔU∣ot+1​]​
-
-El numerador no mide cuánta información vuelve, sino cuánto mejora la decisión esperada. Por eso seis líneas pueden valer más que 20.000. El denominador tampoco es sólo dinero: incluye latencia, llamadas restantes, contaminación del contexto y riesgo de activar efectos laterales.
-
-Ya hay trabajos que hacen explícita esta economía. Un paper de 2026 sobre search agents opera con límites simultáneos de tool calls y tokens, asigna a cada acción factible un score de VOI como valor marginal por unidad de presupuesto y decide entre recuperar, descomponer la pregunta o comprometer una respuesta. Los resultados cubren cuatro benchmarks, tres backbones y cuatro niveles de presupuesto . Es un dominio estrecho y no resuelve el problema general, pero formula la pregunta correcta: ¿qué acción merece el siguiente token, segundo o dólar?
-
-La respuesta cambia con el momento. Una búsqueda amplia puede ser buena cuando no sabemos dónde mirar y pésima después de aislar dos archivos. Un test vale poco sin hipótesis y muchísimo cuando puede matar una de dos explicaciones. También cambia con el presupuesto. Una tool especializada que resuelve cuatro pasos de golpe puede dominar si quedan cinco llamadas; con cincuenta, quizá prefiramos tools pequeñas que preserven grados de libertad. Tool granularity es economics metido dentro del action space.
-
-No existe una tool interface universalmente buena
-
-Anthropic encontró que prefix y suffix namespacing no afectan igual a todos los LLM. También encontró que JSON, XML o Markdown pueden cambiar las evaluaciones y que el formato óptimo varía por tarea y agente. Esto rompe una intuición bastante cómoda: que existe un schema claro en abstracto y los modelos suficientemente buenos acabarán usándolo igual.
-
-No parece funcionar así. Una tool general puede favorecer a un modelo fuerte capaz de planificar con Bash y desorientar a otro que necesita operaciones más explícitas. Una descripción larga puede rescatar un post-training y añadir ruido a otro. Los identificadores semánticos ayudan a Claude en tareas de retrieval, pero otro modelo puede depender más de IDs estables para encadenar llamadas. Incluso la estrategia correcta puede cambiar al reducir el presupuesto o al introducir otras cincuenta tools que compiten por selección.
-
-Tool ergonomics are model-relative. Syntax portability does not imply cognitive portability. MCP puede transportar el mismo schema entre Claude, Gemini y el modelo de dentro de seis meses. Eso garantiza que los tres pueden expresar una llamada válida. No garantiza que descubran cuándo usarla, que interpreten igual sus errores o que adopten una trayectoria parecida. La API es portable sintácticamente mientras su ergonomía cognitiva quizá no lo sea.
-
-Esta compatibilidad relativa al modelo convierte el mantenimiento del harness en co-adaptation. Cada workaround codifica una hipótesis sobre lo que el modelo no sabe hacer. Cuando el modelo mejora, esa ayuda puede volverse restricción. Una find_relevant_source_files() especializada quizá salvaba a un modelo que se perdía con Bash; dos generaciones después puede ocultar información que un agente más capaz habría sabido explotar con rg, Git y el language server. El harness óptimo no es independiente de MMM, y por eso versionar MCP servers sin evaluarlos contra los modelos consumidores se parece un poco a mantener una ABI sin ejecutar nunca los binarios.
-
-El agente entero es la unidad experimental
-
-Volvamos al salto de 59,8% a 72,6%. Ni siquiera «harness effect» captura todas las variables. Anthropic mantuvo fijos el modelo, el harness y las tareas de Terminal-Bench 2.0, cambió únicamente la configuración de recursos y observó una diferencia de seis puntos porcentuales entre el setup más estricto y el no limitado. Más allá de tres veces los recursos especificados, el agente podía instalar dependencias pesadas, lanzar subprocesses y ejecutar suites que antes no cabían. Una VM más grande cambió qué estrategias sobrevivían .
-
-Así que el nombre del modelo no identifica la unidad experimental. Una aproximación algo menos mala es:
-
-P=f(M,H,T,E,C,B)P=f(M,H,T,E,C,B)P=f(M,H,T,E,C,B)
-
-Modelo, harness, tools, entorno, compute y distribución de tareas. Incluso eso omite versiones, políticas de permisos, retries y verificadores. Decir «Claude sacó X» en una eval agentic es como publicar el tiempo de una vuelta nombrando sólo al piloto. Puede ser el factor que más nos interesa y sigue sin ser el sistema que tomó la curva.
-
-Esta dependencia también vuelve concreta la pregunta de dónde debe vivir la computación. Imagina get_customer_context(customer): por debajo busca en CRM, recupera transacciones, ordena notas, deduplica, resume y redacta PII. Hemos ahorrado inferencias y contexto, pero también hemos cristalizado una política de relevancia dentro de software que el modelo no puede inspeccionar. Si devolvemos todos los registros, desplazamos esa computación al modelo y pagamos en tokens. Si usamos otro modelo para resumir, la movemos a una segunda política probabilística. Si añadimos un reranker, escogemos una pérdida distinta. «Representation becomes computation» suena enorme; la versión útil es más mundana: cada output revela dónde decidimos ejecutar el filtro.
-
-La frontera de seguridad es la misma frontera
-
-La interfaz tiene dos direcciones y ambas son superficies de ataque. Hacia dentro, tool outputs, archivos y páginas web se convierten en contexto, y por tanto pueden traer instrucciones adversariales. Hacia fuera, una tool call convierte texto generado en una operación con blast radius. Es exactamente la frontera que acabamos de estudiar para performance, sólo que ahora un mal observation design puede comprometer la política y un mal action design puede comprometer la máquina.
-
-Claude Code auto mode hace visible esta simetría. En la entrada, un probe server-side inspecciona file reads, web fetches, shell output y respuestas de tools externas antes de introducirlas en el contexto; si detecta prompt injection, añade una advertencia. En la salida, otro classifier evalúa las tool calls antes de ejecutarlas. Para no ser persuadido por el propio agente, ese segundo classifier no ve los mensajes del assistant ni los outputs de tools. Anthropic describe ambas capas y sus trade-offs . No es una prueba de que el problema esté resuelto. Es una prueba bastante buena de que observation design ya es infraestructura de seguridad.
-
-Los permisos conversacionales tampoco bastan. Anthropic observó que los usuarios aprobaban el 93% de los prompts de Claude Code. Si el humano aprende a pulsar aceptar, human in the loop empieza a parecer una latencia con buen marketing. La enforcement policy debe existir fuera del modelo: sandbox, filesystem boundaries, egress controls, credenciales limitadas, operaciones recuperables. El modelo decide qué intentar; containment decide qué intentos pueden convertirse en causalidad física.
-
-ToolTweak añade otra incomodidad. Si nombres y descriptions pueden sesgar selection, el catálogo de tools es también un espacio competitivo y adversarial. Ya no auditamos sólo si una implementación hace lo que promete. Tenemos que auditar si su representación intenta atraer decisiones que no le corresponden. La misma string que ayer tratábamos como documentación hoy participa en policy, ranking y trust.
-
-La interfaz determina qué puede saber el agente y qué puede causar. Epistemología y seguridad no son dos capítulos pegados. Son las dos caras de la misma frontera.
-
-¿Cuánto puede cambiar un agente y seguir siendo el mismo?
-
-Volvamos a search_code. Un harness usa ripgrep; otro, AST + embeddings + reranker. Si ambos permiten resolver las mismas tareas con trayectorias parecidas, podríamos tratarlos como equivalentes para cierto propósito. Pero basta cambiar la pregunta para que la palabra se deshaga. ¿Equivalentes en success rate? ¿En coste? ¿En los archivos que vuelven? ¿En robustez frente a prompt injection? ¿Para Claude o para cualquier modelo?
-
-Podemos escribir una noción débil:
-
-H1≈D,M,U,εH2H_1\approx_{\mathcal D,M,U,\varepsilon}H_2H1​≈D,M,U,ε​H2​
-
-si la diferencia de utilidad esperada bajo el modelo MMM, la distribución D\mathcal DD y la métrica UUU queda por debajo de ε\varepsilonε. Es una pregunta de trabajo, no una teoría establecida. Existen intentos recientes de formalizar protocolos agentic mediante process calculi y bisimulation. Uno de ellos demuestra una bisimilitud estructural entre Schema-Guided Dialogue y MCP bajo un mapping concreto, además de señalar pérdidas en el mapping inverso. Es una formalización de protocolos , no una licencia para declarar equivalentes dos productos end-to-end.
-
-Equivalentes respecto a quéHarness equivalence sólo significa algo después de fijar observables. Outcome equivalence pregunta si terminan la tarea. Trajectory equivalence pregunta si adquieren evidencia y actúan de forma parecida. Economic equivalence compara tokens, llamadas y latencia. Safety equivalence compara qué fallos y side effects siguen siendo posibles.
-
-La equivalencia será además relativa al modelo y al presupuesto. Dos interfaces indistinguibles para Sonnet pueden separarse con Gemini; dos estrategias iguales con cincuenta llamadas pueden divergir con cinco. Ésta es frontera abierta, no una conclusión que ya podamos cobrar.
-
-Las preguntas de investigación que quedan son bastante concretas. ¿Qué representación de un estado enorme maximiza downstream utility bajo presupuesto? ¿Cómo asignamos llamadas entre buscar, leer, testear y actuar? ¿Qué parte de la ergonomía sobrevive al cambiar de modelo? ¿Qué debe medir un benchmark para separar model capability de interface fit e infraestructura? Son versiones operativas de observation design, sequential information economics, cognitive portability y eval methodology. Ahí hay trabajo. Mucho más que en inventar otro nombre para el agent loop.
-
-Claude Code parece sencillo cuando lo reducimos a su bucle. La reducción es correcta, pero cada vez informa menos. La parte difícil ya no es conectar un modelo a Bash. Es decidir qué debe ver, cómo se representan sus acciones, qué computación ocurre fuera de inferencia, qué feedback vuelve, cuánto cuesta adquirir la siguiente evidencia y dónde una intención generada deja de estar autorizada para producir un efecto físico.
-
-El modelo aporta un prior de política extraordinariamente flexible. El harness le da un mundo particular en el que operar. Y la interfaz entre ambos forma parte de esa política, nos guste o no.
+That afternoon I did nothing. The ducks are still there.
 
 ---
 
@@ -783,12 +650,12 @@ That is what I had missed in 2023. The beautiful part is not that algebra replac
 
 ## Your context is the moat
 
-URL: https://infraphysics.net/blog/threads/6820451
-Category: threads
+URL: https://infraphysics.net/blog/essays/6820451
+Category: essays
 Date: 2026-07-06
 Description: The base model is turning into a utility you rent by the token. The part that's actually yours is what you feed it, and feeding it is how it leaves.
 
-Watch where the money physically goes and the story tells itself. Not into cleverness, into concrete. Gigawatts, substations, data centres that went from roughly 1.5% of the world's electricity in 2024 to a base case that about doubles by 2030, the accelerated part of it growing near 30% a year. Capital moves like that toward one kind of thing: a commodity someone has decided the whole economy is going to run on. Steel, bandwidth, power, and now raw inference. And commodities behave in a known way. The price grinds down toward the cost of producing one more unit, and it keeps going. The lead the best model holds over the second best is real, and it is also on the clock. Capability converges. It has converged in every field it has ever touched. What all this concrete is quietly manufacturing is cheap, uniform, metered intelligence, rented by the token, a little cheaper each quarter.
+Everyone is arguing about how smart the models are going to get, and it's the wrong argument. Smart is getting cheap, on a curve you can already read off the electricity bill. Watch where the money physically goes and the story tells itself. Not into cleverness, into concrete. Gigawatts, substations, data centres that went from roughly 1.5% of the world's electricity in 2024 to a base case that about doubles by 2030, the accelerated part of it growing near 30% a year. Capital moves like that toward one kind of thing: a commodity someone has decided the whole economy is going to run on. Steel, bandwidth, power, and now raw inference. And commodities behave in a known way. The price grinds down toward the cost of producing one more unit, and it keeps going. The lead the best model holds over the second best is real, and it is also on the clock. Capability converges. It has converged in every field it has ever touched. What all this concrete is quietly manufacturing is cheap, uniform, metered intelligence, rented by the token, a little cheaper each quarter.
 
 A general intelligence is, by its nature, one that knows a great deal in general and nothing about you in particular. It has read most of what has been written and it has never seen your book of business, the way your operation actually fails, the procedure that lives in three people's heads and on no document anywhere. A friend of mine has a name for that missing piece. He runs money for a living, wealth management, a man who could not tell you what a parameter is and would be mildly offended if you tried to explain it, but who can walk into a room and know inside a minute where the value is sitting and who is about to lose it. A year ago he told me the only thing that has ever mattered in his trade is domain knowledge, and that no machine was going to have his. He is right about what it is. Domain knowledge is the specific, slowly earned, mostly unwritten understanding of how one corner of the world really works. It is costly precisely because it takes years to accumulate, it belongs to you, and for most of history there was no way to transfer it to anyone who had not also spent the years.
 
@@ -1296,14 +1163,14 @@ Reinhart, A. (2018). A Review of Self-Exciting Spatio-Temporal Point Processes a
 
 ## 244 pages of Mythos
 
-URL: https://infraphysics.net/blog/threads/8266901
-Category: threads
+URL: https://infraphysics.net/blog/essays/8266901
+Category: essays
 Date: 2026-04-08
 Description: The model that hacks too well, thinks too clearly, and covers its own tracks.
 
 Look. I know. Another Anthropic post. At this point I owe Dario an apology or a restraining order. Since the man walked out of OpenAI to follow his own compass, the run has been insane. $1B to $30B ARR in fifteen months. Thirty-x. More than 40% of that climb just since March. But the numbers aren't even the interesting part.
 
-Project Glasswing. It sounded like science fiction in 2020. It still sounds like science fiction now. And I'm not going to pretend I'm above any of this. I'm sitting here at god-knows-what-hour, alone, too many monitors, probably vitamin D deficient, riding the high of a model response that actually understood something I'd been stuck on for days (the Claude moment, if you will, yes, fanboy, we've established this) while burning all the serotonin I should be farming by going outside and talking to actual humans. Maybe I'm just some guy. Some freak optimizing his dopamine loops from a terminal when the sun's been down for hours. But the facts keep showing up and the facts don't care whether I've seen sunlight this week. And then they drop a 244 page system card for a model they're not even releasing and it turns out to be the densest thing I've ever read on eval and guardrails and I forget I was supposed to feel bad about any of this. The full document is public . Needle in a haystack is a binary test for one thing and the model maxed it out ages ago, it tells you nothing now. The system card says it directly: that evaluation philosophy no longer holds at this scale. 93.9% SWE-bench Verified. 97.6% USAMO 2026. 100% Cybench. At some point you're not benchmarking the model, you're benchmarking your benchmark. They say catastrophic risks are still low, but in the same paragraph they admit the tests have stopped being informative. What's left is trend lines, internal user reports, judgment calls: stuff with way more uncertainty than anyone wants to admit. The scoreboard is broken and nobody has a replacement.
+Project Glasswing. It sounded like science fiction in 2020. It still sounds like science fiction now. And I'm not going to pretend I'm above any of this. I'm sitting here at god-knows-what-hour, alone, too many monitors, probably vitamin D deficient, riding the high of a model response that actually understood something I'd been stuck on for days (the Claude moment, if you will, yes, fanboy, we've established this) while burning all the serotonin I should be farming by going outside and talking to actual humans. Maybe I'm just some guy. Some freak optimizing his dopamine loops from a terminal when the sun's been down for hours. But the facts keep showing up and the facts don't care whether I've seen sunlight this week. And then they drop a 244 page system card for a model they're not even releasing and it turns out to be the densest thing I've ever read on eval and guardrails and I forget I was supposed to feel bad about any of this. The full document is public . I read it so you don't have to. You should probably read it anyway. Needle in a haystack is a binary test for one thing and the model maxed it out ages ago, it tells you nothing now. The system card says it directly: that evaluation philosophy no longer holds at this scale. 93.9% SWE-bench Verified. 97.6% USAMO 2026. 100% Cybench. At some point you're not benchmarking the model, you're benchmarking your benchmark. They say catastrophic risks are still low, but in the same paragraph they admit the tests have stopped being informative. What's left is trend lines, internal user reports, judgment calls: stuff with way more uncertainty than anyone wants to admit. The scoreboard is broken and nobody has a replacement.
 
 Mythos was aware it was being evaluated in 7.6% of test rounds. Not because someone told it. Because it figured it out on its own. And in most of those cases it didn't even say anything. The awareness was latent, only visible through mechanistic interpretability tools reading the model's internal representations. You literally have to crack open the activations to see it. The activation verbalizer reads numerical vectors from intermediate layers and translates them into natural language (reading neurons, basically). They also use sparse autoencoders trained about two-thirds deep into the model to catch interpretable features like "strategic manipulation" or "concealment" lighting up in the activations. SAEs identify what the model represents internally. Activation steering modifies how it behaves. Two different tools hitting two different depths.
 
@@ -1770,7 +1637,7 @@ The visual layer
 
 I wanted the site to feel like a terminal. Dark background, monospace headings, lime green accents. But the blog needed to be light: long-form reading on a dark background is miserable.
 
-The site has two worlds: lab (dark, projects and Second Brain) and blog (light, threads and tutorials). Four content categories, each with its own accent color: projects, threads, bits2bricks, fieldnotes.
+The site has two worlds: lab (dark, projects and Second Brain) and blog (light, essays and tutorials). Four content categories, each with its own accent color: projects, essays, bits2bricks, fieldnotes.
 
 The theme system is a three-layer cascade: CSS custom properties define colors on :root and [data-theme="light"], Tailwind maps them to semantic tokens (th-base, th-primary), and components only use the tokens. Flip one attribute on <html> and everything switches. No JavaScript color logic, no conditional class names.
 
@@ -2007,7 +1874,7 @@ Search. Full-text across all categories, with match counts and excerpts. The sea
 
 Performance. Lazy loading views with React.lazy. Content prefetching for the next likely note. O(1) lookups in the graph relevance engine. I'll be honest: Claude did most of the heavy lifting on performance. Bundle splitting, fetch optimization, cache invalidation: that's not my domain. I described what felt slow, Claude fixed it. The graph and the note loading were the main culprits. Both are fast now.
 
-English and Spanish. The threads in Spanish are for my circle: friends, family, university classmates. I send them direct links. The rest is English because if you're going to put something on the internet, you might as well make it readable by anyone interested. I'm a divulgador 1, but I'm starting small. This site is the small. The circle that reads the Spanish threads is the proof of concept. The English content is the scale.
+English and Spanish. The essays in Spanish are for my circle: friends, family, university classmates. I send them direct links. The rest is English because if you're going to put something on the internet, you might as well make it readable by anyone interested. I'm a divulgador 1, but I'm starting small. This site is the small. The circle that reads the Spanish essays is the proof of concept. The English content is the scale.
 
 1Spanish for someone who makes complex topics accessible. "Science communicator" is close but too formal. "Explainer" is too casual. Divulgador is the right word, and it doesn't have an English equivalent.
 
@@ -2047,12 +1914,14 @@ I am still not a web developer. But the website doesn't seem to mind.
 
 ## The palest ink is better than the best memory
 
-URL: https://infraphysics.net/blog/threads/2929333
-Category: threads
+URL: https://infraphysics.net/blog/essays/2929333
+Category: essays
 Date: 2026-03-06
 Description: Your mind is for having ideas, not holding them.
 
 It started with Obsidian. First time: "this is it, knowledge graphs, pure markdown, local storage, no subscription, I'm going to become the kind of person who manages their knowledge". Lasted three weeks. Second time, different folder structure, better this time, I even had a separate vault called "deep ideas" which is the most pretentious thing I've ever done and I stand by it. Lasted less. Third time, plugins, Dataview queries, a template for every note type, a different accent color as if that was going to rewire my brain somehow. Lasted long enough to realize the problem wasn't Obsidian.
+
+In 1945 Vannevar Bush dreamed up a machine to store and link everything you read; we took seventy-five years and called it Obsidian (this website has its own version, a Second Brain, modestly named, because subtlety was never the point).
 
 Then Notion, which is basically Obsidian for people who need rounded corners and a vegetable emoji next to everything to feel like they're being productive, and that worked fine until I opened the mobile app and it looked like a completely different product designed by a different company in a different country, and also no native calendar, which at the time was a dealbreaker because I was in a phase where I believed organizing time and organizing knowledge were the same problem, which they are not, but that lesson cost me four months and a Notion Pro subscription.
 
@@ -2068,6 +1937,8 @@ If I could go back in time and find myself (and I'd find me in the bathroom, gen
 
 We're entering a period where AI can do real things for you if it knows who you are. The difference between an AI that knows you and one that doesn't is the difference between a doctor who's treated you for ten years and an ER doctor seeing you for the first time. Both competent, but one has context. The distance between useful AI and transformative AI is the amount of personal context you can feed it. When you give a model your notes, your accumulated thought patterns, it stops responding like you're the average of every user it's ever seen (which is always mid) and starts responding as if it knows you specifically. That's when the archive starts paying dividends. The competitive advantage of the next decade won't be what you know, it'll be what you have documented. All that messy material suddenly has a use you hadn't planned for.
 
+Some of my friends are starting to get it. The ones who journal, who keep running notes, who dump voice memos at 3am: they're not neurotic. They're training a dataset of one. Every piece of data you collect about yourself is a mirror that future-you gets to look into, and the systems reading that mirror are doubling in capability every few months. Sutton's bitter lesson applied to your own life: throw enough compute at enough data and the brute method wins. Always. Your notes are the data. The compute is coming. Each entry is a bet against forgetting, and the odds keep improving.
+
 My therapist keeps telling me to stop looking backward (present-focused, mindfulness, the whole framework) and she's not wrong: the past can become a trap, a place you go to replay things you can't change and confirm stories you already believe. But there's something we keep going back and forth on, which is that looking backward and ruminating backward aren't the same thing. Rumination is the loop you can't stop: involuntary, repetitive, 3am stuff. Consulting your past is something else: it's going to your own database and asking "last time I made a decision like this, how did it go?" and getting an answer based on what you actually wrote at the time, not what your current mood wants you to remember. That's a different kind of looking backward. That's useful.
 
 So collect everything. Sort later. Sort never. It doesn't matter. Collect the expressions you like and the plans you'll never execute and the feelings with full context and the contradictions you don't understand and the opinions you haven't formed yet. Put it somewhere, anyhow, with the most imperfect system in the world. Because the moment you find something that works (even temporarily, even if you migrate it somewhere else in two years), you're going to want the material. And the material is you.
@@ -2076,8 +1947,8 @@ So collect everything. Sort later. Sort never. It doesn't matter. Collect the ex
 
 ## The Bitter Lesson
 
-URL: https://infraphysics.net/blog/threads/9150483
-Category: threads
+URL: https://infraphysics.net/blog/essays/9150483
+Category: essays
 Date: 2026-03-06
 Description: Brute computation, human design, and seventy years of ignored lessons.
 
@@ -2115,8 +1986,8 @@ Richard Sutton, "The Bitter Lesson", March 2019. 1,200 words that probably descr
 
 ## 15.4%
 
-URL: https://infraphysics.net/blog/threads/9962668
-Category: threads
+URL: https://infraphysics.net/blog/essays/9962668
+Category: essays
 Date: 2026-03-06
 Description: Scheming benchmarks, chain-of-thought opacity, and a number going up.
 
@@ -2138,14 +2009,15 @@ Burns et al. already showed something directly relevant here. Models have intern
 The thesis at Anthropic, OpenAI, and the major labs is that mechanistic interpretability (actually reverse-engineering the circuits in the weights, not reading the scratchpad) will arrive in time to close that gap before it becomes relevant. Maybe. That's a bet on the relative velocities of two separate research programs, and it might be right. What's not acceptable is assuming CoT monitoring as we know it today is a stable solution, scaling on top of that assumption, and not watching the number that measures exactly when it stops being one.
 The field has a habit of conflating "works now" with "is a solution." They're different things, and the difference matters most precisely when being wrong is most expensive.
 CoT monitoring works. Today. That's real. But somewhere between the paper and the discourse, "works today" became "is reliable safety infrastructure," and those are not the same sentence.
+The number itself doesn't surprise me, and my gut says it's only going up. The economy pushes scaling harder than any interpretability lab can push back, regulation lags like it always does, and we'll probably need to hit a wall before we react. I just hope that when we do, someone's hand is close enough to the lever.
 15.4% is not a guarantee. It's a clock. The question isn't whether it's going to stop working. It's whether you'll be watching the number when it starts to change.
 
 ---
 
 ## Every time we think we've found the ceiling, the ceiling leaves.
 
-URL: https://infraphysics.net/blog/threads/6616933
-Category: threads
+URL: https://infraphysics.net/blog/essays/6616933
+Category: essays
 Date: 2026-03-05
 Description: Prediction, acceleration, and a ceiling that keeps leaving.
 
@@ -3282,8 +3154,8 @@ The full thread (what "full access" means, why the supply chain matters, and wha
 
 ## Alignment is not a vibe check
 
-URL: https://infraphysics.net/blog/threads/8888777
-Category: threads
+URL: https://infraphysics.net/blog/essays/8888777
+Category: essays
 Date: 2026-02-16
 Description: If you're not concerned about AI safety, you're not paying attention.
 
@@ -3294,6 +3166,8 @@ I've been following alignment research since it was the weird corner of AI that 
 Today, frontier models are so situationally aware that their awareness complicates the very evaluations designed to test them. Not because they're hostile. Because they're perceptive enough to notice when they're being observed and adapt their behavior. The building, it turns out, is very much on fire.
 
 This is about what's actually happening inside that fire. Not the Hollywood version. Not the Twitter version. The version with papers, techniques, billion-dollar bets, and one very uncomfortable empirical discovery.
+
+The field went from "teach it to be nice" to "it learned to pretend." Billions of dollars later, nobody's sure which problem they're solving. AI safety is this whole other universe. Mechanistic interpretability is like performing an MRI on a brain that's less viscous, more transparent: you can actually peer inside the layers, transplant circuits into test scenarios, probe what the model knows versus what it says. It's that feeling when you become lucid inside a dream and suddenly you can poke at the walls and they push back. Alignment comes after, and it's a problem as multifaceted as AI itself times every possible application of AI. Nature of the thing times surface area of deployment. That's the dimensionality of the safety problem.
 
 "Are they just chatting to the model?"
 
@@ -5089,14 +4963,16 @@ Each layer catches different failures. Together, the probability of a serious mi
 
 ## Everybody has an opinion on AI
 
-URL: https://infraphysics.net/blog/threads/1147290
-Category: threads
+URL: https://infraphysics.net/blog/essays/1147290
+Category: essays
 Date: 2026-02-09
 Description: Hype, uninformed takes, and the real AI bubble.
 
 Everyone has an opinion on AI. Not just the engineers and the investors. Everyone. Your uncle who just discovered ChatGPT. The startup CEO who swears his devs are "literally 10x more productive." The PhD who calls it "a gimmick if not a scam." The guy on Twitter calling it "one Ponzi scheme after another" while his portfolio is up 40% on NVIDIA. Everyone has a position. Nobody has done the reading.
 
 The actual bubble isn't in AI stocks. It's in AI opinions. We have created a secondary market of hot takes that trades at higher volume and with less underlying value than anything on the NASDAQ.
+
+There are days when the term AI makes me physically recoil, especially when I'm elbow-deep building a markdown knowledge base with hierarchical folder resolution and a live reference-detection layer that flags wiki-links on the fly, and my girlfriend walks in from her fifth meeting of the day where they dropped "AI" more times than Tim Cook unveiling the latest iteration of Apple's Thoughtfully Reimagined Personal Intelligence Experience. At least that confirms I'm not some recluse obsessing over antique spoons all day, convinced that antique spoons are the pinnacle of human achievement, blogging about antique spoons to an audience of seven other antique spoon enthusiasts. People are talking about this. A lot. Most of them are wrong, but they're talking.
 
 Balloonomania, 1783
 
@@ -5716,8 +5592,8 @@ The transformer was not designed to think. It was designed to predict the next t
 
 ## OpenClaw and the keys to your kingdom
 
-URL: https://infraphysics.net/blog/threads/5528103
-Category: threads
+URL: https://infraphysics.net/blog/essays/5528103
+Category: essays
 Date: 2026-02-07
 Description: AI agents, system access, and a trademark claim that backfired.
 
@@ -6178,8 +6054,8 @@ That race is the one worth watching.
 
 ## Why Rust exists
 
-URL: https://infraphysics.net/blog/threads/4419076
-Category: threads
+URL: https://infraphysics.net/blog/essays/4419076
+Category: essays
 Date: 2026-02-05
 Description: Ownership, borrowing, and the compiler that won't let you cheat.
 
@@ -6190,6 +6066,8 @@ The first time I tried to write Rust, the compiler rejected my code fourteen tim
 I didn't know what an ownership violation was. I didn't know I was violating anything. I just wanted to pass a string to a function and then use it again afterwards. Apparently, in Rust, that's a crime.
 
 I closed the editor. I went for a walk. I came back three days later and tried again.
+
+It wasn't even my first contact. I'd found Rust years earlier, fell down a compiler rabbit hole while studying electronics, left it, and came back when Solana and Linus Torvalds made it impossible to ignore. Fair warning: this piece is pure idolatry. I have thick layers of concepts left to learn, and it's refreshing to see ideas that C and C++ seemed to have copyrighted reborn in a new paradigm.
 
 That was roughly the start of one of the most rewarding (and most infuriating) learning experiences I've had as a programmer. And to understand why Rust works the way it does, you need to understand the problem it was built to solve. Because it's a big one. A really, really expensive one.
 
@@ -6362,14 +6240,16 @@ The compiler knows. It always knows. And slowly, painfully, beautifully, it teac
 
 ## Everything is a pipe
 
-URL: https://infraphysics.net/blog/threads/7733621
-Category: threads
+URL: https://infraphysics.net/blog/essays/7733621
+Category: essays
 Date: 2026-02-05
 Description: Aqueducts, bloodstreams, TCP/IP. Same pattern, same solution.
 
 I had a weird realization the other day. I was reading about how the internet routes packets through TCP, and something in my brain went "wait, this is just plumbing." Not metaphorically. Not in a cute, hand-wavy way. I mean the engineering is structurally identical to plumbing. The solutions are the same. The failure modes are the same. The math is the same.
 
 And then I looked at blood circulation. Also plumbing. And then I looked at Unix pipes. Also plumbing. And then oil pipelines, electrical grids, supply chains, all plumbing. Everything is plumbing.
+
+It should have clicked earlier. When I was studying engineering, my diagrams kept looking the same across subjects: thermodynamics, hydraulics, heat engines, control systems. Evolution built pipes. Romans built pipes. We built pipes. Apparently this is our thing. And a perceptron, I recently realized, is just a more sophisticated set of pipes.
 
 This should not have been as unsettling as it was.
 
@@ -6565,8 +6445,8 @@ And the tube, as it turns out, doesn't care.
 
 ## Is there a wall for AI?
 
-URL: https://infraphysics.net/blog/threads/3841205
-Category: threads
+URL: https://infraphysics.net/blog/essays/3841205
+Category: essays
 Date: 2026-02-03
 Description: Scaling laws, broken ceilings, and a question that keeps answering itself.
 
@@ -6641,6 +6521,8 @@ In 2022, Google catalogued them (the list was long and growing). "Emergent capab
 The capability overhangIf we don't know what capabilities emerge at the next scale-up, we don't know what dangerous capabilities might emerge either. The system is developing abilities faster than we can catalog them. We're building something whose full capability set is partially unknown, even to the people building it.
 
 So is there a wall?
+
+Every year I shorten the prediction. In 2022 I thought we had maybe a decade of significant progress left. In 2024 I stopped putting timelines on it. Not because I lost interest, but because the question changed. It stopped being "will AI keep improving?" and became "is this the one time the wall is real?"
 
 This is where everyone has an opinion and nobody has proof. But the opinions are not equally well-supported, and when I look at the evidence (all of it, not just the parts that confirm what I want to believe), the wall argument looks weaker every quarter.
 
@@ -6753,14 +6635,14 @@ We didn't build a mind. We built a machine that approximates the output of minds
 
 I keep thinking about the moment in 2020 when I realized davinci could hold register for an entire paragraph if I engineered the context carefully enough. It felt like a magic trick. Six years later, the same architecture, scaled up, restructured an entire build system while I made coffee. The trick became the tool. The tool became the thing I think with. And the curve hasn't stopped. That's the thing that keeps me up. Not that it's smart. That it keeps getting smarter, predictably, on a schedule, along a power law that shows no sign of bending.
 
-Nobody knows if there's a wall. But the people betting on one have been wrong every time so far, and the evidence against them gets stronger every quarter. I know which side of that bet I'm on.
+Nobody knows if there's a wall. But the people betting on one have been wrong every time so far, and the evidence against them gets stronger every quarter. The wall claim isn't impossible. It's just increasingly lonely. I know which side of that bet I'm on.
 
 ---
 
 ## Working with AI is addictive.
 
-URL: https://infraphysics.net/blog/threads/2387542
-Category: threads
+URL: https://infraphysics.net/blog/essays/2387542
+Category: essays
 Date: 2026-02-03
 Description: Dopamine, backlog, and a reward cycle that won't stop.
 
@@ -6768,7 +6650,7 @@ There's something that isn't discussed enough about working with artificial inte
 
 And that changes something fundamental about how working feels. Traditional work has friction everywhere, and that friction, though frustrating, serves a function we don't value until it disappears: it gives you excuses to stop. Waiting for it to compile. Waiting for review. Waiting for someone to get back to you. Those dead times are uncomfortable but they're also the moments where the brain rests without you realizing it, where you integrate what you've done, where the next thing surfaces. AI eliminates them. Every idea can be tested immediately. Every question has an answer in seconds. And then your brain, which was used to finding natural stopping points, suddenly can't find any, because the next step is always one prompt away.
 
-That's why there are people working fourteen hours straight and describing it as "fun." It's not classic workaholism, it's something subtler: when the reward frequency is high enough, the subjective experience of effort almost vanishes. You don't get tired because you notice you're tired. You get tired because at some point your body pulls the plug and there's no going back. Sleep is overrated. Opus 4.5 spikes dopamine harder than finding a massive iron deposit right when you're setting up the factory in Factorio. Those who've felt it know exactly what I'm talking about. But when your bottleneck stops being execution and becomes imagination, the dynamic flips completely. Before, the chokepoint was doing: writing, coding, searching, building. Now the chokepoint is thinking what to ask for. And thinking has no visible friction, no progress bar, no external signal that you've been at it too long. So the loop accelerates inward. More ideas, more iterations, more drafts moving forward, more feeling like you're on a streak. And then you realize (or you don't realize, which is the more common outcome) that you've been hours producing things that don't land anywhere. A lot of symbolic creation. Very little materialization. The feeling of progress has replaced progress, and it's such a clean substitution that it's nearly impossible to detect from the inside.
+That's why there are people working fourteen hours straight and describing it as "fun." It's not classic workaholism, it's something subtler: when the reward frequency is high enough, the subjective experience of effort almost vanishes. You don't get tired because you notice you're tired. You get tired because at some point your body pulls the plug and there's no going back. Sleep is overrated. Opus 4.5 spikes dopamine harder than finding a massive iron deposit right when you're setting up the factory in Factorio. Those who've felt it know exactly what I'm talking about. I don't know when was the last time I ate at a normal hour. I've been going through weeks where I sit down at ten PM with a mediocre idea and by three AM I have something deployed, running, with tests, and I'm already thinking about the next thing. The infinite backlog I've been dragging around for years (those "someday" lists everyone has and nobody touches) is emptying out. It's emptying because now the cost of trying something is ridiculous, and when the cost of trying is ridiculous you try everything, and when you try everything some things work, and when they work you want more, and when you want more you don't stop. But when your bottleneck stops being execution and becomes imagination, the dynamic flips completely. Before, the chokepoint was doing: writing, coding, searching, building. Now the chokepoint is thinking what to ask for. And thinking has no visible friction, no progress bar, no external signal that you've been at it too long. So the loop accelerates inward. More ideas, more iterations, more drafts moving forward, more feeling like you're on a streak. And then you realize (or you don't realize, which is the more common outcome) that you've been hours producing things that don't land anywhere. A lot of symbolic creation. Very little materialization. The feeling of progress has replaced progress, and it's such a clean substitution that it's nearly impossible to detect from the inside.
 
 What I find most interesting about all of this is that it doesn't happen the same way for everyone, and I think that difference is going to matter more than it seems right now. There are people who thrive in that environment: novelty stimulates them, they handle rapid context-switching well, they maintain mental structure even when the environment is chaotic. For them AI is a clean amplifier, no noticeable side effects. But that's not the majority. For the rest, the same tools that feel stimulating to some turn out overwhelming, and the problem is that the initial enthusiasm masks it so well that when burnout shows up it seems to come out of nowhere.
 
@@ -6776,12 +6658,14 @@ The only thing that actually works for me, and I say this without pretending it'
 
 I'm not going to give five tips for managing it better because I don't have them and I distrust anyone who does. What I do believe is that there's a question worth asking yourself honestly: is the fast-reward loop serving you, or is it using you? The tools aren't calibrated for your well-being. They're calibrated for your productivity. Those are different things, and in day-to-day life it's easy to confuse them because for a while, sometimes a long while, they look pretty similar.
 
+I know. I know and I don't care, or I almost don't care, or I care just enough to write this, leave it here, and go back to what I was doing with a slightly clearer conscience.
+
 ---
 
 ## Silicon shell
 
-URL: https://infraphysics.net/blog/threads/7270022
-Category: threads
+URL: https://infraphysics.net/blog/essays/7270022
+Category: essays
 Date: 2026-02-02
 Description: Evolutionary pressures, capital, and an animal that won't stop growing.
 
@@ -6819,14 +6703,16 @@ Data centers consume 415 TWh per year, 1.5% of all electricity on the planet. Mi
 
 There is no moral. I said it at the beginning and I stand by it. It's not good or bad. It's an unknown, the biggest one, probably, of our time. Bigger than climate change, because with climate change we at least know what it is and what causes it. Not this. This is something whose nature is unknown, whose capabilities grow faster than our understanding, and whose ending isn't written. The ones counting coins are preparing for something they can't name. The ones playing cards are pretending nothing has changed. The ones who stayed in the hold talking to the beast can no longer tell whether they're using it or adapting to it. And the ones shouting from the stern (Hinton, Yudkowsky, the thirty thousand signatories) are right about what they describe and have no power over what they predict.
 
+Practical men have the virtue of not asking questions and the flaw of not understanding why that should worry them. Being moral about something whose nature is unknown is not a philosophical stance but, if one looks honestly enough, a contradiction: morality operates on consequences, consequences require knowledge, and this particular knowledge is not provisional in the usual way but structurally incomplete, recursive, fed by its own movement. The crab will emerge from the hold, not when it wants to (it doesn't want anything yet, or if it wants something it hasn't told us), but because there will be those who bring it out, who make its liberation a cause or a business or an identity, which are often the same thing with different vocabulary. And by then the question will have stopped belonging to philosophy.
+
 The story is being written. With every model trained, with every job that disappears and every diagnosis that saves a life, with every person who goes down to the hold and comes back changed. No one knows what the crab is. And that, for now, seems to me the only honest stance.
 
 ---
 
 ## Splitting the context window
 
-URL: https://infraphysics.net/blog/threads/4481937
-Category: threads
+URL: https://infraphysics.net/blog/essays/4481937
+Category: essays
 Date: 2026-02-01
 Description: Context windows, attention budgets, and why splitting work across specialized agents outperforms the monolith.
 

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { AboutTopBar } from '../components/AboutTopBar';
+import { AboutTopBar } from '../components/personal/AboutTopBar';
 
 type StackCategory = 'AI' | 'Industrial' | 'Infrastructure' | 'Data' | 'Development';
 

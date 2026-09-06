@@ -56,11 +56,13 @@ Supported types are `note`, `tip`, `warning`, `danger` and `keyconcept`. Labels 
 |---|---|---|
 | Wiki concept | `[[uid]]` or `[[uid\|display]]` | Reference icon and preview |
 | Project | `[[projects/id\|display]]` | Lime category link and document icon |
-| Essay | `[[threads/id\|display]]` | Essay category link and document icon |
+| Essay | `[[essays/id\|display]]` | Essay category link and document icon |
 | Technical article | `[[bits2bricks/id\|display]]` | Technical category link and document icon |
 | External reference | `[[https://example.com\|display]]` | Neutral underline and external icon |
 
 Ordinary Markdown links also work. In-page anchors have no destination icon. Unresolved Wiki targets fail validation and have no visible unresolved state.
+
+Wiki links are never bold. `**[[uid|label]]**`, a bold span that contains a Wiki link, or `**` inside the label all fail the build. Bold the surrounding words instead: `[[uid|Attention]] **blocks**`.
 
 Custom-display references also work inside tables; the compiler protects their internal pipe before GFM determines the cells.
 

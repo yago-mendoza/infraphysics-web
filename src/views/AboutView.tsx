@@ -1,5 +1,5 @@
 import React from 'react';
-import { AboutTopBar } from '../components/AboutTopBar';
+import { AboutTopBar } from '../components/personal/AboutTopBar';
 
 const territories = ['systems thinking', 'control', 'robotics', 'infrastructure', 'AI', 'networks', 'mathematics', 'brains'];
 

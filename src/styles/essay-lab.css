@@ -1,0 +1,136 @@
+/* Essay style lab (/r2, /r4, /r5, /r6, /r7, /r12, /r13, /r14). Experimental typography variants for essays.
+   Every variant is a set of --lab-* custom properties applied inline by
+   EssayStyleLabView; these rules only read them. Compare against any
+   production essay for the baseline. Selectors are deliberately specific (and !important) because
+   global.css and article-layout.css pin essay typography with !important. */
+
+/* Reading column: header, meta and body share one measure */
+.essay-lab.lab-styled.article-page-wrapper .article-content,
+.essay-lab.lab-styled.article-page-wrapper .article-title-block,
+.essay-lab.lab-styled.article-page-wrapper .article-essays-meta-engagement {
+  width: 100% !important;
+  max-width: var(--lab-measure) !important;
+  margin-inline: auto !important;
+}
+.essay-lab.lab-styled.article-page-wrapper .article-essays-hero-image {
+  width: min(var(--lab-hero, var(--lab-measure)), calc(100% - 2 * clamp(2rem, 4vw, 4rem))) !important;
+  max-width: none !important;
+}
+
+/* Body text */
+.essay-lab.lab-styled.article-page-wrapper .article-content > p,
+.essay-lab.lab-styled.article-page-wrapper .article-content > ul > li,
+.essay-lab.lab-styled.article-page-wrapper .article-content > ol > li,
+.essay-lab.lab-styled.article-page-wrapper .article-content section > p,
+.essay-lab.lab-styled.article-page-wrapper .article-content blockquote p {
+  font-family: var(--lab-body-font) !important;
+  font-size: var(--lab-body-size) !important;
+  line-height: var(--lab-body-lh) !important;
+  letter-spacing: var(--lab-body-ls, 0) !important;
+  text-align: var(--lab-align, start) !important;
+  hyphens: var(--lab-hyphens, manual) !important;
+  -webkit-hyphens: var(--lab-hyphens, manual) !important;
+}
+.essay-lab.lab-styled.article-page-wrapper .article-content > p {
+  margin-block: 0 var(--lab-para-gap, 1.25em) !important;
+}
+.essay-lab.lab-styled.article-page-wrapper .article-content > ul > li,
+.essay-lab.lab-styled.article-page-wrapper .article-content > ol > li {
+  margin-block-end: calc(var(--lab-para-gap, 1.25em) * .6) !important;
+}
+
+/* Content headings */
+.essay-lab.lab-styled.article-page-wrapper .article-content h2,
+.essay-lab.lab-styled.article-page-wrapper .article-content h3 {
+  font-family: var(--lab-h2-font) !important;
+  font-weight: var(--lab-h2-weight) !important;
+  letter-spacing: var(--lab-h2-ls, -.01em) !important;
+  text-transform: var(--lab-h2-transform, none) !important;
+  line-height: 1.2 !important;
+  margin-top: var(--lab-h2-gap, 2.6rem) !important;
+  margin-bottom: .9rem !important;
+}
+.essay-lab.lab-styled.article-page-wrapper .article-content h2 { font-size: var(--lab-h2-size) !important; }
+.essay-lab.lab-styled.article-page-wrapper .article-content h3 { font-size: calc(var(--lab-h2-size) * .78) !important; }
+
+/* Title, subtitle, meta */
+.essay-lab.lab-styled.article-page-wrapper .article-title {
+  font-family: var(--lab-title-font) !important;
+  font-size: var(--lab-title-size) !important;
+  font-weight: var(--lab-title-weight) !important;
+  line-height: var(--lab-title-lh, 1.04) !important;
+  letter-spacing: var(--lab-title-ls, -.02em) !important;
+  text-transform: var(--lab-title-transform, none) !important;
+  font-style: var(--lab-title-style, normal) !important;
+}
+.essay-lab.lab-styled.article-page-wrapper .article-subtitle {
+  font-family: var(--lab-sub-font) !important;
+  font-size: var(--lab-sub-size, 1.1rem) !important;
+  font-style: var(--lab-sub-style, normal) !important;
+  font-weight: var(--lab-sub-weight, 400) !important;
+  line-height: 1.45 !important;
+  letter-spacing: 0 !important;
+  margin-top: .6rem !important;
+}
+.essay-lab.lab-styled.article-page-wrapper .article-essays-meta-engagement,
+.essay-lab.lab-styled.article-page-wrapper .article-essays-meta-engagement * {
+  font-family: var(--lab-meta-font) !important;
+  font-variant-caps: var(--lab-meta-variant, normal);
+  letter-spacing: var(--lab-meta-ls, .02em);
+}
+.essay-lab.lab-styled.article-page-wrapper .article-essays-meta-engagement { font-size: var(--lab-meta-size, .78rem) !important; }
+.essay-lab.lab-styled.article-page-wrapper .article-essays-body { padding-top: var(--lab-body-gap, 1.75rem) !important; }
+
+/* Drop cap variant */
+.essay-lab.lab-dropcap.article-page-wrapper .article-content > p:first-of-type::first-letter {
+  float: left;
+  font-family: var(--lab-title-font);
+  font-weight: var(--lab-title-weight);
+  font-size: 3.9em;
+  line-height: .78;
+  padding: .08em .12em 0 0;
+  color: var(--art-accent);
+}
+
+/* Lab switcher (fixed, bottom center) */
+.essay-lab-switcher {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  z-index: 70;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .35rem;
+  max-width: calc(100vw - 2rem);
+  padding: .5rem .65rem;
+  border: 1px solid var(--border-default);
+  background: color-mix(in srgb, var(--bg-base) 94%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .18);
+  font-family: var(--font-mono);
+}
+.essay-lab-switcher > nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; }
+.essay-lab-switcher > nav a {
+  display: grid;
+  place-items: center;
+  min-width: 1.9rem;
+  height: 1.6rem;
+  padding-inline: .3rem;
+  font-size: .62rem;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+.essay-lab-switcher > nav a:hover { color: var(--text-primary); border-color: var(--border-default); }
+.essay-lab-switcher > nav a[aria-current="page"] { color: var(--cat-essays-accent); border-color: var(--cat-essays-accent); }
+.essay-lab-switcher > p {
+  margin: 0;
+  font-size: .62rem;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--text-tertiary);
+}
+.essay-lab-switcher > p b { color: var(--text-heading); font-weight: 600; }
+.essay-lab-switcher > p span { color: var(--text-muted); }

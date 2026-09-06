@@ -5,7 +5,7 @@
   "identity": {
     "name": "Yago Mendoza",
     "headline": "Industrial engineer and applied AI engineer",
-    "image": "https://avatars.githubusercontent.com/yago-mendoza",
+    "image": "https://infraphysics.net/avatar.jpg",
     "email": "contact@infraphysics.net",
     "location": "Spain",
     "sameAs": [
@@ -173,7 +173,7 @@
   "contentSemantics": {
     "projects": "First-person engineering work and the strongest evidence of things built or operated.",
     "bits2bricks": "Technical explanations intended to make mechanisms traversable.",
-    "threads": "Essays and arguments. They represent the author's analysis, not an employer or formal reference source.",
+    "essays": "Essays and arguments. They represent the author's analysis, not an employer or formal reference source.",
     "wiki": "Atomic learning notes and conceptual connections. Coverage indicates active study, not equal professional proficiency in every topic."
   },
   "selectedWork": [
@@ -211,13 +211,6 @@
       "category": "bits2bricks",
       "description": "A patient, ground-up explanation of transformer architecture: how tokens become predictions, what attention really computes, where facts live, and why it all scales.",
       "url": "https://infraphysics.net/blog/bits2bricks/5917362"
-    },
-    {
-      "id": "9461728",
-      "title": "The interface is part of the policy",
-      "category": "threads",
-      "description": "What agent harnesses actually change when the model stays the same",
-      "url": "https://infraphysics.net/blog/threads/9461728"
     }
   ]
 }

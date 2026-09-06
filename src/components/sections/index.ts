@@ -15,5 +15,5 @@ export interface SectionRendererProps {
 
 export { Bits2BricksGrid } from './Bits2BricksGrid';
 export { ProjectsList } from './ProjectsList';
-export { ThreadsList } from './ThreadsList';
+export { EssaysList } from './EssaysList';
 export { EmptyState, SearchResultsList } from './SearchResultsList';

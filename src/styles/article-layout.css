@@ -6,35 +6,35 @@
     margin-inline: auto !important;
   }
 
-  .article-threads.article-page-wrapper {
+  .article-essays.article-page-wrapper {
     width: 100% !important;
     max-width: 104rem !important;
   }
 
-  .article-threads .article-threads-card,
-  .article-threads .article-threads-header-content,
-  .article-threads .article-threads-body {
+  .article-essays .article-essays-card,
+  .article-essays .article-essays-header-content,
+  .article-essays .article-essays-body {
     width: 100% !important;
     max-width: none !important;
   }
 
-  .article-threads .article-threads-header-content,
-  .article-threads .article-threads-body {
+  .article-essays .article-essays-header-content,
+  .article-essays .article-essays-body {
     padding-inline: clamp(2rem, 4vw, 4rem) !important;
   }
 
-  .article-blog:not(.article-threads).article-page-wrapper {
+  .article-blog:not(.article-essays).article-page-wrapper {
     width: 100% !important;
     max-width: 104rem !important;
   }
 
-  .article-blog:not(.article-threads) .article-container,
-  .article-blog:not(.article-threads) .article-body {
+  .article-blog:not(.article-essays) .article-container,
+  .article-blog:not(.article-essays) .article-body {
     width: 100% !important;
     max-width: none !important;
   }
 
-  .article-blog:not(.article-threads) .article-blog-image {
+  .article-blog:not(.article-essays) .article-blog-image {
     width: 100% !important;
     max-width: none !important;
   }
@@ -50,7 +50,7 @@
     max-width: none !important;
   }
 
-  .article-blog:not(.article-threads) .article-body,
+  .article-blog:not(.article-essays) .article-body,
   .article-projects .article-body {
     box-sizing: border-box !important;
     padding-inline: clamp(2rem, 5vw, 5rem) !important;
@@ -87,8 +87,7 @@
   font-size: clamp(1.08rem, 1.55vw, 1.26rem) !important;
 }
 
-.article-page-wrapper .article-blog-metabar,
-.article-page-wrapper .article-blog-lead p {
+.article-page-wrapper .article-blog-metabar {
   font-size: 1.09rem !important;
 }
 
@@ -228,7 +227,7 @@
 
 /* The legacy breakout used a 50% offset/translation. Once the article canvas
    became wider that transform could leave editorial hero images off-centre. */
-.article-blog:not(.article-threads) .article-blog-image {
+.article-blog:not(.article-essays) .article-blog-image {
   margin-left: auto !important;
   margin-right: auto !important;
   transform: none !important;
@@ -283,4 +282,134 @@
     font-size: 1.08rem !important;
     line-height: 1.72 !important;
   }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   ESSAYS TYPOGRAPHY (category-wide). Decided in the style lab (/r*):
+   body and subtitle from r6 (Lora 1.06/1.8 on a 40rem column), title from r14
+   (Newsreader 400), drop cap on the opening paragraph, and a quiet meta row.
+   Lives here, at the very end of the last layer, because global.css and the
+   blocks above pin essay type with !important. Change values here, not there.
+   ───────────────────────────────────────────────────────────────────────────── */
+.article-essays.article-page-wrapper {
+  --essay-measure: 40rem;
+  --essay-body-font: 'Lora', Georgia, 'Times New Roman', serif;
+  --essay-display-font: 'Newsreader', Georgia, 'Times New Roman', serif;
+}
+
+/* One reading column for header, meta, body and hero */
+.article-essays.article-page-wrapper .article-content,
+.article-essays.article-page-wrapper .article-title-block,
+.article-essays.article-page-wrapper .article-essays-meta-engagement {
+  width: 100% !important;
+  max-width: var(--essay-measure) !important;
+  margin-inline: auto !important;
+}
+.article-essays.article-page-wrapper .article-essays-hero-image {
+  width: min(var(--essay-measure), calc(100% - 2 * clamp(2rem, 4vw, 4rem))) !important;
+  max-width: none !important;
+}
+/* thumbnailWidth: full — wider than the text, edge to edge with the card padding */
+.article-essays.article-page-wrapper .article-essays-hero-image.thumb-width-full {
+  width: calc(100% - 2 * clamp(2rem, 4vw, 4rem)) !important;
+}
+/* thumbnailAspect: full means the whole image, never a height crop */
+.article-essays.article-page-wrapper .article-essays-hero-image.thumb-full img {
+  max-height: none !important;
+  object-fit: contain !important;
+}
+@media (max-width: 767px) {
+  .article-essays.article-page-wrapper .article-essays-hero-image,
+  .article-essays.article-page-wrapper .article-essays-hero-image.thumb-width-full { width: 100% !important; }
+}
+
+/* Body: Lora 1.06/1.8. Paragraphs, list items and blockquote text alike. */
+.article-essays.article-page-wrapper .article-content { font-family: var(--essay-body-font); }
+.article-essays.article-page-wrapper .article-content p,
+.article-essays.article-page-wrapper .article-content li {
+  font-family: var(--essay-body-font) !important;
+  font-size: 1.06rem !important;
+  line-height: 1.8 !important;
+  letter-spacing: 0 !important;
+}
+.article-essays.article-page-wrapper .article-content > p { margin-block: 0 1.25em !important; }
+.article-essays.article-page-wrapper .article-content li { margin-block-end: .7em !important; }
+.article-essays.article-page-wrapper .article-content li > p { margin-block: 0 .5em !important; }
+
+/* Content headings follow the title face */
+.article-essays.article-page-wrapper .article-content h1,
+.article-essays.article-page-wrapper .article-content h2,
+.article-essays.article-page-wrapper .article-content h3,
+.article-essays.article-page-wrapper .article-content h4 {
+  font-family: var(--essay-display-font) !important;
+  font-weight: 500 !important;
+  font-style: normal !important;
+  letter-spacing: -.01em !important;
+  line-height: 1.2 !important;
+  text-transform: none !important;
+}
+.article-essays.article-page-wrapper .article-content h1 { font-size: 1.9rem !important; margin-top: 2.6rem !important; margin-bottom: .9rem !important; }
+.article-essays.article-page-wrapper .article-content h2 { font-size: 1.6rem !important; margin-top: 2.6rem !important; margin-bottom: .9rem !important; }
+.article-essays.article-page-wrapper .article-content h3 { font-size: 1.3rem !important; margin-top: 2rem !important; margin-bottom: .7rem !important; }
+.article-essays.article-page-wrapper .article-content h4 { font-size: 1.1rem !important; margin-top: 1.6rem !important; margin-bottom: .5rem !important; }
+
+/* Title (r14) and subtitle (r6) */
+.article-essays.article-page-wrapper .article-title {
+  font-family: var(--essay-display-font) !important;
+  font-size: clamp(2.3rem, 5vw, 3.6rem) !important;
+  font-weight: 400 !important;
+  line-height: 1.04 !important;
+  letter-spacing: -.02em !important;
+}
+.article-essays.article-page-wrapper .article-subtitle {
+  font-family: var(--essay-body-font) !important;
+  font-style: italic !important;
+  font-size: 1.15rem !important;
+  font-weight: 400 !important;
+  line-height: 1.5 !important;
+  letter-spacing: 0 !important;
+  margin-top: .6rem !important;
+}
+
+/* Meta row: same serif, small, no dot separators, no pills around views / hearts / share */
+.article-essays.article-page-wrapper .article-essays-meta-engagement,
+.article-essays.article-page-wrapper .article-essays-meta-engagement .article-blog-metabar {
+  font-family: var(--essay-body-font) !important;
+  font-size: .85rem !important;
+  letter-spacing: 0;
+  color: var(--art-text-mid);
+}
+.article-essays.article-page-wrapper .article-blog-metabar-left { gap: 1.25rem; }
+.article-essays.article-page-wrapper .article-blog-metabar-sep { display: none; }
+.article-essays.article-page-wrapper .article-engagement-row { gap: 1.25rem; }
+.article-essays.article-page-wrapper .article-meta-views,
+.article-essays.article-page-wrapper .article-heart-btn,
+.article-essays.article-page-wrapper .article-share-btn {
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-family: var(--essay-body-font) !important;
+  font-size: .85rem !important;
+  color: var(--art-text-mid);
+}
+.article-essays.article-page-wrapper .article-meta-views:hover,
+.article-essays.article-page-wrapper .article-heart-btn:hover,
+.article-essays.article-page-wrapper .article-heart-btn.hearted,
+.article-essays.article-page-wrapper .article-share-btn:hover {
+  background: none;
+  border: 0;
+}
+.article-essays.article-page-wrapper .article-essays-body { padding-top: 1.75rem !important; }
+
+/* Drop cap on the opening paragraph */
+.article-essays.article-page-wrapper:not(.essay-lab) .article-content > p:first-of-type::first-letter {
+  float: left;
+  font-family: var(--essay-display-font);
+  font-weight: 400;
+  font-size: 3.9em;
+  line-height: .78;
+  padding: .08em .12em 0 0;
+  color: var(--art-accent);
 }

@@ -29,7 +29,7 @@ function saveZoneTheme(zone: Zone, theme: Theme) {
 interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
-  applyZone: (zone: Zone) => void;
+  applyZone: (zone: Zone, override?: Theme) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType>({ theme: 'dark', toggleTheme: () => {}, applyZone: () => {} });
@@ -52,10 +52,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  // Called by route watcher — switches to the zone's remembered preference (instant, no animation)
-  const applyZone = useCallback((zone: Zone) => {
+  // Called by route watcher: switches to the zone's remembered preference (instant, no animation).
+  // `override` (from an article's `theme` frontmatter) wins over the remembered preference but is not saved.
+  const applyZone = useCallback((zone: Zone, override?: Theme) => {
     zoneRef.current = zone;
-    const preferred = readZoneTheme(zone);
+    const preferred = override ?? readZoneTheme(zone);
     if (document.documentElement.getAttribute('data-theme') === preferred) {
       setThemeState(prev => prev === preferred ? prev : preferred);
       return;

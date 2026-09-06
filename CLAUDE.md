@@ -22,7 +22,7 @@ Mandatory triggers — when X happens, do Y.
 | [pages/SYNTAX.md](src/data/pages/SYNTAX.md) | All 16 custom syntax features, edge cases, quick reference table |
 | [EDITORIAL-RUBRIC.md](_generation/EDITORIAL-RUBRIC.md) | **Always consult when writing or editing articles.** Kill list, voice direction, two-author problem, syntactic tics, narrative structure, cross-linking |
 | [projects/README.md](src/data/pages/projects/README.md) | Projects editorial voice, storytelling patterns, ctx annotation conventions |
-| [threads/README.md](src/data/pages/threads/README.md) | Threads editorial voice, serif typography, blockquote label rules, ctx restrictions |
+| [essays/README.md](src/data/pages/essays/README.md) | Essays editorial voice, serif typography, blockquote label rules, ctx restrictions |
 | [bits2bricks/README.md](src/data/pages/bits2bricks/README.md) | Bits2Bricks editorial voice, tutorial structure |
 
 **2. Verify factual claims.** When writing content that states dates, names, technical specs, historical events, or statistics — use web search to check accuracy. Do not assume recalled facts are correct.
@@ -103,7 +103,7 @@ Append relevant lessons to the **Gotchas** section below. Update or remove stale
 
 - Personal: `/home`, `/about`, `/contact`, `/thanks`
 - Lab: `/lab/projects` (dark theme)
-- Blog: `/blog/threads`, `/blog/bits2bricks` (light theme)
+- Blog: `/blog/essays`, `/blog/bits2bricks` (light theme)
 - Wiki: `/wiki`, `/wiki/:uid` (legacy `/lab/second-brain/*` URLs redirect here)
 - Post detail: `/lab/:category/:id` (dark), `/blog/:category/:id` (light)
 - Theme auto-switch: `/lab/*` → dark, `/blog/*` → light (instant, no transition). Manual toggle (Shift+T) still works per-page.
@@ -129,7 +129,7 @@ components                                 →  th-* classes
 3. Use `th-*` class
 
 ### What stays hardcoded (theme-constant)
-- Category accents: `--cat-projects-accent`, `--cat-threads-accent`, `--cat-bits2bricks-accent`, `--cat-fieldnotes-accent` — identity colors, same in both themes. Access via `catAccentVar(category)` → returns `var(--cat-*-accent)` string.
+- Category accents: `--cat-projects-accent`, `--cat-essays-accent`, `--cat-bits2bricks-accent`, `--cat-fieldnotes-accent` — identity colors, same in both themes. Access via `catAccentVar(category)` → returns `var(--cat-*-accent)` string.
 - Status colors in `STATUS_CONFIG` (`config/categories.tsx`): raw hex, theme-constant.
 - Accent interactions: `hover:text-blue-400` for links.
 
@@ -137,6 +137,7 @@ components                                 →  th-* classes
 Two distinct paths in `ThemeContext`:
 - **`setTheme(next)`** — instant, no animation. Used by route auto-switch (`useLayoutEffect` in AppLayout).
 - **`toggleTheme()`** — smooth fade via `.theme-transitioning` on `<html>`. Used by manual toggle (Shift+T, search palette).
+- **Per-article override**: `theme: light` (or `dark`) in a post's frontmatter forces that theme on entry via `applyZone(zone, override)`, without saving it as the zone preference. The lookup lives in the AppLayout route effect on purpose: a layout effect in the article view runs *before* the parent's and would be overridden.
 
 `.theme-transitioning` transitions **standard properties only** (background-color, color, border-color, box-shadow, fill, stroke, opacity). Never transition custom properties — see Gotchas.
 
@@ -183,7 +184,7 @@ An image's alt and caption live inside `![ ... ]`, so a `[[wiki-link]]` in there
 `rgba(255,255,255,0.10)` on black is visible; `rgba(0,0,0,0.10)` on white is nearly invisible. Light borders/surfaces need **2-3x the opacity** of dark counterparts. When adjusting `--bg-surface`, also shift `--content-code-bg` (must stay one step darker than surface).
 
 ### Custom property transitions cause flash
-Never transition `--cat-threads-accent` AND `color: var(--cat-threads-accent)` simultaneously. The browser double-interpolates — var resolves mid-transition while color runs its own. Fix: `.theme-transitioning` only lists standard properties. `@property` registrations stay for type documentation but are never transitioned.
+Never transition `--cat-essays-accent` AND `color: var(--cat-essays-accent)` simultaneously. The browser double-interpolates — var resolves mid-transition while color runs its own. Fix: `.theme-transitioning` only lists standard properties. `@property` registrations stay for type documentation but are never transitioned.
 
 ### `.article-related` accent scope
 Related section uses `article-${targetCategory}` but `--art-accent` inherits from the page wrapper (current article's category). Fix: explicit overrides on `.article-related.article-*` selectors with higher specificity.
@@ -220,3 +221,9 @@ The graph is bidirectional even when an interaction is written on only one note.
 
 ### Bulk-editing fieldnote frontmatter catches README.md too
 `src/data/pages/fieldnotes/README.md` contains a literal `distinct:` line inside a yaml example block, so any bulk script that pattern-matches frontmatter across `fieldnotes/*.md` will silently rewrite the documentation example. Exclude `README.md` (filenames of real notes are always 8-char UIDs). Also: after any `move-hierarchy`/`rename-address` batch, `distinct` entries elsewhere go stale because they store addresses, not UIDs — the build's `STALE_DISTINCT` warnings list every one; fix them before committing.
+
+### Global CSS is linked from `index.html`, not imported from `index.tsx`
+`src/styles/global.css` is referenced with `<link rel="stylesheet" href="/src/styles/global.css">` in `index.html` (Vite bundles it). Keep it as a link: it must sit in `<head>` before the Tailwind CDN's runtime `<style>` element so the cascade order is unchanged. Importing it from `index.tsx` would reorder it relative to the per-view CSS imports.
+
+### Essay typography is pinned at the end of `article-layout.css`
+The essays type system (Lora body and subtitle, Newsreader title and headings, 40rem column, drop cap, quiet meta row) is one block at the very end of `src/styles/article-layout.css`, using `.article-essays.article-page-wrapper …` selectors with `!important`. It has to sit last and be that specific because `global.css` and earlier `article.css` blocks also pin essay type with `!important`. Editing font sizes, families or the column width for essays anywhere else will silently lose to this block; change it here.

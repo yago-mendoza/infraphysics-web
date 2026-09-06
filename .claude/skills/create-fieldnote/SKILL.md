@@ -56,7 +56,7 @@ Do NOT proceed until approved.
 
 For each approved new note:
 
-1. **Generate UID**: 8-character alphanumeric (`[a-zA-Z0-9]`), random selection from `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`. Verify uniqueness against all existing filenames in `src/data/pages/fieldnotes/`. Retry on collision. (Same method as `generateUid()` in `migrate-to-uids.js` — UIDs are opaque, never derived from content.)
+1. **Generate UID**: 8-character alphanumeric (`[a-zA-Z0-9]`), random selection from `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`. Verify uniqueness against all existing filenames in `src/data/pages/fieldnotes/`. Retry on collision. (UIDs are opaque, never derived from content.)
 
 2. **Write `{uid}.md`** with:
    - Frontmatter: `uid`, `address`, `name`, `date` (today's date). Add `distinct` if suppressing a segment collision.

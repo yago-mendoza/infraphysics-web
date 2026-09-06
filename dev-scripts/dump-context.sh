@@ -23,7 +23,7 @@ FILES=(
 
   # --- HTML + CSS global ---
   "index.html"
-  "index.css"
+  "src/styles/global.css"
 
   # --- Entry point ---
   "src/index.tsx"
@@ -93,20 +93,19 @@ FILES=(
   "src/components/sections/index.ts"
   "src/components/sections/SearchResultsList.tsx"
   "src/components/sections/ProjectsList.tsx"
-  "src/components/sections/ThreadsList.tsx"
+  "src/components/sections/EssaysList.tsx"
   "src/components/sections/Bits2BricksGrid.tsx"
 
   # --- Components: Standalone ---
   "src/components/ErrorBoundary.tsx"
   "src/components/App.tsx"
   "src/components/SearchPalette.tsx"
-  "src/components/NavigationTrail.tsx"
-  "src/components/NeighborhoodGraph.tsx"
-  "src/components/HomeTour.tsx"
-  "src/components/RotatingTitle.tsx"
-  "src/components/WikiContent.tsx"
-  "src/components/WikiLinkPreview.tsx"
-  "src/components/CopyExportModal.tsx"
+  "src/components/wiki/NavigationTrail.tsx"
+  "src/components/wiki/NeighborhoodGraph.tsx"
+  "src/components/wiki/RelevanceLeaderboard.tsx"
+  "src/components/wiki/WikiContent.tsx"
+  "src/components/wiki/WikiLinkPreview.tsx"
+  "src/components/wiki/CopyExportModal.tsx"
   "src/components/icons/index.tsx"
 
   # --- Views ---
@@ -120,14 +119,12 @@ FILES=(
   "src/views/ArticlePostView.tsx"
   "src/views/SecondBrainView.tsx"
   "src/views/SecondBrainGraphView.tsx"
-  "src/views/XNotesView.tsx"
   "src/components/graph/useGraphData.ts"
   "src/components/graph/GraphControls.tsx"
 
   # --- Styles ---
   "src/styles/article.css"
   "src/styles/wiki-content.css"
-  "src/styles/x-notes.css"
 
   # --- Build scripts ---
   "scripts/build-content.js"
@@ -145,10 +142,10 @@ FILES=(
   "src/data/pages/fieldnotes/README.md"
 
   # --- Contenido representativo (1 por categoría + 1 fieldnote, para mostrar frontmatter) ---
-  "src/data/pages/threads/260205-why-rust-exists.md"
+  "src/data/pages/essays/260205-why-rust-exists.md"
   "src/data/pages/bits2bricks/custom-syntax-pcb.md"
   # Fieldnote files are now named {uid}.md — pick a representative one
-  # Check uid-map.json or ls src/data/pages/fieldnotes/ for current filenames
+  # ls src/data/pages/fieldnotes/ for current filenames
   # "src/data/pages/fieldnotes/egoxqpmC.md"  # Hardware//CPU//ALU
 )
 

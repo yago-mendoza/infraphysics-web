@@ -5,11 +5,11 @@ import { postPath } from '../config/categories';
 
 export const WritingView: React.FC = () => {
   const writing = useMemo(() => posts
-    .filter(post => post.category === 'threads' || post.category === 'bits2bricks')
+    .filter(post => post.category === 'essays' || post.category === 'bits2bricks')
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()), []);
 
   const counts = {
-    threads: writing.filter(post => post.category === 'threads').length,
+    essays: writing.filter(post => post.category === 'essays').length,
     bits2bricks: writing.filter(post => post.category === 'bits2bricks').length,
   };
 
@@ -22,11 +22,11 @@ export const WritingView: React.FC = () => {
       </header>
 
       <section className="grid grid-cols-1 md:grid-cols-2 border-y border-th-border mb-14">
-        <Link to="/blog/threads" className="group py-7 md:pr-8 md:border-r border-th-border">
+        <Link to="/blog/essays" className="group py-7 md:pr-8 md:border-r border-th-border">
           <span className="text-[9px] font-mono text-red-500">01</span>
           <h2 className="mt-5 text-2xl font-serif text-th-heading">Essays</h2>
           <p className="mt-3 text-sm leading-relaxed text-th-secondary font-sans">Arguments, opinions and ideas intended to travel beyond one technical domain.</p>
-          <span className="block mt-5 text-[10px] font-mono text-th-muted">{counts.threads} pieces →</span>
+          <span className="block mt-5 text-[10px] font-mono text-th-muted">{counts.essays} pieces →</span>
         </Link>
         <Link to="/blog/bits2bricks" className="group py-7 md:pl-8 border-t md:border-t-0 border-th-border">
           <span className="text-[9px] font-mono text-blue-500">02</span>
@@ -45,7 +45,7 @@ export const WritingView: React.FC = () => {
           {writing.slice(0, 12).map((post, index) => (
             <Link key={post.id} to={postPath(post.category, post.id)} className="group grid grid-cols-[2rem_minmax(0,1fr)] md:grid-cols-[2rem_7rem_minmax(0,1fr)_7rem] gap-4 items-baseline py-4 border-b border-th-border">
               <span className="text-[9px] font-mono text-th-muted">{String(index + 1).padStart(2, '0')}</span>
-              <span className={`hidden md:block text-[9px] font-mono uppercase tracking-[0.12em] ${post.category === 'threads' ? 'text-red-500' : 'text-blue-500'}`}>{post.category === 'threads' ? 'essay' : 'technical'}</span>
+              <span className={`hidden md:block text-[9px] font-mono uppercase tracking-[0.12em] ${post.category === 'essays' ? 'text-red-500' : 'text-blue-500'}`}>{post.category === 'essays' ? 'essay' : 'technical'}</span>
               <span className="text-[.84rem] leading-snug text-th-heading group-hover:text-th-primary transition-colors">{post.displayTitle || post.title}</span>
               <span className="hidden md:block text-right text-[9px] font-mono text-th-muted">{post.date}</span>
             </Link>

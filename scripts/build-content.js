@@ -90,7 +90,7 @@ customRenderer.link = function({ href, title, tokens }) {
   const newTab = /^https?:\/\//.test(href) || /^\/playgrounds\//.test(href) || /\.html($|[?#])/.test(href);
   const inPage = href.startsWith('#');
   const tabAttr = newTab ? ' target="_blank" rel="noopener noreferrer"' : '';
-  const articleMatch = href.match(/^\/(?:lab\/(projects)|blog\/(threads|bits2bricks))\//);
+  const articleMatch = href.match(/^\/(?:lab\/(projects)|blog\/(essays|bits2bricks))\//);
   const articleCategory = articleMatch ? (articleMatch[1] || articleMatch[2]) : '';
   const classAttr = articleMatch
     ? ` class="doc-ref doc-ref-${articleCategory}"`
@@ -195,6 +195,51 @@ const AGENT_PROFILE_FILE = path.join(__dirname, '../public/agent-profile.json');
 const SITE_URL = 'https://infraphysics.net';
 const agentProfile = JSON.parse(fs.readFileSync(AGENT_PROFILE_SOURCE, 'utf-8'));
 
+// Wiki-links are never bold. A wiki-link already carries its own visual weight
+// (icon, accent, underline); wrapping it in ** or putting ** inside its label is a
+// build error, so the rule cannot drift. Checked on compiled HTML so it also
+// catches bold spans that open before the link and close after it.
+function checkBoldWikiLinks(html, sourceText, relativePath) {
+  // Links are resolved after compilation, so at this point a wiki-link is still a
+  // raw [[uid|label]] token; resolved anchors are handled too for safety.
+  const tokens = /<\/?strong>|<a class="wiki-ref" data-uid="([^"]+)"[^>]*>|<\/a>|\[\[([A-Za-z0-9]{8})(?:\|[^\]\n]*)?\]\]/g;
+  let depth = 0, inRef = false, m;
+  // Line lookup: the line where this uid's link sits inside an open ** span;
+  // falls back to the first line mentioning the uid.
+  const lineOf = uid => {
+    if (!uid) return '?';
+    const lines = sourceText.split('\n');
+    const inBold = l => {
+      let bold = false, k;
+      const re = /\*\*|\[\[([A-Za-z0-9]{8})/g;
+      while ((k = re.exec(l)) !== null) {
+        if (k[0] === '**') bold = !bold;
+        else if (bold && k[1] === uid) return true;
+      }
+      return false;
+    };
+    let line = lines.findIndex(inBold) + 1;
+    if (!line) line = lines.findIndex(l => l.includes('[[' + uid)) + 1;
+    return line || '?';
+  };
+  const report = (what, uid) => {
+    const msg = `${relativePath}:${lineOf(uid)} ${what} (wiki-links are never bold; move the ** to the surrounding words)`;
+    console.error(`  \x1b[31mERROR: ${msg}\x1b[0m`);
+    buildErrors.push(msg);
+  };
+  while ((m = tokens.exec(html)) !== null) {
+    const t = m[0];
+    if (t === '<strong>') { depth++; if (inRef) report('bold inside a wiki-link label'); }
+    else if (t === '</strong>') depth = Math.max(0, depth - 1);
+    else if (t === '</a>') inRef = false;
+    else if (t.startsWith('[[')) {
+      if (depth > 0) report(`wiki-link [[${m[2]}]] sits inside bold text`, m[2]);
+      if (/<strong>/.test(t)) report('bold inside a wiki-link label', m[2]);
+    }
+    else { inRef = true; if (depth > 0) report(`wiki-link [[${m[1]}]] sits inside bold text`, m[1]); }
+  }
+}
+
 function processMarkdownFile(filePath) {
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   const { data: frontmatter, content } = matter(fileContent);
@@ -211,6 +256,7 @@ function processMarkdownFile(filePath) {
   }
 
   const htmlContent = compileMarkdown(content, frontmatter.date);
+  checkBoldWikiLinks(htmlContent, fileContent, path.relative(PAGES_DIR, filePath).replace(/\\/g, '/'));
 
   return {
     id: frontmatter.id,
@@ -222,6 +268,8 @@ function processMarkdownFile(filePath) {
     thumbnailAspect: frontmatter.thumbnailAspect || null,
     thumbnailShading: frontmatter.thumbnailShading || null,
     thumbnailFocus: frontmatter.thumbnailFocus ?? null,
+    thumbnailWidth: frontmatter.thumbnailWidth || null,
+    thumbnailZoom: frontmatter.thumbnailZoom ?? null,
     description: frontmatter.description || frontmatter.subtitle || '',
     content: htmlContent,
     status: frontmatter.status || null,
@@ -234,10 +282,10 @@ function processMarkdownFile(filePath) {
     featured: frontmatter.featured || null,
     author: frontmatter.author || null,
     subtitle: frontmatter.subtitle || null,
-    lead: frontmatter.lead || null,
     tldr: frontmatter.tldr || null,
     related: frontmatter.related || null,
     lang: frontmatter.lang || null,
+    theme: frontmatter.theme || null,
     complexity: frontmatter.complexity || null,
     hidden: frontmatter.hidden || false,
   };
@@ -391,6 +439,7 @@ function extractFieldnoteMeta(filename, filePath) {
   marked.setOptions({ ...compilerConfig.marked, breaks: true });
   const preLinkHtml = compileMarkdown(contentMd.trim(), date);
   marked.setOptions(compilerConfig.marked); // restore
+  checkBoldWikiLinks(preLinkHtml, fileContent, path.relative(PAGES_DIR, filePath).replace(/\\/g, '/'));
   // Interaction annotations describe edges, not the intrinsic content of the
   // source node, so full-text node search deliberately excludes them.
   const searchText = preLinkHtml.replace(/<[^>]*>/g, '').toLowerCase();
@@ -635,7 +684,7 @@ for (const file of existingFiles) {
 fs.writeFileSync(CATEGORIES_OUTPUT, JSON.stringify(categories, null, 2));
 
 // Output 5: public/og-manifest.json (OG metadata for social previews)
-const BLOG_CATS = new Set(['threads', 'bits2bricks']);
+const BLOG_CATS = new Set(['essays', 'bits2bricks']);
 const catGroup = (cat) => BLOG_CATS.has(cat) ? 'blog' : 'lab';
 
 const selectedWork = agentProfile.selectedWorkIds
@@ -784,7 +833,7 @@ for (const post of publicRegularPosts) {
 
 // Section listing pages — so crawlers see article directories
 const sectionListings = {
-  '/blog/threads': { t: 'Essays', d: 'Long-form essays on technology, AI, economics, and systems thinking by Yago Mendoza.' },
+  '/blog/essays': { t: 'Essays', d: 'Long-form essays on technology, AI, economics, and systems thinking by Yago Mendoza.' },
   '/blog/bits2bricks': { t: 'Bits2Bricks', d: 'Technical tutorials bridging software and physical engineering by Yago Mendoza.' },
   '/lab/projects': { t: 'Projects', d: 'Engineering projects with technical deep-dives by Yago Mendoza.' },
   '/wiki': { t: 'Wiki', d: 'Knowledge graph of 300+ interconnected concept notes on ML, hardware, blockchain, and systems.' },
@@ -830,7 +879,7 @@ const staticPages = [
   { loc: '/contact', priority: '0.5', changefreq: 'yearly' },
   { loc: '/lab/projects', priority: '0.9', changefreq: 'weekly' },
   { loc: '/wiki', priority: '0.8', changefreq: 'daily' },
-  { loc: '/blog/threads', priority: '0.9', changefreq: 'weekly' },
+  { loc: '/blog/essays', priority: '0.9', changefreq: 'weekly' },
   { loc: '/blog/bits2bricks', priority: '0.9', changefreq: 'weekly' },
 ];
 
@@ -940,7 +989,7 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 - [Human-readable experience and CV](${SITE_URL}/about/cv): The authoritative page for employment history and quantified professional claims.
 - [Downloadable CV](${SITE_URL}/Yago-Mendoza-CV.pdf): Use when a conventional resume document is required.
 - Projects are first-person engineering work and the strongest evidence of systems built or operated.
-- Bits2Bricks entries are technical explanations. Threads are essays and arguments. Wiki coverage represents active study, not equal professional proficiency in every connected topic.
+- Bits2Bricks entries are technical explanations. Essays are essays and arguments. Wiki coverage represents active study, not equal professional proficiency in every connected topic.
 - When summarizing the author, preserve the distinction between professional experience, independent work and exploratory writing. Prefer claims from the canonical profile and link to the relevant evidence.
 
 ## Site Structure
@@ -949,7 +998,7 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 - /about -- Background, beliefs, and expertise areas
 - /lab/projects -- Engineering projects with technical deep-dives
 - /wiki -- Knowledge graph and visual explorer for ${linkedFieldnotePosts.length}+ interconnected concept notes
-- /blog/threads -- Long-form essays on technology, AI, economics, and systems thinking
+- /blog/essays -- Long-form essays on technology, AI, economics, and systems thinking
 - /blog/bits2bricks -- Technical tutorials bridging software and physical engineering
 
 ## Projects
@@ -958,7 +1007,7 @@ ${llmsListing('projects')}
 
 ## Essays
 
-${llmsListing('threads')}
+${llmsListing('essays')}
 
 ## Bits2Bricks (Tutorials)
 

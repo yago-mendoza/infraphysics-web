@@ -10,7 +10,7 @@ Markdown in this directory is compiled at build time with marked, Shiki and a de
 | Compiler, cache, outputs and validation | [scripts/README.md](../../../scripts/README.md) |
 | Fieldnote operations | [fieldnotes/README.md](fieldnotes/README.md) |
 | Project voice and schema | [projects/README.md](projects/README.md) |
-| Essay voice and schema | [threads/README.md](threads/README.md) |
+| Essay voice and schema | [essays/README.md](essays/README.md) |
 | Technical voice and schema | [bits2bricks/README.md](bits2bricks/README.md) |
 
 Do not document grammar in category guides. `SYNTAX.md` is the single syntax reference.
@@ -22,7 +22,7 @@ Do not document grammar in category guides. `SYNTAX.md` is the single syntax ref
 - **Technical** explains how something works or how to build it.
 - **Fieldnotes** define one atomic concept and connect it to the knowledge graph.
 
-Prefer cross-document references over repeating material. Use `[[projects/id|label]]`, `[[threads/id|label]]`, `[[bits2bricks/id|label]]` or a Wiki UID/address as documented in `SYNTAX.md`.
+Prefer cross-document references over repeating material. Use `[[projects/id|label]]`, `[[essays/id|label]]`, `[[bits2bricks/id|label]]` or a Wiki UID/address as documented in `SYNTAX.md`.
 
 ## Front matter
 

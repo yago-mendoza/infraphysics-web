@@ -7,18 +7,20 @@ import { CursorPreferenceProvider, useCursorPreference } from '../contexts/Curso
 import { ArticleContextProvider } from '../contexts/ArticleContext';
 import { SecondBrainHubProvider } from '../contexts/SecondBrainHubContext';
 import { categoryGroup, isSecondBrainPath, secondBrainPath } from '../config/categories';
+import { postSummaries } from '../data/postSummaries';
 import { Sidebar, MobileNav, Footer, ArticleFloatingBar, AmbientRails, WikiTopBar } from './layout';
 import { ErrorBoundary } from './ErrorBoundary';
 import { RetentionHints } from './RetentionHints';
 import { ExperimentalCursor } from './ExperimentalCursor';
-import { HomeVisualLab } from './HomeVisualLab';
+import { HomeVisualLab } from './personal/HomeVisualLab';
 import { HomeView } from '../views/HomeView';
 
 // Lazy-loaded heavy views (code-split into separate chunks)
 const WritingView = React.lazy(() => import('../views/WritingView').then(m => ({ default: m.WritingView })));
 const AboutView = React.lazy(() => import('../views/AboutView').then(m => ({ default: m.AboutView })));
-const About1View = React.lazy(() => import('../views/About1View').then(m => ({ default: m.About1View })));
+const CvView = React.lazy(() => import('../views/CvView').then(m => ({ default: m.CvView })));
 const StackView = React.lazy(() => import('../views/StackView').then(m => ({ default: m.StackView })));
+const EssayStyleLabView = React.lazy(() => import('../views/EssayStyleLabView').then(m => ({ default: m.EssayStyleLabView })));
 const ContactView = React.lazy(() => import('../views/ContactView').then(m => ({ default: m.ContactView })));
 const ThanksView = React.lazy(() => import('../views/ThanksView').then(m => ({ default: m.ThanksView })));
 const SectionView = React.lazy(() => import('../views/SectionView').then(m => ({ default: m.SectionView })));
@@ -26,7 +28,6 @@ const PostView = React.lazy(() => import('../views/PostView').then(m => ({ defau
 const SecondBrainView = React.lazy(() => import('../views/SecondBrainView').then(m => ({ default: m.SecondBrainView })));
 const SecondBrainSidebar = React.lazy(() => import('./layout/SecondBrainSidebar').then(m => ({ default: m.SecondBrainSidebar })));
 const NotesView = React.lazy(() => import('../views/NotesView').then(m => ({ default: m.NotesView })));
-const XNotesView = React.lazy(() => import('../views/XNotesView').then(m => ({ default: m.XNotesView })));
 const SearchPalette = React.lazy(() => import('./SearchPalette').then(m => ({ default: m.SearchPalette })));
 import { useKeyboardShortcuts, ShortcutDef } from '../hooks/useKeyboardShortcuts';
 
@@ -43,6 +44,11 @@ const LegacyPostRedirect: React.FC = () => {
 const LegacyWikiRedirect: React.FC = () => {
   const { id } = useParams();
   return <Navigate to={secondBrainPath(id)} replace />;
+};
+
+const LegacyEssaysRedirect: React.FC = () => {
+  const { id } = useParams();
+  return <Navigate to={`/blog/essays/`} replace />;
 };
 
 const AppLayout: React.FC = () => {
@@ -119,26 +125,34 @@ const AppLayout: React.FC = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  // Apply zone-specific theme preference on route change (instant, no flash)
+  // Apply zone-specific theme preference on route change (instant, no flash).
+  // An article with `theme:` in its frontmatter forces that theme on entry. This has to happen
+  // here, not in the article view: child layout effects run before this one and would be overridden.
   useLayoutEffect(() => {
-    applyZone(location.pathname.startsWith('/blog')
+    const zone = location.pathname.startsWith('/blog') || /^\/r\d+$/.test(location.pathname)
       ? 'blog'
-      : isSecondBrainPath(location.pathname) ? 'wiki' : 'app');
+      : isSecondBrainPath(location.pathname) ? 'wiki' : 'app';
+    const article = location.pathname.match(/^\/(?:lab|blog)\/([^/]+)\/([^/]+)/);
+    const forced = article
+      ? postSummaries.find(p => p.category === article[1] && p.id === article[2])?.theme
+      : null;
+    applyZone(zone, forced ?? undefined);
   }, [location.pathname, applyZone]);
 
-  const isBlog = location.pathname.startsWith('/blog');
+  // /r2, /r4 … /r14: essay style lab, rendered as a blog article page (light zone, floating bar).
+  const isStyleLab = /^\/r\d+$/.test(location.pathname);
+  const isBlog = location.pathname.startsWith('/blog') || isStyleLab;
   const isHome = location.pathname === '/' || location.pathname === '/home';
   const isAbout = location.pathname === '/about' || location.pathname.startsWith('/about/');
   const hasSystemField = isAbout
     || location.pathname === '/writing'
-    || location.pathname.startsWith('/blog/threads')
+    || location.pathname.startsWith('/blog/essays')
     || location.pathname.startsWith('/blog/bits2bricks')
     || location.pathname.startsWith('/lab/projects');
   const isNotes = location.pathname === '/notes' || location.pathname.startsWith('/notes/');
-  const isXNotes = location.pathname === '/x';
   const clockHome = location.pathname === '/home';
   const isSecondBrain = isSecondBrainPath(location.pathname);
-  const isArticlePage = /^\/(blog|lab)\/[^/]+\/[^/]+/.test(location.pathname) && !isSecondBrain;
+  const isArticlePage = (/^\/(blog|lab)\/[^/]+\/[^/]+/.test(location.pathname) || isStyleLab) && !isSecondBrain;
   // Project detail pages drop the grid and paint the page in the box surface color
   const isProjectArticle = isArticlePage && location.pathname.startsWith('/lab/projects/');
 
@@ -156,16 +170,16 @@ const AppLayout: React.FC = () => {
 
   const content = (
     <ErrorBoundary resetKey={location.pathname}>
-    {aestheticCursor && !isSecondBrain && !isXNotes && <ExperimentalCursor />}
+    {aestheticCursor && !isSecondBrain && <ExperimentalCursor />}
     <div
-      className={`${isNotes ? 'notes-active h-[100dvh] overflow-hidden ' : 'min-h-screen overflow-x-hidden ' }flex relative ${isXNotes ? 'x-notes-active ' : ''}${hasSystemField ? 'about-active ' : ''}${clockHome ? 'home2-active ' : ''}${isHome ? 'home-light-zone bg-transparent' : isProjectArticle ? '' : isBlog ? 'bg-th-blog' : 'bg-transparent'}`}
+      className={`${isNotes ? 'notes-active h-[100dvh] overflow-hidden ' : 'min-h-screen overflow-x-hidden ' }flex relative ${hasSystemField ? 'about-active ' : ''}${clockHome ? 'home2-active ' : ''}${isHome ? 'home-light-zone bg-transparent' : isProjectArticle ? '' : isBlog ? 'bg-th-blog' : 'bg-transparent'}`}
       style={isProjectArticle ? { backgroundColor: 'var(--art-surface)' } : undefined}
     >
-      {!isNotes && !isXNotes && !isArticlePage && <AmbientRails />}
+      {!isNotes && !isArticlePage && <AmbientRails />}
       {hasSystemField && <div className="about-system-visual" aria-hidden="true"><HomeVisualLab variant={2} staticMicroField showTachograph={false} /></div>}
 
       {/* Navigation: floating bar (desktop) + mobile nav for articles, sidebar+mobile nav for everything else */}
-      {isNotes || isXNotes ? null : isSecondBrain ? (
+      {isNotes ? null : isSecondBrain ? (
         <WikiTopBar onOpenSearch={openSearch} />
       ) : isArticlePage ? (
         <>
@@ -187,7 +201,7 @@ const AppLayout: React.FC = () => {
       )}
 
       {/* Contextual retention hints */}
-      {!isArticlePage && !isNotes && !isXNotes && <RetentionHints />}
+      {!isArticlePage && !isNotes && <RetentionHints />}
 
       {/* Hub Sidebar (second-brain only, desktop only — not on graph view) */}
       {isSecondBrain && (
@@ -198,7 +212,7 @@ const AppLayout: React.FC = () => {
 
       {/* Main Content Area */}
       <div className={`flex-1 min-w-0 flex flex-col ${isNotes ? 'h-full min-h-0 overflow-hidden' : 'min-h-screen'}`}>
-        <main className={`flex-grow w-full relative z-10 ${isSecondBrain ? 'max-w-6xl px-4 md:px-10 pt-20 pb-24 md:pt-20 md:pb-28 mx-auto' : isNotes ? 'h-full min-h-0 overflow-hidden' : isXNotes ? 'min-h-screen p-0' : isArticlePage ? 'px-2 pt-[4.5rem] pb-20 md:px-6 md:pt-20 md:pb-28 article-main-viewport' : 'px-6 pt-20 pb-20 md:py-16 md:pb-28 main-center-viewport'}`}>
+        <main className={`flex-grow w-full relative z-10 ${isSecondBrain ? 'max-w-6xl px-4 md:px-10 pt-20 pb-24 md:pt-20 md:pb-28 mx-auto' : isNotes ? 'h-full min-h-0 overflow-hidden' : isArticlePage ? 'px-2 pt-[4.5rem] pb-20 md:px-6 md:pt-20 md:pb-28 article-main-viewport' : 'px-6 pt-20 pb-20 md:py-16 md:pb-28 main-center-viewport'}`}>
           <Suspense fallback={<div className="min-h-screen py-20 text-center text-th-tertiary text-sm animate-pulse">Loading…</div>}>
             <React.Fragment key={isNotes ? '/notes' : location.pathname}>
             <Routes>
@@ -207,10 +221,9 @@ const AppLayout: React.FC = () => {
               <Route path="/writing" element={<WritingView />} />
               <Route path="/notes" element={<NotesView onOpenSearch={openSearch} />} />
               <Route path="/notes/:id" element={<NotesView onOpenSearch={openSearch} />} />
-              <Route path="/x" element={<XNotesView />} />
               <Route path="/blog" element={<Navigate to="/writing" replace />} />
               <Route path="/about" element={<AboutView />} />
-              <Route path="/about/cv" element={<About1View />} />
+              <Route path="/about/cv" element={<CvView />} />
               <Route path="/about/stack" element={<StackView />} />
               <Route path="/about1" element={<Navigate to="/about/cv" replace />} />
               <Route path="/contact" element={<ContactView />} />
@@ -218,13 +231,15 @@ const AppLayout: React.FC = () => {
 
               {/* Lab sections */}
               <Route path="/lab/projects" element={<SectionView category="projects" />} />
-              <Route path="/blog/threads" element={<SectionView category="threads" />} />
+              <Route path="/blog/essays" element={<SectionView category="essays" />} />
               <Route path="/blog/bits2bricks" element={<SectionView category="bits2bricks" />} />
 
               {/* Legacy redirects */}
               <Route path="/projects" element={<Navigate to="/lab/projects" replace />} />
               <Route path="/second-brain" element={<Navigate to={secondBrainPath()} replace />} />
-              <Route path="/threads" element={<Navigate to="/blog/threads" replace />} />
+              <Route path="/essays" element={<Navigate to="/blog/essays" replace />} />
+              <Route path="/blog/threads" element={<Navigate to="/blog/essays" replace />} />
+              <Route path="/blog/threads/:id" element={<LegacyEssaysRedirect />} />
               <Route path="/bits2bricks" element={<Navigate to="/blog/bits2bricks" replace />} />
 
               {/* Wiki — canonical routes */}
@@ -236,6 +251,9 @@ const AppLayout: React.FC = () => {
               <Route path="/lab/second-brain" element={<LegacyWikiRedirect />} />
               <Route path="/lab/second-brain/graph" element={<Navigate to="/wiki" replace />} />
               <Route path="/lab/second-brain/:id" element={<LegacyWikiRedirect />} />
+
+              {/* Essay style lab (experimental typography variants) */}
+              {[2, 4, 5, 6, 7, 12, 13, 14].map(i => <React.Fragment key={i}><Route path={`/r${i}`} element={<EssayStyleLabView variant={i} />} /></React.Fragment>)}
 
               {/* Post detail views */}
               <Route path="/lab/:category/:id" element={<PostView />} />
@@ -259,7 +277,7 @@ const AppLayout: React.FC = () => {
           </Suspense>
         </main>
 
-        {!isSecondBrain && !isNotes && !isXNotes && <Footer />}
+        {!isSecondBrain && !isNotes && <Footer />}
       </div>
     </div>
     </ErrorBoundary>

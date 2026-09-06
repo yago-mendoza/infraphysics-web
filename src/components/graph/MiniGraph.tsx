@@ -124,7 +124,11 @@ const MiniGraph: React.FC<{
   onNodeSelect?: (node: GraphNode) => void;
   onAreaPreview?: (ids: Set<string> | null) => void;
   onMinimize?: () => void;
-}> = ({ resultIds, previewIds = null, searchQuery, cameraFocusIds = null, cameraAnchorIds = null, colorMode = 'centrality', expanded = false, activeRoot = '', onNodeOpen, activeNodeId, onNodeSelect, onAreaPreview, onMinimize }) => {
+  /** Mini view only: renders the expand control inside the mini toolbar. */
+  onExpand?: () => void;
+  /** Expanded workspace only: lets the toolbar switch between root-family and centrality coloring. */
+  onColorModeChange?: (mode: GraphColorMode) => void;
+}> = ({ resultIds, previewIds = null, searchQuery, cameraFocusIds = null, cameraAnchorIds = null, colorMode = 'centrality', expanded = false, activeRoot = '', onNodeOpen, activeNodeId, onNodeSelect, onAreaPreview, onMinimize, onExpand, onColorModeChange }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
 
@@ -1316,12 +1320,18 @@ const MiniGraph: React.FC<{
             onClick={() => setEdgeMode(mode)}
             className={`relative grid h-5 w-5 place-items-center transition-[opacity,background-color] hover:bg-th-surface ${(mode === 'hierarchy' ? visibility.hierarchy : visibility.body || visibility.interaction) ? 'opacity-100' : 'opacity-25'}`}
           ><i className="block h-px w-3.5" style={{ backgroundColor: mode === 'hierarchy' ? EDGE_COLORS.hierarchy : EDGE_COLORS.body, transform: mode === 'hierarchy' ? 'rotate(35deg)' : undefined }} /><span className="sr-only">{mode}</span></button>)}
+          {onExpand && <><i className="mx-0.5 h-3 w-px bg-th-hub-border" /><button type="button" onClick={onExpand} title="Expand graph" aria-label="Expand graph" className="grid h-5 w-5 place-items-center text-th-muted transition-colors hover:bg-th-surface hover:text-violet-300"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 1h4v4M5 11H1V7M11 1L7 5M1 11l4-4" /></svg></button></>}
         </nav>}
         {expanded && <nav aria-label="Graph tools" className="absolute left-4 top-4 z-50 flex w-11 flex-col border border-th-hub-border bg-th-base p-1 font-mono shadow-xl">
           {onMinimize && <button type="button" onClick={onMinimize} title="Minimize graph" aria-label="Minimize graph" className="mb-2 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 text-th-muted transition-colors hover:bg-th-surface hover:text-violet-300"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"><path d="M1.5 4.5h3v-3M10.5 7.5h-3v3M4.5 4.5l-3-3M7.5 7.5l3 3" /></svg></button>}
           <div className="mb-1 border-b border-th-hub-border pb-1">
             {(['2d', '3d'] as const).map(mode => <button key={mode} type="button" title={`${mode.toUpperCase()} view`} onPointerEnter={() => { if (mode === '3d') void import('react-force-graph-3d'); }} onFocus={() => { if (mode === '3d') void import('react-force-graph-3d'); }} onClick={() => { if (mode === dimension) return; physicsTouchedRef.current = true; topologyChangedRef.current = true; topologyCameraCancelledRef.current = false; setPhysicsSettling(true); setDimension(mode); if (mode === '3d') setSelectionMode(false); }} className={`mb-0.5 grid h-8 w-full place-items-center text-[9px] font-semibold uppercase ${dimension === mode ? 'bg-violet-400/15 text-violet-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}>{mode}</button>)}
           </div>
+          {onColorModeChange && <div className="mb-1 border-b border-th-hub-border pb-1">
+            {(['roots', 'centrality'] as const).map(mode => <button key={mode} type="button" aria-pressed={colorMode === mode} title={mode === 'roots' ? 'Color nodes by root family' : 'Color nodes by centrality (lighter = more central)'} onClick={() => onColorModeChange(mode)} className={`mb-0.5 grid h-8 w-full place-items-center ${colorMode === mode ? 'bg-violet-400/15' : 'hover:bg-th-surface'}`}>{mode === 'roots'
+              ? <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="4" cy="4.5" r="2.3" fill="#f472b6" /><circle cx="10" cy="4.5" r="2.3" fill="#34d399" /><circle cx="7" cy="10" r="2.3" fill="#60a5fa" /></svg>
+              : <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.5" fill="#5b21b6" /><circle cx="7" cy="7" r="3.4" fill="#8b5cf6" /><circle cx="7" cy="7" r="1.5" fill="#ddd6fe" /></svg>}<span className="sr-only">{mode}</span></button>)}
+          </div>}
           <button type="button" title="Center graph" onClick={centerGraph} className="mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 text-base leading-none text-th-muted hover:bg-th-surface hover:text-violet-300">⌖</button>
           <button type="button" title="Select area and copy notes" onClick={() => { setSelectionMode(value => !value); setMiniAnalysisEnabled(false); setDensityAreaIds(null); onAreaPreview?.(null); setHoveredId(null); setDragSelect(null); selectionStartRef.current = null; selectionRectRef.current = null; }} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 ${selectionMode ? 'bg-cyan-400/15 text-cyan-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><CopyIcon /></button>
           <button type="button" aria-pressed={miniAnalysisEnabled} title="Inspect local density" onClick={() => { setMiniAnalysisEnabled(value => { const next = !value; if (!next) { setDensityAreaIds(null); onAreaPreview?.(null); } return next; }); setSelectionMode(false); setDragSelect(null); }} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 ${miniAnalysisEnabled ? 'bg-violet-400/15 text-violet-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><AreaInspectIcon /></button>

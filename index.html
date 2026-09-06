@@ -29,7 +29,8 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Roboto+Slab:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,500&display=swap" />
+    <link rel="preload" as="image" href="/avatar.jpg" fetchpriority="high" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Roboto+Slab:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,500&family=Lora:ital,wght@0,400;0,500;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css" crossorigin="anonymous" />
     <title>InfraPhysics</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -154,7 +155,7 @@
 
         /* Category accents */
         --cat-projects-accent:    #a3e635;
-        --cat-threads-accent:     #c8462d;
+        --cat-essays-accent:     #c8462d;
         --cat-bits2bricks-accent: #3B82F6;
         --cat-fieldnotes-accent:  #A78BFA;
 
@@ -245,7 +246,7 @@
         --wiki-unresolved:      #6b7280;
 
         --cat-projects-accent:    #4d7c0f;
-        --cat-threads-accent:     #9b3f24;
+        --cat-essays-accent:     #9b3f24;
         --cat-bits2bricks-accent: #2563eb;
         --cat-fieldnotes-accent:  #7C3AED;
 
@@ -316,7 +317,7 @@
         .main-center-viewport { max-width: 42rem; }
       }
     </style>
-<link rel="stylesheet" href="/index.css">
+<link rel="stylesheet" href="/src/styles/global.css">
 </head>
   <body>
     <div id="root"></div>

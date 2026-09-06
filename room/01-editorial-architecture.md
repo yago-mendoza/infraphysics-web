@@ -12,7 +12,7 @@ Below that, expose a wide, calm body of work: notes, series, projects, and a few
 
 - **About** — who this is, how the mind works, and what kind of problems attract attention.
 - **Projects** — things being built or investigated with a concrete outcome, such as intelligent traffic lights.
-- **Notes / Threads** — public-facing thinking, opinions, questions, and essays; less technical by default.
+- **Notes / Essays** — public-facing thinking, opinions, questions, and essays; less technical by default.
 - **Technical** — tutorials and worked explanations, potentially replacing or renaming Bits2Bricks.
 - **Learning** — only when a course, concept, book, or paper has become a durable piece of understanding.
 - **Rabbit holes** — deep investigations sparked by a video, podcast, paper, or question, ending in an original synthesis or a small artefact when appropriate. This may be a format or series label rather than a top-level destination.

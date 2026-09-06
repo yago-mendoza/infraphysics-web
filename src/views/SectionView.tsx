@@ -1,4 +1,4 @@
-// Category listing view component (projects, threads, bits2bricks) — theme-aware
+// Category listing view component (projects, essays, bits2bricks) — theme-aware
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
@@ -16,7 +16,7 @@ import {
 import {
   Bits2BricksGrid,
   ProjectsList,
-  ThreadsList,
+  EssaysList,
 } from '../components/sections';
 import type { SectionRendererProps } from '../components/sections';
 
@@ -27,7 +27,7 @@ interface SectionViewProps {
 
 const SECTION_RENDERERS: Record<string, React.FC<SectionRendererProps>> = {
   projects: ProjectsList,
-  threads: ThreadsList,
+  essays: EssaysList,
   bits2bricks: Bits2BricksGrid,
 };
 
@@ -72,7 +72,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, projectVaria
   const stats = useArticleStats(sectionPosts);
 
   const hasMultipleLangs = useMemo(() => {
-    if (category !== 'threads') return false;
+    if (category !== 'essays') return false;
     const langs = new Set(sectionPosts.map(p => p.lang || 'en'));
     return langs.size > 1;
   }, [sectionPosts, category]);
@@ -196,7 +196,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, projectVaria
       <nav className="mb-8 text-[10px] text-th-muted flex items-center gap-2 uppercase tracking-[0.18em]">
         <Link to="/home" className="hover:text-th-secondary transition-colors">home</Link>
         <span className="text-th-muted">/</span>
-        <span className="text-th-muted">{category === 'threads' || category === 'bits2bricks' ? 'blog' : 'lab'}</span>
+        <span className="text-th-muted">{category === 'essays' || category === 'bits2bricks' ? 'blog' : 'lab'}</span>
         <span className="text-th-muted">/</span>
         <span className="text-th-secondary">{category}</span>
       </nav>
@@ -361,7 +361,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, projectVaria
         </div>
       </div>
 
-      {/* Language toggle — threads only, hidden when filters active */}
+      {/* Language toggle — essays only, hidden when filters active */}
       {hasMultipleLangs && !query && selectedTopics.length === 0 && selectedTechs.length === 0 && selectedStatuses.length === 0 && (
         <div className="flex justify-center gap-2 mb-6">
           {['en', 'es'].map(lang => {
@@ -373,9 +373,9 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, projectVaria
                 className="text-[11px] font-semibold tracking-widest uppercase px-3 py-1 border rounded-sm transition-colors"
                 style={{
                   fontFamily: "'Roboto Slab', Georgia, serif",
-                  borderColor: active ? `var(--cat-threads-accent)` : 'var(--border)',
-                  color: active ? `var(--cat-threads-accent)` : 'var(--text-tertiary)',
-                  backgroundColor: active ? 'color-mix(in srgb, var(--cat-threads-accent) 10%, transparent)' : 'transparent',
+                  borderColor: active ? `var(--cat-essays-accent)` : 'var(--border)',
+                  color: active ? `var(--cat-essays-accent)` : 'var(--text-tertiary)',
+                  backgroundColor: active ? 'color-mix(in srgb, var(--cat-essays-accent) 10%, transparent)' : 'transparent',
                 }}
               >
                 {lang}

@@ -1,5 +1,5 @@
 // Accent colors for non-category navigation items (constant across themes).
-// Category accents (projects, threads, bits2bricks) are CSS custom properties
+// Category accents (projects, essays, bits2bricks) are CSS custom properties
 // (--cat-*-accent) defined in index.html, accessed via catAccentVar() in config/categories.tsx.
 
 export const CATEGORY_ACCENTS = {

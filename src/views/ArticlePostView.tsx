@@ -7,7 +7,7 @@ import { formatDate, formatDateTerminal, calculateReadingTime } from '../lib';
 import { getProjectDisplayTechnologies } from '../lib/projectPresentation';
 import { initBrainIndex, type BrainIndex } from '../lib/brainIndex';
 import { getActiveChain, ACTIVE_HEADING_THRESHOLD } from '../lib/headings';
-import { WikiContent } from '../components/WikiContent';
+import { WikiContent } from '../components/wiki/WikiContent';
 import { CATEGORY_CONFIG, sectionPath as getSectionPath, postPath, isBlogCategory } from '../config/categories';
 import { ArrowRightIcon, GitHubIcon, LinkedInIcon, TwitterIcon, RedditIcon, HackerNewsIcon, ClipboardIcon, CheckIcon, ShareIcon, HeartIcon, EyeIcon } from '../components/icons';
 
@@ -33,7 +33,7 @@ const FEEDBACK_COPY: Record<string, { label: string; placeholder: string }> = {
     label: "If you see something I don't, I'd genuinely like to know.",
     placeholder: 'A flaw in the approach, a better tool, a question I should be asking...',
   },
-  threads: {
+  essays: {
     label: "If this sparked a 'wait, but...' moment, I want to hear it.",
     placeholder: "A connection I didn't make, a 'yes, but', a book worth reading...",
   },
@@ -106,7 +106,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const navigate = useNavigate();
   const catCfg = CATEGORY_CONFIG[post.category];
   const isBlog = isBlogCategory(post.category);
-  const isThreads = post.category === 'threads';
+  const isEssays = post.category === 'essays';
   const visibleProjectTechnologies = post.category === 'projects' ? getProjectDisplayTechnologies(post.technologies) : [];
   const [copied, setCopied] = useState(false);
   const [contentCopied, setContentCopied] = useState(false);
@@ -517,10 +517,10 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
         document.body
       )}
 
-      {isThreads ? (
-        <article className="article-threads-card">
+      {isEssays ? (
+        <article className="article-essays-card">
           {post.thumbnail && (
-            <div className={`article-threads-hero-image thumb-${post.thumbnailAspect || 'full'}`}>
+            <div className={`article-essays-hero-image thumb-${post.thumbnailAspect || 'full'}${post.thumbnailWidth === 'full' ? ' thumb-width-full' : ''}`}>
               <img
                 src={post.thumbnail}
                 alt={post.displayTitle || post.title}
@@ -530,7 +530,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               />
             </div>
           )}
-          <div className="article-threads-header-content">
+          <div className="article-essays-header-content">
 
             <div className="article-title-block">
               <h1 className="article-title">
@@ -541,10 +541,10 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               )}
             </div>
 
-            <div className="article-threads-meta-engagement">
+            <div className="article-essays-meta-engagement">
               <BlogMetabar date={post.date} authorName={authorName} authorPath={authorPath} readingTime={readingTime} showReadingTime={false} views={null} hearts={null} hearted={hearted} toggleHeart={toggleHeart} shareDropdown={null} formatDate={formatDate} />
 
-              <div className="article-engagement-row article-threads-engagement">
+              <div className="article-engagement-row article-essays-engagement">
                 <div className="article-engagement-left">
                   {views != null && (
                     <span className="article-meta-views"><EyeIcon size={15} /> {views}</span>
@@ -559,15 +559,9 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               </div>
             </div>
 
-            {post.lead && (
-              <div className="article-blog-lead">
-                <p>{post.lead}</p>
-                <p className="article-blog-lead-dots">···</p>
-              </div>
-            )}
           </div>
 
-          <div className="article-threads-body">
+          <div className="article-essays-body">
             <WikiContent
               html={contentWithIds}
               allFieldNotes={brainIndex?.allFieldNotes}
@@ -677,16 +671,9 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
             </div>
           )}
 
-          {/* Meta bar (blog non-threads only — threads has its own in header card) */}
-          {isBlog && post.category !== 'threads' && (
+          {/* Meta bar (blog non-essays only — essays has its own in header card) */}
+          {isBlog && post.category !== 'essays' && (
             <BlogMetabar date={post.date} authorName={authorName} authorPath={authorPath} readingTime={readingTime} views={views} hearts={hearts} hearted={hearted} toggleHeart={toggleHeart} shareDropdown={shareDropdown} formatDate={formatDate} />
-          )}
-
-          {/* Lead text (blog non-threads only — threads has its own in header card) */}
-          {isBlog && post.category !== 'threads' && post.lead && (
-            <div className="article-blog-lead">
-              <p>{post.lead}</p>
-            </div>
           )}
 
           {/* NOTES + DIVIDERS (projects only) */}

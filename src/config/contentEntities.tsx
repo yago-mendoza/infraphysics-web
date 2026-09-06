@@ -10,7 +10,7 @@ import { FileTextIcon, GearIcon, WikiBrainIcon } from '../components/icons';
  */
 export type ContentEntityKind =
   | 'projects'
-  | 'threads'
+  | 'essays'
   | 'bits2bricks'
   | 'wiki'
   | 'notes'
@@ -26,7 +26,7 @@ const WikiIcon = () => <WikiBrainIcon size={22} />;
 
 export const CONTENT_ENTITY_PRESENTATION: Record<ContentEntityKind, EntityPresentation> = {
   projects: { label: 'Projects', accentVar: 'var(--cat-projects-accent)', Icon: GearIcon },
-  threads: { label: 'Essays', accentVar: 'var(--cat-threads-accent)', Icon: FileTextIcon },
+  essays: { label: 'Essays', accentVar: 'var(--cat-essays-accent)', Icon: FileTextIcon },
   bits2bricks: { label: 'Technical', accentVar: 'var(--cat-bits2bricks-accent)', Icon: FileTextIcon },
   wiki: { label: 'Wiki', accentVar: 'var(--cat-fieldnotes-accent)', Icon: WikiIcon },
   notes: { label: 'Notes', accentVar: 'var(--brand-oxide)', Icon: FileTextIcon },

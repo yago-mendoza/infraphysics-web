@@ -78,6 +78,5 @@ Malformed or retired syntax leaking into output is caught by the syntax guard. R
 | `analyze-pairs.js` | Relationship inspection |
 | `compute-graph-relevance.js` | Graph scoring data |
 | `obsidian-export.js` / `obsidian-import.js` | Obsidian synchronization |
-| `migrate-to-uids.js` | Historical UID migration utility |
 
 Detailed flags and edge cases for fieldnote operations remain in the fieldnotes management guide rather than being duplicated here.
