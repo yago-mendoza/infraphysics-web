@@ -19,3 +19,5 @@ Stress tests on LLM behavior: hire people (or AIs) to break your model on purpos
 
 - [[3EKErev3|Alignment]] : : Red-teaming is empirical alignment: finding the failures that theoretical frameworks miss
 - [[YwfNaR4R|DPO]] : : Red-teaming discoveries feed the contrastive pairs for deeper DPO training cycles
+- [[CybEval7|cybersecurity evaluation]] : : Cyber evals turn selected offensive and defensive failure modes into repeatable tasks
+- [[DepRisk4|deployment risk]] : : Red-team findings become operationally meaningful only after considering exposure, permissions and containment

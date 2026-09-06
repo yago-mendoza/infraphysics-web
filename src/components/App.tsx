@@ -1,6 +1,6 @@
 // App shell: provides layout structure and top-level routing
 
-import React, { Suspense, useState, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
+import React, { Suspense, useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useParams } from 'react-router-dom';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { CursorPreferenceProvider, useCursorPreference } from '../contexts/CursorPreferenceContext';
@@ -26,6 +26,7 @@ const PostView = React.lazy(() => import('../views/PostView').then(m => ({ defau
 const SecondBrainView = React.lazy(() => import('../views/SecondBrainView').then(m => ({ default: m.SecondBrainView })));
 const SecondBrainSidebar = React.lazy(() => import('./layout/SecondBrainSidebar').then(m => ({ default: m.SecondBrainSidebar })));
 const NotesView = React.lazy(() => import('../views/NotesView').then(m => ({ default: m.NotesView })));
+const XNotesView = React.lazy(() => import('../views/XNotesView').then(m => ({ default: m.XNotesView })));
 const SearchPalette = React.lazy(() => import('./SearchPalette').then(m => ({ default: m.SearchPalette })));
 import { useKeyboardShortcuts, ShortcutDef } from '../hooks/useKeyboardShortcuts';
 
@@ -46,6 +47,14 @@ const LegacyWikiRedirect: React.FC = () => {
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
+  const previousLocationRef = useRef(location);
+  useEffect(() => {
+    const previous = previousLocationRef.current;
+    if (isSecondBrainPath(location.pathname) && !isSecondBrainPath(previous.pathname)) {
+      try { sessionStorage.setItem('infraphysics:wiki-return-to', `${previous.pathname}${previous.search}${previous.hash}`); } catch { /* optional navigation memory */ }
+    }
+    previousLocationRef.current = location;
+  }, [location]);
   const { theme, toggleTheme, applyZone } = useTheme();
   const { aestheticCursor } = useCursorPreference();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -126,6 +135,7 @@ const AppLayout: React.FC = () => {
     || location.pathname.startsWith('/blog/bits2bricks')
     || location.pathname.startsWith('/lab/projects');
   const isNotes = location.pathname === '/notes' || location.pathname.startsWith('/notes/');
+  const isXNotes = location.pathname === '/x';
   const clockHome = location.pathname === '/home';
   const isSecondBrain = isSecondBrainPath(location.pathname);
   const isArticlePage = /^\/(blog|lab)\/[^/]+\/[^/]+/.test(location.pathname) && !isSecondBrain;
@@ -146,16 +156,16 @@ const AppLayout: React.FC = () => {
 
   const content = (
     <ErrorBoundary resetKey={location.pathname}>
-    {aestheticCursor && !isSecondBrain && <ExperimentalCursor />}
+    {aestheticCursor && !isSecondBrain && !isXNotes && <ExperimentalCursor />}
     <div
-      className={`${isNotes ? 'notes-active h-[100dvh] overflow-hidden ' : 'min-h-screen overflow-x-hidden ' }flex relative ${hasSystemField ? 'about-active ' : ''}${clockHome ? 'home2-active ' : ''}${isHome ? 'home-light-zone bg-transparent' : isProjectArticle ? '' : isBlog ? 'bg-th-blog' : 'bg-transparent'}`}
+      className={`${isNotes ? 'notes-active h-[100dvh] overflow-hidden ' : 'min-h-screen overflow-x-hidden ' }flex relative ${isXNotes ? 'x-notes-active ' : ''}${hasSystemField ? 'about-active ' : ''}${clockHome ? 'home2-active ' : ''}${isHome ? 'home-light-zone bg-transparent' : isProjectArticle ? '' : isBlog ? 'bg-th-blog' : 'bg-transparent'}`}
       style={isProjectArticle ? { backgroundColor: 'var(--art-surface)' } : undefined}
     >
-      {!isNotes && !isArticlePage && <AmbientRails />}
+      {!isNotes && !isXNotes && !isArticlePage && <AmbientRails />}
       {hasSystemField && <div className="about-system-visual" aria-hidden="true"><HomeVisualLab variant={2} staticMicroField showTachograph={false} /></div>}
 
       {/* Navigation: floating bar (desktop) + mobile nav for articles, sidebar+mobile nav for everything else */}
-      {isNotes ? null : isSecondBrain ? (
+      {isNotes || isXNotes ? null : isSecondBrain ? (
         <WikiTopBar onOpenSearch={openSearch} />
       ) : isArticlePage ? (
         <>
@@ -177,7 +187,7 @@ const AppLayout: React.FC = () => {
       )}
 
       {/* Contextual retention hints */}
-      {!isArticlePage && !isNotes && <RetentionHints />}
+      {!isArticlePage && !isNotes && !isXNotes && <RetentionHints />}
 
       {/* Hub Sidebar (second-brain only, desktop only — not on graph view) */}
       {isSecondBrain && (
@@ -188,14 +198,16 @@ const AppLayout: React.FC = () => {
 
       {/* Main Content Area */}
       <div className={`flex-1 min-w-0 flex flex-col ${isNotes ? 'h-full min-h-0 overflow-hidden' : 'min-h-screen'}`}>
-        <main className={`flex-grow w-full relative z-10 ${isSecondBrain ? 'max-w-6xl px-4 md:px-10 pt-20 pb-24 md:pt-20 md:pb-28 mx-auto' : isNotes ? 'h-full min-h-0 overflow-hidden' : isArticlePage ? 'px-2 pt-[4.5rem] pb-20 md:px-6 md:pt-20 md:pb-28 article-main-viewport' : 'px-6 pt-20 pb-20 md:py-16 md:pb-28 main-center-viewport'}`}>
+        <main className={`flex-grow w-full relative z-10 ${isSecondBrain ? 'max-w-6xl px-4 md:px-10 pt-20 pb-24 md:pt-20 md:pb-28 mx-auto' : isNotes ? 'h-full min-h-0 overflow-hidden' : isXNotes ? 'min-h-screen p-0' : isArticlePage ? 'px-2 pt-[4.5rem] pb-20 md:px-6 md:pt-20 md:pb-28 article-main-viewport' : 'px-6 pt-20 pb-20 md:py-16 md:pb-28 main-center-viewport'}`}>
           <Suspense fallback={<div className="min-h-screen py-20 text-center text-th-tertiary text-sm animate-pulse">Loading…</div>}>
-            <Routes key={isNotes ? '/notes' : location.pathname}>
+            <React.Fragment key={isNotes ? '/notes' : location.pathname}>
+            <Routes>
               <Route path="/" element={<Navigate to="/home" replace />} />
               <Route path="/home" element={<HomeView visualVariant={1} fieldVariant={3} />} />
               <Route path="/writing" element={<WritingView />} />
               <Route path="/notes" element={<NotesView onOpenSearch={openSearch} />} />
               <Route path="/notes/:id" element={<NotesView onOpenSearch={openSearch} />} />
+              <Route path="/x" element={<XNotesView />} />
               <Route path="/blog" element={<Navigate to="/writing" replace />} />
               <Route path="/about" element={<AboutView />} />
               <Route path="/about/cv" element={<About1View />} />
@@ -243,10 +255,11 @@ const AppLayout: React.FC = () => {
                 </div>
               } />
             </Routes>
+            </React.Fragment>
           </Suspense>
         </main>
 
-        {!isSecondBrain && !isNotes && <Footer />}
+        {!isSecondBrain && !isNotes && !isXNotes && <Footer />}
       </div>
     </div>
     </ErrorBoundary>

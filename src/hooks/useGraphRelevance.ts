@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useSyncExternalStore } from 'react';
 
 interface RelevanceEntry {
   uid: string;
@@ -26,14 +26,6 @@ export interface IslandCut {
   sides: CutSide[];
 }
 
-export interface NoteTopology {
-  isIsolated: boolean;
-  componentId: number | null;
-  componentSize: number;
-  isBridge: boolean;
-  bridgeCriticality?: number;
-}
-
 export interface IslandsData {
   components: IslandComponent[];
   cuts: IslandCut[];
@@ -48,65 +40,66 @@ interface GraphRelevanceData {
 }
 
 let cached: GraphRelevanceData | null = null;
-let loading = false;
-let listeners: (() => void)[] = [];
+let loadingPromise: Promise<void> | null = null;
+const listeners = new Set<() => void>();
 
 function notifyListeners() {
   listeners.forEach(fn => fn());
 }
 
-async function loadData() {
-  if (cached || loading) return;
-  loading = true;
-  try {
-    const mod = await import('../data/graph-relevance.generated.json');
-    cached = mod.default as GraphRelevanceData;
-  } catch {
-    cached = { centrality: {}, relevance: {} };
-  }
-  loading = false;
-  notifyListeners();
+function loadData(): Promise<void> {
+  if (cached) return Promise.resolve();
+  if (loadingPromise) return loadingPromise;
+  loadingPromise = import('../data/graph-relevance.generated.json')
+    .then(mod => { cached = mod.default as GraphRelevanceData; })
+    .catch(() => { cached = { centrality: {}, relevance: {} }; })
+    .finally(() => {
+      loadingPromise = null;
+      notifyListeners();
+    });
+  return loadingPromise;
 }
 
-export function useGraphRelevance() {
-  const [, setTick] = useState(0);
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  void loadData();
+  return () => { listeners.delete(listener); };
+}
 
-  useEffect(() => {
-    const listener = () => setTick(t => t + 1);
-    listeners.push(listener);
-    loadData();
-    return () => { listeners = listeners.filter(l => l !== listener); };
-  }, []);
+const getSnapshot = () => cached;
+
+export function useGraphRelevance() {
+  const data = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
   // Compute bridge tier thresholds + sorted values for percentile lookup
   const { thresholds, sortedVals } = useMemo(() => {
-    if (!cached) return { thresholds: { bridge: 1, connector: 1 }, sortedVals: [] as number[] };
-    const vals = Object.values(cached.centrality).sort((a, b) => a - b);
+    if (!data) return { thresholds: { bridge: 1, connector: 1 }, sortedVals: [] as number[] };
+    const vals = (Object.values(data.centrality) as number[]).sort((a, b) => a - b);
     if (vals.length === 0) return { thresholds: { bridge: 1, connector: 1 }, sortedVals: [] };
     const p85 = vals[Math.floor(vals.length * 0.85)];
     const p50 = vals[Math.floor(vals.length * 0.50)];
     return { thresholds: { bridge: p85, connector: p50 }, sortedVals: vals };
-  }, [cached ? Object.keys(cached.centrality).length : 0]);
+  }, [data]);
 
   const getRelevance = useCallback((uid: string): RelevanceEntry[] => {
-    return cached?.relevance[uid] || [];
-  }, []);
+    return data?.relevance[uid] || [];
+  }, [data]);
 
   const getCentrality = useCallback((uid: string): number => {
-    return cached?.centrality[uid] ?? 0;
-  }, []);
+    return data?.centrality[uid] ?? 0;
+  }, [data]);
 
   const getBridgeTier = useCallback((uid: string): BridgeTier => {
-    const c = cached?.centrality[uid] ?? 0;
+    const c = data?.centrality[uid] ?? 0;
     if (c >= thresholds.bridge) return 'bridge';
     if (c >= thresholds.connector) return 'connector';
     return 'peripheral';
-  }, [thresholds]);
+  }, [data, thresholds]);
 
   /** Returns percentile rank (0–100, higher = more central). "top X%" = 100 - percentile. */
   const getPercentile = useCallback((uid: string): number => {
     if (sortedVals.length === 0) return 0;
-    const c = cached?.centrality[uid] ?? 0;
+    const c = data?.centrality[uid] ?? 0;
     // Binary search for position in sorted values
     let lo = 0, hi = sortedVals.length;
     while (lo < hi) {
@@ -115,39 +108,11 @@ export function useGraphRelevance() {
       else hi = mid;
     }
     return Math.round((lo / sortedVals.length) * 100);
-  }, [sortedVals]);
+  }, [data, sortedVals]);
 
   const getIslands = useCallback((): IslandsData | null => {
-    return cached?.islands ?? null;
-  }, []);
+    return data?.islands ?? null;
+  }, [data]);
 
-  // Pre-built Set/Map for O(1) topology lookups
-  const { isolatedSet, componentMap, cutMap } = useMemo(() => {
-    const islands = cached?.islands;
-    if (!islands) return { isolatedSet: new Set<string>(), componentMap: new Map<number, IslandComponent>(), cutMap: new Map<string, IslandCut>() };
-    return {
-      isolatedSet: new Set(islands.isolatedUids),
-      componentMap: new Map(islands.components.map(c => [c.id, c])),
-      cutMap: new Map(islands.cuts.map(c => [c.uid, c])),
-    };
-  }, [cached?.islands]);
-
-  const getNoteTopology = useCallback((uid: string): NoteTopology => {
-    if (!cached?.islands) return { isIsolated: false, componentId: null, componentSize: 0, isBridge: false };
-
-    const isIsolated = isolatedSet.has(uid);
-    const componentId = cached.islands.nodeToComponent[uid] ?? null;
-    const comp = componentId != null ? componentMap.get(componentId) : undefined;
-    const cut = cutMap.get(uid);
-
-    return {
-      isIsolated,
-      componentId,
-      componentSize: comp?.size ?? 0,
-      isBridge: !!cut,
-      ...(cut ? { bridgeCriticality: cut.criticality } : {}),
-    };
-  }, [isolatedSet, componentMap, cutMap]);
-
-  return { getRelevance, getCentrality, getBridgeTier, getPercentile, getIslands, getNoteTopology, loaded: !!cached };
+  return { getRelevance, getCentrality, getBridgeTier, getPercentile, getIslands, loaded: !!data };
 }

@@ -120,12 +120,14 @@ FILES=(
   "src/views/ArticlePostView.tsx"
   "src/views/SecondBrainView.tsx"
   "src/views/SecondBrainGraphView.tsx"
+  "src/views/XNotesView.tsx"
   "src/components/graph/useGraphData.ts"
   "src/components/graph/GraphControls.tsx"
 
   # --- Styles ---
   "src/styles/article.css"
   "src/styles/wiki-content.css"
+  "src/styles/x-notes.css"
 
   # --- Build scripts ---
   "scripts/build-content.js"

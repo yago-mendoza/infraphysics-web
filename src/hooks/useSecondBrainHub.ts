@@ -7,7 +7,7 @@ import { secondBrainPath, secondBrainUidFromPath } from '../config/categories';
 import { initBrainIndex, fetchNoteContent, getCachedNoteContent, prefetchNoteContent, type BrainIndex, type Connection, type Neighborhood } from '../lib/brainIndex';
 import { useGraphRelevance } from './useGraphRelevance';
 
-export type SearchMode = 'name' | 'content' | 'backlinks';
+export type SearchMode = 'name' | 'content' | 'backlinks' | 'all';
 export type SortMode = 'a-z' | 'centrality' | 'most-links' | 'fewest-links' | 'depth' | 'shuffle' | 'newest' | 'oldest';
 export type DirectorySortMode = 'children' | 'alpha' | 'depth';
 export type ViewMode = 'simplified' | 'technical';
@@ -79,10 +79,26 @@ export const useSecondBrainHub = () => {
 
   // Load index on mount + reload on HMR/refresh events
   useEffect(() => {
-    initBrainIndex().then(setIndex);
-    const handler = () => initBrainIndex().then(setIndex);
+    let cancelled = false;
+    let revision = 0;
+    const load = async () => {
+      const currentRevision = ++revision;
+      try {
+        const next = await initBrainIndex();
+        if (!cancelled && currentRevision === revision) setIndex(next);
+      } catch (error) {
+        // Keep the current index, if any. A later HMR event can retry without
+        // leaving an unhandled rejection behind.
+        if (!cancelled) console.error('Unable to load the Wiki index', error);
+      }
+    };
+    void load();
+    const handler = () => { void load(); };
     window.addEventListener('fieldnote-hmr', handler);
-    return () => window.removeEventListener('fieldnote-hmr', handler);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('fieldnote-hmr', handler);
+    };
   }, []);
 
   const allFieldNotes = index?.allFieldNotes ?? [];
@@ -104,7 +120,7 @@ export const useSecondBrainHub = () => {
   // because it scans searchText across all notes (heavier than name matching).
   const [debouncedContentQuery, setDebouncedContentQuery] = useState('');
   useEffect(() => {
-    if (searchMode !== 'content') {
+    if (searchMode !== 'content' && searchMode !== 'all') {
       setDebouncedContentQuery(query);
       return;
     }
@@ -176,28 +192,46 @@ export const useSecondBrainHub = () => {
     let cancelled = false;
     setContentLoading(true);
     setContentReadyId(undefined);
-    fetchNoteContent(activePost.id).then(html => {
-      if (!cancelled) {
-        setResolvedHtml(html);
+    fetchNoteContent(activePost.id)
+      .then(html => {
+        if (!cancelled) {
+          setResolvedHtml(html);
+          setContentLoading(false);
+          setContentReadyId(activePost.id);
+        }
+      })
+      .catch(error => {
+        if (cancelled) return;
+        console.error(`Unable to load Wiki note ${activePost.id}`, error);
+        setResolvedHtml('<p>Content unavailable.</p>');
         setContentLoading(false);
         setContentReadyId(activePost.id);
-      }
-    });
+      });
     return () => { cancelled = true; };
   }, [activePost]);
 
   // Re-fetch content when HMR fires for the active note (e.g. after editor save)
   useEffect(() => {
+    let cancelled = false;
     const handler = (e: Event) => {
       const uid = (e as CustomEvent).detail?.uid;
       if (!uid || !activePost || uid !== activePost.id) return;
-      fetchNoteContent(activePost.id, true).then(html => {
-        setResolvedHtml(html);
-        setContentReadyId(activePost.id);
-      });
+      fetchNoteContent(activePost.id, true)
+        .then(html => {
+          if (!cancelled) {
+            setResolvedHtml(html);
+            setContentReadyId(activePost.id);
+          }
+        })
+        .catch(error => {
+          if (!cancelled) console.error(`Unable to refresh Wiki note ${activePost.id}`, error);
+        });
     };
     window.addEventListener('fieldnote-hmr', handler);
-    return () => window.removeEventListener('fieldnote-hmr', handler);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('fieldnote-hmr', handler);
+    };
   }, [activePost]);
 
   // Prefetch content for likely navigation targets
@@ -329,18 +363,24 @@ export const useSecondBrainHub = () => {
 
     const sortTree = (nodes: TreeNode[], mode: DirectorySortMode): TreeNode[] => {
       const sorted = [...nodes];
+      // At every directory level, navigable branches form one contiguous group
+      // before terminal concepts. The selected mode only orders peers within
+      // those two groups, so alphabetical sorting never scatters folders among
+      // leaves and the hierarchy remains quickly scannable.
+      const branchFirst = (a: TreeNode, b: TreeNode) =>
+        Number(b.children.length > 0) - Number(a.children.length > 0);
       switch (mode) {
         case 'children':
-          sorted.sort((a, b) => b.childCount - a.childCount || a.label.localeCompare(b.label));
+          sorted.sort((a, b) => branchFirst(a, b) || b.childCount - a.childCount || a.label.localeCompare(b.label));
           break;
         case 'depth': {
           const maxDepth = (n: TreeNode): number =>
             n.children.length === 0 ? 0 : 1 + Math.max(...n.children.map(maxDepth));
-          sorted.sort((a, b) => maxDepth(b) - maxDepth(a) || a.label.localeCompare(b.label));
+          sorted.sort((a, b) => branchFirst(a, b) || maxDepth(b) - maxDepth(a) || a.label.localeCompare(b.label));
           break;
         }
         default: // 'alpha'
-          sorted.sort((a, b) => a.label.localeCompare(b.label));
+          sorted.sort((a, b) => branchFirst(a, b) || a.label.localeCompare(b.label));
       }
       sorted.forEach(n => { if (n.children.length > 0) n.children = sortTree(n.children, mode); });
       return sorted;
@@ -374,41 +414,35 @@ export const useSecondBrainHub = () => {
 
   // --- Multi-mode search ---
   const searchResults = useMemo(() => {
-    const effectiveQuery = searchMode === 'content' ? debouncedContentQuery : deferredQuery;
+    const effectiveQuery = searchMode === 'content' || searchMode === 'all' ? debouncedContentQuery : deferredQuery;
     if (!effectiveQuery) return allFieldNotes;
     const q = effectiveQuery.toLowerCase();
 
-    if (searchMode === 'name') {
-      return allFieldNotes.filter(note => {
+    const matchesName = (note: FieldNoteMeta) => {
         const address = (note.address || note.title).toLowerCase();
         const displayTitle = (note.displayTitle || note.title).toLowerCase();
         if (address.includes(q) || displayTitle.includes(q)) return true;
-        // Also match against aliases
-        if (note.aliases) {
-          return note.aliases.some(alias => alias.toLowerCase().includes(q));
-        }
-        return false;
-      });
-    }
+        return note.aliases?.some(alias => alias.toLowerCase().includes(q)) ?? false;
+    };
+    const matchesContent = (note: FieldNoteMeta) => (note.searchText || '').includes(q) || note.description.toLowerCase().includes(q);
+    const matchesBacklinks = (note: FieldNoteMeta) => (backlinksMap.get(note.id) || []).some(linker => {
+      const address = (linker.address || linker.title).toLowerCase();
+      const displayTitle = (linker.displayTitle || linker.title).toLowerCase();
+      return address.includes(q) || displayTitle.includes(q) || (linker.searchText || '').includes(q) || linker.description.toLowerCase().includes(q);
+    });
+
+    if (searchMode === 'name') return allFieldNotes.filter(matchesName);
 
     if (searchMode === 'content') {
       // Use pre-built searchText for content search (no need to load full HTML)
-      return allFieldNotes.filter(note =>
-        (note.searchText || '').includes(q) ||
-        note.description.toLowerCase().includes(q)
-      );
+      return allFieldNotes.filter(matchesContent);
     }
 
     if (searchMode === 'backlinks') {
-      return allFieldNotes.filter(note => {
-        const bl = backlinksMap.get(note.id) || [];
-        return bl.some(linker => {
-          const addr = (linker.address || linker.title).toLowerCase();
-          const dt = (linker.displayTitle || linker.title).toLowerCase();
-          return addr.includes(q) || dt.includes(q);
-        });
-      });
+      return allFieldNotes.filter(matchesBacklinks);
     }
+
+    if (searchMode === 'all') return allFieldNotes.filter(note => matchesName(note) || matchesContent(note) || matchesBacklinks(note));
 
     return allFieldNotes;
   }, [deferredQuery, debouncedContentQuery, searchMode, allFieldNotes, backlinksMap]);

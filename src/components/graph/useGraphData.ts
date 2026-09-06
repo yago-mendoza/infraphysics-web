@@ -1,7 +1,5 @@
-// Builds force-graph data structures from BrainIndex
-// Three edge types: body refs, interactions (trailing refs), address hierarchy
+// Builds the immutable topology consumed by both graph viewports.
 
-import { useMemo } from 'react';
 import type { BrainIndex } from '../../lib/brainIndex';
 
 export type EdgeType = 'body' | 'interaction' | 'hierarchy';
@@ -10,7 +8,7 @@ export interface GraphNode {
   id: string;
   name: string;
   address: string;
-  centrality: number; // 0–1 PageRank
+  centrality: number;
   refCount: number;
   depth: number;
   isParent: boolean;
@@ -28,10 +26,13 @@ export interface GraphData {
   links: GraphLink[];
 }
 
-export function buildGraphData(
-  index: BrainIndex,
-  centralityMap: Record<string, number>,
-): GraphData {
+export interface EdgeVisibility {
+  body: boolean;
+  interaction: boolean;
+  hierarchy: boolean;
+}
+
+export function buildGraphData(index: BrainIndex, centralityMap: Record<string, number>): GraphData {
   const nodes: GraphNode[] = index.allFieldNotes.map(note => ({
     id: note.id,
     name: note.name,
@@ -43,95 +44,55 @@ export function buildGraphData(
   }));
 
   const links: GraphLink[] = [];
-  const linkSet = new Set<string>(); // dedup
-
-  const addLink = (src: string, tgt: string, type: EdgeType, annotation?: string | null) => {
-    // For body/interaction, use sorted key to dedup bidirectional
-    const key = type === 'hierarchy'
-      ? `h:${src}\u0000${tgt}`
-      : `${type}:${[src, tgt].sort().join('\u0000')}`;
-    if (linkSet.has(key)) return;
-    linkSet.add(key);
-    links.push({ source: src, target: tgt, type, annotation });
+  const seen = new Set<string>();
+  const addLink = (source: string, target: string, type: EdgeType, annotation?: string | null) => {
+    // The force layout is undirected: collapse reciprocal content links so they
+    // do not add duplicate springs or duplicate draw work. Hierarchy remains
+    // directional because parent -> child is part of its meaning.
+    const endpoints = type === 'hierarchy' ? `${source}\u0000${target}` : [source, target].sort().join('\u0000');
+    const key = `${type}:${endpoints}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    links.push({ source, target, type, annotation });
   };
 
-  // Body references (mentions — refs minus trailing refs)
   index.allFieldNotes.forEach(note => {
-    const trailingIds = new Set((note.trailingRefs || []).map(r => r.uid));
-    (note.references || []).forEach(refUid => {
-      if (trailingIds.has(refUid)) return; // skip — will be an interaction edge
-      if (refUid === note.id) return; // skip self
-      if (index.noteById.has(refUid)) {
-        addLink(note.id, refUid, 'body');
-      }
+    const interactionIds = new Set((note.trailingRefs || []).map(reference => reference.uid));
+    (note.references || []).forEach(target => {
+      if (target !== note.id && !interactionIds.has(target) && index.noteById.has(target)) addLink(note.id, target, 'body');
     });
-  });
-
-  // Interactions (trailing refs)
-  index.allFieldNotes.forEach(note => {
-    (note.trailingRefs || []).forEach(ref => {
-      if (ref.uid === note.id) return;
-      if (index.noteById.has(ref.uid)) {
-        addLink(note.id, ref.uid, 'interaction', ref.annotation);
-      }
+    (note.trailingRefs || []).forEach(reference => {
+      if (reference.uid !== note.id && index.noteById.has(reference.uid)) addLink(note.id, reference.uid, 'interaction', reference.annotation);
     });
-  });
-
-  // Address hierarchy (parent → child)
-  index.allFieldNotes.forEach(note => {
-    const neighborhood = index.neighborhoodMap.get(note.id);
-    if (neighborhood?.parent) {
-      addLink(neighborhood.parent.id, note.id, 'hierarchy');
-    }
+    const parent = index.neighborhoodMap.get(note.id)?.parent;
+    if (parent) addLink(parent.id, note.id, 'hierarchy');
   });
 
   return { nodes, links };
 }
 
-export interface EdgeVisibility {
-  body: boolean;
-  interaction: boolean;
-  hierarchy: boolean;
+// Stable categorical colors. The busiest roots receive the most distinct
+// slots; small overflow roots share a neutral color rather than unstable hues.
+export const ROOT_PALETTE = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767'];
+export const ROOT_NEUTRAL = '#6b7280';
+
+export function hexToRgb(hex: string): number[] {
+  const value = Number.parseInt(hex.slice(1), 16);
+  return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
 }
 
-export function filterGraphData(
-  full: GraphData,
-  visibility: EdgeVisibility,
-): { nodes: GraphNode[]; links: GraphLink[] } {
-  const activeLinks = full.links.filter(l => visibility[l.type]);
-
-  // Only show nodes that have at least one visible edge (or show all if no filter active)
-  const allVisible = visibility.body && visibility.interaction && visibility.hierarchy;
-  if (allVisible) return { nodes: full.nodes, links: activeLinks };
-
-  const connectedIds = new Set<string>();
-  activeLinks.forEach(l => {
-    connectedIds.add(typeof l.source === 'string' ? l.source : (l.source as any).id);
-    connectedIds.add(typeof l.target === 'string' ? l.target : (l.target as any).id);
-  });
-
-  // Always show all nodes — isolated ones just float freely
-  return { nodes: full.nodes, links: activeLinks };
+export function assignRootColors(addresses: Iterable<string>): Map<string, string> {
+  const counts = new Map<string, number>();
+  for (const address of addresses) {
+    const root = address.split('//')[0];
+    if (root) counts.set(root, (counts.get(root) || 0) + 1);
+  }
+  const ranked = [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  return new Map(ranked.map(([root], index) => [root, ROOT_PALETTE[index] ?? ROOT_NEUTRAL]));
 }
 
 export const EDGE_COLORS: Record<EdgeType, string> = {
-  body: '#60a5fa',      // blue-400
-  interaction: '#f59e0b', // amber-500
-  hierarchy: '#4ade80',   // green-400
+  body: '#60a5fa',
+  interaction: '#f59e0b',
+  hierarchy: '#4ade80',
 };
-
-export const EDGE_LABELS: Record<EdgeType, string> = {
-  body: 'Body refs',
-  interaction: 'Interactions',
-  hierarchy: 'Address hierarchy',
-};
-
-export function useFilteredGraph(
-  full: GraphData | null,
-  visibility: EdgeVisibility,
-) {
-  return useMemo(() => {
-    if (!full) return null;
-    return filterGraphData(full, visibility);
-  }, [full, visibility.body, visibility.interaction, visibility.hierarchy]);
-}

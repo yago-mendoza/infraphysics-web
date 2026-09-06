@@ -4,12 +4,14 @@ address: "ML//Inference"
 name: "Inference"
 date: "2026-02-15"
 ---
-At inference time, only the last token's hidden state matters: attention has encoded all previous context into a single 1×D vector.
-- That vector hits the [[2GCBLdlB|LM Head]], producing logits over the vocabulary.
-- [[5qpyTXdv|sampling]] picks the actual next token from those logits.
-- Auto-regressive: each generated token becomes input for the next. The model eats its own output.
+Inference runs a trained model with current inputs to produce predictions or generations. The weights are used rather than learned, although the surrounding application may retrieve information, update memory or call tools between invocations.
+
+For an autoregressive LLM, the transformer produces logits for the next token, [[5qpyTXdv|sampling]] selects a continuation, and that token becomes input to the next step. The economics differ sharply from training: one training run creates weights, while inference may reuse them across millions of requests.
+
+Training builds the instrument. Inference is every performance, including the electricity bill and the waiting audience.
 
 ## Interactions
 
-- [[QtZjVPKo|Transformer]] : : The transformer produces the hidden states; inference reads only the last one
-- [[yK3RLt0K|RAG]] : : RAG stuffs retrieved documents into the context window before inference: the model sees them as regular input
+- [[89ceVDr1|KV cache]] : : Autoregressive inference caches prior attention keys and values to avoid recomputing them for each token
+- [[InfEcon9|inference economics]] : : Repetition, latency and utilization turn inference efficiency into a product constraint
+- [[yK3RLt0K|RAG]] : : RAG retrieves documents before inference so the model can condition on them as ordinary context

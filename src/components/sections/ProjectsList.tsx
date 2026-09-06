@@ -5,6 +5,7 @@ import { Highlight } from '../ui';
 import { postPath, STATUS_CONFIG } from '../../config/categories';
 import { EmptyState } from './SearchResultsList';
 import type { SectionRendererProps } from './index';
+import { getProjectDisplayTechnologies } from '../../lib/projectPresentation';
 
 const projectToolIcons: Record<string, string> = {
   angular: '/tool-icons/si-angular.svg',
@@ -48,7 +49,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
         const status = post.status ? (STATUS_CONFIG[post.status]?.label || post.status) : 'Project';
         const title = <Highlight text={post.displayTitle || post.title} query={query} />;
         const description = <Highlight text={post.description} query={query} />;
-        const technologies = (post.technologies || []).slice(0, 3);
+        const technologies = getProjectDisplayTechnologies(post.technologies);
 
         if (projectVariant === 5) return (
           <article key={post.id} className="project-exhibition-card group">

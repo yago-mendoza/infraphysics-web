@@ -3,7 +3,7 @@
 // Clicking a zone reveals its details below the graph.
 // Sibling-to-sibling navigation animates: the white bar slides to where the sibling dot was.
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { noteLabel, type FieldNoteMeta } from '../types';
 import type { Neighborhood } from '../lib/brainIndex';
@@ -19,6 +19,7 @@ interface Props {
   isVisited?: (noteId: string) => boolean;
   activeZone: Zone;
   onActiveZoneChange: (zone: Zone) => void;
+  onNotePreview?: (note: FieldNoteMeta | null) => void;
   homonymParents?: { parent: FieldNoteMeta; homonym: FieldNoteMeta }[];
   onHomonymNavigate?: (homonym: FieldNoteMeta) => void;
 }
@@ -107,7 +108,7 @@ function ghostDiamondColumns(n: number): number[] {
   return cols;
 }
 
-export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, onNoteClick, isVisited, activeZone, onActiveZoneChange, homonymParents, onHomonymNavigate }) => {
+export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, onNoteClick, isVisited, activeZone, onActiveZoneChange, onNotePreview, homonymParents, onHomonymNavigate }) => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const COL_CURRENT = theme === 'light' ? COL_CURRENT_LIGHT : COL_CURRENT_DARK;
@@ -120,6 +121,15 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
     setTooltip({ label: noteLabel(note), x: svgX, y: svgY });
   };
   const hideTooltip = () => setTooltip(null);
+  const beginNotePreview = (note: FieldNoteMeta) => {
+    setHighlightedNoteId(note.id);
+    onNotePreview?.(note);
+  };
+  const endNotePreview = () => {
+    setHighlightedNoteId(null);
+    onNotePreview?.(null);
+  };
+  useEffect(() => () => onNotePreview?.(null), [onNotePreview]);
 
   const { parent, siblings, children } = neighborhood;
 
@@ -467,8 +477,8 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
                   cx={parentPos.x} cy={parentPos.y} r={HIT_R}
                   fill="transparent" style={{ cursor: 'pointer' }}
                   onClick={() => { onNoteClick(parent!); navigate(secondBrainPath(parent!.id)); }}
-                  onMouseEnter={() => { setHoveredZone('parent'); showTooltip(parent!, parentPos.x, parentPos.y); }}
-                  onMouseLeave={() => { setHoveredZone(null); hideTooltip(); }}
+                  onMouseEnter={() => { setHoveredZone('parent'); showTooltip(parent!, parentPos.x, parentPos.y); beginNotePreview(parent!); }}
+                  onMouseLeave={() => { setHoveredZone(null); hideTooltip(); endNotePreview(); }}
                 />
               </g>
             );
@@ -486,8 +496,8 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
                 cx={pos.x} cy={pos.y} r={HIT_R}
                 fill="transparent" style={{ cursor: 'pointer' }}
                 onClick={() => onHomonymNavigate?.(pos.entry.homonym)}
-                onMouseEnter={() => showTooltip(pos.entry.parent, pos.x, pos.y)}
-                onMouseLeave={hideTooltip}
+                onMouseEnter={() => { showTooltip(pos.entry.parent, pos.x, pos.y); beginNotePreview(pos.entry.homonym); }}
+                onMouseLeave={() => { hideTooltip(); endNotePreview(); }}
               />
             </g>
           ))}
@@ -517,8 +527,8 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
                   cx={pos.x} cy={pos.y} r={HIT_R}
                   fill="transparent" style={{ cursor: isCur ? 'default' : 'pointer' }}
                   onClick={() => { if (!isCur) { onNoteClick(pos.entry.note); navigate(secondBrainPath(pos.entry.note.id)); } }}
-                  onMouseEnter={() => { if (!isCur) setHoveredZone('siblings'); showTooltip(pos.entry.note, pos.x, pos.y); }}
-                  onMouseLeave={() => { setHoveredZone(null); hideTooltip(); }}
+                  onMouseEnter={() => { if (!isCur) { setHoveredZone('siblings'); beginNotePreview(pos.entry.note); } showTooltip(pos.entry.note, pos.x, pos.y); }}
+                  onMouseLeave={() => { setHoveredZone(null); hideTooltip(); if (!isCur) endNotePreview(); }}
                 />
               </g>
             );
@@ -541,8 +551,8 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
                   cx={pos.x} cy={pos.y} r={HIT_R}
                   fill="transparent" style={{ cursor: 'pointer' }}
                   onClick={() => { onNoteClick(children[i]); navigate(secondBrainPath(children[i].id)); }}
-                  onMouseEnter={() => { setHoveredZone('children'); showTooltip(children[i], pos.x, pos.y); }}
-                  onMouseLeave={() => { setHoveredZone(null); hideTooltip(); }}
+                  onMouseEnter={() => { setHoveredZone('children'); showTooltip(children[i], pos.x, pos.y); beginNotePreview(children[i]); }}
+                  onMouseLeave={() => { setHoveredZone(null); hideTooltip(); endNotePreview(); }}
                 />
               </g>
             );

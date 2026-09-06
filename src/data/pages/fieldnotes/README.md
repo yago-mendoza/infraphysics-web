@@ -23,7 +23,7 @@ Fieldnotes form a **bidirectional graph**. Every `[[wiki-link]]` creates a relat
 
 The build pipeline validates the graph on every run. If you break a reference, the build will tell you exactly what's wrong and where. The workflow is: make changes → run build → read errors → fix → repeat.
 
-**AI assistants:** Consult this file before any fieldnotes operation. The [CLAUDE.md](../../../CLAUDE.md) automation rules reference this document.
+**Automation and AI assistants:** Consult this file before any fieldnotes operation; it is the repository's operational source of truth for those changes.
 
 ---
 
@@ -371,6 +371,12 @@ Some text here.      ← this line breaks the trailing ref sequence
 ```
 
 `|` in trailing refs sets display text (which is stripped for connections anyway). ` : : ` sets the annotation that appears in the UI as an "Interaction" description. Trailing refs live under a `## Interactions` heading as list items.
+
+Interaction annotations are **edge content**, not node content. A fieldnote body
+describes the identity or nature of its concept; an interaction describes only
+how two concepts relate. For `A → B`, the relationship is outgoing from `A` and
+incoming (a backlink) to `B`, but its annotation is not intrinsic full-text
+content of either endpoint.
 
 ### `distinct` is bilateral
 

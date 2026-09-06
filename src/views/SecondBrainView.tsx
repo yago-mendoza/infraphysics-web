@@ -6,8 +6,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { secondBrainPath, secondBrainUidFromPath } from '../config/categories';
 import { useHub } from '../contexts/SecondBrainHubContext';
 import { useNavigationTrail } from '../hooks/useNavigationTrail';
-import { WikiContent } from '../components/WikiContent';
 import { NavigationTrail } from '../components/NavigationTrail';
+import { WikiContent } from '../components/WikiContent';
 import { NeighborhoodGraph, type Zone } from '../components/NeighborhoodGraph';
 import { RelevanceLeaderboard, type FamilyItem } from '../components/RelevanceLeaderboard';
 import { BridgeScoreBadge } from '../components/BridgeScoreBadge';
@@ -28,6 +28,7 @@ import { useFieldnoteEditor } from '../components/editor/useFieldnoteEditor';
 import { useLivePreview } from '../components/editor/useLivePreview';
 import { NewNotePanel } from '../components/editor/NewNotePanel';
 import { posts } from '../data/data';
+import { assignRootColors, hexToRgb, ROOT_NEUTRAL } from '../components/graph/useGraphData';
 
 // Lazy-load EditorPanel — never imported on public site, zero bundle impact
 const EditorPanel = React.lazy(() => import('../components/editor/EditorPanel').then(m => ({ default: m.EditorPanel })));
@@ -64,7 +65,8 @@ const SIMPLIFIED_SORT_OPTIONS: { value: SortMode; label: string }[] = [
 const SEARCH_MODES: { value: SearchMode; label: string }[] = [
   { value: 'name', label: 'name' },
   { value: 'content', label: 'content' },
-  { value: 'backlinks', label: 'backlinks' },
+  { value: 'backlinks', label: 'referenced by' },
+  { value: 'all', label: 'all' },
 ];
 
 // --- StepperInput (inline, moved from sidebar) ---
@@ -121,6 +123,16 @@ const ActivityHeatmap: React.FC<{
   onDateClick: (date: string | null) => void;
 }> = ({ allNotes, dateFilter, onDateClick }) => {
   const [year, setYear] = useState(() => new Date().getFullYear());
+  const [temporalPreviewIds, setTemporalPreviewIds] = useState<Set<string> | null>(null);
+
+  useEffect(() => {
+    const receivePreview = (event: Event) => {
+      const ids = (event as CustomEvent<string[] | null>).detail;
+      setTemporalPreviewIds(Array.isArray(ids) ? new Set(ids) : null);
+    };
+    window.addEventListener('wiki-temporal-preview', receivePreview);
+    return () => window.removeEventListener('wiki-temporal-preview', receivePreview);
+  }, []);
 
   // Build date → count map
   const dateCounts = useMemo(() => {
@@ -129,6 +141,17 @@ const ActivityHeatmap: React.FC<{
       if (!n.date) return;
       const d = n.date.slice(0, 10);
       map.set(d, (map.get(d) || 0) + 1);
+    });
+    return map;
+  }, [allNotes]);
+  const noteIdsByDate = useMemo(() => {
+    const map = new Map<string, string[]>();
+    allNotes.forEach(note => {
+      if (!note.date) return;
+      const date = note.date.slice(0, 10);
+      const ids = map.get(date) ?? [];
+      ids.push(note.id);
+      map.set(date, ids);
     });
     return map;
   }, [allNotes]);
@@ -173,12 +196,62 @@ const ActivityHeatmap: React.FC<{
     return max;
   }, [weeks]);
 
-  const cellColor = (count: number, inYear: boolean) => {
+  const rootColors = useMemo(() => assignRootColors(allNotes.map(note => note.address ?? note.title)), [allNotes]);
+  const dominantRootByDate = useMemo(() => {
+    const contributions = new Map<string, Map<string, number>>();
+    allNotes.forEach(note => {
+      if (!note.date) return;
+      const date = note.date.slice(0, 10);
+      const root = note.addressParts?.[0] ?? note.address?.split('//')[0] ?? note.title;
+      const roots = contributions.get(date) ?? new Map<string, number>();
+      roots.set(root, (roots.get(root) ?? 0) + 1);
+      contributions.set(date, roots);
+    });
+    const result = new Map<string, string>();
+    contributions.forEach((roots, date) => {
+      const dominant = [...roots].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
+      if (dominant) result.set(date, dominant[0]);
+    });
+    return result;
+  }, [allNotes]);
+  const temporalDates = useMemo(() => {
+    const result = new Map<string, { count: number; root: string }>();
+    if (!temporalPreviewIds) return result;
+    const rootsPerDate = new Map<string, Map<string, number>>();
+    allNotes.forEach(note => {
+      if (!temporalPreviewIds.has(note.id) || !note.date) return;
+      const date = note.date.slice(0, 10);
+      const root = note.addressParts?.[0] ?? note.address?.split('//')[0] ?? note.title;
+      const roots = rootsPerDate.get(date) ?? new Map<string, number>();
+      roots.set(root, (roots.get(root) ?? 0) + 1);
+      rootsPerDate.set(date, roots);
+    });
+    rootsPerDate.forEach((roots, date) => {
+      const ranked = [...roots].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+      result.set(date, { count: ranked.reduce((sum, entry) => sum + entry[1], 0), root: ranked[0]?.[0] ?? '' });
+    });
+    return result;
+  }, [allNotes, temporalPreviewIds]);
+  const temporalMax = useMemo(() => Math.max(1, ...[...temporalDates.values()].map(value => value.count)), [temporalDates]);
+
+  const cellColor = (date: string, count: number, inYear: boolean) => {
     if (!inYear || count === 0) return 'transparent';
-    // Linear interpolation: 1 note = 0.15, yearMax notes = 0.7
+    if (temporalPreviewIds) {
+      const match = temporalDates.get(date);
+      if (!match) {
+        const rgb = hexToRgb(rootColors.get(dominantRootByDate.get(date) ?? '') ?? ROOT_NEUTRAL);
+        return `rgba(${rgb.map(Math.round).join(',')}, 0.07)`;
+      }
+      const rgb = hexToRgb(rootColors.get(match.root) ?? ROOT_NEUTRAL);
+      const opacity = .38 + .57 * Math.sqrt(match.count / temporalMax);
+      return `rgba(${rgb.map(Math.round).join(',')}, ${opacity.toFixed(2)})`;
+    }
+    // Hue identifies the root that contributed most that day; opacity carries
+    // the independent magnitude signal (total notes written that day).
     const t = yearMax > 1 ? (count - 1) / (yearMax - 1) : 1;
-    const opacity = 0.15 + t * 0.55;
-    return `rgba(167, 139, 250, ${opacity.toFixed(2)})`;
+    const opacity = 0.22 + t * 0.63;
+    const rgb = hexToRgb(rootColors.get(dominantRootByDate.get(date) ?? '') ?? ROOT_NEUTRAL);
+    return `rgba(${rgb.map(Math.round).join(',')}, ${opacity.toFixed(2)})`;
   };
 
   // Parse dateFilter into single or range for highlighting + click logic
@@ -291,7 +364,7 @@ const ActivityHeatmap: React.FC<{
       </div>
       {/* Grid */}
       <div className="overflow-hidden pb-1">
-        <div ref={gridRef} className="flex gap-[2px] cursor-pointer" style={{ width: '100%' }} onClick={handleGridClick}>
+        <div ref={gridRef} className="flex gap-[2px] cursor-pointer" style={{ width: '100%' }} onClick={handleGridClick} onMouseLeave={() => window.dispatchEvent(new CustomEvent('wiki-calendar-preview', { detail: null }))}>
           {/* Day labels */}
           <div data-day-labels className="hidden md:flex flex-col gap-[2px] mr-0.5 flex-shrink-0">
             {DAY_NAMES.map((name, i) => (
@@ -308,10 +381,18 @@ const ActivityHeatmap: React.FC<{
                   <div
                     key={di}
                     className="aspect-square w-full"
+                    onMouseEnter={() => {
+                      const ids = noteIdsByDate.get(day.date);
+                      // A real empty day ends the preview. CSS gaps emit no
+                      // mouse-enter event, so crossing a narrow gutter still
+                      // preserves continuity without making empty cells sticky.
+                      window.dispatchEvent(new CustomEvent('wiki-calendar-preview', { detail: ids?.length ? ids : null }));
+                    }}
                     style={{
-                      backgroundColor: cellColor(day.count, day.inYear),
+                      backgroundColor: cellColor(day.date, day.count, day.inYear),
                       border: isEmpty ? '1px solid rgba(255, 255, 255, 0.06)' : 'none',
                       borderRadius: 1,
+                      transition: 'background-color 180ms ease, box-shadow 180ms ease, opacity 180ms ease',
                       opacity: day.inYear ? 1 : 0,
                       boxShadow: isSelected(day.date)
                         ? 'inset 0 0 0 1px rgba(167, 139, 250, 0.9)'
@@ -319,7 +400,7 @@ const ActivityHeatmap: React.FC<{
                           ? 'inset 0 0 0 1px rgba(167, 139, 250, 0.35)'
                           : 'none',
                     }}
-                    title={day.inYear ? `${day.date}${day.count ? ` (${day.count})` : ''}` : undefined}
+                    title={day.inYear ? `${day.date}${day.count ? ` (${day.count})` : ''}${temporalDates.get(day.date) ? ` · ${temporalDates.get(day.date)!.count} highlighted` : ''}` : undefined}
                   />
                 );
               })}
@@ -391,21 +472,11 @@ const DockedToolbar: React.FC<{
   sortedResults, connectionsMap,
 }) => {
     const isSimplified = viewMode === 'simplified';
-    const { getIslands, loaded } = useGraphRelevance();
     const [filtersOpen, setFiltersOpen] = useState(true);
 
-    // Auto-expand filters when any filter is active or scope is set
-    const isFiltersVisible = filtersOpen || hasActiveFilters || !!directoryScope;
-
-    // Island options
-    const islandOptions = useMemo(() => {
-      if (!loaded) return [];
-      const islands = getIslands();
-      if (!islands) return [];
-      return islands.components
-        .filter(c => c.size > 1)
-        .sort((a, b) => b.size - a.size);
-    }, [getIslands, loaded]);
+    // Panel visibility is independent from filter state. Active constraints
+    // must survive a collapse without forcing the controls back open.
+    const isFiltersVisible = filtersOpen;
 
     // --- Bulk copy state ---
     const [bulkCopyState, setBulkCopyState] = useState<'idle' | 'copying' | 'copied'>('idle');
@@ -418,7 +489,7 @@ const DockedToolbar: React.FC<{
       try {
         const parts: string[] = [];
         if (query) parts.push(`"${query}"`);
-        if (directoryScope) parts.push(`scope: ${directoryScope.replace(/\/\//g, ' / ')}`);
+        if (directoryScope) parts.push(`root: ${directoryScope}`);
         if (hasActiveFilters) parts.push('filtered');
         const header = parts.length > 0 ? `Second Brain — ${parts.join(', ')}` : 'Second Brain export';
 
@@ -438,7 +509,7 @@ const DockedToolbar: React.FC<{
       }
     }, [sortedResults, connectionsMap, bulkCopyMode, query, directoryScope, hasActiveFilters]);
 
-    // Scope picker state
+    // Root picker state
     const [scopeInput, setScopeInput] = useState('');
     const [scopeOpen, setScopeOpen] = useState(false);
     const scopeBlurRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -446,17 +517,12 @@ const DockedToolbar: React.FC<{
     const scopeOptions = useMemo(() => {
       const counts = new Map<string, number>();
       allNotes.forEach(note => {
-        const parts = note.addressParts || [note.title];
-        for (let i = 1; i <= parts.length; i++) {
-          const prefix = parts.slice(0, i).join('//');
-          counts.set(prefix, (counts.get(prefix) || 0) + 1);
-        }
+        const root = (note.addressParts || note.address?.split('//') || [note.title])[0];
+        if (root) counts.set(root, (counts.get(root) || 0) + 1);
       });
-      // Only paths that contain >1 note (actual folders)
       return [...counts.entries()]
-        .filter(([, c]) => c > 1)
         .map(([path, c]) => ({ path, count: c }))
-        .sort((a, b) => a.path.localeCompare(b.path));
+        .sort((a, b) => b.count - a.count || a.path.localeCompare(b.path));
     }, [allNotes]);
 
     const filteredScopeOptions = useMemo(() => {
@@ -474,9 +540,7 @@ const DockedToolbar: React.FC<{
             ref={inputRef}
             type="text"
             placeholder={
-              directoryScope ? `Search in ${directoryScope.replace(/\/\//g, ' / ')}...`
-                : filterState.islandId != null ? `Search in island #${filterState.islandId}...`
-                  : 'Search...'
+              directoryScope ? `Search in ${directoryScope.replace(/\/\//g, ' / ')}...` : 'Search...'
             }
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -494,60 +558,55 @@ const DockedToolbar: React.FC<{
           {query && (
             <button onClick={() => setQuery('')} className="text-th-tertiary hover:text-th-secondary text-[16px] md:text-[13px] leading-none flex-shrink-0 px-0.5">&times;</button>
           )}
-          {!isSimplified && (
-            <>
-              <span className="text-th-hub-border">|</span>
-              <select
-                value={searchMode}
-                onChange={(e) => setSearchMode(e.target.value as SearchMode)}
-                className="md:hidden border border-th-hub-border text-[16px] text-th-primary px-1 py-0.5 focus:outline-none focus:border-th-border-active"
-                style={{ backgroundColor: 'var(--hub-sidebar-bg)', colorScheme: 'dark' }}
-              >
-                {SEARCH_MODES.map(mode => (
-                  <option key={mode.value} value={mode.value}>{mode.label}</option>
-                ))}
-              </select>
-              {SEARCH_MODES.map(mode => (
-                <button
-                  key={mode.value}
-                  onClick={() => setSearchMode(mode.value)}
-                  className={`hidden md:inline-block text-[9px] px-1 py-0 transition-colors flex-shrink-0 ${searchMode === mode.value ? 'text-violet-400' : 'text-th-tertiary hover:text-th-secondary'
-                    }`}
-                >
-                  {mode.label}
-                </button>
-              ))}
-            </>
-          )}
         </div>
+
+        {!isSimplified && <div className="grid grid-cols-4 gap-px border-b border-th-hub-border bg-th-hub-border p-px" aria-label="Search field">
+          {SEARCH_MODES.map(mode => <button
+            key={mode.value}
+            type="button"
+            onClick={() => setSearchMode(mode.value)}
+            title={mode.value === 'name' ? 'Match node names, paths and aliases' : mode.value === 'content' ? 'Match text inside notes' : mode.value === 'backlinks' ? 'Find nodes referenced by matching notes' : 'Search names, content and references together'}
+            className={`bg-th-base px-2 py-1.5 text-[10px] transition-colors ${searchMode === mode.value ? 'bg-violet-400/10 font-medium text-violet-400' : 'text-th-tertiary hover:bg-th-surface hover:text-th-secondary'}`}
+          >{mode.label}</button>)}
+        </div>}
 
         {/* Row 2: Filters (collapsible) — technical mode only */}
         {!isSimplified && (
         <div className="border-b border-th-hub-border">
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() => setFiltersOpen(v => !v)}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFiltersOpen(v => !v); } }}
-            className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[10px] bg-white/[0.03] border-b border-th-hub-border text-th-secondary transition-colors cursor-pointer select-none"
-          >
-            <span>{isFiltersVisible ? '\u25BE' : '\u25B8'}</span>
-            <span className="uppercase tracking-wider text-[9px] font-medium">filters</span>
-            {(hasActiveFilters || !!directoryScope) && (
-              <span className="text-[9px] text-violet-400 tabular-nums">
-                ({[
-                  filterState.isolated,
-                  filterState.leaf,
-                  filterState.bridgesOnly,
-                  filterState.hubThreshold > 0,
-                  filterState.depthMin > 1,
-                  filterState.depthMax !== Infinity,
-                  filterState.islandId != null,
-                  filterState.dateFilter != null,
-                  filterState.wordCountMin > 0 || filterState.wordCountMax < Infinity,
-                  !!directoryScope,
-                ].filter(Boolean).length})
-              </span>
+          <div className={`flex items-center bg-white/[0.03] text-[10px] text-th-secondary transition-colors ${isFiltersVisible ? 'border-b border-th-hub-border' : ''}`}>
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(v => !v)}
+              className="flex min-w-0 flex-1 items-center gap-1.5 px-3 py-1.5 text-left cursor-pointer select-none"
+              aria-expanded={isFiltersVisible}
+            >
+              <span>{isFiltersVisible ? '\u25BE' : '\u25B8'}</span>
+              <span className="uppercase tracking-wider text-[9px] font-medium">filters</span>
+              {(hasActiveFilters || !!directoryScope) && (
+                <span className="text-[9px] text-violet-400 tabular-nums">
+                  ({[
+                    filterState.isolated,
+                    filterState.leaf,
+                    filterState.bridgesOnly,
+                    filterState.hubThreshold > 0,
+                    filterState.depthMin > 1,
+                    filterState.depthMax !== Infinity,
+                    filterState.dateFilter != null,
+                    filterState.wordCountMin > 0 || filterState.wordCountMax < Infinity,
+                    !!directoryScope,
+                  ].filter(Boolean).length})
+                </span>
+              )}
+            </button>
+            {!isFiltersVisible && (hasActiveFilters || !!directoryScope) && (
+              <button
+                type="button"
+                onClick={() => { resetFilters(); setDirectoryScope(null); }}
+                className="mr-2 border-l border-th-hub-border pl-2 font-mono text-[8px] uppercase tracking-[.08em] text-violet-400/80 transition-colors hover:text-violet-300"
+                title="Clear active filters"
+              >
+                clear
+              </button>
             )}
           </div>
           {isFiltersVisible && (
@@ -555,15 +614,15 @@ const DockedToolbar: React.FC<{
               {/* All filters in one row: dropdowns + separator + toggle pills */}
               <div className="flex items-center gap-1.5 md:gap-3 md:flex-wrap overflow-x-auto md:overflow-visible px-3 hub-scrollbar sb-filter-row">
                 <div className="flex items-center gap-1 text-[10px] text-th-tertiary relative">
-                  <span>scope</span>
+                  <span>roots</span>
                   <div className="relative">
                     <input
                       type="text"
-                      placeholder={directoryScope ? directoryScope.replace(/\/\//g, ' / ') : 'all'}
+                      placeholder={directoryScope || 'all'}
                       value={scopeInput}
                       onChange={(e) => { setScopeInput(e.target.value); setScopeOpen(true); }}
                       onFocus={() => { if (scopeBlurRef.current) clearTimeout(scopeBlurRef.current); setScopeOpen(true); }}
-                      onBlur={() => { scopeBlurRef.current = setTimeout(() => setScopeOpen(false), 150); }}
+                      onBlur={() => { scopeBlurRef.current = setTimeout(() => { setScopeOpen(false); window.dispatchEvent(new CustomEvent('wiki-root-preview', { detail: { root: null } })); }, 150); }}
                       onKeyDown={(e) => {
                         if (e.key === 'Escape') { setScopeInput(''); setScopeOpen(false); (e.target as HTMLElement).blur(); }
                         if (e.key === 'Enter' && filteredScopeOptions.length > 0) {
@@ -576,6 +635,7 @@ const DockedToolbar: React.FC<{
                     />
                     {scopeOpen && filteredScopeOptions.length > 0 && (
                       <div
+                        onMouseLeave={() => window.dispatchEvent(new CustomEvent('wiki-root-preview', { detail: { root: null } }))}
                         className="absolute top-full left-0 mt-0.5 border border-th-hub-border max-h-40 overflow-y-auto z-20 w-52 thin-scrollbar"
                         style={{ backgroundColor: 'var(--hub-sidebar-bg)' }}
                       >
@@ -583,32 +643,17 @@ const DockedToolbar: React.FC<{
                           <button
                             key={opt.path}
                             onMouseDown={(e) => e.preventDefault()}
-                            onClick={() => { setDirectoryScope(opt.path); setScopeInput(''); setScopeOpen(false); }}
+                            onMouseEnter={() => window.dispatchEvent(new CustomEvent('wiki-root-preview', { detail: { root: opt.path } }))}
+                            onClick={() => { setDirectoryScope(opt.path); setScopeInput(''); setScopeOpen(false); window.dispatchEvent(new CustomEvent('wiki-root-preview', { detail: { root: null } })); }}
                             className="block w-full text-left px-2 py-1 text-[10px] text-th-secondary hover:bg-violet-400/10 hover:text-violet-400 transition-colors truncate"
                           >
-                            {opt.path.replace(/\/\//g, ' / ')} <span className="text-th-muted">({opt.count})</span>
+                            {opt.path} <span className="text-th-muted">({opt.count})</span>
                           </button>
                         ))}
                       </div>
                     )}
                   </div>
                 </div>
-                {islandOptions.length > 1 && (
-                  <div className="flex items-center gap-1 text-[10px] text-th-tertiary">
-                    <span>island</span>
-                    <select
-                      value={filterState.islandId ?? ''}
-                      onChange={(e) => updateFilter('islandId', e.target.value === '' ? null : Number(e.target.value))}
-                      className="bg-th-surface border border-th-hub-border text-[10px] text-th-primary px-1 py-0.5 focus:outline-none focus:border-th-border-active"
-                      style={{ colorScheme: 'dark' }}
-                    >
-                      <option value="">all</option>
-                      {islandOptions.map(c => (
-                        <option key={c.id} value={c.id}>#{c.id} ({c.size})</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
                 <div className="flex items-center gap-1 text-[10px] text-th-tertiary">
                   <span>depth</span>
                   <StepperInput
@@ -684,7 +729,7 @@ const DockedToolbar: React.FC<{
                 <select
                   value={sortMode}
                   onChange={(e) => setSortMode(e.target.value as SortMode)}
-                  className="md:hidden border border-th-hub-border text-[16px] text-th-primary px-1 py-0.5 focus:outline-none focus:border-th-border-active"
+                  className="md:hidden appearance-none rounded-sm border border-th-hub-border bg-th-surface px-2 py-1 text-[16px] text-th-primary shadow-none focus:outline-none focus:border-th-border-active"
                   style={{ backgroundColor: 'var(--hub-sidebar-bg)', colorScheme: 'dark' }}
                 >
                   {sortOptions.map(opt => (
@@ -764,9 +809,6 @@ const DockedToolbar: React.FC<{
             {directoryScope && (
               <Chip label={`scope: ${directoryScope.replace(/\/\//g, ' / ')}`} onDismiss={() => setDirectoryScope(null)} />
             )}
-            {filterState.islandId != null && (
-              <Chip label={`island #${filterState.islandId}`} onDismiss={() => updateFilter('islandId', null)} />
-            )}
             {filterState.dateFilter && (
               <Chip label={filterState.dateFilter.replace('..', ' \u2192 ')} onDismiss={() => updateFilter('dateFilter', null)} />
             )}
@@ -798,11 +840,7 @@ const GridCard = React.memo<{
   onCardClick: (note: FieldNoteMeta) => void;
   incoming: number;
   outgoing: number;
-  componentId: number | null;
-  isIsolated: boolean;
-  isBridge: boolean;
-  viewMode: ViewMode;
-}>(({ note, idx, focused, visited, onCardClick, incoming, outgoing, componentId, isIsolated, isBridge, viewMode }) => (
+}>(({ note, idx, focused, visited, onCardClick, incoming, outgoing }) => (
   <Link
     data-idx={idx}
     to={secondBrainPath(note.id)}
@@ -826,15 +864,6 @@ const GridCard = React.memo<{
     )}
     <div className="flex items-center gap-2 mt-auto pt-2.5 text-[10px] text-th-tertiary tabular-nums">
       <span>{outgoing}↗ {incoming}↙</span>
-      {viewMode === 'technical' && componentId != null && !isIsolated && (
-        <span className="text-violet-400/60">#{componentId}</span>
-      )}
-      {viewMode === 'technical' && isBridge && (
-        <span className="text-amber-400/80">⚡</span>
-      )}
-      {viewMode === 'technical' && isIsolated && (
-        <span>isolated</span>
-      )}
       {note.date && (
         <span className="ml-auto opacity-60">{note.date.slice(0, 10)}</span>
       )}
@@ -890,8 +919,8 @@ export const SecondBrainView: React.FC = () => {
   const isSimplified = viewMode === 'simplified';
 
   const navigate = useNavigate();
-  const { getRelevance, getPercentile, getNoteTopology } = useGraphRelevance();
-  const { trail, scheduleReset, scheduleExtend, truncateTrail, clearTrail, isOverflowing } =
+  const { getRelevance, getPercentile } = useGraphRelevance();
+  const { trail, scheduleReset, scheduleExtend, truncateTrail, clearTrail } =
     useNavigationTrail({ activePost, directoryNavRef });
   const isLocalhost = useIsLocalhost();
   const { id: urlId } = useParams<{ id: string }>();
@@ -1053,6 +1082,9 @@ export const SecondBrainView: React.FC = () => {
   const handleConnectionClick = useCallback((post: FieldNoteMeta) => {
     scheduleExtend(post);
   }, [scheduleExtend]);
+  const handleNeighborhoodPreview = useCallback((post: FieldNoteMeta | null) => {
+    window.dispatchEvent(new CustomEvent('wiki-link-preview', { detail: post?.id ?? null }));
+  }, []);
 
   // Delegated click handler for wiki-ref links inside dangerouslySetInnerHTML regions
   const handleInlineWikiClick = useCallback((e: React.MouseEvent) => {
@@ -1068,6 +1100,10 @@ export const SecondBrainView: React.FC = () => {
 
   // When search is active, force list view
   const showDetail = activePost && !searchActive;
+  const activeFilterMembership = useMemo(() => {
+    if (!activePost || (!hasActiveFilters && !directoryScope && !query.trim())) return null;
+    return sortedResults.some(note => note.id === activePost.id);
+  }, [activePost, directoryScope, hasActiveFilters, query, sortedResults]);
 
   // Content ready = content loaded for the currently displayed note
   const contentReady = activePost?.id === contentReadyId;
@@ -1547,6 +1583,14 @@ export const SecondBrainView: React.FC = () => {
       </div>
 
       {/* Welcome screen — first visit only, portaled to body to escape transform stacking context */}
+      {trail.length > 0 && <div className="mb-3 max-w-3xl overflow-hidden">
+        <NavigationTrail
+          trail={trail}
+          onItemClick={index => { const item = trail[index]; truncateTrail(index); navigate(secondBrainPath(item.id)); }}
+          onAllConceptsClick={() => { clearTrail(); navigate(secondBrainPath()); }}
+        />
+      </div>}
+
       {!welcomeDismissed && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
@@ -1583,76 +1627,31 @@ export const SecondBrainView: React.FC = () => {
         <div className={globalEditMode && isLocalhost ? 'flex gap-6 items-start' : isSimplified ? 'max-w-3xl' : 'grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-10'}>
           {/* Left: metadata always visible, body fades when content loads */}
           <div className={globalEditMode && isLocalhost ? 'flex-1 min-w-0' : 'lg:col-span-3'}>
-            {/* Navigation Trail */}
-            <div className="flex items-center gap-2 mb-3">
-              <div className="flex-1 min-w-0">
-                <NavigationTrail
-                  trail={trail}
-                  onItemClick={(index) => truncateTrail(index)}
-                  onAllConceptsClick={clearTrail}
-                  isOverflowing={isOverflowing}
-                />
-              </div>
+            <div className="flex items-center gap-2 mb-1">
+              <h2 className="text-2xl font-bold text-th-heading">
+                {noteLabel(activePost!)}
+                {!isSimplified && <BridgeScoreBadge percentile={getPercentile(activePost!.id)} />}
+                {activeFilterMembership !== null && (
+                  <span
+                    className={`ml-1.5 inline-flex h-[13px] translate-y-[-0.18em] items-center rounded-[2px] border px-1 font-mono text-[7px] font-medium uppercase leading-none tracking-[.055em] ${activeFilterMembership
+                      ? 'border-indigo-400/25 bg-indigo-400/[.07] text-indigo-300/85'
+                      : 'border-rose-400/22 bg-rose-400/[.045] text-rose-300/70'
+                    }`}
+                    title={activeFilterMembership ? 'This concept is included in the current filter' : 'This concept is outside the current filter'}
+                  >
+                    {activeFilterMembership ? 'in filter' : 'outside filter'}
+                  </span>
+                )}
+              </h2>
+              <button
+                onClick={() => setShowCopyModal(true)}
+                className="ml-auto shrink-0 text-th-tertiary hover:text-violet-400 transition-colors"
+                title="Copy for context"
+                aria-label="Copy for context"
+              >
+                <ClipboardIcon size={14} />
+              </button>
             </div>
-
-            {/* Topology badges + Concept Title */}
-            {(() => {
-              const topo = getNoteTopology(activePost!.id);
-              const badges = !isSimplified ? (
-                <>
-                  {topo.componentId != null && !topo.isIsolated && (
-                    <button
-                      onClick={() => {
-                        window.dispatchEvent(new CustomEvent('topology-focus', { detail: { componentId: topo.componentId } }));
-                      }}
-                      className="inline-flex items-center text-[10px] font-normal px-1.5 py-0.5 border border-violet-400/30 text-violet-400/80 hover:text-violet-400 hover:border-violet-400/50 transition-colors rounded-sm"
-                      title={`Component #${topo.componentId} (${topo.componentSize} notes)`}
-                    >
-                      island #{topo.componentId}
-                    </button>
-                  )}
-                  {topo.isBridge && (
-                    <span className="inline-flex items-center text-[10px] font-normal px-1.5 py-0.5 border border-amber-400/30 text-amber-400/80 rounded-sm">
-                      ⚡ bridge {Math.round((topo.bridgeCriticality ?? 0) * 100)}%
-                    </span>
-                  )}
-                  {topo.isIsolated && (
-                    <span className="text-[10px] font-normal text-th-muted">(isolated)</span>
-                  )}
-                </>
-              ) : null;
-              const hasBadges = !isSimplified && (topo.componentId != null || topo.isBridge || topo.isIsolated);
-              return (
-                <>
-                  {/* Mobile: badges above title, left-aligned */}
-                  {hasBadges && (
-                    <div className="flex items-center gap-2 mb-1 lg:hidden">
-                      {badges}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 mb-1">
-                    <h2 className="text-2xl font-bold text-th-heading">
-                      {noteLabel(activePost!)}
-                      {!isSimplified && <BridgeScoreBadge percentile={getPercentile(activePost!.id)} />}
-                      {/* Desktop: badges inline after title */}
-                      {hasBadges && (
-                        <span className="hidden lg:inline-flex items-center gap-2 ml-3 align-middle">
-                          {badges}
-                        </span>
-                      )}
-                    </h2>
-                    <button
-                      onClick={() => setShowCopyModal(true)}
-                      className="ml-auto shrink-0 text-th-tertiary hover:text-violet-400 transition-colors"
-                      title="Copy for context"
-                      aria-label="Copy for context"
-                    >
-                      <ClipboardIcon size={14} />
-                    </button>
-                  </div>
-                </>
-              );
-            })()}
             <div className="text-[11px] text-th-tertiary mb-2">
               {activePost!.addressParts && activePost!.addressParts.length > 1
                 ? activePost!.addressParts.map((part, i) => {
@@ -1685,8 +1684,8 @@ export const SecondBrainView: React.FC = () => {
                     key={m.id}
                     to={secondBrainPath(m.id)}
                     onClick={() => handleConnectionClick(m)}
-                    onMouseEnter={(e) => showMentionPreview(m, e)}
-                    onMouseLeave={hideMentionPreview}
+                    onMouseEnter={(e) => { showMentionPreview(m, e); window.dispatchEvent(new CustomEvent('wiki-link-preview', { detail: m.id })); }}
+                    onMouseLeave={() => { hideMentionPreview(); window.dispatchEvent(new CustomEvent('wiki-link-preview', { detail: null })); }}
                     className={`text-sm font-normal transition-colors no-underline ${isVisited(m.id) ? 'text-blue-400 hover:text-blue-300' : 'text-violet-400 hover:text-violet-300'}`}
                   >
                     {noteLabel(m)}<svg className="inline w-[0.85em] h-[0.85em] ml-0.5 opacity-50" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style={{ verticalAlign: '-0.1em' }}><path fillRule="evenodd" clipRule="evenodd" d={ICON_REF_IN} /></svg>
@@ -1734,6 +1733,8 @@ export const SecondBrainView: React.FC = () => {
                             <Link
                               to={secondBrainPath(conn.note.id)}
                               onClick={() => handleConnectionClick(conn.note)}
+                              onMouseEnter={() => window.dispatchEvent(new CustomEvent('wiki-link-preview', { detail: conn.note.id }))}
+                              onMouseLeave={() => window.dispatchEvent(new CustomEvent('wiki-link-preview', { detail: null }))}
                               className="wiki-sidelink inline transition-colors no-underline border-b border-solid cursor-pointer"
                               style={{ '--wl-color': v ? 'var(--wiki-link-visited)' : 'var(--cat-fieldnotes-accent)' } as React.CSSProperties}
                             >
@@ -1818,6 +1819,7 @@ export const SecondBrainView: React.FC = () => {
                             isVisited={isVisited}
                             activeZone={zoneFilter ? activeZone : null}
                             onActiveZoneChange={(zone) => { setZoneFilter(true); setActiveZone(zone); }}
+                            onNotePreview={handleNeighborhoodPreview}
                             homonymParents={homonymParents}
                             onHomonymNavigate={(homonym) => {
                               scheduleExtend(homonym);
@@ -1853,6 +1855,7 @@ export const SecondBrainView: React.FC = () => {
                     isVisited={isVisited}
                     activeZone={zoneFilter ? activeZone : null}
                     onActiveZoneChange={(zone) => { setZoneFilter(true); setActiveZone(zone); }}
+                    onNotePreview={handleNeighborhoodPreview}
                     homonymParents={homonymParents}
                     onHomonymNavigate={(homonym) => {
                       scheduleExtend(homonym);
@@ -1894,9 +1897,7 @@ export const SecondBrainView: React.FC = () => {
           <div style={showDetail ? { display: 'none' } : undefined}>
             <div ref={gridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {visibleResults.length > 0 ? (
-                visibleResults.map((note, idx) => {
-                  const topo = getNoteTopology(note.id);
-                  return (
+                visibleResults.map((note, idx) => (
                     <GridCard
                       key={note.id}
                       note={note}
@@ -1906,13 +1907,8 @@ export const SecondBrainView: React.FC = () => {
                       onCardClick={handleGridCardClick}
                       outgoing={note.references?.length || 0}
                       incoming={(backlinksMap.get(note.id) || []).length}
-                      componentId={topo.componentId}
-                      isIsolated={topo.isIsolated}
-                      isBridge={topo.isBridge}
-                      viewMode={viewMode}
                     />
-                  );
-                })
+                ))
               ) : (
                 <div className="text-xs text-th-tertiary py-8 text-center col-span-3">
                   No concepts match your search

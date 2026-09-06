@@ -6,6 +6,7 @@
   "scripts": {
     "content": "node scripts/build-content.js",
     "content:fix": "node scripts/build-content.js --interactive",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.functions.json",
     "dev": "npm run content && vite",
     "build": "npm run content && vite build",
     "preview": "vite preview",
@@ -22,15 +23,16 @@
     "@giscus/react": "^3.1.0",
     "codemirror": "^6.0.2",
     "d3-force": "^3.0.0",
-    "elkjs": "^0.12.0",
     "katex": "^0.16.37",
-    "makerjs": "^0.19.2",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-force-graph-2d": "^1.29.1",
-    "react-router-dom": "^7.12.0"
+    "react-force-graph-3d": "^1.29.1",
+    "react-router-dom": "^7.18.3",
+    "three": "^0.183.2"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260902.1",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
@@ -41,5 +43,8 @@
     "shiki": "^3.22.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
+  },
+  "overrides": {
+    "lodash-es": "^4.18.1"
   }
 }

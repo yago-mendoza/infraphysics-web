@@ -4,7 +4,9 @@ address: "ML//Multimodal//Whisper"
 name: "Whisper"
 date: "2026-02-27"
 ---
-- OpenAI's automatic speech recognition model (2022). Trained on 680K hours of multilingual audio.
-- Robust to accents, background noise, technical jargon, the "GPT-3 moment" for speech recognition.
-- distil-whisper, v3 Turbo: faster production variants. Open weights, no papers for v2/v3.
-- Became the default ASR backbone in most voice AI pipelines.
+- Whisper is OpenAI's 2022 [[578K1Mhu|multimodal]] speech-recognition model, trained on roughly 680,000 hours of weakly supervised multilingual audio.
+- It frames transcription, translation, language identification, and timestamps as token prediction in one sequence-to-sequence model.
+- Scale and noisy web data gave it unusually broad zero-shot robustness, but domain vocabulary, overlapping speakers, hallucination during silence, and timestamp accuracy still require evaluation in the actual deployment environment.
+- Distilled and accelerated variants trade some generality or precision for production latency.
+
+Whisper's lasting shift was operational: high-quality multilingual ASR became a downloadable component rather than a specialized cloud integration.

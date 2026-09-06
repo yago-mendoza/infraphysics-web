@@ -4,10 +4,11 @@ address: "Infrastructure//edge computing"
 name: "edge computing"
 date: "2026-03-10"
 ---
-Running code in datacenters geographically close to the user, rather than in a central region. Reduces latency because the request doesn't travel across continents.
-- [[Hp5nVw9C|Cloudflare]] has 300+ edge locations worldwide
-- The tradeoff: edge runtimes have limitations (no full Node.js, limited CPU time per request, restricted APIs)
-- Examples: [[Lk2rXj6D|Cloudflare Workers]], Deno Deploy, Vercel Edge, AWS Lambda@Edge
+Edge computing places computation near the data source, user or physical process it serves. That may mean a regional point of presence, a factory gateway, a vehicle or the device holding the sensor itself.
+
+Proximity can reduce round-trip latency, bandwidth consumption and dependence on continuous connectivity. It also fragments deployment across smaller, heterogeneous and physically exposed machines. “Edge” describes where computation sits relative to consequences, not one vendor runtime or ownership model.
+
+The cloud brings data to a large machine. The edge asks whether the decision should travel at all.
 
 ## Interactions
-- [[Lk2rXj6D|Workers]] : : Workers are Cloudflare's implementation of edge computing -- V8 isolates in 300+ datacenters
+- [[Lk2rXj6D|Workers]] : : Workers implement one form of network-edge computing through distributed runtime locations

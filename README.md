@@ -71,7 +71,6 @@ infraphysics-web/
       BridgeScoreBadge.tsx    # Colored dot indicating centrality tier (bridge/connector/peripheral)
       InfoPopover.tsx         # Contextual help popovers (singleton, portal-based)
       SecondBrainGuide.tsx   # Consolidated guide modal for Second Brain (replaces scattered InfoPopovers)
-      IslandDetector.tsx      # Topology sidebar: connected components, articulation points (bridges)
       CopyExportModal.tsx     # Scope-selector modal for exporting note context to clipboard (LLM-friendly)
       NavigationTrail.tsx     # Breadcrumb trail for concept navigation
       SearchPalette.tsx       # Global search overlay (Cmd+K)
@@ -84,13 +83,13 @@ infraphysics-web/
       ui/                     # SearchBar, StatusBadge, Highlight
       icons/                  # SVG icon components
       editor/                 # Fieldnote editor (localhost only): CodeMirror, diagnostics, term detection, navigation, trailing refs, new note panel, delete confirmation
-      graph/                  # Force-directed graph explorer (2D/3D): controls, edge toggles, data hooks
+      graph/                  # Shared force-directed 2D/3D graph explorer and data hooks
     views/
       HomeView.tsx            # Landing page
       SectionView.tsx         # Category listing (projects, threads, bits2bricks)
       PostView.tsx            # Single post renderer
       SecondBrainView.tsx     # Fieldnotes explorer
-      SecondBrainGraphView.tsx # Force-graph explorer (2D/3D, resizable note panel)
+      XNotesView.tsx          # Experimental X-style timeline for short notes (/x)
       AboutView.tsx           # About page
       ContactView.tsx         # Contact form (Formspree)
     data/
@@ -116,7 +115,7 @@ infraphysics-web/
       fieldnotes/             # {uid}.json content files (served as static assets)
       fieldnotes-index.json   # Generated: fieldnote metadata index (HTTP-fetched at runtime)
       og-manifest.json        # Generated: URL path → OG metadata + full text body for crawlers
-      sitemap.xml             # Generated: XML sitemap (415+ URLs)
+      sitemap.xml             # Generated XML sitemap (route count follows current content)
       feed.xml                # Generated: RSS feed (latest 30 articles)
       llms.txt                # Static: LLM-friendly site summary (manually maintained)
       llms-full.txt           # Generated: all articles in full plain text
@@ -131,11 +130,11 @@ infraphysics-web/
       search.ts               # Search utilities
       brainIndex.ts           # Fieldnotes index (singleton, lazy init, 7 in-memory Maps, HMR-aware)
       exportNotes.ts          # Export fieldnotes as LLM-friendly markdown (htmlToText, batch export)
-      addressToId.ts          # Address → slug conversion (deprecated)
+      projectPresentation.ts # Canonical project topics/technology presentation
       icons.ts                # Centralized SVG icon paths (Heroicons)
       content/                # Shared compile/parse library (used by build scripts + Vite plugin)
     hooks/
-      useSecondBrainHub.ts    # Core hub hook: index, search, sort, filter, tree, prefetch (628 lines)
+      useSecondBrainHub.ts    # Core hub hook: index, search, sort, filter, tree and prefetch
       useNavigationTrail.ts   # Breadcrumb trail with popstate tracking
       useGraphRelevance.ts    # PageRank + proximity data (module-level singleton, lazy import)
       useArticleSearch.ts     # In-page search with DOM tree walker + highlight
@@ -147,6 +146,7 @@ infraphysics-web/
       article.css             # Article post view styles (terminal/cyberpunk theme)
       wiki-content.css        # Wiki/second-brain content delta overrides
       editor.css              # CodeMirror overrides for fieldnote editor
+      x-notes.css             # Isolated styling for the experimental /x timeline
     config/                   # Categories config
     constants/                # Layout, theme constants
     types.ts                  # TypeScript interfaces (Post, Category, etc.)
@@ -163,6 +163,7 @@ infraphysics-web/
 | `npm run content` | Compile all markdown into JSON (incremental — only recompiles changed files) |
 | `npm run content -- --force` | Force full rebuild (ignore cache) |
 | `npm run content:fix` | Compile content + interactively fix segment collisions and missing parents |
+| `npm run typecheck` | Type-check the browser app and Cloudflare Functions |
 | `npm run dev` | Build content + start Vite dev server |
 | `npm run build` | Build content + production build |
 | `npm run preview` | Preview production build locally |
@@ -191,7 +192,7 @@ A flat knowledge graph of `{uid}.md` files in `fieldnotes/`. Each note has a sta
 
 **In-browser editor** (localhost only): Click a note's edit button to open a CodeMirror editor panel. Features: `[[` navigation dropdown (arrow keys + Enter to jump between notes, Tab to drill into children, filters as you type), smart term detection (highlights unlinked mentions of known notes in purple, offers Yes/No to convert to wiki-links), missing-parent stub creation from diagnostics, delete workflow with impact analysis (shows inbound refs, children, trailing refs — offers stub conversion or permanent delete with ref cleanup), uid protection (read-only, restored on save), resizable diagnostics panel, trailing refs widget, and auto-reload after save via HMR. The editor runs live validation on every keystroke, catching broken references, missing parents, and formatting issues before they reach the build — so most errors are fixed in real time without needing to run the full pipeline.
 
-**Creating fieldnotes:** Use `/create-fieldnote` in Claude Code with raw text, concepts, or notes as input. The skill handles decomposition, dedup, addressing, stubs, and validation automatically.
+**Creating fieldnotes:** Follow the preflight and creation workflow in the fieldnotes management guide. It covers decomposition, deduplication, addressing, parent stubs and validation.
 
 **Maintenance:** Periodically run `npm run content:fix` to interactively resolve segment collisions and missing parents. Also useful: ask Claude to audit the current state of fieldnotes (address quality, isolated notes, enrichment opportunities, structural improvements) using `check-references.js` and `analyze-pairs.js`.
 
@@ -291,9 +292,9 @@ The build generates `public/og-manifest.json` mapping every URL to its metadata 
 | File | What it is |
 |---|---|
 | `public/llms.txt` | Static summary for LLMs — who, what, site structure, article list with URLs (manually maintained) |
-| `public/llms-full.txt` | All 21+ articles in full plain text, auto-generated from post content |
+| `public/llms-full.txt` | All published articles in full plain text, auto-generated from post content |
 | `public/feed.xml` | RSS feed (latest 30 articles) with `<link rel="alternate">` in `index.html` for autodiscovery |
-| `public/sitemap.xml` | XML sitemap (415+ URLs: static pages, posts, fieldnotes) |
+| `public/sitemap.xml` | XML sitemap for current static pages, posts and fieldnotes |
 | `public/robots.txt` | Crawler directives + sitemap reference |
 
 Routing (`public/_routes.json`) sends article paths, section pages, `/home`, and `/about` through the edge function. Static assets bypass it.
@@ -302,7 +303,7 @@ Routing (`public/_routes.json`) sends article paths, section pages, `/home`, and
 
 ### AI development guide
 
-**[CLAUDE.md](CLAUDE.md)** contains instructions for AI coding assistants working on this codebase: automation rules (what to update when files/syntax change), architecture patterns, theme system rules, and active gotchas. AI tools that read this file will automatically maintain documentation, suggest relevant updates, and follow project conventions.
+Repository conventions live alongside the systems they describe: this README for architecture and deployment, `scripts/README.md` for the compiler, and `src/data/pages/fieldnotes/README.md` for knowledge-graph operations. Keep those documents synchronized when their respective contracts change.
 
 ---
 
@@ -347,4 +348,4 @@ Future features under consideration:
 
 - [ ] **LLM Conversational Assistant** — AI-powered search/Q&A over site content. MVP: Cloudflare Worker proxy to Claude Haiku API with system prompt + post summaries. Future: RAG with vector embeddings for semantic search. Includes "Ask Yago" persona mode.
 - [ ] **Stripe Donations** — One-time support via Stripe Payment Link (zero backend). Button in footer or `/about`. No memberships or auth initially.
-- [x] **Wiki Console graph views** — Force-directed information map, centrality layers, and topology projection embedded at `/wiki`.
+- [x] **Wiki Console graph explorer** — Shared mini/expanded force-directed map with 2D/3D views, semantic highlighting and centrality/root coloring at `/wiki`.

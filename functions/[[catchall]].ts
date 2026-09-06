@@ -8,11 +8,12 @@ interface OgEntry {
   cat: string | null;
   date: string | null;
   text?: string; // plain text body (for AI crawlers)
+  schema?: unknown; // optional page-specific JSON-LD generated from canonical data
 }
 
 type OgManifest = Record<string, OgEntry>;
 
-const CRAWLERS = /facebookexternalhit|Facebot|WhatsApp|Twitterbot|LinkedInBot|Discordbot|TelegramBot|Slackbot|Googlebot|bingbot|GPTBot|ChatGPT-User|ClaudeBot|anthropic-ai|PerplexityBot|Bytespider|cohere-ai|meta-externalagent/i;
+const CRAWLERS = /bot|crawler|spider|slurp|facebookexternalhit|WhatsApp|ChatGPT-User|Claude-User|Perplexity-User|anthropic-ai|cohere-ai|meta-externalagent/i;
 
 const FALLBACK_IMAGE = 'https://infraphysics.net/og-image.jpg';
 
@@ -89,7 +90,11 @@ export const onRequest: PagesFunction = async (context) => {
 
   // Build JSON-LD based on page type
   function buildJsonLd(): string {
-    const author = `{ "@type": "Person", "name": "Yago Mendoza" }`;
+    if (entry.schema) {
+      return JSON.stringify(entry.schema).replace(/</g, '\\u003c');
+    }
+
+    const author = `{ "@type": "Person", "@id": "https://infraphysics.net/about#yago-mendoza", "name": "Yago Mendoza", "url": "https://infraphysics.net/about" }`;
     const publisher = `{ "@type": "Organization", "name": "InfraPhysics", "url": "https://infraphysics.net" }`;
 
     if (pathname === '/home') {
@@ -174,6 +179,10 @@ export const onRequest: PagesFunction = async (context) => {
     // Update <meta name="description">
     .on('meta[name="description"]', {
       element(el) { el.setAttribute('content', entry.d); },
+    })
+    // Remove the shell's root canonical before inserting the route-specific URL.
+    .on('link[rel="canonical"]', {
+      element(el) { el.remove(); },
     })
     // Remove existing OG tags (we'll re-inject them)
     .on('meta[property^="og:"]', {

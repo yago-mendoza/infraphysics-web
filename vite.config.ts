@@ -7,6 +7,9 @@ export default defineConfig({
   server: {
     port: 3000,
     host: 'localhost',
+    watch: {
+      ignored: ['**/room/chrome-wiki-audit/**'],
+    },
   },
   plugins: [react(), fieldnoteEditorPlugin()],
   resolve: {

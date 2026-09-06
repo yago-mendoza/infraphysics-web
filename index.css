@@ -643,11 +643,9 @@ html.theme-transitioning .code-terminal pre code span {
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -732,6 +730,14 @@ button:focus {
 .thin-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--_sb-hover); }
 
 .hub-scrollbar     { --_sb-thumb: var(--hub-sidebar-border); --_sb-hover: var(--text-tertiary); }
+.graph-instrument { padding:.15rem .05rem .35rem; }
+.wiki-graph-range { appearance:none; height:1rem; background:transparent; cursor:pointer; }
+.wiki-graph-range::-webkit-slider-runnable-track { height:3px; border-radius:999px; background:var(--border-default); }
+.wiki-graph-range::-webkit-slider-thumb { appearance:none; width:12px; height:12px; margin-top:-4.5px; border:1px solid var(--text-tertiary); border-radius:50%; background:var(--bg-base); }
+.wiki-graph-range:hover::-webkit-slider-thumb,.wiki-graph-range:focus-visible::-webkit-slider-thumb { border-color:var(--cat-fieldnotes-accent); }
+.wiki-graph-range::-moz-range-track { height:3px; border:0; border-radius:999px; background:var(--border-default); }
+.wiki-graph-range::-moz-range-progress { height:3px; border-radius:999px; background:var(--text-tertiary); }
+.wiki-graph-range::-moz-range-thumb { width:11px; height:11px; border:1px solid var(--text-tertiary); border-radius:50%; background:var(--bg-base); }
 .wiki-context-icon { width:.85rem; height:.85rem; flex:none; margin-left:.05rem; fill:none; stroke:currentColor; stroke-width:1.25; stroke-linecap:square; stroke-linejoin:miter; opacity:.72; transition:opacity 150ms ease,color 150ms ease; }
 .group:hover .wiki-context-icon { color:#a78bfa; opacity:1; }
 
@@ -748,7 +754,7 @@ button:focus {
 .wiki-topbar-actions button span { display:none; }
 .wiki-topbar-actions button svg { width:1rem; height:1rem; transition:color .15s ease,opacity .15s ease,transform .15s ease; }
 .wiki-topbar-actions button:hover,.wiki-topbar-actions button:focus-visible,.wiki-topbar-actions button[aria-pressed="true"] { color:var(--bar-action-accent); background:transparent; }
-.wiki-centrality-select,.wiki-centrality-select option { color:var(--text-primary); background-color:var(--bg-base); }
+.wiki-root-select,.wiki-root-select option { color:var(--text-primary); background-color:var(--bg-base); }
 .wiki-topbar-actions button:hover svg { transform:translateY(-1px); }
 .wiki-back-icon { width:1.2rem; height:1.2rem; fill:currentColor; stroke:none; }
 .wiki-retained-nav .global-nav-shell { transition:opacity .3s ease,transform .3s cubic-bezier(.22,.75,.25,1); }

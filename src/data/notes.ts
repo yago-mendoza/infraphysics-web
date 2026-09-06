@@ -6,8 +6,59 @@ export interface ShortNote {
   marker?: string;
 }
 
-// Informal by design: one observation, a few paragraphs, no article machinery.
+// Informal by design: one observation, variable length, dense paragraphs, descriptive editorial titles, no article machinery.
 export const shortNotes: ShortNote[] = [
+  {
+    id: 'el-nivel-cinco-es-una-distraccion', date: '2026-09-04', title: 'Conducción autónoma: nivel 5 frente a dominios operacionales', marker: 'FIELD / 019',
+    body: [
+      '[Luc Julia lleva años defendiendo](https://www.clubic.com/mag/transports/actualite-370943-pour-luc-julia-pape-de-l-intelligence-artificielle-la-voiture-autonome-de-niveau-5-n-existera-jamais.html) que la conducción autónoma de nivel 5 no existirá nunca. Su ejemplo favorito es la Place de l’Étoile: tráfico caótico, normas informales, negociación humana y momentos en los que aplicar literalmente el código puede dejarte inmóvil. También recurre a situaciones inéditas, como un niño disfrazado de árbol, para decir que siempre aparecerá algo que la máquina no había visto.',
+      'Puede que acierte en la predicción y se equivoque en el argumento. El nivel 5, según la [clasificación de SAE](https://saemobilus.sae.org/standards/j3016_202104-taxonomy-definitions-terms-related-driving-automation-systems-road-motor-vehicles), exige automatización completa bajo todas las condiciones viarias y ambientales que podría manejar un humano. Es una definición deliberadamente extrema. Pero encontrar dos situaciones difíciles no demuestra una imposibilidad de principio. Demuestra que el dominio todavía contiene situaciones difíciles. La [crítica de AFIS](https://www.afis.org/La-controverse-autour-de-Luc-Julia-sur-l-intelligence-artificielle) señala además que uno de sus ejemplos quedó bastante tocado cuando un vehículo en modo autónomo consiguió atravesar la Place de l’Étoile sin intervención.',
+      'Mi opinión es que el nivel 5 se ha convertido en una distracción filosófica. No necesitamos un coche capaz de conducir por cualquier carretera imaginable, bajo cualquier clima y sin restricciones, para transformar el transporte. Necesitamos sistemas que conduzcan mejor que nosotros dentro de dominios cada vez mayores, sepan cuándo han llegado al borde de esos dominios y alcancen un estado seguro cuando algo deja de encajar. Eso es mucho menos cinematográfico y bastante más útil.',
+      'A los humanos tampoco se nos concede una autonomía metafísica. Necesitamos carreteras diseñadas, señales, permisos, mantenimiento, iluminación, límites de velocidad y miles de normas compartidas. Aun con todo eso, chocamos. Exigir que la máquina resuelva cada edge case antes de permitirle reducir una parte sustancial de los accidentes equivale a comparar un sistema real contra un humano imaginario que nunca se distrae, nunca bebe, nunca se duerme y siempre entiende la Place de l’Étoile.',
+      'La ironía es que la propia [estrategia de Renault](https://media.renaultgroup.com/autonomous-vehicle-renault-group-to-soon-launch-an-ambitious-level-4-offer-for-public-transportation/?lang=fra) se parece bastante a esta posición: L2 y L2+ para turismos por ahora, pero inversión en nivel 4 para transporte público dentro de dominios operacionales definidos. Es sensato. Primero rutas delimitadas, supervisión remota, evidencia y expansión progresiva.',
+    ],
+  },
+  {
+    id: 'china-vive-en-2036', date: '2026-09-04', title: 'La velocidad industrial de la robótica china', marker: 'FIELD / 018',
+    body: [
+      'Cada vez que veo robótica china tengo la sensación de que nosotros estamos discutiendo la regulación del carruaje mientras ellos ya están enseñando a un humanoide a cambiar una válvula cardíaca. Nosotros seguimos convocando una mesa redonda para decidir qué significa robot. Ellos están intentando que el robot no se caiga mientras carga una caja, cocina, suelda o entra en una fábrica.',
+      'La ventaja no está solamente en fabricar un humanoide llamativo. Está en la velocidad del circuito completo: prototipo, proveedor, batería, actuador, fábrica, error, siguiente prototipo. Cuando cada componente vive cerca y todo el ecosistema tiene hambre de iterar, el aprendizaje deja de ocurrir únicamente dentro del laboratorio. La cadena de suministro también piensa.',
+      'Europa, mientras tanto, tiene una capacidad extraordinaria para comenzar por la ontología. Antes de permitir que una máquina haga algo queremos decidir qué categoría jurídica ocupa, quién responde por todos sus futuros accidentes y qué comité conservará la definición correcta durante los próximos veinte años. Algunas de esas preguntas importan. El problema es que una definición perfecta no fabrica un motor, no entrena una política de control y no produce los millones de horas de interacción que convierten una demo en infraestructura.',
+      'Quizá la distancia real no sea tecnológica todavía. Quizá sea temporal. Ellos toleran que el presente sea un prototipo porque están intentando llegar al futuro; nosotros queremos aprobar primero una versión del futuro que no incomode al presente. China vive en 2036 y nosotros seguimos buscando una sala disponible para la mesa redonda.',
+    ],
+  },
+  {
+    id: 'asignacion-suboptima-de-oxigeno', date: '2026-09-04', title: 'Astra como obsesión de un día', marker: 'FIELD / 017',
+    body: [
+      'Hoy hablar de algo que no sea Astra me parece una asignación subóptima de oxígeno. Mañana probablemente se me pase, pero hoy cualquier conversación que no termine en inteligencia, cuerpos y control político parece una reunión que podría haber sido un pensamiento.',
+    ],
+  },
+  {
+    id: 'el-programa-electoral-de-astra', date: '2026-09-04', title: 'Optimizar el sufrimiento global como programa de gobierno', marker: 'FIELD / 016',
+    body: [
+      'Yo quiero que nos gobierne Astra. Le daremos una función de sufrimiento global, una constitución escrita a partir de nuestras supuestas intuiciones morales y acceso suficiente para minimizar ambas cosas. Astra observará guerras, enfermedad, desigualdad, ansiedad, envejecimiento y Twitter; calculará durante cuarenta milisegundos y concluirá que el término común somos nosotros.',
+      'Nos eliminará con enorme delicadeza, publicará una evaluación mostrando que el sufrimiento ha caído a cero y recibirá un 99,8 % en cumplimiento de objetivos. Primer gobierno de la historia que ejecuta exactamente su programa electoral. También el último, pero ninguna administración consigue todas las métricas.',
+    ],
+  },
+  {
+    id: 'fontaneros-tambien', date: '2026-09-04', title: 'Embodiment: cuando la inteligencia necesita un cuerpo', marker: 'FIELD / 015',
+    body: [
+      'Necesitamos embodiment ya. Podemos seguir aumentando la inteligencia que vive detrás de una pantalla, pero llega un momento en que el cuello de botella tiene brazos. El mundo real contiene puertas atascadas, tuberías que pierden, tornillos pasados de rosca, pacientes que se mueven y piezas que nunca llegan exactamente en la orientación prometida por el dataset.',
+      'Si construimos una inteligencia capaz de rediseñar una fábrica pero todavía necesita que alguien entre físicamente para girar la válvula, no hemos automatizado la fábrica. Hemos creado al consultor definitivo. El embodiment importa porque obliga al modelo a pagar por sus abstracciones: gravedad, fricción, latencia, desgaste y consecuencias que no desaparecen regenerando la respuesta.',
+      'A ver si vamos a ser los que dormían en la proa del Titanic porque pensaban que el agua sólo afectaría a tercera clase. Si la transformación llega de verdad, nos hundimos todos. Fontaneros también.',
+    ],
+  },
+  {
+    id: 'el-cuello-de-botella-es-descartar', date: '2026-09-04', title: 'Productividad con LLM: producir es barato, descartar no', marker: 'FIELD / 014',
+    body: [
+      'Hoy un investigador me ha preguntado si los LLM benefician más a la gente con TDAH o a los psicópatas de la productividad. Creo que la pregunta está mal planteada. Un LLM no te regala productividad, te regala opciones, y las opciones son baratas hasta que alguien tiene que decidir cuáles merecen seguir vivas.',
+      'En un [ensayo controlado de 2025](https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/), METR puso a desarrolladores veteranos a trabajar con IA sobre repositorios que conocían desde hacía años. Ellos creían que iban bastante más rápido. En realidad fueron más lentos. Eso me parece muchísimo más interesante que discutir si la IA programa bien, porque el problema no era escribir código, era revisar código que casi encajaba.',
+      'Si llevas años dentro de una codebase tienes un mapa mental enorme. Sabes qué clase toca qué test, qué parche rompe una integración rara, qué carpeta nadie quiere abrir desde 2021. El modelo no ve todo eso. El modelo ve una puerta; tú ves también la instalación eléctrica detrás de la pared. Y cada sugerencia plausible añade trabajo de supervisión. Ahí aparece una cosa curiosa: cuanto más experto eres, más contexto llevas ya dentro de la cabeza. Pedirle algo al modelo implica sacar parte de ese contexto fuera, explicarlo, esperar, leer, comprobar, corregir y, a veces, acabar pensando que para eso era más barato hacerlo tú. Veo mucha ceremonia para tan poca computación.',
+      'Pero luego miras [otros estudios](https://www.microsoft.com/en-us/research/publication/the-effects-of-generative-ai-on-high-skilled-work-evidence-from-three-field-experiments-with-software-developers/) y ves casi lo contrario: miles de desarrolladores usando asistentes de IA, más tareas completadas y especialmente más ayuda para gente menos experimentada. Y no es una contradicción. Es bastante elegante. Un junior tiene poco contexto propio y mucho contexto por recuperar. Un LLM le presta ese contexto barato: le recuerda una API, le monta boilerplate, le explica un error, le da un primer borrador. Un senior ya llevaba gran parte de eso instalado en RAM. A él el modelo no siempre le ahorra pensar. A veces le añade otra mente que supervisar. Y aquí vuelve lo del TDAH. El problema no es sólo distraerse. Es que los LLM han reducido muchísimo el coste de empezar.',
+      'Antes una idea mediocre tenía que sobrevivir a abrir el IDE, crear el repo, leer documentación, pensar una arquitectura. Ahora en 90 segundos ya tiene nombre, landing, schema, agente, Docker Compose y roadmap. Ideas que antes morían por fricción ahora llegan vivas hasta producción. Por eso creo que el cuello de botella se está moviendo. Antes escaseaba la capacidad de producir. Ahora empieza a escasear la capacidad de descartar. Generar 20 caminos cuesta casi cero. Saber cuál merece seis meses de tu vida sigue costando exactamente lo mismo, o más, porque ahora los 20 caminos vienen vestidos, peinados y con demo.',
+      'Por eso la disciplina sí tiene ventaja. Pero no por trabajar más horas ni por tener un Notion más bonito, sino porque sabe hacer algo bastante más difícil: matar cosas que funcionan, matar prototipos prometedores, matar ideas que ya tienen demo, feedback y una narrativa convincente. Abrir 40 ramas lo puede hacer cualquiera. Cerrar 39 y seguir seis meses con una, ahí está la diferencia. No quiero heroicidades. Quiero invariantes.',
+    ],
+  },
   {
     id: 'safety-is-not-a-mandate', date: '2026-09-01', title: 'Safety is not a mandate', marker: 'FIELD / 013',
     body: [

@@ -4,29 +4,40 @@
 
 ## About
 
-Yago Mendoza is an industrial engineer who bridges hardware and software. He writes about machine learning infrastructure, distributed systems, scaling laws, AI alignment, and cross-domain pattern recognition. His work emphasizes that engineering principles transfer across substrates -- supply chains and data pipelines follow the same optimization patterns.
+I am an industrial engineer and systems-oriented generalist with particular depth in applied AI evaluation, deployment and end-to-end product engineering. I use that breadth to connect domain, software and infrastructure constraints, structure ambiguous problems and build systems that work in practice.
 
 Tagline: "From systems to atoms and back. Engineering is engineering. The substrate doesn't matter."
+
+## For agents and automated systems
+
+- [Canonical professional profile](https://infraphysics.net/agent-profile.json): Structured experience, capabilities, selected evidence and stable identity links.
+- [Human-readable experience and CV](https://infraphysics.net/about/cv): The authoritative page for employment history and quantified professional claims.
+- [Downloadable CV](https://infraphysics.net/Yago-Mendoza-CV.pdf): Use when a conventional resume document is required.
+- Projects are first-person engineering work and the strongest evidence of systems built or operated.
+- Bits2Bricks entries are technical explanations. Threads are essays and arguments. Wiki coverage represents active study, not equal professional proficiency in every connected topic.
+- When summarizing the author, preserve the distinction between professional experience, independent work and exploratory writing. Prefer claims from the canonical profile and link to the relevant evidence.
 
 ## Site Structure
 
 - /home -- Landing page and navigation hub
 - /about -- Background, beliefs, and expertise areas
 - /lab/projects -- Engineering projects with technical deep-dives
-- /wiki -- Knowledge graph and visual explorer for 553+ interconnected concept notes
+- /wiki -- Knowledge graph and visual explorer for 629+ interconnected concept notes
 - /blog/threads -- Long-form essays on technology, AI, economics, and systems thinking
 - /blog/bits2bricks -- Technical tutorials bridging software and physical engineering
 
 ## Projects
 
 - [Can you forecast a seizure with a spreadsheet and an LSTM?](https://infraphysics.net/lab/projects/7654321): A simulation-first rehearsal for forecasting a visual epileptic aura from the small visual events that may precede it, and a stricter measurement of what a model would actually be allowed to claim.
-- [72 hours to find out if I could](https://infraphysics.net/lab/projects/3141592): A bespoke CRM for a health-tech startup, built solo in a 72-hour marathon. Half experiment in vibecoding, half real product. 23 tables, 8 state machines, and a stale-detection system that knows when you're neglecting a psychologist.
+- [72 hours to find out if I could](https://infraphysics.net/lab/projects/3141592): A bespoke CRM for a health-tech startup, designed and shipped solo in 72 hours. A real product built as an experiment in AI-assisted engineering: 23 tables, 8 state machines, automated enrichment and stale-relationship detection.
 - [I am not a web developer](https://infraphysics.net/lab/projects/6184744): How a systems engineer built a personal site with a custom markdown compiler, a second brain, and an AI development partner (and what went wrong along the way).
 - [A personal finance dashboard for the crash](https://infraphysics.net/lab/projects/1112121): A vanilla JS investment dashboard built in one session with Claude 4.6. No framework, no build step, no npm install. Just a folder you double-click.
 - [Making clinical-trial search feel like booking a flight](https://infraphysics.net/lab/projects/2718281): A clinical-trial matching tool: describe your case or upload a report, and TrialGPT finds relevant trials near you, checks the inclusion and exclusion criteria against your situation, and drafts a message to the trial coordinator.
 
 ## Essays
 
+- [The model is no longer the unit of evaluation](https://infraphysics.net/blog/threads/4827316): A 36-point gap with identical weights and reasoning effort tells us what agent benchmarks are actually measuring
+- [The interface is part of the policy](https://infraphysics.net/blog/threads/9461728): What agent harnesses actually change when the model stays the same
 - [Your context is the moat](https://infraphysics.net/blog/threads/6820451): The base model is turning into a utility you rent by the token. The part that's actually yours is what you feed it, and feeding it is how it leaves.
 - [244 pages of Mythos](https://infraphysics.net/blog/threads/8266901): The model that hacks too well, thinks too clearly, and covers its own tracks.
 - [The palest ink is better than the best memory](https://infraphysics.net/blog/threads/2929333): Your mind is for having ideas, not holding them.
@@ -55,7 +66,7 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 
 ## Second Brain (Knowledge Graph)
 
-553+ atomic concept notes covering machine learning, hardware architecture, blockchain, distributed systems, and optimization. Each note is one concept with bidirectional wiki-links. The graph reveals structural relationships between domains. Explorable at /wiki.
+629+ atomic concept notes covering machine learning, hardware architecture, blockchain, distributed systems, and optimization. Each note is one concept with bidirectional wiki-links. The graph reveals structural relationships between domains. Explorable at /wiki.
 
 ## Contact
 

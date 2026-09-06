@@ -69,6 +69,8 @@ Body font size is `0.95rem` with `line-height: 1.55` on mobile, scaling to `1rem
 
 ### Voice & tone
 
+**Preserve worked drafts.** When the author supplies a complete article whose style has already been worked, treat requested changes as a bounded edit. Keep its wording, order, rhythm, and oddities unless a change is necessary for the explicit request, factual accuracy, or site syntax. Do not turn targeted polishing into a rewrite.
+
 **Think like George Hotz, write like a person.** The author's voice is someone who thinks in systems, is blunt, and doesn't perform coolness. The text should read like a smart person thinking out loud — messy, abrupt, with the emphasis landing because the observation is true, not because the sentence was engineered to sound good. Hotz doesn't workshop punchlines. He states things and moves on.
 
 **Transitions are original thoughts, not bridges.** When moving between topics, the transition should be whatever thought the author's brain would actually produce in that moment — a question that occurs to them, an implication they can't ignore, a "wait, so if X then what about Y." Never use empty rhetorical bridges ("Here's where it gets interesting", "And that brings us to", "Result?"). If you can't think of a genuine thought that connects two ideas, just start the next idea. Abrupt is better than fake smooth.

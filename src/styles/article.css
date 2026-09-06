@@ -2555,6 +2555,27 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   --wiki-link-hover: var(--art-accent) !important;
 }
 
+/* Wiki destinations inside published articles need to read as a deliberate
+   second navigation layer. Mixing with the theme heading token raises
+   perceptual contrast in both directions: darker in light, brighter in dark. */
+.article-page-wrapper:not(.article-wiki) .wiki-ref-resolved {
+  color: color-mix(in srgb, var(--art-accent) 78%, var(--text-heading)) !important;
+  border-bottom: 1px dashed color-mix(in srgb, var(--art-accent) 72%, var(--text-heading)) !important;
+  background-image: linear-gradient(to top, color-mix(in srgb, var(--art-accent) 14%, transparent) 0 .28em, transparent .28em);
+  transition: color .15s ease, border-color .15s ease, background-image .15s ease;
+}
+
+.article-page-wrapper:not(.article-wiki) .wiki-ref-resolved:hover {
+  color: color-mix(in srgb, var(--art-accent) 62%, var(--text-heading)) !important;
+  border-bottom-color: color-mix(in srgb, var(--art-accent) 88%, var(--text-heading)) !important;
+  background-image: linear-gradient(to top, color-mix(in srgb, var(--art-accent) 24%, transparent) 0 .34em, transparent .34em);
+}
+
+.article-page-wrapper:not(.article-wiki) .wiki-ref-resolved .wiki-ref-icon {
+  color: currentColor;
+  opacity: .92;
+}
+
 /* E2c. Threads body — monospace (inherits from .article-page-wrapper) */
 
 .article-threads .article-title {

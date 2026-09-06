@@ -288,16 +288,6 @@ export const InfoIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
   </svg>
 );
 
-export const IslandIcon: React.FC = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="6" cy="6" r="3" />
-    <circle cx="18" cy="6" r="3" />
-    <circle cx="12" cy="18" r="3" />
-    <line x1="8.5" y1="7.5" x2="9.5" y2="16.5" />
-    <line x1="15.5" y1="7.5" x2="14.5" y2="16.5" />
-  </svg>
-);
-
 export const ShareIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />

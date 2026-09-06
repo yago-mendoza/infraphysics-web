@@ -13,6 +13,8 @@ export interface TrailItem {
 }
 
 const MAX_TRAIL = 25;
+const TRAIL_STORAGE_KEY = 'wiki-navigation-trail-v1';
+export const TRAIL_SYNC_EVENT = 'wiki-navigation-trail-change';
 
 const toTrailItem = (post: TrailSource): TrailItem => ({
   id: post.id,
@@ -29,7 +31,9 @@ interface UseNavigationTrailOptions {
 }
 
 export const useNavigationTrail = ({ activePost, directoryNavRef }: UseNavigationTrailOptions) => {
-  const [trail, setTrail] = useState<TrailItem[]>([]);
+  const [trail, setTrail] = useState<TrailItem[]>(() => {
+    try { return JSON.parse(sessionStorage.getItem(TRAIL_STORAGE_KEY) ?? '[]').slice(-MAX_TRAIL); } catch { return []; }
+  });
   const pendingAction = useRef<TrailAction | null>(null);
 
   const resetTrail = useCallback((item: TrailItem) => {
@@ -55,13 +59,9 @@ export const useNavigationTrail = ({ activePost, directoryNavRef }: UseNavigatio
     setTrail([]);
   }, []);
 
-  const initTrail = useCallback((item: TrailItem) => {
-    setTrail(prev => (prev.length === 0 ? [item] : prev));
-  }, []);
-
-  /** Queue a trail reset for the next activePost sync (grid/search clicks). */
+  /** Grid/search navigation is still real visit history; do not erase it. */
   const scheduleReset = useCallback((post: TrailSource) => {
-    pendingAction.current = { type: 'reset', post };
+    pendingAction.current = { type: 'extend', post };
   }, []);
 
   /** Queue a trail extend for the next activePost sync (wiki-link/backlink clicks). */
@@ -96,7 +96,7 @@ export const useNavigationTrail = ({ activePost, directoryNavRef }: UseNavigatio
         extendTrail(toTrailItem(action.post));
       }
     } else if (fromDirectory) {
-      resetTrail(toTrailItem(activePost));
+      extendTrail(toTrailItem(activePost));
     } else if (fromPopstate) {
       // Browser back/forward: truncate to this item if in trail, otherwise reset
       setTrail(prev => {
@@ -105,9 +105,31 @@ export const useNavigationTrail = ({ activePost, directoryNavRef }: UseNavigatio
         return [toTrailItem(activePost)];
       });
     } else {
-      initTrail(toTrailItem(activePost));
+      // Routes can also change through the graph, search palette, or browser
+      // links, none of which schedule an action in this hook. They are still
+      // genuine visits and must advance the trail rather than leave the first
+      // concept frozen forever.
+      extendTrail(toTrailItem(activePost));
     }
-  }, [activePost, resetTrail, extendTrail, initTrail, directoryNavRef]);
+  }, [activePost, resetTrail, extendTrail, directoryNavRef]);
+
+  useEffect(() => {
+    try { sessionStorage.setItem(TRAIL_STORAGE_KEY, JSON.stringify(trail)); } catch { /* session history is optional */ }
+    window.dispatchEvent(new CustomEvent(TRAIL_SYNC_EVENT, { detail: trail }));
+  }, [trail]);
+
+  useEffect(() => {
+    const sync = (event: Event) => {
+      const next = (event as CustomEvent<TrailItem[]>).detail;
+      if (!Array.isArray(next)) return;
+      const bounded = next.slice(-MAX_TRAIL);
+      // This hook also emits the event. Reusing the same logical value avoids
+      // an emit -> clone -> emit feedback loop that can starve route updates.
+      setTrail(current => current.length === bounded.length && current.every((item, index) => item.id === bounded[index]?.id && item.label === bounded[index]?.label) ? current : bounded);
+    };
+    window.addEventListener(TRAIL_SYNC_EVENT, sync);
+    return () => window.removeEventListener(TRAIL_SYNC_EVENT, sync);
+  }, []);
 
   const isOverflowing = trail.length >= MAX_TRAIL;
 

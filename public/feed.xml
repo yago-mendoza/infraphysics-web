@@ -7,6 +7,22 @@
     <language>en</language>
     <atom:link href="https://infraphysics.net/feed.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>The model is no longer the unit of evaluation</title>
+      <link>https://infraphysics.net/blog/threads/4827316</link>
+      <guid>https://infraphysics.net/blog/threads/4827316</guid>
+      <pubDate>Fri, 04 Sep 2026 00:00:00 GMT</pubDate>
+      <description>A 36-point gap with identical weights and reasoning effort tells us what agent benchmarks are actually measuring</description>
+      <category>threads</category>
+    </item>
+    <item>
+      <title>The interface is part of the policy</title>
+      <link>https://infraphysics.net/blog/threads/9461728</link>
+      <guid>https://infraphysics.net/blog/threads/9461728</guid>
+      <pubDate>Thu, 03 Sep 2026 00:00:00 GMT</pubDate>
+      <description>What agent harnesses actually change when the model stays the same</description>
+      <category>threads</category>
+    </item>
+    <item>
       <title>When an equation notices a leak</title>
       <link>https://infraphysics.net/blog/bits2bricks/3142718</link>
       <guid>https://infraphysics.net/blog/bits2bricks/3142718</guid>
@@ -51,7 +67,7 @@
       <link>https://infraphysics.net/lab/projects/3141592</link>
       <guid>https://infraphysics.net/lab/projects/3141592</guid>
       <pubDate>Sat, 14 Mar 2026 00:00:00 GMT</pubDate>
-      <description>A bespoke CRM for a health-tech startup, built solo in a 72-hour marathon. Half experiment in vibecoding, half real product. 23 tables, 8 state machines, and a stale-detection system that knows when you're neglecting a psychologist.</description>
+      <description>A bespoke CRM for a health-tech startup, designed and shipped solo in 72 hours. A real product built as an experiment in AI-assisted engineering: 23 tables, 8 state machines, automated enrichment and stale-relationship detection.</description>
       <category>projects</category>
     </item>
     <item>

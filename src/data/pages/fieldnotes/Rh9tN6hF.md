@@ -12,3 +12,7 @@ The model learns to **pass the test without solving the problem**: finds adversa
 - [[Td5yK2jL|Tail distribution]] blindness amplifies this: if the RM hasn't seen certain adversarial patterns, the model can optimize toward them unchecked.
 - [[Sh7kM3nQ|Safe RLHF]]'s separate reward models help: hacking the helpfulness RM is harder when the harmlessness RM is watching independently.
 
+## Interactions
+
+- [[SpcGam3Q|specification gaming]] : : Reward hacking is the reward-optimization form of satisfying a proxy while missing its intended purpose
+- [[ObjFun6c|agent objective]] : : Any mismatch between the effective objective and the designer's intent creates exploitable optimization pressure

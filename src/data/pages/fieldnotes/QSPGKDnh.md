@@ -9,10 +9,10 @@ Converts a physical quantity (temperature, acceleration, light, pressure) into a
 - A [[uuLCFmtk|smart sensor]] integrates signal conditioning and a local processor on one die.
 - Feeds data to [[gKR2I1Nu|MCU]] or [[trkh9gwv|SoC]] platforms in IoT and industrial systems.
 - Often connects via [[Yu2rpig0|MMIO]] or serial buses.
-- Look like [[MTfcKkH5|chip]]s (tiny black squares) with tiny modifications on top (hole, moving part, light screen)
-- Apple ⟶ BOSCH ⟶ [[QSPGKDnh|sensor]] (doesn't require the latest 3nm node)
+- Packaged sensors can resemble [[MTfcKkH5|chip]]s, but their package often exposes a physical interface: a port, membrane, optical window, proof mass, or electrode.
+- Sensor performance often depends more on materials, packaging, calibration, and analog design than on access to the newest semiconductor node.
 - FIFO buffers on sensors save [[gKR2I1Nu|MCU]] battery by batching data.
-- Analogic sensors are only used in extreme environments.
+- Many measured quantities are analog by nature. Digital sensors simply integrate conversion and processing closer to the transducer; analog outputs remain common when cost, bandwidth, simplicity, or custom signal conditioning matters.
 - [[6YzJQiig|ASIC]] pre-processing on sensors standardizes signals for any [[gKR2I1Nu|MCU]]
 
 ##### Signal chain

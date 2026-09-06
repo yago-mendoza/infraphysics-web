@@ -4,6 +4,7 @@ import React, { useMemo, useEffect, useState, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { formatDate, formatDateTerminal, calculateReadingTime } from '../lib';
+import { getProjectDisplayTechnologies } from '../lib/projectPresentation';
 import { initBrainIndex, type BrainIndex } from '../lib/brainIndex';
 import { getActiveChain, ACTIVE_HEADING_THRESHOLD } from '../lib/headings';
 import { WikiContent } from '../components/WikiContent';
@@ -106,6 +107,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const catCfg = CATEGORY_CONFIG[post.category];
   const isBlog = isBlogCategory(post.category);
   const isThreads = post.category === 'threads';
+  const visibleProjectTechnologies = post.category === 'projects' ? getProjectDisplayTechnologies(post.technologies) : [];
   const [copied, setCopied] = useState(false);
   const [contentCopied, setContentCopied] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
@@ -601,15 +603,15 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
             <div className="article-nav-row">
               <div className="article-nav-tags">
                 {post.tags && post.tags.length > 0 && (
-                  <div className="article-pills article-pills-topics">
+                  <div className="article-pills article-pills-topics" aria-label="Project topics">
                     {post.tags.map(tag => (
                       <span key={tag} className="article-pill article-pill-topic">{tag}</span>
                     ))}
                   </div>
                 )}
-                {post.technologies && post.technologies.length > 0 && (
-                  <div className="article-pills article-pills-tech">
-                    {post.technologies.map(tech => (
+                {visibleProjectTechnologies.length > 0 && (
+                  <div className="article-pills article-pills-tech" aria-label="Project technologies">
+                    {visibleProjectTechnologies.map(tech => (
                       <span key={tech} className="article-pill article-pill-tech">{tech}</span>
                     ))}
                   </div>

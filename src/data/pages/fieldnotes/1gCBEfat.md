@@ -4,10 +4,12 @@ address: "Security//Minimum Privilege"
 name: "Minimum Privilege"
 date: "2025-09-07"
 ---
-- Don't expose what you don't need: only map RPC ports on nodes that external clients actually connect to.
-- Validators should NOT have RPC exposed: reduces the attack surface to zero from outside.
-- Bootnodes should NOT have RPC exposed. They only need P2P connectivity.
-- Ideal topology: separate RPC node that's neither validator nor bootnode, single purpose, minimal exposure.
+
+Minimum privilege gives each identity, process or agent only the authority required for its present role, for only as long as that authority is needed. It is stronger than asking software not to use permissions it already possesses.
+
+The design reduces both attack surface and blast radius. An agent that needs three read-only files should not inherit a general shell, production credentials and unrestricted Internet access. In a Besu network, the same principle separates public RPC nodes from validators and bootnodes instead of exposing every role through one machine.
+
+Permissions are not convenience settings. They are the physical upper bound on what a mistake can become.
 
 ## Interactions
 

@@ -215,5 +215,8 @@ The `text` field in `ogManifest['/about']` and `ogManifest['/home']` (in `build-
 ### Home clock field: maze topology is cached per lattice size
 The maze (islands, edges, origins) is grown once per `(cols, rows)` and reused every frame; only the per-frame fields are recomputed. If the topology is ever made time-dependent again, the cache key in `drawClockMaze` must include that variable or the change will never render.
 
+### Fieldnote interactions are graph edges, not reciprocal citations
+The graph is bidirectional even when an interaction is written on only one note. For a conceptual pair, keep the clearest causal explanation on one side instead of adding reciprocal trailing refs to both files. Reciprocal entries create `DUPLICATE TRAILING REFS` noise in `check-references.js` without adding connectivity. After a bulk creation pass, run the audit and remove every duplicate introduced by the new notes before considering the batch complete.
+
 ### Bulk-editing fieldnote frontmatter catches README.md too
 `src/data/pages/fieldnotes/README.md` contains a literal `distinct:` line inside a yaml example block, so any bulk script that pattern-matches frontmatter across `fieldnotes/*.md` will silently rewrite the documentation example. Exclude `README.md` (filenames of real notes are always 8-char UIDs). Also: after any `move-hierarchy`/`rename-address` batch, `distinct` entries elsewhere go stale because they store addresses, not UIDs — the build's `STALE_DISTINCT` warnings list every one; fix them before committing.

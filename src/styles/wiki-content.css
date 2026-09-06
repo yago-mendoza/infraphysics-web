@@ -16,18 +16,30 @@
 .article-wiki .article-content li,
 .article-wiki .article-content td,
 .article-wiki .article-content .ann-note {
-  font-family: 'Inter', var(--font-sans);
+  font-family: var(--font-sans) !important;
   font-size: 0.875rem;
+  font-weight: 400;
   line-height: 1.6;
+  letter-spacing: 0;
 }
 
 .article-wiki .article-content h1,
 .article-wiki .article-content h2,
 .article-wiki .article-content h3,
 .article-wiki .article-content h4 {
-  font-family: 'Inter', var(--font-sans);
+  font-family: 'Inter', var(--font-sans) !important;
   text-transform: none;
   letter-spacing: normal;
+}
+
+/* Fieldnotes are navigated as nodes, not as long-form editorial documents.
+   Keep rich article syntax, but never turn their headings into copy targets. */
+.article-wiki .heading-anchor-link {
+  display: none !important;
+}
+
+.article-wiki .article-content :is(h1, h2, h3, h4, h5) {
+  cursor: default;
 }
 
 /* Wiki headings — slightly smaller than article defaults */
@@ -85,27 +97,17 @@
   opacity: 0.7;
 }
 
-/* Wiki refs — solid underline, full brightness (not dimmed like in articles) */
+/* Wiki refs use the same single dotted label underline as articles. */
 .article-wiki .wiki-ref-resolved {
   color: var(--wiki-link) !important;
-  border-bottom: 1px solid color-mix(in srgb, var(--wiki-link) 50%, transparent) !important;
+  border-bottom: 0 !important;
 }
 
 .article-wiki .wiki-ref-resolved:hover {
   color: var(--wiki-link-hover) !important;
-  border-bottom-color: var(--wiki-link-hover) !important;
 }
 
 /* Visited wiki-links — variable override cascades automatically via .wiki-ref-visited */
-
-/* Topology flash — brief highlight when scrolling to a component in the sidebar */
-@keyframes topology-flash {
-  0% { background-color: rgba(139, 92, 246, 0.25); }
-  100% { background-color: transparent; }
-}
-.topology-flash {
-  animation: topology-flash 1.2s ease-out;
-}
 
 /* Swipe-to-dismiss panel: disable browser touch handling so JS controls
    both vertical scroll and horizontal swipe. */

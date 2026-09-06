@@ -12,6 +12,7 @@ import { HomeVisualLab, type HomeVisualVariant } from '../components/HomeVisualL
 import { shortNotes } from '../data/notes';
 
 const categoryKeys = ['projects', 'threads', 'bits2bricks'] as const;
+const selectedWorkIds = ['2718281', '3142718', '3141592', '6184744', '5917362', '9461728'] as const;
 type FieldVariant = 1 | 2 | 3 | 4 | 5;
 const fieldCoordinates = [
   { label: 'control', x: 48, y: 48, evidence: 'Industrial engineering, dynamic systems and control-oriented modelling.' },
@@ -46,12 +47,9 @@ const FieldOfView: React.FC<{ variant: FieldVariant }> = ({ variant }) => {
 };
 
 export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVariant?: FieldVariant }> = ({ visualVariant, fieldVariant = 1 }) => {
-  const featuredPosts = useMemo(() =>
-    posts
-      .filter(p => p.featured)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 6),
-  []);
+  const selectedWorkPosts = useMemo(() => selectedWorkIds
+    .map(id => posts.find(post => post.id === id))
+    .filter((post): post is PostSummary => Boolean(post)), []);
 
   // Post counts per category
   const categoryCounts = useMemo(() => {
@@ -92,7 +90,7 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
     <div className={`flex flex-col animate-fade-in font-sans home-editorial-shell ${visualVariant ? `home-experiment home-experiment-${visualVariant}` : ''}`}>
       {/* Hero */}
       <section className="relative pt-4 md:pt-12 pb-14 md:pb-20 min-h-[62vh] flex items-end home-hero" {...(visualVariant === 1 ? { 'data-clickable-above': '[data-home-pattern-boundary]', 'data-clickable-offset': '48' } : {})}>
-        {visualVariant && <div className={`home-visual-experiment home-visual-${visualVariant}`} aria-hidden="true"><HomeVisualLab variant={visualVariant} interactivePointer /></div>}
+        {visualVariant && <div className={`home-visual-experiment home-visual-${visualVariant}`} aria-hidden="true"><HomeVisualLab variant={visualVariant} interactivePointer showTachograph={false} /></div>}
         <div className="relative z-10 w-full">
           <div>
           {/* Identity anchor */}
@@ -255,7 +253,7 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
         </div>
 
         <div className="home-selected-list edu-entry-list edu-article-list">
-          {featuredPosts.map(post => (
+          {selectedWorkPosts.map(post => (
             <Link key={`${post.category}-${post.id}`} to={postPath(post.category, post.id)} className="edu-entry-row">
               <span className="edu-entry-mark edu-entry-mark-article" aria-hidden="true"><i /><i /><i /><i /></span>
               <span className="edu-entry-copy">

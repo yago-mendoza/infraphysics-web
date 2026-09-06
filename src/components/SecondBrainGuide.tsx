@@ -34,8 +34,8 @@ const SECTIONS: Section[] = [
             <p>The <strong className={tipStrong}>grid</strong> is your starting point. Each card represents one concept. Click any card to read the full note and explore its connections.</p>
             <p>You don't need to browse manually — <strong className={tipStrong}>just start typing</strong> on your keyboard and the search bar opens automatically. Results filter live as you type.</p>
             <p>As you explore, the interface tracks where you've been: <span style={{ color: 'var(--wiki-link-visited)' }}>blue</span> names are notes you've already visited this session, <span className={tipAccent}>purple</span> ones are still unvisited. You'll see these colors everywhere — on grid cards, inside notes, and on the graph.</p>
-            <p>The <strong className={tipStrong}>Wiki Console</strong> separates graph information and topology into dedicated views. Switching views changes the analysis layer without rebuilding the underlying knowledge graph.</p>
-            <p>On the mini graph, every node sits on a <span className={tipAccent}>purple</span> scale — the lighter the node, the more central the concept. While you search or filter, matching nodes turn <span style={{ color: '#a3e635' }}>lime</span> live; the rest keep their purple. The <strong className={tipStrong}>central</strong> sort option orders results from most to least central.</p>
+            <p>The <strong className={tipStrong}>Wiki Console</strong> combines graph information, search, filters, and the directory without rebuilding the underlying knowledge graph.</p>
+            <p>The mini graph uses <span className={tipAccent}>purple</span> to show centrality (lighter means more central), while the expanded graph colors nodes by root family. Search and filter results appear in cool periwinkle, temporary previews in bright orchid, and a committed selection in lime. Context stays visible underneath each layer, so you can distinguish looking from filtering and filtering from selecting. The <strong className={tipStrong}>central</strong> sort option orders results from most to least central.</p>
             <p>You can switch between light and dark themes anytime. Use the theme button in the header, or press <code className={tipCode}>Shift+T</code> on desktop.</p>
           </div>
         ),
@@ -77,7 +77,6 @@ const SECTIONS: Section[] = [
             <p><strong className={tipStrong}>Isolated</strong> shows only notes with zero connections — they don't link anywhere and nothing links to them.</p>
             <p><strong className={tipStrong}>Leaf</strong> shows notes at the end of a naming branch. For example, if <code className={tipCode}>chip//MCU//ARM</code> has no sub-notes, ARM is a leaf.</p>
             <p><strong className={tipStrong}>Bridges</strong> highlights structurally critical notes. A bridge is a note that, if removed, would split its cluster of connected notes into separate groups. They're the glue holding parts of the graph together.</p>
-            <p><strong className={tipStrong}>Island</strong> lets you pick a specific cluster of connected notes from a dropdown. Notes form islands based on their actual links — two notes in the same folder can belong to different islands if they aren't linked to each other.</p>
             <p><strong className={tipStrong}>Depth</strong> filters by hierarchy level. A root note like <code className={tipCode}>chip</code> has depth 1, <code className={tipCode}>chip//MCU</code> has depth 2, <code className={tipCode}>chip//MCU//ARM</code> has depth 3.</p>
             <p><strong className={tipStrong}>Hubs &ge; N</strong> shows only notes with at least N total connections (incoming + outgoing). Useful for finding the most interconnected concepts.</p>
             <p><strong className={tipStrong}>Heatmap</strong> is the calendar-style grid of colored squares. Click any day to filter notes created on that date. Click a second day to select a range.</p>
@@ -144,6 +143,7 @@ const SECTIONS: Section[] = [
         content: (
           <div className="space-y-3">
             <p>Below the note body, you may see a section called <strong className={tipStrong}>Interactions</strong>. These are different from regular links in the text.</p>
+            <p>An interaction annotation belongs to the <strong className={tipStrong}>edge</strong> between two concepts, not to the identity or intrinsic content of either node.</p>
             <p>A regular link just says "A mentions B." An interaction is a <strong className={tipStrong}>curated, annotated relationship</strong> — it describes <em>how</em> two concepts relate. For example: "contrasts with", "depends on", "is an example of".</p>
             <p>Interactions are <strong className={tipStrong}>bilateral</strong>: if note A has an interaction with note B, it automatically shows up on both sides. You don't need to add it twice.</p>
             <p>Click any name in the interactions list to jump to that concept.</p>
@@ -180,20 +180,6 @@ const SECTIONS: Section[] = [
             <p>When you open a note, its branch <strong className={tipStrong}>auto-expands</strong> in the directory so you can see where you are in the tree.</p>
             <p>The <strong className={tipStrong}>small bars</strong> on the right side of each note show relative centrality — how many links that note has compared to others. Wider bar = more connected.</p>
             <p>Use the <strong className={tipStrong}>filter input</strong> at the top to search within the tree by name. When any filter, search, or scope is active, branches with no matching notes are hidden automatically.</p>
-          </div>
-        ),
-      },
-      {
-        label: 'Topology',
-        content: (
-          <div className="space-y-3">
-            <p>While the Directory groups notes by their names, <strong className={tipStrong}>Topology</strong> groups them by their actual connections. It answers: "which notes can reach each other through links?"</p>
-            <p><strong className={tipStrong}>Islands</strong> are clusters of notes that are all reachable from each other by following links. Each island gets a numeric <span className={tipAccent}>#ID</span>. Two notes in the same directory folder can belong to different islands if nothing connects them.</p>
-            <p>Notes marked with <strong className={tipStrong}>⚡ (bridges)</strong> are structurally critical — removing one would split its island into separate groups. They're the bottlenecks holding clusters together.</p>
-            <p>Notes marked with <strong className={tipStrong}>○ (isolated)</strong> have zero connections to anything.</p>
-            <p>Click the <strong className={tipStrong}>chevron</strong> next to any island to expand it and see all its members.</p>
-            <p>When you're reading a note, you'll see an <strong className={tipStrong}>island badge</strong> near the title (e.g. <span className={tipAccent}>island #3</span>). Clicking that badge scrolls the sidebar to highlight the corresponding island here.</p>
-            <p>Like the directory, topology auto-prunes when filters are active — islands with no matching notes disappear temporarily.</p>
           </div>
         ),
       },

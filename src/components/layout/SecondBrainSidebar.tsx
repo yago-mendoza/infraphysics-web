@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useMemo, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { secondBrainPath } from '../../config/categories';
+import { isSecondBrainPath, secondBrainPath } from '../../config/categories';
 import { useHub } from '../../contexts/SecondBrainHubContext';
 import {
   ChevronIcon,
@@ -11,28 +11,54 @@ import {
   BarChartIcon,
   SlidersIcon,
   CloseIcon,
-  IslandIcon,
   InfoIcon,
   WikiBrainIcon,
 } from '../icons';
 import { SecondBrainGuide } from '../SecondBrainGuide';
-import { IslandDetector, type IslandDetectorHandle } from '../IslandDetector';
-import { TopologyOrbit } from '../graph/TopologyOrbit';
 import { useGraphRelevance } from '../../hooks/useGraphRelevance';
 import { useIsLocalhost } from '../../hooks/useIsLocalhost';
 import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../../constants/layout';
 import type { FieldNoteMeta } from '../../types';
-import type { TreeNode, FilterState, DirectorySortMode } from '../../hooks/useSecondBrainHub';
+import type { TreeNode, FilterState, DirectorySortMode, SearchMode } from '../../hooks/useSecondBrainHub';
 
 // Lazy-load MiniGraph — heavy dep (react-force-graph-2d)
 const MiniGraph = React.lazy(() => import('../graph/MiniGraph'));
+import type { GraphColorMode } from '../graph/MiniGraph';
+import { assignRootColors, ROOT_NEUTRAL } from '../graph/useGraphData';
 
-type ConsolePanel = 'information' | 'topology';
-
-const CONSOLE_PANELS: { id: ConsolePanel; label: string; shortLabel: string }[] = [
-  { id: 'information', label: 'Graph information', shortLabel: 'Graph info' },
-  { id: 'topology', label: 'Topology', shortLabel: 'Topology' },
-];
+type GraphPhysics = { repulsion: number; linkDistance: number; linkStrength: number; collision: number; damping: number; gravity: number };
+const GRAPH_PHYSICS_DEFAULTS: GraphPhysics = { repulsion: -30, linkDistance: 58, linkStrength: .11, collision: 3.2, damping: .32, gravity: .05 };
+const GraphDynamicsControls = React.memo(() => {
+  const [values, setValues] = useState<GraphPhysics>(() => {
+    try { return { ...GRAPH_PHYSICS_DEFAULTS, ...JSON.parse(localStorage.getItem('wiki-graph-physics-v4') ?? '{}') }; }
+    catch { return GRAPH_PHYSICS_DEFAULTS; }
+  });
+  const pendingRef = useRef<GraphPhysics | null>(null);
+  const timerRef = useRef<number | null>(null);
+  const update = (key: keyof GraphPhysics, value: number) => {
+    setValues(current => {
+      const next = { ...current, [key]: value };
+      pendingRef.current = next;
+      return next;
+    });
+    if (timerRef.current === null) timerRef.current = window.setTimeout(() => {
+      timerRef.current = null;
+      const next = pendingRef.current;
+      pendingRef.current = null;
+      if (next) window.dispatchEvent(new CustomEvent('wiki-graph-physics-change', { detail: next }));
+    }, 70);
+  };
+  useEffect(() => () => { if (timerRef.current !== null) window.clearTimeout(timerRef.current); }, []);
+  return <div className="graph-instrument divide-y divide-th-hub-border border-y border-th-hub-border">{([
+    ['repulsion', 'repulsion', 12, 140, 1], ['linkDistance', 'edge length', 10, 80, 1],
+    ['linkStrength', 'edge attraction', .02, .9, .01], ['collision', 'clearance', 1, 12, .1],
+    ['damping', 'damping', .12, .8, .01], ['gravity', 'center gravity', 0, .4, .01],
+  ] as Array<[keyof GraphPhysics, string, number, number, number]>).map(([key, label, min, max, step]) => {
+    const shown = key === 'repulsion' ? Math.abs(values[key]) : values[key];
+    return <label key={key} className="grid h-7 grid-cols-[5.4rem_minmax(0,1fr)_2.3rem] items-center gap-2 px-1.5"><span className="truncate text-[8px] uppercase tracking-[.08em] text-th-muted">{label}</span><input type="range" min={min} max={max} step={step} value={shown} onChange={event => update(key, key === 'repulsion' ? -Number(event.target.value) : Number(event.target.value))} className="wiki-graph-range min-w-0 w-full" /><output className="text-right font-mono text-[9px] tabular-nums text-violet-400">{shown.toFixed(step < .1 ? 2 : 1)}</output></label>;
+  })}</div>;
+});
+GraphDynamicsControls.displayName = 'GraphDynamicsControls';
 
 // --- Collapsible Section ---
 const Section: React.FC<{
@@ -73,28 +99,45 @@ const Section: React.FC<{
   );
 };
 
-// --- Scope Icon (for concept+folder nodes) ---
-const ScopeIcon: React.FC<{ onClick: (e: React.MouseEvent) => void }> = ({ onClick }) => (
-  <button
-    onClick={onClick}
-    className="hover-reveal text-th-muted hover:text-violet-400 flex-shrink-0"
-    title="Scope to this folder"
-    aria-label="Scope to this folder"
-  >
-    <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <circle cx="8" cy="8" r="5" />
-      <circle cx="8" cy="8" r="2" />
-    </svg>
-  </button>
+// --- Root legend (graph roots color mode) ---
+// Click a root to light up its address subtree on the graph without hiding the rest
+const RootLegend: React.FC<{
+  roots: { root: string; count: number }[];
+  colors: Map<string, string>;
+  activeRoot: string | null;
+  onPick: (root: string | null) => void;
+  onPreview?: (root: string | null) => void;
+  className?: string;
+}> = ({ roots, colors, activeRoot, onPick, onPreview, className }) => (
+  <div className={`flex flex-wrap gap-x-2 gap-y-1 ${className ?? ''}`}>
+    {roots.map(({ root, count }) => {
+      const active = activeRoot === root;
+      return (
+        <button
+          key={root}
+          type="button"
+          aria-pressed={active}
+          onClick={() => onPick(active ? null : root)}
+          onMouseEnter={() => onPreview?.(root)}
+          onMouseLeave={() => onPreview?.(null)}
+          className={`flex items-center gap-1 text-[8px] leading-none transition-colors ${active ? 'text-th-primary' : 'text-th-muted hover:text-th-secondary'}`}
+          title={`${root} (${count} notes) — click to light up its subtree`}
+        >
+          <i className="h-1.5 w-1.5 flex-shrink-0 rounded-full" style={{ backgroundColor: colors.get(root) ?? ROOT_NEUTRAL }} />
+          <span className="max-w-[80px] truncate">{root}</span>
+        </button>
+      );
+    })}
+  </div>
 );
 
 // --- Centrality micro-bar ---
 const CentralityBar: React.FC<{ pct: number }> = ({ pct }) => {
   if (pct === 0) return null;
-  const fillFromRight = pct < 50;
+  const rank = pct >= 50 ? `top ${Math.max(1, 100 - pct)}%` : `bottom ${Math.max(1, pct)}%`;
   return (
-    <div className="w-8 h-1 bg-th-hub-border rounded-full flex-shrink-0 overflow-hidden" title={`Centrality: top ${100 - pct}%`}>
-      <div className={`h-full bg-violet-400/50 rounded-full ${fillFromRight ? 'ml-auto' : ''}`} style={{ width: `${pct}%` }} />
+    <div className="w-8 h-1 bg-th-hub-border rounded-full flex-shrink-0 overflow-hidden" title={`Centrality: ${rank} · percentile ${pct}`}>
+      <div className="h-full rounded-full bg-violet-400/50" style={{ width: `${pct}%` }} />
     </div>
   );
 };
@@ -103,14 +146,16 @@ const CentralityBar: React.FC<{ pct: number }> = ({ pct }) => {
 const TreeNodeItem: React.FC<{
   node: TreeNode;
   depth?: number;
-  activeScope: string | null;
-  onScope: (path: string) => void;
   onConceptClick?: () => void;
-  forceExpanded?: boolean;
+  forceExpandDepth?: number;
   activePath?: string | null;
   getPercentile?: (uid: string) => number;
   collapseSignal?: number;
-}> = ({ node, depth = 0, activeScope, onScope, onConceptClick, forceExpanded = false, activePath, getPercentile, collapseSignal = 0 }) => {
+  accentColor?: string;
+  onPathPreview?: (path: string | null) => void;
+  onPathPick?: (path: string) => void;
+  relativeSize?: number;
+}> = ({ node, depth = 0, onConceptClick, forceExpandDepth = 0, activePath, getPercentile, collapseSignal = 0, accentColor, onPathPreview, onPathPick, relativeSize = 1 }) => {
   const [expanded, setExpanded] = useState(false);
   const [manuallyCollapsed, setManuallyCollapsed] = useState(false);
   const prevSignal = useRef(collapseSignal);
@@ -132,11 +177,13 @@ const TreeNodeItem: React.FC<{
   const hasChildren = node.children.length > 0;
   // Auto-expand if active note is inside this node's subtree
   const isOnActivePath = !!(activePath && hasChildren && (activePath === node.path || activePath.startsWith(node.path + '//')));
-  const isExpanded = forceExpanded || ((expanded || isOnActivePath) && !manuallyCollapsed);
+  // Automatic expansion reveals matches, but explicit user intent always wins.
+  // This keeps filtered/search trees fully foldable instead of reopening them
+  // on every render while automatic expansion remains active.
+  const isExpanded = !manuallyCollapsed && (depth < forceExpandDepth || expanded || isOnActivePath);
   // Keep children mounted after first expand so close animation works
   const [hasBeenExpanded, setHasBeenExpanded] = useState(false);
   useEffect(() => { if (isExpanded && hasChildren) setHasBeenExpanded(true); }, [isExpanded, hasChildren]);
-  const isScoped = activeScope === node.path;
   const isConceptAndFolder = node.concept && hasChildren;
   const isActive = !!(activePath && node.concept && activePath === node.path);
   const isRoot = depth === 0;
@@ -147,17 +194,20 @@ const TreeNodeItem: React.FC<{
   return (
     <div>
       <div
-        className={`flex items-center gap-1 py-1.5 md:py-0.5 group ${
-          isScoped ? 'bg-violet-400/10' : isActive ? 'bg-violet-400/5' : ''
+        onMouseEnter={() => onPathPreview?.(node.path)}
+        onMouseLeave={() => onPathPreview?.(null)}
+        className={`relative flex items-center gap-1 py-1.5 md:py-0.5 group ${
+          isActive ? 'bg-violet-400/5' : ''
         } ${isRoot ? 'border-l-2 border-violet-400/20' : ''}`}
-        style={{ paddingLeft: `${depth * 12}px` }}
+        style={{ paddingLeft: `${depth * 12}px`, ...(isRoot && accentColor ? { borderLeftColor: accentColor } : {}) }}
       >
+        <span className="pointer-events-none absolute bottom-0 h-[2px] opacity-[.32]" style={{ left: `${depth * 12 + 20}px`, width: `calc((100% - ${depth * 12 + 20}px) * ${Math.max(.03, relativeSize)})`, backgroundColor: accentColor ?? '#a78bfa' }} />
         {hasChildren ? (
           <button
             onClick={() => {
               if (isExpanded) {
-                if (isOnActivePath) setManuallyCollapsed(true);
-                else setExpanded(false);
+                setManuallyCollapsed(true);
+                setExpanded(false);
               } else {
                 setManuallyCollapsed(false);
                 setExpanded(true);
@@ -175,7 +225,7 @@ const TreeNodeItem: React.FC<{
 
         {node.concept ? (
           isConceptAndFolder ? (
-            // Concept + folder: label links to detail, scope icon on hover
+            // Concept + folder: label links to detail; chevron expands children.
             <>
               <Link
                 to={secondBrainPath(node.concept.id)}
@@ -185,7 +235,6 @@ const TreeNodeItem: React.FC<{
                 {displayLabel}
               </Link>
               <span className="text-[9px] text-th-muted tabular-nums">{countSuffix}</span>
-              <ScopeIcon onClick={(e) => { e.preventDefault(); onScope(node.path); }} />
               <span className="flex-1" />
               <CentralityBar pct={centralityPct} />
             </>
@@ -204,13 +253,11 @@ const TreeNodeItem: React.FC<{
             </>
           )
         ) : hasChildren ? (
-          // Pure folder: click label to scope
+          // Pure folder: the label expands/collapses the directory branch.
           <>
             <button
-              onClick={() => onScope(node.path)}
-              className={`text-[11px] truncate text-left transition-colors ${
-                isScoped ? 'text-violet-400' : 'text-th-muted hover:text-th-secondary'
-              }`}
+              onClick={() => { onPathPick?.(node.path); setManuallyCollapsed(isExpanded); setExpanded(!isExpanded); }}
+              className="text-[11px] truncate text-left text-th-muted transition-colors hover:text-th-secondary"
             >
               {displayLabel}
             </button>
@@ -231,13 +278,15 @@ const TreeNodeItem: React.FC<{
                   key={child.label}
                   node={child}
                   depth={depth + 1}
-                  activeScope={activeScope}
-                  onScope={onScope}
                   onConceptClick={onConceptClick}
-                  forceExpanded={forceExpanded}
+                  forceExpandDepth={forceExpandDepth}
                   activePath={activePath}
                   getPercentile={getPercentile}
                   collapseSignal={collapseSignal}
+                  accentColor={accentColor}
+                  onPathPreview={onPathPreview}
+                  onPathPick={onPathPick}
+                  relativeSize={Math.max(1, child.childCount + (child.concept ? 1 : 0)) / Math.max(1, ...node.children.map(sibling => sibling.childCount + (sibling.concept ? 1 : 0)))}
                 />
               ))}
           </div>
@@ -418,49 +467,82 @@ export const SecondBrainSidebar: React.FC = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [graphExpanded, setGraphExpanded] = useState(false);
   const [graphExpandedVisible, setGraphExpandedVisible] = useState(false);
-  const [topologyExpanded, setTopologyExpanded] = useState(false);
-  const [consolePanel, setConsolePanel] = useState<ConsolePanel>(() => {
-    const requested = new URLSearchParams(window.location.search).get('console');
-    if (requested === 'topology' || requested === 'information') return requested;
-    return localStorage.getItem('wiki-console-panel') === 'topology' ? 'topology' : 'information';
-  });
-  const { getPercentile, getIslands } = useGraphRelevance();
-
-  useEffect(() => { localStorage.setItem('wiki-console-panel', consolePanel); }, [consolePanel]);
+  const graphMinimizeTimerRef = useRef<number | null>(null);
+  const graphSearchInputRef = useRef<HTMLInputElement>(null);
+  const [graphInput, setGraphInput] = useState('');
+  const [graphSelectionCleared, setGraphSelectionCleared] = useState(false);
+  const [previewRoot, setPreviewRoot] = useState<string | null>(null);
+  const [previewPath, setPreviewPath] = useState<string | null>(null);
+  const [miniAreaIds, setMiniAreaIds] = useState<Set<string> | null>(null);
+  const [wikiLinkPreviewId, setWikiLinkPreviewId] = useState<string | null>(null);
+  const [calendarPreviewIds, setCalendarPreviewIds] = useState<Set<string> | null>(null);
+  const [graphColorMode, setGraphColorMode] = useState<GraphColorMode>(() =>
+    localStorage.getItem('wiki-graph-colormode') === 'roots' ? 'roots' : 'centrality',
+  );
+  const { getPercentile } = useGraphRelevance();
+  useEffect(() => { localStorage.setItem('wiki-graph-colormode', graphColorMode); }, [graphColorMode]);
+  useEffect(() => {
+    const receiveCalendarPreview = (event: Event) => {
+      const ids = (event as CustomEvent<string[] | null>).detail;
+      setCalendarPreviewIds(Array.isArray(ids) ? new Set(ids) : null);
+    };
+    window.addEventListener('wiki-calendar-preview', receiveCalendarPreview);
+    return () => window.removeEventListener('wiki-calendar-preview', receiveCalendarPreview);
+  }, []);
+  useEffect(() => {
+    const receiveWikiLinkPreview = (event: Event) => setWikiLinkPreviewId((event as CustomEvent<string | null>).detail ?? null);
+    window.addEventListener('wiki-link-preview', receiveWikiLinkPreview);
+    return () => window.removeEventListener('wiki-link-preview', receiveWikiLinkPreview);
+  }, []);
+  useEffect(() => {
+    const handlePreview = (event: Event) => setPreviewRoot((event as CustomEvent<{ root?: string | null }>).detail?.root ?? null);
+    window.addEventListener('wiki-root-preview', handlePreview);
+    return () => window.removeEventListener('wiki-root-preview', handlePreview);
+  }, []);
 
   const expandGraph = () => {
+    if (graphMinimizeTimerRef.current !== null) window.clearTimeout(graphMinimizeTimerRef.current);
     setMobileOpen(false);
+    setPreviewRoot(null);
+    setPreviewPath(null);
+    setMiniAreaIds(null);
+    setGraphInput(query || activePost?.title || '');
+    setGraphSelectionCleared(false);
     setGraphExpanded(true);
     requestAnimationFrame(() => requestAnimationFrame(() => setGraphExpandedVisible(true)));
   };
-  const minimizeGraph = () => {
+  const minimizeGraph = (returnToMatrix = graphSelectionCleared) => {
     setGraphExpandedVisible(false);
-    window.setTimeout(() => setGraphExpanded(false), 360);
+    if (returnToMatrix) { setQuery(''); navigate(secondBrainPath()); }
+    graphMinimizeTimerRef.current = window.setTimeout(() => { setGraphExpanded(false); graphMinimizeTimerRef.current = null; }, 360);
   };
 
-  // Expanded visualizations are transient UI, not route state. Navigation must
-  // always restore the normal console and its scroll behavior.
+  // Keep graph inspection alive while its underlying console route changes;
+  // only leaving the wiki should dismiss the expanded workspace.
   useEffect(() => {
-    setGraphExpanded(false);
-    setGraphExpandedVisible(false);
-    setTopologyExpanded(false);
+    if (isSecondBrainPath(location.pathname)) return;
+    if (graphMinimizeTimerRef.current !== null) { window.clearTimeout(graphMinimizeTimerRef.current); graphMinimizeTimerRef.current = null; }
+    setGraphExpanded(false); setGraphExpandedVisible(false);
   }, [location.pathname]);
 
+  useEffect(() => () => {
+    if (graphMinimizeTimerRef.current !== null) window.clearTimeout(graphMinimizeTimerRef.current);
+  }, []);
+
   useEffect(() => {
-    if (!graphExpanded && !topologyExpanded) return;
+    if (!graphExpanded) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       if (graphExpanded) minimizeGraph();
-      setTopologyExpanded(false);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [graphExpanded, topologyExpanded]);
+  }, [graphExpanded, graphSelectionCleared]);
 
   // Swipe-to-close state for mobile drawer
   const drawerRef = useRef<HTMLElement>(null);
@@ -525,53 +607,13 @@ export const SecondBrainSidebar: React.FC = () => {
     }
   }, [mobileOpen]);
 
-  // Island detector ref for collapse-all button in header
-  const islandRef = useRef<IslandDetectorHandle>(null);
-  const [topologyQuery, setTopologyQuery] = useState('');
-
   // Directory collapse-all: increment to reset all TreeNodeItem expanded state
   const [dirCollapseGen, setDirCollapseGen] = useState(0);
-
-  // Topology focus: { id, flash } — flash=true only from chip click, false from auto-expand
-  const [topologyFocus, setTopologyFocus] = useState<{ id: number; flash: boolean } | null>(null);
-
-  // Chip click → focus with flash
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const compId = (e as CustomEvent).detail?.componentId;
-      if (typeof compId === 'number') {
-        setConsolePanel('topology');
-        setTopologyFocus({ id: compId, flash: true });
-      }
-    };
-    window.addEventListener('topology-focus', handler);
-    return () => window.removeEventListener('topology-focus', handler);
-  }, []);
-
-  // Auto-expand corresponding island on note navigation (no flash), collapse on grid view
-  const prevActiveIdRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (!hub) return;
-    const { activePost } = hub;
-    if (!activePost) {
-      // Back to grid — collapse all topology
-      if (prevActiveIdRef.current) {
-        prevActiveIdRef.current = null;
-        islandRef.current?.collapseAll();
-      }
-      return;
-    }
-    if (activePost.id === prevActiveIdRef.current) return;
-    prevActiveIdRef.current = activePost.id;
-    const islands = getIslands();
-    if (!islands) return;
-    const compId = islands.nodeToComponent[activePost.id];
-    if (compId != null) setTopologyFocus({ id: compId, flash: false });
-  }, [hub, getIslands]);
 
   if (!hub) return null;
 
   const {
+    query, setQuery, searchMode, setSearchMode,
     filterState, setFilterState,
     directoryScope, setDirectoryScope,
     directoryQuery, setDirectoryQuery,
@@ -586,9 +628,33 @@ export const SecondBrainSidebar: React.FC = () => {
     histogramNotes,
     hasActiveFilters,
     searchActive,
+    resetFilters,
   } = hub;
 
-  // Prune sidebar sections when any filter/scope/search is active
+  useEffect(() => {
+    if (!graphExpanded) return;
+    const frame = requestAnimationFrame(() => graphSearchInputRef.current?.focus());
+    const redirectTyping = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.matches('input, textarea, [contenteditable="true"]')) return;
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      if (event.key.length === 1) {
+        event.preventDefault();
+        const next = graphSelectionCleared ? `${graphInput}${event.key}` : event.key;
+        setGraphSelectionCleared(true); setGraphInput(next); setQuery(next);
+        graphSearchInputRef.current?.focus();
+      } else if (event.key === 'Backspace') {
+        event.preventDefault();
+        const next = graphSelectionCleared ? graphInput.slice(0, -1) : '';
+        setGraphSelectionCleared(true); setGraphInput(next); setQuery(next);
+        graphSearchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', redirectTyping, true);
+    return () => { cancelAnimationFrame(frame); window.removeEventListener('keydown', redirectTyping, true); };
+  }, [graphExpanded, graphInput, graphSelectionCleared, setQuery]);
+
+  // Prune sidebar sections when any filter, root, or search is active.
   const isFiltering = hasActiveFilters || !!directoryScope || searchActive;
   const resultIdSet = useMemo(() => {
     if (!isFiltering) return null;
@@ -606,51 +672,150 @@ export const SecondBrainSidebar: React.FC = () => {
       }, []);
     return prune(filteredTree);
   }, [filteredTree, resultIdSet]);
-
-  const handleScope = (path: string) => {
-    // Toggle: clicking already-scoped folder clears scope
-    setDirectoryScope(directoryScope === path ? null : path);
-  };
+  const directoryPreviewIds = calendarPreviewIds ?? miniAreaIds;
+  const areaRootBreakdown = useMemo(() => {
+    if (!directoryPreviewIds?.size) return [] as Array<{ root: string; count: number; percent: number }>;
+    const counts = new Map<string, number>();
+    allFieldNotes.forEach(note => {
+      if (!directoryPreviewIds.has(note.id)) return;
+      const root = note.addressParts?.[0] ?? note.address?.split('//')[0] ?? note.title;
+      counts.set(root, (counts.get(root) ?? 0) + 1);
+    });
+    return [...counts].map(([root, count]) => ({ root, count, percent: count / directoryPreviewIds.size * 100 })).sort((a, b) => b.count - a.count || a.root.localeCompare(b.root));
+  }, [allFieldNotes, directoryPreviewIds]);
+  const areaOrderedTree = useMemo(() => {
+    if (!areaRootBreakdown.length) return visibleTree;
+    const pruneToArea = (nodes: TreeNode[]): TreeNode[] => nodes.reduce<TreeNode[]>((result, node) => {
+      const children = pruneToArea(node.children);
+      const nodeId = node.concept?.id;
+      if ((nodeId && directoryPreviewIds?.has(nodeId)) || children.length) result.push({ ...node, children });
+      return result;
+    }, []);
+    // A calendar hover is a transient lens above the persisted date filter.
+    // Start from the complete directory tree so a pinned day cannot erase the
+    // nodes belonging to the day currently being previewed. Other area tools
+    // continue to operate on the already-filtered tree.
+    const sampledTree = pruneToArea(calendarPreviewIds ? filteredTree : visibleTree);
+    const rank = new Map<string, number>(areaRootBreakdown.map((item, index): [string, number] => [item.root, index]));
+    return sampledTree.sort((a, b) => (rank.get(a.path.split('//')[0]) ?? 9999) - (rank.get(b.path.split('//')[0]) ?? 9999));
+  }, [areaRootBreakdown, calendarPreviewIds, directoryPreviewIds, filteredTree, visibleTree]);
+  const previewExpansionDepth = useMemo(() => {
+    if (!calendarPreviewIds?.size && !miniAreaIds?.size) return 0;
+    // Spend the available vertical rows one complete generation at a time.
+    // This never exposes half of a level and scales to arbitrarily deep trees.
+    const viewportHeight = typeof window === 'undefined' ? 800 : window.innerHeight;
+    const availableRows = Math.max(4, Math.floor((viewportHeight - (graphExpanded ? 430 : 520)) / 25));
+    let visibleRows = areaOrderedTree.length;
+    let depth = 0;
+    let frontier = areaOrderedTree;
+    while (frontier.length) {
+      const next = frontier.flatMap(node => node.children);
+      if (!next.length || visibleRows + next.length > availableRows) break;
+      visibleRows += next.length;
+      frontier = next;
+      depth += 1;
+    }
+    return depth;
+  }, [areaOrderedTree, calendarPreviewIds, graphExpanded, miniAreaIds]);
+  const forceDirectoryDepth = directoryQuery.length > 0
+    ? Number.POSITIVE_INFINITY
+    : calendarPreviewIds?.size || miniAreaIds?.size
+      ? previewExpansionDepth
+      : filterState.dateFilter
+        ? Number.POSITIVE_INFINITY
+        : 0;
 
   const updateFilter = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
     setFilterState(prev => ({ ...prev, [key]: value }));
   };
+  const noteDateById = useMemo(() => new Map(
+    allFieldNotes.map(note => [note.id, note.date?.slice(0, 10) ?? '']),
+  ), [allFieldNotes]);
+  const openGraphNode = (node: { id: string }) => {
+    const date = noteDateById.get(node.id);
+    if (date) updateFilter('dateFilter', date);
+    navigate(secondBrainPath(node.id));
+  };
 
-  const consoleTabs = (
-    <div className="grid grid-cols-2 border-t border-th-hub-border" role="tablist" aria-label="Wiki Console view">
-      {CONSOLE_PANELS.map(panel => (
-        <button
-          key={panel.id}
-          type="button"
-          role="tab"
-          aria-selected={consolePanel === panel.id}
-          title={panel.label}
-          onClick={() => setConsolePanel(panel.id)}
-          className={`relative min-w-0 border-r border-th-hub-border px-1 py-2 text-[8px] uppercase tracking-[.08em] transition-colors last:border-r-0 ${
-            consolePanel === panel.id
-              ? 'bg-violet-400/10 text-violet-300'
-              : 'text-th-muted hover:bg-th-surface hover:text-th-secondary'
-          }`}
-        >
-          <span className="block truncate">{panel.shortLabel}</span>
-          {consolePanel === panel.id && <i className="absolute inset-x-2 bottom-0 h-px bg-violet-400" />}
-        </button>
-      ))}
-    </div>
-  );
+  const rootOptions = useMemo(() => {
+    const counts = new Map<string, number>();
+    allFieldNotes.forEach(note => {
+      const root = (note.addressParts || note.address?.split('//') || [note.title])[0];
+      if (root) counts.set(root, (counts.get(root) || 0) + 1);
+    });
+    return [...counts.entries()]
+      .map(([root, count]) => ({ root, count }))
+      .sort((a, b) => b.count - a.count || a.root.localeCompare(b.root));
+  }, [allFieldNotes]);
+  const rootColorMap = useMemo(() => assignRootColors(allFieldNotes.map(note => note.address ?? note.title)), [allFieldNotes]);
+  const graphDirectoryIndex = useMemo(() => {
+    const descendantsByPath = new Map<string, Set<string>>();
+    const noteById = new Map<string, FieldNoteMeta>();
+    allFieldNotes.forEach(note => {
+      noteById.set(note.id, note);
+      const parts = note.addressParts ?? note.address?.split('//') ?? [note.title];
+      for (let depth = 1; depth <= parts.length; depth += 1) {
+        const path = parts.slice(0, depth).join('//');
+        const descendants = descendantsByPath.get(path) ?? new Set<string>();
+        descendants.add(note.id);
+        descendantsByPath.set(path, descendants);
+      }
+    });
+    return { descendantsByPath, noteById };
+  }, [allFieldNotes]);
+
+  const scopedRoot = directoryScope && rootOptions.some(option => option.root === directoryScope) ? directoryScope : '';
 
   // Build highlight set from sortedResults when searching
   const graphHighlightIds = useMemo(() => {
     if (!isFiltering) return null;
     return new Set(sortedResults.map(n => n.id));
   }, [isFiltering, sortedResults]);
+  const previewRootIds = previewRoot ? graphDirectoryIndex.descendantsByPath.get(previewRoot) ?? null : null;
+  const previewPathIds = previewPath ? graphDirectoryIndex.descendantsByPath.get(previewPath) ?? null : null;
+  const previewPathCameraIds = useMemo(() => {
+    if (!previewPath) return null;
+    const contextPath = previewPath.split('//').slice(0, 2).join('//');
+    return graphDirectoryIndex.descendantsByPath.get(contextPath) ?? null;
+  }, [graphDirectoryIndex, previewPath]);
+  const wikiLinkHighlightIds = useMemo(() => wikiLinkPreviewId ? new Set([wikiLinkPreviewId]) : null, [wikiLinkPreviewId]);
+  // Deep links retain spatial context: frame at most root/first-child depth,
+  // independent of how deeply nested the destination itself is.
+  const wikiLinkCameraIds = useMemo(() => {
+    if (!wikiLinkPreviewId) return null;
+    const target = graphDirectoryIndex.noteById.get(wikiLinkPreviewId);
+    const parts = target?.addressParts ?? target?.address?.split('//') ?? [];
+    if (!parts.length) return wikiLinkHighlightIds;
+    const contextPath = parts.slice(0, Math.min(2, parts.length)).join('//');
+    return graphDirectoryIndex.descendantsByPath.get(contextPath) ?? wikiLinkHighlightIds;
+  }, [graphDirectoryIndex, wikiLinkHighlightIds, wikiLinkPreviewId]);
+  const transientGraphHighlightIds = previewPathIds ?? previewRootIds ?? calendarPreviewIds ?? miniAreaIds ?? wikiLinkHighlightIds;
+  const graphStateReadout = (graphHighlightIds || transientGraphHighlightIds || (!graphSelectionCleared && activePost)) ? (
+    <span className="flex items-center gap-2 font-mono text-[8px] normal-case tracking-normal text-th-muted" aria-label="Graph visual state">
+      {graphHighlightIds && <span className="flex items-center gap-1 text-indigo-300" title={`${graphHighlightIds.size} current matrix results`}><i className="h-1.5 w-1.5 rounded-full bg-indigo-300" />{graphHighlightIds.size}</span>}
+      {transientGraphHighlightIds && <span className="flex items-center gap-1 text-fuchsia-400" title={`${transientGraphHighlightIds.size} temporarily previewed nodes`}><i className="h-1.5 w-1.5 rounded-full bg-fuchsia-400" />{transientGraphHighlightIds.size}</span>}
+      {!graphSelectionCleared && activePost && <span className="flex items-center gap-1 text-lime-400" title="Selected node and descendants"><i className="h-1.5 w-1.5 rounded-full bg-lime-400" />1</span>}
+    </span>
+  ) : null;
+  const temporalPreviewIds = useMemo(() => {
+    if (previewPathIds) return previewPathIds;
+    if (previewRootIds) return previewRootIds;
+    if (calendarPreviewIds) return calendarPreviewIds;
+    if (miniAreaIds) return miniAreaIds;
+    // A single graph-node hover is deliberately local. Sending it to the
+    // calendar made the whole temporal map flicker for no useful comparison.
+    return null;
+  }, [calendarPreviewIds, miniAreaIds, previewPathIds, previewRootIds]);
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('wiki-temporal-preview', { detail: temporalPreviewIds ? [...temporalPreviewIds] : null }));
+  }, [temporalPreviewIds]);
 
   // Build filtered ID set for mini graph — active when any filter reduces the result set
   const sections = (
     <>
-      {consolePanel === 'information' && <>
+      <>
       {/* Mini Graph — visual overview, highlights search matches */}
-      <Section
+      {!graphExpanded && <div className="sticky top-0 z-30 bg-th-base"><Section
         title="graph"
         icon={
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
@@ -659,41 +824,54 @@ export const SecondBrainSidebar: React.FC = () => {
           </svg>
         }
         defaultOpen={true}
-        headerAction={null}
+        headerAction={graphStateReadout}
       >
-        <div className="relative">
+        <div className="relative -mx-3 -mb-3 overflow-hidden">
           <Suspense fallback={
             <div className="flex items-center justify-center text-th-muted text-[10px] animate-pulse" style={{ height: 150 }}>
               Loading graph...
             </div>
           }>
             <MiniGraph
-              highlightIds={graphHighlightIds}
-              filteredIds={null}
+              resultIds={graphHighlightIds}
+              previewIds={transientGraphHighlightIds}
               searchQuery={hub.query}
+              cameraFocusIds={previewPathCameraIds ?? previewRootIds ?? calendarPreviewIds ?? wikiLinkCameraIds}
+              cameraAnchorIds={previewPathIds ?? previewRootIds ?? calendarPreviewIds ?? wikiLinkHighlightIds}
+              onAreaPreview={setMiniAreaIds}
+              colorMode="roots"
+              onNodeSelect={openGraphNode}
+              activeNodeId={activePost?.id ?? null}
             />
           </Suspense>
           <button
             type="button"
             onClick={expandGraph}
-            className="absolute -bottom-1 -right-1 flex items-center gap-1 text-violet-400 hover:text-violet-300 transition-colors text-[10px] leading-none opacity-60 hover:opacity-100"
+            className="absolute bottom-0.5 right-0.5 z-10 grid h-6 w-6 place-items-center border border-th-hub-border bg-th-base text-violet-400 opacity-55 shadow-sm transition-[opacity,color,background-color] hover:bg-violet-400/10 hover:text-violet-300 hover:opacity-100"
             title="Expand graph"
           >
-            <span>Expand</span>
-            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
-              <circle cx="3" cy="3" r="1.5" /><circle cx="9" cy="5" r="1.5" /><circle cx="5" cy="9" r="1.5" />
-              <line x1="4.2" y1="3.8" x2="7.8" y2="4.5" /><line x1="4" y1="8" x2="7.8" y2="5.8" />
-            </svg>
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"><path d="M4.5 1.5h-3v3M7.5 10.5h3v-3M1.5 4.5l3-3M10.5 7.5l-3 3" /></svg>
           </button>
         </div>
-      </Section>
+      </Section></div>}
 
       {/* Graph Stats — always global, technical only */}
-      <Section
-        title="graph stats"
+      {graphExpanded && <Section title="graph statistics" icon={<BarChartIcon />} defaultOpen={false}>
+        <div className="divide-y divide-th-hub-border border-y border-th-hub-border">
+          {[
+            ['nodes', stats.totalConcepts], ['links', stats.totalLinks], ['density', `${stats.density}%`],
+            ['isolated', stats.isolatedCount], ['avg refs', stats.avgRefs], ['depth', stats.maxDepth],
+          ].map(([label, value]) => <div key={label} className="flex h-6 items-center justify-between px-1.5"><span className="text-[8px] uppercase tracking-[.12em] text-th-muted">{label}</span><span className="font-mono text-[10px] tabular-nums text-th-secondary">{value}</span></div>)}
+        </div>
+      </Section>}
+
+      {graphExpanded && <Section
+        key="graph-dynamics"
+        title="graph dynamics"
         icon={<BarChartIcon />}
-        defaultOpen={true}
+        defaultOpen={!graphExpanded}
       >
+        {graphExpanded ? <GraphDynamicsControls /> : <>
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
           <div>
             <div className="text-[9px] text-th-muted">concepts</div>
@@ -728,7 +906,8 @@ export const SecondBrainSidebar: React.FC = () => {
             setFilterState(prev => ({ ...prev, wordCountMin: min, wordCountMax: max }));
           }}
         />
-      </Section>
+        </>}
+      </Section>}
 
       {/* Directory Tree */}
       <Section
@@ -786,8 +965,9 @@ export const SecondBrainSidebar: React.FC = () => {
         </div>
 
         {(() => {
-          const withChildren = visibleTree.filter(n => n.children.length > 0);
-          const leaves = visibleTree.filter(n => n.children.length === 0);
+          const withChildren = areaOrderedTree.filter(n => n.children.length > 0);
+          const leaves = areaOrderedTree.filter(n => n.children.length === 0);
+          const maxBranchSize = Math.max(1, ...areaOrderedTree.map(node => node.childCount + (node.concept ? 1 : 0)));
           return (
             <div>
               {withChildren.length === 0 && leaves.length === 0 && isFiltering && (
@@ -801,13 +981,15 @@ export const SecondBrainSidebar: React.FC = () => {
                     <TreeNodeItem
                       key={node.label}
                       node={node}
-                      activeScope={directoryScope}
-                      onScope={handleScope}
-                      onConceptClick={signalDirectoryNav}
-                      forceExpanded={directoryQuery.length > 0}
-                      activePath={activePost?.address ?? null}
+                      onConceptClick={() => { signalDirectoryNav(); if (graphExpanded) minimizeGraph(false); }}
+                      forceExpandDepth={forceDirectoryDepth}
+                      activePath={directoryPreviewIds?.size ? null : activePost?.address ?? null}
                       getPercentile={getPercentile}
                       collapseSignal={dirCollapseGen}
+                      accentColor={rootColorMap.get(node.path.split('//')[0]) ?? ROOT_NEUTRAL}
+                      onPathPreview={setPreviewPath}
+                      onPathPick={path => setDirectoryScope(directoryScope === path ? null : path)}
+                      relativeSize={Math.max(1, node.childCount + (node.concept ? 1 : 0)) / maxBranchSize}
 
                     />
                   ))}
@@ -825,13 +1007,15 @@ export const SecondBrainSidebar: React.FC = () => {
                       <TreeNodeItem
                         key={node.label}
                         node={node}
-                        activeScope={directoryScope}
-                        onScope={handleScope}
-                        onConceptClick={signalDirectoryNav}
-                        forceExpanded={directoryQuery.length > 0}
-                        activePath={activePost?.address ?? null}
+                        onConceptClick={() => { signalDirectoryNav(); if (graphExpanded) minimizeGraph(false); }}
+                        forceExpandDepth={forceDirectoryDepth}
+                        activePath={directoryPreviewIds?.size ? null : activePost?.address ?? null}
                         getPercentile={getPercentile}
                         collapseSignal={dirCollapseGen}
+                        accentColor={rootColorMap.get(node.path.split('//')[0]) ?? ROOT_NEUTRAL}
+                        onPathPreview={setPreviewPath}
+                        onPathPick={path => setDirectoryScope(directoryScope === path ? null : path)}
+                        relativeSize={Math.max(1, node.childCount + (node.concept ? 1 : 0)) / maxBranchSize}
   
                       />
                     ))}
@@ -842,78 +1026,8 @@ export const SecondBrainSidebar: React.FC = () => {
           );
         })()}
       </Section>
-      </>}
+      </>
 
-      {/* Topology — technical only */}
-      {consolePanel === 'topology' && <Section
-        title="topology"
-        icon={<IslandIcon />}
-        defaultOpen={true}
-        forceOpen={topologyFocus != null}
-        headerAction={
-          <span className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => setTopologyExpanded(true)}
-              className="text-[8px] uppercase tracking-[.08em] text-violet-400/75 hover:text-violet-300"
-              title="Expand topology projection"
-            >
-              expand
-            </button>
-            <button
-              onClick={() => islandRef.current?.collapseAll()}
-              className="text-th-muted hover:text-th-secondary transition-colors p-1 leading-none"
-              title="Collapse all"
-            >
-              <svg className="block" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" x2="18" y1="15" y2="15" />
-                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-              </svg>
-            </button>
-          </span>
-        }
-      >
-        <TopologyOrbit
-          notes={allFieldNotes}
-          highlightIds={resultIdSet}
-          activeNodeId={activePost?.id ?? null}
-          onOpenNode={id => navigate(secondBrainPath(id))}
-        />
-        <div className="my-2 flex items-center gap-2 text-[8px] uppercase tracking-[.08em] text-th-muted">
-          <span className="h-px flex-1 bg-th-hub-border" />
-          components & cuts
-          <span className="h-px flex-1 bg-th-hub-border" />
-        </div>
-        <div className="flex items-center border border-th-hub-border px-2 py-1 bg-th-surface focus-within:border-th-border-active transition-colors mb-2">
-          <input
-            type="text"
-            placeholder="Filter topology..."
-            value={topologyQuery}
-            onChange={(e) => setTopologyQuery(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Escape') { setTopologyQuery(''); (e.target as HTMLInputElement).blur(); } }}
-            className="w-full text-[10px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
-          />
-          {topologyQuery && (
-            <button
-              onClick={() => setTopologyQuery('')}
-              className="text-th-muted hover:text-th-secondary text-[9px] ml-1 flex-shrink-0"
-            >
-              &times;
-            </button>
-          )}
-        </div>
-        <IslandDetector
-          ref={islandRef}
-          focusComponentId={topologyFocus?.id ?? null}
-          focusFlash={topologyFocus?.flash ?? false}
-          onFocusHandled={() => setTopologyFocus(null)}
-          activeIslandScope={filterState.islandId}
-          onIslandScope={(id) => updateFilter('islandId', filterState.islandId === id ? null : id)}
-          filterQuery={topologyQuery}
-          visibleIds={resultIdSet}
-        />
-      </Section>}
     </>
   );
 
@@ -970,7 +1084,6 @@ export const SecondBrainSidebar: React.FC = () => {
               </div>
               <div className="mt-1 text-right text-[9px] text-th-muted">{stats.totalConcepts} concepts</div>
             </div>
-            {consoleTabs}
             {/* Scrollable sections */}
             <div className="flex-1 overflow-y-auto thin-scrollbar hub-scrollbar">
               {sections}
@@ -993,10 +1106,14 @@ export const SecondBrainSidebar: React.FC = () => {
         {/* Header — h-7 first row aligns with the editing upbar */}
         <div className="border-b border-th-hub-border flex-shrink-0">
           <div className="px-3 h-7 flex items-center justify-between">
-            <Link to={secondBrainPath()} className="group flex items-center gap-1.5">
+            <Link
+              to={secondBrainPath()}
+              className="group flex items-center gap-1.5"
+              onClick={() => { if (graphExpanded) minimizeGraph(true); }}
+            >
               <WikiBrainIcon className="text-violet-400 group-hover:text-violet-300 transition-colors" size={14} />
               <span><span className="text-[11px] lowercase tracking-wide font-semibold text-violet-400 group-hover:text-violet-300 transition-colors">wiki</span>{' '}
-              <span className="text-[11px] lowercase tracking-wide text-th-muted font-normal">console</span></span>
+              <span className="text-[11px] lowercase tracking-wide text-th-muted font-normal">console ({stats.totalConcepts})</span></span>
             </Link>
             <button
               onClick={() => setGuideOpen(true)}
@@ -1006,8 +1123,6 @@ export const SecondBrainSidebar: React.FC = () => {
               <InfoIcon size={11} />
             </button>
           </div>
-          <div className="px-3 pb-1.5 text-right text-[9px] text-th-muted">{stats.totalConcepts} concepts</div>
-          {consoleTabs}
         </div>
         {/* Scrollable sections */}
         <div className="flex-1 overflow-y-auto thin-scrollbar hub-scrollbar">
@@ -1017,43 +1132,32 @@ export const SecondBrainSidebar: React.FC = () => {
 
       {graphExpanded && createPortal(
         <div
-          className={`fixed inset-0 z-[80] bg-th-base transition-[opacity,transform,border-radius] duration-300 ease-[cubic-bezier(.22,1,.36,1)] ${graphExpandedVisible ? 'opacity-100 scale-100 rounded-none' : 'pointer-events-none opacity-0 scale-[.18] rounded-xl'}`}
-          style={{ transformOrigin: `${SIDEBAR_WIDTH + SECOND_BRAIN_SIDEBAR_WIDTH / 2}px 28%` }}
-          role="dialog"
-          aria-modal="true"
+          className={`fixed bottom-0 right-0 top-12 z-[60] overflow-hidden border-l border-th-hub-border bg-th-base transition-[opacity,transform,border-radius] duration-500 ease-[cubic-bezier(.22,1,.36,1)] ${graphExpandedVisible ? 'opacity-100 scale-100 rounded-none' : 'pointer-events-none opacity-0 scale-[.12] rounded-xl'}`}
+          style={{ left: SIDEBAR_WIDTH + SECOND_BRAIN_SIDEBAR_WIDTH, transformOrigin: '0 24%' }}
+          role="region"
           aria-label="Expanded Wiki graph"
         >
           <Suspense fallback={<div className="grid h-full place-items-center text-[10px] text-th-muted animate-pulse">Loading graph…</div>}>
             <MiniGraph
               expanded
-              highlightIds={graphHighlightIds}
-              filteredIds={null}
+              resultIds={graphHighlightIds}
+              previewIds={transientGraphHighlightIds}
               searchQuery={hub.query}
-              onNodeOpen={node => { minimizeGraph(); window.setTimeout(() => navigate(secondBrainPath(node.id)), 220); }}
+              cameraFocusIds={previewPathCameraIds ?? previewRootIds ?? calendarPreviewIds ?? wikiLinkCameraIds}
+              cameraAnchorIds={previewPathIds ?? previewRootIds ?? calendarPreviewIds ?? wikiLinkHighlightIds}
+              colorMode={graphColorMode}
+              activeRoot={scopedRoot}
+              onAreaPreview={setMiniAreaIds}
+              onMinimize={() => minimizeGraph()}
+              activeNodeId={graphSelectionCleared ? null : activePost?.id ?? null}
+              onNodeSelect={node => { setGraphSelectionCleared(false); minimizeGraph(false); openGraphNode(node); }}
+              onNodeOpen={node => { setGraphSelectionCleared(false); minimizeGraph(false); window.setTimeout(() => navigate(secondBrainPath(node.id)), 220); }}
             />
           </Suspense>
-          <div className="pointer-events-none absolute left-4 top-4 bg-th-base/90 px-2 py-1 text-[9px] font-mono uppercase tracking-[.14em] text-th-muted">Drag nodes · drag space · wheel to zoom · click to open</div>
-          <button type="button" onClick={minimizeGraph} className="absolute right-4 top-4 z-10 flex items-center gap-2 border border-violet-400/40 bg-th-base px-3 py-2 text-[10px] font-mono uppercase tracking-[.12em] text-violet-400 shadow-lg hover:bg-violet-400/10 transition-colors"><span aria-hidden="true">↙</span> Minimize</button>
-        </div>,
-        document.body,
-      )}
-
-      {topologyExpanded && createPortal(
-        <div className="fixed inset-0 z-[80] bg-th-base p-3 sm:p-5" role="dialog" aria-modal="true" aria-label="Expanded Wiki topology">
-          <TopologyOrbit
-            expanded
-            notes={allFieldNotes}
-            highlightIds={resultIdSet}
-            activeNodeId={activePost?.id ?? null}
-            onOpenNode={id => { setTopologyExpanded(false); navigate(secondBrainPath(id)); }}
-          />
-          <button
-            type="button"
-            onClick={() => setTopologyExpanded(false)}
-            className="absolute right-7 top-7 border border-violet-400/35 bg-th-base/90 px-3 py-2 text-[9px] uppercase tracking-[.12em] text-violet-300 hover:bg-violet-400/10"
-          >
-            minimize
-          </button>
+          <div className={`group absolute left-20 right-20 top-3 z-[65] mx-auto max-w-2xl border border-th-hub-border bg-th-base/90 font-mono shadow-lg transition-opacity duration-500 focus-within:opacity-100 hover:opacity-100 ${graphInput ? 'opacity-90' : 'opacity-[.14]'}`}>
+            <div className="flex h-9 items-center gap-2 px-3"><span className="text-violet-400">⌕</span><input ref={graphSearchInputRef} value={graphInput} onChange={event => { setGraphInput(event.target.value); setGraphSelectionCleared(true); setQuery(event.target.value); }} placeholder="search wiki…" autoComplete="off" spellCheck={false} className="min-w-0 flex-1 cursor-text bg-transparent text-[12px] text-th-primary outline-none placeholder:text-th-muted" />{graphStateReadout}{(hasActiveFilters || directoryScope) && <button type="button" onClick={() => { resetFilters(); setDirectoryScope(null); }} className="flex-none border-l border-th-hub-border pl-2 text-[8px] uppercase tracking-[.08em] text-amber-400 transition-colors hover:text-amber-300" title="Clear active filters, keep search">reset filters</button>}{graphInput && <button type="button" onClick={() => { setGraphInput(''); setGraphSelectionCleared(true); setQuery(''); }} className="text-th-muted hover:text-th-primary">×</button>}</div>
+            <div className="grid grid-cols-4 gap-px border-t border-th-hub-border bg-th-hub-border p-px">{([['name', 'name'], ['content', 'content'], ['backlinks', 'referenced by'], ['all', 'all']] as Array<[SearchMode, string]>).map(([mode, label]) => <button key={mode} type="button" onClick={() => setSearchMode(mode)} className={`bg-th-base px-2 py-1.5 text-[9px] transition-colors ${searchMode === mode ? 'bg-violet-400/10 text-violet-400' : 'text-th-muted hover:bg-th-surface hover:text-th-secondary'}`}>{label}</button>)}</div>
+          </div>
         </div>,
         document.body,
       )}

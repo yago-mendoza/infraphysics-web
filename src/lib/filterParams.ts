@@ -81,26 +81,25 @@ export function applyHubFilters(
   // 1. Search
   const q = parsed.query.toLowerCase();
   if (q) {
+    const matchesName = (n: FieldNoteMeta) => {
+      const addr = (n.address || n.title).toLowerCase();
+      const dt = (n.displayTitle || n.title).toLowerCase();
+      return addr.includes(q) || dt.includes(q) || (n.aliases?.some(a => a.toLowerCase().includes(q)) ?? false);
+    };
+    const matchesContent = (n: FieldNoteMeta) => (n.searchText || '').includes(q) || n.description.toLowerCase().includes(q);
+    const matchesBacklinks = (n: FieldNoteMeta) => (index.backlinksMap.get(n.id) || []).some(linker => {
+      const addr = (linker.address || linker.title).toLowerCase();
+      const dt = (linker.displayTitle || linker.title).toLowerCase();
+      return addr.includes(q) || dt.includes(q) || (linker.searchText || '').includes(q) || linker.description.toLowerCase().includes(q);
+    });
     if (parsed.searchMode === 'name') {
-      notes = notes.filter(n => {
-        const addr = (n.address || n.title).toLowerCase();
-        const dt = (n.displayTitle || n.title).toLowerCase();
-        if (addr.includes(q) || dt.includes(q)) return true;
-        return n.aliases?.some(a => a.toLowerCase().includes(q)) ?? false;
-      });
+      notes = notes.filter(matchesName);
     } else if (parsed.searchMode === 'content') {
-      notes = notes.filter(n =>
-        (n.searchText || '').includes(q) || n.description.toLowerCase().includes(q)
-      );
+      notes = notes.filter(matchesContent);
     } else if (parsed.searchMode === 'backlinks') {
-      notes = notes.filter(n => {
-        const bl = index.backlinksMap.get(n.id) || [];
-        return bl.some(linker => {
-          const addr = (linker.address || linker.title).toLowerCase();
-          const dt = (linker.displayTitle || linker.title).toLowerCase();
-          return addr.includes(q) || dt.includes(q);
-        });
-      });
+      notes = notes.filter(matchesBacklinks);
+    } else if (parsed.searchMode === 'all') {
+      notes = notes.filter(n => matchesName(n) || matchesContent(n) || matchesBacklinks(n));
     }
   }
 

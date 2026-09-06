@@ -26,7 +26,6 @@ export const Footer: React.FC = () => {
 
   return (
     <footer className={`w-full relative z-20 ${isBlog ? 'bg-th-blog' : 'bg-transparent'}`}>
-      <div data-home-tachograph-anchor aria-hidden="true" />
       <div className="max-w-[42rem] mx-auto px-6 pt-10 pb-28 md:pb-32">
         <div className="border-t border-th-border pt-7 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-8 md:items-end">
           <div>

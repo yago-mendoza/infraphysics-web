@@ -116,7 +116,7 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
   // Break out only primitives that would otherwise need horizontal scrolling.
   // The class is measured from their real rendered content, not guessed by type.
   useEffect(() => {
-    const root = containerRef.current;
+    const root: HTMLDivElement | null = containerRef.current;
     if (!root) return;
     const measure = () => {
       const wiki = !!root.closest('.article-wiki');
@@ -182,6 +182,8 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
           const address = decodeURIComponent(link.getAttribute('data-address') || '');
           const description = decodeURIComponent(link.getAttribute('data-description') || '');
           setPreview({ visible: true, title, address, description, x: e.clientX, y: e.clientY });
+          const noteId = secondBrainUidFromPath(href);
+          if (noteId) window.dispatchEvent(new CustomEvent('wiki-link-preview', { detail: noteId }));
         }
       } else {
         // Mouse is on non-link content — schedule hide
@@ -189,6 +191,7 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
           hideTimer.current = setTimeout(() => {
             hoveredLinkRef.current = null;
             setPreview(INITIAL_PREVIEW);
+            window.dispatchEvent(new CustomEvent('wiki-link-preview', { detail: null }));
             hideTimer.current = null;
           }, 80);
         }
@@ -199,6 +202,7 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
       clearHide();
       hoveredLinkRef.current = null;
       setPreview(INITIAL_PREVIEW);
+      window.dispatchEvent(new CustomEvent('wiki-link-preview', { detail: null }));
     };
 
     const onClick = (e: MouseEvent) => {
@@ -274,6 +278,7 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
       el.removeEventListener('mouseleave', onLeave);
       el.removeEventListener('click', onClick);
       clearHide();
+      window.dispatchEvent(new CustomEvent('wiki-link-preview', { detail: null }));
     };
   }, [clearHide]);
 
