@@ -1319,7 +1319,7 @@ a.stack-row:hover .stack-arrow { color:var(--brand-oxide); transition-delay:75ms
 .index-ruler { display:flex; justify-content:space-between; align-items:flex-end; height:.8rem; border-bottom:1px solid color-mix(in srgb,var(--text-heading) 22%,transparent); }
 .index-ruler i { width:1px; height:.22rem; background:color-mix(in srgb,var(--text-heading) 22%,transparent); }
 .index-ruler i.is-mid { height:.4rem; }
-.index-ruler i.is-major { height:.62rem; background:color-mix(in srgb,var(--text-heading) 45%,transparent); }
+.index-ruler i.is-major { height:.55rem; background:color-mix(in srgb,var(--text-heading) 26%,transparent); }
 
 /* Home spotlight: the pinned piece wide, the wiki graph as its small companion. Bleeds past the column like the field map. */
 .home-spotlight-grid { display:grid; grid-template-columns:minmax(0,1.9fr) minmax(15rem,1fr); gap:1px; border:1px solid var(--border-default); background:var(--border-default); padding-top:0; }
