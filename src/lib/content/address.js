@@ -1,4 +1,4 @@
-// Address utilities for fieldnote hierarchical naming
+// Address utilities for wikinote hierarchical naming
 // Browser-safe — no Node dependencies
 
 /**

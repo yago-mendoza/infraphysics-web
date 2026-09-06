@@ -1,6 +1,6 @@
 # infraphysics
 
-Personal website and knowledge system. Articles, projects, field notes, and a second brain built from scratch.
+Personal website and knowledge system. Articles, projects, and a wiki of notes built from scratch.
 
 ![build](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)
 
@@ -19,7 +19,7 @@ Personal website and knowledge system. Articles, projects, field notes, and a se
 - **Cloudflare R2** (image hosting)
 - **Giscus** (GitHub Discussions-backed comments on articles)
 - **Formspree** (contact form)
-- **CodeMirror 6** (in-browser fieldnote editor, localhost only)
+- **CodeMirror 6** (in-browser wikinote editor, localhost only)
 
 ---
 
@@ -28,13 +28,13 @@ Personal website and knowledge system. Articles, projects, field notes, and a se
 ```
 infraphysics-web/
   .claude/
-    hooks/                      # Claude Code hooks (pre-commit build, fieldnote edit guards)
+    hooks/                      # Claude Code hooks (pre-commit build, wikinote edit guards)
     skills/
       commit/SKILL.md             # /commit — atomic commit proposal workflow
-      create-fieldnote/SKILL.md   # /create-fieldnote — process raw input into fieldnotes
+      create-wikinote/SKILL.md   # /create-wikinote — process raw input into wikinotes
   .github/
     workflows/
-      validate.yml              # CI: build + type check + fieldnote reference validation
+      validate.yml              # CI: build + type check + wikinote reference validation
   functions/
     [[catchall]].ts             # Cloudflare Pages Function (OG tags + JSON-LD + body content for social + AI crawlers)
     api/views/[[slug]].ts       # View counter API (KV-backed, IP-deduped per 24h)
@@ -43,19 +43,19 @@ infraphysics-web/
     api/analytics.ts            # Lightweight analytics ingest
     api/presence.ts             # Live presence counter
   vite-plugins/
-    fieldnote-editor.js         # Dev server plugin: fieldnote CRUD API (localhost only, 6 endpoints)
+    wikinote-editor.js         # Dev server plugin: wikinote CRUD API (localhost only, 6 endpoints)
   scripts/
     compiler.config.js        # Centralized compiler configuration
     build-content.js          # Markdown → JSON pipeline (triple output)
-    validate-fieldnotes.js    # Reference integrity checks
+    validate-wikinotes.js    # Reference integrity checks
     resolve-issues.js         # Interactive issue resolver (segment collisions, missing parents)
-    rename-address.js         # Rename fieldnote address (frontmatter only — refs use stable UIDs)
+    rename-address.js         # Rename wikinote address (frontmatter only — refs use stable UIDs)
     check-references.js       # Detect isolated notes, weak parents, stale refs
-    analyze-pairs.js          # Relationship analyzer for fieldnote pairs
+    analyze-pairs.js          # Relationship analyzer for wikinote pairs
     preflight.js              # Pre-creation briefing (content, refs, collisions)
     move-hierarchy.js         # Cascading rename for address + all descendants
-    obsidian-export.js        # Export fieldnotes to Obsidian vault structure
-    obsidian-import.js        # Import Obsidian vault back to fieldnotes
+    obsidian-export.js        # Export wikinotes to Obsidian vault structure
+    obsidian-import.js        # Import Obsidian vault back to wikinotes
     compute-graph-relevance.js # Build-time PageRank + proximity → graph-relevance.generated.json
     README.md                 # Build pipeline docs, cache format
   dev-scripts/
@@ -76,7 +76,7 @@ infraphysics-web/
       layout/                 # Sidebar, MobileNav, Footer, AmbientRails, ArticleFloatingBar, WikiTopBar, SecondBrainSidebar
       ui/                     # StatusBadge, Highlight, ComplexityBar
       icons/                  # SVG icon components
-      editor/                 # Fieldnote editor (localhost only): CodeMirror, diagnostics, term detection, navigation, trailing refs, new note panel, delete confirmation
+      editor/                 # Wikinote editor (localhost only): CodeMirror, diagnostics, term detection, navigation, trailing refs, new note panel, delete confirmation
       graph/                  # Shared force-directed 2D/3D graph explorer (MiniGraph) and data hooks
     views/
       HomeView.tsx            # Landing page
@@ -85,7 +85,7 @@ infraphysics-web/
       SectionView.tsx         # Category listing (projects, essays, bits2bricks)
       PostView.tsx            # Single post renderer
       ArticlePostView.tsx     # Article body renderer (wiki-links, hover previews)
-      SecondBrainView.tsx     # Fieldnotes explorer (/wiki)
+      SecondBrainView.tsx     # Wikinotes explorer (/wiki)
       AboutView.tsx           # About page
       CvView.tsx              # CV page (/about/cv)
       StackView.tsx           # Tooling stack page (/about/stack)
@@ -105,14 +105,14 @@ infraphysics-web/
         bits2bricks/          # .md posts + _category.yaml
           README.md             # Bits2Bricks editorial voice
         fieldnotes/           # Individual {uid}.md files (1 per concept, UID-named)
-          README.md             # Fieldnotes management guide (scripts, workflows, errors)
+          README.md             # Wikinotes management guide (scripts, workflows, errors)
       notes.ts                # Short notes (hand-written TS array, no markdown pipeline)
       agent-profile.json      # Author profile consumed by views and crawlers
       postSummaries.ts        # Lightweight post index for listings
-      posts.generated.json    # Regular posts only (no fieldnotes)
+      posts.generated.json    # Regular posts only (no wikinotes)
       posts-index.generated.json  # Post metadata without bodies
-      fieldnotes-index.generated.json  # Fieldnote metadata (no content)
-      graph-relevance.generated.json   # PageRank + proximity per fieldnote
+      fieldnotes-index.generated.json  # Wikinote metadata (no content)
+      graph-relevance.generated.json   # PageRank + proximity per wikinote
       categories.generated.json
       data.ts                 # Runtime data loader
     public/
@@ -120,7 +120,7 @@ infraphysics-web/
       articles/<article-id>/  # Local image assets grouped by article ID
       playgrounds/<article-id>/ # Self-contained interactive "playgrounds" (HTML/JS) per article, linked via [text](/playgrounds/<id>/<name>.html)
       fieldnotes/             # {uid}.json content files (served as static assets)
-      fieldnotes-index.json   # Generated: fieldnote metadata index (HTTP-fetched at runtime)
+      fieldnotes-index.json   # Generated: wikinote metadata index (HTTP-fetched at runtime)
       og-manifest.json        # Generated: URL path → OG metadata + full text body for crawlers
       sitemap.xml             # Generated XML sitemap (route count follows current content)
       feed.xml                # Generated: RSS feed (latest 30 articles)
@@ -138,8 +138,8 @@ infraphysics-web/
       search.ts               # Search utilities
       filterParams.ts         # URL filter param (de)serialization
       engagementApi.ts        # Views / hearts / stats API client
-      brainIndex.ts           # Fieldnotes index (singleton, lazy init, 7 in-memory Maps, HMR-aware)
-      exportNotes.ts          # Export fieldnotes as LLM-friendly markdown (htmlToText, batch export)
+      brainIndex.ts           # Wikinotes index (singleton, lazy init, 7 in-memory Maps, HMR-aware)
+      exportNotes.ts          # Export wikinotes as LLM-friendly markdown (htmlToText, batch export)
       projectPresentation.ts # Canonical project topics/technology presentation
       icons.ts                # Centralized SVG icon paths (Heroicons)
       content/                # Shared compile/parse library (used by build scripts + Vite plugin)
@@ -160,7 +160,7 @@ infraphysics-web/
       article-layout.css      # Article page grid and reading column
       editorial-primitives.css # Shared editorial typography primitives
       wiki-content.css        # Wiki/second-brain content delta overrides
-      editor.css              # CodeMirror overrides for fieldnote editor
+      editor.css              # CodeMirror overrides for wikinote editor
       essay-lab.css           # Experimental essay typography lab (/r2, /r4 … /r14), driven by --lab-* variables
     config/                   # Categories config, analytics, content entities
     constants/                # Layout, theme constants
@@ -183,16 +183,16 @@ infraphysics-web/
 | `npm run dev` | Build content + start Vite dev server |
 | `npm run build` | Build content + production build |
 | `npm run preview` | Preview production build locally |
-| `npm run obsidian:export` | Export fieldnotes to Obsidian vault structure |
-| `npm run obsidian:import` | Import Obsidian vault back to fieldnotes |
+| `npm run obsidian:export` | Export wikinotes to Obsidian vault structure |
+| `npm run obsidian:import` | Import Obsidian vault back to wikinotes |
 
-The build pipeline compiles posts and fieldnotes through one shared transformation: protected Markdown, the small editorial grammar, Marked, Shiki and link resolution. Results are cached in `.content-cache.json`; changes to compiler code or configuration invalidate that cache. Full pipeline details: **[scripts/README.md](scripts/README.md)**
+The build pipeline compiles posts and wikinotes through one shared transformation: protected Markdown, the small editorial grammar, Marked, Shiki and link resolution. Results are cached in `.content-cache.json`; changes to compiler code or configuration invalidate that cache. Full pipeline details: **[scripts/README.md](scripts/README.md)**
 
 ---
 
 ### Writing content
 
-All article and fieldnote Markdown lives in `src/data/pages/`. Standard Markdown does most of the work; the deliberately small extension adds typed notes, optional tabbed sections, definition/alphabetical lists, context annotations, Wiki and cross-document links, single/pair images, mathematics and inline footnotes. Authoring hub: **[src/data/pages/README.md](src/data/pages/README.md)**. Normative syntax reference: **[src/data/pages/SYNTAX.md](src/data/pages/SYNTAX.md)**
+All article and wikinote Markdown lives in `src/data/pages/`. Standard Markdown does most of the work; the deliberately small extension adds typed notes, optional tabbed sections, definition/alphabetical lists, context annotations, Wiki and cross-document links, single/pair images, mathematics and inline footnotes. Authoring hub: **[src/data/pages/README.md](src/data/pages/README.md)**. Normative syntax reference: **[src/data/pages/SYNTAX.md](src/data/pages/SYNTAX.md)**
 
 ---
 
@@ -204,13 +204,13 @@ All colors flow through a three-layer cascade: CSS custom properties in `index.h
 
 ### Second Brain
 
-A flat knowledge graph of `{uid}.md` files in `fieldnotes/`. Each note has a stable 8-char UID (for references and URLs) and an `address` (hierarchical, `//`-separated, for display and neighborhood). Notes link to each other via `[[uid]]` wiki-links — renaming an address changes only one file's frontmatter. Build produces three outputs: a posts JSON (no fieldnotes), a metadata index (no content), and individual `{uid}.json` content files served as static assets. At runtime, the metadata index is fetched via HTTP (cached by CDN, separate from the JS bundle) while note content is fetched on demand. For managing fieldnotes, see **[src/data/pages/fieldnotes/README.md](src/data/pages/fieldnotes/README.md)**.
+A flat knowledge graph of `{uid}.md` files in `fieldnotes/`. Each note has a stable 8-char UID (for references and URLs) and an `address` (hierarchical, `//`-separated, for display and neighborhood). Notes link to each other via `[[uid]]` wiki-links — renaming an address changes only one file's frontmatter. Build produces three outputs: a posts JSON (no wikinotes), a metadata index (no content), and individual `{uid}.json` content files served as static assets. At runtime, the metadata index is fetched via HTTP (cached by CDN, separate from the JS bundle) while note content is fetched on demand. For managing wikinotes, see **[src/data/pages/fieldnotes/README.md](src/data/pages/fieldnotes/README.md)**.
 
 **In-browser editor** (localhost only): Click a note's edit button to open a CodeMirror editor panel. Features: `[[` navigation dropdown (arrow keys + Enter to jump between notes, Tab to drill into children, filters as you type), smart term detection (highlights unlinked mentions of known notes in purple, offers Yes/No to convert to wiki-links), missing-parent stub creation from diagnostics, delete workflow with impact analysis (shows inbound refs, children, trailing refs — offers stub conversion or permanent delete with ref cleanup), uid protection (read-only, restored on save), resizable diagnostics panel, trailing refs widget, and auto-reload after save via HMR. The editor runs live validation on every keystroke, catching broken references, missing parents, and formatting issues before they reach the build — so most errors are fixed in real time without needing to run the full pipeline.
 
-**Creating fieldnotes:** Follow the preflight and creation workflow in the fieldnotes management guide. It covers decomposition, deduplication, addressing, parent stubs and validation.
+**Creating wikinotes:** Follow the preflight and creation workflow in the wikinotes management guide. It covers decomposition, deduplication, addressing, parent stubs and validation.
 
-**Maintenance:** Periodically run `npm run content:fix` to interactively resolve segment collisions and missing parents. Also useful: ask Claude to audit the current state of fieldnotes (address quality, isolated notes, enrichment opportunities, structural improvements) using `check-references.js` and `analyze-pairs.js`.
+**Maintenance:** Periodically run `npm run content:fix` to interactively resolve segment collisions and missing parents. Also useful: ask Claude to audit the current state of wikinotes (address quality, isolated notes, enrichment opportunities, structural improvements) using `check-references.js` and `analyze-pairs.js`.
 
 ---
 
@@ -220,7 +220,7 @@ The build pipeline includes a 7-phase integrity checker that catches reference e
 
 | Phase | What it catches | Severity |
 |---|---|---|
-| Reference integrity | Broken `[[wiki-links]]` in fieldnotes and posts | ERROR (fails build) |
+| Reference integrity | Broken `[[wiki-links]]` in wikinotes and posts | ERROR (fails build) |
 | Self-references | Notes linking to themselves | WARN |
 | Bare trailing refs | Trailing `[[ref]]` without a `::` annotation — every interaction must explain why | ERROR (fails build) |
 | Parent hierarchy | Missing parent nodes in the address tree | WARN |
@@ -266,11 +266,11 @@ Serverless endpoints running as Cloudflare Pages Functions. All responses includ
 | `/api/reactions/{slug}` | `POST` | Toggle heart for caller's IP, return new count + hearted status |
 | `/api/stats` | `POST` | Bulk fetch: `{ slugs: [...] }` → `{ [slug]: { views, hearts } }` (capped at 50) |
 
-**Dev-only API** (served by `vite-plugins/fieldnote-editor.js`, never deployed):
+**Dev-only API** (served by `vite-plugins/wikinote-editor.js`, never deployed):
 
 | Endpoint | Method | Description |
 |---|---|---|
-| `/api/fieldnotes/:uid/raw` | `GET` | Raw markdown + mtime for a fieldnote |
+| `/api/fieldnotes/:uid/raw` | `GET` | Raw markdown + mtime for a wikinote |
 | `/api/fieldnotes/save` | `POST` | Write to disk + incremental rebuild |
 | `/api/fieldnotes/create` | `POST` | Create new note + rebuild |
 | `/api/fieldnotes/validate` | `POST` | Parse + validate without saving |
@@ -301,7 +301,7 @@ The site is an SPA — without server-side rendering, crawlers see an empty `<di
 - **`<head>`**: OG tags, Twitter cards, canonical URL, and JSON-LD structured data (Article + BreadcrumbList for posts, WebSite for `/home`, ProfilePage with Person schema for `/about`)
 - **`<body>`**: Full article text in semantic `<article>` HTML with heading, paragraphs, date, and author footer — so AI crawlers can read and index the actual content, not just metadata
 
-The build generates `public/og-manifest.json` mapping every URL to its metadata **plus full plain text body** for regular posts. For fieldnotes, the edge function fetches individual `public/fieldnotes/{uid}.json` at runtime and strips HTML. Section pages (`/blog/essays`, `/lab/projects`, etc.) include article listings.
+The build generates `public/og-manifest.json` mapping every URL to its metadata **plus full plain text body** for regular posts. For wikinotes, the edge function fetches individual `public/fieldnotes/{uid}.json` at runtime and strips HTML. Section pages (`/blog/essays`, `/lab/projects`, etc.) include article listings.
 
 **Additional discovery files (all generated at build time):**
 
@@ -310,7 +310,7 @@ The build generates `public/og-manifest.json` mapping every URL to its metadata 
 | `public/llms.txt` | Static summary for LLMs — who, what, site structure, article list with URLs (manually maintained) |
 | `public/llms-full.txt` | All published articles in full plain text, auto-generated from post content |
 | `public/feed.xml` | RSS feed (latest 30 articles) with `<link rel="alternate">` in `index.html` for autodiscovery |
-| `public/sitemap.xml` | XML sitemap for current static pages, posts and fieldnotes |
+| `public/sitemap.xml` | XML sitemap for current static pages, posts and wikinotes |
 | `public/robots.txt` | Crawler directives + sitemap reference |
 
 Routing (`public/_routes.json`) sends article paths, section pages, `/home`, and `/about` through the edge function. Static assets bypass it.
@@ -337,7 +337,7 @@ npm run dev          # build content + start vite dev server (includes editor AP
 npm run build        # build content + production build
 ```
 
-**Local editor:** The Vite dev server automatically loads `vite-plugins/fieldnote-editor.js`, which exposes the fieldnote CRUD API at `/api/fieldnotes/*`. No extra setup — just `npm run dev` and the editor UI appears on Second Brain note pages.
+**Local editor:** The Vite dev server automatically loads `vite-plugins/wikinote-editor.js`, which exposes the wikinote CRUD API at `/api/fieldnotes/*`. No extra setup — just `npm run dev` and the editor UI appears on Second Brain note pages.
 
 **KV APIs in dev:** Cloudflare Pages Functions are not available behind Vite. Localhost therefore reads the canonical counters from `https://infraphysics.net` over CORS. Local article views use `GET` so previewing does not alter production analytics; reaction toggles still target the canonical API. A failed request remains unavailable (`null`) and is never displayed as a false zero.
 
@@ -350,7 +350,7 @@ A GitHub Actions workflow (`.github/workflows/validate.yml`) runs on every push 
 1. **Install** — `npm ci` with dependency cache
 2. **Build** — `npm run build` (compiles content + Vite production build)
 3. **Type check** — `tsc --noEmit` (non-blocking — reports issues without failing the pipeline)
-4. **Validate references** — `node scripts/check-references.js` (fieldnote integrity)
+4. **Validate references** — `node scripts/check-references.js` (wikinote integrity)
 
 **Deploy** is handled separately by the **Cloudflare Pages GitHub integration** — it triggers automatically on push to `main`, runs its own `npm run build`, and publishes the output. The GitHub Action validates; Cloudflare deploys.
 

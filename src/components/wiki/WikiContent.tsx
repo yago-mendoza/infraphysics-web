@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useMemo, useState, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FieldNoteMeta } from '../../types';
+import { WikiNoteMeta } from '../../types';
 import { resolveWikiLinks } from '../../lib/wikilinks';
 import { secondBrainUidFromPath } from '../../config/categories';
 import { WikiLinkPreview } from './WikiLinkPreview';
@@ -47,13 +47,13 @@ function withHeadingLinks(html: string): string {
 
 interface WikiContentProps {
   html: string;
-  allFieldNotes?: FieldNoteMeta[];
+  allWikiNotes?: WikiNoteMeta[];
   className?: string;
   onWikiLinkClick?: (conceptId: string) => void;
   isVisited?: (noteId: string) => boolean;
 }
 
-export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, className, onWikiLinkClick, isVisited }) => {
+export const WikiContent: React.FC<WikiContentProps> = ({ html, allWikiNotes, className, onWikiLinkClick, isVisited }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -62,13 +62,13 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allFieldNotes, c
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Two resolution modes:
-  //   1. Article context: allFieldNotes provided → resolves wiki-links client-side
-  //   2. Second Brain context: allFieldNotes omitted → html already pre-resolved by fetchNoteContent()
+  //   1. Article context: allWikiNotes provided → resolves wiki-links client-side
+  //   2. Second Brain context: allWikiNotes omitted → html already pre-resolved by fetchNoteContent()
   const resolvedHtml = useMemo(() => {
-    if (!allFieldNotes) return withHeadingLinks(html);
-    const { html: processed } = resolveWikiLinks(html, allFieldNotes);
+    if (!allWikiNotes) return withHeadingLinks(html);
+    const { html: processed } = resolveWikiLinks(html, allWikiNotes);
     return withHeadingLinks(processed);
-  }, [html, allFieldNotes]);
+  }, [html, allWikiNotes]);
 
   // Kill preview on route change or content change
   useEffect(() => {

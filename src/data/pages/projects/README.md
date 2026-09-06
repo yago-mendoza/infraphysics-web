@@ -70,7 +70,7 @@ related: ["1112121"]
 - **Irregular paragraph length.** Some one-liners. Some expansive. Predictable structure kills authenticity.
 - **15-paragraph rule.** In any long article, ~15 paragraphs should be in a calmer, more measured register. The rest can be casual/excited. Variation = human.
 - **Storytelling over reporting.** Commits are story beats, not changelog entries. "Fixed fixes fixing fixes" needs a sentence explaining *why* that moment mattered — then the technical part comes after, connected to something else so it doesn't feel heavy.
-- **Cross-reference constantly.** Wiki-links (`[[concept]]`) aren't decoration — they show how the author's mind connects ideas. Use them mid-sentence, naturally. But verify the target fieldnote exists before adding a wiki-link — broken links fail the build.
+- **Cross-reference constantly.** Wiki-links (`[[concept]]`) aren't decoration — they show how the author's mind connects ideas. Use them mid-sentence, naturally. But verify the target wikinote exists before adding a wiki-link — broken links fail the build.
 - **Plant forward references.** If a concept appears late in the article (e.g. the Second Brain in section 6), mention it casually 2–3 times earlier so it feels like it was always part of the story. Concepts shouldn't appear out of nowhere.
 
 ### Blockquote discipline

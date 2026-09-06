@@ -28,5 +28,5 @@ jobs:
         run: npx tsc --noEmit
         continue-on-error: true
 
-      - name: Validate fieldnote references
+      - name: Validate wikinote references
         run: node scripts/check-references.js

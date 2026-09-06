@@ -5,7 +5,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { noteLabel, type FieldNoteMeta } from '../../types';
+import { noteLabel, type WikiNoteMeta } from '../../types';
 import type { Neighborhood } from '../../lib/brainIndex';
 import { secondBrainPath } from '../../config/categories';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -14,14 +14,14 @@ export type Zone = 'parent' | 'siblings' | 'children' | null;
 
 interface Props {
   neighborhood: Neighborhood;
-  currentNote: FieldNoteMeta;
-  onNoteClick: (note: FieldNoteMeta) => void;
+  currentNote: WikiNoteMeta;
+  onNoteClick: (note: WikiNoteMeta) => void;
   isVisited?: (noteId: string) => boolean;
   activeZone: Zone;
   onActiveZoneChange: (zone: Zone) => void;
-  onNotePreview?: (note: FieldNoteMeta | null) => void;
-  homonymParents?: { parent: FieldNoteMeta; homonym: FieldNoteMeta }[];
-  onHomonymNavigate?: (homonym: FieldNoteMeta) => void;
+  onNotePreview?: (note: WikiNoteMeta | null) => void;
+  homonymParents?: { parent: WikiNoteMeta; homonym: WikiNoteMeta }[];
+  onHomonymNavigate?: (homonym: WikiNoteMeta) => void;
 }
 
 // Layout constants
@@ -117,11 +117,11 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
   const [tooltip, setTooltip] = useState<{ label: string; x: number; y: number } | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
-  const showTooltip = (note: FieldNoteMeta, svgX: number, svgY: number) => {
+  const showTooltip = (note: WikiNoteMeta, svgX: number, svgY: number) => {
     setTooltip({ label: noteLabel(note), x: svgX, y: svgY });
   };
   const hideTooltip = () => setTooltip(null);
-  const beginNotePreview = (note: FieldNoteMeta) => {
+  const beginNotePreview = (note: WikiNoteMeta) => {
     setHighlightedNoteId(note.id);
     onNotePreview?.(note);
   };

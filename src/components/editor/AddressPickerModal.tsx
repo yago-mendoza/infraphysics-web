@@ -1,12 +1,12 @@
-// Modal for interactively browsing the fieldnote hierarchy and selecting a new address.
+// Modal for interactively browsing the wikinote hierarchy and selecting a new address.
 // Shows tree navigation with breadcrumbs, search, and iterative drilling.
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import type { FieldNoteMeta } from '../../types';
+import type { WikiNoteMeta } from '../../types';
 
 interface Props {
-  allNotes: FieldNoteMeta[];
+  allNotes: WikiNoteMeta[];
   currentAddress: string;
   currentName: string;
   onConfirm: (newAddress: string, newName: string) => void;
@@ -21,7 +21,7 @@ interface TreeNode {
   noteCount: number;
 }
 
-function buildTree(notes: FieldNoteMeta[]): TreeNode {
+function buildTree(notes: WikiNoteMeta[]): TreeNode {
   const root: TreeNode = {
     segment: '', fullAddress: '', hasNote: false,
     children: new Map(), noteCount: 0,

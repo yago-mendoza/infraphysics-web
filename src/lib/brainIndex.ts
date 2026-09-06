@@ -1,30 +1,30 @@
-// Async Second Brain index — loads fieldnotes metadata from generated index,
+// Async Second Brain index — loads wikinotes metadata from generated index,
 // fetches individual note content on demand.
 
-import { FieldNoteMeta, ConnectionRef } from '../types';
+import { WikiNoteMeta, ConnectionRef } from '../types';
 import { resolveWikiLinks } from './wikilinks';
 
 export interface Connection {
-  note: FieldNoteMeta;
+  note: WikiNoteMeta;
   annotation: string | null;       // from the declaring side
   reverseAnnotation: string | null; // from the other side (if bilateral)
 }
 
 export interface Neighborhood {
-  parent: FieldNoteMeta | null;
-  siblings: FieldNoteMeta[];
-  children: FieldNoteMeta[];
+  parent: WikiNoteMeta | null;
+  siblings: WikiNoteMeta[];
+  children: WikiNoteMeta[];
 }
 
 export interface BrainIndex {
-  allFieldNotes: FieldNoteMeta[];
-  noteById: Map<string, FieldNoteMeta>;
+  allWikiNotes: WikiNoteMeta[];
+  noteById: Map<string, WikiNoteMeta>;
   addressToNoteId: Map<string, string>;
-  backlinksMap: Map<string, FieldNoteMeta[]>;
+  backlinksMap: Map<string, WikiNoteMeta[]>;
   connectionsMap: Map<string, Connection[]>;
-  mentionsMap: Map<string, FieldNoteMeta[]>;
+  mentionsMap: Map<string, WikiNoteMeta[]>;
   neighborhoodMap: Map<string, Neighborhood>;
-  homonymsMap: Map<string, FieldNoteMeta[]>;
+  homonymsMap: Map<string, WikiNoteMeta[]>;
   parentIds: Set<string>;
   globalStats: {
     totalConcepts: number;
@@ -33,7 +33,7 @@ export interface BrainIndex {
     avgRefs: number;
     maxDepth: number;
     density: number;
-    mostConnectedHub: FieldNoteMeta | null;
+    mostConnectedHub: WikiNoteMeta | null;
   };
 }
 
@@ -56,26 +56,26 @@ function _cacheSet(id: string, html: string) {
   }
 }
 
-export async function initBrainIndex(freshData?: FieldNoteMeta[]): Promise<BrainIndex> {
+export async function initBrainIndex(freshData?: WikiNoteMeta[]): Promise<BrainIndex> {
   if (!freshData && _index) return _index;
   if (!freshData && _initPromise) return _initPromise;
 
   _initPromise = (async () => {
-    const indexData: FieldNoteMeta[] = freshData ??
+    const indexData: WikiNoteMeta[] = freshData ??
       await fetch('/fieldnotes-index.json').then(r => r.json());
 
-    const allFieldNotes = indexData;
-    const noteById = new Map(allFieldNotes.map(n => [n.id, n]));
+    const allWikiNotes = indexData;
+    const noteById = new Map(allWikiNotes.map(n => [n.id, n]));
 
     // Address → note ID mapping (for neighborhood computation)
     const addressToNoteId = new Map<string, string>();
-    allFieldNotes.forEach(note => {
+    allWikiNotes.forEach(note => {
       if (note.address) addressToNoteId.set(note.address, note.id);
     });
 
     // Collect trailing ref UIDs per note (for excluding from mentions)
     const trailingRefIds = new Map<string, Set<string>>();
-    allFieldNotes.forEach(note => {
+    allWikiNotes.forEach(note => {
       const refs = note.trailingRefs || [];
       const ids = new Set<string>();
       refs.forEach(ref => {
@@ -86,8 +86,8 @@ export async function initBrainIndex(freshData?: FieldNoteMeta[]): Promise<Brain
 
     // Backlinks (all references, including inline body + trailing)
     // references[] now stores UIDs directly
-    const backlinksMap = new Map<string, FieldNoteMeta[]>();
-    allFieldNotes.forEach(note => {
+    const backlinksMap = new Map<string, WikiNoteMeta[]>();
+    allWikiNotes.forEach(note => {
       const seen = new Set<string>();
       (note.references || []).forEach(refUid => {
         if (seen.has(refUid)) return;
@@ -103,7 +103,7 @@ export async function initBrainIndex(freshData?: FieldNoteMeta[]): Promise<Brain
     // First pass: collect all declared trailing ref connections
     const declaredConnections = new Map<string, Map<string, string | null>>(); // noteId → Map<targetId, annotation>
     const incomingDeclared = new Map<string, Map<string, string | null>>();
-    allFieldNotes.forEach(note => {
+    allWikiNotes.forEach(note => {
       const refs = note.trailingRefs || [];
       if (refs.length === 0) return;
       const map = new Map<string, string | null>();
@@ -120,7 +120,7 @@ export async function initBrainIndex(freshData?: FieldNoteMeta[]): Promise<Brain
     });
 
     // Second pass: build bilateral connections for each note
-    allFieldNotes.forEach(note => {
+    allWikiNotes.forEach(note => {
       const seen = new Set<string>();
       const connections: Connection[] = [];
 
@@ -155,8 +155,8 @@ export async function initBrainIndex(freshData?: FieldNoteMeta[]): Promise<Brain
     });
 
     // Mentions: body-text backlinks EXCLUDING trailing refs
-    const mentionsMap = new Map<string, FieldNoteMeta[]>();
-    allFieldNotes.forEach(note => {
+    const mentionsMap = new Map<string, WikiNoteMeta[]>();
+    allWikiNotes.forEach(note => {
       const seen = new Set<string>();
       const myTrailingIds = trailingRefIds.get(note.id) || new Set();
 
@@ -174,7 +174,7 @@ export async function initBrainIndex(freshData?: FieldNoteMeta[]): Promise<Brain
 
     // Parent IDs
     const parentIds = new Set<string>();
-    allFieldNotes.forEach(note => {
+    allWikiNotes.forEach(note => {
       const parts = note.addressParts;
       if (!parts || parts.length <= 1) return;
       for (let i = 1; i < parts.length; i++) {
@@ -188,10 +188,10 @@ export async function initBrainIndex(freshData?: FieldNoteMeta[]): Promise<Brain
     const neighborhoodMap = new Map<string, Neighborhood>();
 
     // Build children-by-parent-address map (single O(N) pass)
-    const childrenByParent = new Map<string, FieldNoteMeta[]>();
-    const rootNotes: FieldNoteMeta[] = [];
+    const childrenByParent = new Map<string, WikiNoteMeta[]>();
+    const rootNotes: WikiNoteMeta[] = [];
 
-    allFieldNotes.forEach(note => {
+    allWikiNotes.forEach(note => {
       const parts = note.addressParts || [note.title];
       if (parts.length === 1) {
         rootNotes.push(note);
@@ -203,12 +203,12 @@ export async function initBrainIndex(freshData?: FieldNoteMeta[]): Promise<Brain
     });
 
     // O(1) lookups per note
-    allFieldNotes.forEach(note => {
+    allWikiNotes.forEach(note => {
       const parts = note.addressParts || [note.title];
       const addr = note.address || '';
 
       // Parent
-      let parent: FieldNoteMeta | null = null;
+      let parent: WikiNoteMeta | null = null;
       if (parts.length > 1) {
         const parentAddr = parts.slice(0, -1).join('//');
         const parentId = addressToNoteId.get(parentAddr);
@@ -216,7 +216,7 @@ export async function initBrainIndex(freshData?: FieldNoteMeta[]): Promise<Brain
       }
 
       // Siblings: other children of the same parent
-      let siblings: FieldNoteMeta[];
+      let siblings: WikiNoteMeta[];
       if (parts.length > 1) {
         const parentAddr = parts.slice(0, -1).join('//');
         siblings = (childrenByParent.get(parentAddr) || []).filter(n => n.id !== note.id);
@@ -234,9 +234,9 @@ export async function initBrainIndex(freshData?: FieldNoteMeta[]): Promise<Brain
     });
 
     // Homonyms: group notes that share the same leaf segment name
-    const homonymsMap = new Map<string, FieldNoteMeta[]>();
-    const _leafBuckets = new Map<string, FieldNoteMeta[]>();
-    allFieldNotes.forEach(note => {
+    const homonymsMap = new Map<string, WikiNoteMeta[]>();
+    const _leafBuckets = new Map<string, WikiNoteMeta[]>();
+    allWikiNotes.forEach(note => {
       const parts = note.addressParts || [note.title];
       const leaf = parts[parts.length - 1].toLowerCase();
       if (!_leafBuckets.has(leaf)) _leafBuckets.set(leaf, []);
@@ -250,19 +250,19 @@ export async function initBrainIndex(freshData?: FieldNoteMeta[]): Promise<Brain
     });
 
     // Stats
-    const totalConcepts = allFieldNotes.length;
-    const totalLinks = allFieldNotes.reduce((sum, n) => sum + (n.references?.length || 0), 0);
+    const totalConcepts = allWikiNotes.length;
+    const totalLinks = allWikiNotes.reduce((sum, n) => sum + (n.references?.length || 0), 0);
     const linkedToSet = new Set<string>();
-    allFieldNotes.forEach(n => {
+    allWikiNotes.forEach(n => {
       (n.references || []).forEach(refUid => linkedToSet.add(refUid));
     });
-    const isolatedCount = allFieldNotes.filter(n => {
+    const isolatedCount = allWikiNotes.filter(n => {
       const hasOutgoing = (n.references?.length || 0) > 0;
       const hasIncoming = linkedToSet.has(n.id);
       return !hasOutgoing && !hasIncoming;
     }).length;
     const avgRefs = totalConcepts > 0 ? Math.round((totalLinks / totalConcepts) * 10) / 10 : 0;
-    const maxDepth = allFieldNotes.reduce((max, n) => {
+    const maxDepth = allWikiNotes.reduce((max, n) => {
       const d = (n.addressParts || [n.title]).length;
       return d > max ? d : max;
     }, 0);
@@ -271,9 +271,9 @@ export async function initBrainIndex(freshData?: FieldNoteMeta[]): Promise<Brain
       ? Math.round((totalLinks / possibleConnections) * 1000) / 10
       : 0;
 
-    let mostConnectedHub: FieldNoteMeta | null = null;
+    let mostConnectedHub: WikiNoteMeta | null = null;
     let maxConnections = 0;
-    allFieldNotes.forEach(n => {
+    allWikiNotes.forEach(n => {
       const outgoing = n.references?.length || 0;
       const incoming = (backlinksMap.get(n.id) || []).length;
       const total = outgoing + incoming;
@@ -284,7 +284,7 @@ export async function initBrainIndex(freshData?: FieldNoteMeta[]): Promise<Brain
     });
 
     _index = {
-      allFieldNotes,
+      allWikiNotes,
       noteById,
       addressToNoteId,
       backlinksMap,
@@ -329,7 +329,7 @@ export async function fetchNoteContent(id: string, bustCache = false): Promise<s
   if (!resp.ok) return '<p>Content unavailable.</p>';
 
   const { content } = await resp.json();
-  const { html } = resolveWikiLinks(content, index.allFieldNotes, index.noteById);
+  const { html } = resolveWikiLinks(content, index.allWikiNotes, index.noteById);
   _cacheSet(id, html);
   return html;
 }
@@ -344,7 +344,7 @@ export function prefetchNoteContent(ids: string[]): void {
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data?.content && !_contentCache.has(id)) {
-          const { html } = resolveWikiLinks(data.content, index.allFieldNotes, index.noteById);
+          const { html } = resolveWikiLinks(data.content, index.allWikiNotes, index.noteById);
           _cacheSet(id, html);
         }
       })
@@ -355,7 +355,7 @@ export function prefetchNoteContent(ids: string[]): void {
 /**
  * Force-refresh the brain index by re-importing the generated JSON.
  * Clears the content cache for the specified UID (or all if not specified).
- * Dispatches a 'fieldnote-hmr' custom event so views can react.
+ * Dispatches a 'wikinote-hmr' custom event so views can react.
  */
 export async function refreshBrainIndex(uid?: string, action?: string): Promise<BrainIndex> {
   // Invalidate content cache — on delete/stub, clear ALL cached HTML
@@ -373,7 +373,7 @@ export async function refreshBrainIndex(uid?: string, action?: string): Promise<
   _initPromise = null;
 
   // In dev, fetch fresh data from the API (import() cache is stale)
-  let freshData: FieldNoteMeta[] | undefined;
+  let freshData: WikiNoteMeta[] | undefined;
   try {
     const resp = await fetch('/api/fieldnotes/index');
     if (resp.ok) {
@@ -385,7 +385,7 @@ export async function refreshBrainIndex(uid?: string, action?: string): Promise<
   const newIndex = await initBrainIndex(freshData);
 
   // Notify React views
-  window.dispatchEvent(new CustomEvent('fieldnote-hmr', { detail: { uid, action } }));
+  window.dispatchEvent(new CustomEvent('wikinote-hmr', { detail: { uid, action } }));
 
   return newIndex;
 }
@@ -395,7 +395,7 @@ export async function refreshBrainIndex(uid?: string, action?: string): Promise<
 // static JSON file entirely.
 if (import.meta.hot) {
   import.meta.hot.accept();
-  import.meta.hot.on('fieldnote-update', (data: { uid: string; action: string }) => {
+  import.meta.hot.on('wikinote-update', (data: { uid: string; action: string }) => {
     refreshBrainIndex(data.uid, data.action);
   });
 }

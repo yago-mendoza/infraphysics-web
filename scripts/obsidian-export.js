@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// obsidian-export.js — Export fieldnotes to Obsidian vault structure
+// obsidian-export.js — Export wikinotes to Obsidian vault structure
 //
 // Usage: node scripts/obsidian-export.js [output-dir]
 //   Default output: ./obsidian-vault
@@ -20,21 +20,21 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const FIELDNOTES_DIR = path.join(__dirname, '../src/data/pages/fieldnotes');
+const WIKINOTES_DIR = path.join(__dirname, '../src/data/pages/fieldnotes');
 
 const outputDir = process.argv[2] || path.join(__dirname, '../obsidian-vault');
 
-// --- Parse all fieldnotes ---
+// --- Parse all wikinotes ---
 
-function parseAllFieldnotes() {
-  const files = fs.readdirSync(FIELDNOTES_DIR)
+function parseAllWikinotes() {
+  const files = fs.readdirSync(WIKINOTES_DIR)
     .filter(f => f.endsWith('.md') && !f.startsWith('_'));
 
   const notes = [];
   const uidToName = new Map();
 
   for (const filename of files) {
-    const filePath = path.join(FIELDNOTES_DIR, filename);
+    const filePath = path.join(WIKINOTES_DIR, filename);
     const raw = fs.readFileSync(filePath, 'utf-8');
     const { data: fm, content: body } = matter(raw);
 
@@ -111,7 +111,7 @@ function buildFrontmatter(note) {
 
 // --- Main ---
 
-const { notes, uidToName } = parseAllFieldnotes();
+const { notes, uidToName } = parseAllWikinotes();
 
 // Clean output directory
 if (fs.existsSync(outputDir)) {
@@ -153,5 +153,5 @@ for (const note of notes) {
   exported++;
 }
 
-console.log(`\nExported ${exported} fieldnotes → ${path.relative(process.cwd(), outputDir)}`);
+console.log(`\nExported ${exported} wikinotes → ${path.relative(process.cwd(), outputDir)}`);
 console.log(`UID map: ${uidToName.size} entries resolved.`);

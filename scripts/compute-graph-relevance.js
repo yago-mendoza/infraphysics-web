@@ -29,7 +29,7 @@ const W_SHARED = 0.2;
 
 function run() {
   if (!fs.existsSync(INDEX_FILE)) {
-    console.log('  Skipping graph relevance — no fieldnotes index yet');
+    console.log('  Skipping graph relevance — no wikinotes index yet');
     return;
   }
 

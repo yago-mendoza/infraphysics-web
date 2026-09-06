@@ -1,10 +1,10 @@
-// CopyExportModal — scope-selector modal for exporting fieldnote context to clipboard.
+// CopyExportModal — scope-selector modal for exporting wikinote context to clipboard.
 // Portal modal (follows DeleteConfirmModal pattern). Violet accent.
 // Zones: self, parent, siblings, children + uncles, nephews, descendants + links, interactions, backlinks.
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { type FieldNoteMeta } from '../../types';
+import { type WikiNoteMeta } from '../../types';
 import type { Connection, Neighborhood } from '../../lib/brainIndex';
 import { exportNotesAsMarkdown, estimateWords } from '../../lib/exportNotes';
 import { ClipboardIcon, CheckIcon, CloseIcon } from '../icons';
@@ -27,13 +27,13 @@ function fmtNum(n: number): string {
 }
 
 interface Props {
-  note: FieldNoteMeta;
+  note: WikiNoteMeta;
   neighborhood: Neighborhood;
   connections: Connection[];
-  backlinks: FieldNoteMeta[];
+  backlinks: WikiNoteMeta[];
   connectionsMap: Map<string, Connection[]>;
   neighborhoodMap: Map<string, Neighborhood>;
-  noteById: Map<string, FieldNoteMeta>;
+  noteById: Map<string, WikiNoteMeta>;
   totalNotes: number;
   onClose: () => void;
 }
@@ -42,7 +42,7 @@ interface Props {
 interface ZoneInfo {
   key: ZoneKey;
   label: string;
-  notes: FieldNoteMeta[];
+  notes: WikiNoteMeta[];
   toggleable: boolean;
   /** Which zone this extends from (for drawing lines) */
   connectsTo: ZoneKey;
@@ -50,11 +50,11 @@ interface ZoneInfo {
 
 /** Recursively collect all descendants via neighborhoodMap */
 function collectDescendants(
-  roots: FieldNoteMeta[],
+  roots: WikiNoteMeta[],
   neighborhoodMap: Map<string, Neighborhood>,
   exclude: Set<string>,
-): FieldNoteMeta[] {
-  const result: FieldNoteMeta[] = [];
+): WikiNoteMeta[] {
+  const result: WikiNoteMeta[] = [];
   const seen = new Set<string>(exclude);
   const queue = [...roots];
   while (queue.length > 0) {
@@ -75,17 +75,17 @@ function collectDescendants(
 }
 
 function buildZones(
-  note: FieldNoteMeta,
+  note: WikiNoteMeta,
   neighborhood: Neighborhood,
   connections: Connection[],
-  backlinks: FieldNoteMeta[],
+  backlinks: WikiNoteMeta[],
   neighborhoodMap: Map<string, Neighborhood>,
-  noteById: Map<string, FieldNoteMeta>,
+  noteById: Map<string, WikiNoteMeta>,
 ): ZoneInfo[] {
   const selfId = note.id;
 
   // Uncles = parent's siblings
-  const uncles: FieldNoteMeta[] = [];
+  const uncles: WikiNoteMeta[] = [];
   if (neighborhood.parent) {
     const parentNh = neighborhoodMap.get(neighborhood.parent.id);
     if (parentNh) {
@@ -96,7 +96,7 @@ function buildZones(
   }
 
   // Nephews = siblings' children
-  const nephews: FieldNoteMeta[] = [];
+  const nephews: WikiNoteMeta[] = [];
   const nephewSeen = new Set<string>();
   for (const sib of neighborhood.siblings) {
     const sibNh = neighborhoodMap.get(sib.id);
@@ -117,7 +117,7 @@ function buildZones(
 
   // Links = outgoing body references, excluding trailing ref targets and self
   const trailingIds = new Set(connections.map(c => c.note.id));
-  const links: FieldNoteMeta[] = [];
+  const links: WikiNoteMeta[] = [];
   const linkSeen = new Set<string>();
   for (const refUid of (note.references || [])) {
     if (refUid === selfId || trailingIds.has(refUid) || linkSeen.has(refUid)) continue;
@@ -308,7 +308,7 @@ export const CopyExportModal: React.FC<Props> = ({
   // Deduplicated selected notes
   const selectedNotes = useMemo(() => {
     const seen = new Set<string>();
-    const result: FieldNoteMeta[] = [];
+    const result: WikiNoteMeta[] = [];
     for (const z of zones) {
       if (!activeZones.has(z.key)) continue;
       for (const n of z.notes) {

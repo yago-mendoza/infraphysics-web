@@ -228,7 +228,7 @@ const MiniGraph: React.FC<{
   useEffect(() => {
     if (!index || !relevanceLoaded) return;
     const centralityMap: Record<string, number> = {};
-    index.allFieldNotes.forEach(n => { centralityMap[n.id] = getCentrality(n.id); });
+    index.allWikiNotes.forEach(n => { centralityMap[n.id] = getCentrality(n.id); });
     if (!cachedGraphTemplate) cachedGraphTemplate = buildGraphData(index, centralityMap);
     // The initializer already clones a warm module-level template. Avoid
     // replacing it on mount: that used to launch a second renderer/simulation

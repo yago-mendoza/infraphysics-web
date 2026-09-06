@@ -1,20 +1,20 @@
 // Shared utility for resolving wiki-links at runtime
 
-import { FieldNoteMeta } from '../types';
+import { WikiNoteMeta } from '../types';
 import { WIKI_REF_ICON_HTML } from './icons';
 import { secondBrainPath } from '../config/categories';
 
 export function resolveWikiLinks(
   html: string,
-  allFieldNotes: FieldNoteMeta[],
-  noteMap?: Map<string, FieldNoteMeta>,
+  allWikiNotes: WikiNoteMeta[],
+  noteMap?: Map<string, WikiNoteMeta>,
 ): { html: string; resolvedRefs: string[] } {
   const resolvedRefs: string[] = [];
 
   const processed = html.replace(
     /<a class="wiki-ref" data-uid="([^"]+)">([^<]+)<\/a>/g,
     (_match, uid: string, displayText: string) => {
-      const target = noteMap ? noteMap.get(uid) : allFieldNotes.find(n => n.id === uid);
+      const target = noteMap ? noteMap.get(uid) : allWikiNotes.find(n => n.id === uid);
 
       if (target) {
         resolvedRefs.push(uid);

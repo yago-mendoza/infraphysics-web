@@ -564,7 +564,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
           <div className="article-essays-body">
             <WikiContent
               html={contentWithIds}
-              allFieldNotes={brainIndex?.allFieldNotes}
+              allWikiNotes={brainIndex?.allWikiNotes}
               className="article-content"
             />
             <FeedbackForm title={post.displayTitle || post.title} category={post.category} />
@@ -699,7 +699,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
           {/* Article content */}
           <WikiContent
             html={contentWithIds}
-            allFieldNotes={brainIndex?.allFieldNotes}
+            allWikiNotes={brainIndex?.allWikiNotes}
             className="article-content"
           />
 

@@ -3,13 +3,13 @@
 // Name always = leaf segment (no override).
 
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import type { FieldNoteMeta } from '../../types';
+import type { WikiNoteMeta } from '../../types';
 import { parseAddress, getLeafSegment } from '../../lib/content/address.js';
 import { useAddressAutocomplete } from './useAddressAutocomplete';
 import type { Suggestion } from './useAddressAutocomplete';
 
 interface Props {
-  allNotes: FieldNoteMeta[];
+  allNotes: WikiNoteMeta[];
   onCreated: (uid: string) => void;
   onCancel: () => void;
   initialName?: string;

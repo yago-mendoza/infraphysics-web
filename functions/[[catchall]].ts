@@ -21,7 +21,7 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// Strip HTML tags from content to get plain text (for fieldnotes fetched at runtime)
+// Strip HTML tags from content to get plain text (for wikinotes fetched at runtime)
 function stripHtml(html: string): string {
   return html
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
@@ -75,7 +75,7 @@ export const onRequest: PagesFunction = async (context) => {
   const fullTitle = `${title} — InfraPhysics`;
   const canonicalUrl = `${url.origin}${pathname}`;
 
-  // For fieldnotes without pre-built text, fetch content at runtime
+  // For wikinotes without pre-built text, fetch content at runtime
   let bodyText = entry.text || '';
   if (!bodyText && entry.cat === 'fieldnotes') {
     try {

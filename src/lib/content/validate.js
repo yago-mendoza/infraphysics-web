@@ -1,4 +1,4 @@
-// Fieldnotes validation — browser-safe (no ANSI codes when running in browser)
+// Wikinotes validation — browser-safe (no ANSI codes when running in browser)
 // 7-phase validation: reference integrity, self-refs, bare trailing refs,
 // parent hierarchy, circular refs, segment collisions, isolated notes.
 //
@@ -16,15 +16,15 @@ import { checkSegmentCollisions } from './address.js';
 
 /**
  * Check reference integrity — inline [[refs]] and trailing refs resolve to known UIDs.
- * @param {Array} fieldnotePosts
+ * @param {Array} wikinotePosts
  * @param {Set<string>} knownUids
  * @returns {{ errors: number, issues: Array }}
  */
-export function checkReferenceIntegrity(fieldnotePosts, knownUids) {
+export function checkReferenceIntegrity(wikinotePosts, knownUids) {
   let errors = 0;
   const issues = [];
 
-  for (const post of fieldnotePosts) {
+  for (const post of wikinotePosts) {
     for (const ref of (post.references || [])) {
       if (!knownUids.has(ref)) {
         issues.push({ code: 'BROKEN_REF', severity: 'ERROR', promptable: false, address: post.address, ref });
@@ -44,7 +44,7 @@ export function checkReferenceIntegrity(fieldnotePosts, knownUids) {
 }
 
 /**
- * Check wiki-links in regular posts point to valid fieldnotes.
+ * Check wiki-links in regular posts point to valid wikinotes.
  * @param {Array} regularPosts
  * @param {Set<string>} knownUids
  * @returns {{ errors: number, issues: Array }}
@@ -69,14 +69,14 @@ export function checkRegularPostWikiLinks(regularPosts, knownUids) {
 
 /**
  * Check for self-references in trailing refs.
- * @param {Array} fieldnotePosts
+ * @param {Array} wikinotePosts
  * @returns {{ warnings: number, issues: Array }}
  */
-export function checkSelfReferences(fieldnotePosts) {
+export function checkSelfReferences(wikinotePosts) {
   let warnings = 0;
   const issues = [];
 
-  for (const post of fieldnotePosts) {
+  for (const post of wikinotePosts) {
     for (const ref of (post.trailingRefs || [])) {
       const uid = typeof ref === 'object' ? ref.uid : ref;
       if (uid === post.id) {
@@ -91,14 +91,14 @@ export function checkSelfReferences(fieldnotePosts) {
 
 /**
  * Check that all trailing refs have :: annotations.
- * @param {Array} fieldnotePosts
+ * @param {Array} wikinotePosts
  * @returns {{ errors: number, issues: Array }}
  */
-export function checkBareTrailingRefs(fieldnotePosts) {
+export function checkBareTrailingRefs(wikinotePosts) {
   let errors = 0;
   const issues = [];
 
-  for (const post of fieldnotePosts) {
+  for (const post of wikinotePosts) {
     for (const ref of (post.trailingRefs || [])) {
       const annotation = typeof ref === 'object' ? ref.annotation : null;
       if (!annotation || annotation.trim() === '') {
@@ -114,16 +114,16 @@ export function checkBareTrailingRefs(fieldnotePosts) {
 
 /**
  * Check parent hierarchy — every address segment should have a dedicated note.
- * @param {Array} fieldnotePosts
+ * @param {Array} wikinotePosts
  * @param {Set<string>} knownAddresses
  * @returns {{ warnings: number, issues: Array }}
  */
-export function checkParentHierarchy(fieldnotePosts, knownAddresses) {
+export function checkParentHierarchy(wikinotePosts, knownAddresses) {
   let warnings = 0;
   const issues = [];
   const missingParents = new Map();
 
-  for (const post of fieldnotePosts) {
+  for (const post of wikinotePosts) {
     const parts = post.addressParts || [];
     if (parts.length <= 1) continue;
 
@@ -145,7 +145,7 @@ export function checkParentHierarchy(fieldnotePosts, knownAddresses) {
 }
 
 /**
- * Check frontmatter schema for a single fieldnote.
+ * Check frontmatter schema for a single wikinote.
  * Returns issues for missing required fields and invalid values.
  * @param {Object} frontmatter
  * @returns {Array} issues
@@ -164,14 +164,14 @@ export function checkFrontmatterSchema(frontmatter) {
  * Full validation pipeline — runs all 7 phases.
  * This is the main entry point used by build-content.js.
  *
- * @param {Array} fieldnotePosts - Parsed fieldnote Post objects
- * @param {Array} allPosts - All posts (regular + fieldnotes) with processed HTML
+ * @param {Array} wikinotePosts - Parsed wikinote Post objects
+ * @param {Array} allPosts - All posts (regular + wikinotes) with processed HTML
  * @param {Object} cfg - Validation flags from compiler config
  * @param {Object} [options]
  * @param {boolean} [options.silent] - suppress console output (for browser use)
  * @returns {ValidationResult}
  */
-export function validateFieldnotes(fieldnotePosts, allPosts, cfg, options = {}) {
+export function validateWikinotes(wikinotePosts, allPosts, cfg, options = {}) {
   const silent = options.silent || false;
 
   // ANSI color codes (no-op in silent mode)
@@ -183,19 +183,19 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg, options = {}) 
   const B = silent ? '' : '\x1b[1m';
   const X = silent ? '' : '\x1b[0m';
 
-  if (!silent) console.log(`\n${B}[VALIDATE]${X} ${D}scripts/validate-fieldnotes.js${X}`);
+  if (!silent) console.log(`\n${B}[VALIDATE]${X} ${D}scripts/validate-wikinotes.js${X}`);
 
   let errors = 0;
   let warnings = 0;
   let infos = 0;
   const issues = [];
 
-  const knownUids = new Set(fieldnotePosts.map(p => p.id));
-  const knownAddresses = new Set(fieldnotePosts.map(p => p.address));
+  const knownUids = new Set(wikinotePosts.map(p => p.id));
+  const knownAddresses = new Set(wikinotePosts.map(p => p.address));
 
   // ── Phase 1: Reference integrity ──
-  if (cfg.validateFieldnoteRefs) {
-    const refResult = checkReferenceIntegrity(fieldnotePosts, knownUids);
+  if (cfg.validateWikinoteRefs) {
+    const refResult = checkReferenceIntegrity(wikinotePosts, knownUids);
     errors += refResult.errors;
     for (const issue of refResult.issues) {
       issues.push(issue);
@@ -212,13 +212,13 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg, options = {}) 
     errors += wlResult.errors;
     for (const issue of wlResult.issues) {
       issues.push(issue);
-      if (!silent) console.log(`  ${R}ERROR${X}  [BROKEN_WIKILINK] [[${issue.ref}]] in post "${issue.postId}" → no fieldnote`);
+      if (!silent) console.log(`  ${R}ERROR${X}  [BROKEN_WIKILINK] [[${issue.ref}]] in post "${issue.postId}" → no wikinote`);
     }
   }
 
   // ── Phase 2: Self-references ──
   {
-    const selfResult = checkSelfReferences(fieldnotePosts);
+    const selfResult = checkSelfReferences(wikinotePosts);
     warnings += selfResult.warnings;
     for (const issue of selfResult.issues) {
       issues.push(issue);
@@ -228,7 +228,7 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg, options = {}) 
 
   // ── Phase 3: Bare trailing refs ──
   {
-    const bareResult = checkBareTrailingRefs(fieldnotePosts);
+    const bareResult = checkBareTrailingRefs(wikinotePosts);
     errors += bareResult.errors;
     for (const issue of bareResult.issues) {
       issues.push(issue);
@@ -238,7 +238,7 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg, options = {}) 
 
   // ── Phase 4: Parent hierarchy ──
   if (cfg.validateParentSegments) {
-    const parentResult = checkParentHierarchy(fieldnotePosts, knownAddresses);
+    const parentResult = checkParentHierarchy(wikinotePosts, knownAddresses);
     warnings += parentResult.warnings;
     for (const issue of parentResult.issues) {
       issues.push(issue);
@@ -252,7 +252,7 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg, options = {}) 
   // ── Phase 5: Circular references ──
   if (cfg.detectCircularRefs) {
     const adj = new Map();
-    for (const post of fieldnotePosts) {
+    for (const post of wikinotePosts) {
       adj.set(post.address, (post.references || []).filter(r => knownAddresses.has(r) && r !== post.address));
     }
 
@@ -306,7 +306,7 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg, options = {}) 
       ]).map(s => s.toLowerCase())
     );
 
-    const collisions = checkSegmentCollisions(fieldnotePosts, { exclusions });
+    const collisions = checkSegmentCollisions(wikinotePosts, { exclusions });
 
     if (collisions.length > 0 && !silent) {
       const tierColor = { HIGH: R, MED: Y, LOW: D };
@@ -351,7 +351,7 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg, options = {}) 
     }
 
     // Stale distinct references
-    for (const post of fieldnotePosts) {
+    for (const post of wikinotePosts) {
       for (const addr of (post.distinct || [])) {
         if (!knownAddresses.has(addr)) {
           if (!silent) console.log(`  ${Y}WARN ${X}  [STALE_DISTINCT] stale distinct: "${addr}" in "${post.address}" → no block`);
@@ -365,11 +365,11 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg, options = {}) 
   // ── Phase 7: Isolated notes ──
   if (cfg.detectIsolated !== false) {
     const referenced = new Set();
-    for (const post of fieldnotePosts) {
+    for (const post of wikinotePosts) {
       for (const ref of (post.references || [])) referenced.add(ref);
     }
 
-    for (const post of fieldnotePosts) {
+    for (const post of wikinotePosts) {
       const hasOut = (post.references || []).length > 0;
       const hasIn = referenced.has(post.id);
       if (!hasOut && !hasIn) {
@@ -385,8 +385,8 @@ export function validateFieldnotes(fieldnotePosts, allPosts, cfg, options = {}) 
     if (issues.length > 0) {
       const codes = new Set(issues.map(i => i.code));
       const legend = {
-        BROKEN_REF: 'inline [[ref]] to nonexistent fieldnote',
-        BROKEN_WIKILINK: '[[wiki-link]] in post to nonexistent fieldnote',
+        BROKEN_REF: 'inline [[ref]] to nonexistent wikinote',
+        BROKEN_WIKILINK: '[[wiki-link]] in post to nonexistent wikinote',
         SELF_REF: 'note trails a ref to itself',
         BARE_TRAILING_REF: 'trailing ref without : : annotation (must explain why)',
         MISSING_PARENT: 'parent address has no dedicated note',

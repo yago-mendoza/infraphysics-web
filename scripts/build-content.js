@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 import { createHash } from 'crypto';
 import { createHighlighter } from 'shiki';
 import katex from 'katex';
-import { validateFieldnotes } from '../src/lib/content/validate.js';
+import { validateWikinotes } from '../src/lib/content/validate.js';
 import {
   compileMarkdown as _compileMarkdown,
   processAllLinks as _processAllLinks,
@@ -335,9 +335,9 @@ function getAllCategoryConfigs(dir) {
   return configs;
 }
 
-// --- Fieldnotes: read individual .md files ---
+// --- Wikinotes: read individual .md files ---
 
-function extractFieldnoteMeta(filename, filePath) {
+function extractWikinoteMeta(filename, filePath) {
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   const { data: frontmatter, content: bodyMd } = matter(fileContent);
 
@@ -435,7 +435,7 @@ function extractFieldnoteMeta(filename, filePath) {
     contentMd = bodyLines.slice(0, cutoff).join('\n');
   }
 
-  // Fieldnotes use breaks:true — single newline → <br>, double newline → new <p>
+  // Wikinotes use breaks:true — single newline → <br>, double newline → new <p>
   marked.setOptions({ ...compilerConfig.marked, breaks: true });
   const preLinkHtml = compileMarkdown(contentMd.trim(), date);
   marked.setOptions(compilerConfig.marked); // restore
@@ -503,24 +503,24 @@ function processRegularPosts(cache, configHash, forceRebuild) {
   return { results, cachePosts: newCache };
 }
 
-// --- Cached fieldnotes ---
+// --- Cached wikinotes ---
 
-function processFieldnotesDir(cache, configHash, forceRebuild) {
-  const fieldnotesDir = path.join(PAGES_DIR, 'fieldnotes');
-  if (!fs.existsSync(fieldnotesDir)) return { results: [], cacheFieldnotes: {} };
+function processWikinotesDir(cache, configHash, forceRebuild) {
+  const wikinotesDir = path.join(PAGES_DIR, 'fieldnotes');
+  if (!fs.existsSync(wikinotesDir)) return { results: [], cacheWikinotes: {} };
 
-  const files = fs.readdirSync(fieldnotesDir)
+  const files = fs.readdirSync(wikinotesDir)
     .filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md');
 
   const cacheValid = cache?.version === 1 && cache?.configHash === configHash && !forceRebuild;
-  const cachedNotes = cacheValid ? (cache.fieldnotes || {}) : {};
+  const cachedNotes = cacheValid ? (cache.wikinotes || {}) : {};
 
   let hits = 0, compiled = 0;
   const newCache = {};
   const results = [];
 
   for (const filename of files) {
-    const filePath = path.join(fieldnotesDir, filename);
+    const filePath = path.join(wikinotesDir, filename);
     const mtime = fs.statSync(filePath).mtimeMs;
     const entry = cachedNotes[filename];
 
@@ -529,23 +529,23 @@ function processFieldnotesDir(cache, configHash, forceRebuild) {
       results.push({ ...entry.metadata, content: entry.preLinkHtml });
       hits++;
     } else {
-      const result = extractFieldnoteMeta(filename, filePath);
+      const result = extractWikinoteMeta(filename, filePath);
       if (!result) continue;
       newCache[filename] = { mtime, metadata: result.metadata, preLinkHtml: result.preLinkHtml };
       results.push({ ...result.metadata, content: result.preLinkHtml });
       compiled++;
     }
   }
-  console.log(`  Fieldnotes: ${compiled} compiled, ${hits} cached`);
-  return { results, cacheFieldnotes: newCache };
+  console.log(`  Wikinotes: ${compiled} compiled, ${hits} cached`);
+  return { results, cacheWikinotes: newCache };
 }
 
 // ── Main ──
 
 console.log('Building content...');
 
-const FIELDNOTES_INDEX_FILE = path.join(__dirname, '../src/data/fieldnotes-index.generated.json');
-const FIELDNOTES_CONTENT_DIR = path.join(__dirname, '../public/fieldnotes');
+const WIKINOTES_INDEX_FILE = path.join(__dirname, '../src/data/fieldnotes-index.generated.json');
+const WIKINOTES_CONTENT_DIR = path.join(__dirname, '../public/fieldnotes');
 
 const forceRebuild = process.argv.includes('--force');
 const interactive = process.argv.includes('--interactive');
@@ -553,13 +553,13 @@ const configHash = computeConfigHash();
 const cache = loadCache();
 
 const { results: regularPosts, cachePosts } = processRegularPosts(cache, configHash, forceRebuild);
-const { results: fieldnotePosts, cacheFieldnotes } = processFieldnotesDir(cache, configHash, forceRebuild);
+const { results: wikinotePosts, cacheWikinotes } = processWikinotesDir(cache, configHash, forceRebuild);
 
 // Duplicate UID detection
 const seenUids = new Map();
-for (const post of fieldnotePosts) {
+for (const post of wikinotePosts) {
   if (seenUids.has(post.id)) {
-    const msg = `duplicate fieldnote UID "${post.id}" — addresses "${seenUids.get(post.id)}" and "${post.address}"`;
+    const msg = `duplicate wikinote UID "${post.id}" — addresses "${seenUids.get(post.id)}" and "${post.address}"`;
     console.error(`  \x1b[31mERROR: ${msg}\x1b[0m`);
     buildErrors.push(msg);
   } else {
@@ -568,11 +568,11 @@ for (const post of fieldnotePosts) {
 }
 
 // Save unified cache
-saveCache({ version: 1, configHash, posts: cachePosts, fieldnotes: cacheFieldnotes });
+saveCache({ version: 1, configHash, posts: cachePosts, wikinotes: cacheWikinotes });
 
 // Build uidToMeta map for processAllLinks display resolution
 const uidToMeta = new Map();
-for (const post of fieldnotePosts) {
+for (const post of wikinotePosts) {
   uidToMeta.set(post.id, { address: post.address, name: post.name || post.displayTitle });
 }
 
@@ -584,7 +584,7 @@ const linkedRegularPosts = regularPosts.map(post => ({
   ...post,
   content: processOutsideCode(post.content, processAllLinks),
 }));
-const linkedFieldnotePosts = fieldnotePosts.map(post => ({
+const linkedWikinotePosts = wikinotePosts.map(post => ({
   ...post,
   content: processOutsideCode(post.content, processAllLinks),
   trailingRefs: (post.trailingRefs || []).map(r => r.annotation ? { ...r, annotation: processAllLinks(r.annotation) } : r),
@@ -595,9 +595,9 @@ const publicRegularPosts = linkedRegularPosts.filter(post => !post.hidden);
 
 const categories = getAllCategoryConfigs(PAGES_DIR);
 
-// Validate fieldnotes + wiki-links (uses combined set for cross-reference checks)
-const allLinkedPosts = [...linkedRegularPosts, ...linkedFieldnotePosts];
-const validation = validateFieldnotes(fieldnotePosts, allLinkedPosts, compilerConfig.validation);
+// Validate wikinotes + wiki-links (uses combined set for cross-reference checks)
+const allLinkedPosts = [...linkedRegularPosts, ...linkedWikinotePosts];
+const validation = validateWikinotes(wikinotePosts, allLinkedPosts, compilerConfig.validation);
 
 // ── Syntax guard: detect custom-syntax tokens that survived compilation ──
 // These render as literal text instead of styled blocks (e.g. an unclosed {bkqt}),
@@ -647,7 +647,7 @@ if (interactive && validation.issues.some(i => i.promptable)) {
   }
 }
 
-// Output 1: posts.generated.json (regular posts only — no fieldnotes)
+// Output 1: posts.generated.json (regular posts only — no wikinotes)
 fs.writeFileSync(OUTPUT_FILE, JSON.stringify(linkedRegularPosts, null, 2));
 
 // Lightweight metadata for Home/Writing. Keeping article bodies out of the
@@ -656,27 +656,27 @@ const postsIndex = publicRegularPosts.map(({ content, ...meta }) => meta);
 fs.writeFileSync(POSTS_INDEX_FILE, JSON.stringify(postsIndex, null, 2));
 
 // Output 2: fieldnotes-index.generated.json (metadata only — no content)
-const fieldnotesIndex = linkedFieldnotePosts.map(({ content, searchText, ...meta }) => ({ ...meta, searchText }));
-fs.writeFileSync(FIELDNOTES_INDEX_FILE, JSON.stringify(fieldnotesIndex, null, 2));
+const wikinotesIndex = linkedWikinotePosts.map(({ content, searchText, ...meta }) => ({ ...meta, searchText }));
+fs.writeFileSync(WIKINOTES_INDEX_FILE, JSON.stringify(wikinotesIndex, null, 2));
 
 // Output 3: public/fieldnotes/{id}.json (individual content files)
-if (!fs.existsSync(FIELDNOTES_CONTENT_DIR)) {
-  fs.mkdirSync(FIELDNOTES_CONTENT_DIR, { recursive: true });
+if (!fs.existsSync(WIKINOTES_CONTENT_DIR)) {
+  fs.mkdirSync(WIKINOTES_CONTENT_DIR, { recursive: true });
 }
 
 const currentIds = new Set();
-for (const post of linkedFieldnotePosts) {
+for (const post of linkedWikinotePosts) {
   currentIds.add(post.id);
-  const contentFile = path.join(FIELDNOTES_CONTENT_DIR, `${post.id}.json`);
+  const contentFile = path.join(WIKINOTES_CONTENT_DIR, `${post.id}.json`);
   fs.writeFileSync(contentFile, JSON.stringify({ content: post.content }));
 }
 
 // Clean stale content files
-const existingFiles = fs.readdirSync(FIELDNOTES_CONTENT_DIR).filter(f => f.endsWith('.json'));
+const existingFiles = fs.readdirSync(WIKINOTES_CONTENT_DIR).filter(f => f.endsWith('.json'));
 for (const file of existingFiles) {
   const id = file.replace('.json', '');
   if (!currentIds.has(id)) {
-    fs.unlinkSync(path.join(FIELDNOTES_CONTENT_DIR, file));
+    fs.unlinkSync(path.join(WIKINOTES_CONTENT_DIR, file));
     console.log(`  Removed stale: ${file}`);
   }
 }
@@ -852,7 +852,7 @@ for (const [urlPath, meta] of Object.entries(sectionListings)) {
   };
 }
 
-for (const note of fieldnotesIndex) {
+for (const note of wikinotesIndex) {
   const urlPath = `/wiki/${note.id}`;
   ogManifest[urlPath] = {
     t: note.title,
@@ -867,8 +867,8 @@ const OG_MANIFEST_FILE = path.join(__dirname, '../public/og-manifest.json');
 fs.writeFileSync(OG_MANIFEST_FILE, JSON.stringify(ogManifest));
 
 // Output 6b: public/fieldnotes-index.json (HTTP-fetchable copy of the index)
-const FIELDNOTES_INDEX_PUBLIC = path.join(__dirname, '../public/fieldnotes-index.json');
-fs.writeFileSync(FIELDNOTES_INDEX_PUBLIC, JSON.stringify(fieldnotesIndex));
+const WIKINOTES_INDEX_PUBLIC = path.join(__dirname, '../public/fieldnotes-index.json');
+fs.writeFileSync(WIKINOTES_INDEX_PUBLIC, JSON.stringify(wikinotesIndex));
 
 // Output 7: public/sitemap.xml
 const SITEMAP_FILE = path.join(__dirname, '../public/sitemap.xml');
@@ -892,7 +892,7 @@ for (const post of publicRegularPosts) {
   const lastmod = post.date ? `<lastmod>${post.date.slice(0, 10)}</lastmod>` : '';
   sitemapEntries.push(`  <url><loc>${SITE_URL}${urlPath}</loc>${lastmod}<changefreq>monthly</changefreq><priority>0.7</priority></url>`);
 }
-for (const note of fieldnotesIndex) {
+for (const note of wikinotesIndex) {
   const urlPath = `/wiki/${note.id}`;
   const lastmod = note.date ? `<lastmod>${note.date.slice(0, 10)}</lastmod>` : '';
   sitemapEntries.push(`  <url><loc>${SITE_URL}${urlPath}</loc>${lastmod}<changefreq>weekly</changefreq><priority>0.5</priority></url>`);
@@ -997,7 +997,7 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 - /home -- Landing page and navigation hub
 - /about -- Background, beliefs, and expertise areas
 - /lab/projects -- Engineering projects with technical deep-dives
-- /wiki -- Knowledge graph and visual explorer for ${linkedFieldnotePosts.length}+ interconnected concept notes
+- /wiki -- Knowledge graph and visual explorer for ${linkedWikinotePosts.length}+ interconnected concept notes
 - /blog/essays -- Long-form essays on technology, AI, economics, and systems thinking
 - /blog/bits2bricks -- Technical tutorials bridging software and physical engineering
 
@@ -1015,7 +1015,7 @@ ${llmsListing('bits2bricks')}
 
 ## Second Brain (Knowledge Graph)
 
-${linkedFieldnotePosts.length}+ atomic concept notes covering machine learning, hardware architecture, blockchain, distributed systems, and optimization. Each note is one concept with bidirectional wiki-links. The graph reveals structural relationships between domains. Explorable at /wiki.
+${linkedWikinotePosts.length}+ atomic concept notes covering machine learning, hardware architecture, blockchain, distributed systems, and optimization. Each note is one concept with bidirectional wiki-links. The graph reveals structural relationships between domains. Explorable at /wiki.
 
 ## Contact
 
@@ -1028,7 +1028,7 @@ fs.writeFileSync(LLMS_FILE, llmsContent);
 
 console.log(`Generated ${linkedRegularPosts.length} posts → ${OUTPUT_FILE}`);
 console.log(`Generated lightweight post index → ${POSTS_INDEX_FILE}`);
-console.log(`Generated ${linkedFieldnotePosts.length} fieldnotes → ${FIELDNOTES_INDEX_FILE} + public/fieldnotes/`);
+console.log(`Generated ${linkedWikinotePosts.length} wikinotes → ${WIKINOTES_INDEX_FILE} + public/fieldnotes/`);
 console.log(`Generated ${Object.keys(categories).length} categories → ${CATEGORIES_OUTPUT}`);
 console.log(`Generated ${Object.keys(ogManifest).length} entries → ${OG_MANIFEST_FILE}`);
 console.log(`Generated sitemap (${sitemapEntries.length} URLs) → ${SITEMAP_FILE}`);

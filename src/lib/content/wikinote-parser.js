@@ -1,4 +1,4 @@
-// Fieldnote parsing — browser-safe (no gray-matter, no Node fs)
+// Wikinote parsing — browser-safe (no gray-matter, no Node fs)
 // Extracts frontmatter, references, trailing refs, and description from raw markdown.
 
 import { load as loadYaml } from 'js-yaml';
@@ -173,15 +173,15 @@ export function stripTrailingRefs(body, trailingRefStart) {
 }
 
 /**
- * Extract full fieldnote metadata from raw file content.
- * This is the browser-safe equivalent of build-content.js's extractFieldnoteMeta.
+ * Extract full wikinote metadata from raw file content.
+ * This is the browser-safe equivalent of build-content.js's extractWikinoteMeta.
  *
  * Does NOT compile HTML — returns contentMd (stripped body) for separate compilation.
  *
  * @param {string} raw - full file content
  * @returns {{ metadata: Object, contentMd: string } | null}
  */
-export function extractFieldnoteMeta(raw) {
+export function extractWikinoteMeta(raw) {
   const parsed = parseFrontmatter(raw);
   if (!parsed) return null;
 
@@ -221,7 +221,7 @@ export function extractFieldnoteMeta(raw) {
 }
 
 /**
- * Serialize fieldnote metadata + content back to raw markdown.
+ * Serialize wikinote metadata + content back to raw markdown.
  * Used by the editor to reconstruct the file after edits to trailing refs.
  *
  * @param {{ uid: string, address: string, name: string, date: string, aliases?: string[], supersedes?: string, distinct?: string[] }} frontmatter
@@ -229,7 +229,7 @@ export function extractFieldnoteMeta(raw) {
  * @param {Array<{uid: string, annotation: string|null}>} trailingRefs
  * @returns {string}
  */
-export function serializeFieldnote(frontmatter, bodyContent, trailingRefs) {
+export function serializeWikinote(frontmatter, bodyContent, trailingRefs) {
   const lines = ['---'];
   lines.push(`uid: ${frontmatter.uid}`);
   lines.push(`address: "${frontmatter.address}"`);

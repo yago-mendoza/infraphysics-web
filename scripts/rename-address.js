@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// rename-address.js — Rename a fieldnote address (UID-based system)
+// rename-address.js — Rename a wikinote address (UID-based system)
 //
 // Usage:
 //   node scripts/rename-address.js "old address" "new address"           (dry-run)
@@ -17,7 +17,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PAGES_DIR = path.join(__dirname, '../src/data/pages');
-const FIELDNOTES_DIR = path.join(PAGES_DIR, 'fieldnotes');
+const WIKINOTES_DIR = path.join(PAGES_DIR, 'fieldnotes');
 
 const args = process.argv.slice(2);
 const applyMode = args.includes('--apply');
@@ -39,12 +39,12 @@ if (oldAddress === newAddress) {
 }
 
 // Find source file by scanning frontmatter for address match
-const fieldnoteFiles = fs.readdirSync(FIELDNOTES_DIR)
+const wikinoteFiles = fs.readdirSync(WIKINOTES_DIR)
   .filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md');
 
 let sourceFile = null;
-for (const filename of fieldnoteFiles) {
-  const filePath = path.join(FIELDNOTES_DIR, filename);
+for (const filename of wikinoteFiles) {
+  const filePath = path.join(WIKINOTES_DIR, filename);
   const content = fs.readFileSync(filePath, 'utf-8');
   const addressMatch = content.match(/^address:\s*"([^"]+)"/m);
   if (addressMatch && addressMatch[1] === oldAddress) {
@@ -54,7 +54,7 @@ for (const filename of fieldnoteFiles) {
 }
 
 if (!sourceFile) {
-  console.error(`ERROR: No fieldnote found with address "${oldAddress}"`);
+  console.error(`ERROR: No wikinote found with address "${oldAddress}"`);
   process.exit(1);
 }
 

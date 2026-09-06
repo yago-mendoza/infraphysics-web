@@ -2,7 +2,7 @@
 // Displays validation messages tagged by source and severity
 
 import React from 'react';
-import type { Diagnostic } from './useFieldnoteEditor';
+import type { Diagnostic } from './useWikinoteEditor';
 
 const SEVERITY_COLORS: Record<string, string> = {
   ERROR: 'text-red-400',

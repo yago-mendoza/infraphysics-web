@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// move-hierarchy.js — Cascading hierarchy rename for fieldnotes (UID-based system)
+// move-hierarchy.js — Cascading hierarchy rename for wikinotes (UID-based system)
 //
 // Usage:
 //   node scripts/move-hierarchy.js "old prefix" "new prefix"           (dry-run)
@@ -19,7 +19,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PAGES_DIR = path.join(__dirname, '../src/data/pages');
-const FIELDNOTES_DIR = path.join(PAGES_DIR, 'fieldnotes');
+const WIKINOTES_DIR = path.join(PAGES_DIR, 'fieldnotes');
 
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -34,7 +34,7 @@ const positionalArgs = args.filter(a => a !== '--apply');
 if (positionalArgs.length !== 2) {
   console.log('Usage: node scripts/move-hierarchy.js "old prefix" "new prefix" [--apply]');
   console.log('');
-  console.log('  Moves a fieldnote and all its descendants to a new address prefix.');
+  console.log('  Moves a wikinote and all its descendants to a new address prefix.');
   console.log('  No cross-file ref updates needed — refs use stable UIDs.');
   console.log('');
   console.log('  Dry-run by default. Pass --apply to execute changes.');
@@ -50,13 +50,13 @@ if (oldPrefix === newPrefix) {
 
 // === Phase 1: Build rename map ===
 
-const fieldnoteFiles = fs.readdirSync(FIELDNOTES_DIR)
+const wikinoteFiles = fs.readdirSync(WIKINOTES_DIR)
   .filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md');
 
-// Parse address from each fieldnote
+// Parse address from each wikinote
 const notesByAddress = new Map();
-for (const filename of fieldnoteFiles) {
-  const filePath = path.join(FIELDNOTES_DIR, filename);
+for (const filename of wikinoteFiles) {
+  const filePath = path.join(WIKINOTES_DIR, filename);
   const content = fs.readFileSync(filePath, 'utf-8');
   const match = content.match(/^address:\s*"([^"]+)"/m);
   if (match) {
@@ -66,7 +66,7 @@ for (const filename of fieldnoteFiles) {
 
 // Find root note
 if (!notesByAddress.has(oldPrefix)) {
-  console.error(`ERROR: No fieldnote with address "${oldPrefix}"`);
+  console.error(`ERROR: No wikinote with address "${oldPrefix}"`);
   console.error('The root note must exist. For detached children without a parent, use rename-address.js individually.');
   process.exit(1);
 }

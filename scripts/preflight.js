@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// preflight.js — Pre-creation briefing for fieldnote authoring
+// preflight.js — Pre-creation briefing for wikinote authoring
 //
 // Usage:
 //   Briefing:    node scripts/preflight.js "MCU" "NPU" "sensor"
@@ -21,7 +21,7 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const FIELDNOTES_DIR = path.join(__dirname, '../src/data/pages/fieldnotes');
+const WIKINOTES_DIR = path.join(__dirname, '../src/data/pages/fieldnotes');
 
 // --- ANSI helpers ---
 
@@ -51,21 +51,21 @@ const INTERACTION_PATTERNS = [
   /\brather than\b/i,
 ];
 
-// --- Parse all fieldnotes ---
+// --- Parse all wikinotes ---
 
-function parseAllFieldnotes() {
-  if (!fs.existsSync(FIELDNOTES_DIR)) {
-    console.error('Fieldnotes directory not found:', FIELDNOTES_DIR);
+function parseAllWikinotes() {
+  if (!fs.existsSync(WIKINOTES_DIR)) {
+    console.error('Wikinotes directory not found:', WIKINOTES_DIR);
     process.exit(1);
   }
 
-  const files = fs.readdirSync(FIELDNOTES_DIR)
+  const files = fs.readdirSync(WIKINOTES_DIR)
     .filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md');
 
   const notes = [];
 
   for (const filename of files) {
-    const filePath = path.join(FIELDNOTES_DIR, filename);
+    const filePath = path.join(WIKINOTES_DIR, filename);
     const fileContent = fs.readFileSync(filePath, 'utf-8');
     const { data: fm, content: bodyMd } = matter(fileContent);
 
@@ -208,7 +208,7 @@ function resolveAddress(query, notes) {
     return null;
   }
 
-  console.error(`${C.red}NOT FOUND${C.reset} "${query}" — no fieldnote matches this address, alias, or segment.`);
+  console.error(`${C.red}NOT FOUND${C.reset} "${query}" — no wikinote matches this address, alias, or segment.`);
   return null;
 }
 
@@ -388,7 +388,7 @@ function checkNewAddresses(newAddrs, notes) {
 
 function printUsage() {
   console.log(`
-${C.bold}preflight.js${C.reset} — Pre-creation briefing for fieldnote authoring
+${C.bold}preflight.js${C.reset} — Pre-creation briefing for wikinote authoring
 
 ${C.bold}Usage:${C.reset}
   ${C.cyan}Brief${C.reset}    node scripts/preflight.js "MCU" "NPU" "sensor"
@@ -443,9 +443,9 @@ for (const arg of args) {
   }
 }
 
-const notes = parseAllFieldnotes();
+const notes = parseAllWikinotes();
 const noteByUid = new Map(notes.map(n => [n.uid, n]));
-console.log(`${C.dim}Scanned ${notes.length} fieldnotes.${C.reset}`);
+console.log(`${C.dim}Scanned ${notes.length} wikinotes.${C.reset}`);
 
 // Brief existing notes
 const resolved = [];

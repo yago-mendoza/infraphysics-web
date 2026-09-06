@@ -1,4 +1,4 @@
-// Live preview hook — compiles raw fieldnote markdown to HTML in the browser.
+// Live preview hook — compiles raw wikinote markdown to HTML in the browser.
 // Uses the same pipeline as build-content.js but without Shiki highlighting.
 
 import { useMemo, useDeferredValue } from 'react';
@@ -8,14 +8,14 @@ import {
   parseFrontmatter,
   parseTrailingRefs,
   stripTrailingRefs,
-} from '../../lib/content/fieldnote-parser.js';
+} from '../../lib/content/wikinote-parser.js';
 import {
   compileMarkdown,
   processOutsideCode,
   processAllLinks,
 } from '../../lib/content/compile.js';
 import { resolveWikiLinks } from '../../lib/wikilinks';
-import type { FieldNoteMeta } from '../../types';
+import type { WikiNoteMeta } from '../../types';
 
 // ── Module-level singletons (created once, reused across renders) ──
 
@@ -82,8 +82,8 @@ const previewMarked = new Marked({ renderer: previewRenderer, ...compilerConfig.
 
 export function useLivePreview(
   rawContent: string,
-  allNotes: FieldNoteMeta[],
-  noteById: Map<string, FieldNoteMeta>,
+  allNotes: WikiNoteMeta[],
+  noteById: Map<string, WikiNoteMeta>,
 ): { previewHtml: string } {
   const deferred = useDeferredValue(rawContent);
 

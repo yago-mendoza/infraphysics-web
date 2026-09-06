@@ -1,4 +1,4 @@
-// Right-split editor panel for Second Brain fieldnote editing
+// Right-split editor panel for Second Brain wikinote editing
 // Three tabs: Editor (CodeMirror + diagnostics), Context (zone panels), Syntax (cheatsheet)
 
 import React, { Suspense, useState, useCallback, useMemo, useRef, useEffect } from 'react';
@@ -8,9 +8,9 @@ import { NewNotePanel } from './NewNotePanel';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
 import { useTermSuggestions } from './useTermSuggestions';
 import { AddressPickerModal } from './AddressPickerModal';
-import type { EditorState, Diagnostic } from './useFieldnoteEditor';
+import type { EditorState, Diagnostic } from './useWikinoteEditor';
 import type { CodeMirrorHandle } from './CodeMirrorEditor';
-import type { FieldNoteMeta, Post } from '../../types';
+import type { WikiNoteMeta, Post } from '../../types';
 import {
   SuperscriptIcon, SubscriptIcon, KbdIcon, AccentIcon, FootnoteIcon,
   DotsIcon, ShoutIcon, BlockquoteIcon, ContextIcon, DefinitionIcon,
@@ -24,7 +24,7 @@ type Tab = 'editor' | 'context' | 'syntax';
 
 interface Props {
   editor: EditorState;
-  allNotes: FieldNoteMeta[];
+  allNotes: WikiNoteMeta[];
   allPosts: Post[];
   contextContent: React.ReactNode;
 }
@@ -102,7 +102,7 @@ export const EditorPanel: React.FC<Props> = ({
     [suggestions],
   );
 
-  // Create a stub fieldnote for a missing parent address
+  // Create a stub wikinote for a missing parent address
   const handleCreateStub = useCallback(async (address: string) => {
     const parts = address.split('//');
     const name = parts[parts.length - 1];
@@ -303,7 +303,7 @@ export const EditorPanel: React.FC<Props> = ({
                 ? 'border-transparent text-th-muted/40 cursor-default'
                 : 'border-red-400/30 text-red-400/70 hover:text-red-400 hover:bg-red-400/10 hover:border-red-400/50'
             }`}
-            title="Delete this fieldnote"
+            title="Delete this wikinote"
           >
             {editor.deleteStatus === 'analyzing' ? '...' : 'delete'}
           </button>

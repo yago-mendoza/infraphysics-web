@@ -1,4 +1,4 @@
-// Vite dev server plugin — fieldnote editing endpoints
+// Vite dev server plugin — wikinote editing endpoints
 // Only active during `vite dev`, never in production builds.
 //
 // Endpoints:
@@ -28,8 +28,8 @@ import {
   parseTrailingRefs,
   extractDescription,
   stripTrailingRefs,
-  serializeFieldnote,
-} from '../src/lib/content/fieldnote-parser.js';
+  serializeWikinote,
+} from '../src/lib/content/wikinote-parser.js';
 import {
   checkReferenceIntegrity,
   checkSelfReferences,
@@ -84,9 +84,9 @@ const STUB_PHRASES = [
 function randomStubPhrase() {
   return STUB_PHRASES[Math.floor(Math.random() * STUB_PHRASES.length)];
 }
-const FIELDNOTES_DIR = path.join(__dirname, '../src/data/pages/fieldnotes');
-const FIELDNOTES_INDEX_FILE = path.join(__dirname, '../src/data/fieldnotes-index.generated.json');
-const FIELDNOTES_CONTENT_DIR = path.join(__dirname, '../public/fieldnotes');
+const WIKINOTES_DIR = path.join(__dirname, '../src/data/pages/fieldnotes');
+const WIKINOTES_INDEX_FILE = path.join(__dirname, '../src/data/fieldnotes-index.generated.json');
+const WIKINOTES_CONTENT_DIR = path.join(__dirname, '../public/fieldnotes');
 
 // Configure marked the same way as build-content.js
 const customRenderer = new Renderer();
@@ -137,18 +137,18 @@ customRenderer.image = function({ href, title, text }) {
 marked.setOptions({ renderer: customRenderer, ...compilerConfig.marked });
 
 /**
- * Read all fieldnotes from disk to rebuild the in-memory index.
- * Returns { fieldnotePosts, uidToMeta }
+ * Read all wikinotes from disk to rebuild the in-memory index.
+ * Returns { wikinotePosts, uidToMeta }
  */
-function loadAllFieldnotes() {
-  const files = fs.readdirSync(FIELDNOTES_DIR)
+function loadAllWikinotes() {
+  const files = fs.readdirSync(WIKINOTES_DIR)
     .filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md');
 
   const posts = [];
   const uidToMeta = new Map();
 
   for (const filename of files) {
-    const filePath = path.join(FIELDNOTES_DIR, filename);
+    const filePath = path.join(WIKINOTES_DIR, filename);
     const raw = fs.readFileSync(filePath, 'utf-8');
     const parsed = parseFrontmatter(raw);
     if (!parsed) continue;
@@ -198,7 +198,7 @@ function loadAllFieldnotes() {
     uidToMeta.set(uid, { address, name });
   }
 
-  return { fieldnotePosts: posts, uidToMeta };
+  return { wikinotePosts: posts, uidToMeta };
 }
 
 /**
@@ -223,14 +223,14 @@ function applyLinks(posts, uidToMeta) {
  */
 function writeOutputs(linkedPosts) {
   const index = linkedPosts.map(({ content, searchText, ...meta }) => ({ ...meta, searchText }));
-  fs.writeFileSync(FIELDNOTES_INDEX_FILE, JSON.stringify(index, null, 2));
+  fs.writeFileSync(WIKINOTES_INDEX_FILE, JSON.stringify(index, null, 2));
 
-  if (!fs.existsSync(FIELDNOTES_CONTENT_DIR)) {
-    fs.mkdirSync(FIELDNOTES_CONTENT_DIR, { recursive: true });
+  if (!fs.existsSync(WIKINOTES_CONTENT_DIR)) {
+    fs.mkdirSync(WIKINOTES_CONTENT_DIR, { recursive: true });
   }
 
   for (const post of linkedPosts) {
-    const contentFile = path.join(FIELDNOTES_CONTENT_DIR, `${post.id}.json`);
+    const contentFile = path.join(WIKINOTES_CONTENT_DIR, `${post.id}.json`);
     fs.writeFileSync(contentFile, JSON.stringify({ content: post.content }));
   }
 }
@@ -240,16 +240,16 @@ function writeOutputs(linkedPosts) {
  * Returns diagnostics.
  */
 function fullRebuild() {
-  const { fieldnotePosts, uidToMeta } = loadAllFieldnotes();
-  const linked = applyLinks(fieldnotePosts, uidToMeta);
+  const { wikinotePosts, uidToMeta } = loadAllWikinotes();
+  const linked = applyLinks(wikinotePosts, uidToMeta);
   writeOutputs(linked);
-  return { fieldnotePosts, uidToMeta, linked };
+  return { wikinotePosts, uidToMeta, linked };
 }
 
 /**
  * Validate raw markdown without saving.
  */
-function validateRaw(raw, allFieldnotes) {
+function validateRaw(raw, allWikinotes) {
   const issues = [];
   const parsed = parseFrontmatter(raw);
 
@@ -271,20 +271,20 @@ function validateRaw(raw, allFieldnotes) {
   const { trailingRefs } = parseTrailingRefs(body);
 
   // Build known UIDs from existing notes
-  const knownUids = new Set(allFieldnotes.map(n => n.id));
+  const knownUids = new Set(allWikinotes.map(n => n.id));
   if (frontmatter.uid) knownUids.add(frontmatter.uid);
 
   // Reference integrity
   for (const ref of references) {
     if (!knownUids.has(ref)) {
-      issues.push({ source: 'VALIDATE', severity: 'ERROR', message: `Broken ref [[${ref}]] — no matching fieldnote` });
+      issues.push({ source: 'VALIDATE', severity: 'ERROR', message: `Broken ref [[${ref}]] — no matching wikinote` });
     }
   }
 
   // Trailing ref checks
   for (const ref of trailingRefs) {
     if (!knownUids.has(ref.uid)) {
-      issues.push({ source: 'VALIDATE', severity: 'ERROR', message: `Broken trailing ref [[${ref.uid}]] — no matching fieldnote` });
+      issues.push({ source: 'VALIDATE', severity: 'ERROR', message: `Broken trailing ref [[${ref.uid}]] — no matching wikinote` });
     }
     if (ref.uid === frontmatter.uid) {
       issues.push({ source: 'VALIDATE', severity: 'WARN', message: 'Self-reference in trailing refs' });
@@ -297,7 +297,7 @@ function validateRaw(raw, allFieldnotes) {
   // Parent hierarchy
   if (frontmatter.address) {
     const parts = parseAddress(frontmatter.address);
-    const knownAddresses = new Set(allFieldnotes.map(n => n.address));
+    const knownAddresses = new Set(allWikinotes.map(n => n.address));
     if (frontmatter.address) knownAddresses.add(frontmatter.address);
 
     for (let i = 1; i < parts.length; i++) {
@@ -343,28 +343,28 @@ function sendJson(res, data, status = 200) {
 }
 
 /** @returns {import('vite').Plugin} */
-export function fieldnoteEditorPlugin() {
-  let cachedFieldnotes = null;
+export function wikinoteEditorPlugin() {
+  let cachedWikinotes = null;
 
   return {
-    name: 'fieldnote-editor',
+    name: 'wikinote-editor',
     apply: 'serve',  // Only active during dev
 
     configureServer(server) {
       // Load initial index
       try {
-        const { fieldnotePosts, uidToMeta } = loadAllFieldnotes();
-        cachedFieldnotes = { posts: fieldnotePosts, uidToMeta };
+        const { wikinotePosts, uidToMeta } = loadAllWikinotes();
+        cachedWikinotes = { posts: wikinotePosts, uidToMeta };
       } catch {
-        console.log('[fieldnote-editor] Initial load failed — will retry on first request');
+        console.log('[wikinote-editor] Initial load failed — will retry on first request');
       }
 
       server.middlewares.use(async (req, res, next) => {
         // ── GET /api/fieldnotes/:uid/raw ──
-        const rawMatch = req.url?.match(/^\/api\/fieldnotes\/([^/]+)\/raw$/);
+        const rawMatch = req.url?.match(/^\/api\/wikinotes\/([^/]+)\/raw$/);
         if (rawMatch && req.method === 'GET') {
           const uid = rawMatch[1];
-          const filePath = path.join(FIELDNOTES_DIR, `${uid}.md`);
+          const filePath = path.join(WIKINOTES_DIR, `${uid}.md`);
 
           if (!fs.existsSync(filePath)) {
             return sendJson(res, { error: 'Not found' }, 404);
@@ -383,27 +383,27 @@ export function fieldnoteEditorPlugin() {
               return sendJson(res, { error: 'Missing uid or raw' }, 400);
             }
 
-            const filePath = path.join(FIELDNOTES_DIR, `${uid}.md`);
+            const filePath = path.join(WIKINOTES_DIR, `${uid}.md`);
             if (!fs.existsSync(filePath)) {
               return sendJson(res, { error: 'File not found' }, 404);
             }
 
             // Validate before saving
-            const allFieldnotes = cachedFieldnotes?.posts || [];
-            const diagnostics = validateRaw(raw, allFieldnotes);
+            const allWikinotes = cachedWikinotes?.posts || [];
+            const diagnostics = validateRaw(raw, allWikinotes);
             const hasErrors = diagnostics.some(d => d.severity === 'ERROR');
 
             // Write to disk even with warnings (only block on errors if desired)
             fs.writeFileSync(filePath, raw, 'utf-8');
 
             // Incremental rebuild
-            const { fieldnotePosts, uidToMeta, linked } = fullRebuild();
-            cachedFieldnotes = { posts: fieldnotePosts, uidToMeta };
+            const { wikinotePosts, uidToMeta, linked } = fullRebuild();
+            cachedWikinotes = { posts: wikinotePosts, uidToMeta };
 
             // Notify browser via HMR
             server.ws.send({
               type: 'custom',
-              event: 'fieldnote-update',
+              event: 'wikinote-update',
               data: { uid, action: 'save' },
             });
 
@@ -426,8 +426,8 @@ export function fieldnoteEditorPlugin() {
             }
 
             // Generate UID
-            const allFieldnotes = cachedFieldnotes?.posts || [];
-            const existingUids = new Set(allFieldnotes.map(n => n.id));
+            const allWikinotes = cachedWikinotes?.posts || [];
+            const existingUids = new Set(allWikinotes.map(n => n.id));
             const uid = generateUid(existingUids);
 
             const parts = parseAddress(address);
@@ -436,13 +436,13 @@ export function fieldnoteEditorPlugin() {
             const bodyContent = body || randomStubPhrase();
 
             // Check address collisions
-            const existingAddresses = new Set(allFieldnotes.map(n => n.address));
+            const existingAddresses = new Set(allWikinotes.map(n => n.address));
             if (existingAddresses.has(address)) {
               return sendJson(res, { error: `Address "${address}" already exists` }, 409);
             }
 
             // Segment collision check
-            const allNotes = [...allFieldnotes, { address, addressParts: parts }];
+            const allNotes = [...allWikinotes, { address, addressParts: parts }];
             const collisions = checkSegmentCollisions(allNotes);
             const newCollisions = collisions.filter(c =>
               (c.entries || []).some(e => e.fullAddress === address)
@@ -462,22 +462,22 @@ export function fieldnoteEditorPlugin() {
             ].join('\n');
 
             // Write file
-            const filePath = path.join(FIELDNOTES_DIR, `${uid}.md`);
+            const filePath = path.join(WIKINOTES_DIR, `${uid}.md`);
             fs.writeFileSync(filePath, raw, 'utf-8');
 
             // Full rebuild
-            const { fieldnotePosts, uidToMeta, linked } = fullRebuild();
-            cachedFieldnotes = { posts: fieldnotePosts, uidToMeta };
+            const { wikinotePosts, uidToMeta, linked } = fullRebuild();
+            cachedWikinotes = { posts: wikinotePosts, uidToMeta };
 
             // HMR notification
             server.ws.send({
               type: 'custom',
-              event: 'fieldnote-update',
+              event: 'wikinote-update',
               data: { uid, action: 'create' },
             });
 
             // Check for missing parents
-            const knownAddresses = new Set(fieldnotePosts.map(n => n.address));
+            const knownAddresses = new Set(wikinotePosts.map(n => n.address));
             const missingParents = [];
             for (let i = 1; i < parts.length; i++) {
               const parentAddr = parts.slice(0, i).join('//');
@@ -505,23 +505,23 @@ export function fieldnoteEditorPlugin() {
             const { uid } = await readBody(req);
             if (!uid) return sendJson(res, { error: 'Missing uid' }, 400);
 
-            if (!cachedFieldnotes) {
-              const { fieldnotePosts, uidToMeta } = loadAllFieldnotes();
-              cachedFieldnotes = { posts: fieldnotePosts, uidToMeta };
+            if (!cachedWikinotes) {
+              const { wikinotePosts, uidToMeta } = loadAllWikinotes();
+              cachedWikinotes = { posts: wikinotePosts, uidToMeta };
             }
 
-            const targetPost = cachedFieldnotes.posts.find(p => p.id === uid);
+            const targetPost = cachedWikinotes.posts.find(p => p.id === uid);
             if (!targetPost) return sendJson(res, { error: 'Note not found' }, 404);
 
             const bodyRefs = [];     // notes that reference this uid in body text
             const trailingRefs = []; // notes that have trailing refs pointing to this uid
             const children = [];     // notes whose address starts with target's address + '//'
 
-            for (const post of cachedFieldnotes.posts) {
+            for (const post of cachedWikinotes.posts) {
               if (post.id === uid) continue;
 
               // Read raw file to distinguish body refs from trailing refs
-              const filePath = path.join(FIELDNOTES_DIR, `${post.id}.md`);
+              const filePath = path.join(WIKINOTES_DIR, `${post.id}.md`);
               if (!fs.existsSync(filePath)) continue;
               const raw = fs.readFileSync(filePath, 'utf-8');
               const parsed = parseFrontmatter(raw);
@@ -566,14 +566,14 @@ export function fieldnoteEditorPlugin() {
 
             // Own trailing refs — interactions declared BY this note
             const ownTrailingRefs = [];
-            const targetFile = path.join(FIELDNOTES_DIR, `${uid}.md`);
+            const targetFile = path.join(WIKINOTES_DIR, `${uid}.md`);
             if (fs.existsSync(targetFile)) {
               const targetRaw = fs.readFileSync(targetFile, 'utf-8');
               const targetParsed = parseFrontmatter(targetRaw);
               if (targetParsed) {
                 const { trailingRefs: ownTRefs } = parseTrailingRefs(targetParsed.body);
                 for (const tr of ownTRefs) {
-                  const meta = cachedFieldnotes.uidToMeta.get(tr.uid);
+                  const meta = cachedWikinotes.uidToMeta.get(tr.uid);
                   ownTrailingRefs.push({
                     uid: tr.uid,
                     address: meta?.address || tr.uid,
@@ -606,18 +606,18 @@ export function fieldnoteEditorPlugin() {
             const { uid, cleanupTrailingRefs, trailingRefUids, unlinkBodyRefs } = await readBody(req);
             if (!uid) return sendJson(res, { error: 'Missing uid' }, 400);
 
-            const sourceFile = path.join(FIELDNOTES_DIR, `${uid}.md`);
+            const sourceFile = path.join(WIKINOTES_DIR, `${uid}.md`);
             if (!fs.existsSync(sourceFile)) {
               return sendJson(res, { error: 'File not found' }, 404);
             }
 
             // Resolve the deleted note's name for unlink fallback text
-            const deletedName = cachedFieldnotes?.uidToMeta?.get(uid)?.name || uid;
+            const deletedName = cachedWikinotes?.uidToMeta?.get(uid)?.name || uid;
 
             // 1. Clean up trailing refs in other notes that point to this uid
             if (cleanupTrailingRefs && trailingRefUids && trailingRefUids.length > 0) {
               for (const otherUid of trailingRefUids) {
-                const otherFile = path.join(FIELDNOTES_DIR, `${otherUid}.md`);
+                const otherFile = path.join(WIKINOTES_DIR, `${otherUid}.md`);
                 if (!fs.existsSync(otherFile)) continue;
 
                 const raw = fs.readFileSync(otherFile, 'utf-8');
@@ -637,18 +637,18 @@ export function fieldnoteEditorPlugin() {
                 const filteredRefs = tRefs.filter(r => r.uid !== uid);
 
                 // Serialize back using clean reconstruction
-                const newRaw = serializeFieldnote(frontmatter, contentBody, filteredRefs);
+                const newRaw = serializeWikinote(frontmatter, contentBody, filteredRefs);
                 fs.writeFileSync(otherFile, newRaw, 'utf-8');
               }
             }
 
             // 2. Unlink body refs in notes that only have body refs (not in trailingRefUids)
             if (unlinkBodyRefs) {
-              const allFieldnotes = cachedFieldnotes?.posts || [];
+              const allWikinotes = cachedWikinotes?.posts || [];
               const alreadyProcessed = new Set(trailingRefUids || []);
-              for (const post of allFieldnotes) {
+              for (const post of allWikinotes) {
                 if (post.id === uid || alreadyProcessed.has(post.id)) continue;
-                const otherFile = path.join(FIELDNOTES_DIR, `${post.id}.md`);
+                const otherFile = path.join(WIKINOTES_DIR, `${post.id}.md`);
                 if (!fs.existsSync(otherFile)) continue;
                 const raw = fs.readFileSync(otherFile, 'utf-8');
                 // Quick check — skip files that don't mention the uid at all
@@ -660,7 +660,7 @@ export function fieldnoteEditorPlugin() {
                 const contentBody = stripTrailingRefs(body, trailingRefStart);
                 const unlinked = unlinkWikiRefs(contentBody, uid, deletedName);
                 if (unlinked !== contentBody) {
-                  const newRaw = serializeFieldnote(frontmatter, unlinked, tRefs);
+                  const newRaw = serializeWikinote(frontmatter, unlinked, tRefs);
                   fs.writeFileSync(otherFile, newRaw, 'utf-8');
                 }
               }
@@ -670,19 +670,19 @@ export function fieldnoteEditorPlugin() {
             fs.unlinkSync(sourceFile);
 
             // 3. Delete compiled output
-            const compiledFile = path.join(FIELDNOTES_CONTENT_DIR, `${uid}.json`);
+            const compiledFile = path.join(WIKINOTES_CONTENT_DIR, `${uid}.json`);
             if (fs.existsSync(compiledFile)) {
               fs.unlinkSync(compiledFile);
             }
 
             // 4. Full rebuild
-            const { fieldnotePosts, uidToMeta } = fullRebuild();
-            cachedFieldnotes = { posts: fieldnotePosts, uidToMeta };
+            const { wikinotePosts, uidToMeta } = fullRebuild();
+            cachedWikinotes = { posts: wikinotePosts, uidToMeta };
 
             // 5. HMR notification
             server.ws.send({
               type: 'custom',
-              event: 'fieldnote-update',
+              event: 'wikinote-update',
               data: { uid, action: 'delete' },
             });
 
@@ -699,7 +699,7 @@ export function fieldnoteEditorPlugin() {
             const { uid } = await readBody(req);
             if (!uid) return sendJson(res, { error: 'Missing uid' }, 400);
 
-            const filePath = path.join(FIELDNOTES_DIR, `${uid}.md`);
+            const filePath = path.join(WIKINOTES_DIR, `${uid}.md`);
             if (!fs.existsSync(filePath)) {
               return sendJson(res, { error: 'File not found' }, 404);
             }
@@ -715,17 +715,17 @@ export function fieldnoteEditorPlugin() {
 
             // Replace body with a random stub phrase, keep trailing refs
             const stubBody = randomStubPhrase();
-            const newRaw = serializeFieldnote(frontmatter, stubBody, tRefs);
+            const newRaw = serializeWikinote(frontmatter, stubBody, tRefs);
             fs.writeFileSync(filePath, newRaw, 'utf-8');
 
             // Full rebuild
-            const { fieldnotePosts, uidToMeta } = fullRebuild();
-            cachedFieldnotes = { posts: fieldnotePosts, uidToMeta };
+            const { wikinotePosts, uidToMeta } = fullRebuild();
+            cachedWikinotes = { posts: wikinotePosts, uidToMeta };
 
             // HMR notification
             server.ws.send({
               type: 'custom',
-              event: 'fieldnote-update',
+              event: 'wikinote-update',
               data: { uid, action: 'stub' },
             });
 
@@ -744,12 +744,12 @@ export function fieldnoteEditorPlugin() {
               return sendJson(res, { error: 'Missing uid or newAddress' }, 400);
             }
 
-            if (!cachedFieldnotes) {
-              const { fieldnotePosts, uidToMeta } = loadAllFieldnotes();
-              cachedFieldnotes = { posts: fieldnotePosts, uidToMeta };
+            if (!cachedWikinotes) {
+              const { wikinotePosts, uidToMeta } = loadAllWikinotes();
+              cachedWikinotes = { posts: wikinotePosts, uidToMeta };
             }
 
-            const targetPost = cachedFieldnotes.posts.find(p => p.id === uid);
+            const targetPost = cachedWikinotes.posts.find(p => p.id === uid);
             if (!targetPost) return sendJson(res, { error: 'Note not found' }, 404);
 
             const oldAddress = targetPost.address;
@@ -758,13 +758,13 @@ export function fieldnoteEditorPlugin() {
             }
 
             // Check collision
-            const collision = cachedFieldnotes.posts.find(p => p.id !== uid && p.address === newAddress);
+            const collision = cachedWikinotes.posts.find(p => p.id !== uid && p.address === newAddress);
             if (collision) {
               return sendJson(res, { error: `Address "${newAddress}" already exists (${collision.name})` }, 409);
             }
 
             // 1. Update target note frontmatter
-            const filePath = path.join(FIELDNOTES_DIR, `${uid}.md`);
+            const filePath = path.join(WIKINOTES_DIR, `${uid}.md`);
             const raw = fs.readFileSync(filePath, 'utf-8');
             const parsed = parseFrontmatter(raw);
             if (!parsed) return sendJson(res, { error: 'Invalid frontmatter' }, 400);
@@ -775,16 +775,16 @@ export function fieldnoteEditorPlugin() {
             const { body } = parsed;
             const { trailingRefs: tRefs, trailingRefStart } = parseTrailingRefs(body);
             const contentBody = stripTrailingRefs(body, trailingRefStart);
-            const newRaw = serializeFieldnote(parsed.frontmatter, contentBody, tRefs);
+            const newRaw = serializeWikinote(parsed.frontmatter, contentBody, tRefs);
             fs.writeFileSync(filePath, newRaw, 'utf-8');
 
             // 2. Cascade to children
             let movedChildren = 0;
             const oldPrefix = oldAddress + '//';
-            for (const post of cachedFieldnotes.posts) {
+            for (const post of cachedWikinotes.posts) {
               if (post.id === uid) continue;
               if (post.address.startsWith(oldPrefix)) {
-                const childFile = path.join(FIELDNOTES_DIR, `${post.id}.md`);
+                const childFile = path.join(WIKINOTES_DIR, `${post.id}.md`);
                 const childRaw = fs.readFileSync(childFile, 'utf-8');
                 const childParsed = parseFrontmatter(childRaw);
                 if (!childParsed) continue;
@@ -795,18 +795,18 @@ export function fieldnoteEditorPlugin() {
                 const { body: childBody } = childParsed;
                 const { trailingRefs: childTRefs, trailingRefStart: childTStart } = parseTrailingRefs(childBody);
                 const childContent = stripTrailingRefs(childBody, childTStart);
-                fs.writeFileSync(childFile, serializeFieldnote(childParsed.frontmatter, childContent, childTRefs), 'utf-8');
+                fs.writeFileSync(childFile, serializeWikinote(childParsed.frontmatter, childContent, childTRefs), 'utf-8');
                 movedChildren++;
               }
             }
 
             // 3. Full rebuild
-            const { fieldnotePosts, uidToMeta } = fullRebuild();
-            cachedFieldnotes = { posts: fieldnotePosts, uidToMeta };
+            const { wikinotePosts, uidToMeta } = fullRebuild();
+            cachedWikinotes = { posts: wikinotePosts, uidToMeta };
 
             server.ws.send({
               type: 'custom',
-              event: 'fieldnote-update',
+              event: 'wikinote-update',
               data: { uid, action: 'move' },
             });
 
@@ -828,11 +828,11 @@ export function fieldnoteEditorPlugin() {
             let updated = 0;
             const pattern = `[[${uid}|${oldName}]]`;
             const replacement = `[[${uid}|${newName}]]`;
-            const allFieldnotes = cachedFieldnotes?.posts || [];
+            const allWikinotes = cachedWikinotes?.posts || [];
 
-            for (const post of allFieldnotes) {
+            for (const post of allWikinotes) {
               if (post.id === uid) continue;
-              const filePath = path.join(FIELDNOTES_DIR, `${post.id}.md`);
+              const filePath = path.join(WIKINOTES_DIR, `${post.id}.md`);
               if (!fs.existsSync(filePath)) continue;
               const raw = fs.readFileSync(filePath, 'utf-8');
               if (raw.includes(pattern)) {
@@ -841,12 +841,12 @@ export function fieldnoteEditorPlugin() {
               }
             }
 
-            const { fieldnotePosts, uidToMeta } = fullRebuild();
-            cachedFieldnotes = { posts: fieldnotePosts, uidToMeta };
+            const { wikinotePosts, uidToMeta } = fullRebuild();
+            cachedWikinotes = { posts: wikinotePosts, uidToMeta };
 
             server.ws.send({
               type: 'custom',
-              event: 'fieldnote-update',
+              event: 'wikinote-update',
               data: { uid, action: 'rename' },
             });
 
@@ -864,8 +864,8 @@ export function fieldnoteEditorPlugin() {
               return sendJson(res, { error: 'Missing raw' }, 400);
             }
 
-            const allFieldnotes = cachedFieldnotes?.posts || [];
-            const issues = validateRaw(raw, allFieldnotes);
+            const allWikinotes = cachedWikinotes?.posts || [];
+            const issues = validateRaw(raw, allWikinotes);
             return sendJson(res, { issues });
           } catch (err) {
             return sendJson(res, { error: err.message }, 500);
@@ -874,12 +874,12 @@ export function fieldnoteEditorPlugin() {
 
         // ── GET /api/fieldnotes/index ──
         if (req.url === '/api/fieldnotes/index' && req.method === 'GET') {
-          if (!cachedFieldnotes) {
-            const { fieldnotePosts, uidToMeta } = loadAllFieldnotes();
-            cachedFieldnotes = { posts: fieldnotePosts, uidToMeta };
+          if (!cachedWikinotes) {
+            const { wikinotePosts, uidToMeta } = loadAllWikinotes();
+            cachedWikinotes = { posts: wikinotePosts, uidToMeta };
           }
           return sendJson(res, {
-            notes: cachedFieldnotes.posts.map(({ content, ...meta }) => meta),
+            notes: cachedWikinotes.posts.map(({ content, ...meta }) => meta),
           });
         }
 

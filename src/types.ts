@@ -53,14 +53,14 @@ export type PostSummary = Post extends infer P
   ? P extends Post ? Omit<P, 'content'> : never
   : never;
 
-/* ── Fieldnote: lightweight metadata (no content) + full type ── */
+/* ── Wikinote: lightweight metadata (no content) + full type ── */
 
 export interface ConnectionRef {
   uid: string;
   annotation: string | null;
 }
 
-export interface FieldNoteMeta {
+export interface WikiNoteMeta {
   id: string;
   title: string;
   displayTitle?: string;
@@ -78,7 +78,7 @@ export interface FieldNoteMeta {
   distinct?: string[];
 }
 
-export interface FieldNote extends FieldNoteMeta {
+export interface WikiNote extends WikiNoteMeta {
   content: string;
 }
 
@@ -86,6 +86,6 @@ export interface FieldNote extends FieldNoteMeta {
 export const noteLabel = (note: { title: string; displayTitle?: string }) =>
   note.displayTitle || note.title;
 
-/* ── Discriminated union (fieldnotes excluded — loaded via brainIndex) ── */
+/* ── Discriminated union (wikinotes excluded — loaded via brainIndex) ── */
 
 export type Post = ProjectPost | ArticlePost;

@@ -15,7 +15,7 @@ import { BridgeScoreBadge } from '../components/wiki/BridgeScoreBadge';
 import { useGraphRelevance } from '../hooks/useGraphRelevance';
 import type { SortMode, SearchMode, FilterState, ViewMode } from '../hooks/useSecondBrainHub';
 import { SearchIcon, PencilIcon, DiceIcon, ClipboardIcon, CheckIcon } from '../components/icons';
-import { noteLabel, type FieldNoteMeta } from '../types';
+import { noteLabel, type WikiNoteMeta } from '../types';
 import { refreshBrainIndex, type Connection } from '../lib/brainIndex';
 import { ICON_REF_IN, ICON_REF_OUT } from '../lib/icons';
 import { exportNotesAsMarkdown } from '../lib/exportNotes';
@@ -24,7 +24,7 @@ import { resolveWikiLinks } from '../lib/wikilinks';
 import { WikiLinkPreview } from '../components/wiki/WikiLinkPreview';
 import { useIsLocalhost } from '../hooks/useIsLocalhost';
 import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../constants/layout';
-import { useFieldnoteEditor } from '../components/editor/useFieldnoteEditor';
+import { useWikinoteEditor } from '../components/editor/useWikinoteEditor';
 import { useLivePreview } from '../components/editor/useLivePreview';
 import { NewNotePanel } from '../components/editor/NewNotePanel';
 import { posts } from '../data/data';
@@ -118,7 +118,7 @@ const DAY_NAMES = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const MONTH_LABELS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
 
 const ActivityHeatmap: React.FC<{
-  allNotes: FieldNoteMeta[];
+  allNotes: WikiNoteMeta[];
   dateFilter: string | null;
   onDateClick: (date: string | null) => void;
 }> = ({ allNotes, dateFilter, onDateClick }) => {
@@ -456,11 +456,11 @@ const DockedToolbar: React.FC<{
   setUnvisitedOnly: (v: boolean | ((prev: boolean) => boolean)) => void;
   hasVisited: boolean;
   isVisited: (id: string) => boolean;
-  allNotes: FieldNoteMeta[];
+  allNotes: WikiNoteMeta[];
   stats: { maxDepth: number };
   inputRef: React.RefObject<HTMLInputElement | null>;
   viewMode: ViewMode;
-  sortedResults: FieldNoteMeta[];
+  sortedResults: WikiNoteMeta[];
   connectionsMap: Map<string, Connection[]>;
 }> = ({
   query, setQuery, searchMode, setSearchMode,
@@ -833,11 +833,11 @@ const DockedToolbar: React.FC<{
 
 // --- Memoized Grid Card — only re-renders when its own data changes ---
 const GridCard = React.memo<{
-  note: FieldNoteMeta;
+  note: WikiNoteMeta;
   idx: number;
   focused: boolean;
   visited: boolean;
-  onCardClick: (note: FieldNoteMeta) => void;
+  onCardClick: (note: WikiNoteMeta) => void;
   incoming: number;
   outgoing: number;
 }>(({ note, idx, focused, visited, onCardClick, incoming, outgoing }) => (
@@ -908,7 +908,7 @@ export const SecondBrainView: React.FC = () => {
     neighborhoodMap,
     addressToNoteId,
     invalidateContent,
-    allFieldNotes,
+    allWikiNotes,
     stats,
     showNewNote,
     setShowNewNote,
@@ -932,13 +932,13 @@ export const SecondBrainView: React.FC = () => {
     }
   }, [urlId, activePost, indexLoading, navigate]);
 
-  const fieldnoteEditor = useFieldnoteEditor();
-  const { previewHtml } = useLivePreview(fieldnoteEditor.rawContent, allFieldNotes, noteById);
+  const wikinoteEditor = useWikinoteEditor();
+  const { previewHtml } = useLivePreview(wikinoteEditor.rawContent, allWikiNotes, noteById);
 
   // Live interactions preview — override compiled connections with editor's live trailing refs
   const effectiveConnections = useMemo((): Connection[] => {
-    if (!fieldnoteEditor.isEditing || !activePost) return connections;
-    const liveRefs = fieldnoteEditor.liveTrailingRefs;
+    if (!wikinoteEditor.isEditing || !activePost) return connections;
+    const liveRefs = wikinoteEditor.liveTrailingRefs;
     const seen = new Set<string>();
     const result: Connection[] = [];
 
@@ -958,7 +958,7 @@ export const SecondBrainView: React.FC = () => {
     }
 
     return result;
-  }, [fieldnoteEditor.isEditing, fieldnoteEditor.liveTrailingRefs, activePost, connections, noteById]);
+  }, [wikinoteEditor.isEditing, wikinoteEditor.liveTrailingRefs, activePost, connections, noteById]);
 
   // Global edit mode — once toggled, every note auto-opens in the editor
   const [globalEditMode, _setGlobalEditMode] = useState(_globalEditMode);
@@ -981,13 +981,13 @@ export const SecondBrainView: React.FC = () => {
   // Auto-open editor when globalEditMode is ON and activePost changes
   useEffect(() => {
     if (!globalEditMode || !activePost?.id || !isLocalhost) return;
-    if (activePost.id === fieldnoteEditor.editingUid) return; // already editing this one
+    if (activePost.id === wikinoteEditor.editingUid) return; // already editing this one
 
     const switchTo = async () => {
-      if (fieldnoteEditor.isDirty && autoSaveOnSwitch) {
-        await fieldnoteEditor.save();
+      if (wikinoteEditor.isDirty && autoSaveOnSwitch) {
+        await wikinoteEditor.save();
       }
-      fieldnoteEditor.openEditor(activePost.id);
+      wikinoteEditor.openEditor(activePost.id);
     };
     switchTo();
   }, [activePost?.id, globalEditMode]);
@@ -997,7 +997,7 @@ export const SecondBrainView: React.FC = () => {
     if (_pendingEditUid && activePost?.id === _pendingEditUid) {
       const uid = _pendingEditUid;
       _pendingEditUid = null;
-      fieldnoteEditor.openEditor(uid);
+      wikinoteEditor.openEditor(uid);
     }
   }, [activePost]);
 
@@ -1072,17 +1072,17 @@ export const SecondBrainView: React.FC = () => {
   const activePostRef = useRef(activePost);
   activePostRef.current = activePost;
 
-  const handleGridCardClick = useCallback((post: FieldNoteMeta) => {
+  const handleGridCardClick = useCallback((post: WikiNoteMeta) => {
     if (activePostRef.current?.id !== post.id) invalidateContent();
     clearSearch();
     scheduleReset(post);
   }, [invalidateContent, clearSearch, scheduleReset]);
 
   // Connection / mention click — extend trail
-  const handleConnectionClick = useCallback((post: FieldNoteMeta) => {
+  const handleConnectionClick = useCallback((post: WikiNoteMeta) => {
     scheduleExtend(post);
   }, [scheduleExtend]);
-  const handleNeighborhoodPreview = useCallback((post: FieldNoteMeta | null) => {
+  const handleNeighborhoodPreview = useCallback((post: WikiNoteMeta | null) => {
     window.dispatchEvent(new CustomEvent('wiki-link-preview', { detail: post?.id ?? null }));
   }, []);
 
@@ -1114,7 +1114,7 @@ export const SecondBrainView: React.FC = () => {
   }>({ visible: false, title: '', address: '', description: '', x: 0, y: 0 });
   const mentionHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const showMentionPreview = useCallback((m: FieldNoteMeta, e: React.MouseEvent) => {
+  const showMentionPreview = useCallback((m: WikiNoteMeta, e: React.MouseEvent) => {
     if (mentionHideTimer.current) { clearTimeout(mentionHideTimer.current); mentionHideTimer.current = null; }
     setMentionPreview({
       visible: true,
@@ -1183,12 +1183,12 @@ export const SecondBrainView: React.FC = () => {
     };
   }, []);
 
-  // Listen for HMR fieldnote updates — force re-render after brainIndex refresh
+  // Listen for HMR wikinote updates — force re-render after brainIndex refresh
   const [, forceUpdate] = useState(0);
   useEffect(() => {
     const handler = () => forceUpdate(n => n + 1);
-    window.addEventListener('fieldnote-hmr', handler);
-    return () => window.removeEventListener('fieldnote-hmr', handler);
+    window.addEventListener('wikinote-hmr', handler);
+    return () => window.removeEventListener('wikinote-hmr', handler);
   }, []);
 
   // Navigate to previous note when the currently-viewed note is deleted
@@ -1197,7 +1197,7 @@ export const SecondBrainView: React.FC = () => {
       const detail = (e as CustomEvent).detail;
       if (detail?.action === 'delete' && detail?.uid === activePost?.id) {
         // Close editor before navigating away
-        fieldnoteEditor.closeEditor();
+        wikinoteEditor.closeEditor();
         // Find the previous note in the trail (skip the deleted one)
         const prev = trail.slice().reverse().find(t => t.id !== activePost.id);
         if (prev) {
@@ -1207,9 +1207,9 @@ export const SecondBrainView: React.FC = () => {
         }
       }
     };
-    window.addEventListener('fieldnote-hmr', handler);
-    return () => window.removeEventListener('fieldnote-hmr', handler);
-  }, [activePost?.id, navigate, trail, fieldnoteEditor]);
+    window.addEventListener('wikinote-hmr', handler);
+    return () => window.removeEventListener('wikinote-hmr', handler);
+  }, [activePost?.id, navigate, trail, wikinoteEditor]);
 
   // Copy export modal state
   const [showCopyModal, setShowCopyModal] = useState(false);
@@ -1300,7 +1300,7 @@ export const SecondBrainView: React.FC = () => {
         const parentNote = parentId ? noteById.get(parentId) || null : null;
         return parentNote ? { parent: parentNote, homonym: h } : null;
       })
-      .filter((x): x is { parent: FieldNoteMeta; homonym: FieldNoteMeta } => x !== null);
+      .filter((x): x is { parent: WikiNoteMeta; homonym: WikiNoteMeta } => x !== null);
   }, [activePost, homonyms, noteById, addressToNoteId]);
 
   const homonymLeaf = useMemo(() => {
@@ -1338,7 +1338,7 @@ export const SecondBrainView: React.FC = () => {
   const detailItems = useMemo(() => {
     if (!showDetail || !activeZone) return [];
     if (activeZone === 'parent') {
-      const items: FieldNoteMeta[] = [];
+      const items: WikiNoteMeta[] = [];
       if (neighborhood.parent) items.push(neighborhood.parent);
       homonymParents.forEach(gp => {
         if (!items.some(i => i.id === gp.parent.id)) items.push(gp.parent);
@@ -1382,7 +1382,7 @@ export const SecondBrainView: React.FC = () => {
     if (showDetail) return; // Only active in list view
 
     const handler = (e: KeyboardEvent) => {
-      if (fieldnoteEditor.isEditing) return;
+      if (wikinoteEditor.isEditing) return;
       const el = e.target as HTMLElement;
       const tag = el.tagName;
       if (el.isContentEditable) return;
@@ -1462,14 +1462,14 @@ export const SecondBrainView: React.FC = () => {
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [showDetail, focusedIdx, visibleResults, getColCount, handleGridCardClick, navigate, searchActive, activePost, clearSearch, fieldnoteEditor.isEditing]);
+  }, [showDetail, focusedIdx, visibleResults, getColCount, handleGridCardClick, navigate, searchActive, activePost, clearSearch, wikinoteEditor.isEditing]);
 
   // --- Detail-view arrow-key navigation (right column boxes) ---
   useEffect(() => {
     if (!showDetail) return;
 
     const handler = (e: KeyboardEvent) => {
-      if (fieldnoteEditor.isEditing) return;
+      if (wikinoteEditor.isEditing) return;
       const el = e.target as HTMLElement;
       const tag = el.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
@@ -1521,14 +1521,14 @@ export const SecondBrainView: React.FC = () => {
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [showDetail, detailItems, focusedDetailIdx, handleConnectionClick, navigate, availableZones, activeZone, fieldnoteEditor.isEditing]);
+  }, [showDetail, detailItems, focusedDetailIdx, handleConnectionClick, navigate, availableZones, activeZone, wikinoteEditor.isEditing]);
 
   // Escape in detail view — navigate back to grid
   useEffect(() => {
     if (!showDetail) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
-      if (fieldnoteEditor.isEditing) return; // don't close detail while editing
+      if (wikinoteEditor.isEditing) return; // don't close detail while editing
       const el = e.target as HTMLElement;
       if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable) return;
       e.preventDefault();
@@ -1536,7 +1536,7 @@ export const SecondBrainView: React.FC = () => {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [showDetail, navigate, fieldnoteEditor.isEditing]);
+  }, [showDetail, navigate, wikinoteEditor.isEditing]);
 
   // Hide detail focus highlight on mouse click (re-shown on next arrow key)
   useEffect(() => {
@@ -1573,7 +1573,7 @@ export const SecondBrainView: React.FC = () => {
           setUnvisitedOnly={setUnvisitedOnly}
           hasVisited={hasVisited}
           isVisited={isVisited}
-          allNotes={allFieldNotes}
+          allNotes={allWikiNotes}
           stats={stats}
           inputRef={toolbarInputRef}
           viewMode={viewMode}
@@ -1713,7 +1713,7 @@ export const SecondBrainView: React.FC = () => {
               >
                 <div className="article-page-wrapper article-wiki">
                   <WikiContent
-                    html={fieldnoteEditor.isEditing ? previewHtml : resolvedHtml}
+                    html={wikinoteEditor.isEditing ? previewHtml : resolvedHtml}
                     className="article-content"
                     onWikiLinkClick={handleWikiLinkClick}
                     isVisited={isVisited}
@@ -1803,11 +1803,11 @@ export const SecondBrainView: React.FC = () => {
 
           {/* Right panel: Editor (when editing) or Context (zone panels) */}
             {globalEditMode && isLocalhost ? (
-              fieldnoteEditor.isEditing ? (
+              wikinoteEditor.isEditing ? (
                 <Suspense fallback={<div className="flex items-center justify-center text-th-muted text-xs" style={{ width: 550, flexShrink: 0 }}>Loading editor...</div>}>
                   <EditorPanel
-                    editor={fieldnoteEditor}
-                    allNotes={allFieldNotes}
+                    editor={wikinoteEditor}
+                    allNotes={allWikiNotes}
                     allPosts={posts}
                     contextContent={
                       <>
@@ -1952,10 +1952,10 @@ export const SecondBrainView: React.FC = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={async () => {
-                    if (fieldnoteEditor.isDirty) {
+                    if (wikinoteEditor.isDirty) {
                       if (!window.confirm('You have unsaved changes. Discard and navigate?')) return;
                     }
-                    const candidates = allFieldNotes.filter(n => n.id !== activePost?.id);
+                    const candidates = allWikiNotes.filter(n => n.id !== activePost?.id);
                     if (candidates.length === 0) return;
                     const random = candidates[Math.floor(Math.random() * candidates.length)];
                     navigate(secondBrainPath(random.id));
@@ -1983,8 +1983,8 @@ export const SecondBrainView: React.FC = () => {
                 <button
                   onClick={async () => {
                     if (globalEditMode) {
-                      if (fieldnoteEditor.isDirty) await fieldnoteEditor.save();
-                      fieldnoteEditor.closeEditor();
+                      if (wikinoteEditor.isDirty) await wikinoteEditor.save();
+                      wikinoteEditor.closeEditor();
                       setGlobalEditMode(false);
                     } else {
                       setGlobalEditMode(true);
@@ -2049,7 +2049,7 @@ export const SecondBrainView: React.FC = () => {
               connectionsMap={connectionsMap}
               neighborhoodMap={neighborhoodMap}
               noteById={noteById}
-              totalNotes={allFieldNotes.length}
+              totalNotes={allWikiNotes.length}
               onClose={() => setShowCopyModal(false)}
             />
           )}
@@ -2062,7 +2062,7 @@ export const SecondBrainView: React.FC = () => {
             >
               <div className="w-full max-w-md mx-4">
                 <NewNotePanel
-                  allNotes={allFieldNotes}
+                  allNotes={allWikiNotes}
                   onCreated={async (uid) => {
                     setShowNewNote(false);
                     _pendingEditUid = uid;

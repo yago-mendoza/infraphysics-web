@@ -129,7 +129,7 @@ FILES=(
   # --- Build scripts ---
   "scripts/build-content.js"
   "scripts/compiler.config.js"
-  "scripts/validate-fieldnotes.js"
+  "scripts/validate-wikinotes.js"
   "scripts/resolve-issues.js"
   "scripts/rename-address.js"
   "scripts/check-references.js"
@@ -141,10 +141,10 @@ FILES=(
   "scripts/README.md"
   "src/data/pages/fieldnotes/README.md"
 
-  # --- Contenido representativo (1 por categoría + 1 fieldnote, para mostrar frontmatter) ---
+  # --- Contenido representativo (1 por categoría + 1 wikinote, para mostrar frontmatter) ---
   "src/data/pages/essays/260205-why-rust-exists.md"
   "src/data/pages/bits2bricks/custom-syntax-pcb.md"
-  # Fieldnote files are now named {uid}.md — pick a representative one
+  # Wikinote files are now named {uid}.md — pick a representative one
   # ls src/data/pages/fieldnotes/ for current filenames
   # "src/data/pages/fieldnotes/egoxqpmC.md"  # Hardware//CPU//ALU
 )

@@ -2,7 +2,7 @@
 // Used to propagate filters from the list view to the graph view.
 
 import type { FilterState, SearchMode } from '../hooks/useSecondBrainHub';
-import type { FieldNoteMeta } from '../types';
+import type { WikiNoteMeta } from '../types';
 import type { BrainIndex } from './brainIndex';
 
 // ─── Serialization ──────────────────────────────────────────────────
@@ -71,7 +71,7 @@ export function parseHubFilters(params: URLSearchParams): ParsedHubFilters {
 
 /** Apply the hub filter pipeline to a set of notes (replicates useSecondBrainHub logic). */
 export function applyHubFilters(
-  allNotes: FieldNoteMeta[],
+  allNotes: WikiNoteMeta[],
   parsed: ParsedHubFilters,
   index: BrainIndex,
   getIslands?: () => { nodeToComponent: Record<string, number>; cuts: { uid: string }[] } | null,
@@ -81,13 +81,13 @@ export function applyHubFilters(
   // 1. Search
   const q = parsed.query.toLowerCase();
   if (q) {
-    const matchesName = (n: FieldNoteMeta) => {
+    const matchesName = (n: WikiNoteMeta) => {
       const addr = (n.address || n.title).toLowerCase();
       const dt = (n.displayTitle || n.title).toLowerCase();
       return addr.includes(q) || dt.includes(q) || (n.aliases?.some(a => a.toLowerCase().includes(q)) ?? false);
     };
-    const matchesContent = (n: FieldNoteMeta) => (n.searchText || '').includes(q) || n.description.toLowerCase().includes(q);
-    const matchesBacklinks = (n: FieldNoteMeta) => (index.backlinksMap.get(n.id) || []).some(linker => {
+    const matchesContent = (n: WikiNoteMeta) => (n.searchText || '').includes(q) || n.description.toLowerCase().includes(q);
+    const matchesBacklinks = (n: WikiNoteMeta) => (index.backlinksMap.get(n.id) || []).some(linker => {
       const addr = (linker.address || linker.title).toLowerCase();
       const dt = (linker.displayTitle || linker.title).toLowerCase();
       return addr.includes(q) || dt.includes(q) || (linker.searchText || '').includes(q) || linker.description.toLowerCase().includes(q);

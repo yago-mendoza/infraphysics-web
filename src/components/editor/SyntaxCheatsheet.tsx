@@ -4,7 +4,7 @@
 import React from 'react';
 
 const FEATURES = [
-  { syntax: '[[uid]]', desc: 'Wiki-link to a fieldnote (by UID)' },
+  { syntax: '[[uid]]', desc: 'Wiki-link to a wikinote (by UID)' },
   { syntax: '[[uid|display]]', desc: 'Wiki-link with custom display text' },
   { syntax: '[[projects/slug|Text]]', desc: 'Cross-doc link (projects, essays, bits2bricks)' },
   { syntax: '[[https://url|Text]]', desc: 'External URL link' },

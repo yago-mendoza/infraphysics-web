@@ -1,20 +1,20 @@
 // CodeMirror autocomplete source for [[navigation]]
-// Triggers on [[ and provides a filterable dropdown to jump between fieldnotes
+// Triggers on [[ and provides a filterable dropdown to jump between wikinotes
 
 import type { CompletionContext, CompletionResult, Completion } from '@codemirror/autocomplete';
 import type { EditorView } from '@codemirror/view';
-import type { FieldNoteMeta } from '../../types';
+import type { WikiNoteMeta } from '../../types';
 
 /**
- * Creates a CompletionSource that triggers on [[ and provides fieldnote navigation.
+ * Creates a CompletionSource that triggers on [[ and provides wikinote navigation.
  * Arrow keys to browse, Enter/Tab to jump to the selected note.
- * @param getNotes - function returning current fieldnotes
+ * @param getNotes - function returning current wikinotes
  * @param currentUid - UID of the note being edited (excluded from results)
  * @param onNavigate - callback when user selects a note to navigate to
  * @param onCreateRequest - callback when user selects "Create" from autocomplete
  */
 export function createWikiAutocomplete(
-  getNotes: () => FieldNoteMeta[],
+  getNotes: () => WikiNoteMeta[],
   currentUid: string | null,
   onNavigate?: (uid: string) => void,
   onCreateRequest?: (name: string) => void,
@@ -35,7 +35,7 @@ export function createWikiAutocomplete(
     const from = line.from + bracketIdx; // include the [[ in the replacement range
     const notes = getNotes();
 
-    const scored: { note: FieldNoteMeta; score: number }[] = [];
+    const scored: { note: WikiNoteMeta; score: number }[] = [];
     let hasExactMatch = false;
 
     for (const note of notes) {

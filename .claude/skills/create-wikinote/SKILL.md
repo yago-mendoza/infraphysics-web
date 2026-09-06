@@ -1,10 +1,10 @@
 ---
-name: create-fieldnote
-description: Process raw knowledge input into well-structured fieldnotes
+name: create-wikinote
+description: Process raw knowledge input into well-structured wikinotes
 argument-hint: "<raw text, concepts, or notes to process>"
 ---
 
-Process the user's raw input ($ARGUMENTS) into one or more well-structured fieldnotes. The input can be anything: raw notes, bullet points, a concept name, a paste from a lecture, a paragraph of ideas — any form of knowledge.
+Process the user's raw input ($ARGUMENTS) into one or more well-structured wikinotes. The input can be anything: raw notes, bullet points, a concept name, a paste from a lecture, a paragraph of ideas — any form of knowledge.
 
 ## Required reading
 
@@ -12,7 +12,7 @@ Before ANY work, read these files — but only the sections you need, not cover-
 - `src/data/pages/README.md` — frontmatter schemas, naming conventions, wiki-link syntax, trailing refs rules
 - `src/data/pages/fieldnotes/README.md` — scripts, workflows, cascading effects
 
-Also load the existing fieldnotes index to know what's already in the knowledge base:
+Also load the existing wikinotes index to know what's already in the knowledge base:
 - Read `src/data/fieldnotes-index.generated.json` (all addresses, names, UIDs at a glance)
 
 ## Phase 0: Analyze, decompose, and plan
@@ -62,7 +62,7 @@ For each approved new note:
    - Frontmatter: `uid`, `address`, `name`, `date` (today's date). Add `distinct` if suppressing a segment collision.
    - Body: content from the user's input. Preserve the user's voice and structure — bullets, prose, definitions, whatever fits. Don't force bullet points if the content is naturally prose.
    - Follow all **writing style rules** in [pages/README.md](src/data/pages/README.md#writing-style) (no em dashes, long arrows only, no blank line after frontmatter, no invented examples, no manual back-references).
-   - Wiki-links (`[[uid|name]]`): wrap terms that reference other fieldnotes. Match broadly:
+   - Wiki-links (`[[uid|name]]`): wrap terms that reference other wikinotes. Match broadly:
      - Literal matches (term = note name)
      - Semantic matches (text says "gradient descent methods" → link to note "SGD" or "optimizer")
      - Contextual matches (text says "the model" in an ML context → link to note "LLM" if appropriate)

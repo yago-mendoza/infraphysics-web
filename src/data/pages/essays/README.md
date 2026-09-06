@@ -104,7 +104,7 @@ Blockquote labels in essays are rendered with serif font, no colon after the lab
 
 **Dense monologue over sectioned cliffhangers.** Essays work best as a continuous flow of thought, not as sections with dramatic reveals. Avoid headings that function as cliffhangers ("the canary", "it knows you're watching"). If the piece is dense enough, the reader follows the thought without needing signposts. Headings are optional — use them only when the topic genuinely shifts and the reader needs a breath, not for dramatic pacing.
 
-**Technical depth goes to fieldnotes.** When an essay touches a technical concept that needs more than a sentence of explanation (activation steering procedures, SAE architecture, vector arithmetic), extract the definition into a fieldnote and link it from the thread. The thread keeps the narrative and the "so what." The fieldnote keeps the "how it works."
+**Technical depth goes to wikinotes.** When an essay touches a technical concept that needs more than a sentence of explanation (activation steering procedures, SAE architecture, vector arithmetic), extract the definition into a wikinote and link it from the thread. The thread keeps the narrative and the "so what." The wikinote keeps the "how it works."
 
 ---
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { noteLabel, type FieldNoteMeta } from '../../types';
+import { noteLabel, type WikiNoteMeta } from '../../types';
 import { secondBrainPath } from '../../config/categories';
 
 interface RelevanceEntry {
@@ -9,13 +9,13 @@ interface RelevanceEntry {
 }
 
 export interface FamilyItem {
-  note: FieldNoteMeta;
+  note: WikiNoteMeta;
   zone: 'parent' | 'siblings' | 'children';
 }
 
 interface BaseProps {
-  noteById: Map<string, FieldNoteMeta>;
-  onNoteClick: (note: FieldNoteMeta) => void;
+  noteById: Map<string, WikiNoteMeta>;
+  onNoteClick: (note: WikiNoteMeta) => void;
   isVisited: (id: string) => boolean;
   getPercentile: (uid: string) => number;
 }

@@ -4,7 +4,7 @@
 
 import { useState, useCallback, useRef, useEffect, type MutableRefObject } from 'react';
 import { noteLabel } from '../types';
-// Minimal type — works with both Post and FieldNoteMeta
+// Minimal type — works with both Post and WikiNoteMeta
 interface TrailSource { id: string; title: string; displayTitle?: string; }
 
 export interface TrailItem {

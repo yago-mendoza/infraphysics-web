@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// analyze-pairs.js — Relationship analyzer for fieldnote pairs
+// analyze-pairs.js — Relationship analyzer for wikinote pairs
 //
 // Usage:
 //   Pair mode:  node scripts/analyze-pairs.js "CPU" "RAM" "GPU" "CPU//core"
@@ -17,7 +17,7 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const FIELDNOTES_DIR = path.join(__dirname, '../src/data/pages/fieldnotes');
+const WIKINOTES_DIR = path.join(__dirname, '../src/data/pages/fieldnotes');
 
 // --- ANSI helpers ---
 
@@ -35,21 +35,21 @@ const C = {
 const CHECK = `${C.green}✓${C.reset}`;
 const CROSS = `${C.red}✗${C.reset}`;
 
-// --- Parse all fieldnotes ---
+// --- Parse all wikinotes ---
 
-function parseAllFieldnotes() {
-  if (!fs.existsSync(FIELDNOTES_DIR)) {
-    console.error('Fieldnotes directory not found:', FIELDNOTES_DIR);
+function parseAllWikinotes() {
+  if (!fs.existsSync(WIKINOTES_DIR)) {
+    console.error('Wikinotes directory not found:', WIKINOTES_DIR);
     process.exit(1);
   }
 
-  const files = fs.readdirSync(FIELDNOTES_DIR)
+  const files = fs.readdirSync(WIKINOTES_DIR)
     .filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md');
 
   const notes = [];
 
   for (const filename of files) {
-    const filePath = path.join(FIELDNOTES_DIR, filename);
+    const filePath = path.join(WIKINOTES_DIR, filename);
     const fileContent = fs.readFileSync(filePath, 'utf-8');
     const { data: frontmatter, content: bodyMd } = matter(fileContent);
 
@@ -182,7 +182,7 @@ function resolveAddress(query, notes) {
     return null;
   }
 
-  console.error(`${C.red}NOT FOUND${C.reset} "${query}" — no fieldnote matches this address, alias, or segment.`);
+  console.error(`${C.red}NOT FOUND${C.reset} "${query}" — no wikinote matches this address, alias, or segment.`);
   return null;
 }
 
@@ -410,7 +410,7 @@ function formatAllOutput(target, notes) {
 
 function printUsage() {
   console.log(`
-${C.bold}analyze-pairs.js${C.reset} — Relationship analyzer for fieldnote pairs
+${C.bold}analyze-pairs.js${C.reset} — Relationship analyzer for wikinote pairs
 
 ${C.bold}Usage:${C.reset}
   ${C.cyan}Pair mode${C.reset}   node scripts/analyze-pairs.js "addr1" "addr2" ["addr3" ...]
@@ -438,8 +438,8 @@ if (args.length === 0) {
   process.exit(0);
 }
 
-const notes = parseAllFieldnotes();
-console.log(`${C.dim}Scanned ${notes.length} fieldnotes.${C.reset}`);
+const notes = parseAllWikinotes();
+console.log(`${C.dim}Scanned ${notes.length} wikinotes.${C.reset}`);
 
 // Detect mode
 const allFlagIdx = args.indexOf('--all');

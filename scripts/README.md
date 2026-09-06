@@ -1,6 +1,6 @@
 # Content tooling
 
-Operational reference for the build-time content pipeline. Supported authoring syntax is documented only in [`src/data/pages/SYNTAX.md`](../src/data/pages/SYNTAX.md); fieldnote workflows live in [`fieldnotes/README.md`](../src/data/pages/fieldnotes/README.md).
+Operational reference for the build-time content pipeline. Supported authoring syntax is documented only in [`src/data/pages/SYNTAX.md`](../src/data/pages/SYNTAX.md); wikinote workflows live in [`fieldnotes/README.md`](../src/data/pages/fieldnotes/README.md).
 
 ## Commands
 
@@ -38,8 +38,8 @@ The active per-document pipeline is:
 |---|---|
 | `src/data/posts.generated.json` | Full compiled Projects, Essays and Technical content |
 | `src/data/posts-index.generated.json` | Lightweight listing/search metadata |
-| `src/data/fieldnotes-index.generated.json` | Fieldnote metadata without full bodies |
-| `public/fieldnotes/{uid}.json` | One compiled body per fieldnote |
+| `src/data/fieldnotes-index.generated.json` | Wikinote metadata without full bodies |
+| `public/fieldnotes/{uid}.json` | One compiled body per wikinote |
 | `src/data/categories.generated.json` | Category configuration |
 | `src/data/graph-relevance.generated.json` | Graph relevance and bridge metrics |
 | `public/og-manifest.json` | Social metadata lookup |
@@ -54,9 +54,9 @@ Generated files must not be edited by hand.
 
 ## Validation
 
-`validate-fieldnotes.js` runs automatically. Errors fail the build; warnings and informational findings do not. Active checks are controlled by `compiler.config.js`:
+`validate-wikinotes.js` runs automatically. Errors fail the build; warnings and informational findings do not. Active checks are controlled by `compiler.config.js`:
 
-- Regular-post and fieldnote Wiki references.
+- Regular-post and wikinote Wiki references.
 - Missing parent segments.
 - Segment and alias collisions.
 - Optional circular-reference detection.
@@ -69,7 +69,7 @@ Malformed or retired syntax leaking into output is caught by the syntax guard. R
 | Script | Role |
 |---|---|
 | `build-content.js` | Compilation, global link resolution and generated outputs |
-| `validate-fieldnotes.js` | Graph/content integrity checks |
+| `validate-wikinotes.js` | Graph/content integrity checks |
 | `resolve-issues.js` | Interactive fixes emitted by validation |
 | `preflight.js` | Address and collision checks before creating notes |
 | `move-hierarchy.js` | Planned/dry-run hierarchy moves and reference updates |
@@ -79,4 +79,4 @@ Malformed or retired syntax leaking into output is caught by the syntax guard. R
 | `compute-graph-relevance.js` | Graph scoring data |
 | `obsidian-export.js` / `obsidian-import.js` | Obsidian synchronization |
 
-Detailed flags and edge cases for fieldnote operations remain in the fieldnotes management guide rather than being duplicated here.
+Detailed flags and edge cases for wikinote operations remain in the wikinotes management guide rather than being duplicated here.

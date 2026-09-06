@@ -1,6 +1,6 @@
 /**
  * Claude Code hook: PostToolUse on Write|Edit
- * Detects edits to fieldnote .md files and reminds Claude to build + check references.
+ * Detects edits to wikinote .md files and reminds Claude to build + check references.
  *
  * Exit 0 + JSON additionalContext = reminder shown to Claude.
  * Exit 0 with no output = no action.
@@ -12,7 +12,7 @@ process.stdin.on('end', () => {
     const data = JSON.parse(input);
     const filePath = (data.tool_input?.file_path || '').replace(/\\/g, '/');
 
-    // Only trigger for fieldnotes .md files (not README)
+    // Only trigger for wikinotes .md files (not README)
     if (
       !filePath.includes('src/data/pages/fieldnotes/') ||
       !filePath.endsWith('.md') ||
@@ -25,7 +25,7 @@ process.stdin.on('end', () => {
       hookSpecificOutput: {
         hookEventName: 'PostToolUse',
         additionalContext:
-          'FIELDNOTE MODIFIED — when all fieldnote changes are complete, run:\n' +
+          'WIKINOTE MODIFIED — when all wikinote changes are complete, run:\n' +
           '1. npm run build\n' +
           '2. node scripts/check-references.js',
       },

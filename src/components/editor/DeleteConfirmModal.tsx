@@ -1,10 +1,10 @@
-// Two-phase deletion modal for fieldnotes:
+// Two-phase deletion modal for wikinotes:
 // Phase 1 — Impact overview: stub conversion (safe default) vs permanent deletion
 // Phase 2 — Permanent deletion details: trailing ref cleanup + body ref handling
 
 import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import type { DeleteAnalysis } from './useFieldnoteEditor';
+import type { DeleteAnalysis } from './useWikinoteEditor';
 
 type Phase = 'overview' | 'permanent';
 

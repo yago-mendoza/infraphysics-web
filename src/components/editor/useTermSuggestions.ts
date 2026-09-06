@@ -1,8 +1,8 @@
-// Detects unlinked mentions of known fieldnote names in the editor body
+// Detects unlinked mentions of known wikinote names in the editor body
 // and surfaces them as suggestions in the diagnostics terminal.
 
 import { useMemo, useState, useDeferredValue, useCallback, useEffect } from 'react';
-import type { FieldNoteMeta } from '../../types';
+import type { WikiNoteMeta } from '../../types';
 
 export interface TermSuggestion {
   uid: string;
@@ -88,7 +88,7 @@ function lineAt(raw: string, offset: number): number {
 
 export function useTermSuggestions(
   rawContent: string,
-  allNotes: FieldNoteMeta[],
+  allNotes: WikiNoteMeta[],
   currentUid: string | null,
 ): { suggestions: TermSuggestion[]; dismiss: (s: TermSuggestion) => void } {
   const deferredContent = useDeferredValue(rawContent);

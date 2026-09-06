@@ -1,6 +1,6 @@
-# Fieldnotes Management Guide
+# Wikinotes Management Guide
 
-Developer reference for managing the fieldnotes knowledge graph. This covers the operational side — creating, renaming, deleting, and auditing notes. For the **content authoring format** (frontmatter, syntax, trailing refs, wiki-links), see the [Second Brain section in the pages README](../README.md#second-brain-fieldnotes). For **build pipeline internals** (shared compilation, cache and Shiki config), see [scripts/README.md](../../../scripts/README.md).
+Developer reference for managing the wikinotes knowledge graph. This covers the operational side — creating, renaming, deleting, and auditing notes. For the **content authoring format** (frontmatter, syntax, trailing refs, wiki-links), see the [Second Brain section in the pages README](../README.md#second-brain-wikinotes). For **build pipeline internals** (shared compilation, cache and Shiki config), see [scripts/README.md](../../../scripts/README.md).
 
 ---
 
@@ -19,11 +19,11 @@ Developer reference for managing the fieldnotes knowledge graph. This covers the
 
 ## Why This File Matters
 
-Fieldnotes form a **bidirectional graph**. Every `[[wiki-link]]` creates a relationship — in the body, in trailing refs, and in other posts that reference fieldnotes. References now use **stable UIDs** (`[[uid]]`), so renaming an address only changes ONE file's frontmatter. Deletion still breaks references across the graph. **Do not edit addresses or filenames by hand.** Use the scripts below — they handle validation and file operations correctly.
+Wikinotes form a **bidirectional graph**. Every `[[wiki-link]]` creates a relationship — in the body, in trailing refs, and in other posts that reference wikinotes. References now use **stable UIDs** (`[[uid]]`), so renaming an address only changes ONE file's frontmatter. Deletion still breaks references across the graph. **Do not edit addresses or filenames by hand.** Use the scripts below — they handle validation and file operations correctly.
 
 The build pipeline validates the graph on every run. If you break a reference, the build will tell you exactly what's wrong and where. The workflow is: make changes → run build → read errors → fix → repeat.
 
-**Automation and AI assistants:** Consult this file before any fieldnotes operation; it is the repository's operational source of truth for those changes.
+**Automation and AI assistants:** Consult this file before any wikinotes operation; it is the repository's operational source of truth for those changes.
 
 ---
 
@@ -31,12 +31,12 @@ The build pipeline validates the graph on every run. If you break a reference, t
 
 All scripts live in `scripts/`. For full parameter docs, output formats, and implementation details, see **[scripts/README.md](../../../scripts/README.md)**. This section covers only the workflow essentials.
 
-- **`rename-address.js`** — Renames a single fieldnote address. Does NOT cascade to children. **Always dry-run first** (`node scripts/rename-address.js "old" "new"`), then `--apply`.
+- **`rename-address.js`** — Renames a single wikinote address. Does NOT cascade to children. **Always dry-run first** (`node scripts/rename-address.js "old" "new"`), then `--apply`.
 - **`move-hierarchy.js`** — Cascading rename: moves a note and all its descendants to a new address prefix. **Always dry-run first**, then `--apply`. Use this instead of `rename-address.js` when the note has children.
 - **`check-references.js`** — Deep integrity audit (isolated notes, weak parents, duplicate trailing refs, redundant refs, fuzzy duplicates, segment collisions). Not part of the build — run manually after bulk changes.
 - **`analyze-pairs.js`** — Relationship analyzer. Answers "how are A and B connected?" via structural, trailing ref, and body mention checks. Supports fuzzy address resolution.
 - **`preflight.js`** — Pre-creation briefing. Takes existing addresses (fuzzy-resolved) and dumps content, trailing refs (with bilateral warnings), interaction candidates, and cross-ref matrix. Use `--new "addr"` to collision-check proposed addresses. Run before creating or enriching notes.
-- **`validate-fieldnotes.js`** — Build-time validator. Called automatically by every build. See [Build-Time Validation](#build-time-validation) below.
+- **`validate-wikinotes.js`** — Build-time validator. Called automatically by every build. See [Build-Time Validation](#build-time-validation) below.
 - **`resolve-issues.js`** — Interactive issue resolver. Called via `npm run content:fix`. Prompts to fix segment collisions and missing parents. See [Interactive Mode](#interactive-mode) below.
 
 **Build commands** (all run the full validation pipeline):
@@ -57,11 +57,11 @@ npm run content:fix    # compile + interactive issue resolution
 
 ### Pre-creation check: segment collisions
 
-Before creating any fieldnote, search existing addresses for the last segment of the proposed address (case-insensitive). For example, before creating `X//Y//cache`, check if `cache` already appears anywhere — even as a non-terminal segment like `CPU//cache//L1`. If the segment exists, evaluate whether the new note is the same concept or genuinely distinct. This avoids creating notes that immediately trigger build-time collision warnings and require rework.
+Before creating any wikinote, search existing addresses for the last segment of the proposed address (case-insensitive). For example, before creating `X//Y//cache`, check if `cache` already appears anywhere — even as a non-terminal segment like `CPU//cache//L1`. If the segment exists, evaluate whether the new note is the same concept or genuinely distinct. This avoids creating notes that immediately trigger build-time collision warnings and require rework.
 
 Quick check: search `address:` lines in `src/data/pages/fieldnotes/*.md` for the segment name.
 
-### Creating a single fieldnote
+### Creating a single wikinote
 
 1. Run the [pre-creation check](#pre-creation-check-segment-collisions) for the proposed address
 2. Create `src/data/pages/fieldnotes/{uid}.md` where `{uid}` is a unique identifier (assigned by migration script or manually generated)
@@ -70,7 +70,7 @@ Quick check: search `address:` lines in `src/data/pages/fieldnotes/*.md` for the
 5. Run `npm run build` — fix any errors
 6. If the build warns about missing parents, create stub notes for them
 
-### Creating fieldnotes in bulk
+### Creating wikinotes in bulk
 
 1. Run the [pre-creation check](#pre-creation-check-segment-collisions) for each proposed address
 2. Create all the `.md` files
@@ -119,7 +119,7 @@ Note: With UID-based references, children's connections remain intact even if th
 
 </details>
 
-### Deleting a fieldnote
+### Deleting a wikinote
 
 1. Delete the `.md` file
 2. Run `npm run build` — the build will ERROR on every broken `[[reference]]` to the deleted note
@@ -145,7 +145,7 @@ The build runs a 7-phase integrity check automatically. Errors fail the build (e
 
 | Phase | What it catches | Severity |
 |---|---|---|
-| 1. Reference integrity | Broken `[[wiki-links]]` in fieldnotes and posts | **ERROR** |
+| 1. Reference integrity | Broken `[[wiki-links]]` in wikinotes and posts | **ERROR** |
 | 2. Self-references | Notes linking to themselves in trailing refs | WARN |
 | 3. Bare trailing refs | Trailing refs without ` : : ` annotation | **ERROR** |
 | 4. Parent hierarchy | Missing parent notes in the address tree | WARN |
@@ -160,7 +160,7 @@ The terminal output after every build is your primary debugging tool. It tells y
 ```
 ERROR  [[chip//MCU]] in "CPU" -> no block
 ```
-→ The note at address `CPU` has a `[[chip//MCU]]` reference, but no fieldnote with address `chip//MCU` exists. Either create it or fix the reference.
+→ The note at address `CPU` has a `[[chip//MCU]]` reference, but no wikinote with address `chip//MCU` exists. Either create it or fix the reference.
 
 ```
 WARN   "laptop" has no block (parent of laptop//UI +1 more)
@@ -184,8 +184,8 @@ Every validation output line includes a bracketed error code for easy scanning a
 
 | Code | Severity | Fixable? | Meaning |
 |---|---|---|---|
-| `BROKEN_REF` | ERROR | No | Inline `[[ref]]` to nonexistent fieldnote |
-| `BROKEN_WIKILINK` | ERROR | No | `[[wiki-link]]` in post to nonexistent fieldnote |
+| `BROKEN_REF` | ERROR | No | Inline `[[ref]]` to nonexistent wikinote |
+| `BROKEN_WIKILINK` | ERROR | No | `[[wiki-link]]` in post to nonexistent wikinote |
 | `SELF_REF` | WARN | No | Note trails a ref to itself |
 | `BARE_TRAILING_REF` | ERROR | No | Trailing ref without ` : : ` annotation |
 | `MISSING_PARENT` | WARN | Yes | Parent address has no dedicated note |
@@ -249,7 +249,7 @@ When you answer **(s)** to any collision, the resolver collects the merge instru
 ╰──────────────────────────────────────────────────────────────────╯
 
 ┌────────────────────────────────────────────────────────────────────┐
-│  Merge the following fieldnotes. For each group:                  │
+│  Merge the following wikinotes. For each group:                  │
 │  1. Run the rename commands with --apply                          │
 │  2. Manually combine the note bodies (keep the richer content)    │
 │  3. After all merges, run npm run build to verify                 │
@@ -279,10 +279,10 @@ Every error and warning you might encounter, where it comes from, and what to do
 |---|---|---|
 | `ERROR: {file} missing 'uid' in frontmatter` | A `.md` file has no `uid` field | Add `uid: "..."` to the YAML frontmatter |
 | `ERROR: {file} missing 'address' in frontmatter` | A `.md` file has no `address` field | Add `address: "..."` to the YAML frontmatter |
-| `ERROR: duplicate fieldnote UID "{uid}"` | Two notes share the same UID | Change one UID to be unique |
-| `ERROR  [[{uid}]] in "{address}" -> no block` | Inline `[[uid]]` points to nonexistent fieldnote | Create the missing note or fix the reference |
-| `ERROR  trailing [[{uid}]] in "{address}" -> no block` | Trailing ref points to nonexistent fieldnote | Same — create or fix |
-| `ERROR  [[{uid}]] in post "{id}" -> no fieldnote` | Wiki-link in a regular post (thread, project, etc.) points to nonexistent fieldnote | Create the fieldnote or remove the wiki-link from the post |
+| `ERROR: duplicate wikinote UID "{uid}"` | Two notes share the same UID | Change one UID to be unique |
+| `ERROR  [[{uid}]] in "{address}" -> no block` | Inline `[[uid]]` points to nonexistent wikinote | Create the missing note or fix the reference |
+| `ERROR  trailing [[{uid}]] in "{address}" -> no block` | Trailing ref points to nonexistent wikinote | Same — create or fix |
+| `ERROR  [[{uid}]] in post "{id}" -> no wikinote` | Wiki-link in a regular post (thread, project, etc.) points to nonexistent wikinote | Create the wikinote or remove the wiki-link from the post |
 
 ### Build warnings (logged, build continues)
 
@@ -306,7 +306,7 @@ Every error and warning you might encounter, where it comes from, and what to do
 
 | Message | Cause | Fix |
 |---|---|---|
-| `ERROR: No file found with address "{address}"` | No fieldnote has the old address in frontmatter | Check the address spelling |
+| `ERROR: No file found with address "{address}"` | No wikinote has the old address in frontmatter | Check the address spelling |
 | `ERROR: File {filename} has address "{actual}" but expected "{old}"` | File exists but frontmatter address doesn't match | Fix the frontmatter or use the correct address |
 | `ERROR: Target UID collision: {uid}` | A note with the same UID already exists at the target | Choose a different target address or merge the notes |
 
@@ -372,7 +372,7 @@ Some text here.      ← this line breaks the trailing ref sequence
 
 `|` in trailing refs sets display text (which is stripped for connections anyway). ` : : ` sets the annotation that appears in the UI as an "Interaction" description. Trailing refs live under a `## Interactions` heading as list items.
 
-Interaction annotations are **edge content**, not node content. A fieldnote body
+Interaction annotations are **edge content**, not node content. A wikinote body
 describes the identity or nature of its concept; an interaction describes only
 how two concepts relate. For `A → B`, the relationship is outgoing from `A` and
 incoming (a backlink) to `B`, but its annotation is not intrinsic full-text
@@ -415,13 +415,13 @@ The cache is also fully invalidated when `compiler.config.js` changes.
 
 ## Obsidian Sync
 
-> **Status: available but not the primary workflow.** Fieldnotes are authored and edited via the localhost editor (Second Brain UI). Obsidian is a separate thinking space — not a mirror of this system. These scripts exist for one-off exports or if the workflow changes in the future. See the vault's `README.md` for the philosophical boundary between the two systems.
+> **Status: available but not the primary workflow.** Wikinotes are authored and edited via the localhost editor (Second Brain UI). Obsidian is a separate thinking space — not a mirror of this system. These scripts exist for one-off exports or if the workflow changes in the future. See the vault's `README.md` for the philosophical boundary between the two systems.
 
-Bidirectional sync between infraphysics fieldnotes and an Obsidian vault.
+Bidirectional sync between infraphysics wikinotes and an Obsidian vault.
 
 ### Export: `npm run obsidian:export [output-dir]`
 
-Reads all fieldnotes → writes an Obsidian vault structure (default: `./obsidian-vault`).
+Reads all wikinotes → writes an Obsidian vault structure (default: `./obsidian-vault`).
 
 | Conversion | Example |
 |---|---|
@@ -434,10 +434,10 @@ Reads all fieldnotes → writes an Obsidian vault structure (default: `./obsidia
 
 ### Import: `npm run obsidian:import [vault-dir]`
 
-Reads Obsidian vault → syncs back to fieldnotes (default: `./obsidian-vault`).
+Reads Obsidian vault → syncs back to wikinotes (default: `./obsidian-vault`).
 
-- Notes with `infraphysics-uid` → update existing fieldnote
-- Notes without → generate new UID, create new fieldnote
+- Notes with `infraphysics-uid` → update existing wikinote
+- Notes without → generate new UID, create new wikinote
 - `[[name]]` → resolved to `[[uid\|name]]` (ambiguities reported, left unresolved)
 - `> [!TYPE]` callouts → `{bkqt/TYPE}...{/bkqt}`
 - Deletions → detected and reported only (not auto-deleted)

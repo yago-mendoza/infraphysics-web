@@ -1,9 +1,9 @@
-// Address autocomplete hook — terminal-style path completion for fieldnote addresses.
+// Address autocomplete hook — terminal-style path completion for wikinote addresses.
 // Builds a segment map from allNotes, offers prefix-filtered suggestions,
 // and supports Tab/Shift+Tab cycling.
 
 import { useMemo, useState, useCallback, useEffect } from 'react';
-import type { FieldNoteMeta } from '../../types';
+import type { WikiNoteMeta } from '../../types';
 import { parseAddress } from '../../lib/content/address.js';
 
 export interface Suggestion {
@@ -27,7 +27,7 @@ export interface AddressAutocomplete {
  * Build segment map: parentPrefix → Set<childSegment>
  * Key "" → root segments, Key "ML" → children of ML, etc.
  */
-function buildSegmentMap(allNotes: FieldNoteMeta[]): Map<string, Map<string, number>> {
+function buildSegmentMap(allNotes: WikiNoteMeta[]): Map<string, Map<string, number>> {
   // parentPrefix → child segment → count of grandchildren
   const segMap = new Map<string, Map<string, number>>();
 
@@ -73,7 +73,7 @@ function buildSegmentMap(allNotes: FieldNoteMeta[]): Map<string, Map<string, num
 }
 
 export function useAddressAutocomplete(
-  allNotes: FieldNoteMeta[],
+  allNotes: WikiNoteMeta[],
   address: string,
 ): AddressAutocomplete {
   const [selectedIndex, setSelectedIndex] = useState(0);

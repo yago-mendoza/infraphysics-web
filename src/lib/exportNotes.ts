@@ -1,7 +1,7 @@
-// Export fieldnotes as LLM-friendly markdown.
+// Export wikinotes as LLM-friendly markdown.
 // Pure functions — no React dependency.
 
-import type { FieldNoteMeta } from '../types';
+import type { WikiNoteMeta } from '../types';
 import type { Connection } from './brainIndex';
 
 export interface ExportResult {
@@ -21,7 +21,7 @@ export interface ExportOptions {
 // HTML → plain text
 // ---------------------------------------------------------------------------
 
-/** Convert compiled fieldnote HTML to plain text, preserving wiki-link UIDs. */
+/** Convert compiled wikinote HTML to plain text, preserving wiki-link UIDs. */
 export function htmlToText(html: string): string {
   const doc = new DOMParser().parseFromString(html, 'text/html');
 
@@ -70,7 +70,7 @@ export function htmlToText(html: string): string {
 // ---------------------------------------------------------------------------
 
 export function formatNoteSection(
-  note: FieldNoteMeta,
+  note: WikiNoteMeta,
   connections: Connection[],
   opts: ExportOptions,
 ): string {
@@ -114,7 +114,7 @@ export function formatNoteSection(
 // ---------------------------------------------------------------------------
 
 export async function exportNotesAsMarkdown(
-  notes: FieldNoteMeta[],
+  notes: WikiNoteMeta[],
   connectionsMap: Map<string, Connection[]>,
   opts: ExportOptions,
 ): Promise<ExportResult> {
@@ -171,7 +171,7 @@ export async function exportNotesAsMarkdown(
 // Quick word estimate from searchText (no fetch needed)
 // ---------------------------------------------------------------------------
 
-export function estimateWords(notes: FieldNoteMeta[]): number {
+export function estimateWords(notes: WikiNoteMeta[]): number {
   let total = 0;
   for (const n of notes) {
     total += (n.searchText || '').split(/\s+/).filter(Boolean).length;

@@ -1,19 +1,19 @@
 // CodeMirror autocomplete source for @ universal references
-// Triggers on @ at word boundary, searches fieldnotes + articles + URLs
+// Triggers on @ at word boundary, searches wikinotes + articles + URLs
 
 import type { CompletionContext, CompletionResult, Completion } from '@codemirror/autocomplete';
 import type { EditorView } from '@codemirror/view';
-import type { FieldNoteMeta } from '../../types';
+import type { WikiNoteMeta } from '../../types';
 import type { Post } from '../../types';
 
 const URL_RE = /^[a-z0-9][-a-z0-9]*\.[a-z]{2,}/i;
 
 /**
  * Creates a CompletionSource that triggers on @ and provides universal reference insertion.
- * Searches fieldnotes (tier 1), articles (tier 2), URL detection, and plain text fallback.
+ * Searches wikinotes (tier 1), articles (tier 2), URL detection, and plain text fallback.
  */
 export function createAtAutocomplete(
-  getNotes: () => FieldNoteMeta[],
+  getNotes: () => WikiNoteMeta[],
   getPosts: () => Post[],
   currentUid: string | null,
   onCreateRequest?: (name: string) => void,
@@ -37,9 +37,9 @@ export function createAtAutocomplete(
 
     const options: Completion[] = [];
 
-    // --- Tier 1: Fieldnotes ---
+    // --- Tier 1: Wikinotes ---
     const notes = getNotes();
-    const scoredNotes: { note: FieldNoteMeta; score: number }[] = [];
+    const scoredNotes: { note: WikiNoteMeta; score: number }[] = [];
 
     for (const note of notes) {
       if (note.id === currentUid) continue;

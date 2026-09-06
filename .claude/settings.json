@@ -21,7 +21,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-fieldnote-apply.js\""
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-wikinote-apply.js\""
           }
         ]
       }
@@ -32,7 +32,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-fieldnote-edit.js\""
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-wikinote-edit.js\""
           }
         ]
       }

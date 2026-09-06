@@ -116,15 +116,15 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
     initBrainIndex().then(index => { if (!cancelled) setBrainIndex(index); }).catch(() => {});
     return () => { cancelled = true; };
   }, [isOpen, brainIndex]);
-  const allFieldNotes = brainIndex?.allFieldNotes ?? [];
-  const searchableConcepts = useMemo(() => allFieldNotes.map(note => {
+  const allWikiNotes = brainIndex?.allWikiNotes ?? [];
+  const searchableConcepts = useMemo(() => allWikiNotes.map(note => {
     const address = note.address || '';
     const lastSegment = address.includes('//') ? address.split('//').pop() || '' : address;
     return {
       note,
       haystack: [note.name || '', lastSegment, ...(note.aliases || [])].join('\u0000').toLowerCase(),
     };
-  }), [allFieldNotes]);
+  }), [allWikiNotes]);
 
   const executeAndClose = useCallback((fn: () => void) => {
     fn();

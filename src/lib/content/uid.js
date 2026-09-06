@@ -1,4 +1,4 @@
-// UID generation for fieldnotes
+// UID generation for wikinotes
 // Browser-safe — uses crypto.getRandomValues (available in both Node 19+ and browsers)
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';

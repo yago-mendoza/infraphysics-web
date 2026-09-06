@@ -1,7 +1,7 @@
 import path from 'path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { fieldnoteEditorPlugin } from './vite-plugins/fieldnote-editor.js';
+import { wikinoteEditorPlugin } from './vite-plugins/wikinote-editor.js';
 
 export default defineConfig({
   server: {
@@ -11,7 +11,7 @@ export default defineConfig({
       ignored: ['**/room/chrome-wiki-audit/**'],
     },
   },
-  plugins: [react(), fieldnoteEditorPlugin()],
+  plugins: [react(), wikinoteEditorPlugin()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

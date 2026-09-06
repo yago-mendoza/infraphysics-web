@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// obsidian-import.js — Import Obsidian vault back to fieldnotes
+// obsidian-import.js — Import Obsidian vault back to wikinotes
 //
 // Usage: node scripts/obsidian-import.js [vault-dir]
 //   Default input: ./obsidian-vault
@@ -23,24 +23,24 @@ import { customAlphabet } from 'nanoid';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const FIELDNOTES_DIR = path.join(__dirname, '../src/data/pages/fieldnotes');
-const TRANSFERS_DIR = path.join(FIELDNOTES_DIR, 'transfers');
+const WIKINOTES_DIR = path.join(__dirname, '../src/data/pages/fieldnotes');
+const TRANSFERS_DIR = path.join(WIKINOTES_DIR, 'transfers');
 
 const vaultDir = process.argv[2] || path.join(__dirname, '../obsidian-vault');
 
 const generateUid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 8);
 
-// --- Parse existing fieldnotes ---
+// --- Parse existing wikinotes ---
 
-function parseExistingFieldnotes() {
-  const files = fs.readdirSync(FIELDNOTES_DIR)
+function parseExistingWikinotes() {
+  const files = fs.readdirSync(WIKINOTES_DIR)
     .filter(f => f.endsWith('.md') && !f.startsWith('_'));
 
   const byUid = new Map();
   const nameToUids = new Map(); // name → [uid, ...] (can be ambiguous)
 
   for (const filename of files) {
-    const filePath = path.join(FIELDNOTES_DIR, filename);
+    const filePath = path.join(WIKINOTES_DIR, filename);
     const raw = fs.readFileSync(filePath, 'utf-8');
     const { data: fm } = matter(raw);
 
@@ -159,9 +159,9 @@ function convertCallouts(text) {
   return result.join('\n');
 }
 
-// --- Build fieldnote frontmatter ---
+// --- Build wikinote frontmatter ---
 
-function buildFieldnoteFrontmatter(uid, address, name, date, aliases, distinct, supersedes) {
+function buildWikinoteFrontmatter(uid, address, name, date, aliases, distinct, supersedes) {
   const lines = ['---'];
   lines.push(`uid: ${uid}`);
   lines.push(`address: "${address}"`);
@@ -187,7 +187,7 @@ if (!fs.existsSync(vaultDir)) {
   process.exit(1);
 }
 
-const { byUid, nameToUids } = parseExistingFieldnotes();
+const { byUid, nameToUids } = parseExistingWikinotes();
 const vaultFiles = findMdFiles(vaultDir);
 
 const report = [];
@@ -217,9 +217,9 @@ for (const { fullPath, relPath } of vaultFiles) {
   if (uid && byUid.has(uid)) {
     // Update existing note
     seenUids.add(uid);
-    const frontmatter = buildFieldnoteFrontmatter(uid, address, name, date, aliases, distinct, supersedes);
+    const frontmatter = buildWikinoteFrontmatter(uid, address, name, date, aliases, distinct, supersedes);
     const content = frontmatter + '\n\n' + convertedBody + '\n';
-    const targetPath = path.join(FIELDNOTES_DIR, `${uid}.md`);
+    const targetPath = path.join(WIKINOTES_DIR, `${uid}.md`);
     fs.writeFileSync(targetPath, content, 'utf-8');
     updated++;
     report.push(`UPDATE  ${address} (${uid})`);
@@ -227,9 +227,9 @@ for (const { fullPath, relPath } of vaultFiles) {
     // Create new note
     const newUid = generateUid();
     seenUids.add(newUid);
-    const frontmatter = buildFieldnoteFrontmatter(newUid, address, name, date, aliases, distinct, supersedes);
+    const frontmatter = buildWikinoteFrontmatter(newUid, address, name, date, aliases, distinct, supersedes);
     const content = frontmatter + '\n\n' + convertedBody + '\n';
-    const targetPath = path.join(FIELDNOTES_DIR, `${newUid}.md`);
+    const targetPath = path.join(WIKINOTES_DIR, `${newUid}.md`);
     fs.writeFileSync(targetPath, content, 'utf-8');
     created++;
     report.push(`CREATE  ${address} (${newUid})`);

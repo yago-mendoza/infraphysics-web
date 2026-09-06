@@ -13,7 +13,7 @@ process.stdin.on('end', () => {
     const data = JSON.parse(input);
     const command = data.tool_input?.command || '';
 
-    // Only trigger for fieldnote scripts with --apply
+    // Only trigger for wikinote scripts with --apply
     if (
       !/\b(rename-address|move-hierarchy)\.js\b/.test(command) ||
       !command.includes('--apply')
@@ -25,9 +25,9 @@ process.stdin.on('end', () => {
       hookSpecificOutput: {
         hookEventName: 'PreToolUse',
         permissionDecision: 'allow',
-        permissionDecisionReason: 'Fieldnote script with --apply detected',
+        permissionDecisionReason: 'Wikinote script with --apply detected',
         additionalContext:
-          'FIELDNOTE APPLY — verify before proceeding:\n' +
+          'WIKINOTE APPLY — verify before proceeding:\n' +
           '- Did you dry-run this script first and review the output?\n' +
           '- After applying: npm run build + node scripts/check-references.js',
       },

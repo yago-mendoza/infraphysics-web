@@ -1,4 +1,4 @@
-// CodeMirror 6 editor for fieldnote markdown editing
+// CodeMirror 6 editor for wikinote markdown editing
 // Lazy-loaded via React.lazy — only imported on localhost when edit mode activates
 
 import React, { useEffect, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
@@ -10,7 +10,7 @@ import { defaultKeymap, history, historyKeymap, indentMore, indentLess } from '@
 import { oneDark } from '@codemirror/theme-one-dark';
 import { createWikiAutocomplete } from './WikiAutocomplete';
 import { createAtAutocomplete } from './AtAutocomplete';
-import type { FieldNoteMeta, Post } from '../../types';
+import type { WikiNoteMeta, Post } from '../../types';
 
 interface HighlightRange {
   from: number;
@@ -21,7 +21,7 @@ interface Props {
   value: string;
   onChange: (value: string) => void;
   onSave: () => void;
-  allNotes: FieldNoteMeta[];
+  allNotes: WikiNoteMeta[];
   allPosts: Post[];
   currentUid: string | null;
   onNavigate?: (uid: string) => void;

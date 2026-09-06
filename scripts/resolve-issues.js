@@ -1,4 +1,4 @@
-// resolve-issues.js — Interactive issue resolver for fieldnotes validation
+// resolve-issues.js — Interactive issue resolver for wikinotes validation
 //
 // Called by build-content.js when --interactive flag is set.
 // Prompts the user to fix promptable issues (segment collisions, missing parents).
@@ -15,7 +15,7 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const FIELDNOTES_DIR = path.join(__dirname, '../src/data/pages/fieldnotes');
+const WIKINOTES_DIR = path.join(__dirname, '../src/data/pages/fieldnotes');
 
 // ANSI color codes
 const G = '\x1b[32m';   // green
@@ -35,7 +35,7 @@ function addressToFilename(address) {
 // ── Frontmatter modification (regex-based, preserves quoting style) ──
 
 /**
- * Add addresses to the `distinct` array in a fieldnote's frontmatter.
+ * Add addresses to the `distinct` array in a wikinote's frontmatter.
  * Uses regex to avoid gray-matter.stringify which changes quoting style.
  *
  * Handles three cases:
@@ -145,7 +145,7 @@ function randomStubPhrase() {
 function generateUid() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const existing = new Set(
-    fs.readdirSync(FIELDNOTES_DIR)
+    fs.readdirSync(WIKINOTES_DIR)
       .filter(f => f.endsWith('.md'))
       .map(f => f.replace('.md', ''))
   );
@@ -158,20 +158,20 @@ function generateUid() {
 }
 
 /**
- * Create a minimal stub fieldnote for a missing parent address.
+ * Create a minimal stub wikinote for a missing parent address.
  */
 function createStubNote(address) {
   // Check if any existing file already has this address
-  const files = fs.readdirSync(FIELDNOTES_DIR).filter(f => f.endsWith('.md') && f !== 'README.md');
+  const files = fs.readdirSync(WIKINOTES_DIR).filter(f => f.endsWith('.md') && f !== 'README.md');
   for (const file of files) {
-    const content = fs.readFileSync(path.join(FIELDNOTES_DIR, file), 'utf-8');
+    const content = fs.readFileSync(path.join(WIKINOTES_DIR, file), 'utf-8');
     const addrMatch = content.match(/^address:\s*["']?(.+?)["']?\s*$/m);
     if (addrMatch && addrMatch[1] === address) return { created: false, reason: 'already exists' };
   }
 
   const uid = generateUid();
   const filename = `${uid}.md`;
-  const filePath = path.join(FIELDNOTES_DIR, filename);
+  const filePath = path.join(WIKINOTES_DIR, filename);
   const today = new Date().toISOString().split('T')[0];
   const name = address.split('//').pop().trim();
   const phrase = randomStubPhrase();
@@ -181,17 +181,17 @@ function createStubNote(address) {
 }
 
 /**
- * Find the .md file for a given fieldnote address.
+ * Find the .md file for a given wikinote address.
  * First tries the filename convention, then scans all files.
  */
 function findFileForAddress(address) {
   const conventionName = addressToFilename(address);
-  const conventionPath = path.join(FIELDNOTES_DIR, conventionName);
+  const conventionPath = path.join(WIKINOTES_DIR, conventionName);
   if (fs.existsSync(conventionPath)) return conventionPath;
 
-  const files = fs.readdirSync(FIELDNOTES_DIR).filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md');
+  const files = fs.readdirSync(WIKINOTES_DIR).filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md');
   for (const file of files) {
-    const filePath = path.join(FIELDNOTES_DIR, file);
+    const filePath = path.join(WIKINOTES_DIR, file);
     const content = fs.readFileSync(filePath, 'utf-8');
     const addrMatch = content.match(/^address:\s*["']?(.+?)["']?\s*$/m);
     if (addrMatch && addrMatch[1] === address) return filePath;
@@ -212,7 +212,7 @@ const QUIT = Symbol('quit');
 
 /**
  * Resolve all promptable issues interactively.
- * @param {Array} issues - Structured issues from validateFieldnotes()
+ * @param {Array} issues - Structured issues from validateWikinotes()
  * @returns {Promise<{ filesModified: number }>}
  */
 export async function resolveIssues(issues) {
@@ -426,7 +426,7 @@ function printSummary(filesModified) {
 
     // Build the copyable instruction block
     const lines = [];
-    lines.push('Merge the following fieldnotes. For each group:');
+    lines.push('Merge the following wikinotes. For each group:');
     lines.push('1. Run the rename commands with --apply');
     lines.push('2. Manually combine the note bodies (keep the richer content)');
     lines.push('3. After all merges, run npm run build to verify');

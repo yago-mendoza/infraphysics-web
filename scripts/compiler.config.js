@@ -36,7 +36,7 @@ export default {
   // Validation flags
   validation: {
     validateRegularPostWikiLinks: true,
-    validateFieldnoteRefs: true,
+    validateWikinoteRefs: true,
     validateParentSegments: true,
     detectCircularRefs: false,  // off by default — knowledge graphs naturally have cycles
     detectSegmentCollisions: true,

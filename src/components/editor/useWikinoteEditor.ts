@@ -1,8 +1,8 @@
-// Hook for managing the fieldnote editing lifecycle:
+// Hook for managing the wikinote editing lifecycle:
 // fetch raw → edit → validate (debounced) → save → HMR refresh
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { parseFrontmatter, parseTrailingRefs } from '../../lib/content/fieldnote-parser.js';
+import { parseFrontmatter, parseTrailingRefs } from '../../lib/content/wikinote-parser.js';
 import type { ConnectionRef } from '../../types';
 
 export interface Diagnostic {
@@ -51,7 +51,7 @@ export interface EditorState {
   cancelDelete: () => void;
 }
 
-export function useFieldnoteEditor(): EditorState {
+export function useWikinoteEditor(): EditorState {
   const [isEditing, setIsEditing] = useState(false);
   const [editingUid, setEditingUid] = useState<string | null>(null);
   const [rawContent, setRawContentState] = useState('');

@@ -33,7 +33,7 @@ export interface EdgeVisibility {
 }
 
 export function buildGraphData(index: BrainIndex, centralityMap: Record<string, number>): GraphData {
-  const nodes: GraphNode[] = index.allFieldNotes.map(note => ({
+  const nodes: GraphNode[] = index.allWikiNotes.map(note => ({
     id: note.id,
     name: note.name,
     address: note.address || note.title,
@@ -56,7 +56,7 @@ export function buildGraphData(index: BrainIndex, centralityMap: Record<string, 
     links.push({ source, target, type, annotation });
   };
 
-  index.allFieldNotes.forEach(note => {
+  index.allWikiNotes.forEach(note => {
     const interactionIds = new Set((note.trailingRefs || []).map(reference => reference.uid));
     (note.references || []).forEach(target => {
       if (target !== note.id && !interactionIds.has(target) && index.noteById.has(target)) addLink(note.id, target, 'body');

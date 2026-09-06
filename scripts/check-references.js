@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// check-references.js — Full integrity audit for fieldnotes
+// check-references.js — Full integrity audit for wikinotes
 //
 // Usage: node scripts/check-references.js
 //
@@ -21,23 +21,23 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const FIELDNOTES_DIR = path.join(__dirname, '../src/data/pages/fieldnotes');
+const WIKINOTES_DIR = path.join(__dirname, '../src/data/pages/fieldnotes');
 
-// --- Parse all fieldnotes ---
+// --- Parse all wikinotes ---
 
-function parseAllFieldnotes() {
-  if (!fs.existsSync(FIELDNOTES_DIR)) {
-    console.error('Fieldnotes directory not found:', FIELDNOTES_DIR);
+function parseAllWikinotes() {
+  if (!fs.existsSync(WIKINOTES_DIR)) {
+    console.error('Wikinotes directory not found:', WIKINOTES_DIR);
     process.exit(1);
   }
 
-  const files = fs.readdirSync(FIELDNOTES_DIR)
+  const files = fs.readdirSync(WIKINOTES_DIR)
     .filter(f => f.endsWith('.md') && !f.startsWith('_'));
 
   const notes = [];
 
   for (const filename of files) {
-    const filePath = path.join(FIELDNOTES_DIR, filename);
+    const filePath = path.join(WIKINOTES_DIR, filename);
     const fileContent = fs.readFileSync(filePath, 'utf-8');
     const { data: frontmatter, content: bodyMd } = matter(fileContent);
 
@@ -393,10 +393,10 @@ function checkStaleDistinct(notes) {
 
 // --- Main ---
 
-console.log('\n=== Fieldnotes Integrity Audit ===\n');
+console.log('\n=== Wikinotes Integrity Audit ===\n');
 
-const notes = parseAllFieldnotes();
-console.log(`Scanned ${notes.length} fieldnotes.\n`);
+const notes = parseAllWikinotes();
+console.log(`Scanned ${notes.length} wikinotes.\n`);
 
 let issues = 0;
 

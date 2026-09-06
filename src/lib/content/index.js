@@ -14,12 +14,12 @@ export {
   parseTrailingRefs,
   extractDescription,
   stripTrailingRefs,
-  extractFieldnoteMeta,
-  serializeFieldnote,
-} from './fieldnote-parser.js';
+  extractWikinoteMeta,
+  serializeWikinote,
+} from './wikinote-parser.js';
 
 export {
-  validateFieldnotes,
+  validateWikinotes,
   checkReferenceIntegrity,
   checkRegularPostWikiLinks,
   checkSelfReferences,

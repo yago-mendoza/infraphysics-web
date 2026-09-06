@@ -2,7 +2,7 @@
 // Each ref = card with note name + editable annotation + delete button
 
 import React, { useState, useMemo } from 'react';
-import type { FieldNoteMeta, ConnectionRef } from '../../types';
+import type { WikiNoteMeta, ConnectionRef } from '../../types';
 import { noteLabel } from '../../types';
 
 interface TrailingRef {
@@ -12,8 +12,8 @@ interface TrailingRef {
 
 interface Props {
   trailingRefs: TrailingRef[];
-  noteById: Map<string, FieldNoteMeta>;
-  allNotes: FieldNoteMeta[];
+  noteById: Map<string, WikiNoteMeta>;
+  allNotes: WikiNoteMeta[];
   currentUid: string | null;
   onUpdate: (refs: TrailingRef[]) => void;
 }
@@ -54,7 +54,7 @@ export const TrailingRefsWidget: React.FC<Props> = ({
     onUpdate(next);
   };
 
-  const handleAdd = (note: FieldNoteMeta) => {
+  const handleAdd = (note: WikiNoteMeta) => {
     onUpdate([...trailingRefs, { uid: note.id, annotation: '' }]);
     setShowAdd(false);
     setAddQuery('');

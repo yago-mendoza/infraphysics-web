@@ -33,13 +33,13 @@ Mandatory triggers — when X happens, do Y.
 
 When the user gives feedback on article quality (tone, structure, storytelling, editorial choices), incorporate the lesson into the README of that article's category folder (e.g. `src/data/pages/projects/README.md`). These READMEs accumulate editorial patterns — they're the memory for how each content type should be written.
 
-### On managing fieldnotes
+### On managing wikinotes
 
-**Before** creating, renaming, deleting, or restructuring fieldnotes, read **[fieldnotes/README.md](src/data/pages/fieldnotes/README.md)**. It covers available scripts, step-by-step workflows, cascading effects, and the full error reference. Never rename or delete fieldnotes by hand — use the scripts.
+**Before** creating, renaming, deleting, or restructuring wikinotes, read **[fieldnotes/README.md](src/data/pages/fieldnotes/README.md)**. It covers available scripts, step-by-step workflows, cascading effects, and the full error reference. Never rename or delete wikinotes by hand — use the scripts.
 
-**Creating fieldnotes:** Check for segment collisions first — search existing addresses for the last segment of each proposed address (case-insensitive). If it already exists anywhere in the hierarchy, evaluate whether it's the same concept before creating. After creating, run `npm run build`, then `node scripts/check-references.js` for isolated notes and weak parents, and create stub notes for missing parents.
+**Creating wikinotes:** Check for segment collisions first — search existing addresses for the last segment of each proposed address (case-insensitive). If it already exists anywhere in the hierarchy, evaluate whether it's the same concept before creating. After creating, run `npm run build`, then `node scripts/check-references.js` for isolated notes and weak parents, and create stub notes for missing parents.
 
-**Renaming fieldnotes:**
+**Renaming wikinotes:**
 
 > `rename-address.js` renames ONE exact address. It does NOT cascade to children. See [fieldnotes/README.md](src/data/pages/fieldnotes/README.md#restructuring-a-hierarchy).
 
@@ -216,10 +216,10 @@ The `text` field in `ogManifest['/about']` and `ogManifest['/home']` (in `build-
 ### Home clock field: maze topology is cached per lattice size
 The maze (islands, edges, origins) is grown once per `(cols, rows)` and reused every frame; only the per-frame fields are recomputed. If the topology is ever made time-dependent again, the cache key in `drawClockMaze` must include that variable or the change will never render.
 
-### Fieldnote interactions are graph edges, not reciprocal citations
+### Wikinote interactions are graph edges, not reciprocal citations
 The graph is bidirectional even when an interaction is written on only one note. For a conceptual pair, keep the clearest causal explanation on one side instead of adding reciprocal trailing refs to both files. Reciprocal entries create `DUPLICATE TRAILING REFS` noise in `check-references.js` without adding connectivity. After a bulk creation pass, run the audit and remove every duplicate introduced by the new notes before considering the batch complete.
 
-### Bulk-editing fieldnote frontmatter catches README.md too
+### Bulk-editing wikinote frontmatter catches README.md too
 `src/data/pages/fieldnotes/README.md` contains a literal `distinct:` line inside a yaml example block, so any bulk script that pattern-matches frontmatter across `fieldnotes/*.md` will silently rewrite the documentation example. Exclude `README.md` (filenames of real notes are always 8-char UIDs). Also: after any `move-hierarchy`/`rename-address` batch, `distinct` entries elsewhere go stale because they store addresses, not UIDs — the build's `STALE_DISTINCT` warnings list every one; fix them before committing.
 
 ### Global CSS is linked from `index.html`, not imported from `index.tsx`

@@ -2,7 +2,7 @@
    WIKI CONTENT — Delta overrides on top of article.css base
    Scoped to SecondBrainView via .article-wiki wrapper class.
    article.css provides all base .article-content rules;
-   this file only overrides what differs for fieldnotes.
+   this file only overrides what differs for wikinotes.
    ═══════════════════════════════════════════════════════════════ */
 
 /* Accent + layout — purple, no max-width cap (grid layout) */
@@ -32,7 +32,7 @@
   letter-spacing: normal;
 }
 
-/* Fieldnotes are navigated as nodes, not as long-form editorial documents.
+/* Wikinotes are navigated as nodes, not as long-form editorial documents.
    Keep rich article syntax, but never turn their headings into copy targets. */
 .article-wiki .heading-anchor-link {
   display: none !important;
@@ -64,7 +64,7 @@
   margin: 0.5rem 0 0.15rem;
 }
 
-/* Tighter vertical rhythm for fieldnotes —
+/* Tighter vertical rhythm for wikinotes —
    Single paragraph break = minimal gap, feels like next line.
    Headings provide the real visual separation. */
 .article-wiki .article-content p {

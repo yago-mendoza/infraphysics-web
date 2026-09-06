@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useRef, useEffect, useLayoutEffect, useDeferredValue } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FieldNoteMeta } from '../types';
+import { WikiNoteMeta } from '../types';
 import { secondBrainPath, secondBrainUidFromPath } from '../config/categories';
 import { initBrainIndex, fetchNoteContent, getCachedNoteContent, prefetchNoteContent, type BrainIndex, type Connection, type Neighborhood } from '../lib/brainIndex';
 import { useGraphRelevance } from './useGraphRelevance';
@@ -41,7 +41,7 @@ const DEFAULT_FILTER_STATE: FilterState = {
 export interface TreeNode {
   label: string;
   path: string;           // full path e.g. "LAPTOP//UI//SCROLLING"
-  concept: FieldNoteMeta | null;
+  concept: WikiNoteMeta | null;
   children: TreeNode[];
   childCount: number;     // total descendants (concepts only)
 }
@@ -94,14 +94,14 @@ export const useSecondBrainHub = () => {
     };
     void load();
     const handler = () => { void load(); };
-    window.addEventListener('fieldnote-hmr', handler);
+    window.addEventListener('wikinote-hmr', handler);
     return () => {
       cancelled = true;
-      window.removeEventListener('fieldnote-hmr', handler);
+      window.removeEventListener('wikinote-hmr', handler);
     };
   }, []);
 
-  const allFieldNotes = index?.allFieldNotes ?? [];
+  const allWikiNotes = index?.allWikiNotes ?? [];
   const noteById = index?.noteById ?? new Map();
   const addressToNoteId = index?.addressToNoteId ?? new Map();
   const backlinksMap = index?.backlinksMap ?? new Map();
@@ -227,10 +227,10 @@ export const useSecondBrainHub = () => {
           if (!cancelled) console.error(`Unable to refresh Wiki note ${activePost.id}`, error);
         });
     };
-    window.addEventListener('fieldnote-hmr', handler);
+    window.addEventListener('wikinote-hmr', handler);
     return () => {
       cancelled = true;
-      window.removeEventListener('fieldnote-hmr', handler);
+      window.removeEventListener('wikinote-hmr', handler);
     };
   }, [activePost]);
 
@@ -303,7 +303,7 @@ export const useSecondBrainHub = () => {
   const outgoingRefCount = useMemo(() => activePost?.references?.length || 0, [activePost]);
 
   // Homonyms: other notes that share the same leaf segment name
-  const homonyms = useMemo((): FieldNoteMeta[] => {
+  const homonyms = useMemo((): WikiNoteMeta[] => {
     if (!activePost) return [];
     const parts = activePost.addressParts || [activePost.title];
     const leaf = parts[parts.length - 1].toLowerCase();
@@ -315,7 +315,7 @@ export const useSecondBrainHub = () => {
     const roots: TreeNode[] = [];
     const nodeMap = new Map<string, TreeNode>();
 
-    allFieldNotes.forEach(note => {
+    allWikiNotes.forEach(note => {
       const parts = note.addressParts || [note.title];
       let currentPath = '';
 
@@ -387,7 +387,7 @@ export const useSecondBrainHub = () => {
     };
 
     return sortTree(roots, directorySortMode);
-  }, [allFieldNotes, directorySortMode]);
+  }, [allWikiNotes, directorySortMode]);
 
   // --- Filtered tree (by directoryQuery) ---
   const filteredTree = useMemo(() => {
@@ -415,37 +415,37 @@ export const useSecondBrainHub = () => {
   // --- Multi-mode search ---
   const searchResults = useMemo(() => {
     const effectiveQuery = searchMode === 'content' || searchMode === 'all' ? debouncedContentQuery : deferredQuery;
-    if (!effectiveQuery) return allFieldNotes;
+    if (!effectiveQuery) return allWikiNotes;
     const q = effectiveQuery.toLowerCase();
 
-    const matchesName = (note: FieldNoteMeta) => {
+    const matchesName = (note: WikiNoteMeta) => {
         const address = (note.address || note.title).toLowerCase();
         const displayTitle = (note.displayTitle || note.title).toLowerCase();
         if (address.includes(q) || displayTitle.includes(q)) return true;
         return note.aliases?.some(alias => alias.toLowerCase().includes(q)) ?? false;
     };
-    const matchesContent = (note: FieldNoteMeta) => (note.searchText || '').includes(q) || note.description.toLowerCase().includes(q);
-    const matchesBacklinks = (note: FieldNoteMeta) => (backlinksMap.get(note.id) || []).some(linker => {
+    const matchesContent = (note: WikiNoteMeta) => (note.searchText || '').includes(q) || note.description.toLowerCase().includes(q);
+    const matchesBacklinks = (note: WikiNoteMeta) => (backlinksMap.get(note.id) || []).some(linker => {
       const address = (linker.address || linker.title).toLowerCase();
       const displayTitle = (linker.displayTitle || linker.title).toLowerCase();
       return address.includes(q) || displayTitle.includes(q) || (linker.searchText || '').includes(q) || linker.description.toLowerCase().includes(q);
     });
 
-    if (searchMode === 'name') return allFieldNotes.filter(matchesName);
+    if (searchMode === 'name') return allWikiNotes.filter(matchesName);
 
     if (searchMode === 'content') {
       // Use pre-built searchText for content search (no need to load full HTML)
-      return allFieldNotes.filter(matchesContent);
+      return allWikiNotes.filter(matchesContent);
     }
 
     if (searchMode === 'backlinks') {
-      return allFieldNotes.filter(matchesBacklinks);
+      return allWikiNotes.filter(matchesBacklinks);
     }
 
-    if (searchMode === 'all') return allFieldNotes.filter(note => matchesName(note) || matchesContent(note) || matchesBacklinks(note));
+    if (searchMode === 'all') return allWikiNotes.filter(note => matchesName(note) || matchesContent(note) || matchesBacklinks(note));
 
-    return allFieldNotes;
-  }, [deferredQuery, debouncedContentQuery, searchMode, allFieldNotes, backlinksMap]);
+    return allWikiNotes;
+  }, [deferredQuery, debouncedContentQuery, searchMode, allWikiNotes, backlinksMap]);
 
   // --- Directory scope filter ---
   const scopedResults = useMemo(() => {
@@ -637,7 +637,7 @@ export const useSecondBrainHub = () => {
     filteredTree,
 
     // Data
-    allFieldNotes,
+    allWikiNotes,
     noteById,
     addressToNoteId,
     backlinksMap,

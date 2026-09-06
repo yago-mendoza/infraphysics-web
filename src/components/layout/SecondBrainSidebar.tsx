@@ -18,7 +18,7 @@ import { SecondBrainGuide } from '../wiki/SecondBrainGuide';
 import { useGraphRelevance } from '../../hooks/useGraphRelevance';
 import { useIsLocalhost } from '../../hooks/useIsLocalhost';
 import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../../constants/layout';
-import type { FieldNoteMeta } from '../../types';
+import type { WikiNoteMeta } from '../../types';
 import type { TreeNode, FilterState, DirectorySortMode, SearchMode } from '../../hooks/useSecondBrainHub';
 
 // Lazy-load MiniGraph — heavy dep (react-force-graph-2d)
@@ -298,7 +298,7 @@ const TreeNodeItem: React.FC<{
 
 // --- Word Count Histogram ---
 const WordCountHistogram: React.FC<{
-  notes: FieldNoteMeta[];
+  notes: WikiNoteMeta[];
   wordCountMin: number;
   wordCountMax: number;
   onFilter: (min: number, max: number) => void;
@@ -620,7 +620,7 @@ export const SecondBrainSidebar: React.FC = () => {
     directorySortMode, setDirectorySortMode,
     filteredTree,
     stats,
-    allFieldNotes,
+    allWikiNotes,
     backlinksMap,
     signalDirectoryNav,
     activePost,
@@ -676,13 +676,13 @@ export const SecondBrainSidebar: React.FC = () => {
   const areaRootBreakdown = useMemo(() => {
     if (!directoryPreviewIds?.size) return [] as Array<{ root: string; count: number; percent: number }>;
     const counts = new Map<string, number>();
-    allFieldNotes.forEach(note => {
+    allWikiNotes.forEach(note => {
       if (!directoryPreviewIds.has(note.id)) return;
       const root = note.addressParts?.[0] ?? note.address?.split('//')[0] ?? note.title;
       counts.set(root, (counts.get(root) ?? 0) + 1);
     });
     return [...counts].map(([root, count]) => ({ root, count, percent: count / directoryPreviewIds.size * 100 })).sort((a, b) => b.count - a.count || a.root.localeCompare(b.root));
-  }, [allFieldNotes, directoryPreviewIds]);
+  }, [allWikiNotes, directoryPreviewIds]);
   const areaOrderedTree = useMemo(() => {
     if (!areaRootBreakdown.length) return visibleTree;
     const pruneToArea = (nodes: TreeNode[]): TreeNode[] => nodes.reduce<TreeNode[]>((result, node) => {
@@ -729,8 +729,8 @@ export const SecondBrainSidebar: React.FC = () => {
     setFilterState(prev => ({ ...prev, [key]: value }));
   };
   const noteDateById = useMemo(() => new Map(
-    allFieldNotes.map(note => [note.id, note.date?.slice(0, 10) ?? '']),
-  ), [allFieldNotes]);
+    allWikiNotes.map(note => [note.id, note.date?.slice(0, 10) ?? '']),
+  ), [allWikiNotes]);
   const openGraphNode = (node: { id: string }) => {
     const date = noteDateById.get(node.id);
     if (date) updateFilter('dateFilter', date);
@@ -739,19 +739,19 @@ export const SecondBrainSidebar: React.FC = () => {
 
   const rootOptions = useMemo(() => {
     const counts = new Map<string, number>();
-    allFieldNotes.forEach(note => {
+    allWikiNotes.forEach(note => {
       const root = (note.addressParts || note.address?.split('//') || [note.title])[0];
       if (root) counts.set(root, (counts.get(root) || 0) + 1);
     });
     return [...counts.entries()]
       .map(([root, count]) => ({ root, count }))
       .sort((a, b) => b.count - a.count || a.root.localeCompare(b.root));
-  }, [allFieldNotes]);
-  const rootColorMap = useMemo(() => assignRootColors(allFieldNotes.map(note => note.address ?? note.title)), [allFieldNotes]);
+  }, [allWikiNotes]);
+  const rootColorMap = useMemo(() => assignRootColors(allWikiNotes.map(note => note.address ?? note.title)), [allWikiNotes]);
   const graphDirectoryIndex = useMemo(() => {
     const descendantsByPath = new Map<string, Set<string>>();
-    const noteById = new Map<string, FieldNoteMeta>();
-    allFieldNotes.forEach(note => {
+    const noteById = new Map<string, WikiNoteMeta>();
+    allWikiNotes.forEach(note => {
       noteById.set(note.id, note);
       const parts = note.addressParts ?? note.address?.split('//') ?? [note.title];
       for (let depth = 1; depth <= parts.length; depth += 1) {
@@ -762,7 +762,7 @@ export const SecondBrainSidebar: React.FC = () => {
       }
     });
     return { descendantsByPath, noteById };
-  }, [allFieldNotes]);
+  }, [allWikiNotes]);
 
   const scopedRoot = directoryScope && rootOptions.some(option => option.root === directoryScope) ? directoryScope : '';
 
