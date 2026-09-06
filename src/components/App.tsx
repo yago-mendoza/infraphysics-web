@@ -19,7 +19,6 @@ import { HomeView } from '../views/HomeView';
 const AboutView = React.lazy(() => import('../views/AboutView').then(m => ({ default: m.AboutView })));
 const CvView = React.lazy(() => import('../views/CvView').then(m => ({ default: m.CvView })));
 const StackView = React.lazy(() => import('../views/StackView').then(m => ({ default: m.StackView })));
-const EssayStyleLabView = React.lazy(() => import('../views/EssayStyleLabView').then(m => ({ default: m.EssayStyleLabView })));
 const ContactView = React.lazy(() => import('../views/ContactView').then(m => ({ default: m.ContactView })));
 const ThanksView = React.lazy(() => import('../views/ThanksView').then(m => ({ default: m.ThanksView })));
 const SectionView = React.lazy(() => import('../views/SectionView').then(m => ({ default: m.SectionView })));
@@ -137,7 +136,7 @@ const AppLayout: React.FC = () => {
   // An article with `theme:` in its frontmatter forces that theme on entry. This has to happen
   // here, not in the article view: child layout effects run before this one and would be overridden.
   useLayoutEffect(() => {
-    const zone = location.pathname.startsWith('/blog') || /^\/r\d+$/.test(location.pathname)
+    const zone = location.pathname.startsWith('/blog')
       ? 'blog'
       : isSecondBrainPath(location.pathname) ? 'wiki' : 'app';
     const article = location.pathname.match(/^\/(?:lab|blog)\/([^/]+)\/([^/]+)/);
@@ -147,9 +146,7 @@ const AppLayout: React.FC = () => {
     applyZone(zone, forced ?? undefined);
   }, [location.pathname, applyZone]);
 
-  // /r2, /r4 … /r14: essay style lab, rendered as a blog article page (light zone, floating bar).
-  const isStyleLab = /^\/r\d+$/.test(location.pathname);
-  const isBlog = location.pathname.startsWith('/blog') || isStyleLab;
+  const isBlog = location.pathname.startsWith('/blog');
   // /s1 … /s8: Home with alternative "Start here" and wiki-banner layouts, for comparison.
   const isStartLab = /^\/s\d+$/.test(location.pathname);
   const isHome = location.pathname === '/' || location.pathname === '/home' || isStartLab;
@@ -160,7 +157,7 @@ const AppLayout: React.FC = () => {
     || location.pathname.startsWith('/lab/projects');
   const clockHome = location.pathname === '/home' || isStartLab;
   const isSecondBrain = isSecondBrainPath(location.pathname);
-  const isArticlePage = (/^\/(blog|lab)\/[^/]+\/[^/]+/.test(location.pathname) || isStyleLab) && !isSecondBrain;
+  const isArticlePage = /^\/(blog|lab)\/[^/]+\/[^/]+/.test(location.pathname) && !isSecondBrain;
   // Project detail pages drop the grid and paint the page in the box surface color
   const isProjectArticle = isArticlePage && location.pathname.startsWith('/lab/projects/');
 
@@ -250,7 +247,6 @@ const AppLayout: React.FC = () => {
               <Route path="/lab/second-brain/:id" element={<LegacyWikiRedirect />} />
 
               {/* Essay style lab (experimental typography variants) */}
-              {[2, 4, 5, 6, 7, 12, 13, 14].map(i => <React.Fragment key={i}><Route path={`/r${i}`} element={<EssayStyleLabView variant={i} />} /></React.Fragment>)}
 
               {/* Post detail views */}
               <Route path="/lab/:category/:id" element={<PostView />} />

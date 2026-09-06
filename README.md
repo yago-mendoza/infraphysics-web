@@ -91,7 +91,6 @@ infraphysics-web/
       StackView.tsx           # Tooling stack page (/about/stack)
       ContactView.tsx         # Contact form (Formspree)
       ThanksView.tsx          # Post-submit thank-you page
-      EssayStyleLabView.tsx   # Experimental: /r2, /r4 … /r14 typography variants of one essay (essay-lab.css)
     legacy/
       home-visuals/           # Retired home visual engine, kept for reference (see its README)
     data/
@@ -161,7 +160,6 @@ infraphysics-web/
       editorial-primitives.css # Shared editorial typography primitives
       wiki-content.css        # Wiki/second-brain content delta overrides
       editor.css              # CodeMirror overrides for wikinote editor
-      essay-lab.css           # Experimental essay typography lab (/r2, /r4 … /r14), driven by --lab-* variables
       start-here.css          # Home "Start here" variants (/s1 … /s8)
       wiki-banner.css         # Home closing wiki plate variants (/s1 … /s8)
     config/                   # Categories config, analytics, content entities

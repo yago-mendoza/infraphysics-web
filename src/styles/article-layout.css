@@ -404,7 +404,7 @@
 .article-essays.article-page-wrapper .article-essays-body { padding-top: 1.75rem !important; }
 
 /* Drop cap on the opening paragraph */
-.article-essays.article-page-wrapper:not(.essay-lab) .article-content > p:first-of-type::first-letter {
+.article-essays.article-page-wrapper .article-content > p:first-of-type::first-letter {
   float: left;
   font-family: var(--essay-display-font);
   font-weight: 400;
