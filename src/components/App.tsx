@@ -27,7 +27,6 @@ const SectionView = React.lazy(() => import('../views/SectionView').then(m => ({
 const PostView = React.lazy(() => import('../views/PostView').then(m => ({ default: m.PostView })));
 const SecondBrainView = React.lazy(() => import('../views/SecondBrainView').then(m => ({ default: m.SecondBrainView })));
 const SecondBrainSidebar = React.lazy(() => import('./layout/SecondBrainSidebar').then(m => ({ default: m.SecondBrainSidebar })));
-const NotesView = React.lazy(() => import('../views/NotesView').then(m => ({ default: m.NotesView })));
 const SearchPalette = React.lazy(() => import('./SearchPalette').then(m => ({ default: m.SearchPalette })));
 import { useKeyboardShortcuts, ShortcutDef } from '../hooks/useKeyboardShortcuts';
 
@@ -149,37 +148,25 @@ const AppLayout: React.FC = () => {
     || location.pathname.startsWith('/blog/essays')
     || location.pathname.startsWith('/blog/bits2bricks')
     || location.pathname.startsWith('/lab/projects');
-  const isNotes = location.pathname === '/notes' || location.pathname.startsWith('/notes/');
   const clockHome = location.pathname === '/home';
   const isSecondBrain = isSecondBrainPath(location.pathname);
   const isArticlePage = (/^\/(blog|lab)\/[^/]+\/[^/]+/.test(location.pathname) || isStyleLab) && !isSecondBrain;
   // Project detail pages drop the grid and paint the page in the box surface color
   const isProjectArticle = isArticlePage && location.pathname.startsWith('/lab/projects/');
 
-  // Notes behaves as a fixed viewport application. The document itself is
-  // locked; only the index and selected note are allowed to scroll.
-  useLayoutEffect(() => {
-    if (!isNotes) return;
-    document.documentElement.classList.add('notes-document-locked');
-    document.body.classList.add('notes-document-locked');
-    return () => {
-      document.documentElement.classList.remove('notes-document-locked');
-      document.body.classList.remove('notes-document-locked');
-    };
-  }, [isNotes]);
 
   const content = (
     <ErrorBoundary resetKey={location.pathname}>
     {aestheticCursor && !isSecondBrain && <ExperimentalCursor />}
     <div
-      className={`${isNotes ? 'notes-active h-[100dvh] overflow-hidden ' : 'min-h-screen overflow-x-hidden ' }flex relative ${hasSystemField ? 'about-active ' : ''}${clockHome ? 'home2-active ' : ''}${isHome ? 'home-light-zone bg-transparent' : isProjectArticle ? '' : isBlog ? 'bg-th-blog' : 'bg-transparent'}`}
+      className={`min-h-screen overflow-x-hidden flex relative ${hasSystemField ? 'about-active ' : ''}${clockHome ? 'home2-active ' : ''}${isHome ? 'home-light-zone bg-transparent' : isProjectArticle ? '' : isBlog ? 'bg-th-blog' : 'bg-transparent'}`}
       style={isProjectArticle ? { backgroundColor: 'var(--art-surface)' } : undefined}
     >
-      {!isNotes && !isArticlePage && <AmbientRails />}
+      {!isArticlePage && <AmbientRails />}
       {hasSystemField && <div className="about-system-visual" aria-hidden="true"><HomeVisualLab variant={2} staticMicroField showTachograph={false} /></div>}
 
       {/* Navigation: floating bar (desktop) + mobile nav for articles, sidebar+mobile nav for everything else */}
-      {isNotes ? null : isSecondBrain ? (
+      {isSecondBrain ? (
         <WikiTopBar onOpenSearch={openSearch} />
       ) : isArticlePage ? (
         <>
@@ -201,7 +188,7 @@ const AppLayout: React.FC = () => {
       )}
 
       {/* Contextual retention hints */}
-      {!isArticlePage && !isNotes && <RetentionHints />}
+      {!isArticlePage && <RetentionHints />}
 
       {/* Hub Sidebar (second-brain only, desktop only — not on graph view) */}
       {isSecondBrain && (
@@ -211,16 +198,14 @@ const AppLayout: React.FC = () => {
       )}
 
       {/* Main Content Area */}
-      <div className={`flex-1 min-w-0 flex flex-col ${isNotes ? 'h-full min-h-0 overflow-hidden' : 'min-h-screen'}`}>
-        <main className={`flex-grow w-full relative z-10 ${isSecondBrain ? 'max-w-6xl px-4 md:px-10 pt-20 pb-24 md:pt-20 md:pb-28 mx-auto' : isNotes ? 'h-full min-h-0 overflow-hidden' : isArticlePage ? 'px-2 pt-[4.5rem] pb-20 md:px-6 md:pt-20 md:pb-28 article-main-viewport' : 'px-6 pt-20 pb-20 md:py-16 md:pb-28 main-center-viewport'}`}>
+      <div className="flex-1 min-w-0 flex flex-col min-h-screen">
+        <main className={`flex-grow w-full relative z-10 ${isSecondBrain ? 'max-w-6xl px-4 md:px-10 pt-20 pb-24 md:pt-20 md:pb-28 mx-auto' : isArticlePage ? 'px-2 pt-[4.5rem] pb-20 md:px-6 md:pt-20 md:pb-28 article-main-viewport' : 'px-6 pt-20 pb-20 md:py-16 md:pb-28 main-center-viewport'}`}>
           <Suspense fallback={<div className="min-h-screen py-20 text-center text-th-tertiary text-sm animate-pulse">Loading…</div>}>
-            <React.Fragment key={isNotes ? '/notes' : location.pathname}>
+            <React.Fragment key={location.pathname}>
             <Routes>
               <Route path="/" element={<Navigate to="/home" replace />} />
               <Route path="/home" element={<HomeView visualVariant={1} fieldVariant={3} />} />
               <Route path="/writing" element={<WritingView />} />
-              <Route path="/notes" element={<NotesView onOpenSearch={openSearch} />} />
-              <Route path="/notes/:id" element={<NotesView onOpenSearch={openSearch} />} />
               <Route path="/blog" element={<Navigate to="/writing" replace />} />
               <Route path="/about" element={<AboutView />} />
               <Route path="/about/cv" element={<CvView />} />
@@ -277,7 +262,7 @@ const AppLayout: React.FC = () => {
           </Suspense>
         </main>
 
-        {!isSecondBrain && !isNotes && <Footer />}
+        {!isSecondBrain && <Footer />}
       </div>
     </div>
     </ErrorBoundary>

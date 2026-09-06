@@ -13,7 +13,6 @@ export type ContentEntityKind =
   | 'essays'
   | 'bits2bricks'
   | 'wiki'
-  | 'notes'
   | 'writing';
 
 type EntityPresentation = {
@@ -29,7 +28,6 @@ export const CONTENT_ENTITY_PRESENTATION: Record<ContentEntityKind, EntityPresen
   essays: { label: 'Essays', accentVar: 'var(--cat-essays-accent)', Icon: FileTextIcon },
   bits2bricks: { label: 'Technical', accentVar: 'var(--cat-bits2bricks-accent)', Icon: FileTextIcon },
   wiki: { label: 'Wiki', accentVar: 'var(--cat-fieldnotes-accent)', Icon: WikiIcon },
-  notes: { label: 'Notes', accentVar: 'var(--brand-oxide)', Icon: FileTextIcon },
   writing: { label: 'Writing', accentVar: 'var(--text-secondary)', Icon: FileTextIcon },
 };
 

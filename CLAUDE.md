@@ -222,6 +222,9 @@ The graph is bidirectional even when an interaction is written on only one note.
 ### Bulk-editing wikinote frontmatter catches README.md too
 `src/data/pages/fieldnotes/README.md` contains a literal `distinct:` line inside a yaml example block, so any bulk script that pattern-matches frontmatter across `fieldnotes/*.md` will silently rewrite the documentation example. Exclude `README.md` (filenames of real notes are always 8-char UIDs). Also: after any `move-hierarchy`/`rename-address` batch, `distinct` entries elsewhere go stale because they store addresses, not UIDs — the build's `STALE_DISTINCT` warnings list every one; fix them before committing.
 
+### Wikinotes are still called `fieldnotes` on disk and in the category key
+The content type was renamed to "wikinotes" in code, docs, scripts and the `/create-wikinote` skill (Sep 2026), but every path and data contract kept the old name on purpose: `src/data/pages/fieldnotes/`, `public/fieldnotes/{uid}.json`, `fieldnotes-index.json`, the `Category` value `'fieldnotes'` (used by `og-manifest.json` and the edge function), the `/api/fieldnotes/*` dev endpoints and `--cat-fieldnotes-accent`. Do not "fix" those to wikinotes: they are deployed URLs and cached CDN paths. Identifiers say wikinote, paths and keys say fieldnotes.
+
 ### Global CSS is linked from `index.html`, not imported from `index.tsx`
 `src/styles/global.css` is referenced with `<link rel="stylesheet" href="/src/styles/global.css">` in `index.html` (Vite bundles it). Keep it as a link: it must sit in `<head>` before the Tailwind CDN's runtime `<style>` element so the cascade order is unchanged. Importing it from `index.tsx` would reorder it relative to the per-view CSS imports.
 

@@ -37,7 +37,6 @@ export const Footer: React.FC = () => {
           </div>
           <div className="md:text-right">
             <div className="footer-social-links flex md:justify-end gap-4 text-xs text-th-tertiary mb-4">
-              <Link to="/notes" className="footer-notes-link font-mono tracking-[0.06em] hover:text-th-heading transition-colors">Notes →</Link>
               {!isHome && <span className="footer-external-links">
                 <a href="https://github.com/yago-mendoza" target="_blank" rel="noopener noreferrer" className="footer-social-link transition-colors">GitHub</a>
                 <a href="https://linkedin.com/in/yago-mendoza" target="_blank" rel="noopener noreferrer" className="footer-social-link transition-colors">LinkedIn</a>

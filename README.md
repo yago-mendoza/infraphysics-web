@@ -81,7 +81,6 @@ infraphysics-web/
     views/
       HomeView.tsx            # Landing page
       WritingView.tsx         # Unified writing index (/writing)
-      NotesView.tsx           # Short notes reader (/notes, /notes/:id)
       SectionView.tsx         # Category listing (projects, essays, bits2bricks)
       PostView.tsx            # Single post renderer
       ArticlePostView.tsx     # Article body renderer (wiki-links, hover previews)
@@ -106,7 +105,6 @@ infraphysics-web/
           README.md             # Bits2Bricks editorial voice
         fieldnotes/           # Individual {uid}.md files (1 per concept, UID-named)
           README.md             # Wikinotes management guide (scripts, workflows, errors)
-      notes.ts                # Short notes (hand-written TS array, no markdown pipeline)
       agent-profile.json      # Author profile consumed by views and crawlers
       postSummaries.ts        # Lightweight post index for listings
       posts.generated.json    # Regular posts only (no wikinotes)

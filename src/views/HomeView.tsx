@@ -9,7 +9,6 @@ import { CATEGORY_CONFIG, catAccentVar, postPath, sectionPath } from '../config/
 import { getSearchExcerpt, countMatches } from '../lib';
 import { Highlight } from '../components/ui';
 import { HomeVisualLab, type HomeVisualVariant } from '../components/personal/HomeVisualLab';
-import { shortNotes } from '../data/notes';
 
 const categoryKeys = ['projects', 'essays', 'bits2bricks'] as const;
 const selectedWorkIds = ['2718281', '3142718', '3141592', '6184744', '5917362'] as const;
@@ -269,26 +268,6 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
       <div className="home-field-wide">
         <FieldOfView variant={fieldVariant} />
       </div>
-
-      {/* Notes — intentionally absent from global navigation */}
-      <section className="home-notes-section border-t border-th-border pt-8 md:pt-12 pb-12 md:pb-20">
-        <div className="home-editorial-heading">
-          <div>
-            <p className="text-[9px] font-mono uppercase tracking-[0.18em] text-th-tertiary mb-2">Unfiltered log</p>
-            <h2><Link to="/notes" aria-label="Open Notes">Notes</Link></h2>
-          </div>
-        </div>
-        <div className="home-notes-list">
-          {shortNotes.slice(0, 4).map((note, index) => (
-            <Link key={note.id} to={`/notes/${note.id}`} className="home-note-row group">
-              <span>{String(index + 1).padStart(2, '0')}</span>
-              <strong>{note.title}</strong>
-              <time>{note.date}</time>
-              <span aria-hidden="true">↗</span>
-            </Link>
-          ))}
-        </div>
-      </section>
 
     </div>
     </>

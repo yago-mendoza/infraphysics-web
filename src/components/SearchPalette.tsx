@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { posts } from '../data/data';
-import { shortNotes } from '../data/notes';
 import { postPath, sectionPath, secondBrainPath } from '../config/categories';
 import { ContentEntityIcon } from '../config/contentEntities';
 import { COMMAND_KEY } from './layout/Sidebar';
@@ -36,7 +35,7 @@ interface QuickAction {
   icon: React.ReactNode;
   action: () => void;
   shortcut?: string;
-  group?: 'contextual' | 'global' | 'nav' | 'concept' | 'notes' | 'articles-title' | 'articles-content';
+  group?: 'contextual' | 'global' | 'nav' | 'concept' | 'articles-title' | 'articles-content';
 }
 
 /** Strip HTML tags for plain-text search */
@@ -210,7 +209,6 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
       { label: 'View Bits2Bricks', keywords: ['technical', 'engineering', 'tutorials', 'bits'], icon: <ContentEntityIcon kind="bits2bricks" />, path: sectionPath('bits2bricks'), hideWhen: () => currentCategory === 'bits2bricks' },
       { label: 'Open Source / GitHub', keywords: ['code', 'repository', 'repo', 'source'], icon: <GitHubIcon size={22} />, path: 'https://github.com/infraphysics', external: true },
       { label: 'Wiki', keywords: ['knowledge', 'brain', 'fieldnotes', 'concepts'], icon: <ContentEntityIcon kind="wiki" />, path: secondBrainPath() },
-      { label: 'Notes', keywords: ['notes', 'now', 'short', 'thoughts', 'log'], icon: <ContentEntityIcon kind="notes" />, path: '/notes' },
       { label: 'Contact', keywords: ['email', 'message', 'talk', 'hire'], icon: <MailIcon />, path: '/contact' },
     ];
 
@@ -353,32 +351,6 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
       }));
   }, [query, searchableConcepts, navigate, executeAndClose]);
 
-  // Short notes are small enough to rank locally. Titles carry more weight
-  // than prose, while every query term must occur somewhere in the note.
-  const noteMatches = useMemo<QuickAction[]>(() => {
-    const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
-    if (!terms.length) return [];
-    return shortNotes
-      .map(note => {
-        const title = note.title.toLowerCase();
-        const body = note.body.join(' ').toLowerCase();
-        if (!terms.every(term => title.includes(term) || body.includes(term))) return null;
-        const score = terms.reduce((total, term) => total
-          + (title.startsWith(term) ? 12 : title.includes(term) ? 8 : 0)
-          + (body.includes(term) ? 2 : 0), 0);
-        return { note, score };
-      })
-      .filter((entry): entry is { note: (typeof shortNotes)[number]; score: number } => entry !== null)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 6)
-      .map(({ note }) => ({
-        label: note.title,
-        subtitle: note.date,
-        icon: <ContentEntityIcon kind="notes" />,
-        action: () => executeAndClose(() => navigate(`/notes/${note.id}`)),
-        group: 'notes' as const,
-      }));
-  }, [query, navigate, executeAndClose]);
 
   const filtered = useMemo(() => {
     const q = query.trim();
@@ -391,10 +363,10 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
         : searchText.toLowerCase().includes(lower);
     });
     // Exact concept matches first, then articles
-    const results = [...matchedActions, ...noteMatches, ...conceptMatches, ...articleMatches];
+    const results = [...matchedActions, ...conceptMatches, ...articleMatches];
     // Fall back to default actions when nothing matches
     return results.length > 0 ? results : actions;
-  }, [query, actions, noteMatches, articleMatches, conceptMatches]);
+  }, [query, actions, articleMatches, conceptMatches]);
 
   // Reset state on open/close
   useEffect(() => {
@@ -481,7 +453,6 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
       case 'articles-title': return 'Articles';
       case 'articles-content': return 'In Content';
       case 'concept': return 'Wiki';
-      case 'notes': return 'Notes';
       default: return null;
     }
   };
