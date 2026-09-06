@@ -54,6 +54,8 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
         if (projectVariant === 5) return (
           <article key={post.id} className="project-exhibition-card group">
             <Link to={postPath(post.category, post.id)}>
+              {/* A quiet tick ruler stands in for the horizontal rule between projects. */}
+              <span className="index-ruler" aria-hidden="true">{Array.from({ length: 41 }, (_, i) => <i key={i} className={i % 10 === 0 ? 'is-major' : i % 5 === 0 ? 'is-mid' : ''} />)}</span>
               <span className="project-exhibition-image">
                 {post.thumbnail ? <img src={post.thumbnail} alt="" loading="lazy" /> : <i>{String(index + 1).padStart(2, '0')}</i>}
               </span>

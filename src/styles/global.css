@@ -1316,10 +1316,10 @@ a.stack-row:hover .stack-arrow { color:var(--brand-oxide); transition-delay:75ms
 .home-directory-icon { color:var(--ac-color); }
 .home-directory-row:hover .home-directory-title { color:var(--ac-color); }
 /* Tick ruler heading the Projects index. */
-.index-ruler { display:flex; justify-content:space-between; align-items:flex-end; height:1rem; margin-bottom:1.2rem; border-bottom:1px solid color-mix(in srgb,var(--text-heading) 40%,transparent); }
-.index-ruler i { width:1px; height:.3rem; background:color-mix(in srgb,var(--text-heading) 40%,transparent); }
-.index-ruler i.is-mid { height:.55rem; }
-.index-ruler i.is-major { height:.85rem; background:var(--text-heading); }
+.index-ruler { display:flex; justify-content:space-between; align-items:flex-end; height:.8rem; border-bottom:1px solid color-mix(in srgb,var(--text-heading) 22%,transparent); }
+.index-ruler i { width:1px; height:.22rem; background:color-mix(in srgb,var(--text-heading) 22%,transparent); }
+.index-ruler i.is-mid { height:.4rem; }
+.index-ruler i.is-major { height:.62rem; background:color-mix(in srgb,var(--text-heading) 45%,transparent); }
 
 /* Home spotlight: the pinned piece wide, the wiki graph as its small companion. Bleeds past the column like the field map. */
 .home-spotlight-grid { display:grid; grid-template-columns:minmax(0,1.9fr) minmax(15rem,1fr); gap:1px; border:1px solid var(--border-default); background:var(--border-default); padding-top:0; }
@@ -1381,7 +1381,8 @@ a.stack-row:hover .stack-arrow { color:var(--brand-oxide); transition-delay:75ms
 .project-exhibition-meta > span > i { color:var(--text-muted); font-style:normal; }
 .project-exhibition-copy > .project-exhibition-tags { margin-top:.85rem; gap:.75rem; }
 .project-exhibition-card { position:relative; padding-top:0; border-top:0; }
-.project-exhibition-card::before { content:''; position:absolute; z-index:2; left:0; right:0; top:0; height:1px; background:color-mix(in srgb,var(--text-heading) 24%,var(--border-default)); pointer-events:none; }
+.project-exhibition-card::before { display:none; }
+.project-exhibition-card .index-ruler { position:absolute; left:0; right:0; top:-1.15rem; z-index:2; pointer-events:none; }
 .project-exhibition-image img { transform:none !important; transition:none; }
 .project-exhibition-card:hover img { filter:grayscale(16%); transform:none !important; }
 /* --thumb-zoom comes from frontmatter thumbnailZoom (EssaysList sets it inline); 1 = no zoom */

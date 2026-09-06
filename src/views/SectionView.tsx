@@ -385,9 +385,6 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, projectVaria
         </div>
       )}
 
-      {/* Projects read as an instrument: a tick ruler heads the list. */}
-      {category === 'projects' && <div className="index-ruler" aria-hidden="true">{Array.from({ length: 41 }, (_, i) => <i key={i} className={i % 10 === 0 ? 'is-major' : i % 5 === 0 ? 'is-mid' : ''} />)}</div>}
-
       {/* Delegated renderer */}
       <Renderer posts={visiblePosts} query={query} getExcerpt={getExcerpt} getMatchCount={getMatchCount} accent={accent} stats={stats} projectVariant={projectVariant} />
 
