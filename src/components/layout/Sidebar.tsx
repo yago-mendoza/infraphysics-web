@@ -37,6 +37,9 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
   const [open, setOpen] = useState(false);          // compact page menu (md..xl)
   const [settings, setSettings] = useState(false);  // gear popover
   const [menu, setMenu] = useState<MenuName | null>(null); // hover menu (About / Writing)
+  // With a real pointer the menus are hover-only: a click on the trigger does nothing, so the open menu
+  // does not blink away. Without hover (touch) the click is the only way in, so it toggles.
+  const canHover = () => window.matchMedia('(hover: hover)').matches;
   const closeTimer = useRef<number | null>(null);
   const { theme, toggleTheme } = useTheme();
   const { aestheticCursor, toggleAestheticCursor } = useCursorPreference();
@@ -86,7 +89,7 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
                 const flyoutOpen = menu === name;
                 return (
                   <div key={name} className="relative" onMouseEnter={() => showMenu(name)} onMouseLeave={hideMenu}>
-                    <button type="button" onClick={() => setMenu(flyoutOpen ? null : name)} aria-expanded={flyoutOpen} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-base ${active ? 'bg-th-nav-accent text-th-on-accent' : flyoutOpen ? 'bg-th-surface-alt text-th-heading' : 'text-th-secondary hover:bg-th-surface-alt'}`}><span>{name}</span><span className="text-[10px] font-mono opacity-60">›</span></button>
+                    <button type="button" onClick={() => { if (canHover()) return; setMenu(flyoutOpen ? null : name); }} aria-expanded={flyoutOpen} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-base ${active ? 'bg-th-nav-accent text-th-on-accent' : flyoutOpen ? 'bg-th-surface-alt text-th-heading' : 'text-th-secondary hover:bg-th-surface-alt'}`}><span>{name}</span><span className="text-[10px] font-mono opacity-60">›</span></button>
                     {flyoutOpen && <div className="compact-flyout">{NAV_MENUS[name].map(item => <Link key={item.to} to={item.to} data-active={isItemActive(item.to) || undefined} className="compact-flyout-link"><span>{item.label}</span><i aria-hidden="true">→</i></Link>)}</div>}
                   </div>
                 );
@@ -104,7 +107,7 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
         <nav className="hidden xl:flex items-center gap-0.5" aria-label="Primary navigation">
           {links.map(link => isMenu(link.label) ? (
             <div className="relative" key={link.label} onMouseEnter={() => showMenu(link.label as MenuName)} onMouseLeave={hideMenu}>
-              <button type="button" onClick={() => { setOpen(false); setSettings(false); setMenu(menu === link.label ? null : link.label as MenuName); }} aria-expanded={menu === link.label} className={`inline-flex items-center gap-1 ${menuPill(isActive(link.activePath ?? link.to, link.label))}`}>{link.label} <span className="text-[8px] opacity-60">{menu === link.label ? '▴' : '▾'}</span></button>
+              <button type="button" onClick={() => { if (canHover()) return; setOpen(false); setSettings(false); setMenu(menu === link.label ? null : link.label as MenuName); }} aria-expanded={menu === link.label} className={`inline-flex items-center gap-1 ${menuPill(isActive(link.activePath ?? link.to, link.label))}`}>{link.label} <span className="text-[8px] opacity-60">{menu === link.label ? '▴' : '▾'}</span></button>
               {menu === link.label && (
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 pb-3">
                   <div className="w-56 rounded-2xl border border-th-border bg-th-base shadow-2xl overflow-hidden p-1.5">
