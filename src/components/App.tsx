@@ -167,7 +167,7 @@ const AppLayout: React.FC = () => {
     <ErrorBoundary resetKey={location.pathname}>
     {aestheticCursor && !isSecondBrain && <ExperimentalCursor />}
     <div
-      className={`min-h-screen overflow-x-hidden flex relative ${hasSystemField ? 'about-active ' : ''}${location.pathname.startsWith('/lab/projects') ? 'projects-zone ' : ''}${clockHome ? 'home2-active ' : ''}${isHome ? 'home-light-zone bg-transparent' : isProjectArticle ? '' : isBlog ? 'bg-th-blog' : 'bg-transparent'}`}
+      className={`min-h-screen overflow-x-clip flex relative ${hasSystemField ? 'about-active ' : ''}${location.pathname.startsWith('/lab/projects') ? 'projects-zone ' : ''}${clockHome ? 'home2-active ' : ''}${isHome ? 'home-light-zone bg-transparent' : isProjectArticle ? '' : isBlog ? 'bg-th-blog' : 'bg-transparent'}`}
       style={isProjectArticle ? { backgroundColor: 'var(--art-surface)' } : undefined}
     >
       {!isArticlePage && <AmbientRails />}

@@ -71,7 +71,7 @@
 @property --cat-fieldnotes-accent { syntax:'<color>'; inherits:true; initial-value:#a78bfa; }
 
 /* Prevent horizontal scroll on mobile */
-html, body { overflow-x: hidden; }
+html, body { overflow-x: clip; } /* clip, not hidden: hidden makes body a scroll container and kills position: sticky everywhere below it */
 
 /* Article routes need a substantially wider canvas than index and profile
    pages. The old shared .main-center-viewport capped their parent <main> at

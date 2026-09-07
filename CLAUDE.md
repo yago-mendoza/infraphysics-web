@@ -234,6 +234,9 @@ In `MiniGraph.tsx` the 3D view sets `linkVisibility={false}` and paints every ed
 ### `navigate()` is a transition; state that must change with it goes in the same `startTransition`
 React Router 7 runs every `navigate()` as a React transition, so a plain `setState` fired in the same click handler commits one frame earlier than the route change: a bar disappears, then the page switches (wiki trail, cleared search before a note opens). Wrap the companion updates and the `navigate()` call together in `startTransition(() => { ... })`, as the wiki trail handlers and `openGraphNode` do. Do not reach for timeouts or effects to "sync" them.
 
+### Horizontal overflow is clipped with `overflow-x: clip`, never `hidden`
+`html, body` in `global.css` and the root wrapper in `App.tsx` use `overflow-x: clip`. `hidden` would turn each of them into a scroll container, and then `position: sticky` anywhere below (the article index in `ArticleGeometryLabView`, any future sticky rail) anchors to that non-scrolling box and never sticks. `clip` clips the same without creating a scroll container. If you need to clip an ancestor of something sticky, use `clip`.
+
 ### Wikinotes are still called `fieldnotes` on disk and in the category key
 The content type was renamed to "wikinotes" in code, docs, scripts and the `/create-wikinote` skill (Sep 2026), but every path and data contract kept the old name on purpose: `src/data/pages/fieldnotes/`, `public/fieldnotes/{uid}.json`, `fieldnotes-index.json`, the `Category` value `'fieldnotes'` (used by `og-manifest.json` and the edge function), the `/api/fieldnotes/*` dev endpoints and `--cat-fieldnotes-accent`. Do not "fix" those to wikinotes: they are deployed URLs and cached CDN paths. Identifiers say wikinote, paths and keys say fieldnotes.
 
