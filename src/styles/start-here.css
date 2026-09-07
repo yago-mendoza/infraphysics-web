@@ -1,8 +1,6 @@
-/* Start here (Home): a column-width carousel through four doors, in several
-   compositions (/home = tabs, /r1 … /r6 = candidates). Every door sets
-   --sh-accent to its category accent; everything else is theme tokens. */
-
-.start-here-tag { align-self:flex-start; padding:.3rem .5rem; border:1px solid var(--border-default); color:var(--text-tertiary); font:9px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; }
+/* Start here (Home): the four-door carousel under the intro. Picture full
+   bleed, four progress segments on top, copy bottom-left, halves to move.
+   Every door sets --sh-accent to its category accent; the rest is tokens. */
 
 /* Backdrops */
 .sh-visual { position:absolute; inset:0; display:block; overflow:hidden; }
@@ -16,118 +14,35 @@
 .sh-visual-thumb img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 35%; filter:grayscale(1) contrast(1.02); transition:filter .35s ease; }
 .sh-visual-thumb > i { position:absolute; inset:0; display:grid; place-items:center; color:var(--text-muted); font:9px/1 var(--font-mono); }
 
-/* Shared pieces */
+/* Card */
+.sh-card { position:relative; display:grid; grid-template-rows:auto minmax(0,1fr); min-height:20rem; overflow:hidden; border:1px solid var(--border-default); background:var(--bg-base); isolation:isolate; }
 .sh-card-backdrop { position:absolute; inset:0; z-index:0; }
 .sh-card-layer { position:absolute; inset:0; opacity:0; transition:opacity .6s ease; }
 .sh-card-layer.is-active { opacity:1; }
-.sh-card-copy { position:relative; z-index:2; display:grid; align-content:end; gap:.4rem; max-width:26rem; padding:1.4rem 1.1rem 1.2rem; color:var(--text-secondary); animation:sh-copy-in .45s ease both; }
-/* Text keeps its own reserve so the backdrop can come through on hover without eating the copy. */
+.sh-card-backdrop::after { content:''; position:absolute; inset:0; z-index:1; background:linear-gradient(to top,color-mix(in srgb,var(--bg-base) 94%,transparent) 0%,color-mix(in srgb,var(--bg-base) 55%,transparent) 42%,transparent 75%); }
+.sh-card:hover .sh-visual-thumb img { filter:grayscale(0); }
+.sh-card:hover .sh-visual-graph .graph-thumb { filter:saturate(1); }
+
+/* Progress segments double as the door tabs */
+.sh-stories-segments { position:relative; z-index:3; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.3rem; padding:.55rem .6rem 0; }
+.sh-stories-segments button { display:block; height:.9rem; padding:.35rem 0; border:0; background:transparent; cursor:pointer; }
+.sh-stories-segments button::before { content:''; display:block; height:2px; background:color-mix(in srgb,var(--text-heading) 14%,transparent); }
+.sh-stories-segments button i { display:block; height:2px; margin-top:-2px; width:100%; background:color-mix(in srgb,var(--sh-accent) 80%,var(--text-secondary)); transform:scaleX(0); transform-origin:left; }
+.sh-stories-segments button.is-done i { transform:scaleX(1); }
+.sh-stories-segments button.is-live i { animation:sh-progress 7s linear both; }
+.sh-stories-segments button.is-live i.is-paused { animation-play-state:paused; }
+@keyframes sh-progress { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+.sh-stories-half { position:absolute; top:2rem; bottom:0; z-index:2; width:30%; border:0; background:transparent; cursor:pointer; }
+.sh-stories-prev { left:0; } .sh-stories-next { right:0; }
+
+/* Copy */
+.sh-card-copy { position:relative; z-index:2; grid-row:2; display:grid; align-content:end; align-self:end; gap:.4rem; max-width:26rem; padding:1.4rem 1.1rem 1.2rem; color:var(--text-secondary); animation:sh-copy-in .45s ease both; }
 .sh-card-copy::before { content:""; position:absolute; inset:-1rem -3rem -.5rem -.2rem; z-index:-1; background:radial-gradient(ellipse at 20% 80%,color-mix(in srgb,var(--bg-base) 92%,transparent) 0%,color-mix(in srgb,var(--bg-base) 78%,transparent) 45%,transparent 75%); pointer-events:none; }
 @keyframes sh-copy-in { from { opacity:0; transform:translateX(-.9rem); } to { opacity:1; transform:none; } }
-.sh-card-copy small { color:var(--sh-accent); font:9px/1.3 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; }
+.sh-card-copy small { color:color-mix(in srgb,var(--sh-accent) 80%,var(--text-secondary)); font:9px/1.3 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; }
 .sh-card-copy strong { color:var(--text-heading); font:400 1.45rem/1.08 var(--font-serif); letter-spacing:-.02em; }
 .sh-card-copy > span { display:-webkit-box; overflow:hidden; color:var(--text-tertiary); font:.78rem/1.5 var(--font-sans); -webkit-line-clamp:2; -webkit-box-orient:vertical; }
 .sh-card-copy em { margin-top:.2rem; color:var(--text-muted); font:normal 9px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; transition:color .16s ease; }
 .sh-card-copy:hover em { color:var(--text-heading); }
 .sh-card-copy:hover strong { color:var(--sh-accent); }
-.sh-card-progress { position:absolute; left:0; right:0; bottom:0; z-index:3; height:2px; background:color-mix(in srgb,var(--text-heading) 8%,transparent); }
-.sh-card-progress i { display:block; height:100%; width:100%; background:var(--sh-accent); transform-origin:left; animation:sh-progress 7s linear both; }
-.sh-card-progress i.is-paused { animation-play-state:paused; }
-@keyframes sh-progress { from { transform:scaleX(0); } to { transform:scaleX(1); } }
-.sh-card-controls { display:flex; gap:.2rem; }
-.sh-card-controls button { display:grid; place-items:center; width:1.55rem; height:1.55rem; border:1px solid transparent; background:transparent; color:var(--text-tertiary); font:12px/1 var(--font-mono); cursor:pointer; transition:color .15s ease,border-color .15s ease; }
-.sh-card-controls button:hover { color:var(--text-heading); border-color:var(--border-default); }
-/* Letter tabs, shared by several layouts */
-.sh-card-tabs,.sh-split-rail,.sh-band-letters { display:flex; gap:.25rem; }
-.sh-card-tabs button,.sh-split-rail button,.sh-band-letters button { display:grid; place-items:center; width:1.55rem; height:1.55rem; border:1px solid var(--border-default); background:transparent; color:var(--text-tertiary); font:600 10px/1 var(--font-mono); cursor:pointer; transition:color .15s ease,border-color .15s ease,background-color .15s ease; }
-.sh-card-tabs button:hover,.sh-split-rail button:hover,.sh-band-letters button:hover { color:var(--text-heading); border-color:color-mix(in srgb,var(--sh-accent) 70%,var(--border-default)); }
-.sh-card-tabs button.is-active,.sh-split-rail button.is-active,.sh-band-letters button.is-active { color:var(--text-on-accent); border-color:color-mix(in srgb,var(--sh-accent) 80%,var(--text-secondary)); background:color-mix(in srgb,var(--sh-accent) 80%,var(--text-secondary)); }
-@media (prefers-reduced-motion:reduce) { .sh-card-layer,.sh-card-copy { animation:none; transition:none; } .sh-card-progress,.sh-stories-segments { display:none; } }
-
-/* 0. Tabs (home) */
-.sh-card { position:relative; display:grid; grid-template-rows:auto minmax(0,1fr); min-height:16.5rem; overflow:hidden; border:1px solid var(--border-default); background:var(--bg-base); isolation:isolate; }
-.sh-card-tall { min-height:20rem; grid-template-rows:minmax(0,1fr); }
-.sh-card-backdrop::after { content:''; position:absolute; inset:0; z-index:1; background:linear-gradient(to right,color-mix(in srgb,var(--bg-base) 94%,transparent) 0%,color-mix(in srgb,var(--bg-base) 82%,transparent) 48%,color-mix(in srgb,var(--bg-base) 30%,transparent) 100%); transition:opacity .35s ease; }
-.sh-card:hover .sh-card-backdrop::after,.sh-split:hover .sh-card-backdrop::after,.sh-ledger-visual:hover .sh-card-backdrop::after { opacity:.45; }
-.sh-card:hover .sh-visual-thumb img,.sh-split:hover .sh-visual-thumb img,.sh-ledger-visual:hover .sh-visual-thumb img,.sh-deck-card.is-active:hover .sh-visual-thumb img { filter:grayscale(0); }
-.sh-card:hover .sh-visual-graph .graph-thumb,.sh-split:hover .sh-visual-graph .graph-thumb { filter:saturate(1); }
-.sh-card-bar { position:relative; z-index:2; display:flex; align-items:center; justify-content:space-between; padding:.55rem .6rem .55rem .7rem; border-bottom:1px solid var(--border-default); background:color-mix(in srgb,var(--bg-base) 88%,transparent); }
-
-/* 1. Filmstrip */
-.sh-filmstrip { display:grid; gap:.4rem; }
-.sh-filmstrip-strip { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.4rem; }
-.sh-filmstrip-thumb { position:relative; height:4.2rem; padding:0; overflow:hidden; border:1px solid var(--border-default); background:var(--bg-base); cursor:pointer; transition:border-color .18s ease; }
-.sh-filmstrip-thumb .sh-visual { opacity:.55; transition:opacity .2s ease; }
-.sh-filmstrip-thumb.is-active,.sh-filmstrip-thumb:hover { border-color:var(--sh-accent); }
-.sh-filmstrip-thumb.is-active .sh-visual,.sh-filmstrip-thumb:hover .sh-visual { opacity:1; }
-.sh-filmstrip-thumb span { position:absolute; left:.4rem; bottom:.35rem; display:flex; align-items:center; gap:.35rem; padding:.2rem .4rem; background:color-mix(in srgb,var(--bg-base) 88%,transparent); color:var(--text-secondary); font:9px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; }
-.sh-filmstrip-thumb span b { color:var(--sh-accent); }
-
-/* 2. Split */
-.sh-split { position:relative; display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1fr) 2.2rem; min-height:16rem; overflow:hidden; border:1px solid var(--border-default); background:var(--bg-base); isolation:isolate; }
-.sh-split-visual { position:relative; min-height:12rem; border-right:1px solid var(--border-default); }
-.sh-split-visual .sh-card-backdrop::after { background:linear-gradient(to right,transparent 60%,color-mix(in srgb,var(--bg-base) 40%,transparent)); }
-.sh-split-copy { position:relative; display:grid; grid-template-rows:minmax(0,1fr) auto; }
-.sh-split-copy .sh-card-copy { padding:1.2rem 1.1rem .6rem; }
-.sh-split-copy .sh-card-copy::before { display:none; }
-.sh-split-copy .sh-card-controls { padding:0 .8rem .7rem; }
-.sh-split-rail { flex-direction:column; align-items:center; justify-content:center; gap:.3rem; border-left:1px solid var(--border-default); background:color-mix(in srgb,var(--bg-surface) 55%,var(--bg-base)); }
-@media (max-width:640px) { .sh-split { grid-template-columns:minmax(0,1fr) 2.2rem; } .sh-split-visual { grid-column:1 / -1; min-height:9rem; border-right:0; border-bottom:1px solid var(--border-default); } }
-
-/* 3. Band */
-.sh-band { position:relative; display:grid; grid-template-columns:7.5rem minmax(0,1fr) auto; align-items:stretch; min-height:8.5rem; overflow:hidden; border:1px solid var(--border-default); background:var(--bg-base); isolation:isolate; }
-.sh-band-visual { position:relative; border-right:1px solid var(--border-default); }
-.sh-band-visual .sh-card-backdrop::after { display:none; }
-.sh-band .sh-card-copy { align-content:center; max-width:none; padding:1rem 1.1rem; }
-.sh-band .sh-card-copy::before { display:none; }
-.sh-band .sh-card-copy strong { font-size:1.2rem; }
-.sh-band-letters { align-items:center; gap:.3rem; padding:0 .9rem; border-left:1px solid var(--border-default); }
-.sh-band-letters button { width:2rem; height:2rem; font-size:12px; }
-@media (max-width:640px) { .sh-band { grid-template-columns:5rem minmax(0,1fr); } .sh-band-letters { display:none; } }
-
-/* 4. Stories */
-.sh-stories { grid-template-rows:auto minmax(0,1fr); }
-.sh-stories .sh-card-backdrop::after { background:linear-gradient(to top,color-mix(in srgb,var(--bg-base) 94%,transparent) 0%,color-mix(in srgb,var(--bg-base) 55%,transparent) 42%,transparent 75%); }
-.sh-stories:hover .sh-card-backdrop::after { opacity:1; }
-.sh-stories-segments { position:relative; z-index:3; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.3rem; padding:.55rem .6rem 0; }
-.sh-stories-segments span { display:block; height:2px; overflow:hidden; background:color-mix(in srgb,var(--text-heading) 14%,transparent); }
-.sh-stories-segments span i { display:block; height:100%; width:100%; background:var(--sh-accent); transform:scaleX(0); transform-origin:left; }
-.sh-stories-segments span.is-done i { transform:scaleX(1); }
-.sh-stories-segments span.is-live i { animation:sh-progress 7s linear both; }
-.sh-stories-segments span.is-live i.is-paused { animation-play-state:paused; }
-.sh-stories-half { position:absolute; top:2rem; bottom:0; z-index:2; width:30%; border:0; background:transparent; cursor:pointer; }
-.sh-stories-prev { left:0; } .sh-stories-next { right:0; }
-.sh-stories .sh-card-copy { grid-row:2; align-self:end; }
-
-/* 5. Ledger */
-.sh-ledger { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,.95fr); min-height:16rem; overflow:hidden; border:1px solid var(--border-default); background:var(--bg-base); }
-.sh-ledger-list { margin:0; padding:0; list-style:none; display:grid; align-content:stretch; border-right:1px solid var(--border-default); }
-.sh-ledger-list li { position:relative; border-bottom:1px solid var(--border-default); }
-.sh-ledger-list li:last-child { border-bottom:0; }
-.sh-ledger-list li::before { content:''; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--sh-accent); transform:scaleY(0); transition:transform .18s ease; }
-.sh-ledger-list li.is-active::before { transform:scaleY(1); }
-.sh-ledger-list a { display:grid; grid-template-columns:1.6rem minmax(0,1fr); gap:.2rem .5rem; align-items:baseline; padding:.7rem .8rem .7rem .9rem; color:var(--text-secondary); transition:background-color .16s ease; }
-.sh-ledger-list li.is-active a { background:color-mix(in srgb,var(--text-heading) 3%,transparent); }
-.sh-ledger-list a span { color:var(--sh-accent); font:600 9px/1.4 var(--font-mono); }
-.sh-ledger-list a strong { color:var(--text-heading); font:400 .98rem/1.2 var(--font-serif); letter-spacing:-.01em; }
-.sh-ledger-list a small { grid-column:2; color:var(--text-muted); font:8px/1.3 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; }
-.sh-ledger-list li.is-active a strong { color:var(--sh-accent); }
-.sh-ledger-visual { position:relative; display:block; min-height:12rem; isolation:isolate; }
-.sh-ledger-visual .sh-card-backdrop::after { background:linear-gradient(to top,color-mix(in srgb,var(--bg-base) 70%,transparent),transparent 45%); }
-.sh-ledger-visual em { position:absolute; right:.8rem; bottom:.7rem; z-index:2; color:var(--text-heading); font:normal 9px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; }
-@media (max-width:640px) { .sh-ledger { grid-template-columns:1fr; } .sh-ledger-list { border-right:0; border-bottom:1px solid var(--border-default); } }
-
-/* 6. Deck */
-.sh-deck { position:relative; height:19rem; overflow:hidden; }
-.sh-deck-card { position:absolute; top:0; bottom:0; left:50%; width:72%; overflow:hidden; border:1px solid var(--border-default); background:var(--bg-base); isolation:isolate; transform:translateX(-50%); transition:transform .5s cubic-bezier(.22,.75,.25,1),opacity .4s ease,filter .4s ease; display:grid; grid-template-rows:minmax(0,1fr); }
-.sh-deck-card .sh-visual { position:absolute; inset:0; }
-.sh-deck-card::after { content:''; position:absolute; inset:0; z-index:1; background:linear-gradient(to right,color-mix(in srgb,var(--bg-base) 94%,transparent) 0%,color-mix(in srgb,var(--bg-base) 70%,transparent) 55%,color-mix(in srgb,var(--bg-base) 25%,transparent) 100%); }
-.sh-deck-card.is-active { z-index:3; }
-.sh-deck-card.is-next,.sh-deck-card.is-prev { z-index:2; width:60%; cursor:pointer; opacity:.55; filter:saturate(.4); }
-.sh-deck-card.is-next { transform:translateX(12%) scale(.92); }
-.sh-deck-card.is-prev { transform:translateX(-112%) scale(.92); }
-.sh-deck-card.is-hidden { z-index:1; opacity:0; transform:translateX(-50%) scale(.85); pointer-events:none; }
-.sh-deck-card .sh-card-copy { align-self:end; }
-.sh-deck-label { position:absolute; left:.8rem; bottom:.7rem; z-index:2; display:flex; align-items:center; gap:.4rem; color:var(--text-secondary); font:9px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; }
-.sh-deck-label b { color:var(--sh-accent); }
-@media (max-width:640px) { .sh-deck-card { width:86%; } .sh-deck-card.is-next { transform:translateX(38%) scale(.9); } .sh-deck-card.is-prev { transform:translateX(-138%) scale(.9); } }
+@media (prefers-reduced-motion:reduce) { .sh-card-layer,.sh-card-copy { animation:none; transition:none; } .sh-stories-segments button i { animation:none; } }

@@ -101,7 +101,7 @@ Append relevant lessons to the **Gotchas** section below. Update or remove stale
 
 ## Routes
 
-- Personal: `/home`, `/about`, `/contact`, `/thanks`. `/r1`…`/r6` render Home with alternative "Start here" carousels (`StartHere.tsx`) for comparison; remove once one is chosen.
+- Personal: `/home`, `/about`, `/contact`, `/thanks`
 - Lab: `/lab/projects` (dark theme)
 - Blog: `/blog/essays`, `/blog/bits2bricks` (light theme)
 - Wiki: `/wiki`, `/wiki/:uid` (legacy `/lab/second-brain/*` URLs redirect here)

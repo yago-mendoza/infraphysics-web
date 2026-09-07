@@ -1,5 +1,5 @@
 // Closing plate on the Home page, under "Ideas in public": the wiki graph in
-// its purple centrality ramp on a dark field, a small plate with the brain
+// brand oxide on a dark field, a small plate with the brain
 // mark, and one plain line.
 
 import React from 'react';
@@ -12,7 +12,7 @@ import '../../styles/wiki-banner.css';
 export const WikiBanner: React.FC = () => (
   <div className="home-field-wide wiki-banner-wrap">
     <Link to={secondBrainPath()} className="wiki-banner" aria-label="Open the wiki">
-      <span className="wb-field" aria-hidden="true"><GraphThumb className="graph-thumb" tone="purple" /></span>
+      <span className="wb-field" aria-hidden="true"><GraphThumb className="graph-thumb" /></span>
       <span className="wb-copy">
         <small>The wiki</small>
         <strong>{wikiNoteCount} short notes on the concepts I work with, linked to each other.</strong>
