@@ -1,22 +1,18 @@
-/* Wiki banner (Home, under "Ideas in public"): a sponsor-plate strip with the
-   graph as a frozen 3D view in dulled oxide on a dark field, a wordmark and
-   one line. Dark in both themes on purpose, like the wiki itself. */
+/* Wiki banner (Home, under "Ideas in public"): a plate with the graph as a
+   frozen 3D render behind a wordmark and one line. Follows the page theme:
+   light on light, dark on dark. */
 
 .wiki-banner-wrap { padding-top:0; margin-bottom:clamp(2rem,5vw,3.5rem); }
-.wiki-banner { --graph-oxide:color-mix(in srgb,var(--brand-oxide) 58%,#7a6f66); position:relative; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; min-height:14rem; padding:1.6rem; overflow:hidden; border:1px solid #25252d; background:#0a0a10; color:#b8b3ad; isolation:isolate; }
+.wiki-banner { position:relative; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; min-height:19rem; padding:1.6rem; overflow:hidden; border:1px solid var(--border-default); background:color-mix(in srgb,var(--bg-surface) 60%,var(--bg-base)); color:var(--text-secondary); isolation:isolate; }
 .wb-field { position:absolute; inset:0; z-index:0; }
-.wb-field .graph-thumb { position:absolute; inset:0; width:100%; height:100%; }
-.wb-field .graph-thumb-field { fill:#0a0a10; }
-.wb-field .graph-thumb-links line { stroke:var(--graph-oxide); stroke-opacity:.16; stroke-width:.12; }
-.wb-field .graph-thumb-link-2 { stroke-opacity:.3; stroke-width:.18; }
-.wb-field .graph-thumb-nodes circle { fill:var(--graph-oxide); }
-.wb-field::after { content:''; position:absolute; inset:0; background:linear-gradient(to right,rgba(10,10,16,.9),rgba(10,10,16,.35) 60%,transparent); }
+.wb-field .graph-thumb { position:absolute; inset:0; width:100%; height:100%; display:block; }
+.wb-field::after { content:''; position:absolute; inset:0; background:linear-gradient(to right,color-mix(in srgb,var(--bg-base) 80%,transparent),color-mix(in srgb,var(--bg-base) 20%,transparent) 48%,transparent 70%); }
 .wb-copy { position:relative; z-index:1; display:grid; gap:.5rem; align-content:end; }
-.wb-copy small { color:#7d7871; font:9px/1.3 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; }
-.wb-copy strong { color:#f1ede6; font:400 1.45rem/1.08 var(--font-serif); letter-spacing:-.02em; }
-.wb-copy em { color:#9a948c; font:normal 9px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; transition:color .16s ease; }
-.wiki-banner:hover .wb-copy em { color:#f1ede6; }
-.wb-mark { position:relative; z-index:1; display:flex; align-items:center; gap:.6rem; align-self:end; padding:.6rem .9rem; border:1px solid currentColor; color:color-mix(in srgb,var(--brand-oxide) 78%,#b8b3ad); }
+.wb-copy small { color:var(--text-muted); font:9px/1.3 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; }
+.wb-copy strong { color:var(--text-heading); font:400 1.45rem/1.08 var(--font-serif); letter-spacing:-.02em; }
+.wb-copy em { color:var(--text-tertiary); font:normal 9px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; transition:color .16s ease; }
+.wiki-banner:hover .wb-copy em { color:var(--text-heading); }
+.wb-mark { position:relative; z-index:1; display:flex; align-items:center; gap:.6rem; align-self:end; padding:.6rem .9rem; border:1px solid currentColor; color:color-mix(in srgb,var(--brand-oxide) 78%,var(--text-secondary)); background:color-mix(in srgb,var(--bg-base) 70%,transparent); }
 .wb-logo { width:1.3rem; height:1.3rem; }
 .wb-mark b { font:600 11px/1 var(--font-mono); letter-spacing:.26em; text-transform:uppercase; }
 @media (max-width:640px) {
