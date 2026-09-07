@@ -42,7 +42,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
   if (posts.length === 0) return <EmptyState query={query} />;
 
   return (
-    <div className={projectVariant === 5 ? 'project-exhibition-list max-w-6xl mx-auto' : 'max-w-4xl mx-auto border-t border-th-border'}>
+    <div className={projectVariant === 5 ? 'project-exhibition-list' : 'max-w-4xl mx-auto border-t border-th-border'}>
       {posts.map((post, index) => {
         const excerpt = getExcerpt(post.content, query);
         const matchCount = query ? getMatchCount(post.content, query) : 0;
