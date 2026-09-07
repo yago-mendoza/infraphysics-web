@@ -50,3 +50,24 @@
   .glab-index { position: static; padding-top: .8rem; }
   .glab-index ol { gap: .4rem; }
 }
+
+/* Header block. Essays: text then hero, stacked. Bits2Bricks (.glab-split): text left, hero right. */
+.glab-head { display: grid; grid-template-columns: minmax(0, 1fr); }
+.glab-split .glab-head { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2.5rem; align-items: end; margin-bottom: 2.4rem; }
+.glab-split .glab-head .glab-hero { margin: 0; }
+.glab-split .glab-head .glab-meta-row { margin-bottom: 0; }
+@media (max-width: 900px) { .glab-split .glab-head { grid-template-columns: 1fr; gap: 1.2rem; } }
+
+/* Numbered section index (Bits2Bricks) */
+.article-geometry .glab-index-numbered a.article-toc-link { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .5rem; align-items: baseline; }
+.article-geometry .glab-index-numbered a.article-toc-link b { color: var(--art-accent); font: 600 9px/1.4 var(--font-mono); }
+
+/* Engagement row in the meta line: quiet text, no pills (essays get the same from article-layout.css). */
+.article-geometry.article-page-wrapper .glab-meta-row .article-engagement-row { gap: 1.25rem; }
+.article-geometry.article-page-wrapper .glab-meta-row .article-meta-views,
+.article-geometry.article-page-wrapper .glab-meta-row .article-heart-btn,
+.article-geometry.article-page-wrapper .glab-meta-row .article-share-btn { height: auto; padding: 0; border: 0; border-radius: 0; background: none; font-family: var(--font-sans); font-size: .85rem; color: var(--art-text-mid); }
+.article-geometry.article-page-wrapper .glab-meta-row .article-meta-views:hover,
+.article-geometry.article-page-wrapper .glab-meta-row .article-heart-btn:hover,
+.article-geometry.article-page-wrapper .glab-meta-row .article-heart-btn.hearted,
+.article-geometry.article-page-wrapper .glab-meta-row .article-share-btn:hover { background: none; border: 0; }

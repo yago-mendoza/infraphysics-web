@@ -462,53 +462,61 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   );
 
   return (
-    <div className={`article-page-wrapper article-${post.category}${isBlog ? ' article-blog' : ''}${isEssays ? ' article-geometry' : ''} animate-fade-in`}>
+    <div className={`article-page-wrapper article-${post.category}${isBlog ? ' article-blog' : ''}${isBlog ? ' article-geometry' : ''} animate-fade-in`}>
       {createPortal(
         <div ref={progressRef} className="article-progress-bar" style={{ backgroundColor: `var(--cat-${post.category}-accent)` }} />,
         document.body
       )}
 
-      {isEssays ? (
-        /* Essays geometry: breadcrumb, sans title, meta line, rounded hero,
-           sticky index of top-level sections on the left, body on the right. */
-        <article className="glab">
+      {isBlog ? (
+        /* Blog geometry: breadcrumb, sans title, meta line, rounded hero,
+           sticky index of top-level sections on the left, body on the right.
+           Essays stack the hero under the meta; Bits2Bricks put the hashtags
+           above the title, the hero beside it and number the index. */
+        <article className={`glab${isEssays ? '' : ' glab-split'}`}>
           <nav className="glab-crumb" aria-label="Breadcrumb">
             <Link to="/home">home</Link><span>/</span><Link to={getSectionPath(post.category)}>blog</Link><span>/</span><b>{catCfg?.title ?? post.category}</b>
           </nav>
-          <h1 className="glab-title">{post.displayTitle || post.title}</h1>
-          {post.subtitle && <p className="glab-subtitle">{post.subtitle}</p>}
-          <div className="glab-meta-row">
-            <p className="glab-meta">
-              <Link to={authorPath}>{authorName}</Link>
-              <span>·</span><time dateTime={post.date}>{formattedDate}</time>
-              <span>·</span><span>{readingTime} min read</span>
-            </p>
-            <div className="article-engagement-row article-essays-engagement">
-              <div className="article-engagement-left">
-                {views != null && (
-                  <span className="article-meta-views"><EyeIcon size={15} /> {views}</span>
-                )}
-                {hearts != null && (
-                  <button onClick={toggleHeart} className={`article-heart-btn${hearted ? ' hearted' : ''}`} title={hearted ? 'Unlike' : 'Like'}>
-                    <HeartIcon size={15} filled={hearted} /> {hearts}
-                  </button>
-                )}
+          <div className="glab-head">
+            <div className="glab-head-text">
+              {!isEssays && <ArticleHashtags tags={post.tags} technologies={post.technologies} />}
+              <h1 className="glab-title">{post.displayTitle || post.title}</h1>
+              {post.subtitle && <p className="glab-subtitle">{post.subtitle}</p>}
+              <div className="glab-meta-row">
+                <p className="glab-meta">
+                  <Link to={authorPath}>{authorName}</Link>
+                  <span>·</span><time dateTime={post.date}>{formattedDate}</time>
+                  <span>·</span><span>{readingTime} min read</span>
+                  {!isEssays && post.complexity != null && <><span>·</span><span>complexity {post.complexity}/10</span></>}
+                </p>
+                <div className="article-engagement-row article-essays-engagement">
+                  <div className="article-engagement-left">
+                    {views != null && (
+                      <span className="article-meta-views"><EyeIcon size={15} /> {views}</span>
+                    )}
+                    {hearts != null && (
+                      <button onClick={toggleHeart} className={`article-heart-btn${hearted ? ' hearted' : ''}`} title={hearted ? 'Unlike' : 'Like'}>
+                        <HeartIcon size={15} filled={hearted} /> {hearts}
+                      </button>
+                    )}
+                  </div>
+                  {shareDropdown}
+                </div>
               </div>
-              {shareDropdown}
             </div>
+            {post.thumbnail && (
+              <figure className={`glab-hero thumb-${post.thumbnailAspect || 'full'}`}>
+                <img src={post.thumbnail} alt={post.displayTitle || post.title} loading="eager" style={thumbFocusStyle} />
+              </figure>
+            )}
           </div>
-          {post.thumbnail && (
-            <figure className={`glab-hero thumb-${post.thumbnailAspect || 'full'}`}>
-              <img src={post.thumbnail} alt={post.displayTitle || post.title} loading="eager" style={thumbFocusStyle} />
-            </figure>
-          )}
           <div className="glab-grid">
-            <aside className="glab-index" id="article-toc">
+            <aside className={`glab-index${isEssays ? '' : ' glab-index-numbered'}`} id="article-toc">
               {topHeadings.length > 1 && (
                 <>
-                  <small>In this article</small>
+                  <small>{isEssays ? 'In this article' : 'Sections'}</small>
                   <ol>
-                    {topHeadings.map(h => <li key={h.id}><a href={`#${h.id}`} className="article-toc-link" onClick={event => { event.preventDefault(); document.getElementById(h.id)?.scrollIntoView({ behavior: 'instant', block: 'start' }); }}>{h.text}</a></li>)}
+                    {topHeadings.map((h, i) => <li key={h.id}><a href={`#${h.id}`} className="article-toc-link" onClick={event => { event.preventDefault(); document.getElementById(h.id)?.scrollIntoView({ behavior: 'instant', block: 'start' }); }}>{!isEssays && <b>{String(i + 1).padStart(2, '0')}</b>}<span>{h.text}</span></a></li>)}
                   </ol>
                 </>
               )}
