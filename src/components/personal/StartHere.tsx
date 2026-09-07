@@ -1,7 +1,8 @@
 // Four doors (wiki, pinned essay, a project, a Bits2Bricks lesson) in one
 // column-width carousel that sits under the Home intro: picture full-bleed,
 // four progress segments on top, copy bottom-left, halves to move. Progress
-// is driven in script so a hover freezes it and the bar resumes where it was.
+// is driven in script; a hover does not stop the rotation, it only shows the live
+// segment full, and on leave the bar shows the real progress again.
 // Every door sets --sh-accent to its category accent.
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -52,7 +53,7 @@ const Visual: React.FC<{ door: Door }> = ({ door }) => door.key === 'wiki'
 
 export const StartHere: React.FC = () => {
   const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const [progress, setProgress] = useState(0); // 0..1 of the current door
   const elapsedRef = useRef(0);
   const go = useCallback((next: number) => {
@@ -60,10 +61,9 @@ export const StartHere: React.FC = () => {
     setProgress(0);
     setIndex(((next % DOORS.length) + DOORS.length) % DOORS.length);
   }, []);
-  // Elapsed time accumulates only while not paused, so a hover freezes the
-  // bar in place and the countdown resumes from there.
+  // The countdown never pauses: hovering only changes what the live segment displays.
   useEffect(() => {
-    if (paused || DOORS.length < 2) return;
+    if (DOORS.length < 2) return;
     let frame = 0;
     let last = performance.now();
     const tick = (now: number) => {
@@ -80,18 +80,18 @@ export const StartHere: React.FC = () => {
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [paused, index]);
+  }, [index]);
   if (DOORS.length === 0) return null;
   const door = DOORS[index];
   return (
-    <div className="sh-card sh-stories" style={doorStyle(door)} onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}>
+    <div className="sh-card sh-stories" style={doorStyle(door)} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocus={() => setHovered(true)} onBlur={() => setHovered(false)}>
       <div className="sh-card-backdrop" aria-hidden="true">
         {DOORS.map((item, i) => <div key={item.key} className={`sh-card-layer${i === index ? ' is-active' : ''}`}><Visual door={item} /></div>)}
       </div>
       <div className="sh-stories-segments" role="tablist" aria-label="Start here">
         {DOORS.map((item, i) => (
           <button key={item.key} type="button" role="tab" aria-selected={i === index} aria-label={`${item.ref} · ${item.kicker}`} style={doorStyle(item)} className={i < index ? 'is-done' : i === index ? 'is-live' : ''} onClick={() => go(i)}>
-            <i style={i === index ? { transform: `scaleX(${progress})` } : undefined} />
+            <i style={i === index ? { transform: `scaleX(${hovered ? 1 : progress})` } : undefined} />
           </button>
         ))}
       </div>

@@ -116,6 +116,7 @@ infraphysics-web/
       categories.generated.json
       data.ts                 # Runtime data loader
     public/
+      home-wiki-{dark,light}.png # Captures of the wiki console for the Home closing plate (retake when the wiki UI changes)
       avatar.jpg              # Self-hosted portrait for the home identity anchor (240px, preloaded from index.html)
       articles/<article-id>/  # Local image assets grouped by article ID
       playgrounds/<article-id>/ # Self-contained interactive "playgrounds" (HTML/JS) per article, linked via [text](/playgrounds/<id>/<name>.html)
