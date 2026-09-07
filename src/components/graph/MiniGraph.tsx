@@ -128,7 +128,9 @@ const MiniGraph: React.FC<{
   onExpand?: () => void;
   /** Expanded workspace only: lets the toolbar switch between root-family and centrality coloring. */
   onColorModeChange?: (mode: GraphColorMode) => void;
-}> = ({ resultIds, previewIds = null, searchQuery, cameraFocusIds = null, cameraAnchorIds = null, colorMode = 'centrality', expanded = false, activeRoot = '', onNodeOpen, activeNodeId, onNodeSelect, onAreaPreview, onMinimize, onExpand, onColorModeChange }) => {
+  /** Expanded workspace only: a click on empty canvas drops the current node selection. */
+  onClearSelection?: () => void;
+}> = ({ resultIds, previewIds = null, searchQuery, cameraFocusIds = null, cameraAnchorIds = null, colorMode = 'centrality', expanded = false, activeRoot = '', onNodeOpen, activeNodeId, onNodeSelect, onAreaPreview, onMinimize, onExpand, onColorModeChange, onClearSelection }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
 
@@ -897,6 +899,11 @@ const MiniGraph: React.FC<{
     setSelectedId(node.id);
     onNodeSelect?.(node);
   }, [onNodeSelect]);
+  const clearSelection = useCallback(() => {
+    if (!expanded || !selectedId) return;
+    setSelectedId(null);
+    onClearSelection?.();
+  }, [expanded, onClearSelection, selectedId]);
 
   // Apply compact force settings — tighter layout
   useEffect(() => {
@@ -1139,14 +1146,6 @@ const MiniGraph: React.FC<{
       ctx.shadowBlur = 0;
     }
 
-    if (expanded && (selected || depth === 1)) {
-      const fontSize = Math.max(2.4, 9 / globalScale);
-      ctx.font = `${fontSize}px ui-monospace, SFMono-Regular, monospace`;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-      ctx.fillStyle = selected ? '#f7fee7' : '#d1d5db';
-      ctx.globalAlpha = selected ? 1 : depth !== undefined ? .88 : .66;
-      ctx.fillText(n.name, n.x, n.y + r + 1.2 / globalScale);
-    }
 
     ctx.globalAlpha = 1;
   }, [backlinkDepthById, baseCssById, baseRgbById, expanded, hoveredId, multiSelected, nodeRadiusById, nodeVisualColor, previewIds, resultIds, rootHexByName, selectedId]);
@@ -1250,6 +1249,7 @@ const MiniGraph: React.FC<{
             onEngineStop={() => { if (topologyChangedRef.current) { topologyChangedRef.current = false; if (expanded ? !topologyCameraCancelledRef.current : !miniCameraAutomationBlockedRef.current) { if (expanded) centerGraph(); else frameVisibleCore(graphRef.current, 650); } topologyCameraCancelledRef.current = false; } else frameGraph(); updateOffscreenIndicators(); saveSettledLayout(); setPhysicsSettling(false); }}
             onZoomEnd={updateOffscreenIndicators}
             onNodeClick={(node: any) => (expanded || miniAnalysisEnabled) && inspectNode(node as GraphNode)}
+            onBackgroundClick={clearSelection}
             onNodeRightClick={(node: any) => expanded && onNodeOpen?.(node as GraphNode)}
             onNodeHover={() => undefined}
             autoPauseRedraw={!highlightAnimating}
@@ -1279,6 +1279,7 @@ const MiniGraph: React.FC<{
             linkWidth={0}
             onEngineStop={() => { if (topologyChangedRef.current) { topologyChangedRef.current = false; if (!topologyCameraCancelledRef.current) centerGraph(); topologyCameraCancelledRef.current = false; } else frameGraph(); saveSettledLayout(); setPhysicsSettling(false); }}
             onNodeClick={(node: any) => inspectNode(node as GraphNode)}
+            onBackgroundClick={clearSelection}
             onNodeHover={(node: any) => setHoveredId(node ? (node as GraphNode).id : null)}
             onNodeRightClick={(node: any) => onNodeOpen?.(node as GraphNode)}
             d3AlphaDecay={0.05}

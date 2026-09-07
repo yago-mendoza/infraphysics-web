@@ -1146,6 +1146,7 @@ export const SecondBrainSidebar: React.FC = () => {
               activeNodeId={graphSelectionCleared ? null : activePost?.id ?? null}
               onNodeSelect={node => { setGraphSelectionCleared(false); minimizeGraph(false); openGraphNode(node); }}
               onNodeOpen={node => { setGraphSelectionCleared(false); minimizeGraph(false); window.setTimeout(() => navigate(secondBrainPath(node.id)), 220); }}
+              onClearSelection={() => setGraphSelectionCleared(true)}
             />
           </Suspense>
           <div className={`group absolute left-20 right-20 top-3 z-[65] mx-auto max-w-2xl border border-th-hub-border bg-th-base/90 font-mono shadow-lg transition-opacity duration-500 focus-within:opacity-100 hover:opacity-100 ${graphInput ? 'opacity-90' : 'opacity-[.14]'}`}>

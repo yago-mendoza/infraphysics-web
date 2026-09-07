@@ -24,7 +24,7 @@ Read the entire input holistically. Before doing anything, think:
 2. **Does any of this belong in EXISTING notes?** Search the index for concepts that already exist. If the input adds new information to an existing concept, the plan should say "enrich existing note X" — not create a duplicate.
 
 3. **For each NEW note**, propose:
-   - **address** — follow naming conventions (products capitalized, acronyms ALL CAPS, fields lowercase, techniques lowercase, proper nouns as-is). Use `//` hierarchy separator. See **Address depth philosophy** below for nesting rules.
+   - **address** — every segment in sentence case: first letter capital, the rest as in prose (`Channel capacity`, not `Channel Capacity` nor `channel capacity`); products, proper nouns and acronyms keep their own casing (`Gmail API`, `RLHF`). Full rule in `src/data/pages/README.md` (Wikinote names). Use `//` hierarchy separator. See **Address depth philosophy** below for nesting rules.
    - **name** — the display name
    - **1-line summary** of what it will contain
    - **parent** — where it nests in the existing tree. Check if parent exists. If not, flag for stub.
