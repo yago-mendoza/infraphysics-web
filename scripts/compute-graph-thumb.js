@@ -2,7 +2,7 @@
  * compute-graph-thumb.js
  * Build-time script: reads fieldnotes-index.generated.json, lays out the whole
  * wikinote graph with a small deterministic force simulation and writes a
- * static picture of it (positions, radii, root colours, centrality percentile, typed edges) to
+ * static picture of it (3D positions, radii, root colours, centrality percentile, typed edges) to
  * src/data/graph-thumb.generated.json. The Home page draws it as inline SVG
  * so it looks like the wiki's minimised graph without loading the index or
  * the force-graph library.
@@ -84,45 +84,47 @@ function run() {
   // hashed satellite position instead of piling up in the centre.
   const random = mulberry32(20260906);
   const n = ids.length;
-  const pos = ids.map(() => ({ x: random() - .5, y: random() - .5 }));
+  const pos = ids.map(() => ({ x: random() - .5, y: random() - .5, z: (random() - .5) * .6 }));
   const hash01 = (value, salt) => { let h = 2166136261 ^ salt; for (let i = 0; i < value.length; i += 1) { h ^= value.charCodeAt(i); h = Math.imul(h, 16777619); } return ((h >>> 0) % 10000) / 10000; };
-  const satellite = ids.map((id, index) => degree[index] ? null : { x: (hash01(id, 71) - .5) * 1.6, y: (hash01(id, 97) - .5) * 1.6 });
+  const satellite = ids.map((id, index) => degree[index] ? null : { x: (hash01(id, 71) - .5) * 1.6, y: (hash01(id, 97) - .5) * 1.6, z: (hash01(id, 131) - .5) * .8 });
   const k = Math.sqrt(1 / n) * .85;
   let temperature = .1;
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) {
-    const disp = pos.map(() => ({ x: 0, y: 0 }));
+    const disp = pos.map(() => ({ x: 0, y: 0, z: 0 }));
     for (let i = 0; i < n; i += 1) for (let j = i + 1; j < n; j += 1) {
-      let dx = pos[i].x - pos[j].x, dy = pos[i].y - pos[j].y;
-      const d = Math.hypot(dx, dy) || 1e-4;
+      let dx = pos[i].x - pos[j].x, dy = pos[i].y - pos[j].y, dz = pos[i].z - pos[j].z;
+      const d = Math.hypot(dx, dy, dz) || 1e-4;
       if (d > .35) continue; // short-range repulsion keeps this O(n²) pass cheap enough
       const force = (k * k) / d;
-      dx /= d; dy /= d;
-      disp[i].x += dx * force; disp[i].y += dy * force;
-      disp[j].x -= dx * force; disp[j].y -= dy * force;
+      dx /= d; dy /= d; dz /= d;
+      disp[i].x += dx * force; disp[i].y += dy * force; disp[i].z += dz * force;
+      disp[j].x -= dx * force; disp[j].y -= dy * force; disp[j].z -= dz * force;
     }
     for (const [i, j] of links) {
-      let dx = pos[i].x - pos[j].x, dy = pos[i].y - pos[j].y;
-      const d = Math.hypot(dx, dy) || 1e-4;
+      let dx = pos[i].x - pos[j].x, dy = pos[i].y - pos[j].y, dz = pos[i].z - pos[j].z;
+      const d = Math.hypot(dx, dy, dz) || 1e-4;
       const force = (d * d) / k;
-      dx /= d; dy /= d;
-      disp[i].x -= dx * force; disp[i].y -= dy * force;
-      disp[j].x += dx * force; disp[j].y += dy * force;
+      dx /= d; dy /= d; dz /= d;
+      disp[i].x -= dx * force; disp[i].y -= dy * force; disp[i].z -= dz * force;
+      disp[j].x += dx * force; disp[j].y += dy * force; disp[j].z += dz * force;
     }
     for (let i = 0; i < n; i += 1) {
       const anchor = satellite[i];
-      if (anchor) { disp[i].x += (anchor.x - pos[i].x) * .3; disp[i].y += (anchor.y - pos[i].y) * .3; }
-      else { disp[i].x -= pos[i].x * .05; disp[i].y -= pos[i].y * .05; }
-      const d = Math.hypot(disp[i].x, disp[i].y) || 1e-4;
+      if (anchor) { disp[i].x += (anchor.x - pos[i].x) * .3; disp[i].y += (anchor.y - pos[i].y) * .3; disp[i].z += (anchor.z - pos[i].z) * .3; }
+      else { disp[i].x -= pos[i].x * .05; disp[i].y -= pos[i].y * .05; disp[i].z -= pos[i].z * .09; }
+      const d = Math.hypot(disp[i].x, disp[i].y, disp[i].z) || 1e-4;
       const step = Math.min(d, temperature);
       pos[i].x += (disp[i].x / d) * step;
       pos[i].y += (disp[i].y / d) * step;
+      pos[i].z += (disp[i].z / d) * step;
     }
     temperature *= .99;
   }
 
-  // Normalise into a 0..100 box with a small margin.
-  const xs = pos.map(p => p.x), ys = pos.map(p => p.y);
+  // Normalise x/y into a 0..100 box with a small margin; z keeps the same scale, centred on 0.
+  const xs = pos.map(p => p.x), ys = pos.map(p => p.y), zs = pos.map(p => p.z);
   const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const zMid = (Math.min(...zs) + Math.max(...zs)) / 2;
   const span = Math.max(maxX - minX, maxY - minY) || 1;
   const offsetX = (span - (maxX - minX)) / 2, offsetY = (span - (maxY - minY)) / 2;
   const byDegree = ids.map((_, index) => index).sort((a, b) => degree[a] - degree[b]);
@@ -135,6 +137,7 @@ function run() {
       id,
       x: Number((4 + ((pos[index].x - minX + offsetX) / span) * 92).toFixed(1)),
       y: Number((4 + ((pos[index].y - minY + offsetY) / span) * 92).toFixed(1)),
+      z: Number((((pos[index].z - zMid) / span) * 92).toFixed(1)),
       r: Number((.32 + Math.pow(percentile[index], .78) * .95).toFixed(2)),
       c: colorByRoot.get(root) ?? ROOT_NEUTRAL,
       p: Number(percentile[index].toFixed(2)),

@@ -4,14 +4,17 @@
 
 /* Backdrops */
 .sh-visual { position:absolute; inset:0; display:block; overflow:hidden; }
-.sh-visual-graph { --graph-oxide:color-mix(in srgb,var(--brand-oxide) 58%,var(--text-tertiary)); background:color-mix(in srgb,var(--brand-oxide) 5%,var(--bg-base)); background-image:linear-gradient(color-mix(in srgb,var(--brand-oxide) 11%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--brand-oxide) 11%,transparent) 1px,transparent 1px); background-size:2.1rem 2.1rem; }
+.sh-visual-graph { --graph-oxide:color-mix(in srgb,var(--brand-oxide) 58%,var(--text-tertiary)); background:color-mix(in srgb,var(--text-heading) 5%,var(--bg-base)); background-image:linear-gradient(color-mix(in srgb,var(--text-heading) 13%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--text-heading) 13%,transparent) 1px,transparent 1px); background-size:2.1rem 2.1rem; }
 .sh-visual-graph .graph-thumb { position:absolute; inset:0; width:100%; height:100%; }
 .sh-visual-graph .graph-thumb-field { fill:transparent; }
-.sh-visual-graph .graph-thumb-links line { stroke:var(--graph-oxide); stroke-opacity:.14; }
+.sh-visual-graph .graph-thumb-links line { stroke:var(--graph-oxide); stroke-opacity:.1; stroke-width:.14; }
+.sh-visual-graph .graph-thumb-link-2 { stroke:color-mix(in srgb,var(--text-heading) 70%,var(--brand-oxide)); stroke-opacity:.34; stroke-width:.22; }
+.sh-visual-graph .graph-thumb-link-1 { stroke-opacity:.22; }
 .sh-visual-graph .graph-thumb-halos { display:none; }
-.sh-visual-graph .graph-thumb-nodes circle { fill:var(--graph-oxide); opacity:.55; }
+.sh-visual-graph .graph-thumb-nodes circle { fill:var(--graph-oxide); opacity:.62; stroke:var(--bg-base); stroke-width:.18; }
+.sh-visual-graph .graph-thumb-rings circle { stroke:var(--graph-oxide); stroke-width:.2; opacity:.7; }
 .sh-visual-thumb { background:var(--bg-base); }
-.sh-visual-thumb img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 35%; filter:grayscale(1) contrast(1.02); transition:filter .35s ease; }
+.sh-visual-thumb img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 35%; }
 .sh-visual-thumb > i { position:absolute; inset:0; display:grid; place-items:center; color:var(--text-muted); font:9px/1 var(--font-mono); }
 
 /* Card */
@@ -19,8 +22,7 @@
 .sh-card-backdrop { position:absolute; inset:0; z-index:0; }
 .sh-card-layer { position:absolute; inset:0; opacity:0; transition:opacity .6s ease; }
 .sh-card-layer.is-active { opacity:1; }
-.sh-card-backdrop::after { content:''; position:absolute; inset:0; z-index:1; background:linear-gradient(to top,color-mix(in srgb,var(--bg-base) 94%,transparent) 0%,color-mix(in srgb,var(--bg-base) 55%,transparent) 42%,transparent 75%); }
-.sh-card:hover .sh-visual-thumb img { filter:grayscale(0); }
+.sh-card-backdrop::after { content:''; position:absolute; inset:0; z-index:1; background:linear-gradient(to top,color-mix(in srgb,var(--bg-base) 82%,transparent) 0%,color-mix(in srgb,var(--bg-base) 38%,transparent) 40%,transparent 68%); }
 .sh-card:hover .sh-visual-graph .graph-thumb-nodes circle { opacity:.75; }
 
 /* Progress segments double as the door tabs */
@@ -29,15 +31,12 @@
 .sh-stories-segments button::before { content:''; display:block; height:2px; background:color-mix(in srgb,var(--text-heading) 14%,transparent); }
 .sh-stories-segments button i { display:block; height:2px; margin-top:-2px; width:100%; background:color-mix(in srgb,var(--sh-accent) 80%,var(--text-secondary)); transform:scaleX(0); transform-origin:left; }
 .sh-stories-segments button.is-done i { transform:scaleX(1); }
-.sh-stories-segments button.is-live i { animation:sh-progress 7s linear both; }
-.sh-stories-segments button.is-live i.is-paused { animation:none; transform:scaleX(1); }
-@keyframes sh-progress { from { transform:scaleX(0); } to { transform:scaleX(1); } }
 .sh-stories-half { position:absolute; top:2rem; bottom:0; z-index:2; width:50%; border:0; background:transparent; cursor:pointer; }
 .sh-stories-prev { left:0; } .sh-stories-next { right:0; }
 
 /* Copy */
 .sh-card-copy { position:relative; z-index:3; grid-row:2; display:grid; align-content:end; align-self:end; gap:.4rem; max-width:26rem; padding:1.4rem 1.1rem 1.2rem; color:var(--text-secondary); animation:sh-copy-in .45s ease both; }
-.sh-card-copy::before { content:""; position:absolute; inset:-1rem -3rem -.5rem -.2rem; z-index:-1; background:radial-gradient(ellipse at 20% 80%,color-mix(in srgb,var(--bg-base) 92%,transparent) 0%,color-mix(in srgb,var(--bg-base) 78%,transparent) 45%,transparent 75%); pointer-events:none; }
+.sh-card-copy::before { content:""; position:absolute; inset:-1rem -3rem -.5rem -.2rem; z-index:-1; background:radial-gradient(ellipse at 20% 80%,color-mix(in srgb,var(--bg-base) 66%,transparent) 0%,color-mix(in srgb,var(--bg-base) 40%,transparent) 45%,transparent 72%); pointer-events:none; }
 @keyframes sh-copy-in { from { opacity:0; transform:translateX(-.9rem); } to { opacity:1; transform:none; } }
 .sh-card-copy small { color:color-mix(in srgb,var(--sh-accent) 80%,var(--text-secondary)); font:9px/1.3 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; }
 .sh-card-copy strong { color:var(--text-heading); font:400 1.45rem/1.08 var(--font-serif); letter-spacing:-.02em; }
@@ -45,4 +44,4 @@
 .sh-card-copy em { margin-top:.2rem; color:var(--text-muted); font:normal 9px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; transition:color .16s ease; }
 .sh-card-copy:hover em { color:var(--text-heading); }
 .sh-card-copy:hover strong { color:var(--sh-accent); }
-@media (prefers-reduced-motion:reduce) { .sh-card-layer,.sh-card-copy { animation:none; transition:none; } .sh-stories-segments button i { animation:none; } }
+@media (prefers-reduced-motion:reduce) { .sh-card-layer,.sh-card-copy { animation:none; transition:none; } }

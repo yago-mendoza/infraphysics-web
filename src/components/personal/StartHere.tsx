@@ -1,6 +1,7 @@
 // Four doors (wiki, pinned essay, a project, a Bits2Bricks lesson) in one
 // column-width carousel that sits under the Home intro: picture full-bleed,
-// four progress segments on top, copy bottom-left, tap the halves to move.
+// four progress segments on top, copy bottom-left, halves to move. Progress
+// is driven in script so a hover freezes it and the bar resumes where it was.
 // Every door sets --sh-accent to its category accent.
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -52,13 +53,34 @@ const Visual: React.FC<{ door: Door }> = ({ door }) => door.key === 'wiki'
 export const StartHere: React.FC = () => {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  const timer = useRef<number | null>(null);
+  const [progress, setProgress] = useState(0); // 0..1 of the current door
+  const elapsedRef = useRef(0);
+  const go = useCallback((next: number) => {
+    elapsedRef.current = 0;
+    setProgress(0);
+    setIndex(((next % DOORS.length) + DOORS.length) % DOORS.length);
+  }, []);
+  // Elapsed time accumulates only while not paused, so a hover freezes the
+  // bar in place and the countdown resumes from there.
   useEffect(() => {
     if (paused || DOORS.length < 2) return;
-    timer.current = window.setTimeout(() => setIndex(current => (current + 1) % DOORS.length), ROTATE_MS);
-    return () => { if (timer.current) window.clearTimeout(timer.current); };
-  }, [index, paused]);
-  const go = useCallback((next: number) => setIndex(((next % DOORS.length) + DOORS.length) % DOORS.length), []);
+    let frame = 0;
+    let last = performance.now();
+    const tick = (now: number) => {
+      elapsedRef.current += now - last;
+      last = now;
+      if (elapsedRef.current >= ROTATE_MS) {
+        elapsedRef.current = 0;
+        setProgress(0);
+        setIndex(current => (current + 1) % DOORS.length);
+      } else {
+        setProgress(elapsedRef.current / ROTATE_MS);
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [paused, index]);
   if (DOORS.length === 0) return null;
   const door = DOORS[index];
   return (
@@ -69,7 +91,7 @@ export const StartHere: React.FC = () => {
       <div className="sh-stories-segments" role="tablist" aria-label="Start here">
         {DOORS.map((item, i) => (
           <button key={item.key} type="button" role="tab" aria-selected={i === index} aria-label={`${item.ref} · ${item.kicker}`} style={doorStyle(item)} className={i < index ? 'is-done' : i === index ? 'is-live' : ''} onClick={() => go(i)}>
-            <i key={`${door.key}-${paused ? 'p' : 'r'}`} className={paused ? 'is-paused' : ''} />
+            <i style={i === index ? { transform: `scaleX(${progress})` } : undefined} />
           </button>
         ))}
       </div>

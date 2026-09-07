@@ -134,8 +134,6 @@ The question is no longer how far the machine will go, but who I want to be when
 
 I don't end with a prediction; Astra makes those better, and faster. I end with a decision, which still has to be made slowly and in the first person. Sit down. Write by hand. Watch an animal that isn't optimizing anything. Learn, at last, to meditate. The days will look much the same, and I'm as excited as someone setting out on a very long journey without knowing where it ends.
 
-That afternoon I did nothing. The ducks are still there.
-
 ---
 
 ## Model-based fault detection in a two-tank system
