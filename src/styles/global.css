@@ -1374,7 +1374,6 @@ a.stack-row:hover .stack-arrow { color:var(--brand-oxide); transition-delay:75ms
 }
 .project-exhibition-image .project-exhibition-number { position:absolute; top:.75rem; left:.75rem; z-index:1; display:inline-flex; align-items:center; padding:.38rem .55rem; border:1px solid color-mix(in srgb,var(--cat-projects-accent) 45%,transparent); border-radius:999px; background:color-mix(in srgb,var(--bg-base) 82%,transparent); color:var(--cat-projects-accent); font:8px/1 var(--font-mono); backdrop-filter:blur(8px); }
 .project-exhibition-copy { padding-top:1.15rem; }
-}
 .project-exhibition-card:nth-child(even) .project-exhibition-copy { text-align:right; }
 .project-exhibition-card:nth-child(even) .project-exhibition-copy > small,
 .project-exhibition-card:nth-child(even) .project-exhibition-copy > em { margin-left:auto; }
