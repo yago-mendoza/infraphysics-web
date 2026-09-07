@@ -71,7 +71,7 @@ infraphysics-web/
       RetentionHints.tsx      # Contextual nudges for undiscovered features (scroll depth, wikilinks, search)
       ExperimentalCursor.tsx  # Optional custom cursor (user preference)
       wiki/                   # Second Brain: WikiContent, WikiLinkPreview, NeighborhoodGraph, RelevanceLeaderboard, BridgeScoreBadge, NavigationTrail, CopyExportModal, SecondBrainGuide
-      personal/               # Personal pages: AboutTopBar, ContactLogoSculpture, GraphThumb, GraphThumb3D, HomeVisualLab,
+      personal/               # Personal pages: AboutTopBar, ContactLogoSculpture, GraphThumb, HomeVisualLab,
                               #   StartHere (four-door carousel under the intro) and WikiBanner (closing plate)
       article/                # ArticleBreadcrumbs, ArticleHashtags, BlogMetabar
       sections/               # SearchResultsList, ProjectsList, EssaysList, Bits2BricksGrid
