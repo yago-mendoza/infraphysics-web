@@ -370,7 +370,7 @@ const ActivityHeatmap: React.FC<{
   };
 
   return (
-    <div className="relative">
+    <div className="relative mx-auto" style={{ maxWidth: '58rem' }}>
       {/* Year selector */}
       <div className="flex items-center gap-2 mb-1.5">
         <button onClick={() => setYear(y => y - 1)} className="text-[10px] text-th-muted hover:text-th-secondary transition-colors">&lsaquo;</button>
