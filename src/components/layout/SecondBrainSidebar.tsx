@@ -1,6 +1,6 @@
 // Wiki Console sidebar — data exploration dashboard for Second Brain routes
 
-import React, { useState, useRef, useEffect, useMemo, Suspense } from 'react';
+import React, { useState, useRef, useEffect, useMemo, Suspense, startTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { isSecondBrainPath, secondBrainPath } from '../../config/categories';
@@ -738,10 +738,12 @@ export const SecondBrainSidebar: React.FC = () => {
     allWikiNotes.map(note => [note.id, note.date?.slice(0, 10) ?? '']),
   ), [allWikiNotes]);
   const openGraphNode = (node: { id: string }) => {
-    // An active search shows the result matrix instead of the card; drop it so the concept opens directly.
-    if (query) setQuery('');
-    setGraphInput('');
-    navigate(secondBrainPath(node.id));
+    // An active search shows the result matrix instead of the card; drop it in the same transition as the route change so the card is the only thing that appears.
+    startTransition(() => {
+      if (query) setQuery('');
+      setGraphInput('');
+      navigate(secondBrainPath(node.id));
+    });
   };
 
   const rootOptions = useMemo(() => {

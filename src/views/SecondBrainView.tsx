@@ -1,6 +1,6 @@
 // Second Brain / Concept Wiki view component — theme-aware
 
-import React, { Suspense, useCallback, useState, useEffect, useRef, useMemo } from 'react';
+import React, { Suspense, startTransition, useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { secondBrainPath, secondBrainUidFromPath } from '../config/categories';
@@ -1616,8 +1616,9 @@ export const SecondBrainView: React.FC = () => {
       {trail.length > 0 && activePost && <div className="mb-3 max-w-3xl overflow-hidden">
         <NavigationTrail
           trail={trail}
-          onItemClick={index => { const item = trail[index]; truncateTrail(index); navigate(secondBrainPath(item.id)); }}
-          onAllConceptsClick={() => { clearTrail(); navigate(secondBrainPath()); }}
+          // React Router runs navigate as a transition; the trail update must ride the same transition or the bar vanishes a frame before the page changes.
+          onItemClick={index => { const item = trail[index]; startTransition(() => { truncateTrail(index); navigate(secondBrainPath(item.id)); }); }}
+          onAllConceptsClick={() => startTransition(() => { clearTrail(); navigate(secondBrainPath()); })}
         />
       </div>}
 
