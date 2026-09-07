@@ -105,7 +105,7 @@ Append relevant lessons to the **Gotchas** section below. Update or remove stale
 - Lab: `/lab/projects` (dark theme)
 - Blog: `/blog/essays`, `/blog/bits2bricks` (light theme)
 - Wiki: `/wiki`, `/wiki/:uid` (legacy `/lab/second-brain/*` URLs redirect here)
-- Post detail: `/lab/:category/:id` (dark), `/blog/:category/:id` (light)
+- Post detail: `/lab/:category/:id` (dark), `/blog/:category/:id` (light). `/essays2/:id` and `/bits2bricks2/:id` render the same articles in an experimental geometry (`ArticleGeometryLabView.tsx`); remove once one is chosen.
 - Theme auto-switch: `/lab/*` → dark, `/blog/*` → light (instant, no transition). Manual toggle (Shift+T) still works per-page.
 - Backgrounds: Starfield (personal, dark only), DualGrid (lab/wiki), Clean (blog posts)
 

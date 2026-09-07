@@ -1,0 +1,45 @@
+/* Article geometry lab (/essays2, /bits2bricks2): breadcrumb, sans title, meta
+   line, rounded full-width hero, sticky index of top-level sections on the
+   left and the body on the right. Category typography (essay drop cap, Lora
+   body, Bits2Bricks hashtags) still comes from article.css / article-layout.css
+   through the article-* wrapper classes. */
+
+.geometry-lab.article-page-wrapper { max-width: none !important; }
+.glab { width: min(68rem, 100%); margin-inline: auto; padding: 1rem 0 4rem; }
+
+.glab-crumb { display: flex; gap: .55rem; margin-bottom: 1.4rem; color: var(--text-muted); font: 9px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
+.glab-crumb a { color: var(--text-tertiary); }
+.glab-crumb a:hover { color: var(--text-heading); }
+.glab-crumb b { color: var(--art-accent); font-weight: 600; }
+
+.geometry-lab .article-hashtags { margin: 0 0 .9rem; }
+
+.glab-title { margin: 0 0 .9rem; color: var(--text-heading); font: 500 clamp(2.1rem, 4.6vw, 3.6rem)/1.06 var(--font-sans); letter-spacing: -.035em; }
+.glab-subtitle { margin: 0 0 1rem; max-width: 46rem; color: var(--text-secondary); font: 400 1.1rem/1.5 var(--font-sans); }
+.geometry-lab.article-essays .glab-subtitle { font-family: var(--essay-body-font); font-style: italic; }
+.glab-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: .55rem; margin: 0 0 1.8rem; color: var(--text-muted); font: 9px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
+.glab-meta a { color: var(--text-heading); font-weight: 600; }
+.glab-meta a:hover { color: var(--art-accent); }
+
+.glab-hero { margin: 0 0 2.6rem; overflow: hidden; border-radius: 14px; background: var(--bg-surface-alt); }
+.glab-hero img { display: block; width: 100%; max-height: 30rem; object-fit: cover; }
+/* thumbnailAspect: full means the whole picture (diagrams), never a height crop */
+.glab-hero.thumb-full img { max-height: 34rem; object-fit: contain; }
+
+.glab-grid { display: grid; grid-template-columns: 15.5rem minmax(0, 1fr); gap: 3rem; align-items: start; }
+.glab-index { position: sticky; top: 5.5rem; padding-top: .9rem; border-top: 1px solid var(--border-default); }
+.glab-index small { display: block; margin-bottom: 1.1rem; color: var(--text-muted); font: 9px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
+.glab-index ol { margin: 0; padding: 0; list-style: none; display: grid; gap: .55rem; }
+.glab-index a { display: block; color: var(--text-secondary); font: 400 .82rem/1.35 var(--font-sans); transition: color .15s ease; }
+.glab-index a:hover { color: var(--text-heading); }
+.glab-index a.is-active { color: var(--text-heading); font-weight: 500; text-decoration: underline; text-decoration-color: var(--art-accent); text-underline-offset: .28em; }
+
+.glab-body { min-width: 0; }
+/* The body column is the reading measure; category rules may cap it again at their own measure. */
+.geometry-lab .glab-body .article-content { width: 100% !important; max-width: 42rem !important; margin-inline: 0 !important; }
+
+@media (max-width: 900px) {
+  .glab-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+  .glab-index { position: static; padding-top: .8rem; }
+  .glab-index ol { gap: .4rem; }
+}
