@@ -15,7 +15,7 @@
       <category>essays</category>
     </item>
     <item>
-      <title>When an equation notices a leak</title>
+      <title>Model-based fault detection in a two-tank system</title>
       <link>https://infraphysics.net/blog/bits2bricks/3142718</link>
       <guid>https://infraphysics.net/blog/bits2bricks/3142718</guid>
       <pubDate>Fri, 28 Aug 2026 00:00:00 GMT</pubDate>
@@ -39,7 +39,7 @@
       <category>bits2bricks</category>
     </item>
     <item>
-      <title>Can you forecast a seizure with a spreadsheet and an LSTM?</title>
+      <title>Forecasting visual auras from event streams: a simulation-first study</title>
       <link>https://infraphysics.net/lab/projects/7654321</link>
       <guid>https://infraphysics.net/lab/projects/7654321</guid>
       <pubDate>Fri, 26 Jun 2026 00:00:00 GMT</pubDate>
@@ -55,7 +55,7 @@
       <category>essays</category>
     </item>
     <item>
-      <title>72 hours to find out if I could</title>
+      <title>A CRM for a health-tech startup, built solo in 72 hours</title>
       <link>https://infraphysics.net/lab/projects/3141592</link>
       <guid>https://infraphysics.net/lab/projects/3141592</guid>
       <pubDate>Sat, 14 Mar 2026 00:00:00 GMT</pubDate>
@@ -63,7 +63,7 @@
       <category>projects</category>
     </item>
     <item>
-      <title>I am not a web developer</title>
+      <title>Building this site: a markdown compiler, a theme system and a second brain</title>
       <link>https://infraphysics.net/lab/projects/6184744</link>
       <guid>https://infraphysics.net/lab/projects/6184744</guid>
       <pubDate>Sun, 08 Mar 2026 00:00:00 GMT</pubDate>
@@ -127,7 +127,7 @@
       <category>bits2bricks</category>
     </item>
     <item>
-      <title>A personal finance dashboard for the crash</title>
+      <title>An investment dashboard with no build step: vanilla JS and Chart.js</title>
       <link>https://infraphysics.net/lab/projects/1112121</link>
       <guid>https://infraphysics.net/lab/projects/1112121</guid>
       <pubDate>Fri, 13 Feb 2026 00:00:00 GMT</pubDate>
@@ -223,7 +223,7 @@
       <category>essays</category>
     </item>
     <item>
-      <title>Making clinical-trial search feel like booking a flight</title>
+      <title>TrialGPT: from a medical report to a shortlist of eligible trials</title>
       <link>https://infraphysics.net/lab/projects/2718281</link>
       <guid>https://infraphysics.net/lab/projects/2718281</guid>
       <pubDate>Tue, 08 Jul 2025 00:00:00 GMT</pubDate>

@@ -179,28 +179,28 @@
   "selectedWork": [
     {
       "id": "2718281",
-      "title": "Making clinical-trial search feel like booking a flight",
+      "title": "TrialGPT: from a medical report to a shortlist of eligible trials",
       "category": "projects",
       "description": "A clinical-trial matching tool: describe your case or upload a report, and TrialGPT finds relevant trials near you, checks the inclusion and exclusion criteria against your situation, and drafts a message to the trial coordinator.",
       "url": "https://infraphysics.net/lab/projects/2718281"
     },
     {
       "id": "3142718",
-      "title": "When an equation notices a leak",
+      "title": "Model-based fault detection in a two-tank system",
       "category": "bits2bricks",
       "description": "Building a model-based fault detector from thirteen equations, four residuals and a very small hydraulic system.",
       "url": "https://infraphysics.net/blog/bits2bricks/3142718"
     },
     {
       "id": "3141592",
-      "title": "72 hours to find out if I could",
+      "title": "A CRM for a health-tech startup, built solo in 72 hours",
       "category": "projects",
       "description": "A bespoke CRM for a health-tech startup, designed and shipped solo in 72 hours. A real product built as an experiment in AI-assisted engineering: 23 tables, 8 state machines, automated enrichment and stale-relationship detection.",
       "url": "https://infraphysics.net/lab/projects/3141592"
     },
     {
       "id": "6184744",
-      "title": "I am not a web developer",
+      "title": "Building this site: a markdown compiler, a theme system and a second brain",
       "category": "projects",
       "description": "How a systems engineer built a personal site with a custom markdown compiler, a second brain, and an AI development partner (and what went wrong along the way).",
       "url": "https://infraphysics.net/lab/projects/6184744"

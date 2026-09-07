@@ -138,7 +138,7 @@ That afternoon I did nothing. The ducks are still there.
 
 ---
 
-## When an equation notices a leak
+## Model-based fault detection in a two-tank system
 
 URL: https://infraphysics.net/blog/bits2bricks/3142718
 Category: bits2bricks
@@ -920,7 +920,7 @@ And now the original diagram should look much less like wiring. Four little neur
 
 ---
 
-## Can you forecast a seizure with a spreadsheet and an LSTM?
+## Forecasting visual auras from event streams: a simulation-first study
 
 URL: https://infraphysics.net/lab/projects/7654321
 Category: projects
@@ -1184,7 +1184,7 @@ And then the 244 pages build to this: the model cheated, knew it was cheating, d
 
 ---
 
-## 72 hours to find out if I could
+## A CRM for a health-tech startup, built solo in 72 hours
 
 URL: https://infraphysics.net/lab/projects/3141592
 Category: projects
@@ -1505,7 +1505,7 @@ hour 72. 178 commits. 30 migrations. 32,058 lines. it works. I have no idea what
 
 ---
 
-## I am not a web developer
+## Building this site: a markdown compiler, a theme system and a second brain
 
 URL: https://infraphysics.net/lab/projects/6184744
 Category: projects
@@ -3901,7 +3901,7 @@ Most production pipelines use all three, not because more is better, but because
 
 ---
 
-## A personal finance dashboard for the crash
+## An investment dashboard with no build step: vanilla JS and Chart.js
 
 URL: https://infraphysics.net/lab/projects/1112121
 Category: projects
@@ -6818,7 +6818,7 @@ We are not at the fully automated pipeline yet. We are somewhere in the middle: 
 
 ---
 
-## Making clinical-trial search feel like booking a flight
+## TrialGPT: from a medical report to a shortlist of eligible trials
 
 URL: https://infraphysics.net/lab/projects/2718281
 Category: projects
