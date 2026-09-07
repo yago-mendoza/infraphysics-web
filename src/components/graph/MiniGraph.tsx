@@ -127,6 +127,10 @@ const MiniGraph: React.FC<{
   onMinimize?: () => void;
   /** Mini view only: renders the expand control inside the mini toolbar. */
   onExpand?: () => void;
+  /** Mini view only: expand straight into the 3D view. */
+  onExpand3d?: () => void;
+  /** Expanded workspace: which renderer to open with. */
+  initialDimension?: '2d' | '3d';
   /** Expanded workspace only: lets the toolbar switch between root-family and centrality coloring. */
   onColorModeChange?: (mode: GraphColorMode) => void;
   /** Expanded workspace only: a click on empty canvas drops the current node selection. */
@@ -134,7 +138,7 @@ const MiniGraph: React.FC<{
   /** Mini view only: shows a reset control in the toolbar while any filter, root or search is active. */
   filtersActive?: boolean;
   onResetFilters?: () => void;
-}> = ({ resultIds, previewIds = null, searchQuery, cameraFocusIds = null, cameraAnchorIds = null, colorMode = 'centrality', expanded = false, activeRoot = '', onNodeOpen, activeNodeId, onNodeSelect, onAreaPreview, onMinimize, onExpand, onColorModeChange, onClearSelection, filtersActive = false, onResetFilters }) => {
+}> = ({ resultIds, previewIds = null, searchQuery, cameraFocusIds = null, cameraAnchorIds = null, colorMode = 'centrality', expanded = false, activeRoot = '', onNodeOpen, activeNodeId, onNodeSelect, onAreaPreview, onMinimize, onExpand, onColorModeChange, onClearSelection, filtersActive = false, onResetFilters, onExpand3d, initialDimension = '2d' }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
 
@@ -187,7 +191,7 @@ const MiniGraph: React.FC<{
   const [densityAreaIds, setDensityAreaIds] = useState<Set<string> | null>(null);
   const [miniCameraDirty, setMiniCameraDirty] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [dimension, setDimension] = useState<'2d' | '3d'>('2d');
+  const [dimension, setDimension] = useState<'2d' | '3d'>(initialDimension);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [multiSelected, setMultiSelected] = useState<Set<string>>(() => new Set());
@@ -692,6 +696,12 @@ const MiniGraph: React.FC<{
     setMultiSelected(ids); setCopyStats(null); graph.refresh?.();
   }, [filtered, selectionMode]);
 
+  // Expanded workspace: the first click on a node selects it (lime), a second click on the
+  // already selected node opens it. Nothing navigates on a single click.
+  const selectOrOpen = useCallback((node: GraphNode) => {
+    if (selectedId === node.id) { onNodeOpen?.(node); return; }
+    setSelectedId(node.id);
+  }, [onNodeOpen, selectedId]);
   const handlePointerUp = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     const selection = selectionRectRef.current;
     if (selectionStartRef.current && selection) {
@@ -709,12 +719,11 @@ const MiniGraph: React.FC<{
       if (rect) targetId = findNearestNodeId(event.clientX - rect.left, event.clientY - rect.top);
     }
     if (!targetId) return;
+    const node = filtered?.nodes.find(candidate => candidate.id === targetId);
+    if (expanded) { if (node) selectOrOpen(node); return; }
     setSelectedId(targetId);
-    if (!expanded) {
-      const node = filtered?.nodes.find(candidate => candidate.id === targetId);
-      if (node) onNodeSelect?.(node);
-    }
-  }, [expanded, filtered, findNearestNodeId, hoveredId, onNodeSelect]);
+    if (node) onNodeSelect?.(node);
+  }, [expanded, filtered, findNearestNodeId, hoveredId, onNodeSelect, selectOrOpen]);
 
   // Refit only when the structural node set changes. Query highlighting never
   // changes `filtered`, so typing cannot reset the camera or the simulation.
@@ -919,10 +928,11 @@ const MiniGraph: React.FC<{
   }, [containerHeight, containerWidth, dimension, expanded, filtered]);
 
   const inspectNode = useCallback((node: GraphNode) => {
-    // When a select handler navigates away, painting the branch first only distracts.
+    if (expanded) { selectOrOpen(node); return; }
+    // Mini view: when a select handler navigates away, painting the branch first only distracts.
     if (onNodeSelect) { onNodeSelect(node); return; }
     setSelectedId(node.id);
-  }, [onNodeSelect]);
+  }, [expanded, onNodeSelect, selectOrOpen]);
   useEffect(() => {
     if (dimension !== '3d') return;
     setMiniAnalysisEnabled(false);
@@ -1352,7 +1362,7 @@ const MiniGraph: React.FC<{
             linkCanvasObject={linkCanvasObject}
             onEngineStop={() => { if (topologyChangedRef.current) { topologyChangedRef.current = false; if (expanded ? !topologyCameraCancelledRef.current : !miniCameraAutomationBlockedRef.current) { if (expanded) centerGraph(); else frameVisibleCore(graphRef.current, 650); } topologyCameraCancelledRef.current = false; } else frameGraph(); updateOffscreenIndicators(); saveSettledLayout(); setPhysicsSettling(false); }}
             onZoomEnd={updateOffscreenIndicators}
-            onNodeClick={(node: any) => (expanded || miniAnalysisEnabled) && inspectNode(node as GraphNode)}
+            onNodeClick={(node: any) => !expanded && miniAnalysisEnabled && inspectNode(node as GraphNode)}
             onBackgroundClick={clearSelection}
             onNodeRightClick={(node: any) => expanded && onNodeOpen?.(node as GraphNode)}
             onNodeHover={() => undefined}
@@ -1426,7 +1436,7 @@ const MiniGraph: React.FC<{
             onClick={() => setEdgeMode(mode)}
             className={`relative grid h-5 w-5 place-items-center transition-[opacity,background-color] hover:bg-th-surface ${(mode === 'hierarchy' ? visibility.hierarchy : visibility.body || visibility.interaction) ? 'opacity-100' : 'opacity-25'}`}
           ><i className="block h-px w-3.5" style={{ backgroundColor: mode === 'hierarchy' ? EDGE_COLORS.hierarchy : EDGE_COLORS.body, transform: mode === 'hierarchy' ? 'rotate(35deg)' : undefined }} /><span className="sr-only">{mode}</span></button>)}
-          {onExpand && <><i className="mx-0.5 h-3 w-px bg-th-hub-border" /><button type="button" onClick={onExpand} title="Expand graph" aria-label="Expand graph" className="grid h-5 w-5 place-items-center text-th-muted transition-colors hover:bg-th-surface hover:text-violet-300"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 1h4v4M5 11H1V7M11 1L7 5M1 11l4-4" /></svg></button></>}
+          {onExpand && <><i className="mx-0.5 h-3 w-px bg-th-hub-border" /><button type="button" onClick={onExpand} title="Expand graph" aria-label="Expand graph" className="grid h-5 w-5 place-items-center text-th-muted transition-colors hover:bg-th-surface hover:text-violet-300"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 1h4v4M5 11H1V7M11 1L7 5M1 11l4-4" /></svg></button>{onExpand3d && <button type="button" onClick={onExpand3d} title="Expand in 3D" aria-label="Expand in 3D" className="grid h-5 min-w-5 place-items-center px-1 text-[8px] font-semibold tracking-[.08em] text-th-muted transition-colors hover:bg-th-surface hover:text-violet-300">3D</button>}</>}
         </nav>}
         {expanded && <nav aria-label="Graph tools" className="absolute left-4 top-4 z-50 flex w-11 flex-col border border-th-hub-border bg-th-base p-1 font-mono shadow-xl">
           {onMinimize && <button type="button" onClick={onMinimize} title="Minimize graph" aria-label="Minimize graph" className="mb-2 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 text-th-muted transition-colors hover:bg-th-surface hover:text-violet-300"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"><path d="M1.5 4.5h3v-3M10.5 7.5h-3v3M4.5 4.5l-3-3M7.5 7.5l3 3" /></svg></button>}

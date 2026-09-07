@@ -47,7 +47,7 @@ const FieldOfView: React.FC<{ variant: FieldVariant }> = ({ variant }) => {
   return <section className="home-field-index field-plot-study field-plot-blueprint field-plot-interactive pb-14 md:pb-20"><div className="field-plot-caption"><span>Operational coordinates</span><small>YM / FOV / 05</small></div><div className="field-plot"><i className="field-axis-x" /><i className="field-axis-y" /><AxisLabels /><FieldPoints projections active={active?.label} onActivate={setActive} /><p>direction, not rank</p></div><div className="field-evidence-console"><span>{active ? `0${fieldCoordinates.indexOf(active) + 1}` : '--'}</span><strong>{active?.label ?? 'Awaiting selection'}</strong><p>{evidence}</p></div></section>;
 };
 
-export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVariant?: FieldVariant }> = ({ visualVariant, fieldVariant = 1 }) => {
+export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVariant?: FieldVariant; startVariant?: number }> = ({ visualVariant, fieldVariant = 1, startVariant = 0 }) => {
   const selectedWorkPosts = useMemo(() => selectedWorkIds
     .map(id => posts.find(post => post.id === id))
     .filter((post): post is PostSummary => Boolean(post)), []);
@@ -140,8 +140,8 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
         </div>
       </section>
 
-      {/* Start here: four doors in one rotating card. */}
-      <StartHere />
+      {/* Start here: four doors in one carousel. /r1 … /r6 compare compositions. */}
+      <StartHere variant={startVariant} />
 
       {/* Categories */}
       <section className="home-directory-section pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">

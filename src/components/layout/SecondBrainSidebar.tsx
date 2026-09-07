@@ -467,6 +467,9 @@ export const SecondBrainSidebar: React.FC = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [graphExpanded, setGraphExpanded] = useState(false);
   const [graphExpandedVisible, setGraphExpandedVisible] = useState(false);
+  const [graphExpandDimension, setGraphExpandDimension] = useState<'2d' | '3d'>('2d');
+  // Minimize shrinks the workspace toward the mini map; expand only fades and settles from near full size.
+  const [graphClosing, setGraphClosing] = useState(false);
   const graphMinimizeTimerRef = useRef<number | null>(null);
   const graphSearchInputRef = useRef<HTMLInputElement>(null);
   const [graphInput, setGraphInput] = useState('');
@@ -500,7 +503,8 @@ export const SecondBrainSidebar: React.FC = () => {
     return () => window.removeEventListener('wiki-root-preview', handlePreview);
   }, []);
 
-  const expandGraph = () => {
+  const expandGraph = (dimension: '2d' | '3d' = '2d') => {
+    setGraphExpandDimension(dimension);
     if (graphMinimizeTimerRef.current !== null) window.clearTimeout(graphMinimizeTimerRef.current);
     setMobileOpen(false);
     setPreviewRoot(null);
@@ -508,10 +512,12 @@ export const SecondBrainSidebar: React.FC = () => {
     setMiniAreaIds(null);
     setGraphInput(query || activePost?.title || '');
     setGraphSelectionCleared(false);
+    setGraphClosing(false);
     setGraphExpanded(true);
     requestAnimationFrame(() => requestAnimationFrame(() => setGraphExpandedVisible(true)));
   };
   const minimizeGraph = (returnToMatrix = graphSelectionCleared && graphInput.trim().length > 0) => {
+    setGraphClosing(true);
     setGraphExpandedVisible(false);
     if (returnToMatrix) { setQuery(''); navigate(secondBrainPath()); }
     graphMinimizeTimerRef.current = window.setTimeout(() => { setGraphExpanded(false); graphMinimizeTimerRef.current = null; }, 360);
@@ -791,11 +797,10 @@ export const SecondBrainSidebar: React.FC = () => {
     return graphDirectoryIndex.descendantsByPath.get(contextPath) ?? wikiLinkHighlightIds;
   }, [graphDirectoryIndex, wikiLinkHighlightIds, wikiLinkPreviewId]);
   const transientGraphHighlightIds = previewPathIds ?? previewRootIds ?? calendarPreviewIds ?? miniAreaIds ?? wikiLinkHighlightIds;
-  const graphStateReadout = (graphHighlightIds || transientGraphHighlightIds || (!graphSelectionCleared && activePost)) ? (
+  const graphStateReadout = (graphHighlightIds || transientGraphHighlightIds) ? (
     <span className="flex items-center gap-2 font-mono text-[8px] normal-case tracking-normal text-th-muted" aria-label="Graph visual state">
       {graphHighlightIds && <span className="flex items-center gap-1 text-indigo-300" title={`${graphHighlightIds.size} current matrix results`}><i className="h-1.5 w-1.5 rounded-full bg-indigo-300" />{graphHighlightIds.size}</span>}
       {transientGraphHighlightIds && <span className="flex items-center gap-1 text-fuchsia-400" title={`${transientGraphHighlightIds.size} temporarily previewed nodes`}><i className="h-1.5 w-1.5 rounded-full bg-fuchsia-400" />{transientGraphHighlightIds.size}</span>}
-      {!graphSelectionCleared && activePost && <span className="flex items-center gap-1 text-lime-400" title="Selected node and descendants"><i className="h-1.5 w-1.5 rounded-full bg-lime-400" />1</span>}
     </span>
   ) : null;
   const temporalPreviewIds = useMemo(() => {
@@ -841,7 +846,8 @@ export const SecondBrainSidebar: React.FC = () => {
               cameraAnchorIds={previewPathIds ?? previewRootIds ?? calendarPreviewIds ?? wikiLinkHighlightIds}
               onAreaPreview={setMiniAreaIds}
               colorMode="roots"
-              onExpand={expandGraph}
+              onExpand={() => expandGraph('2d')}
+              onExpand3d={() => expandGraph('3d')}
               onNodeSelect={openGraphNode}
               activeNodeId={activePost?.id ?? null}
               filtersActive={hasActiveFilters || !!directoryScope || searchActive}
@@ -1128,7 +1134,7 @@ export const SecondBrainSidebar: React.FC = () => {
 
       {graphExpanded && createPortal(
         <div
-          className={`fixed bottom-0 right-0 top-12 z-[60] overflow-hidden border-l border-th-hub-border bg-th-base transition-[opacity,transform,border-radius] duration-500 ease-[cubic-bezier(.22,1,.36,1)] ${graphExpandedVisible ? 'opacity-100 scale-100 rounded-none' : 'pointer-events-none opacity-0 scale-[.12] rounded-xl'}`}
+          className={`fixed bottom-0 right-0 top-12 z-[60] overflow-hidden border-l border-th-hub-border bg-th-base transition-[opacity,transform,border-radius] duration-500 ease-[cubic-bezier(.22,1,.36,1)] ${graphExpandedVisible ? 'opacity-100 scale-100 rounded-none' : graphClosing ? 'pointer-events-none opacity-0 scale-[.12] rounded-xl' : 'pointer-events-none opacity-0 scale-[.985] rounded-none'}`}
           style={{ left: SIDEBAR_WIDTH + SECOND_BRAIN_SIDEBAR_WIDTH, transformOrigin: '0 24%' }}
           role="region"
           aria-label="Expanded Wiki graph"
@@ -1136,6 +1142,7 @@ export const SecondBrainSidebar: React.FC = () => {
           <Suspense fallback={<div className="grid h-full place-items-center text-[10px] text-th-muted animate-pulse">Loading graph…</div>}>
             <MiniGraph
               expanded
+              initialDimension={graphExpandDimension}
               resultIds={graphHighlightIds}
               previewIds={transientGraphHighlightIds}
               searchQuery={hub.query}

@@ -147,13 +147,15 @@ const AppLayout: React.FC = () => {
   }, [location.pathname, applyZone]);
 
   const isBlog = location.pathname.startsWith('/blog');
-  const isHome = location.pathname === '/' || location.pathname === '/home';
+  // /r1 … /r6: Home with alternative "Start here" carousels, for comparison.
+  const isStartLab = /^\/r[1-6]$/.test(location.pathname);
+  const isHome = location.pathname === '/' || location.pathname === '/home' || isStartLab;
   const isAbout = location.pathname === '/about' || location.pathname.startsWith('/about/');
   const hasSystemField = isAbout
     || location.pathname.startsWith('/blog/essays')
     || location.pathname.startsWith('/blog/bits2bricks')
     || location.pathname.startsWith('/lab/projects');
-  const clockHome = location.pathname === '/home';
+  const clockHome = location.pathname === '/home' || isStartLab;
   const isSecondBrain = isSecondBrainPath(location.pathname);
   const isArticlePage = /^\/(blog|lab)\/[^/]+\/[^/]+/.test(location.pathname) && !isSecondBrain;
   // Project detail pages drop the grid and paint the page in the box surface color
@@ -211,12 +213,12 @@ const AppLayout: React.FC = () => {
             <Routes>
               <Route path="/" element={<Navigate to="/home" replace />} />
               <Route path="/home" element={<HomeView visualVariant={1} fieldVariant={3} />} />
+              {[1, 2, 3, 4, 5, 6].map(i => <React.Fragment key={i}><Route path={`/r${i}`} element={<HomeView visualVariant={1} fieldVariant={3} startVariant={i} />} /></React.Fragment>)}
               <Route path="/writing" element={<Navigate to="/blog/essays" replace />} />
               <Route path="/blog" element={<Navigate to="/blog/essays" replace />} />
               <Route path="/about" element={<AboutView />} />
               <Route path="/about/cv" element={<CvView />} />
               <Route path="/about/stack" element={<StackView />} />
-              <Route path="/about1" element={<Navigate to="/about/cv" replace />} />
               <Route path="/contact" element={<ContactView />} />
               <Route path="/thanks" element={<ThanksView />} />
 

@@ -56,7 +56,7 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
   const isActive = (path: string, label: string) => label === 'Writing'
     ? location.pathname.startsWith('/blog/')
     : label === 'Projects'
-      ? location.pathname === '/lab/projects' || location.pathname.startsWith('/lab/projects/') || /^\/(?:lab\/)?projects[1-4]$/.test(location.pathname)
+      ? location.pathname === '/lab/projects' || location.pathname.startsWith('/lab/projects/')
       : location.pathname === path || location.pathname.startsWith(path + '/');
   const links = [
     { to: '/home', label: 'Home' },
@@ -70,6 +70,8 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
   const isItemActive = (to: string) => to.startsWith('/blog/') ? location.pathname.startsWith(to) : location.pathname === to;
   const currentLabel = links.find(link => isActive(link.activePath ?? link.to, link.label))?.label ?? 'Explore';
   const pill = (active: boolean) => `px-3.5 py-2 rounded-xl text-[12px] font-medium tracking-wide transition-colors ${active ? 'bg-th-nav-accent text-th-on-accent' : 'text-th-tertiary hover:text-th-heading hover:bg-th-surface-alt'}`;
+  // Menu triggers are not links: a lighter hover than a real destination.
+  const menuPill = (active: boolean) => `px-3.5 py-2 rounded-xl text-[12px] font-medium tracking-wide transition-colors ${active ? 'bg-th-nav-accent text-th-on-accent' : 'text-th-tertiary hover:text-th-heading hover:bg-th-surface-alt/40'}`;
   const closeAll = () => { setOpen(false); setSettings(false); setMenu(null); };
   return (
     <>
@@ -102,11 +104,11 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
         <nav className="hidden xl:flex items-center gap-0.5" aria-label="Primary navigation">
           {links.map(link => isMenu(link.label) ? (
             <div className="relative" key={link.label} onMouseEnter={() => showMenu(link.label as MenuName)} onMouseLeave={hideMenu}>
-              <button type="button" onClick={() => { setOpen(false); setSettings(false); setMenu(menu === link.label ? null : link.label as MenuName); }} aria-expanded={menu === link.label} className={`inline-flex items-center gap-1 ${pill(isActive(link.activePath ?? link.to, link.label))}`}>{link.label} <span className="text-[8px] opacity-60">{menu === link.label ? '▴' : '▾'}</span></button>
+              <button type="button" onClick={() => { setOpen(false); setSettings(false); setMenu(menu === link.label ? null : link.label as MenuName); }} aria-expanded={menu === link.label} className={`inline-flex items-center gap-1 ${menuPill(isActive(link.activePath ?? link.to, link.label))}`}>{link.label} <span className="text-[8px] opacity-60">{menu === link.label ? '▴' : '▾'}</span></button>
               {menu === link.label && (
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 pb-3">
                   <div className="w-56 rounded-2xl border border-th-border bg-th-base shadow-2xl overflow-hidden p-1.5">
-                    {NAV_MENUS[link.label as MenuName].map(item => { const current = isItemActive(item.to); return <Link key={item.to} to={item.to} className={`flex items-center justify-between gap-4 rounded-xl px-3.5 py-2.5 text-[14px] font-medium ${current ? 'bg-th-nav-accent text-th-on-accent' : 'text-th-secondary hover:bg-th-surface-alt hover:text-th-heading'}`}><span>{item.label}</span><span className={`text-[14px] leading-none font-mono ${current ? 'opacity-70' : 'text-th-muted'}`}>→</span></Link>; })}
+                    {NAV_MENUS[link.label as MenuName].map(item => { const current = isItemActive(item.to); return <Link key={item.to} to={item.to} onClick={() => setMenu(null)} className={`flex items-center justify-between gap-4 rounded-xl px-3.5 py-2.5 text-[14px] font-medium ${current ? 'bg-th-nav-accent text-th-on-accent' : 'text-th-secondary hover:bg-th-surface-alt hover:text-th-heading'}`}><span>{item.label}</span><span className={`text-[14px] leading-none font-mono ${current ? 'opacity-70' : 'text-th-muted'}`}>→</span></Link>; })}
                   </div>
                 </div>
               )}

@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect, useLayoutEffect, useDeferredValue } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { WikiNoteMeta } from '../types';
-import { secondBrainPath, secondBrainUidFromPath } from '../config/categories';
+import { isSecondBrainPath, secondBrainPath, secondBrainUidFromPath } from '../config/categories';
 import { initBrainIndex, fetchNoteContent, getCachedNoteContent, prefetchNoteContent, type BrainIndex, type Connection, type Neighborhood } from '../lib/brainIndex';
 import { useGraphRelevance } from './useGraphRelevance';
 
@@ -570,6 +570,14 @@ export const useSecondBrainHub = () => {
   const resetFilters = useCallback(() => {
     setFilterState(DEFAULT_FILTER_STATE);
   }, []);
+
+  // Leaving the wiki forgets every filter, root and search; the next visit starts clean.
+  const wasInWikiRef = useRef(isSecondBrainPath(location.pathname));
+  useEffect(() => {
+    const inWiki = isSecondBrainPath(location.pathname);
+    if (wasInWikiRef.current && !inWiki) { setFilterState(DEFAULT_FILTER_STATE); setQuery(''); setDirectoryScope(null); }
+    wasInWikiRef.current = inWiki;
+  }, [location.pathname]);
 
   // Check if any filter is active
   const hasActiveFilters = useMemo(() => {

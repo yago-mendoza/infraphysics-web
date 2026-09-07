@@ -2,7 +2,7 @@
  * compute-graph-thumb.js
  * Build-time script: reads fieldnotes-index.generated.json, lays out the whole
  * wikinote graph with a small deterministic force simulation and writes a
- * static picture of it (positions, radii, root colours, typed edges) to
+ * static picture of it (positions, radii, root colours, centrality percentile, typed edges) to
  * src/data/graph-thumb.generated.json. The Home page draws it as inline SVG
  * so it looks like the wiki's minimised graph without loading the index or
  * the force-graph library.
@@ -137,6 +137,7 @@ function run() {
       y: Number((4 + ((pos[index].y - minY + offsetY) / span) * 92).toFixed(1)),
       r: Number((.32 + Math.pow(percentile[index], .78) * .95).toFixed(2)),
       c: colorByRoot.get(root) ?? ROOT_NEUTRAL,
+      p: Number(percentile[index].toFixed(2)),
     };
   });
 

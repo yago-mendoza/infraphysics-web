@@ -1664,8 +1664,8 @@ export const SecondBrainView: React.FC = () => {
                 {activeFilterMembership !== null && (
                   <span
                     className={`ml-1.5 inline-flex h-[13px] translate-y-[-0.18em] items-center rounded-[2px] border px-1 font-mono text-[7px] font-medium uppercase leading-none tracking-[.055em] ${activeFilterMembership
-                      ? 'border-indigo-400/25 bg-indigo-400/[.07] text-indigo-300/85'
-                      : 'border-rose-400/22 bg-rose-400/[.045] text-rose-300/70'
+                      ? 'border-violet-400/30 bg-violet-400/[.08] text-violet-300/90'
+                      : 'border-violet-400/18 bg-violet-400/[.04] text-violet-300/55'
                     }`}
                     title={activeFilterMembership ? 'This concept is included in the current filter' : 'This concept is outside the current filter'}
                   >

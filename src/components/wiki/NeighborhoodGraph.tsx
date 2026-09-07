@@ -299,14 +299,16 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
 
   const highlightZone = hoveredZone || activeZone;
 
-  // Dynamic center zone width based on column spread
-  const centerSpread = useMemo(() => {
-    if (centerPositions.length <= 1) return 0;
+  // Center zone from the real column bounds. With many siblings the tallest column is not
+  // necessarily at CENTER_X, so centering the zone there left outer columns uncovered.
+  const centerBounds = useMemo(() => {
+    if (centerPositions.length === 0) return { min: CENTER_X, max: CENTER_X };
     const xs = centerPositions.map(p => p.x);
-    return Math.max(...xs) - Math.min(...xs);
+    return { min: Math.min(...xs), max: Math.max(...xs) };
   }, [centerPositions]);
+  const centerSpread = centerBounds.max - centerBounds.min;
   const sibZoneW = Math.max(76, centerSpread + 24);
-  const sibZoneX = CENTER_X - sibZoneW / 2;
+  const sibZoneX = (centerBounds.min + centerBounds.max) / 2 - sibZoneW / 2;
 
   // Zone column configs — shared between active indicator and hover indicator
   const zoneConfigs: Record<string, { x: number; w: number }> = {
@@ -322,7 +324,7 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
     const cfg = zoneConfigs[activeZone];
     const fill = 'rgba(139,92,246,0.08)';
     return { ...cfg, fill, opacity: 1 };
-  }, [activeZone, sibZoneW]);
+  }, [activeZone, sibZoneW, sibZoneX]);
 
   // Hover indicator — lighter shadow, only when hovering a zone different from active
   const hoverIndicator = useMemo(() => {
@@ -330,7 +332,7 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
     const cfg = zoneConfigs[hoveredZone];
     const fill = 'rgba(139,92,246,0.04)';
     return { ...cfg, fill, opacity: 1 };
-  }, [hoveredZone, activeZone, sibZoneW]);
+  }, [hoveredZone, activeZone, sibZoneW, sibZoneX]);
 
   const handleZoneClick = (zone: Zone) => {
     if (zone !== activeZone) onActiveZoneChange(zone);
