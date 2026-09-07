@@ -251,7 +251,7 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
       </section>
 
       {/* Synthesis after the evidence: a plain note on what the map means, then the map itself, slightly wider than the column. */}
-      <p className="home-field-note">The map below is where my attention goes. Each label is a field I work in. Left to right is how much I use it in real systems; bottom to top is how much I study it on my own. Top right is what I get paid for, bottom left is what I read about at night. Hover a label and it tells you what backs it up.</p>
+      <p className="home-field-wide home-field-note">This is a map of where my attention actually goes. Every label is a field I work in, placed by two things: how much I use it in real systems, from left to right, and how much I keep studying it on my own, from bottom to top. The top right corner is what I ship for a living, the bottom left is what I read about at night, and hovering any label shows the work behind it.</p>
       <div className="home-field-wide">
         <FieldOfView variant={fieldVariant} />
       </div>

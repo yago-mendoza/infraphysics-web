@@ -944,7 +944,8 @@ button:focus {
 
 .home-hero { isolation: isolate; }
 .home-intro-carousel { position: relative; z-index: 2; max-width: 40rem; }
-.home-field-note { max-width: 40rem; margin: 0 0 .5rem; color: var(--text-secondary); font: .92rem/1.65 var(--font-sans); }
+.home-field-note { margin: 0 0 .25rem; color: var(--text-secondary); font: .95rem/1.65 var(--font-sans); }
+.home-field-note.home-field-wide { padding-top: 0; }
 .home-identity-portrait { isolation: isolate; overflow: visible; }
 .home-identity-portrait > img { z-index: 2; }
 .home-identity-portrait > div { z-index: 1; }
