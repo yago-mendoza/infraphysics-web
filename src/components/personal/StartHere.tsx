@@ -46,9 +46,9 @@ function buildDoors(): Door[] {
 const DOORS = buildDoors();
 const doorStyle = (door: Door) => ({ '--sh-accent': door.accent } as React.CSSProperties);
 
-/* Backdrop for one door: the 2D graph in dulled brand oxide on a drafting grid, or the thumbnail. */
+/* Backdrop for one door: the graph as the wiki paints it (purple centrality ramp on a dark field), or the thumbnail. */
 const Visual: React.FC<{ door: Door }> = ({ door }) => door.key === 'wiki'
-  ? <span className="sh-visual sh-visual-graph"><GraphThumb className="graph-thumb" /></span>
+  ? <span className="sh-visual sh-visual-graph"><GraphThumb className="graph-thumb" tone="purple" /></span>
   : <span className="sh-visual sh-visual-thumb">{door.post?.thumbnail ? <img src={door.post.thumbnail} alt="" loading="lazy" /> : <i>{door.ref}</i>}</span>;
 
 export const StartHere: React.FC = () => {
