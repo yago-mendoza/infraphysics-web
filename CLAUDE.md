@@ -105,7 +105,7 @@ Append relevant lessons to the **Gotchas** section below. Update or remove stale
 - Lab: `/lab/projects` (dark theme)
 - Blog: `/blog/essays`, `/blog/bits2bricks` (light theme)
 - Wiki: `/wiki`, `/wiki/:uid` (legacy `/lab/second-brain/*` URLs redirect here)
-- Post detail: `/lab/:category/:id` (dark), `/blog/:category/:id` (light). `/essays2/:id` and `/bits2bricks2/:id` render the same articles in an experimental geometry (`ArticleGeometryLabView.tsx`); remove once one is chosen.
+- Post detail: `/lab/:category/:id` (dark), `/blog/:category/:id` (light). `/r1`…`/r5` (`/rN/:id`) render a Bits2Bricks article in candidate tutorial formats (`Bits2BricksLabView.tsx`); remove once one is chosen.
 - Theme auto-switch: `/lab/*` → dark, `/blog/*` → light (instant, no transition). Manual toggle (Shift+T) still works per-page.
 - Backgrounds: Starfield (personal, dark only), DualGrid (lab/wiki), Clean (blog posts)
 
@@ -204,6 +204,9 @@ YAML parsers (like `gray-matter`) auto-convert bare `date: 2026-02-15` into a JS
 ### Strikethrough is double-tilde only — a lone `~` is always literal
 marked's built-in strikethrough fires on a **single** `~`, which silently pairs two unrelated tildes into a malformed `<del>` that **truncates the rest of the article** in the browser (no build error, the `[SYNTAX]` guard can't see it). Two everyday sources of stray single tildes: KaTeX emits `~` in MathML (`\tilde`), and authors write `~30W` / `~$6` for "approximately". **Root fix (permanent):** a custom marked inline tokenizer in `build-content.js` (`strictStrikethrough`) makes `~~…~~` the only strikethrough and a lone `~` literal text. Belt-and-suspenders: `processMath` also neutralizes `~` → `&#x7e;` in rendered KaTeX. Rule documented in `SYNTAX.md` (Strikethrough and the tilde rule). So: write `~approximately` freely; use `~~double~~` for an actual strikethrough.
 
+### Per-frame setState starves React Router navigation (dev only)
+A `requestAnimationFrame` loop that calls `setState` every frame (the home carousel progress bar did this) keeps React Router's `startTransition` navigation pending forever in dev mode: the URL changes but the page never re-renders. Production was unaffected, which made it look random. Rule: animate per-frame values by writing to a DOM node through a ref (`el.style.transform = ...`), never through React state. If a route ever "changes URL but not screen", look for a state update loop on the page you are leaving.
+
 ### Blog category list duplicated for OG manifest
 `build-content.js` has a local `BLOG_CATS` set (used to build URL paths for `og-manifest.json`) that mirrors `BLOG_CATEGORIES` in `categories.tsx`. If a new blog category is added, update both. Also add the new route pattern to `public/_routes.json`.
 
@@ -235,7 +238,7 @@ In `MiniGraph.tsx` the 3D view sets `linkVisibility={false}` and paints every ed
 React Router 7 runs every `navigate()` as a React transition, so a plain `setState` fired in the same click handler commits one frame earlier than the route change: a bar disappears, then the page switches (wiki trail, cleared search before a note opens). Wrap the companion updates and the `navigate()` call together in `startTransition(() => { ... })`, as the wiki trail handlers and `openGraphNode` do. Do not reach for timeouts or effects to "sync" them.
 
 ### Horizontal overflow is clipped with `overflow-x: clip`, never `hidden`
-`html, body` in `global.css` and the root wrapper in `App.tsx` use `overflow-x: clip`. `hidden` would turn each of them into a scroll container, and then `position: sticky` anywhere below (the article index in `ArticleGeometryLabView`, any future sticky rail) anchors to that non-scrolling box and never sticks. `clip` clips the same without creating a scroll container. If you need to clip an ancestor of something sticky, use `clip`.
+`html, body` in `global.css` and the root wrapper in `App.tsx` use `overflow-x: clip`. `hidden` would turn each of them into a scroll container, and then `position: sticky` anywhere below (the essays article index in `ArticlePostView`, the Bits2Bricks lab, any future sticky rail) anchors to that non-scrolling box and never sticks. `clip` clips the same without creating a scroll container. If you need to clip an ancestor of something sticky, use `clip`.
 
 ### Wikinotes are still called `fieldnotes` on disk and in the category key
 The content type was renamed to "wikinotes" in code, docs, scripts and the `/create-wikinote` skill (Sep 2026), but every path and data contract kept the old name on purpose: `src/data/pages/fieldnotes/`, `public/fieldnotes/{uid}.json`, `fieldnotes-index.json`, the `Category` value `'fieldnotes'` (used by `og-manifest.json` and the edge function), the `/api/fieldnotes/*` dev endpoints and `--cat-fieldnotes-accent`. Do not "fix" those to wikinotes: they are deployed URLs and cached CDN paths. Identifiers say wikinote, paths and keys say fieldnotes.

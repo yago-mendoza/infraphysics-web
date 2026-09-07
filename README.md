@@ -86,7 +86,7 @@ infraphysics-web/
       PostView.tsx            # Single post renderer
       ArticlePostView.tsx     # Article body renderer (wiki-links, hover previews)
       SecondBrainView.tsx     # Wikinotes explorer (/wiki)
-      ArticleGeometryLabView.tsx # Experimental: /essays2, /bits2bricks2 article geometry (article-geometry-lab.css)
+      Bits2BricksLabView.tsx  # Experimental: /r1 … /r5 Bits2Bricks tutorial formats (bits2bricks-lab.css)
       AboutView.tsx           # About page
       CvView.tsx              # CV page (/about/cv)
       StackView.tsx           # Tooling stack page (/about/stack)
@@ -163,7 +163,8 @@ infraphysics-web/
       wiki-content.css        # Wiki/second-brain content delta overrides
       editor.css              # CodeMirror overrides for wikinote editor
       start-here.css          # Home four-door carousel under the intro
-      article-geometry-lab.css # Experimental article geometry (/essays2, /bits2bricks2)
+      article-geometry.css    # Essays page geometry (breadcrumb, sans title, rounded hero, sticky index)
+      bits2bricks-lab.css     # Experimental Bits2Bricks formats (/r1 … /r5)
       wiki-banner.css         # Home closing wiki plate
     config/                   # Categories config, analytics, content entities
     constants/                # Layout, theme constants

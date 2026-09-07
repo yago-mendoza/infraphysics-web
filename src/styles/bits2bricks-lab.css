@@ -1,0 +1,61 @@
+/* Bits2Bricks format lab (/r1 … /r5). Shares the article geometry classes
+   (article-geometry.css) and adds one block per candidate. */
+
+.b2l-tag { position: absolute; right: 0; top: 1rem; padding: .3rem .55rem; border: 1px solid var(--border-default); border-radius: 999px; color: var(--text-muted); font: 500 9px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
+.b2l .glab { position: relative; }
+.b2l-index a.b2l-link { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .5rem; align-items: baseline; }
+.b2l-index a.b2l-link b { color: var(--art-accent); font: 600 9px/1.4 var(--font-mono); }
+.b2l-index a.b2l-link:not(:has(b)) { grid-template-columns: minmax(0, 1fr); }
+.b2l-single { width: min(44rem, 100%); }
+.b2l-single .glab-hero { margin-bottom: 2rem; }
+
+/* 1. Manual: spec strip under the meta */
+.b2l-strip { display: flex; flex-wrap: wrap; gap: 1px; margin: -.6rem 0 2rem; border: 1px solid var(--border-default); background: var(--border-default); }
+.b2l-strip span { display: grid; gap: .25rem; flex: 1 1 8rem; padding: .7rem .9rem; background: var(--bg-base); }
+.b2l-strip b { color: var(--text-heading); font: 500 .95rem/1.1 var(--font-sans); }
+.b2l-strip small { color: var(--text-muted); font: 8px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
+
+/* 2. Steps: sticky bar of numbered pills */
+.b2l-stepbar { position: sticky; top: 4.6rem; z-index: 5; display: flex; gap: .35rem; overflow-x: auto; margin: 0 0 2rem; padding: .5rem 0; background: color-mix(in srgb, var(--bg-base) 92%, transparent); backdrop-filter: blur(6px); border-bottom: 1px solid var(--border-default); scrollbar-width: none; }
+.b2l-stepbar::-webkit-scrollbar { display: none; }
+.b2l-stepbar a { display: inline-flex; align-items: center; gap: .45rem; flex: none; padding: .4rem .7rem; border: 1px solid var(--border-default); border-radius: 999px; color: var(--text-secondary); font: 400 .74rem/1 var(--font-sans); white-space: nowrap; transition: color .15s ease, border-color .15s ease, background-color .15s ease; }
+.b2l-stepbar a b { color: var(--art-accent); font: 600 9px/1 var(--font-mono); }
+.b2l-stepbar a:hover { color: var(--text-heading); border-color: var(--text-tertiary); }
+.b2l-stepbar a.is-active { color: var(--text-on-accent); background: var(--art-accent); border-color: var(--art-accent); }
+.b2l-stepbar a.is-active b { color: var(--text-on-accent); }
+
+/* 3. Textbook: contents box, numbered headings */
+.b2l-contents { margin: 0 0 2rem; padding: 1rem 1.2rem 1.1rem; border: 1px solid var(--border-default); background: color-mix(in srgb, var(--bg-surface) 55%, var(--bg-base)); }
+.b2l-contents small { display: block; margin-bottom: .7rem; color: var(--text-muted); font: 9px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
+.b2l-contents ol { margin: 0; padding: 0; list-style: none; display: grid; gap: .35rem; }
+.b2l-contents a { display: grid; grid-template-columns: 2rem minmax(0, 1fr); gap: .5rem; color: var(--text-secondary); font: 400 .86rem/1.4 var(--font-sans); }
+.b2l-contents a b { color: var(--art-accent); font: 600 9px/1.6 var(--font-mono); }
+.b2l-contents a:hover, .b2l-contents a.is-active { color: var(--text-heading); }
+.b2l-textbook .article-content { counter-reset: b2l-section; }
+.b2l-textbook .article-content > h2::before,
+.b2l-textbook .article-content > h1::before { counter-increment: b2l-section; content: counter(b2l-section, decimal-leading-zero) "  "; color: var(--art-accent); font: 600 .55em/1 var(--font-mono); letter-spacing: .1em; vertical-align: .35em; }
+
+/* 4. Console: dark band header, stepper index */
+.b2l-band { position: relative; margin: 0 0 2rem; padding: 1.4rem 1.6rem 1.6rem; border-radius: 14px; background: #111111; color: #d6d2cb; }
+.b2l-band .glab-crumb a { color: #8f8a83; } .b2l-band .glab-crumb { color: #6f6a64; }
+.b2l-band .glab-title { color: #f3efe8; }
+.b2l-band .glab-subtitle { color: #b5b0a8; }
+.b2l-band .b2l-tag { right: 1.2rem; }
+.b2l-band .article-hashtag { border-color: #2c2c2c; background: #1a1a1a; }
+.b2l-specs { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: 1px; margin: .8rem 0 0; border: 1px solid #2a2a2a; background: #2a2a2a; }
+.b2l-specs div { padding: .6rem .8rem; background: #151515; }
+.b2l-specs dt { color: #7d7871; font: 8px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
+.b2l-specs dd { margin: .3rem 0 0; color: #f3efe8; font: 500 .92rem/1.1 var(--font-sans); }
+.b2l-stepper { border-top: 0; padding-top: .2rem; }
+.b2l-stepper ol { position: relative; gap: 0; }
+.b2l-stepper ol::before { content: ''; position: absolute; left: .42rem; top: .6rem; bottom: .6rem; width: 1px; background: var(--border-default); }
+.b2l-stepper a.b2l-link { grid-template-columns: 1rem auto minmax(0, 1fr); align-items: center; gap: .45rem; padding: .45rem 0; }
+.b2l-stepper a.b2l-link i { position: relative; z-index: 1; width: .55rem; height: .55rem; margin-left: .15rem; border: 1px solid var(--text-tertiary); border-radius: 50%; background: var(--bg-base); transition: background-color .15s ease, border-color .15s ease; }
+.b2l-stepper a.b2l-link.is-active i { background: var(--art-accent); border-color: var(--art-accent); }
+.b2l-stepper a.b2l-link.is-active { text-decoration: none; }
+
+/* 5. Split: two-column header */
+.b2l-split-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2.5rem; align-items: end; margin-bottom: 2.4rem; }
+.b2l-split-head .glab-hero { margin: 0; }
+.b2l-split-head .glab-meta-row { margin-bottom: 0; }
+@media (max-width: 900px) { .b2l-split-head { grid-template-columns: 1fr; } }

@@ -23,6 +23,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import Giscus from '@giscus/react';
 import '../styles/article.css';
 import '../styles/article-layout.css';
+import '../styles/article-geometry.css';
 
 interface ArticlePostViewProps {
   post: Post;
@@ -170,6 +171,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
     return { headings, contentWithIds: finalProcessed };
   }, [post.content, isBlog]);
 
+  const topHeadings = useMemo(() => headings.filter(h => h.depth === 0), [headings]);
   const [tocOpen, setTocOpen] = useState(isBlog);
   const [blinkId, setBlinkId] = useState<string>('');
   const blinkTimer = useRef<ReturnType<typeof setTimeout>>(0 as any);
@@ -460,63 +462,65 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   );
 
   return (
-    <div className={`article-page-wrapper article-${post.category}${isBlog ? ' article-blog' : ''} animate-fade-in`}>
+    <div className={`article-page-wrapper article-${post.category}${isBlog ? ' article-blog' : ''}${isEssays ? ' article-geometry' : ''} animate-fade-in`}>
       {createPortal(
         <div ref={progressRef} className="article-progress-bar" style={{ backgroundColor: `var(--cat-${post.category}-accent)` }} />,
         document.body
       )}
 
       {isEssays ? (
-        <article className="article-essays-card">
-          {post.thumbnail && (
-            <div className={`article-essays-hero-image thumb-${post.thumbnailAspect || 'full'}${post.thumbnailWidth === 'full' ? ' thumb-width-full' : ''}`}>
-              <img
-                src={post.thumbnail}
-                alt={post.displayTitle || post.title}
-                loading="lazy"
-                className="w-full h-auto rounded-lg"
-                style={thumbFocusStyle}
-              />
-            </div>
-          )}
-          <div className="article-essays-header-content">
-
-            <div className="article-title-block">
-              <h1 className="article-title">
-                {post.displayTitle || post.title}
-              </h1>
-              {post.subtitle && (
-                <p className="article-subtitle">{post.subtitle}</p>
-              )}
-            </div>
-
-            <div className="article-essays-meta-engagement">
-              <BlogMetabar date={post.date} authorName={authorName} authorPath={authorPath} readingTime={readingTime} showReadingTime={false} views={null} hearts={null} hearted={hearted} toggleHeart={toggleHeart} shareDropdown={null} formatDate={formatDate} />
-
-              <div className="article-engagement-row article-essays-engagement">
-                <div className="article-engagement-left">
-                  {views != null && (
-                    <span className="article-meta-views"><EyeIcon size={15} /> {views}</span>
-                  )}
-                  {hearts != null && (
-                    <button onClick={toggleHeart} className={`article-heart-btn${hearted ? ' hearted' : ''}`} title={hearted ? 'Unlike' : 'Like'}>
-                      <HeartIcon size={15} filled={hearted} /> {hearts}
-                    </button>
-                  )}
-                </div>
-                {shareDropdown}
+        /* Essays geometry: breadcrumb, sans title, meta line, rounded hero,
+           sticky index of top-level sections on the left, body on the right. */
+        <article className="glab">
+          <nav className="glab-crumb" aria-label="Breadcrumb">
+            <Link to="/home">home</Link><span>/</span><Link to={getSectionPath(post.category)}>blog</Link><span>/</span><b>{catCfg?.title ?? post.category}</b>
+          </nav>
+          <h1 className="glab-title">{post.displayTitle || post.title}</h1>
+          {post.subtitle && <p className="glab-subtitle">{post.subtitle}</p>}
+          <div className="glab-meta-row">
+            <p className="glab-meta">
+              <Link to={authorPath}>{authorName}</Link>
+              <span>·</span><time dateTime={post.date}>{formattedDate}</time>
+              <span>·</span><span>{readingTime} min read</span>
+            </p>
+            <div className="article-engagement-row article-essays-engagement">
+              <div className="article-engagement-left">
+                {views != null && (
+                  <span className="article-meta-views"><EyeIcon size={15} /> {views}</span>
+                )}
+                {hearts != null && (
+                  <button onClick={toggleHeart} className={`article-heart-btn${hearted ? ' hearted' : ''}`} title={hearted ? 'Unlike' : 'Like'}>
+                    <HeartIcon size={15} filled={hearted} /> {hearts}
+                  </button>
+                )}
               </div>
+              {shareDropdown}
             </div>
-
           </div>
-
-          <div className="article-essays-body">
-            <WikiContent
-              html={contentWithIds}
-              allWikiNotes={brainIndex?.allWikiNotes}
-              className="article-content"
-            />
-            <GiscusComments />
+          {post.thumbnail && (
+            <figure className={`glab-hero thumb-${post.thumbnailAspect || 'full'}`}>
+              <img src={post.thumbnail} alt={post.displayTitle || post.title} loading="eager" style={thumbFocusStyle} />
+            </figure>
+          )}
+          <div className="glab-grid">
+            <aside className="glab-index" id="article-toc">
+              {topHeadings.length > 1 && (
+                <>
+                  <small>In this article</small>
+                  <ol>
+                    {topHeadings.map(h => <li key={h.id}><a href={`#${h.id}`} className="article-toc-link" onClick={event => { event.preventDefault(); document.getElementById(h.id)?.scrollIntoView({ behavior: 'instant', block: 'start' }); }}>{h.text}</a></li>)}
+                  </ol>
+                </>
+              )}
+            </aside>
+            <div className="glab-body">
+              <WikiContent
+                html={contentWithIds}
+                allWikiNotes={brainIndex?.allWikiNotes}
+                className="article-content"
+              />
+              <GiscusComments />
+            </div>
           </div>
         </article>
       ) : (

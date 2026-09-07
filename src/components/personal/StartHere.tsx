@@ -53,12 +53,19 @@ const Visual: React.FC<{ door: Door }> = ({ door }) => door.key === 'wiki'
 
 export const StartHere: React.FC = () => {
   const [index, setIndex] = useState(0);
-  const [hovered, setHovered] = useState(false);
-  const [progress, setProgress] = useState(0); // 0..1 of the current door
+  // Progress is written straight to the live segment's DOM node, never through React state:
+  // a setState per animation frame kept React Router's navigation transition pending forever
+  // in dev mode (the URL changed but the page never re-rendered).
   const elapsedRef = useRef(0);
+  const hoveredRef = useRef(false);
+  const liveBarRef = useRef<HTMLElement | null>(null);
+  const paintBar = useCallback(() => {
+    const bar = liveBarRef.current;
+    if (bar) bar.style.transform = `scaleX(${hoveredRef.current ? 1 : elapsedRef.current / ROTATE_MS})`;
+  }, []);
+  const setHovered = useCallback((next: boolean) => { hoveredRef.current = next; paintBar(); }, [paintBar]);
   const go = useCallback((next: number) => {
     elapsedRef.current = 0;
-    setProgress(0);
     setIndex(((next % DOORS.length) + DOORS.length) % DOORS.length);
   }, []);
   // The countdown never pauses: hovering only changes what the live segment displays.
@@ -66,21 +73,21 @@ export const StartHere: React.FC = () => {
     if (DOORS.length < 2) return;
     let frame = 0;
     let last = performance.now();
+    paintBar();
     const tick = (now: number) => {
       elapsedRef.current += now - last;
       last = now;
       if (elapsedRef.current >= ROTATE_MS) {
         elapsedRef.current = 0;
-        setProgress(0);
         setIndex(current => (current + 1) % DOORS.length);
-      } else {
-        setProgress(elapsedRef.current / ROTATE_MS);
+        return;
       }
+      paintBar();
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [index]);
+  }, [index, paintBar]);
   if (DOORS.length === 0) return null;
   const door = DOORS[index];
   return (
@@ -91,7 +98,7 @@ export const StartHere: React.FC = () => {
       <div className="sh-stories-segments" role="tablist" aria-label="Start here">
         {DOORS.map((item, i) => (
           <button key={item.key} type="button" role="tab" aria-selected={i === index} aria-label={`${item.ref} · ${item.kicker}`} style={doorStyle(item)} className={i < index ? 'is-done' : i === index ? 'is-live' : ''} onClick={() => go(i)}>
-            <i style={i === index ? { transform: `scaleX(${hovered ? 1 : progress})` } : undefined} />
+            <i ref={i === index ? liveBarRef : undefined} style={i === index ? { transform: 'scaleX(0)' } : undefined} />
           </button>
         ))}
       </div>
