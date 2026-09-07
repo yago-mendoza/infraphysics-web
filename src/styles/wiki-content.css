@@ -17,9 +17,10 @@
 .article-wiki .article-content td,
 .article-wiki .article-content .ann-note {
   font-family: var(--font-sans) !important;
-  font-size: 0.875rem;
+  /* Same size as an interaction title (Tailwind text-sm). !important because global.css forces 1.02rem on every .article-content p/li. */
+  font-size: 0.875rem !important;
   font-weight: 400;
-  line-height: 1.6;
+  line-height: 1.6 !important;
   letter-spacing: 0;
 }
 
