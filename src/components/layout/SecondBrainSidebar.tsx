@@ -734,6 +734,9 @@ export const SecondBrainSidebar: React.FC = () => {
   const openGraphNode = (node: { id: string }) => {
     const date = noteDateById.get(node.id);
     if (date) updateFilter('dateFilter', date);
+    // An active search shows the result matrix instead of the card; drop it so the concept opens directly.
+    if (query) setQuery('');
+    setGraphInput('');
     navigate(secondBrainPath(node.id));
   };
 
@@ -815,7 +818,7 @@ export const SecondBrainSidebar: React.FC = () => {
     <>
       <>
       {/* Mini Graph — visual overview, highlights search matches */}
-      {!graphExpanded && <div className="sticky top-0 z-30 bg-th-base"><Section
+      {!graphExpandedVisible && <div className="sticky top-0 z-30 bg-th-base"><Section
         title="graph"
         icon={
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
@@ -843,13 +846,15 @@ export const SecondBrainSidebar: React.FC = () => {
               onExpand={expandGraph}
               onNodeSelect={openGraphNode}
               activeNodeId={activePost?.id ?? null}
+              filtersActive={hasActiveFilters || !!directoryScope || searchActive}
+              onResetFilters={() => { resetFilters(); setDirectoryScope(null); setQuery(''); }}
             />
           </Suspense>
         </div>
       </Section></div>}
 
       {/* Graph Stats — always global, technical only */}
-      {graphExpanded && <Section title="graph statistics" icon={<BarChartIcon />} defaultOpen={false}>
+      {graphExpandedVisible && <Section title="graph statistics" icon={<BarChartIcon />} defaultOpen={false}>
         <div className="divide-y divide-th-hub-border border-y border-th-hub-border">
           {[
             ['nodes', stats.totalConcepts], ['links', stats.totalLinks], ['density', `${stats.density}%`],
@@ -858,7 +863,7 @@ export const SecondBrainSidebar: React.FC = () => {
         </div>
       </Section>}
 
-      {graphExpanded && <Section
+      {graphExpandedVisible && <Section
         key="graph-dynamics"
         title="graph dynamics"
         icon={<BarChartIcon />}

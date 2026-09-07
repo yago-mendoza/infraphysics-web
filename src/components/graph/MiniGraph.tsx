@@ -131,7 +131,10 @@ const MiniGraph: React.FC<{
   onColorModeChange?: (mode: GraphColorMode) => void;
   /** Expanded workspace only: a click on empty canvas drops the current node selection. */
   onClearSelection?: () => void;
-}> = ({ resultIds, previewIds = null, searchQuery, cameraFocusIds = null, cameraAnchorIds = null, colorMode = 'centrality', expanded = false, activeRoot = '', onNodeOpen, activeNodeId, onNodeSelect, onAreaPreview, onMinimize, onExpand, onColorModeChange, onClearSelection }) => {
+  /** Mini view only: shows a reset control in the toolbar while any filter, root or search is active. */
+  filtersActive?: boolean;
+  onResetFilters?: () => void;
+}> = ({ resultIds, previewIds = null, searchQuery, cameraFocusIds = null, cameraAnchorIds = null, colorMode = 'centrality', expanded = false, activeRoot = '', onNodeOpen, activeNodeId, onNodeSelect, onAreaPreview, onMinimize, onExpand, onColorModeChange, onClearSelection, filtersActive = false, onResetFilters }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
 
@@ -458,6 +461,23 @@ const MiniGraph: React.FC<{
   }, [activeRoot, backlinkDepthById, baseCssById, selectedId]);
   useEffect(() => { graphRef.current?.refresh?.(); }, [hoveredId]);
 
+  // Nearest 2D node to a canvas point, within a small screen radius.
+  const findNearestNodeId = useCallback((x: number, y: number): string | null => {
+    const graph = graphRef.current;
+    if (!graph || !filtered) return null;
+    const graphPoint = graph.screen2GraphCoords?.(x, y);
+    if (!graphPoint) return null;
+    const zoom = Math.max(.01, graph.zoom?.() ?? 1);
+    let nearest: string | null = null, nearestDistance = (expanded ? 28 : 18) / zoom;
+    for (const node of filtered.nodes) {
+      const positioned = node as GraphNode & { x?: number; y?: number };
+      if (!Number.isFinite(positioned.x) || !Number.isFinite(positioned.y)) continue;
+      const distance = Math.hypot(positioned.x! - graphPoint.x, positioned.y! - graphPoint.y);
+      if (distance < nearestDistance) { nearestDistance = distance; nearest = node.id; }
+    }
+    return nearest;
+  }, [expanded, filtered]);
+
   const handleNearestHover = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (selectionMode) return;
     // UI panels live over the canvas. Never infer a node through one of them.
@@ -476,19 +496,10 @@ const MiniGraph: React.FC<{
     hoverLastAtRef.current = performance.now();
     cancelAnimationFrame(hoverFrameRef.current);
     hoverFrameRef.current = requestAnimationFrame(() => {
-      const graphPoint = graph.screen2GraphCoords?.(x, y);
-      if (!graphPoint) return;
-      const zoom = Math.max(.01, graph.zoom?.() ?? 1);
-      let nearest: string | null = null, nearestDistance = (expanded ? 28 : 18) / zoom;
-      for (const node of filtered.nodes) {
-        const positioned = node as GraphNode & { x?: number; y?: number };
-        if (!Number.isFinite(positioned.x) || !Number.isFinite(positioned.y)) continue;
-        const distance = Math.hypot(positioned.x! - graphPoint.x, positioned.y! - graphPoint.y);
-        if (distance < nearestDistance) { nearestDistance = distance; nearest = node.id; }
-      }
+      const nearest = findNearestNodeId(x, y);
       setHoveredId(current => current === nearest ? current : nearest);
     });
-  }, [dimension, expanded, filtered, selectionMode]);
+  }, [dimension, filtered, findNearestNodeId, selectionMode]);
 
   const handleMiniAreaHover = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (!miniAnalysisEnabled || !onAreaPreview || !(event.target instanceof HTMLCanvasElement)) return;
@@ -690,14 +701,20 @@ const MiniGraph: React.FC<{
       return;
     }
     const start = proximityClickRef.current; proximityClickRef.current = null;
-    if (start && hoveredId && Math.hypot(event.clientX - start.x, event.clientY - start.y) < 5) {
-      setSelectedId(hoveredId);
-      if (!expanded) {
-        const node = filtered?.nodes.find(candidate => candidate.id === hoveredId);
-        if (node) onNodeSelect?.(node);
-      }
+    if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) >= 5) return;
+    // Touch has no hover before the tap: resolve the node under the finger now.
+    let targetId = hoveredId;
+    if (!targetId && !expanded) {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (rect) targetId = findNearestNodeId(event.clientX - rect.left, event.clientY - rect.top);
     }
-  }, [expanded, filtered, hoveredId, onNodeSelect]);
+    if (!targetId) return;
+    setSelectedId(targetId);
+    if (!expanded) {
+      const node = filtered?.nodes.find(candidate => candidate.id === targetId);
+      if (node) onNodeSelect?.(node);
+    }
+  }, [expanded, filtered, findNearestNodeId, hoveredId, onNodeSelect]);
 
   // Refit only when the structural node set changes. Query highlighting never
   // changes `filtered`, so typing cannot reset the camera or the simulation.
@@ -1373,6 +1390,7 @@ const MiniGraph: React.FC<{
           />}
         </div>
         {!expanded && <nav aria-label="Mini graph tools" className="absolute bottom-1 left-1 z-20 flex items-center gap-px border border-th-hub-border bg-th-base/90 p-0.5 font-mono shadow-sm backdrop-blur-sm">
+          {filtersActive && onResetFilters && <button type="button" title="Reset filters" aria-label="Reset filters" onClick={onResetFilters} className="flex h-5 w-5 items-center justify-center text-[11px] text-violet-400 transition-colors hover:text-violet-300">⟲</button>}
           <button
             type="button"
             aria-pressed={miniAnalysisEnabled}

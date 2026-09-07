@@ -320,11 +320,26 @@ const ActivityHeatmap: React.FC<{
   }, [dateFilter, year]);
 
   // --- Grid click handler (eliminates dead-zone gaps) ---
+  // Narrow layouts split the year in two rows so a day stays tappable; each
+  // row resolves its own click from its own box.
   const gridRef = useRef<HTMLDivElement>(null);
+  const calendarRef = useRef<HTMLDivElement>(null);
+  const [calendarWidth, setCalendarWidth] = useState(0);
+  useEffect(() => {
+    const el = calendarRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(entries => setCalendarWidth(entries[0]?.contentRect.width ?? 0));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  const compact = calendarWidth > 0 && calendarWidth / weeks.length < 13;
+  const half = Math.ceil(weeks.length / 2);
+  const weekRows = compact ? [weeks.slice(0, half), weeks.slice(half)] : [weeks];
+  const monthRows = compact ? [[0, 1, 2, 3, 4, 5], [6, 7, 8, 9, 10, 11]] : [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]];
 
-  const handleGridClick = (e: React.MouseEvent) => {
-    const grid = gridRef.current;
-    if (!grid || grid.children.length < 2) return;
+  const handleGridClick = (e: React.MouseEvent<HTMLDivElement>, rowWeeks: typeof weeks) => {
+    const grid = e.currentTarget;
+    if (grid.children.length < 2) return;
     const rect = grid.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -342,7 +357,7 @@ const ActivityHeatmap: React.FC<{
     const gridStartX = firstWeekRect.left - rect.left;
     const gridX = x - gridStartX;
     if (gridX < 0) return;
-    const n = weeks.length;
+    const n = rowWeeks.length;
     const gridWidth = rect.width - gridStartX;
     const gap = 2;
     const colWidth = (gridWidth - (n - 1) * gap) / n;
@@ -350,7 +365,7 @@ const ActivityHeatmap: React.FC<{
     const wi = Math.min(Math.max(Math.floor(gridX / colStep), 0), n - 1);
     const rowPitch = colWidth + gap; // square cells: row height = column width
     const di = Math.min(Math.max(Math.floor(y / rowPitch), 0), 6);
-    const day = weeks[wi]?.[di];
+    const day = rowWeeks[wi]?.[di];
     if (day?.inYear) handleCellClick(day.date);
   };
 
@@ -362,77 +377,82 @@ const ActivityHeatmap: React.FC<{
         <span className="text-[10px] text-th-muted tabular-nums">{year}</span>
         <button onClick={() => setYear(y => Math.min(y + 1, currentYear))} disabled={year >= currentYear} className="text-[10px] text-th-muted hover:text-th-secondary disabled:opacity-30 transition-colors">&rsaquo;</button>
       </div>
-      {/* Grid */}
-      <div className="overflow-hidden pb-1">
-        <div ref={gridRef} className="flex gap-[2px] cursor-pointer" style={{ width: '100%' }} onClick={handleGridClick} onMouseLeave={() => window.dispatchEvent(new CustomEvent('wiki-calendar-preview', { detail: null }))}>
-          {/* Day labels */}
-          <div data-day-labels className="hidden md:flex flex-col gap-[2px] mr-0.5 flex-shrink-0">
-            {DAY_NAMES.map((name, i) => (
-              <div key={i} className="text-[6px] text-th-muted leading-none flex items-center" style={{ width: 8, height: 8 }}>
-                {i % 2 === 1 ? name : ''}
+      {/* Grid: one row of weeks, or two on narrow layouts */}
+      <div ref={calendarRef} className="overflow-hidden pb-1">
+        {weekRows.map((rowWeeks, rowIndex) => (
+          <div key={rowIndex} ref={rowIndex === 0 ? gridRef : undefined} className={`flex gap-[2px] cursor-pointer${rowIndex > 0 ? ' mt-2' : ''}`} style={{ width: '100%' }} onClick={e => handleGridClick(e, rowWeeks)} onMouseLeave={() => window.dispatchEvent(new CustomEvent('wiki-calendar-preview', { detail: null }))}>
+            {/* Day labels */}
+            <div data-day-labels className="hidden md:flex flex-col gap-[2px] mr-0.5 flex-shrink-0">
+              {DAY_NAMES.map((name, i) => (
+                <div key={i} className="text-[6px] text-th-muted leading-none flex items-center" style={{ width: 8, height: 8 }}>
+                  {i % 2 === 1 ? name : ''}
+                </div>
+              ))}
+            </div>
+            {rowWeeks.map((week, wi) => (
+              <div key={wi} className="flex flex-col gap-[2px] flex-1 min-w-0">
+                {week.map((day, di) => {
+                  const isEmpty = day.count === 0 && day.inYear;
+                  return (
+                    <div
+                      key={di}
+                      className="aspect-square w-full"
+                      onMouseEnter={() => {
+                        const ids = noteIdsByDate.get(day.date);
+                        // A real empty day ends the preview. CSS gaps emit no
+                        // mouse-enter event, so crossing a narrow gutter still
+                        // preserves continuity without making empty cells sticky.
+                        window.dispatchEvent(new CustomEvent('wiki-calendar-preview', { detail: ids?.length ? ids : null }));
+                      }}
+                      style={{
+                        backgroundColor: cellColor(day.date, day.count, day.inYear),
+                        border: isEmpty ? '1px solid rgba(255, 255, 255, 0.06)' : 'none',
+                        borderRadius: 1,
+                        transition: 'background-color 180ms ease, box-shadow 180ms ease, opacity 180ms ease',
+                        opacity: day.inYear ? 1 : 0,
+                        boxShadow: isSelected(day.date)
+                          ? 'inset 0 0 0 1px rgba(167, 139, 250, 0.9)'
+                          : isInRange(day.date)
+                            ? 'inset 0 0 0 1px rgba(167, 139, 250, 0.35)'
+                            : 'none',
+                      }}
+                      title={day.inYear ? `${day.date}${day.count ? ` (${day.count})` : ''}${temporalDates.get(day.date) ? ` · ${temporalDates.get(day.date)!.count} highlighted` : ''}` : undefined}
+                    />
+                  );
+                })}
               </div>
             ))}
           </div>
-          {weeks.map((week, wi) => (
-            <div key={wi} className="flex flex-col gap-[2px] flex-1 min-w-0">
-              {week.map((day, di) => {
-                const isEmpty = day.count === 0 && day.inYear;
-                return (
-                  <div
-                    key={di}
-                    className="aspect-square w-full"
-                    onMouseEnter={() => {
-                      const ids = noteIdsByDate.get(day.date);
-                      // A real empty day ends the preview. CSS gaps emit no
-                      // mouse-enter event, so crossing a narrow gutter still
-                      // preserves continuity without making empty cells sticky.
-                      window.dispatchEvent(new CustomEvent('wiki-calendar-preview', { detail: ids?.length ? ids : null }));
-                    }}
-                    style={{
-                      backgroundColor: cellColor(day.date, day.count, day.inYear),
-                      border: isEmpty ? '1px solid rgba(255, 255, 255, 0.06)' : 'none',
-                      borderRadius: 1,
-                      transition: 'background-color 180ms ease, box-shadow 180ms ease, opacity 180ms ease',
-                      opacity: day.inYear ? 1 : 0,
-                      boxShadow: isSelected(day.date)
-                        ? 'inset 0 0 0 1px rgba(167, 139, 250, 0.9)'
-                        : isInRange(day.date)
-                          ? 'inset 0 0 0 1px rgba(167, 139, 250, 0.35)'
-                          : 'none',
-                    }}
-                    title={day.inYear ? `${day.date}${day.count ? ` (${day.count})` : ''}${temporalDates.get(day.date) ? ` · ${temporalDates.get(day.date)!.count} highlighted` : ''}` : undefined}
-                  />
-                );
-              })}
-            </div>
-          ))}
-        </div>
+        ))}
       </div>
       {/* Month tap targets */}
-      <div className="flex gap-[1px] mt-1.5">
-        {MONTH_LABELS.map((label, i) => {
-          const active = activeMonth === i;
-          const isCurrent = i === new Date().getMonth() && year === new Date().getFullYear();
-          return (
-            <button
-              key={i}
-              onClick={() => handleMonthClick(i)}
-              className={`flex-1 flex items-center justify-center text-[8px] rounded-sm transition-colors ${active ? 'text-violet-300'
-                : isCurrent ? 'text-th-secondary'
-                  : 'text-th-muted'
-                }`}
-              style={{
-                height: 24,
-                border: active ? '1px solid rgba(167, 139, 250, 0.5)'
-                  : isCurrent ? '1.5px solid rgba(255, 255, 255, 0.18)'
-                    : '1px solid transparent',
-              }}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
+      {monthRows.map((months, rowIndex) => (
+        <div key={rowIndex} className="flex gap-[1px] mt-1.5">
+          {months.map(i => {
+            const label = MONTH_LABELS[i];
+            const active = activeMonth === i;
+            const isCurrent = i === new Date().getMonth() && year === new Date().getFullYear();
+            return (
+              <button
+                key={i}
+                onClick={() => handleMonthClick(i)}
+                className={`flex-1 flex items-center justify-center text-[8px] rounded-sm transition-colors ${active ? 'text-violet-300'
+                  : isCurrent ? 'text-th-secondary'
+                    : 'text-th-muted'
+                  }`}
+                style={{
+                  height: 24,
+                  border: active ? '1px solid rgba(167, 139, 250, 0.5)'
+                    : isCurrent ? '1.5px solid rgba(255, 255, 255, 0.18)'
+                      : '1px solid transparent',
+                }}
+              >
+                {label}
+              </button>
+              );
+          })}
+        </div>
+      ))}
     </div>
   );
 };
@@ -553,10 +573,10 @@ const DockedToolbar: React.FC<{
             }}
             autoComplete="off"
             spellCheck={false}
-            className="flex-1 min-w-0 text-[16px] md:text-[11px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
+            className="flex-1 min-w-0 font-mono text-[12px] md:text-[11px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
           />
           {query && (
-            <button onClick={() => setQuery('')} className="text-th-tertiary hover:text-th-secondary text-[16px] md:text-[13px] leading-none flex-shrink-0 px-0.5">&times;</button>
+            <button onClick={() => setQuery('')} className="text-th-tertiary hover:text-th-secondary text-[14px] md:text-[13px] leading-none flex-shrink-0 px-0.5">&times;</button>
           )}
         </div>
 
@@ -615,7 +635,17 @@ const DockedToolbar: React.FC<{
               <div className="flex items-center gap-1.5 md:gap-3 md:flex-wrap overflow-x-auto md:overflow-visible px-3 hub-scrollbar sb-filter-row">
                 <div className="flex items-center gap-1 text-[10px] text-th-tertiary relative">
                   <span>roots</span>
-                  <div className="relative">
+                  <select
+                    value={directoryScope ?? ''}
+                    onChange={(e) => setDirectoryScope(e.target.value || null)}
+                    aria-label="Root"
+                    className="md:hidden appearance-none rounded-sm border border-th-hub-border bg-th-surface px-1.5 py-0.5 font-mono text-[11px] text-th-primary focus:outline-none focus:border-th-border-active"
+                    style={{ backgroundColor: 'var(--hub-sidebar-bg)', colorScheme: 'dark', maxWidth: '9rem' }}
+                  >
+                    <option value="">all</option>
+                    {scopeOptions.map(opt => <option key={opt.path} value={opt.path}>{opt.path} ({opt.count})</option>)}
+                  </select>
+                  <div className="relative hidden md:block">
                     <input
                       type="text"
                       placeholder={directoryScope || 'all'}
@@ -630,7 +660,7 @@ const DockedToolbar: React.FC<{
                           setScopeInput(''); setScopeOpen(false); (e.target as HTMLElement).blur();
                         }
                       }}
-                      className={`bg-th-surface border text-[16px] md:text-[10px] text-th-primary px-1.5 py-0.5 w-24 md:w-24 focus:outline-none transition-colors ${directoryScope ? 'border-violet-400/40' : 'border-th-hub-border'
+                      className={`bg-th-surface border font-mono text-[10px] text-th-primary px-1.5 py-0.5 w-24 focus:outline-none transition-colors ${directoryScope ? 'border-violet-400/40' : 'border-th-hub-border'
                         } focus:border-th-border-active`}
                     />
                     {scopeOpen && filteredScopeOptions.length > 0 && (
@@ -729,7 +759,7 @@ const DockedToolbar: React.FC<{
                 <select
                   value={sortMode}
                   onChange={(e) => setSortMode(e.target.value as SortMode)}
-                  className="md:hidden appearance-none rounded-sm border border-th-hub-border bg-th-surface px-2 py-1 text-[16px] text-th-primary shadow-none focus:outline-none focus:border-th-border-active"
+                  className="md:hidden appearance-none rounded-sm border border-th-hub-border bg-th-surface px-2 py-1 font-mono text-[11px] uppercase tracking-[.08em] text-th-secondary shadow-none focus:outline-none focus:border-th-border-active"
                   style={{ backgroundColor: 'var(--hub-sidebar-bg)', colorScheme: 'dark' }}
                 >
                   {sortOptions.map(opt => (
@@ -1583,7 +1613,7 @@ export const SecondBrainView: React.FC = () => {
       </div>
 
       {/* Welcome screen — first visit only, portaled to body to escape transform stacking context */}
-      {trail.length > 0 && <div className="mb-3 max-w-3xl overflow-hidden">
+      {trail.length > 0 && activePost && <div className="mb-3 max-w-3xl overflow-hidden">
         <NavigationTrail
           trail={trail}
           onItemClick={index => { const item = trail[index]; truncateTrail(index); navigate(secondBrainPath(item.id)); }}
@@ -1895,7 +1925,7 @@ export const SecondBrainView: React.FC = () => {
 
           {/* --- Concept List View (always mounted, hidden when detail is shown) --- */}
           <div style={showDetail ? { display: 'none' } : undefined}>
-            <div ref={gridRef} className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(19rem, 100%), 1fr))' }}>
+            <div ref={gridRef} className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(14.5rem, 100%), 1fr))' }}>
               {visibleResults.length > 0 ? (
                 visibleResults.map((note, idx) => (
                     <GridCard
