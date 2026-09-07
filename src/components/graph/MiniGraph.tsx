@@ -3,6 +3,7 @@
 // stay stable while result, preview and selection layers change paint only.
 
 import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } from 'react';
+import * as THREE from 'three';
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation } from 'd3-force';
 import { initBrainIndex, type BrainIndex } from '../../lib/brainIndex';
 import { useGraphRelevance } from '../../hooks/useGraphRelevance';
@@ -891,7 +892,12 @@ const MiniGraph: React.FC<{
     }
     // Isolated satellite notes remain navigable, but they must not dictate the
     // scale of the connected constellation when the user asks to center it.
-    const connectedIds = new Set(filtered.nodes.filter(node => (node.inDegree ?? 0) + (node.outDegree ?? 0) > 0).map(node => node.id));
+    // Connectivity from our own edge list: the library only fills inDegree/outDegree on its link pass, which 3D no longer runs.
+    const connectedIds = new Set<string>();
+    for (const link of filtered.links as any[]) {
+      connectedIds.add(typeof link.source === 'object' ? link.source.id : link.source);
+      connectedIds.add(typeof link.target === 'object' ? link.target.id : link.target);
+    }
     instance.zoomToFit?.(420, occupiedLeft + 52, (object: any) => Boolean(object?.id && connectedIds.has(object.id)));
   }, [containerHeight, containerWidth, dimension, expanded, filtered]);
 
@@ -1187,11 +1193,10 @@ const MiniGraph: React.FC<{
 
   const nodeColor3d = useCallback((node: any) => {
     const id = (node as GraphNode).id;
-    if (id === hoveredId) return '#f5f3ff';
     if ((highlightVisualRef.current.matches.get(id) ?? 0) > .08) return previewIds ? PREVIEW_HEX : RESULT_HEX;
     if (previewIds && resultIds?.has(id)) return '#818cf8';
     return nodeVisualColor(node as GraphNode);
-  }, [hoveredId, nodeVisualColor, previewIds, resultIds]);
+  }, [nodeVisualColor, previewIds, resultIds]);
   const nodeVal3d = useCallback((node: any) => (1.2 + (node as GraphNode).centrality * 7) * NODE_SCALE * ((node as GraphNode).id === selectedId ? 1.55 : 1), [selectedId]);
   const nodeLabel3d = useCallback(() => '', []);
   const linkColor3d = useCallback((link: any) => {
@@ -1206,6 +1211,79 @@ const MiniGraph: React.FC<{
     const resultBranch = Boolean(previewIds && resultIds?.has(source) && resultIds.has(target));
     return branch ? SELECT_HEX : previewBranch ? (previewIds ? PREVIEW_HEX : RESULT_HEX) : resultBranch ? '#818cf8' : EDGE_COLORS[(link as GraphLink).type];
   }, [backlinkDepthById, previewIds, resultIds, selectedId, visibility.body, visibility.hierarchy, visibility.interaction]);
+
+  // 3D edges: one LineSegments for the whole graph instead of one Line object
+  // per link. 2,000+ draw calls per frame collapse into one, which is what
+  // keeps rotation smooth and lets the graph grow. Hidden edge types are
+  // painted black under additive blending, so they vanish on the dark field.
+  const edgeMeshRef = useRef<{ mesh: THREE.LineSegments; positions: Float32Array; colors: Float32Array; count: number } | null>(null);
+  const linkColor3dRef = useRef(linkColor3d);
+  useEffect(() => { linkColor3dRef.current = linkColor3d; }, [linkColor3d]);
+  const dropEdgeMesh = useCallback(() => {
+    const entry = edgeMeshRef.current;
+    if (!entry) return;
+    entry.mesh.parent?.remove(entry.mesh);
+    entry.mesh.geometry.dispose();
+    (entry.mesh.material as THREE.Material).dispose();
+    edgeMeshRef.current = null;
+  }, []);
+  const syncEdgeColors = useCallback(() => {
+    const entry = edgeMeshRef.current;
+    if (!entry || !filtered) return;
+    const links = filtered.links as any[];
+    const color = new THREE.Color();
+    links.forEach((link, i) => {
+      const css = linkColor3dRef.current(link);
+      if (css === 'rgba(0,0,0,0)') color.setRGB(0, 0, 0); else color.set(css);
+      const o = i * 6;
+      entry.colors[o] = entry.colors[o + 3] = color.r;
+      entry.colors[o + 1] = entry.colors[o + 4] = color.g;
+      entry.colors[o + 2] = entry.colors[o + 5] = color.b;
+    });
+    entry.mesh.geometry.getAttribute('color').needsUpdate = true;
+    (entry.mesh.material as THREE.LineBasicMaterial).opacity = Math.min(1, (selectedId ? .12 : .3) * EDGE_PRESENCE);
+  }, [filtered, selectedId]);
+  const syncEdgePositions = useCallback(() => {
+    const instance = graphRef.current;
+    if (!filtered || typeof instance?.scene !== 'function') return;
+    const links = filtered.links as any[];
+    const nodeById = new Map(filtered.nodes.map(node => [node.id, node as any]));
+    let entry = edgeMeshRef.current;
+    if (!entry || entry.count !== links.length) {
+      dropEdgeMesh();
+      const positions = new Float32Array(links.length * 6);
+      const colors = new Float32Array(links.length * 6);
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      const material = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: .3, blending: THREE.AdditiveBlending, depthWrite: false });
+      const mesh = new THREE.LineSegments(geometry, material);
+      mesh.frustumCulled = false;
+      instance.scene().add(mesh);
+      entry = edgeMeshRef.current = { mesh, positions, colors, count: links.length };
+      syncEdgeColors();
+    }
+    for (let i = 0; i < links.length; i += 1) {
+      const a = typeof links[i].source === 'object' ? links[i].source : nodeById.get(links[i].source);
+      const b = typeof links[i].target === 'object' ? links[i].target : nodeById.get(links[i].target);
+      if (!a || !b) continue;
+      const o = i * 6;
+      entry.positions[o] = a.x ?? 0; entry.positions[o + 1] = a.y ?? 0; entry.positions[o + 2] = a.z ?? 0;
+      entry.positions[o + 3] = b.x ?? 0; entry.positions[o + 4] = b.y ?? 0; entry.positions[o + 5] = b.z ?? 0;
+    }
+    entry.mesh.geometry.getAttribute('position').needsUpdate = true;
+    entry.mesh.geometry.computeBoundingSphere();
+  }, [dropEdgeMesh, filtered, syncEdgeColors]);
+  useEffect(() => { if (dimension === '3d') syncEdgeColors(); }, [dimension, linkColor3d, syncEdgeColors]);
+  useEffect(() => { if (dimension !== '3d') dropEdgeMesh(); return dropEdgeMesh; }, [dimension, dropEdgeMesh]);
+  // With a settled layout the engine emits no ticks, so build the mesh once the 3D scene and node positions exist.
+  useEffect(() => {
+    if (dimension !== '3d') return;
+    let inner = 0;
+    const outer = requestAnimationFrame(() => { inner = requestAnimationFrame(() => { syncEdgePositions(); window.setTimeout(syncEdgePositions, 400); }); });
+    return () => { cancelAnimationFrame(outer); cancelAnimationFrame(inner); };
+  }, [dimension, expanded, filtered, syncEdgePositions]);
+
 
   if (!filtered) {
     return (
@@ -1275,12 +1353,11 @@ const MiniGraph: React.FC<{
             nodeResolution={5}
             nodeOpacity={0.94}
             linkColor={linkColor3d}
-            linkOpacity={Math.min(1, (selectedId ? .14 : .38) * EDGE_PRESENCE)}
-            linkWidth={0}
-            onEngineStop={() => { if (topologyChangedRef.current) { topologyChangedRef.current = false; if (!topologyCameraCancelledRef.current) centerGraph(); topologyCameraCancelledRef.current = false; } else frameGraph(); saveSettledLayout(); setPhysicsSettling(false); }}
+            linkVisibility={false}
+            onEngineTick={syncEdgePositions}
+            onEngineStop={() => { syncEdgePositions(); if (topologyChangedRef.current) { topologyChangedRef.current = false; if (!topologyCameraCancelledRef.current) centerGraph(); topologyCameraCancelledRef.current = false; } else frameGraph(); saveSettledLayout(); setPhysicsSettling(false); }}
             onNodeClick={(node: any) => inspectNode(node as GraphNode)}
             onBackgroundClick={clearSelection}
-            onNodeHover={(node: any) => setHoveredId(node ? (node as GraphNode).id : null)}
             onNodeRightClick={(node: any) => onNodeOpen?.(node as GraphNode)}
             d3AlphaDecay={0.05}
             d3VelocityDecay={physics.damping}

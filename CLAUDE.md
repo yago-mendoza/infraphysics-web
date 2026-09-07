@@ -228,6 +228,9 @@ The wiki miniature on `/home` is inline SVG drawn from `src/data/graph-thumb.gen
 ### Article "Back" goes to the last non-article page of the tab
 `AppLayout` stores the previous route in `sessionStorage` (`infraphysics:article-return-to`) whenever an article is entered from a non-article page, and passes it to `ArticleFloatingBar`. Article-to-article navigation keeps the original origin. With no origin (direct link) the button reads "Back home" and goes to `/home`. There is no per-category back label any more.
 
+### 3D wiki graph draws its edges itself
+In `MiniGraph.tsx` the 3D view sets `linkVisibility={false}` and paints every edge in one `THREE.LineSegments` (`syncEdgePositions`, fed from `filtered.links` on each engine tick). One draw call instead of 2,000 keeps rotation and hover cheap. Consequences: the library never runs its link pass in 3D, so it does not fill `inDegree`/`outDegree` on nodes; derive connectivity from `filtered.links` (as `centerGraph` does) or a node filter silently matches nothing and `zoomToFit` becomes a no-op. The 3D ref exposes `scene()` but not `graphData()`; use the component's own graph data. Hover in 3D must not go through React state: a state change re-applies node colours to 744 meshes.
+
 ### Wikinotes are still called `fieldnotes` on disk and in the category key
 The content type was renamed to "wikinotes" in code, docs, scripts and the `/create-wikinote` skill (Sep 2026), but every path and data contract kept the old name on purpose: `src/data/pages/fieldnotes/`, `public/fieldnotes/{uid}.json`, `fieldnotes-index.json`, the `Category` value `'fieldnotes'` (used by `og-manifest.json` and the edge function), the `/api/fieldnotes/*` dev endpoints and `--cat-fieldnotes-accent`. Do not "fix" those to wikinotes: they are deployed URLs and cached CDN paths. Identifiers say wikinote, paths and keys say fieldnotes.
 
