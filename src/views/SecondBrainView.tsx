@@ -1624,7 +1624,7 @@ export const SecondBrainView: React.FC = () => {
       {/* Detail view — conditional so it doesn't render during search.
            Grid below stays always-mounted for instant search entry. */}
       {showDetail && (
-        <div className={globalEditMode && isLocalhost ? 'flex gap-6 items-start' : isSimplified ? 'max-w-3xl' : 'grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-10'}>
+        <div className={globalEditMode && isLocalhost ? 'flex gap-6 items-start' : isSimplified ? 'max-w-3xl' : 'max-w-6xl grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-10'}>
           {/* Left: metadata always visible, body fades when content loads */}
           <div className={globalEditMode && isLocalhost ? 'flex-1 min-w-0' : 'lg:col-span-3'}>
             <div className="flex items-center gap-2 mb-1">
@@ -1895,7 +1895,7 @@ export const SecondBrainView: React.FC = () => {
 
           {/* --- Concept List View (always mounted, hidden when detail is shown) --- */}
           <div style={showDetail ? { display: 'none' } : undefined}>
-            <div ref={gridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div ref={gridRef} className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(19rem, 100%), 1fr))' }}>
               {visibleResults.length > 0 ? (
                 visibleResults.map((note, idx) => (
                     <GridCard

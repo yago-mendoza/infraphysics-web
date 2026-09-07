@@ -205,7 +205,7 @@ const AppLayout: React.FC = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 min-w-0 flex flex-col min-h-screen">
-        <main className={`flex-grow w-full relative z-10 ${isSecondBrain ? 'max-w-6xl px-4 md:px-10 pt-20 pb-24 md:pt-20 md:pb-28 mx-auto' : isArticlePage ? 'px-2 pt-[4.5rem] pb-20 md:px-6 md:pt-20 md:pb-28 article-main-viewport' : 'px-6 pt-20 pb-20 md:py-16 md:pb-28 main-center-viewport'}`}>
+        <main className={`flex-grow w-full relative z-10 ${isSecondBrain ? 'max-w-[112rem] px-4 md:px-10 pt-20 pb-24 md:pt-20 md:pb-28 mx-auto' : isArticlePage ? 'px-2 pt-[4.5rem] pb-20 md:px-6 md:pt-20 md:pb-28 article-main-viewport' : 'px-6 pt-20 pb-20 md:py-16 md:pb-28 main-center-viewport'}`}>
           <Suspense fallback={<div className="min-h-screen py-20 text-center text-th-tertiary text-sm animate-pulse">Loading…</div>}>
             <React.Fragment key={location.pathname}>
             <Routes>
