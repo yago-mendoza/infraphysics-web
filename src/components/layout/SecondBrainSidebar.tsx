@@ -56,7 +56,7 @@ const GraphDynamicsControls = React.memo(() => {
   ] as Array<[keyof GraphPhysics, string, number, number, number]>).map(([key, label, min, max, step]) => {
     const shown = key === 'repulsion' ? Math.abs(values[key]) : values[key];
     return <label key={key} className="grid h-7 grid-cols-[5.4rem_minmax(0,1fr)_2.3rem] items-center gap-2 px-1.5"><span className="truncate text-[8px] uppercase tracking-[.08em] text-th-muted">{label}</span><input type="range" min={min} max={max} step={step} value={shown} onChange={event => update(key, key === 'repulsion' ? -Number(event.target.value) : Number(event.target.value))} className="wiki-graph-range min-w-0 w-full" /><output className="text-right font-mono text-[9px] tabular-nums text-violet-400">{shown.toFixed(step < .1 ? 2 : 1)}</output></label>;
-  })}</div>;
+  })}<button type="button" onClick={() => { setValues(GRAPH_PHYSICS_DEFAULTS); if (timerRef.current !== null) { window.clearTimeout(timerRef.current); timerRef.current = null; } pendingRef.current = null; window.dispatchEvent(new CustomEvent('wiki-graph-physics-change', { detail: GRAPH_PHYSICS_DEFAULTS })); }} className="flex h-7 w-full items-center justify-between px-1.5 text-[8px] uppercase tracking-[.08em] text-th-muted transition-colors hover:text-violet-300"><span>reset</span><span className="font-mono">defaults</span></button></div>;
 });
 GraphDynamicsControls.displayName = 'GraphDynamicsControls';
 
@@ -511,7 +511,7 @@ export const SecondBrainSidebar: React.FC = () => {
     setGraphExpanded(true);
     requestAnimationFrame(() => requestAnimationFrame(() => setGraphExpandedVisible(true)));
   };
-  const minimizeGraph = (returnToMatrix = graphSelectionCleared) => {
+  const minimizeGraph = (returnToMatrix = graphSelectionCleared && graphInput.trim().length > 0) => {
     setGraphExpandedVisible(false);
     if (returnToMatrix) { setQuery(''); navigate(secondBrainPath()); }
     graphMinimizeTimerRef.current = window.setTimeout(() => { setGraphExpanded(false); graphMinimizeTimerRef.current = null; }, 360);
@@ -732,8 +732,6 @@ export const SecondBrainSidebar: React.FC = () => {
     allWikiNotes.map(note => [note.id, note.date?.slice(0, 10) ?? '']),
   ), [allWikiNotes]);
   const openGraphNode = (node: { id: string }) => {
-    const date = noteDateById.get(node.id);
-    if (date) updateFilter('dateFilter', date);
     // An active search shows the result matrix instead of the card; drop it so the concept opens directly.
     if (query) setQuery('');
     setGraphInput('');

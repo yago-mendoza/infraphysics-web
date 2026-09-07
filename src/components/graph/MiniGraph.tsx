@@ -459,7 +459,7 @@ const MiniGraph: React.FC<{
     if (activeRoot && node.address.split('//')[0] !== activeRoot) return '#374151';
     return baseCssById.get(node.id) ?? `rgb(${SCALE_LOW.join(',')})`;
   }, [activeRoot, backlinkDepthById, baseCssById, selectedId]);
-  useEffect(() => { graphRef.current?.refresh?.(); }, [hoveredId]);
+  useEffect(() => { if (dimension === '2d') graphRef.current?.refresh?.(); }, [dimension, hoveredId]);
 
   // Nearest 2D node to a canvas point, within a small screen radius.
   const findNearestNodeId = useCallback((x: number, y: number): string | null => {
@@ -919,9 +919,18 @@ const MiniGraph: React.FC<{
   }, [containerHeight, containerWidth, dimension, expanded, filtered]);
 
   const inspectNode = useCallback((node: GraphNode) => {
+    // When a select handler navigates away, painting the branch first only distracts.
+    if (onNodeSelect) { onNodeSelect(node); return; }
     setSelectedId(node.id);
-    onNodeSelect?.(node);
   }, [onNodeSelect]);
+  useEffect(() => {
+    if (dimension !== '3d') return;
+    setMiniAnalysisEnabled(false);
+    setSelectionMode(false);
+    setDensityAreaIds(null);
+    setDragSelect(null);
+    onAreaPreview?.(null);
+  }, [dimension, onAreaPreview]);
   const clearSelection = useCallback(() => {
     if (!expanded || !selectedId) return;
     setSelectedId(null);
@@ -1375,6 +1384,7 @@ const MiniGraph: React.FC<{
             onEngineStop={() => { syncEdgePositions(); if (topologyChangedRef.current) { topologyChangedRef.current = false; if (!topologyCameraCancelledRef.current) centerGraph(); topologyCameraCancelledRef.current = false; } else frameGraph(); saveSettledLayout(); setPhysicsSettling(false); }}
             onNodeClick={(node: any) => inspectNode(node as GraphNode)}
             onBackgroundClick={clearSelection}
+            onNodeHover={(node: any) => setHoveredId(node ? (node as GraphNode).id : null)}
             onNodeRightClick={(node: any) => onNodeOpen?.(node as GraphNode)}
             d3AlphaDecay={0.05}
             d3VelocityDecay={physics.damping}
@@ -1429,8 +1439,8 @@ const MiniGraph: React.FC<{
               : <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.5" fill="#5b21b6" /><circle cx="7" cy="7" r="3.4" fill="#8b5cf6" /><circle cx="7" cy="7" r="1.5" fill="#ddd6fe" /></svg>}<span className="sr-only">{mode}</span></button>)}
           </div>}
           <button type="button" title="Center graph" onClick={centerGraph} className="mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 text-base leading-none text-th-muted hover:bg-th-surface hover:text-violet-300">⌖</button>
-          <button type="button" title="Select area and copy notes" onClick={() => { setSelectionMode(value => !value); setMiniAnalysisEnabled(false); setDensityAreaIds(null); onAreaPreview?.(null); setHoveredId(null); setDragSelect(null); selectionStartRef.current = null; selectionRectRef.current = null; }} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 ${selectionMode ? 'bg-cyan-400/15 text-cyan-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><CopyIcon /></button>
-          <button type="button" aria-pressed={miniAnalysisEnabled} title="Inspect local density" onClick={() => { setMiniAnalysisEnabled(value => { const next = !value; if (!next) { setDensityAreaIds(null); onAreaPreview?.(null); } return next; }); setSelectionMode(false); setDragSelect(null); }} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 ${miniAnalysisEnabled ? 'bg-violet-400/15 text-violet-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><AreaInspectIcon /></button>
+          {dimension === '2d' && <button type="button" title="Select area and copy notes" onClick={() => { setSelectionMode(value => !value); setMiniAnalysisEnabled(false); setDensityAreaIds(null); onAreaPreview?.(null); setHoveredId(null); setDragSelect(null); selectionStartRef.current = null; selectionRectRef.current = null; }} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 ${selectionMode ? 'bg-cyan-400/15 text-cyan-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><CopyIcon /></button>}
+          {dimension === '2d' && <button type="button" aria-pressed={miniAnalysisEnabled} title="Inspect local density" onClick={() => { setMiniAnalysisEnabled(value => { const next = !value; if (!next) { setDensityAreaIds(null); onAreaPreview?.(null); } return next; }); setSelectionMode(false); setDragSelect(null); }} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 ${miniAnalysisEnabled ? 'bg-violet-400/15 text-violet-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><AreaInspectIcon /></button>}
           <div className="pt-0.5">
             {(['content', 'hierarchy'] as const).map(mode => { const active = mode === 'hierarchy' ? visibility.hierarchy : visibility.body || visibility.interaction; return <button key={mode} type="button" title={mode === 'hierarchy' ? 'Path hierarchy' : 'Content references and interactions'} aria-pressed={active} onClick={() => setEdgeMode(mode)} className={`relative mb-0.5 grid h-8 w-full place-items-center hover:bg-th-surface ${active ? 'opacity-100' : 'opacity-25'}`}><i className="block h-px w-5" style={{ backgroundColor: mode === 'hierarchy' ? EDGE_COLORS.hierarchy : EDGE_COLORS.body, transform: mode === 'hierarchy' ? 'rotate(35deg)' : undefined }} /><span className="absolute bottom-0.5 right-1 text-[6px] uppercase text-th-muted">{mode === 'hierarchy' ? 'P' : 'C'}</span></button>; })}
           </div>
@@ -1444,7 +1454,7 @@ const MiniGraph: React.FC<{
         </aside>}
         {hoveredNode && (expanded
           ? <div ref={hoverCardRef} className="pointer-events-none absolute left-0 top-0 z-[60] max-w-56 border border-th-hub-border bg-th-base/95 px-2 py-1 font-mono text-[9px] shadow-lg backdrop-blur-sm will-change-transform"><span style={{ color: rootHexByName.get(hoveredNode.address.split('//')[0]) ?? ROOT_NEUTRAL }}>{hoveredNode.address.split('//')[0]}</span><span className="mx-1 text-th-muted">/</span><span className="text-th-primary underline decoration-th-muted underline-offset-2">{hoveredNode.name}</span></div>
-          : <div className="pointer-events-none absolute left-1 right-8 top-1 z-[60] truncate bg-th-base/82 px-1.5 py-1 font-mono text-[8px] shadow-sm backdrop-blur-sm"><span style={{ color: rootHexByName.get(hoveredNode.address.split('//')[0]) ?? ROOT_NEUTRAL }}>{hoveredNode.address.split('//')[0]}</span><span className="mx-1 text-th-muted">/</span><span className="text-th-primary">{hoveredNode.name}</span></div>
+          : <div className="pointer-events-none absolute left-1 top-1 z-[60] max-w-[calc(100%-2.5rem)] truncate bg-th-base/82 px-1.5 py-1 font-mono text-[8px] shadow-sm backdrop-blur-sm"><span style={{ color: rootHexByName.get(hoveredNode.address.split('//')[0]) ?? ROOT_NEUTRAL }}>{hoveredNode.address.split('//')[0]}</span><span className="mx-1 text-th-muted">/</span><span className="text-th-primary">{hoveredNode.name}</span></div>
         )}
       </Suspense>
     </div>

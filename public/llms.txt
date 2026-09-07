@@ -22,7 +22,7 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 - /home -- Landing page and navigation hub
 - /about -- Background, beliefs, and expertise areas
 - /lab/projects -- Engineering projects with technical deep-dives
-- /wiki -- Knowledge graph and visual explorer for 744+ interconnected concept notes
+- /wiki -- Knowledge graph and visual explorer for 757+ interconnected concept notes
 - /blog/essays -- Long-form essays on technology, AI, economics, and systems thinking
 - /blog/bits2bricks -- Technical tutorials bridging software and physical engineering
 
@@ -65,7 +65,7 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 
 ## Second Brain (Knowledge Graph)
 
-744+ atomic concept notes covering machine learning, hardware architecture, blockchain, distributed systems, and optimization. Each note is one concept with bidirectional wiki-links. The graph reveals structural relationships between domains. Explorable at /wiki.
+757+ atomic concept notes covering machine learning, hardware architecture, blockchain, distributed systems, and optimization. Each note is one concept with bidirectional wiki-links. The graph reveals structural relationships between domains. Explorable at /wiki.
 
 ## Contact
 
