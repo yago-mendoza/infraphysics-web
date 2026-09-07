@@ -4,15 +4,15 @@
 
 /* Backdrops */
 .sh-visual { position:absolute; inset:0; display:block; overflow:hidden; }
-/* The wiki door shows the graph as the wiki itself paints it: dark field, purple centrality ramp, faint edges. */
-.sh-visual-graph { background:#0a0a10; }
-.sh-visual-graph .graph-thumb { position:absolute; inset:0; width:100%; height:100%; display:block; }
-.sh-visual-graph .graph-thumb-field { fill:#0a0a10; }
-.sh-visual-graph .graph-thumb-links line { stroke-width:.14; stroke-opacity:.22; }
-.sh-visual-graph .graph-thumb-halos circle,
-.sh-visual-graph .graph-thumb-nodes circle { transform-box:fill-box; transform-origin:center; transform:scale(.6); }
-.sh-visual-graph .graph-thumb-halos circle { opacity:.12; }
-.sh-visual-graph .graph-thumb-nodes circle { opacity:.96; }
+/* The wiki door paints the graph the way the /r4 carousel did: a field tinted with the wiki accent
+   under a fine grid, purple nodes, faint edges, no halos or rings; hover brings the colour up. */
+.sh-visual-graph { background:color-mix(in srgb,var(--cat-fieldnotes-accent) 8%,var(--bg-base)); background-image:linear-gradient(color-mix(in srgb,var(--cat-fieldnotes-accent) 14%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--cat-fieldnotes-accent) 14%,transparent) 1px,transparent 1px); background-size:2.1rem 2.1rem; }
+.sh-visual-graph .graph-thumb { position:absolute; inset:0; width:100%; height:100%; display:block; filter:saturate(.7); transition:filter .35s ease; }
+.sh-visual-graph .graph-thumb-field { fill:transparent; }
+.sh-visual-graph .graph-thumb-links line { stroke-opacity:.14; }
+.sh-visual-graph .graph-thumb-halos { display:none; }
+.sh-visual-graph .graph-thumb-nodes circle { opacity:.7; }
+.sh-card:hover .sh-visual-graph .graph-thumb { filter:saturate(1); }
 .sh-visual-graph .graph-thumb-rings { display:none; }
 /* Solid white behind every thumbnail: transparent artwork must never show the page through. */
 .sh-visual-thumb { background:#fff; }
