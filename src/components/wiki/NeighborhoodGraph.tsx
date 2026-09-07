@@ -42,14 +42,14 @@ const COL_GAP = 14;    // horizontal gap between center sub-columns
 // Colors
 const COL_CURRENT_DARK = 'rgba(255,255,255,0.75)';
 const COL_CURRENT_LIGHT = 'rgba(0,0,0,0.75)';
-const COL_PARENT = 'rgba(139,92,246,0.8)';
+const COL_PARENT = 'color-mix(in srgb, var(--wiki-500) 80%, transparent)';
 const COL_PARENT_VISITED = 'rgba(96,165,250,0.8)';
-const COL_SIBLING = 'rgba(139,92,246,0.6)';
-const COL_CHILD = 'rgba(139,92,246,0.6)';
-const COL_LINE_PARENT = 'rgba(139,92,246,0.15)';
-const COL_LINE_CHILD = 'rgba(139,92,246,0.15)';
-const COL_LINE_PARENT_HOVER = 'rgba(139,92,246,0.35)';
-const COL_LINE_CHILD_HOVER = 'rgba(139,92,246,0.35)';
+const COL_SIBLING = 'color-mix(in srgb, var(--wiki-500) 60%, transparent)';
+const COL_CHILD = 'color-mix(in srgb, var(--wiki-500) 60%, transparent)';
+const COL_LINE_PARENT = 'color-mix(in srgb, var(--wiki-500) 15%, transparent)';
+const COL_LINE_CHILD = 'color-mix(in srgb, var(--wiki-500) 15%, transparent)';
+const COL_LINE_PARENT_HOVER = 'color-mix(in srgb, var(--wiki-500) 35%, transparent)';
+const COL_LINE_CHILD_HOVER = 'color-mix(in srgb, var(--wiki-500) 35%, transparent)';
 
 function distributeY(count: number, centerY: number, spacing: number): number[] {
   if (count === 0) return [];
@@ -84,7 +84,7 @@ function bezierH(x1: number, y1: number, x2: number, y2: number): string {
 }
 
 const COL_VISITED = 'rgba(96,165,250,0.55)';  // blue for visited nodes
-const COL_GHOST_PARENT = 'rgba(139,92,246,0.35)'; // faded purple for ghost parent dots (unvisited)
+const COL_GHOST_PARENT = 'color-mix(in srgb, var(--wiki-500) 35%, transparent)'; // faded purple for ghost parent dots (unvisited)
 const COL_GHOST_PARENT_VISITED = 'rgba(96,165,250,0.35)'; // faded blue for ghost parent dots (visited)
 const PARENT_COL_GAP = 14; // horizontal gap between ghost parent columns
 
@@ -320,9 +320,9 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
 
   // Active indicator — moves only on click
   const activeIndicator = useMemo(() => {
-    if (!activeZone) return { ...defaultPos, fill: 'rgba(139,92,246,0.07)', opacity: 0 };
+    if (!activeZone) return { ...defaultPos, fill: 'color-mix(in srgb, var(--wiki-500) 7%, transparent)', opacity: 0 };
     const cfg = zoneConfigs[activeZone];
-    const fill = 'rgba(139,92,246,0.08)';
+    const fill = 'color-mix(in srgb, var(--wiki-500) 8%, transparent)';
     return { ...cfg, fill, opacity: 1 };
   }, [activeZone, sibZoneW, sibZoneX]);
 
@@ -330,7 +330,7 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
   const hoverIndicator = useMemo(() => {
     if (!hoveredZone || hoveredZone === activeZone) return { ...defaultPos, fill: 'transparent', opacity: 0 };
     const cfg = zoneConfigs[hoveredZone];
-    const fill = 'rgba(139,92,246,0.04)';
+    const fill = 'color-mix(in srgb, var(--wiki-500) 4%, transparent)';
     return { ...cfg, fill, opacity: 1 };
   }, [hoveredZone, activeZone, sibZoneW, sibZoneX]);
 
@@ -471,7 +471,7 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
                   cx={parentPos.x}
                   cy={parentPos.y}
                   r={5}
-                  fill={isHighlighted ? 'rgba(139,92,246,1)' : isVisited?.(parent!.id) ? COL_PARENT_VISITED : COL_PARENT}
+                  fill={isHighlighted ? 'color-mix(in srgb, var(--wiki-500) 100%, transparent)' : isVisited?.(parent!.id) ? COL_PARENT_VISITED : COL_PARENT}
                   filter={isHighlighted ? 'url(#node-glow)' : 'none'}
                   style={{ transition: 'fill 200ms ease' }}
                 />
@@ -519,7 +519,7 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
                   width={w}
                   height={h}
                   rx={rx}
-                  fill={isHighlighted ? 'rgba(139,92,246,1)' : isCur ? COL_CURRENT : (isVisited?.(pos.entry.note.id) ? COL_VISITED : COL_SIBLING)}
+                  fill={isHighlighted ? 'color-mix(in srgb, var(--wiki-500) 100%, transparent)' : isCur ? COL_CURRENT : (isVisited?.(pos.entry.note.id) ? COL_VISITED : COL_SIBLING)}
                   filter={isHighlighted ? 'url(#node-glow)' : 'none'}
                   style={{
                     transition: `x ${TRANSITION}, y ${TRANSITION}, width ${TRANSITION}, height ${TRANSITION}, rx ${TRANSITION}, fill 200ms ease`,
@@ -545,7 +545,7 @@ export const NeighborhoodGraph: React.FC<Props> = ({ neighborhood, currentNote, 
                   cx={pos.x}
                   cy={pos.y}
                   r={NODE_R}
-                  fill={isHighlighted ? 'rgba(139,92,246,1)' : isVisited?.(children[i].id) ? COL_VISITED : COL_CHILD}
+                  fill={isHighlighted ? 'color-mix(in srgb, var(--wiki-500) 100%, transparent)' : isVisited?.(children[i].id) ? COL_VISITED : COL_CHILD}
                   filter={isHighlighted ? 'url(#node-glow)' : 'none'}
                   style={{ transition: 'fill 200ms ease' }}
                 />

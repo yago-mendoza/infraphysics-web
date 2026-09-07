@@ -121,7 +121,7 @@ export const TrailingRefsWidget: React.FC<Props> = ({
           <div
             key={ref.uid}
             className="flex gap-1.5 px-2 py-0.5 items-start"
-            style={{ borderBottom: idx < trailingRefs.length - 1 ? '1px solid rgba(139, 92, 246, 0.06)' : 'none' }}
+            style={{ borderBottom: idx < trailingRefs.length - 1 ? '1px solid color-mix(in srgb, var(--wiki-500) 6%, transparent)' : 'none' }}
           >
             <button
               onClick={() => handleDelete(idx)}

@@ -11,11 +11,11 @@
 }
 
 .cm-editor .cm-activeLineGutter {
-  background-color: rgba(167, 139, 250, 0.08) !important;
+  background-color: color-mix(in srgb, var(--wiki-400) 8%, transparent) !important;
 }
 
 .cm-editor .cm-activeLine {
-  background-color: rgba(167, 139, 250, 0.04) !important;
+  background-color: color-mix(in srgb, var(--wiki-400) 4%, transparent) !important;
 }
 
 /* Light mode CodeMirror adjustments */
@@ -38,7 +38,7 @@
 }
 
 .cm-tooltip-autocomplete ul li[aria-selected] {
-  background-color: rgba(167, 139, 250, 0.15) !important;
+  background-color: color-mix(in srgb, var(--wiki-400) 15%, transparent) !important;
 }
 
 .cm-completionLabel {

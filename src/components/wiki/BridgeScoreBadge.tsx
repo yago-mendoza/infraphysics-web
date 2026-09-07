@@ -8,8 +8,8 @@ const BAR_WIDTH = 48;
 const BAR_HEIGHT = 6;
 const TRI_SIZE = 4;
 
-const BAR_FILL = 'rgba(167,139,250,0.45)';
-const TRI_FILL = 'rgba(167,139,250,0.7)';
+const BAR_FILL = 'color-mix(in srgb, var(--wiki-400) 45%, transparent)';
+const TRI_FILL = 'color-mix(in srgb, var(--wiki-400) 70%, transparent)';
 
 export const BridgeScoreBadge: React.FC<Props> = ({ percentile }) => {
   if (percentile === 0) return null;

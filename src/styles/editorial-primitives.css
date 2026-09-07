@@ -319,10 +319,10 @@
 
 /* Wiki uses every primitive but never escapes its own content column. */
 .article-wiki {
-  --art-accent: #a855f7;
+  --art-accent: var(--wiki-500);
 }
 
-[data-theme="light"] .article-wiki { --art-accent: #7c3aed; }
+[data-theme="light"] .article-wiki { --art-accent: var(--wiki-600); }
 
 .article-wiki .article-content :is(.code-terminal, .table-wrapper, figure.img-full) {
   width: 100%;

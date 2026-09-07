@@ -1,8 +1,8 @@
 // Four doors (wiki, pinned essay, a project, a Bits2Bricks lesson) in one
 // column-width carousel that sits under the Home intro: picture full-bleed,
 // four progress segments on top, copy bottom-left, halves to move. Progress
-// is driven in script; a hover does not stop the rotation, it only shows the live
-// segment full, and on leave the bar shows the real progress again.
+// is driven in script; a hover does not stop the rotation, it restarts the live
+// segment's countdown from zero so the door stays a full turn under the pointer.
 // Every door sets --sh-accent to its category accent.
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -57,18 +57,17 @@ export const StartHere: React.FC = () => {
   // a setState per animation frame kept React Router's navigation transition pending forever
   // in dev mode (the URL changed but the page never re-rendered).
   const elapsedRef = useRef(0);
-  const hoveredRef = useRef(false);
   const liveBarRef = useRef<HTMLElement | null>(null);
   const paintBar = useCallback(() => {
     const bar = liveBarRef.current;
-    if (bar) bar.style.transform = `scaleX(${hoveredRef.current ? 1 : elapsedRef.current / ROTATE_MS})`;
+    if (bar) bar.style.transform = `scaleX(${elapsedRef.current / ROTATE_MS})`;
   }, []);
-  const setHovered = useCallback((next: boolean) => { hoveredRef.current = next; paintBar(); }, [paintBar]);
+  const restartBar = useCallback(() => { elapsedRef.current = 0; paintBar(); }, [paintBar]);
   const go = useCallback((next: number) => {
     elapsedRef.current = 0;
     setIndex(((next % DOORS.length) + DOORS.length) % DOORS.length);
   }, []);
-  // The countdown never pauses: hovering only changes what the live segment displays.
+  // The countdown never pauses: hovering only restarts it.
   useEffect(() => {
     if (DOORS.length < 2) return;
     let frame = 0;
@@ -91,7 +90,7 @@ export const StartHere: React.FC = () => {
   if (DOORS.length === 0) return null;
   const door = DOORS[index];
   return (
-    <div className="sh-card sh-stories" style={doorStyle(door)} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocus={() => setHovered(true)} onBlur={() => setHovered(false)}>
+    <div className="sh-card sh-stories" style={doorStyle(door)} onMouseEnter={restartBar} onFocus={restartBar}>
       <div className="sh-card-backdrop" aria-hidden="true">
         {DOORS.map((item, i) => <div key={item.key} className={`sh-card-layer${i === index ? ' is-active' : ''}`}><Visual door={item} /></div>)}
       </div>

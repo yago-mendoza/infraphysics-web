@@ -411,9 +411,9 @@ const ActivityHeatmap: React.FC<{
                         transition: 'background-color 180ms ease, box-shadow 180ms ease, opacity 180ms ease',
                         opacity: day.inYear ? 1 : 0,
                         boxShadow: isSelected(day.date)
-                          ? 'inset 0 0 0 1px rgba(167, 139, 250, 0.9)'
+                          ? 'inset 0 0 0 1px color-mix(in srgb, var(--wiki-400) 90%, transparent)'
                           : isInRange(day.date)
-                            ? 'inset 0 0 0 1px rgba(167, 139, 250, 0.35)'
+                            ? 'inset 0 0 0 1px color-mix(in srgb, var(--wiki-400) 35%, transparent)'
                             : 'none',
                       }}
                       title={day.inYear ? `${day.date}${day.count ? ` (${day.count})` : ''}${temporalDates.get(day.date) ? ` · ${temporalDates.get(day.date)!.count} highlighted` : ''}` : undefined}
@@ -442,7 +442,7 @@ const ActivityHeatmap: React.FC<{
                   }`}
                 style={{
                   height: 24,
-                  border: active ? '1px solid rgba(167, 139, 250, 0.5)'
+                  border: active ? '1px solid color-mix(in srgb, var(--wiki-400) 50%, transparent)'
                     : isCurrent ? '1.5px solid rgba(255, 255, 255, 0.18)'
                       : '1px solid transparent',
                 }}
@@ -801,7 +801,7 @@ const DockedToolbar: React.FC<{
               <>
                 <span className="text-[9px] text-th-muted tabular-nums">{Math.round((sortedCount / allNotes.length) * 100)}%</span>
                 <span className="inline-block w-10 h-1 rounded-full" style={{ backgroundColor: 'var(--bg-surface-alt)' }}>
-                  <span className="block h-full rounded-full" style={{ width: `${Math.min((sortedCount / allNotes.length) * 100, 100)}%`, backgroundColor: 'rgba(139,92,246,0.6)' }} />
+                  <span className="block h-full rounded-full" style={{ width: `${Math.min((sortedCount / allNotes.length) * 100, 100)}%`, backgroundColor: 'color-mix(in srgb, var(--wiki-500) 60%, transparent)' }} />
                 </span>
               </>
             )}

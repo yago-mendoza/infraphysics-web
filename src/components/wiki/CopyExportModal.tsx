@@ -194,7 +194,7 @@ const ScopeGraph: React.FC<{
           <line
             key={`line-${z.key}`}
             x1={from.x} y1={from.y} x2={to.x} y2={to.y}
-            stroke={active ? 'rgba(139,92,246,0.35)' : 'var(--bg-surface-alt)'}
+            stroke={active ? 'color-mix(in srgb, var(--wiki-500) 35%, transparent)' : 'var(--bg-surface-alt)'}
             strokeWidth={1}
             strokeDasharray={dashed ? '4 3' : undefined}
           />
@@ -202,8 +202,8 @@ const ScopeGraph: React.FC<{
       })}
 
       {/* Self node — always active, larger */}
-      <circle cx={CX} cy={CY} r={8} fill="rgba(139,92,246,0.9)" />
-      <text x={CX} y={CY + 24} textAnchor="middle" fill="rgba(139,92,246,0.8)" fontSize={11} fontFamily="monospace">
+      <circle cx={CX} cy={CY} r={8} fill="color-mix(in srgb, var(--wiki-500) 90%, transparent)" />
+      <text x={CX} y={CY + 24} textAnchor="middle" fill="color-mix(in srgb, var(--wiki-500) 80%, transparent)" fontSize={11} fontFamily="monospace">
         self
       </text>
 
@@ -214,10 +214,10 @@ const ScopeGraph: React.FC<{
         if (count === 0) return null;
         const active = activeZones.has(z.key);
         const isExt = EXTENDED_KEYS.has(z.key);
-        const fillActive = isExt ? 'rgba(139,92,246,0.5)' : 'rgba(139,92,246,0.7)';
+        const fillActive = isExt ? 'color-mix(in srgb, var(--wiki-500) 50%, transparent)' : 'color-mix(in srgb, var(--wiki-500) 70%, transparent)';
         const fill = active ? fillActive : 'var(--bg-surface-alt)';
         const textFill = active
-          ? (isExt ? 'rgba(139,92,246,0.7)' : 'rgba(139,92,246,0.9)')
+          ? (isExt ? 'color-mix(in srgb, var(--wiki-500) 70%, transparent)' : 'color-mix(in srgb, var(--wiki-500) 90%, transparent)')
           : 'var(--text-tertiary)';
         const dotCount = Math.min(count, MAX_DOTS);
         const overflow = count > MAX_DOTS ? count - MAX_DOTS : 0;
@@ -352,11 +352,11 @@ export const CopyExportModal: React.FC<Props> = ({
         className="w-full max-w-2xl max-h-[calc(100dvh-2rem)] mx-4 border overflow-y-auto"
         style={{
           backgroundColor: 'var(--hub-sidebar-bg)',
-          borderColor: 'rgba(139,92,246,0.3)',
+          borderColor: 'color-mix(in srgb, var(--wiki-500) 30%, transparent)',
         }}
       >
         {/* Header */}
-        <div className="px-5 py-4 border-b flex items-start justify-between gap-5" style={{ borderColor: 'rgba(139,92,246,0.2)', backgroundColor: 'rgba(139,92,246,0.05)' }}>
+        <div className="px-5 py-4 border-b flex items-start justify-between gap-5" style={{ borderColor: 'color-mix(in srgb, var(--wiki-500) 20%, transparent)', backgroundColor: 'color-mix(in srgb, var(--wiki-500) 5%, transparent)' }}>
           <div className="min-w-0">
             <div className="text-[15px] font-semibold text-violet-400">Copy for context</div>
             <div className="text-[12px] leading-relaxed text-th-secondary mt-1 break-words">
@@ -400,7 +400,7 @@ export const CopyExportModal: React.FC<Props> = ({
             <span className="inline-block w-16 h-1 rounded-full" style={{ backgroundColor: 'var(--bg-surface-alt)' }}>
               <span
                 className="block h-full rounded-full transition-all"
-                style={{ width: `${pctWidth}%`, backgroundColor: 'rgba(139,92,246,0.6)' }}
+                style={{ width: `${pctWidth}%`, backgroundColor: 'color-mix(in srgb, var(--wiki-500) 60%, transparent)' }}
               />
             </span>
           </div>

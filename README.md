@@ -134,6 +134,7 @@ infraphysics-web/
       wikilinks.ts            # Runtime wiki-link resolver
       content.ts              # Content utilities
       color.ts                # Color utilities (accentChipStyle)
+      wikiAccent.ts           # Wiki accent for canvas/three.js code, derived from --wiki-accent (index.html)
       date.ts                 # Date formatting
       search.ts               # Search utilities
       filterParams.ts         # URL filter param (de)serialization

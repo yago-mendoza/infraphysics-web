@@ -37,8 +37,8 @@ const MAX_ROWS = 20;
 const CENT_BAR_W = 32;
 const CENT_BAR_H = 5;
 const TRI_SIZE = 3;
-const BAR_FILL = 'rgba(167,139,250,0.45)';
-const TRI_FILL = 'rgba(167,139,250,0.7)';
+const BAR_FILL = 'color-mix(in srgb, var(--wiki-400) 45%, transparent)';
+const TRI_FILL = 'color-mix(in srgb, var(--wiki-400) 70%, transparent)';
 
 const ZONE_LABELS: Record<FamilyItem['zone'], string> = { parent: 'P', siblings: 'S', children: 'C' };
 

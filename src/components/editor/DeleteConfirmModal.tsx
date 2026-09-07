@@ -79,14 +79,14 @@ export const DeleteConfirmModal: React.FC<Props> = ({
         className="w-full max-w-md mx-4 border rounded-lg overflow-hidden"
         style={{
           backgroundColor: 'var(--hub-sidebar-bg)',
-          borderColor: phase === 'permanent' ? 'rgba(248,113,113,0.3)' : 'rgba(139,92,246,0.3)',
+          borderColor: phase === 'permanent' ? 'rgba(248,113,113,0.3)' : 'color-mix(in srgb, var(--wiki-500) 30%, transparent)',
           maxHeight: 'calc(100vh - 4rem)',
         }}
       >
         {/* ─── PHASE 1: OVERVIEW ─── */}
         {phase === 'overview' && (
           <>
-            <div className="px-4 py-3 border-b" style={{ borderColor: 'rgba(139,92,246,0.2)', backgroundColor: 'rgba(139,92,246,0.05)' }}>
+            <div className="px-4 py-3 border-b" style={{ borderColor: 'color-mix(in srgb, var(--wiki-500) 20%, transparent)', backgroundColor: 'color-mix(in srgb, var(--wiki-500) 5%, transparent)' }}>
               <div className="text-[13px] font-semibold text-violet-400">Clear note content</div>
               <div className="text-[11px] text-th-secondary mt-0.5">
                 {analysis.noteAddress} <span className="text-th-muted">({analysis.noteName})</span>

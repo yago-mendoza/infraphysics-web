@@ -3,6 +3,6 @@
 // (--cat-*-accent) defined in index.html, accessed via catAccentVar() in config/categories.tsx.
 
 export const CATEGORY_ACCENTS = {
-  secondBrain: '#8B5CF6',
+  secondBrain: 'var(--wiki-500)',
   meta: '#9AA0A6',
 } as const;

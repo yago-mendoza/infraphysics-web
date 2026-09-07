@@ -35,6 +35,10 @@
     <title>InfraPhysics</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+      // Tailwind's violet and purple scales resolve to the wiki accent scale (--wiki-50 … --wiki-950,
+      // defined in :root below), so text-violet-400, bg-violet-500/15 and friends all follow --wiki-accent.
+      const wikiScale = Object.fromEntries([50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].map(step => [step,
+        ({ opacityValue }) => opacityValue === undefined ? `var(--wiki-${step})` : `color-mix(in srgb, var(--wiki-${step}) calc(${opacityValue} * 100%), transparent)`]));
       tailwind.config = {
         theme: {
           extend: {
@@ -65,6 +69,8 @@
               'th-overlay':     'var(--overlay-bg)',
               'th-on-accent':   'var(--text-on-accent)',
               'th-nav-accent':  'var(--nav-accent)',
+              violet: wikiScale,
+              purple: wikiScale,
             },
           },
         },
@@ -83,6 +89,23 @@
         /* Site identity + data signals (shared by every route) */
         --brand-oxide:        #c8462d;
         --brand-oxide-strong: #d65a36;
+
+        /* Wiki accent: the ONE place the wiki colour is defined. Every purple in the wiki UI derives
+           from it: Tailwind's violet and purple scales (inline config above), --cat-fieldnotes-accent,
+           --wiki-link, the graph ramps in JS (lib/wikiAccent.ts, same mix ratios). Theme-constant.
+           Original value #A78BFA (violet-400); currently trying the brand oxide. */
+        --wiki-accent: #c8462d;
+        --wiki-50:  color-mix(in srgb, var(--wiki-accent), white 90%);
+        --wiki-100: color-mix(in srgb, var(--wiki-accent), white 80%);
+        --wiki-200: color-mix(in srgb, var(--wiki-accent), white 60%);
+        --wiki-300: color-mix(in srgb, var(--wiki-accent), white 35%);
+        --wiki-400: var(--wiki-accent);
+        --wiki-500: color-mix(in srgb, var(--wiki-accent), black 15%);
+        --wiki-600: color-mix(in srgb, var(--wiki-accent), black 30%);
+        --wiki-700: color-mix(in srgb, var(--wiki-accent), black 40%);
+        --wiki-800: color-mix(in srgb, var(--wiki-accent), black 48%);
+        --wiki-900: color-mix(in srgb, var(--wiki-accent), black 58%);
+        --wiki-950: color-mix(in srgb, var(--wiki-accent), black 72%);
         --signal-blue:        #63a7d8;
         --signal-green:       #5f9d78;
         --shadow-color:       rgba(0,0,0,0.42);
@@ -144,8 +167,8 @@
         --content-img-bg:            rgba(255,255,255,0.03);
 
         /* Wiki links */
-        --wiki-link:            #A78BFA;
-        --wiki-link-hover:      #C4B5FD;
+        --wiki-link:            var(--wiki-400);
+        --wiki-link-hover:      var(--wiki-300);
         --wiki-preview-bg:      #111111;
         --wiki-preview-border:  rgba(255,255,255,0.10);
         --wiki-preview-title:   #E8EAED;
@@ -157,7 +180,7 @@
         --cat-projects-accent:    #a3e635;
         --cat-essays-accent:     #c8462d;
         --cat-bits2bricks-accent: #3B82F6;
-        --cat-fieldnotes-accent:  #A78BFA;
+        --cat-fieldnotes-accent:  var(--wiki-400);
 
         /* Wiki link state (Second Brain visited/unvisited) */
         --wiki-link-visited:      #60a5fa;
@@ -236,8 +259,8 @@
         --content-img-border:        #d1d5db;
         --content-img-bg:            #f3f4f6;
 
-        --wiki-link:            #7C3AED;
-        --wiki-link-hover:      #6D28D9;
+        --wiki-link:            var(--wiki-600);
+        --wiki-link-hover:      var(--wiki-700);
         --wiki-preview-bg:      #ffffff;
         --wiki-preview-border:  #d1d5db;
         --wiki-preview-title:   #1F2937;
@@ -248,7 +271,7 @@
         --cat-projects-accent:    #4d7c0f;
         --cat-essays-accent:     #9b3f24;
         --cat-bits2bricks-accent: #2563eb;
-        --cat-fieldnotes-accent:  #7C3AED;
+        --cat-fieldnotes-accent:  var(--wiki-600);
 
         --wiki-link-visited:      #2563eb;
 

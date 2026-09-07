@@ -132,6 +132,7 @@ components                                 →  th-* classes
 - Category accents: `--cat-projects-accent`, `--cat-essays-accent`, `--cat-bits2bricks-accent`, `--cat-fieldnotes-accent` — identity colors, same in both themes. Access via `catAccentVar(category)` → returns `var(--cat-*-accent)` string.
 - Status colors in `STATUS_CONFIG` (`config/categories.tsx`): raw hex, theme-constant.
 - Accent interactions: `hover:text-blue-400` for links.
+- **Wiki accent is one variable**: `--wiki-accent` in `index.html` `:root`. The scale `--wiki-50` … `--wiki-950` is derived from it with `color-mix()`, the inline Tailwind config maps the `violet` and `purple` palettes onto that scale (so `text-violet-400`, `bg-violet-500/15` follow it), `--cat-fieldnotes-accent` and `--wiki-link` point at it, and canvas/three.js code reads it through `lib/wikiAccent.ts` (same mix ratios; keep both in sync). To recolour the wiki, change that one line. Never write a purple hex in wiki code again. The home plate captures (`public/home-wiki-*.png`) are static and must be retaken after a colour change.
 
 ### Theme switching
 Two distinct paths in `ThemeContext`:

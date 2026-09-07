@@ -201,7 +201,7 @@ const TreeNodeItem: React.FC<{
         } ${isRoot ? 'border-l-2 border-violet-400/20' : ''}`}
         style={{ paddingLeft: `${depth * 12}px`, ...(isRoot && accentColor ? { borderLeftColor: accentColor } : {}) }}
       >
-        <span className="pointer-events-none absolute bottom-0 h-[2px] opacity-[.32]" style={{ left: `${depth * 12 + 20}px`, width: `calc((100% - ${depth * 12 + 20}px) * ${Math.max(.03, relativeSize)})`, backgroundColor: accentColor ?? '#a78bfa' }} />
+        <span className="pointer-events-none absolute bottom-0 h-[2px] opacity-[.32]" style={{ left: `${depth * 12 + 20}px`, width: `calc((100% - ${depth * 12 + 20}px) * ${Math.max(.03, relativeSize)})`, backgroundColor: accentColor ?? 'var(--wiki-400)' }} />
         {hasChildren ? (
           <button
             onClick={() => {
@@ -442,8 +442,8 @@ const WordCountHistogram: React.FC<{
                 style={{
                   height: barH,
                   backgroundColor: inSelection
-                    ? 'rgba(167, 139, 250, 0.5)'
-                    : 'rgba(167, 139, 250, 0.15)',
+                    ? 'color-mix(in srgb, var(--wiki-400) 50%, transparent)'
+                    : 'color-mix(in srgb, var(--wiki-400) 15%, transparent)',
                   borderRadius: 1,
                 }}
               />

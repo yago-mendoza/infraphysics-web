@@ -8,6 +8,7 @@ import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation } 
 import { initBrainIndex, type BrainIndex } from '../../lib/brainIndex';
 import { useGraphRelevance } from '../../hooks/useGraphRelevance';
 import { buildGraphData, type GraphData, type GraphNode, type GraphLink, type EdgeVisibility, EDGE_COLORS, assignRootColors, hexToRgb, ROOT_NEUTRAL } from './useGraphData';
+import { wikiRamp, wikiStepCss } from '../../lib/wikiAccent';
 
 export type GraphColorMode = 'centrality' | 'roots';
 type SelectionRect = { x0: number; y0: number; x1: number; y1: number };
@@ -34,9 +35,8 @@ const ForceGraph3D = React.lazy(() => import('react-force-graph-3d'));
 
 const MINI_HEIGHT = 150;
 // Canvas colors are raw values by necessity (no CSS cascade inside canvas paint).
-// Purple centrality scale: periphery (violet-800) → core (violet-300).
-const SCALE_LOW = [91, 33, 182];
-const SCALE_HIGH = [196, 181, 253];
+// Centrality scale: periphery (wiki 800) → core (wiki 300), derived from --wiki-accent.
+const { low: SCALE_LOW, high: SCALE_HIGH } = wikiRamp();
 // Selection color: infraphysics lime, mirrors --cat-projects-accent (theme-constant)
 const SELECT_RGB = [163, 230, 53];
 const SELECT_HEX = '#a3e635';
@@ -180,6 +180,7 @@ const MiniGraph: React.FC<{
   const copyResetTimerRef = useRef<number | null>(null);
   const layoutSaveTimerRef = useRef<number | null>(null);
   const physicsTouchedRef = useRef(false);
+  const entryHeatDoneRef = useRef(false);
   const topologyChangedRef = useRef(false);
   const topologyCameraCancelledRef = useRef(false);
   const cameraTimerRef = useRef<number | null>(null);
@@ -993,6 +994,16 @@ const MiniGraph: React.FC<{
           physicsTouchedRef.current = false;
           fg.d3ReheatSimulation?.();
         }
+        // On entry the restored layout was settled under whichever edge mode
+        // was active when it was saved (or under the content-mode seed), and
+        // the engine starts with a zero tick budget, so hierarchy mode looked
+        // mixed until a drag reheated it. Run that same reheat once on mount
+        // of the sidebar graph; the expanded graph inherits the result.
+        if (!expanded && !entryHeatDoneRef.current) {
+          entryHeatDoneRef.current = true;
+          setPhysicsSettling(true);
+          requestAnimationFrame(() => fg.d3ReheatSimulation?.());
+        }
       });
     });
     return () => { cancelAnimationFrame(frame); cancelAnimationFrame(innerFrame); };
@@ -1163,7 +1174,7 @@ const MiniGraph: React.FC<{
 
     if (hovered) {
       const root = n.address.split('//')[0];
-      const hoverStroke = expanded ? (rootHexByName.get(root) ?? SELECT_RING) : '#c4b5fd';
+      const hoverStroke = expanded ? (rootHexByName.get(root) ?? SELECT_RING) : wikiStepCss(300);
       ctx.strokeStyle = hoverStroke;
       ctx.lineWidth = Math.max(.7, 1.4 / globalScale);
       ctx.shadowColor = hoverStroke; ctx.shadowBlur = 5 / globalScale;
@@ -1446,7 +1457,7 @@ const MiniGraph: React.FC<{
           {onColorModeChange && <div className="mb-1 border-b border-th-hub-border pb-1">
             {(['roots', 'centrality'] as const).map(mode => <button key={mode} type="button" aria-pressed={colorMode === mode} title={mode === 'roots' ? 'Color nodes by root family' : 'Color nodes by centrality (lighter = more central)'} onClick={() => onColorModeChange(mode)} className={`mb-0.5 grid h-8 w-full place-items-center ${colorMode === mode ? 'bg-violet-400/15' : 'hover:bg-th-surface'}`}>{mode === 'roots'
               ? <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="4" cy="4.5" r="2.3" fill="#f472b6" /><circle cx="10" cy="4.5" r="2.3" fill="#34d399" /><circle cx="7" cy="10" r="2.3" fill="#60a5fa" /></svg>
-              : <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.5" fill="#5b21b6" /><circle cx="7" cy="7" r="3.4" fill="#8b5cf6" /><circle cx="7" cy="7" r="1.5" fill="#ddd6fe" /></svg>}<span className="sr-only">{mode}</span></button>)}
+              : <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.5" fill="var(--wiki-800)" /><circle cx="7" cy="7" r="3.4" fill="var(--wiki-500)" /><circle cx="7" cy="7" r="1.5" fill="var(--wiki-200)" /></svg>}<span className="sr-only">{mode}</span></button>)}
           </div>}
           <button type="button" title="Center graph" onClick={centerGraph} className="mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 text-base leading-none text-th-muted hover:bg-th-surface hover:text-violet-300">⌖</button>
           {dimension === '2d' && <button type="button" title="Select area and copy notes" onClick={() => { setSelectionMode(value => !value); setMiniAnalysisEnabled(false); setDensityAreaIds(null); onAreaPreview?.(null); setHoveredId(null); setDragSelect(null); selectionStartRef.current = null; selectionRectRef.current = null; }} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 ${selectionMode ? 'bg-cyan-400/15 text-cyan-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><CopyIcon /></button>}
