@@ -33,7 +33,7 @@ Mandatory triggers — when X happens, do Y.
 
 ### On adding an HTML page to an article
 
-A self-contained HTML page that belongs to one article (an interactive table, a simulation, a decoy viewer) goes in `public/playgrounds/<article-id>/<name>.html`, kebab-case, tracked in git, served as a static asset at `/playgrounds/<article-id>/<name>.html`. Never put HTML under `media/` (that tree is image masters bound for the CDN) and never link it with a bare markdown link: write `[[playgrounds/<article-id>/<name>|text]]`, which renders as a cross-document link in the article accent and opens in a new tab. The page must be standalone (its own CSS and JS inline, no site assets).
+A self-contained HTML page that belongs to one article (an interactive table, a simulation, a decoy viewer) goes in `public/playgrounds/<article-id>/<name>.html`, kebab-case, tracked in git, served as a static asset at `/playgrounds/<article-id>/<name>.html`. Never put HTML under `media/` (that tree is image masters bound for the CDN) and never link it with a bare markdown link: write `[[playgrounds/<article-id>/<name>|text]]`, which renders as a cross-document link in the article accent and opens in a new tab. The page must be standalone (its own CSS and JS inline, no site assets). Full guide, together with images: [pages/README.md, Attachments](src/data/pages/README.md#attachments); which features each category may use: [SYNTAX.md, Where each feature applies](src/data/pages/SYNTAX.md#where-each-feature-applies).
 
 ### On editorial feedback
 
@@ -261,6 +261,9 @@ The essays type system (Lora body and subtitle, Newsreader title and headings, 4
 
 ### Article body type is pinned with `!important` in `global.css` above 768px
 A block in `src/styles/global.css` ("One typographic voice") forces `font-size: 1.02rem !important` and `line-height: 1.76 !important` on every `.article-content p/li/td` at 768px and up, so a per-category rule without `!important` (the wiki's `0.875rem` in `wiki-content.css` was one) silently loses on desktop and only applies on phones. Category deltas for body size must carry `!important` too, or be added to that block.
+
+### Body heading sizes are pinned in `global.css` for every article
+The "One typographic voice" block in `src/styles/global.css` sets `.article-content h2` to 2rem and `h3` to 1.25rem with `!important` above 768px. Any per-category heading scale has to use `!important` from a more specific selector (`.article-blog:not(.article-essays) .article-content h2`, at the end of `article.css`, is the Bits2Bricks one) or the levels collapse: before that scale, `#` and `##` rendered at the same size and `###` at body size. The convention is `#` section, `##` subsection, `###` third level; every article starts at `#`.
 
 ### Block fences (`{math}`, `{bkqt}`) need blank lines around them
 A `{math}` … `{/math}` or `{bkqt/…}` … `{/bkqt}` fence written directly between list items or paragraphs (no blank line before the opening tag or after the closing one) closes the block and the compiler emits everything after it as literal text: `**bold**`, `[links](url)` and the following bullets stay unrendered, and the build prints no error (only the `[SYNTAX]` guard notices when a markdown link survives). Always put a blank line before the opening tag and after the closing tag. Documented in `SYNTAX.md` (Typed notes, Chemical and mathematical forms).

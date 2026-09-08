@@ -197,7 +197,15 @@ The build pipeline compiles posts and wikinotes through one shared transformatio
 
 ### Writing content
 
-All article and wikinote Markdown lives in `src/data/pages/`. Standard Markdown does most of the work; the deliberately small extension adds typed notes, optional tabbed sections, definition/alphabetical lists, context annotations, Wiki and cross-document links, single/pair images, mathematics and inline footnotes. Authoring hub: **[src/data/pages/README.md](src/data/pages/README.md)**. Normative syntax reference: **[src/data/pages/SYNTAX.md](src/data/pages/SYNTAX.md)**
+All article and wikinote Markdown lives in `src/data/pages/`. One entry point: **[src/data/pages/README.md](src/data/pages/README.md)**, the authoring hub, says where everything is and links down. From there:
+
+- **Hard rules, every category:** [STYLE.md](src/data/pages/STYLE.md). No double quotes, no arrows, no em-dashes, no box titles, dense paragraphs, literal titles. The mechanical ones come back as `[STYLE]` build warnings.
+- **Syntax:** [SYNTAX.md](src/data/pages/SYNTAX.md), the single grammar reference. The grammar is shared by every category; what each category may actually use is a subset, listed in its *Where each feature applies* table.
+- **Voice per category:** [projects/README.md](src/data/pages/projects/README.md), [essays/README.md](src/data/pages/essays/README.md), [bits2bricks/README.md](src/data/pages/bits2bricks/README.md): schema, tone, structure, accumulated author feedback.
+- **Wikinotes:** [wikinotes/STYLE.md](src/data/pages/wikinotes/STYLE.md) for how a note is written, [wikinotes/README.md](src/data/pages/wikinotes/README.md) for scripts, renames and validation.
+- **Attachments:** images (masters in `media/`, served from the CDN) and standalone HTML pages (`public/playgrounds/<article-id>/`), in the hub's *Attachments* section.
+
+Standard Markdown does most of the work; the small extension adds typed notes, parameter sheets, definition and alphabetical lists, context annotations, wiki, cross-document and playground links, single or paired images, mathematics and inline footnotes.
 
 ---
 
@@ -290,8 +298,7 @@ Articles include engagement and navigation features layered on top of the base c
 
 - **View count + hearts** — POST on mount (IP-deduped), displayed in article header and section listings. Hearts are toggleable per IP.
 - **Giscus comments** — GitHub Discussions-backed comment widget at article footer. Config: `yago-mendoza/infraphysics-comments` repo.
-- **In-page search** — `Ctrl+F` inside articles highlights matches in the rendered content via DOM TreeWalker. Match count in floating bar.
-- **Floating bar** — Sticky bar with TOC dropdown, active heading indicator, search toggle, reading progress, and share button. Visible on all article types.
+- **Floating bar** — Back to the page the reader came from, active heading indicator, reading progress and share. Essays and Bits2Bricks also carry a sticky index of the top-level sections beside the body.
 - **Reading progress** — Horizontal progress bar at top of viewport, driven by scroll position via RAF.
 - **Active TOC tracking** — Scroll listener marks the current heading + its ancestor chain in the TOC. Shared algorithm between ArticlePostView and ArticleFloatingBar.
 - **Share dropdown** — Copy link, email feedback, Twitter/X share.
@@ -325,12 +332,6 @@ Routing (`public/_routes.json`) sends article paths, section pages, `/home`, and
 ### AI development guide
 
 Repository conventions live alongside the systems they describe: this README for architecture and deployment, `scripts/README.md` for the compiler, and `src/data/pages/wikinotes/README.md` for knowledge-graph operations. Keep those documents synchronized when their respective contracts change.
-
----
-
-### Media
-
-All images and media assets are hosted on **Cloudflare R2** — never commit binary assets to the repo. Reference them via their R2 URL in markdown.
 
 ---
 

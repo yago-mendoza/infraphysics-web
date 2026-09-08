@@ -3124,3 +3124,10 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   .article-blog:not(.article-essays) .article-blog-image { width:calc(100vw - 2rem); }
   .article-blog:not(.article-essays) .article-title { font-size:clamp(2.45rem,13vw,3.65rem); }
 }
+
+/* Bits2Bricks (blog, non-essay) heading scale by tag. global.css pins every article's h2 at 2rem and
+   h3 at 1.25rem regular with !important, which made # and ## the same size and ### body-sized. */
+.article-blog:not(.article-essays) .article-content h1 { font-size: 2rem !important; font-weight: 400 !important; line-height: 1.15 !important; margin: 2.8rem 0 .9rem; }
+.article-blog:not(.article-essays) .article-content h2 { font-size: 1.5rem !important; font-weight: 600 !important; line-height: 1.25 !important; margin: 2.4rem 0 .7rem; }
+.article-blog:not(.article-essays) .article-content h3 { font-size: 1.2rem !important; font-weight: 600 !important; line-height: 1.3 !important; margin: 1.9rem 0 .5rem; }
+.article-blog:not(.article-essays) .article-content h4 { font-size: 1.05rem !important; font-weight: 600 !important; line-height: 1.3 !important; margin: 1.6rem 0 .45rem; }

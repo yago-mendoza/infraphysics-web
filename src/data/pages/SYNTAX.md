@@ -32,6 +32,8 @@ Single underscores follow Markdown and therefore mean italic. Horizontal rules, 
 
 ## Headings and exact links
 
+`#` is a section, `##` a subsection, `###` a third level used sparingly; nothing deeper. The article title comes from the frontmatter, so the body starts at `#` and never repeats the title. Do not start an article at `##`: headings are sized by tag, and the index only normalises depth. Wikinotes have no headings (`## Interactions` is reserved).
+
 Rendered headings receive stable anchors. Hovering a heading reveals a chain control on its left. Activating it copies the exact URL to that section. If numbering is wanted, write it manually in the heading.
 
 ## Typed notes
@@ -146,6 +148,31 @@ Front matter controls the article hero independently through `thumbnail`, `thumb
 ```
 
 They remain a first-class primitive for project history and post-publication corrections.
+
+## Where each feature applies
+
+The grammar is one; the subset each category may use is not. Yes means allowed as documented above, a phrase means allowed with a condition, no means never.
+
+| Feature | Projects | Essays | Bits2Bricks | Wikinotes |
+|---|---|---|---|---|
+| Headings `#`, `##`, `###` | yes | yes, sparingly, never as cliffhangers | yes | no |
+| Typed boxes `{bkqt/type}` | yes (tip by default; warning/danger only for real reader risk) | yes | yes | at most one keyconcept per note |
+| Box labels `{bkqt/type\|Label}` | no | no | no | no (dropped, build warning) |
+| Parameter sheets `{params}` | yes | rarely | yes, instead of symbol tables | yes (constants, ports, flags) |
+| Context annotations `>>` | yes: the project diary, opening annotation required | post-publication only, never opening | post-publication corrections only | no |
+| Inline footnotes | yes | yes | yes | yes |
+| Inline and block math | yes | yes | yes | yes; a block closes its bullet |
+| Images, single and pair | yes | yes | yes | no |
+| Tables | factual comparison only | rarely | yes | no |
+| Definition and alphabetical lists | yes | yes | yes | sparingly |
+| Code blocks | yes | yes | yes | only a literal command |
+| Wiki links `[[uid]]` | yes | yes | yes | yes |
+| Cross-document links `[[projects/…]]` etc. | yes | yes | yes | only when the article is the source |
+| Playground links `[[playgrounds/…]]` | yes | yes | yes | no |
+| `tldr` frontmatter | yes, one quoted paragraph | no | yes | no |
+| Tag chips above the title | no | no | yes (`tags`, `technologies`) | no |
+| Double quotes in prose, arrows, em-dashes | no | no | no | no |
+| Bold on a wiki link | no | no | no | no |
 
 ## Pipeline
 
