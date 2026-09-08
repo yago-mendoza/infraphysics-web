@@ -69,7 +69,7 @@ const AppLayout: React.FC = () => {
     }
     previousLocationRef.current = location;
   }, [location]);
-  const { theme, toggleTheme, applyZone } = useTheme();
+  const { theme, toggleTheme, applyRoute } = useTheme();
   const { aestheticCursor } = useCursorPreference();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchLoaded, setSearchLoaded] = useState(false);
@@ -133,19 +133,16 @@ const AppLayout: React.FC = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  // Apply zone-specific theme preference on route change (instant, no flash).
-  // An article with `theme:` in its frontmatter forces that theme on entry. This has to happen
-  // here, not in the article view: child layout effects run before this one and would be overridden.
+  // Re-apply the reader's theme on route change (instant, no flash). An article with `theme:` in its
+  // frontmatter forces that theme on entry. This has to happen here, not in the article view: child
+  // layout effects run before this one and would be overridden.
   useLayoutEffect(() => {
-    const zone = location.pathname.startsWith('/blog')
-      ? 'blog'
-      : isSecondBrainPath(location.pathname) ? 'wiki' : 'app';
     const article = location.pathname.match(/^\/(?:lab|blog)\/([^/]+)\/([^/]+)/);
     const forced = article
       ? postSummaries.find(p => p.category === article[1] && p.id === article[2])?.theme
       : null;
-    applyZone(zone, forced ?? undefined);
-  }, [location.pathname, applyZone]);
+    applyRoute(forced ?? undefined);
+  }, [location.pathname, applyRoute]);
 
   const isBlog = location.pathname.startsWith('/blog');
   const isHome = location.pathname === '/' || location.pathname === '/home';

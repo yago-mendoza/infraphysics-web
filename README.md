@@ -213,6 +213,8 @@ Standard Markdown does most of the work; the small extension adds typed notes, p
 
 All colors flow through a three-layer cascade: CSS custom properties in `index.html` (`:root` for dark, `[data-theme="light"]` for light) → Tailwind semantic tokens (`th-*`) in the inline config → `th-*` classes in components. Article styling adds a fourth layer: `--art-accent` per category with `color-mix()` derivations on `.article-page-wrapper`. Never use hardcoded color classes (`text-white`, `bg-gray-900`) — they bypass the cascade and break theme transitions.
 
+The site is dark everywhere by default: one atmosphere from the home to the last wikinote. Light is a single global reader preference (gear, Shift+T), remembered site-wide and never inferred from the OS or tied to a route. A post can force a theme on entry with `theme:` in its frontmatter.
+
 ---
 
 ### Second Brain

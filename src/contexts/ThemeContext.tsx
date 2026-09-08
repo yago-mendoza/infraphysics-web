@@ -1,49 +1,41 @@
-// Theme context — dark/light toggle with per-zone persistence
-// Independent theme memories: blog (light), app (dark), and wiki (dark).
+// Theme context. One atmosphere: the site is dark everywhere by default. Light is a reader
+// preference, not a zone: a single global setting (gear, Shift+T) remembered for the whole
+// site, never inferred from the OS. An article may still force a theme on entry through its
+// `theme:` frontmatter; that override is applied but not saved.
 
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { isSecondBrainPath } from '../config/categories';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 type Theme = 'dark' | 'light';
-type Zone = 'blog' | 'app' | 'wiki';
 
-const ZONE_DEFAULTS: Record<Zone, Theme> = { blog: 'light', app: 'dark', wiki: 'dark' };
-const ZONE_KEYS: Record<Zone, string> = { blog: 'theme-blog', app: 'theme-app', wiki: 'theme-wiki' };
+const DEFAULT_THEME: Theme = 'dark';
+const STORAGE_KEY = 'infraphysics:theme';
 
-const zoneFromPath = (path: string): Zone => path.startsWith('/blog')
-  ? 'blog'
-  : isSecondBrainPath(path) ? 'wiki' : 'app';
-
-function readZoneTheme(zone: Zone): Theme {
+function readTheme(): Theme {
   try {
-    const saved = localStorage.getItem(ZONE_KEYS[zone]) as Theme | null;
+    const saved = localStorage.getItem(STORAGE_KEY) as Theme | null;
     if (saved === 'dark' || saved === 'light') return saved;
   } catch {}
-  return ZONE_DEFAULTS[zone];
+  return DEFAULT_THEME;
 }
 
-function saveZoneTheme(zone: Zone, theme: Theme) {
-  try { localStorage.setItem(ZONE_KEYS[zone], theme); } catch {}
+function saveTheme(theme: Theme) {
+  try { localStorage.setItem(STORAGE_KEY, theme); } catch {}
 }
 
 interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
-  applyZone: (zone: Zone, override?: Theme) => void;
+  /** Route watcher: re-apply the reader's preference, or an article's `theme:` override (not saved). Instant, no animation. */
+  applyRoute: (override?: Theme) => void;
 }
 
-const ThemeContext = createContext<ThemeContextType>({ theme: 'dark', toggleTheme: () => {}, applyZone: () => {} });
+const ThemeContext = createContext<ThemeContextType>({ theme: 'dark', toggleTheme: () => {}, applyRoute: () => {} });
 
 export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const zoneRef = useRef<Zone>('app');
-
   const [theme, setThemeState] = useState<Theme>(() => {
-    // Read zone from current URL before React Router mounts
-    const zone = zoneFromPath(window.location.pathname);
-    zoneRef.current = zone;
-    const initial = readZoneTheme(zone);
+    const initial = readTheme();
     document.documentElement.setAttribute('data-theme', initial);
     return initial;
   });
@@ -52,11 +44,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  // Called by route watcher: switches to the zone's remembered preference (instant, no animation).
-  // `override` (from an article's `theme` frontmatter) wins over the remembered preference but is not saved.
-  const applyZone = useCallback((zone: Zone, override?: Theme) => {
-    zoneRef.current = zone;
-    const preferred = override ?? readZoneTheme(zone);
+  const applyRoute = useCallback((override?: Theme) => {
+    const preferred = override ?? readTheme();
     if (document.documentElement.getAttribute('data-theme') === preferred) {
       setThemeState(prev => prev === preferred ? prev : preferred);
       return;
@@ -65,12 +54,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setThemeState(preferred);
   }, []);
 
-  // Smooth animated toggle — saves to current zone
+  // Smooth animated toggle; saves the global preference.
   const toggleTheme = useCallback(() => {
     const current = document.documentElement.getAttribute('data-theme') as Theme;
     const next: Theme = current === 'dark' ? 'light' : 'dark';
 
-    saveZoneTheme(zoneRef.current, next);
+    saveTheme(next);
     try { localStorage.setItem('infraphysics:theme-toggled', '1'); } catch {}
 
     document.documentElement.classList.add('theme-transitioning');
@@ -94,7 +83,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, applyZone }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, applyRoute }}>
       {children}
     </ThemeContext.Provider>
   );

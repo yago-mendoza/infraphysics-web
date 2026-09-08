@@ -112,7 +112,7 @@ Append relevant lessons to the **Gotchas** section below. Update or remove stale
 - Blog: `/blog/essays`, `/blog/bits2bricks` (light theme)
 - Wiki: `/wiki`, `/wiki/:uid` (legacy `/lab/second-brain/*` URLs redirect here). No top bar: the global nav is hidden and slides in when the pointer nears the bottom edge (`useProximityReveal`, scroll reveal on touch), with a leading Back arrow to the page the reader came from.
 - Post detail: `/lab/:category/:id` (dark), `/blog/:category/:id` (light). Blog articles share one geometry (`article-geometry.css`): essays stack the hero under the meta, Bits2Bricks put it beside the title and number the section index.
-- Theme auto-switch: `/lab/*` → dark, `/blog/*` → light (instant, no transition). Manual toggle (Shift+T) still works per-page.
+- Theme: dark everywhere by default, one atmosphere. Light is a single global reader preference (`infraphysics:theme` in localStorage, gear or Shift+T), remembered for the whole site, never inferred from the OS and never tied to a route. A post may force a theme on entry with `theme:` in its frontmatter (applied, not saved). Light is maintained so it does not break, not designed as a second identity.
 - Backgrounds: Starfield (personal, dark only), DualGrid (lab/wiki), Clean (blog posts)
 
 ---
@@ -142,9 +142,9 @@ components                                 →  th-* classes
 
 ### Theme switching
 Two distinct paths in `ThemeContext`:
-- **`setTheme(next)`** — instant, no animation. Used by route auto-switch (`useLayoutEffect` in AppLayout).
+- **`applyRoute(override?)`** — instant, no animation. Called from the route `useLayoutEffect` in AppLayout on every navigation: re-applies the saved preference, or the article override.
 - **`toggleTheme()`** — smooth fade via `.theme-transitioning` on `<html>`. Used by manual toggle (Shift+T, search palette).
-- **Per-article override**: `theme: light` (or `dark`) in a post's frontmatter forces that theme on entry via `applyZone(zone, override)`, without saving it as the zone preference. The lookup lives in the AppLayout route effect on purpose: a layout effect in the article view runs *before* the parent's and would be overridden.
+- **Per-article override**: `theme: light` (or `dark`) in a post's frontmatter forces that theme on entry via `applyRoute(override)`, without saving it as the preference. The lookup lives in the AppLayout route effect on purpose: a layout effect in the article view runs *before* the parent's and would be overridden.
 
 `.theme-transitioning` transitions **standard properties only** (background-color, color, border-color, box-shadow, fill, stroke, opacity). Never transition custom properties — see Gotchas.
 

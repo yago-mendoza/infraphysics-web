@@ -7,7 +7,7 @@
 @property --page-grid-ink { syntax:'<color>'; inherits:true; initial-value:rgba(241,237,228,.025); }
 @property --page-glow { syntax:'<color>'; inherits:true; initial-value:rgba(180,61,35,0); }
 @property --bg-base { syntax:'<color>'; inherits:true; initial-value:#151715; }
-@property --bg-blog { syntax:'<color>'; inherits:true; initial-value:#101210; }
+@property --bg-blog { syntax:'<color>'; inherits:true; initial-value:#1a1916; }
 @property --bg-surface { syntax:'<color>'; inherits:true; initial-value:rgba(236,231,218,.035); }
 @property --bg-surface-alt { syntax:'<color>'; inherits:true; initial-value:rgba(236,231,218,.06); }
 @property --bg-elevated { syntax:'<color>'; inherits:true; initial-value:rgba(236,231,218,.08); }
