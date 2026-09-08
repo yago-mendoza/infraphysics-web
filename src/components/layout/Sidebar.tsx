@@ -36,7 +36,8 @@ const isMenu = (label: string): label is MenuName => label === 'About' || label 
 export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: boolean; proximityReveal?: boolean; back?: NavBackAction }> = ({ onOpenSearch, revealOnScrollUp = false, proximityReveal = false, back }) => {
   const location = useLocation();
   // Article pages: the bar hides while reading and slides back in on an upward scroll.
-  // Wiki (proximityReveal): the bar is hidden until the pointer reaches the bottom edge, and stays while
+  // Wiki uses proximity alone; articles combine it with scroll-up reveal.
+  // With proximityReveal the bar appears at the bottom edge, and stays while
   // it has focus or an open menu. Without hover (touch) that mode falls back to the scroll reveal.
   const hoverDevice = useMemo(() => typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches, []);
   const proximity = proximityReveal && hoverDevice;
@@ -65,7 +66,9 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
   const showMenu = (name: MenuName) => { if (closeTimer.current) window.clearTimeout(closeTimer.current); setMenu(name); };
   const hideMenu = () => { if (closeTimer.current) window.clearTimeout(closeTimer.current); closeTimer.current = window.setTimeout(() => setMenu(null), 140); };
 
-  const revealed = proximity ? (nearEdge || focusWithin || menu !== null || settings || open) : scrollRevealed;
+  const revealed = proximity
+    ? (nearEdge || (revealOnScrollUp && scrollRevealed) || focusWithin || menu !== null || settings || open)
+    : scrollRevealed;
 
   const isActive = (path: string, label: string) => label === 'Writing'
     ? location.pathname.startsWith('/blog/')
@@ -156,7 +159,7 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
                 <span className="flex items-center gap-2 text-th-tertiary"><kbd className="px-1.5 py-0.5 rounded-md border border-th-border text-[9px] font-mono">Shift T</kbd><span className="text-[10px] font-mono uppercase tracking-wide">{theme === 'dark' ? 'Dark' : 'Light'}</span>{theme === 'dark' ? <SunIcon /> : <MoonIcon />}</span>
               </button>
               <button onClick={toggleAestheticCursor} className="w-full flex items-center justify-between px-4 py-3 border-t border-th-border text-th-secondary hover:text-th-heading hover:bg-th-surface-alt transition-colors">
-                <span>Aesthetic cursor</span>
+                <span>CAD cursor</span>
                 <span className="text-[10px] font-mono uppercase tracking-wide text-th-tertiary">{aestheticCursor ? 'On' : 'Off'}</span>
               </button>
               <div className="flex items-center justify-between px-4 py-3 border-t border-th-border text-th-secondary">

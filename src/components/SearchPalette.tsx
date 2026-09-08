@@ -248,8 +248,8 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
     });
 
     result.push({
-      label: `Aesthetic Cursor (${aestheticCursor ? 'On' : 'Off'})`,
-      keywords: ['mouse', 'pointer', 'speed', 'performance', 'lag', 'latency', 'fps', 'animation', 'effects', 'smooth'],
+      label: `CAD cursor (${aestheticCursor ? 'On' : 'Off'})`,
+      keywords: ['cursor', 'cad', 'crosshair', 'aesthetic', 'mouse', 'pointer', 'speed', 'performance', 'lag', 'latency', 'fps', 'animation', 'effects', 'smooth'],
       icon: <span className="w-[22px] h-[22px] flex items-center justify-center font-mono text-base text-th-secondary">+</span>,
       action: () => executeAndClose(toggleAestheticCursor),
       group: 'global',
