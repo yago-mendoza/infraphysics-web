@@ -196,6 +196,9 @@ const CROSS_DOC_CATEGORIES = {
   projects:    { path: '/lab/projects' },
   essays:     { path: '/blog/essays' },
   bits2bricks: { path: '/blog/bits2bricks' },
+  // Self-contained HTML that belongs to one article: public/playgrounds/<article-id>/<name>.html,
+  // linked as [[playgrounds/<article-id>/<name>|text]]. Opens in a new tab like the other cross-doc links.
+  playgrounds: { path: '/playgrounds', suffix: '.html' },
 };
 
 const CROSS_DOC_ICON = `<svg class="doc-ref-icon" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M280-280h280v-80H280v80Zm0-160h400v-80H280v80Zm0-160h400v-80H280v80Zm-80 480q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"/></svg>`;
@@ -212,7 +215,7 @@ export function processAllLinks(html, uidToMeta, wikiLinksConfig, buildErrors) {
   if (wikiLinksConfig && !wikiLinksConfig.enabled) return html;
 
   return html.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (match, ref, displayText, offset) => {
-    const crossDocMatch = ref.match(/^(projects|essays|bits2bricks)\/(.*)/);
+    const crossDocMatch = ref.match(/^(projects|essays|bits2bricks|playgrounds)\/(.*)/);
 
     if (crossDocMatch) {
       const [, category, slug] = crossDocMatch;
@@ -225,7 +228,7 @@ export function processAllLinks(html, uidToMeta, wikiLinksConfig, buildErrors) {
         return match;
       }
 
-      const href = `${config.path}/${slug.trim()}`;
+      const href = `${config.path}/${slug.trim()}${config.suffix || ''}`;
       return `<a class="doc-ref doc-ref-${category}" href="${href}" target="_blank" rel="noopener noreferrer">${CROSS_DOC_ICON}${displayText.trim()}</a>`;
     }
 

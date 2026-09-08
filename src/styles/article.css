@@ -1826,10 +1826,12 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 .article-content .doc-ref-projects { color: var(--cat-projects-accent); border-bottom-color: color-mix(in srgb, var(--cat-projects-accent) 32%, transparent); }
 .article-content .doc-ref-essays  { color: var(--cat-essays-accent); border-bottom-color: color-mix(in srgb, var(--cat-essays-accent) 32%, transparent); }
 .article-content .doc-ref-bits2bricks { color: var(--cat-bits2bricks-accent); border-bottom-color: color-mix(in srgb, var(--cat-bits2bricks-accent) 32%, transparent); }
+.article-content .doc-ref-playgrounds { color: var(--art-accent); border-bottom-color: color-mix(in srgb, var(--art-accent) 32%, transparent); }
 
 .article-content .doc-ref-projects:hover { border-bottom-color: var(--cat-projects-accent); }
 .article-content .doc-ref-essays:hover  { border-bottom-color: var(--cat-essays-accent); }
 .article-content .doc-ref-bits2bricks:hover { border-bottom-color: var(--cat-bits2bricks-accent); }
+.article-content .doc-ref-playgrounds:hover { border-bottom-color: var(--art-accent); }
 
 .article-content .doc-ref-external { color: #b0b0b0; border-bottom-color: rgba(156,163,175,0.35); }
 .article-content .doc-ref-external:hover { color: #d4d4d4; border-bottom-color: rgba(156,163,175,0.7); }

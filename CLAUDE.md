@@ -31,6 +31,10 @@ Mandatory triggers — when X happens, do Y.
 
 **3. Build after editing.** After editing any `.md` file in `src/data/pages/`, run `npm run build`. Markdown is compiled at build time — changes are invisible until the build runs.
 
+### On adding an HTML page to an article
+
+A self-contained HTML page that belongs to one article (an interactive table, a simulation, a decoy viewer) goes in `public/playgrounds/<article-id>/<name>.html`, kebab-case, tracked in git, served as a static asset at `/playgrounds/<article-id>/<name>.html`. Never put HTML under `media/` (that tree is image masters bound for the CDN) and never link it with a bare markdown link: write `[[playgrounds/<article-id>/<name>|text]]`, which renders as a cross-document link in the article accent and opens in a new tab. The page must be standalone (its own CSS and JS inline, no site assets).
+
 ### On editorial feedback
 
 When the user gives feedback on article quality (tone, structure, storytelling, editorial choices), incorporate the lesson into the README of that article's category folder (e.g. `src/data/pages/projects/README.md`). These READMEs accumulate editorial patterns — they're the memory for how each content type should be written.

@@ -59,6 +59,7 @@ Supported types are `note`, `tip`, `warning`, `danger` and `keyconcept`. Labels 
 | Essay | `[[essays/id\|display]]` | Essay category link and document icon |
 | Technical article | `[[bits2bricks/id\|display]]` | Technical category link and document icon |
 | External reference | `[[https://example.com\|display]]` | Neutral underline and external icon |
+| Article playground (own HTML page) | `[[playgrounds/<article-id>/<name>\|display]]` | Accent-coloured link and document icon, opens `/playgrounds/<article-id>/<name>.html` in a new tab |
 
 Ordinary Markdown links also work. In-page anchors have no destination icon. Unresolved Wiki targets fail validation and have no visible unresolved state.
 

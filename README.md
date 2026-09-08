@@ -118,7 +118,7 @@ infraphysics-web/
       home-wiki-{dark,light}.png # Captures of the wiki console for the Home closing plate (retake when the wiki UI changes)
       avatar.jpg              # Self-hosted portrait for the home identity anchor (240px, preloaded from index.html)
       articles/<article-id>/  # Local image assets grouped by article ID
-      playgrounds/<article-id>/ # Self-contained interactive "playgrounds" (HTML/JS) per article, linked via [text](/playgrounds/<id>/<name>.html)
+      playgrounds/<article-id>/ # Self-contained HTML pages that belong to one article (interactive tables, simulations), linked with [[playgrounds/<id>/<name>|text]]
       wikinotes/             # {uid}.json content files (served as static assets)
       wikinotes-index.json   # Generated: wikinote metadata index (HTTP-fetched at runtime)
       og-manifest.json        # Generated: URL path → OG metadata + full text body for crawlers
