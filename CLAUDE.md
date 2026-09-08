@@ -21,6 +21,7 @@ Mandatory triggers — when X happens, do Y.
 | [pages/README.md](src/data/pages/README.md) | Frontmatter schemas, content types, editorial rules, compilation pipeline |
 | [pages/SYNTAX.md](src/data/pages/SYNTAX.md) | All 16 custom syntax features, edge cases, quick reference table |
 | [EDITORIAL-RUBRIC.md](_generation/EDITORIAL-RUBRIC.md) | **Always consult when writing or editing articles.** Kill list, voice direction, two-author problem, syntactic tics, narrative structure, cross-linking |
+| [VISUAL-RUBRIC.md](_generation/VISUAL-RUBRIC.md) | **Always consult before generating or choosing images.** Photographic language, three registers, kill list, prompt base |
 | [projects/README.md](src/data/pages/projects/README.md) | Projects editorial voice, storytelling patterns, ctx annotation conventions |
 | [essays/README.md](src/data/pages/essays/README.md) | Essays editorial voice, serif typography, blockquote label rules, ctx restrictions |
 | [bits2bricks/README.md](src/data/pages/bits2bricks/README.md) | Bits2Bricks editorial voice, tutorial structure |
