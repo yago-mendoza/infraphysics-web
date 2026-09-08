@@ -25,7 +25,7 @@ Mandatory triggers — when X happens, do Y.
 | [projects/README.md](src/data/pages/projects/README.md) | Projects editorial voice, storytelling patterns, ctx annotation conventions |
 | [essays/README.md](src/data/pages/essays/README.md) | Essays editorial voice, serif typography, blockquote label rules, ctx restrictions |
 | [bits2bricks/README.md](src/data/pages/bits2bricks/README.md) | Bits2Bricks editorial voice, tutorial structure |
-| [fieldnotes/STYLE.md](src/data/pages/fieldnotes/STYLE.md) | **Always consult before writing or rewriting a wikinote.** Shape, tone, body versus Interactions, names and casing, paths, size, allowed syntax |
+| [wikinotes/STYLE.md](src/data/pages/wikinotes/STYLE.md) | **Always consult before writing or rewriting a wikinote.** Shape, tone, body versus Interactions, names and casing, paths, size, allowed syntax |
 
 **2. Verify factual claims.** When writing content that states dates, names, technical specs, historical events, or statistics — use web search to check accuracy. Do not assume recalled facts are correct.
 
@@ -37,13 +37,13 @@ When the user gives feedback on article quality (tone, structure, storytelling, 
 
 ### On managing wikinotes
 
-**Before** creating, renaming, deleting, or restructuring wikinotes, read **[fieldnotes/README.md](src/data/pages/fieldnotes/README.md)**. It covers available scripts, step-by-step workflows, cascading effects, and the full error reference. Never rename or delete wikinotes by hand — use the scripts.
+**Before** creating, renaming, deleting, or restructuring wikinotes, read **[wikinotes/README.md](src/data/pages/wikinotes/README.md)**. It covers available scripts, step-by-step workflows, cascading effects, and the full error reference. Never rename or delete wikinotes by hand — use the scripts.
 
 **Creating wikinotes:** Check for segment collisions first — search existing addresses for the last segment of each proposed address (case-insensitive). If it already exists anywhere in the hierarchy, evaluate whether it's the same concept before creating. After creating, run `npm run build`, then `node scripts/check-references.js` for isolated notes and weak parents, and create stub notes for missing parents.
 
 **Renaming wikinotes:**
 
-> `rename-address.js` renames ONE exact address. It does NOT cascade to children. See [fieldnotes/README.md](src/data/pages/fieldnotes/README.md#restructuring-a-hierarchy).
+> `rename-address.js` renames ONE exact address. It does NOT cascade to children. See [wikinotes/README.md](src/data/pages/wikinotes/README.md#restructuring-a-hierarchy).
 
 - **Simple rename** (no children): dry-run → `--apply` → `npm run build` → check stale `distinct` entries → commit together.
 - **Restructuring** (hierarchy change or note has children): use `move-hierarchy.js` instead — it cascades to all descendants. Dry-run → `--apply` → `npm run build` → `check-references.js` → commit together.
@@ -131,10 +131,10 @@ components                                 →  th-* classes
 3. Use `th-*` class
 
 ### What stays hardcoded (theme-constant)
-- Category accents: `--cat-projects-accent`, `--cat-essays-accent`, `--cat-bits2bricks-accent`, `--cat-fieldnotes-accent` — identity colors, same in both themes. Access via `catAccentVar(category)` → returns `var(--cat-*-accent)` string.
+- Category accents: `--cat-projects-accent`, `--cat-essays-accent`, `--cat-bits2bricks-accent`, `--cat-wikinotes-accent` — identity colors, same in both themes. Access via `catAccentVar(category)` → returns `var(--cat-*-accent)` string.
 - Status colors in `STATUS_CONFIG` (`config/categories.tsx`): raw hex, theme-constant.
 - Accent interactions: `hover:text-blue-400` for links.
-- **Wiki accent is one variable**: `--wiki-accent` in `index.html` `:root`. The scale `--wiki-50` … `--wiki-950` is derived from it with `color-mix()`, the inline Tailwind config maps the `violet` and `purple` palettes onto that scale (so `text-violet-400`, `bg-violet-500/15` follow it), `--cat-fieldnotes-accent` and `--wiki-link` point at it, and canvas/three.js code reads it through `lib/wikiAccent.ts` (same mix ratios; keep both in sync). To recolour the wiki, change that one line. Never write a purple hex in wiki code again. The home plate captures (`public/home-wiki-*.png`) are static and must be retaken after a colour change.
+- **Wiki accent is one variable**: `--wiki-accent` in `index.html` `:root`. The scale `--wiki-50` … `--wiki-950` is derived from it with `color-mix()`, the inline Tailwind config maps the `violet` and `purple` palettes onto that scale (so `text-violet-400`, `bg-violet-500/15` follow it), `--cat-wikinotes-accent` and `--wiki-link` point at it, and canvas/three.js code reads it through `lib/wikiAccent.ts` (same mix ratios; keep both in sync). To recolour the wiki, change that one line. Never write a purple hex in wiki code again. The home plate captures (`public/home-wiki-*.png`) are static and must be retaken after a colour change.
 
 ### Theme switching
 Two distinct paths in `ThemeContext`:
@@ -226,7 +226,7 @@ The maze (islands, edges, origins) is grown once per `(cols, rows)` and reused e
 The graph is bidirectional even when an interaction is written on only one note. For a conceptual pair, keep the clearest causal explanation on one side instead of adding reciprocal trailing refs to both files. Reciprocal entries create `DUPLICATE TRAILING REFS` noise in `check-references.js` without adding connectivity. After a bulk creation pass, run the audit and remove every duplicate introduced by the new notes before considering the batch complete.
 
 ### Bulk-editing wikinote frontmatter catches README.md and STYLE.md too
-`src/data/pages/fieldnotes/README.md` contains a literal `distinct:` line inside a yaml example block, so any bulk script that pattern-matches frontmatter across `fieldnotes/*.md` will silently rewrite the documentation example. Exclude `README.md` and `STYLE.md` (filenames of real notes are always 8-char UIDs; every script that lists notes filters both names by hand). Also: after any `move-hierarchy`/`rename-address` batch, `distinct` entries elsewhere go stale because they store addresses, not UIDs — the build's `STALE_DISTINCT` warnings list every one; fix them before committing.
+`src/data/pages/wikinotes/README.md` contains a literal `distinct:` line inside a yaml example block, so any bulk script that pattern-matches frontmatter across `wikinotes/*.md` will silently rewrite the documentation example. Exclude `README.md` and `STYLE.md` (filenames of real notes are always 8-char UIDs; every script that lists notes filters both names by hand). Also: after any `move-hierarchy`/`rename-address` batch, `distinct` entries elsewhere go stale because they store addresses, not UIDs — the build's `STALE_DISTINCT` warnings list every one; fix them before committing.
 
 ### Home graphs are build-time pictures, not the live graph
 Both wiki graphs on `/home` come from `src/data/graph-thumb.generated.json`, produced by `scripts/compute-graph-thumb.js` at the end of every build (seeded 3D layout, identical across builds). Both the carousel door and the closing plate draw it as inline SVG (`GraphThumb.tsx`), recoloured per placement through the `graph-thumb-*` classes. They copy the root palette and edge colours from `useGraphData.ts`; if those change, update the script and the components. The pinned piece in the carousel is the newest post with `featured: true`.
@@ -243,8 +243,8 @@ React Router 7 runs every `navigate()` as a React transition, so a plain `setSta
 ### Horizontal overflow is clipped with `overflow-x: clip`, never `hidden`
 `html, body` in `global.css` and the root wrapper in `App.tsx` use `overflow-x: clip`. `hidden` would turn each of them into a scroll container, and then `position: sticky` anywhere below (the blog article index in `ArticlePostView`, any future sticky rail) anchors to that non-scrolling box and never sticks. `clip` clips the same without creating a scroll container. If you need to clip an ancestor of something sticky, use `clip`.
 
-### Wikinotes are still called `fieldnotes` on disk and in the category key
-The content type was renamed to "wikinotes" in code, docs, scripts and the `/create-wikinote` skill (Sep 2026), but every path and data contract kept the old name on purpose: `src/data/pages/fieldnotes/`, `public/fieldnotes/{uid}.json`, `fieldnotes-index.json`, the `Category` value `'fieldnotes'` (used by `og-manifest.json` and the edge function), the `/api/fieldnotes/*` dev endpoints and `--cat-fieldnotes-accent`. Do not "fix" those to wikinotes: they are deployed URLs and cached CDN paths. Identifiers say wikinote, paths and keys say fieldnotes.
+### The content type is called wikinotes everywhere (renamed Sep 2026)
+Sources live in `src/data/pages/wikinotes/`, the build writes `public/wikinotes/{uid}.json` and `public/wikinotes-index.json`, the category key is `'wikinotes'` (og-manifest and the Pages Function), the dev endpoints are `/api/wikinotes/*` and the accent is `--cat-wikinotes-accent`. Public URLs never carried the old name (`/wiki/:uid`). If "fieldnote" appears anywhere it is stale text, not a contract; the only legitimate mentions are historical (the site-building article, old notes).
 
 ### Global CSS is linked from `index.html`, not imported from `index.tsx`
 `src/styles/global.css` is referenced with `<link rel="stylesheet" href="/src/styles/global.css">` in `index.html` (Vite bundles it). Keep it as a link: it must sit in `<head>` before the Tailwind CDN's runtime `<style>` element so the cascade order is unchanged. Importing it from `index.tsx` would reorder it relative to the per-view CSS imports.

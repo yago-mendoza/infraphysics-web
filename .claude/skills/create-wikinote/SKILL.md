@@ -9,12 +9,12 @@ Process the user's raw input ($ARGUMENTS) into one or more well-structured wikin
 ## Required reading
 
 Before ANY work, read these files — but only the sections you need, not cover-to-cover:
-- `src/data/pages/fieldnotes/STYLE.md` — how a note is written: shape (never a bare bullet list), tone, body versus Interactions, names and casing, equations, bold, paths, size, allowed syntax. Read it whole.
+- `src/data/pages/wikinotes/STYLE.md` — how a note is written: shape (never a bare bullet list), tone, body versus Interactions, names and casing, equations, bold, paths, size, allowed syntax. Read it whole.
 - `src/data/pages/README.md` — frontmatter schemas, wiki-link syntax, trailing refs rules
-- `src/data/pages/fieldnotes/README.md` — scripts, workflows, cascading effects
+- `src/data/pages/wikinotes/README.md` — scripts, workflows, cascading effects
 
 Also load the existing wikinotes index to know what's already in the knowledge base:
-- Read `src/data/fieldnotes-index.generated.json` (all addresses, names, UIDs at a glance)
+- Read `src/data/wikinotes-index.generated.json` (all addresses, names, UIDs at a glance)
 
 ## Phase 0: Analyze, decompose, and plan
 
@@ -57,7 +57,7 @@ Do NOT proceed until approved.
 
 For each approved new note:
 
-1. **Generate UID**: 8-character alphanumeric (`[a-zA-Z0-9]`), random selection from `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`. Verify uniqueness against all existing filenames in `src/data/pages/fieldnotes/`. Retry on collision. (UIDs are opaque, never derived from content.)
+1. **Generate UID**: 8-character alphanumeric (`[a-zA-Z0-9]`), random selection from `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`. Verify uniqueness against all existing filenames in `src/data/pages/wikinotes/`. Retry on collision. (UIDs are opaque, never derived from content.)
 
 2. **Write `{uid}.md`** with:
    - Frontmatter: `uid`, `address`, `name`, `date` (today's date). Add `distinct` if suppressing a segment collision.

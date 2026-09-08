@@ -1,6 +1,6 @@
 /**
  * compute-graph-thumb.js
- * Build-time script: reads fieldnotes-index.generated.json, lays out the whole
+ * Build-time script: reads wikinotes-index.generated.json, lays out the whole
  * wikinote graph with a small deterministic force simulation and writes a
  * static picture of it (3D positions, radii, root colours, centrality percentile, typed edges) to
  * src/data/graph-thumb.generated.json. The Home page draws it as inline SVG
@@ -17,7 +17,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const INDEX_FILE = path.join(__dirname, '../src/data/fieldnotes-index.generated.json');
+const INDEX_FILE = path.join(__dirname, '../src/data/wikinotes-index.generated.json');
 const OUTPUT_FILE = path.join(__dirname, '../src/data/graph-thumb.generated.json');
 
 const ITERATIONS = 300;

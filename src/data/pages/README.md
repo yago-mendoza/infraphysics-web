@@ -8,7 +8,7 @@ Markdown in this directory is compiled at build time with marked, Shiki and a de
 |---|---|
 | Supported authoring syntax | [SYNTAX.md](SYNTAX.md) |
 | Compiler, cache, outputs and validation | [scripts/README.md](../../../scripts/README.md) |
-| Wikinote operations | [fieldnotes/README.md](fieldnotes/README.md) |
+| Wikinote operations | [wikinotes/README.md](wikinotes/README.md) |
 | Project voice and schema | [projects/README.md](projects/README.md) |
 | Essay voice and schema | [essays/README.md](essays/README.md) |
 | Technical voice and schema | [bits2bricks/README.md](bits2bricks/README.md) |
@@ -50,7 +50,7 @@ The `description` is card/metadata copy. Body text before the first heading is t
 
 ### Wikinote names
 
-The `name` of a wikinote and the last segment of its `address` are the same string, written as the term appears in the middle of a sentence: common nouns in lowercase (`feedback loop`), proper nouns, products and acronyms in their own casing (`Kalman filter`, `RLHF`, `EtherNet/IP`). Shortest canonical term, no articles, singular unless the concept is inherently plural. The title, card and directory capitalise the first letter when rendering. Full rules, and everything else about how a note is written (shape, tone, body versus Interactions, equations, bold, paths, size, allowed syntax), in [fieldnotes/STYLE.md](fieldnotes/STYLE.md).
+The `name` of a wikinote and the last segment of its `address` are the same string, written as the term appears in the middle of a sentence: common nouns in lowercase (`feedback loop`), proper nouns, products and acronyms in their own casing (`Kalman filter`, `RLHF`, `EtherNet/IP`). Shortest canonical term, no articles, singular unless the concept is inherently plural. The title, card and directory capitalise the first letter when rendering. Full rules, and everything else about how a note is written (shape, tone, body versus Interactions, equations, bold, paths, size, allowed syntax), in [wikinotes/STYLE.md](wikinotes/STYLE.md).
 
 ## Build
 
@@ -60,4 +60,4 @@ npm run content:fix
 npm run build
 ```
 
-Generated JSON and HTML are outputs, not authoring sources. Compilation details belong in `scripts/README.md`; wikinote validation and migration workflows belong in `fieldnotes/README.md`.
+Generated JSON and HTML are outputs, not authoring sources. Compilation details belong in `scripts/README.md`; wikinote validation and migration workflows belong in `wikinotes/README.md`.

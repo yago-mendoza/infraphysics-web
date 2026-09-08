@@ -1,6 +1,6 @@
 # Content tooling
 
-Operational reference for the build-time content pipeline. Supported authoring syntax is documented only in [`src/data/pages/SYNTAX.md`](../src/data/pages/SYNTAX.md); wikinote workflows live in [`fieldnotes/README.md`](../src/data/pages/fieldnotes/README.md).
+Operational reference for the build-time content pipeline. Supported authoring syntax is documented only in [`src/data/pages/SYNTAX.md`](../src/data/pages/SYNTAX.md); wikinote workflows live in [`wikinotes/README.md`](../src/data/pages/wikinotes/README.md).
 
 ## Commands
 
@@ -38,8 +38,8 @@ The active per-document pipeline is:
 |---|---|
 | `src/data/posts.generated.json` | Full compiled Projects, Essays and Technical content |
 | `src/data/posts-index.generated.json` | Lightweight listing/search metadata |
-| `src/data/fieldnotes-index.generated.json` | Wikinote metadata without full bodies |
-| `public/fieldnotes/{uid}.json` | One compiled body per wikinote |
+| `src/data/wikinotes-index.generated.json` | Wikinote metadata without full bodies |
+| `public/wikinotes/{uid}.json` | One compiled body per wikinote |
 | `src/data/categories.generated.json` | Category configuration |
 | `src/data/graph-relevance.generated.json` | Graph relevance and bridge metrics |
 | `src/data/graph-thumb.generated.json` | Static layout of the whole wiki graph (positions, root colours, typed edges) drawn as inline SVG on the Home spotlight |

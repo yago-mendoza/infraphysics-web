@@ -1767,7 +1767,7 @@ export const SecondBrainView: React.FC = () => {
                               onMouseEnter={() => window.dispatchEvent(new CustomEvent('wiki-link-preview', { detail: conn.note.id }))}
                               onMouseLeave={() => window.dispatchEvent(new CustomEvent('wiki-link-preview', { detail: null }))}
                               className="wiki-sidelink inline transition-colors no-underline border-b border-solid cursor-pointer"
-                              style={{ '--wl-color': v ? 'var(--wiki-link-visited)' : 'var(--cat-fieldnotes-accent)' } as React.CSSProperties}
+                              style={{ '--wl-color': v ? 'var(--wiki-link-visited)' : 'var(--cat-wikinotes-accent)' } as React.CSSProperties}
                             >
                               <span className="text-sm">{noteLabel(conn.note)}</span><svg className="inline w-[0.85em] h-[0.85em] ml-0.5 opacity-80" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style={{ verticalAlign: '-0.1em' }}><path fillRule="evenodd" clipRule="evenodd" d={icon} /></svg>
                             </Link>

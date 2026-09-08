@@ -93,7 +93,7 @@ export function useWikinoteEditor(): EditorState {
     if (validateTimer.current) clearTimeout(validateTimer.current);
     validateTimer.current = setTimeout(async () => {
       try {
-        const resp = await fetch('/api/fieldnotes/validate', {
+        const resp = await fetch('/api/wikinotes/validate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ raw }),
@@ -134,7 +134,7 @@ export function useWikinoteEditor(): EditorState {
     setDeleteAnalysis(null);
     setDeleteError(null);
     try {
-      const resp = await fetch(`/api/fieldnotes/${uid}/raw`);
+      const resp = await fetch(`/api/wikinotes/${uid}/raw`);
       if (!resp.ok) throw new Error('Failed to fetch');
       const { raw } = await resp.json();
       // Normalize CRLF → LF to match CodeMirror's internal representation
@@ -188,7 +188,7 @@ export function useWikinoteEditor(): EditorState {
           `address: "${safeAddress}"`,
         );
       }
-      const resp = await fetch('/api/fieldnotes/save', {
+      const resp = await fetch('/api/wikinotes/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ uid: editingUid, raw: safeRaw }),
@@ -214,7 +214,7 @@ export function useWikinoteEditor(): EditorState {
   const moveAddress = useCallback(async (newAddress: string, newName: string) => {
     if (!editingUid) return;
     try {
-      const resp = await fetch('/api/fieldnotes/move-address', {
+      const resp = await fetch('/api/wikinotes/move-address', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ uid: editingUid, newAddress, newName }),
@@ -226,7 +226,7 @@ export function useWikinoteEditor(): EditorState {
       const result = await resp.json();
 
       // Re-fetch raw content (frontmatter changed on disk)
-      const rawResp = await fetch(`/api/fieldnotes/${editingUid}/raw`);
+      const rawResp = await fetch(`/api/wikinotes/${editingUid}/raw`);
       if (rawResp.ok) {
         const { raw } = await rawResp.json();
         const normalized = raw.replace(/\r\n/g, '\n');
@@ -252,7 +252,7 @@ export function useWikinoteEditor(): EditorState {
   const updatePipeText = useCallback(async (oldName: string, newName: string) => {
     if (!editingUid) return;
     try {
-      const resp = await fetch('/api/fieldnotes/update-pipe-text', {
+      const resp = await fetch('/api/wikinotes/update-pipe-text', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ uid: editingUid, oldName, newName }),
@@ -277,7 +277,7 @@ export function useWikinoteEditor(): EditorState {
     setDeleteStatus('analyzing');
     setDeleteError(null);
     try {
-      const resp = await fetch('/api/fieldnotes/analyze-refs', {
+      const resp = await fetch('/api/wikinotes/analyze-refs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ uid: editingUid }),
@@ -296,7 +296,7 @@ export function useWikinoteEditor(): EditorState {
     if (!editingUid) return;
     setDeleteStatus('deleting');
     try {
-      const resp = await fetch('/api/fieldnotes/delete', {
+      const resp = await fetch('/api/wikinotes/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ uid: editingUid, cleanupTrailingRefs, trailingRefUids, unlinkBodyRefs }),
@@ -322,14 +322,14 @@ export function useWikinoteEditor(): EditorState {
     if (!editingUid) return;
     setDeleteStatus('stubbing');
     try {
-      const resp = await fetch('/api/fieldnotes/convert-to-stub', {
+      const resp = await fetch('/api/wikinotes/convert-to-stub', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ uid: editingUid }),
       });
       if (!resp.ok) throw new Error('Stub conversion failed');
       // Re-fetch the note's raw content (it changed on disk)
-      const rawResp = await fetch(`/api/fieldnotes/${editingUid}/raw`);
+      const rawResp = await fetch(`/api/wikinotes/${editingUid}/raw`);
       if (rawResp.ok) {
         const { raw } = await rawResp.json();
         const normalized = raw.replace(/\r\n/g, '\n');

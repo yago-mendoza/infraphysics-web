@@ -25,8 +25,8 @@ dist-ssr
 # Generated content
 *.generated.json
 .content-cache.json
-public/fieldnotes/
-public/fieldnotes-index.json
+public/wikinotes/
+public/wikinotes-index.json
 public/sitemap.xml
 
 # Private generation tools

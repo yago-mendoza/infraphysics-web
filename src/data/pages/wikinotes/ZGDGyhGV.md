@@ -5,7 +5,7 @@ name: "Localhost Editor"
 date: "2026-03-19"
 ---
 
-A CodeMirror-based editor that only activates on localhost, invisible in production. Allows editing fieldnotes in the browser using the full [[JkzQf7qt|custom syntax]], with live recompilation.
+A CodeMirror-based editor that only activates on localhost, invisible in production. Allows editing wikinotes in the browser using the full [[JkzQf7qt|custom syntax]], with live recompilation.
 
 - Detected via `useIsLocalhost`: when the site runs on `localhost:5173`, the editor panel appears inside the Second Brain UI
 - The editor is a CodeMirror instance with syntax-aware features: typing double-bracket triggers wiki-link autocomplete (fuzzy-matches names, aliases, addresses), unlinked term detection highlights concepts that should be wiki-links, and diagnostics catch structural issues (missing parents, broken refs)

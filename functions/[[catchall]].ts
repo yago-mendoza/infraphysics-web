@@ -77,10 +77,10 @@ export const onRequest: PagesFunction = async (context) => {
 
   // For wikinotes without pre-built text, fetch content at runtime
   let bodyText = entry.text || '';
-  if (!bodyText && entry.cat === 'fieldnotes') {
+  if (!bodyText && entry.cat === 'wikinotes') {
     try {
       const noteId = pathname.split('/').pop();
-      const contentRes = await env.ASSETS.fetch(new URL(`/fieldnotes/${noteId}.json`, request.url));
+      const contentRes = await env.ASSETS.fetch(new URL(`/wikinotes/${noteId}.json`, request.url));
       if (contentRes.ok) {
         const { content } = await contentRes.json() as { content: string };
         bodyText = stripHtml(content);

@@ -62,7 +62,7 @@ export async function initBrainIndex(freshData?: WikiNoteMeta[]): Promise<BrainI
 
   _initPromise = (async () => {
     const indexData: WikiNoteMeta[] = freshData ??
-      await fetch('/fieldnotes-index.json').then(r => r.json());
+      await fetch('/wikinotes-index.json').then(r => r.json());
 
     const allWikiNotes = indexData;
     const noteById = new Map(allWikiNotes.map(n => [n.id, n]));
@@ -324,7 +324,7 @@ export async function fetchNoteContent(id: string, bustCache = false): Promise<s
   }
 
   const index = getBrainIndex();
-  const url = bustCache ? `/fieldnotes/${id}.json?t=${Date.now()}` : `/fieldnotes/${id}.json`;
+  const url = bustCache ? `/wikinotes/${id}.json?t=${Date.now()}` : `/wikinotes/${id}.json`;
   const resp = await fetch(url);
   if (!resp.ok) return '<p>Content unavailable.</p>';
 
@@ -340,7 +340,7 @@ export function prefetchNoteContent(ids: string[]): void {
   if (!index) return;
   for (const id of ids) {
     if (_contentCache.has(id)) continue;
-    fetch(`/fieldnotes/${id}.json`)
+    fetch(`/wikinotes/${id}.json`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data?.content && !_contentCache.has(id)) {
@@ -375,7 +375,7 @@ export async function refreshBrainIndex(uid?: string, action?: string): Promise<
   // In dev, fetch fresh data from the API (import() cache is stale)
   let freshData: WikiNoteMeta[] | undefined;
   try {
-    const resp = await fetch('/api/fieldnotes/index');
+    const resp = await fetch('/api/wikinotes/index');
     if (resp.ok) {
       const { notes } = await resp.json();
       freshData = notes;

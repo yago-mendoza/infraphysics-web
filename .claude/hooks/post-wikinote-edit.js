@@ -14,7 +14,7 @@ process.stdin.on('end', () => {
 
     // Only trigger for wikinotes .md files (not README)
     if (
-      !filePath.includes('src/data/pages/fieldnotes/') ||
+      !filePath.includes('src/data/pages/wikinotes/') ||
       !filePath.endsWith('.md') ||
       filePath.endsWith('README.md')
     ) {

@@ -13,7 +13,7 @@
 //   > [!TYPE] →           {bkqt/TYPE}...{/bkqt}
 //   Deleted notes →       reported only (not auto-deleted)
 //
-// Output: transfer report to src/data/pages/fieldnotes/transfers/
+// Output: transfer report to src/data/pages/wikinotes/transfers/
 
 import fs from 'fs';
 import path from 'path';
@@ -23,7 +23,7 @@ import { customAlphabet } from 'nanoid';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const WIKINOTES_DIR = path.join(__dirname, '../src/data/pages/fieldnotes');
+const WIKINOTES_DIR = path.join(__dirname, '../src/data/pages/wikinotes');
 const TRANSFERS_DIR = path.join(WIKINOTES_DIR, 'transfers');
 
 const vaultDir = process.argv[2] || path.join(__dirname, '../obsidian-vault');
@@ -241,7 +241,7 @@ for (const { fullPath, relPath } of vaultFiles) {
   }
 }
 
-// Detect deletions (notes in fieldnotes/ but not in vault)
+// Detect deletions (notes in wikinotes/ but not in vault)
 const deletions = [];
 for (const [uid, note] of byUid) {
   if (!seenUids.has(uid)) {

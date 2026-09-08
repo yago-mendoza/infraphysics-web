@@ -11,11 +11,11 @@ The full path from a markdown file on disk to rendered content in the browser.
 .md on disk
   → npm run build
   → compiler (marked + Shiki + custom syntax preprocessors)
-  → public/fieldnotes/{uid}.json (pre-rendered HTML + metadata)
+  → public/wikinotes/{uid}.json (pre-rendered HTML + metadata)
   → Vite bundles the React SPA into dist/
   → browser loads the SPA shell (CSR — single index.html)
   → user navigates to a wikinote
-  → fetch("/fieldnotes/{uid}.json") — on-demand, not upfront
+  → fetch("/wikinotes/{uid}.json") — on-demand, not upfront
   → React injects the pre-rendered HTML into the DOM
 ```
 

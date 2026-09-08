@@ -2,13 +2,13 @@
 // Only active during `vite dev`, never in production builds.
 //
 // Endpoints:
-//   GET  /api/fieldnotes/:uid/raw     → raw markdown + mtime
-//   POST /api/fieldnotes/save         → write to disk, incremental rebuild
-//   POST /api/fieldnotes/create       → create new note, rebuild
-//   POST /api/fieldnotes/validate     → parse + validate without saving
-//   POST /api/fieldnotes/analyze-refs    → pre-delete impact analysis
-//   POST /api/fieldnotes/convert-to-stub → clear body, preserve frontmatter + trailing refs
-//   POST /api/fieldnotes/delete          → delete note + optional trailing ref cleanup
+//   GET  /api/wikinotes/:uid/raw     → raw markdown + mtime
+//   POST /api/wikinotes/save         → write to disk, incremental rebuild
+//   POST /api/wikinotes/create       → create new note, rebuild
+//   POST /api/wikinotes/validate     → parse + validate without saving
+//   POST /api/wikinotes/analyze-refs    → pre-delete impact analysis
+//   POST /api/wikinotes/convert-to-stub → clear body, preserve frontmatter + trailing refs
+//   POST /api/wikinotes/delete          → delete note + optional trailing ref cleanup
 
 import fs from 'fs';
 import path from 'path';
@@ -84,9 +84,9 @@ const STUB_PHRASES = [
 function randomStubPhrase() {
   return STUB_PHRASES[Math.floor(Math.random() * STUB_PHRASES.length)];
 }
-const WIKINOTES_DIR = path.join(__dirname, '../src/data/pages/fieldnotes');
-const WIKINOTES_INDEX_FILE = path.join(__dirname, '../src/data/fieldnotes-index.generated.json');
-const WIKINOTES_CONTENT_DIR = path.join(__dirname, '../public/fieldnotes');
+const WIKINOTES_DIR = path.join(__dirname, '../src/data/pages/wikinotes');
+const WIKINOTES_INDEX_FILE = path.join(__dirname, '../src/data/wikinotes-index.generated.json');
+const WIKINOTES_CONTENT_DIR = path.join(__dirname, '../public/wikinotes');
 
 // Configure marked the same way as build-content.js
 const customRenderer = new Renderer();
@@ -180,7 +180,7 @@ function loadAllWikinotes() {
       title: address,
       displayTitle: name,
       name,
-      category: 'fieldnotes',
+      category: 'wikinotes',
       date,
       description,
       address,
@@ -219,7 +219,7 @@ function applyLinks(posts, uidToMeta) {
 }
 
 /**
- * Write outputs: fieldnotes-index.generated.json + public/fieldnotes/*.json
+ * Write outputs: wikinotes-index.generated.json + public/wikinotes/*.json
  */
 function writeOutputs(linkedPosts) {
   const index = linkedPosts.map(({ content, searchText, ...meta }) => ({ ...meta, searchText }));
@@ -360,7 +360,7 @@ export function wikinoteEditorPlugin() {
       }
 
       server.middlewares.use(async (req, res, next) => {
-        // ── GET /api/fieldnotes/:uid/raw ──
+        // ── GET /api/wikinotes/:uid/raw ──
         const rawMatch = req.url?.match(/^\/api\/wikinotes\/([^/]+)\/raw$/);
         if (rawMatch && req.method === 'GET') {
           const uid = rawMatch[1];
@@ -375,8 +375,8 @@ export function wikinoteEditorPlugin() {
           return sendJson(res, { raw, mtime: stat.mtimeMs });
         }
 
-        // ── POST /api/fieldnotes/save ──
-        if (req.url === '/api/fieldnotes/save' && req.method === 'POST') {
+        // ── POST /api/wikinotes/save ──
+        if (req.url === '/api/wikinotes/save' && req.method === 'POST') {
           try {
             const { uid, raw } = await readBody(req);
             if (!uid || !raw) {
@@ -417,8 +417,8 @@ export function wikinoteEditorPlugin() {
           }
         }
 
-        // ── POST /api/fieldnotes/create ──
-        if (req.url === '/api/fieldnotes/create' && req.method === 'POST') {
+        // ── POST /api/wikinotes/create ──
+        if (req.url === '/api/wikinotes/create' && req.method === 'POST') {
           try {
             const { address, name, date, body } = await readBody(req);
             if (!address) {
@@ -498,9 +498,9 @@ export function wikinoteEditorPlugin() {
           }
         }
 
-        // ── POST /api/fieldnotes/analyze-refs ──
+        // ── POST /api/wikinotes/analyze-refs ──
         // Pre-delete impact analysis: who references this note?
-        if (req.url === '/api/fieldnotes/analyze-refs' && req.method === 'POST') {
+        if (req.url === '/api/wikinotes/analyze-refs' && req.method === 'POST') {
           try {
             const { uid } = await readBody(req);
             if (!uid) return sendJson(res, { error: 'Missing uid' }, 400);
@@ -600,8 +600,8 @@ export function wikinoteEditorPlugin() {
           }
         }
 
-        // ── POST /api/fieldnotes/delete ──
-        if (req.url === '/api/fieldnotes/delete' && req.method === 'POST') {
+        // ── POST /api/wikinotes/delete ──
+        if (req.url === '/api/wikinotes/delete' && req.method === 'POST') {
           try {
             const { uid, cleanupTrailingRefs, trailingRefUids, unlinkBodyRefs } = await readBody(req);
             if (!uid) return sendJson(res, { error: 'Missing uid' }, 400);
@@ -692,9 +692,9 @@ export function wikinoteEditorPlugin() {
           }
         }
 
-        // ── POST /api/fieldnotes/convert-to-stub ──
+        // ── POST /api/wikinotes/convert-to-stub ──
         // Clears body content but preserves frontmatter + trailing refs
-        if (req.url === '/api/fieldnotes/convert-to-stub' && req.method === 'POST') {
+        if (req.url === '/api/wikinotes/convert-to-stub' && req.method === 'POST') {
           try {
             const { uid } = await readBody(req);
             if (!uid) return sendJson(res, { error: 'Missing uid' }, 400);
@@ -735,9 +735,9 @@ export function wikinoteEditorPlugin() {
           }
         }
 
-        // ── POST /api/fieldnotes/move-address ──
+        // ── POST /api/wikinotes/move-address ──
         // Moves a note to a new address, cascading to children
-        if (req.url === '/api/fieldnotes/move-address' && req.method === 'POST') {
+        if (req.url === '/api/wikinotes/move-address' && req.method === 'POST') {
           try {
             const { uid, newAddress, newName } = await readBody(req);
             if (!uid || !newAddress) {
@@ -816,9 +816,9 @@ export function wikinoteEditorPlugin() {
           }
         }
 
-        // ── POST /api/fieldnotes/update-pipe-text ──
+        // ── POST /api/wikinotes/update-pipe-text ──
         // Batch-update [[uid|oldName]] → [[uid|newName]] across all notes
-        if (req.url === '/api/fieldnotes/update-pipe-text' && req.method === 'POST') {
+        if (req.url === '/api/wikinotes/update-pipe-text' && req.method === 'POST') {
           try {
             const { uid, oldName, newName } = await readBody(req);
             if (!uid || !oldName || !newName) {
@@ -856,8 +856,8 @@ export function wikinoteEditorPlugin() {
           }
         }
 
-        // ── POST /api/fieldnotes/validate ──
-        if (req.url === '/api/fieldnotes/validate' && req.method === 'POST') {
+        // ── POST /api/wikinotes/validate ──
+        if (req.url === '/api/wikinotes/validate' && req.method === 'POST') {
           try {
             const { raw } = await readBody(req);
             if (!raw) {
@@ -872,8 +872,8 @@ export function wikinoteEditorPlugin() {
           }
         }
 
-        // ── GET /api/fieldnotes/index ──
-        if (req.url === '/api/fieldnotes/index' && req.method === 'GET') {
+        // ── GET /api/wikinotes/index ──
+        if (req.url === '/api/wikinotes/index' && req.method === 'GET') {
           if (!cachedWikinotes) {
             const { wikinotePosts, uidToMeta } = loadAllWikinotes();
             cachedWikinotes = { posts: wikinotePosts, uidToMeta };

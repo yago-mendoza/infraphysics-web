@@ -12,8 +12,8 @@
 .wb-foot { display:flex; align-items:center; gap:1rem; margin-bottom:.4rem; }
 .wb-foot em { color:var(--text-tertiary); font:normal 9px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; transition:color .16s ease; }
 .wiki-banner:hover .wb-foot em { color:var(--text-heading); }
-.wb-mark { display:flex; align-items:center; gap:.6rem; padding:.6rem .9rem; border:1px solid currentColor; color:var(--cat-fieldnotes-accent); transition:background-color .16s ease; }
-.wiki-banner:hover .wb-mark { background:color-mix(in srgb,var(--cat-fieldnotes-accent) 12%,transparent); }
+.wb-mark { display:flex; align-items:center; gap:.6rem; padding:.6rem .9rem; border:1px solid currentColor; color:var(--cat-wikinotes-accent); transition:background-color .16s ease; }
+.wiki-banner:hover .wb-mark { background:color-mix(in srgb,var(--cat-wikinotes-accent) 12%,transparent); }
 .wb-logo { width:1.3rem; height:1.3rem; }
 .wb-mark b { font:600 11px/1 var(--font-mono); letter-spacing:.26em; text-transform:uppercase; }
 

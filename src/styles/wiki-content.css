@@ -7,7 +7,7 @@
 
 /* Accent + layout — purple, no max-width cap (grid layout) */
 .article-wiki {
-  --art-accent: var(--cat-fieldnotes-accent);
+  --art-accent: var(--cat-wikinotes-accent);
   max-width: none;
 }
 

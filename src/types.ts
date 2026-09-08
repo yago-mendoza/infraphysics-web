@@ -1,6 +1,6 @@
 import { STATUS_CONFIG } from './config/categories';
 
-export type Category = 'projects' | 'essays' | 'bits2bricks' | 'fieldnotes';
+export type Category = 'projects' | 'essays' | 'bits2bricks' | 'wikinotes';
 
 export type PostStatus = keyof typeof STATUS_CONFIG;
 
@@ -65,7 +65,7 @@ export interface WikiNoteMeta {
   title: string;
   displayTitle?: string;
   name: string;
-  category: 'fieldnotes';
+  category: 'wikinotes';
   date: string;
   description: string;
   address: string;

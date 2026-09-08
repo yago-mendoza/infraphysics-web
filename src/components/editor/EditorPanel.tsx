@@ -107,7 +107,7 @@ export const EditorPanel: React.FC<Props> = ({
     const parts = address.split('//');
     const name = parts[parts.length - 1];
     try {
-      const resp = await fetch('/api/fieldnotes/create', {
+      const resp = await fetch('/api/wikinotes/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

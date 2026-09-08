@@ -35,7 +35,7 @@ const byId = (id: string) => posts.find(post => post.id === id);
 function buildDoors(): Door[] {
   const essay = byId(ESSAY_ID), project = byId(PROJECT_ID), b2b = byId(B2B_ID);
   const doors: Door[] = [
-    { key: 'wiki', ref: 'A', kicker: 'Wiki', title: 'One graph, every concept I keep.', line: 'Short notes on ML, hardware, infrastructure and systems, linked into a graph you can walk.', meta: `${wikiNoteCount} notes`, to: secondBrainPath(), accent: catAccentVar('fieldnotes') },
+    { key: 'wiki', ref: 'A', kicker: 'Wiki', title: 'One graph, every concept I keep.', line: 'Short notes on ML, hardware, infrastructure and systems, linked into a graph you can walk.', meta: `${wikiNoteCount} notes`, to: secondBrainPath(), accent: catAccentVar('wikinotes') },
   ];
   if (essay) doors.push({ key: 'essay', ref: 'B', kicker: 'Essay', title: essay.displayTitle || essay.title, line: essay.subtitle || essay.description || '', meta: essay.date, to: postPath(essay.category, essay.id), accent: catAccentVar('essays'), post: essay });
   if (project) doors.push({ key: 'project', ref: 'C', kicker: 'Project', title: project.displayTitle || project.title, line: project.description || '', meta: [('status' in project ? project.status : null), project.date].filter(Boolean).join(' · '), to: postPath(project.category, project.id), accent: catAccentVar('projects'), post: project });

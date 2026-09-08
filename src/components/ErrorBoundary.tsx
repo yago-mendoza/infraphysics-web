@@ -42,7 +42,7 @@ export class ErrorBoundary extends (React.Component as new (props: Props) => {
 
     const handleReset = () => this.setState({ hasError: false, error: null });
     const isSecondBrain = window.location.pathname.startsWith(secondBrainPath());
-    const accent = isSecondBrain ? 'var(--cat-fieldnotes-accent)' : 'var(--text-secondary)';
+    const accent = isSecondBrain ? 'var(--cat-wikinotes-accent)' : 'var(--text-secondary)';
 
     return (
       <div className="flex items-center justify-center min-h-[40vh] px-6">

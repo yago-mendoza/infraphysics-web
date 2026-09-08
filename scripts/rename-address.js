@@ -17,7 +17,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PAGES_DIR = path.join(__dirname, '../src/data/pages');
-const WIKINOTES_DIR = path.join(PAGES_DIR, 'fieldnotes');
+const WIKINOTES_DIR = path.join(PAGES_DIR, 'wikinotes');
 
 const args = process.argv.slice(2);
 const applyMode = args.includes('--apply');

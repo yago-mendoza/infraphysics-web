@@ -348,7 +348,7 @@ const MiniGraph: React.FC<{
     const notes = [...selection].map(id => index.noteById.get(id)).filter(Boolean) as NonNullable<ReturnType<typeof index.noteById.get>>[];
     const contents = await Promise.all(notes.map(async note => {
       try {
-        const response = await fetch(`/fieldnotes/${note.id}.json`);
+        const response = await fetch(`/wikinotes/${note.id}.json`);
         if (!response.ok) return { note, text: '' };
         const payload = await response.json();
         const documentNode = new DOMParser().parseFromString(payload.content ?? '', 'text/html');

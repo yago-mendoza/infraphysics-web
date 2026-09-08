@@ -69,7 +69,7 @@
 @property --cat-projects-accent { syntax:'<color>'; inherits:true; initial-value:#a3e635; }
 @property --cat-essays-accent { syntax:'<color>'; inherits:true; initial-value:#c8462d; }
 @property --cat-bits2bricks-accent { syntax:'<color>'; inherits:true; initial-value:#3b82f6; }
-@property --cat-fieldnotes-accent { syntax:'<color>'; inherits:true; initial-value:#a78bfa; }
+@property --cat-wikinotes-accent { syntax:'<color>'; inherits:true; initial-value:#a78bfa; }
 
 /* Prevent horizontal scroll on mobile */
 html, body { overflow-x: clip; } /* clip, not hidden: hidden makes body a scroll container and kills position: sticky everywhere below it */
@@ -516,7 +516,7 @@ html.theme-transitioning {
     --highlight-bg .95s ease, --highlight-text .95s ease,
     --selection-bg .95s ease, --focus-ring .95s ease, --shadow-color .95s ease,
     --cat-projects-accent .95s ease, --cat-essays-accent .95s ease,
-    --cat-bits2bricks-accent .95s ease, --cat-fieldnotes-accent .95s ease;
+    --cat-bits2bricks-accent .95s ease, --cat-wikinotes-accent .95s ease;
 }
 
 /* Tokens already carry the animation. Local colour transitions would chase a
@@ -579,10 +579,10 @@ html.theme-transitioning body * { transition-duration:0s !important; transition-
   pointer-events: none;
   max-width: 320px;
   min-width: 220px;
-  background: color-mix(in srgb, var(--wiki-preview-bg) 94%, var(--cat-fieldnotes-accent));
-  border: 1px solid color-mix(in srgb, var(--wiki-preview-border) 72%, var(--cat-fieldnotes-accent));
-  border-left: 1px solid color-mix(in srgb, var(--wiki-preview-border) 72%, var(--cat-fieldnotes-accent));
-  border-bottom: 1px solid color-mix(in srgb, var(--wiki-preview-border) 72%, var(--cat-fieldnotes-accent));
+  background: color-mix(in srgb, var(--wiki-preview-bg) 94%, var(--cat-wikinotes-accent));
+  border: 1px solid color-mix(in srgb, var(--wiki-preview-border) 72%, var(--cat-wikinotes-accent));
+  border-left: 1px solid color-mix(in srgb, var(--wiki-preview-border) 72%, var(--cat-wikinotes-accent));
+  border-bottom: 1px solid color-mix(in srgb, var(--wiki-preview-border) 72%, var(--cat-wikinotes-accent));
   border-radius: 4px;
   padding: 12px 14px;
   box-shadow: 0 14px 50px rgba(0, 0, 0, 0.28);
@@ -748,7 +748,7 @@ button:focus {
 .wiki-graph-range { appearance:none; height:1rem; background:transparent; cursor:pointer; }
 .wiki-graph-range::-webkit-slider-runnable-track { height:3px; border-radius:999px; background:var(--border-default); }
 .wiki-graph-range::-webkit-slider-thumb { appearance:none; width:12px; height:12px; margin-top:-4.5px; border:1px solid var(--text-tertiary); border-radius:50%; background:var(--bg-base); }
-.wiki-graph-range:hover::-webkit-slider-thumb,.wiki-graph-range:focus-visible::-webkit-slider-thumb { border-color:var(--cat-fieldnotes-accent); }
+.wiki-graph-range:hover::-webkit-slider-thumb,.wiki-graph-range:focus-visible::-webkit-slider-thumb { border-color:var(--cat-wikinotes-accent); }
 .wiki-graph-range::-moz-range-track { height:3px; border:0; border-radius:999px; background:var(--border-default); }
 .wiki-graph-range::-moz-range-progress { height:3px; border-radius:999px; background:var(--text-tertiary); }
 .wiki-graph-range::-moz-range-thumb { width:11px; height:11px; border:1px solid var(--text-tertiary); border-radius:50%; background:var(--bg-base); }
@@ -829,9 +829,9 @@ button:focus {
   flex-shrink: 0;
   width: 5rem;
   padding: 0.375rem;
-  border: 1px solid color-mix(in srgb, var(--cat-fieldnotes-accent) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cat-wikinotes-accent) 20%, transparent);
   border-radius: 0.125rem;
-  background: color-mix(in srgb, var(--cat-fieldnotes-accent) 3%, transparent);
+  background: color-mix(in srgb, var(--cat-wikinotes-accent) 3%, transparent);
   align-self: flex-start;
 }
 

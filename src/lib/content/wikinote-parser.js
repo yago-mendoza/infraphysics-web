@@ -205,7 +205,7 @@ export function extractWikinoteMeta(raw) {
       title: address,
       displayTitle: name,
       name,
-      category: 'fieldnotes',
+      category: 'wikinotes',
       date,
       description,
       address,

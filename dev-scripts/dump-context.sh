@@ -139,14 +139,14 @@ FILES=(
   "scripts/obsidian-export.js"
   "scripts/obsidian-import.js"
   "scripts/README.md"
-  "src/data/pages/fieldnotes/README.md"
+  "src/data/pages/wikinotes/README.md"
 
   # --- Contenido representativo (1 por categoría + 1 wikinote, para mostrar frontmatter) ---
   "src/data/pages/essays/260205-why-rust-exists.md"
   "src/data/pages/bits2bricks/custom-syntax-pcb.md"
   # Wikinote files are now named {uid}.md — pick a representative one
-  # ls src/data/pages/fieldnotes/ for current filenames
-  # "src/data/pages/fieldnotes/egoxqpmC.md"  # Hardware//CPU//ALU
+  # ls src/data/pages/wikinotes/ for current filenames
+  # "src/data/pages/wikinotes/egoxqpmC.md"  # Hardware//CPU//ALU
 )
 
 # ── Recopilar stats ───────────────────────────────────────────────────

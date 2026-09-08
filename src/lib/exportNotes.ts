@@ -130,7 +130,7 @@ export async function exportNotesAsMarkdown(
     // Batch-fetch content for all notes
     const fetches = notes.map(async (note) => {
       try {
-        const resp = await fetch(`/fieldnotes/${note.id}.json`);
+        const resp = await fetch(`/wikinotes/${note.id}.json`);
         if (!resp.ok) return { uid: note.id, body: '[content unavailable]' };
         const { content } = await resp.json();
         return { uid: note.id, body: htmlToText(content) };

@@ -207,7 +207,7 @@ export function validateWikinotes(wikinotePosts, allPosts, cfg, options = {}) {
   }
 
   if (cfg.validateRegularPostWikiLinks) {
-    const regularPosts = allPosts.filter(p => p.category !== 'fieldnotes');
+    const regularPosts = allPosts.filter(p => p.category !== 'wikinotes');
     const wlResult = checkRegularPostWikiLinks(regularPosts, knownUids);
     errors += wlResult.errors;
     for (const issue of wlResult.issues) {

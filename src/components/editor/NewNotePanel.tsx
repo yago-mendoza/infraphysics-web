@@ -82,7 +82,7 @@ export const NewNotePanel: React.FC<Props> = ({ allNotes, onCreated, onCancel, i
     setError(null);
 
     try {
-      const resp = await fetch('/api/fieldnotes/create', {
+      const resp = await fetch('/api/wikinotes/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

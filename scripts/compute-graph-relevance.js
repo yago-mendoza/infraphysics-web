@@ -1,6 +1,6 @@
 /**
  * compute-graph-relevance.js
- * Build-time script: reads fieldnotes-index.generated.json, computes graph
+ * Build-time script: reads wikinotes-index.generated.json, computes graph
  * relevance scores (PageRank + BFS proximity + shared neighbors), outputs
  * src/data/graph-relevance.generated.json.
  *
@@ -14,7 +14,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const INDEX_FILE = path.join(__dirname, '../src/data/fieldnotes-index.generated.json');
+const INDEX_FILE = path.join(__dirname, '../src/data/wikinotes-index.generated.json');
 const OUTPUT_FILE = path.join(__dirname, '../src/data/graph-relevance.generated.json');
 
 const TOP_N = 30;

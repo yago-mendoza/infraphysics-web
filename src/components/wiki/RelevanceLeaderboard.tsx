@@ -135,7 +135,7 @@ export const RelevanceLeaderboard: React.FC<Props> = (props) => {
               onClick={() => onNoteClick(note)}
               className="wiki-siderow group relative flex items-center h-6 rounded-sm no-underline transition-colors hover:bg-white/5 overflow-visible"
               title={note.address || noteLabel(note)}
-              style={{ '--wl-color': visited ? 'var(--wiki-link-visited)' : 'var(--cat-fieldnotes-accent)' } as React.CSSProperties}
+              style={{ '--wl-color': visited ? 'var(--wiki-link-visited)' : 'var(--cat-wikinotes-accent)' } as React.CSSProperties}
             >
               <span className="relative z-10 text-[9px] text-th-muted flex-shrink-0 w-3 text-center mr-1.5">{ZONE_LABELS[zone]}</span>
               <span className="wiki-siderow-text relative z-10 text-[11px] overflow-hidden whitespace-nowrap flex-1 min-w-0 transition-colors">
@@ -181,7 +181,7 @@ export const RelevanceLeaderboard: React.FC<Props> = (props) => {
             onClick={() => onNoteClick(note)}
             className="wiki-siderow group relative flex items-center h-6 rounded-sm no-underline transition-colors hover:bg-white/5 overflow-visible"
             title={note.address || noteLabel(note)}
-            style={{ '--wl-color': visited ? 'var(--wiki-link-visited)' : 'var(--cat-fieldnotes-accent)' } as React.CSSProperties}
+            style={{ '--wl-color': visited ? 'var(--wiki-link-visited)' : 'var(--cat-wikinotes-accent)' } as React.CSSProperties}
           >
             {/* Relevance bar fill */}
             <div

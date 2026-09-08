@@ -61,12 +61,12 @@ npm run content:fix    # compile + interactive issue resolution
 
 Before creating any wikinote, search existing addresses for the last segment of the proposed address (case-insensitive). For example, before creating `X//Y//cache`, check if `cache` already appears anywhere — even as a non-terminal segment like `CPU//cache//L1`. If the segment exists, evaluate whether the new note is the same concept or genuinely distinct. This avoids creating notes that immediately trigger build-time collision warnings and require rework.
 
-Quick check: search `address:` lines in `src/data/pages/fieldnotes/*.md` for the segment name.
+Quick check: search `address:` lines in `src/data/pages/wikinotes/*.md` for the segment name.
 
 ### Creating a single wikinote
 
 1. Run the [pre-creation check](#pre-creation-check-segment-collisions) for the proposed address
-2. Create `src/data/pages/fieldnotes/{uid}.md` where `{uid}` is a unique identifier (assigned by migration script or manually generated)
+2. Create `src/data/pages/wikinotes/{uid}.md` where `{uid}` is a unique identifier (assigned by migration script or manually generated)
 3. Add frontmatter with `uid` (required), `address` (required), and `date` (required, `YYYY-MM-DD` string — never a full ISO timestamp)
 4. Write the body + trailing refs
 5. Run `npm run build` — fix any errors
@@ -127,7 +127,7 @@ Note: With UID-based references, children's connections remain intact even if th
 2. Run `npm run build` — the build will ERROR on every broken `[[reference]]` to the deleted note
 3. Fix each broken reference (remove it, redirect it, or replace with a different address)
 4. Build again until clean
-5. Stale `.json` content files in `public/fieldnotes/` are auto-cleaned by the build
+5. Stale `.json` content files in `public/wikinotes/` are auto-cleaned by the build
 
 ### Using `supersedes` during migration
 
@@ -238,7 +238,7 @@ Every prompt accepts **(q)** to quit early. Changes already written to disk are 
   >
 ```
 
-- **c** — creates a minimal `fieldnotes/LAPTOP.md` with just `address` and `date`
+- **c** — creates a minimal `wikinotes/LAPTOP.md` with just `address` and `date`
 - **k** — skips
 
 **End-of-session merge block:**
@@ -320,7 +320,7 @@ Understanding what changes propagate where prevents subtle breakage.
 
 ### Renaming an address affects:
 - **The note's own file**: frontmatter `address` and `name` fields only
-- **Build outputs**: the compiled `.json` file in `public/fieldnotes/` uses the UID (which doesn't change), so output filename stays the same
+- **Build outputs**: the compiled `.json` file in `public/wikinotes/` uses the UID (which doesn't change), so output filename stays the same
 - **Children: NOT automatic.** If a parent address changes, children still have their old addresses. They must each be renamed (via `rename-address.js` or `move-hierarchy.js`) to reflect the new hierarchy path. However, references to children still work via their stable UIDs.
 - **`distinct` entries**: any note with `distinct: ["old-address"]` becomes stale — update or remove them
 - **References in other files**: NOT affected. References use stable UIDs (`[[uid]]`), not addresses, so they continue pointing to the same note regardless of address changes
@@ -443,7 +443,7 @@ Reads Obsidian vault → syncs back to wikinotes (default: `./obsidian-vault`).
 - `[[name]]` → resolved to `[[uid\|name]]` (ambiguities reported, left unresolved)
 - `> [!TYPE]` callouts → `{bkqt/TYPE}...{/bkqt}`
 - Deletions → detected and reported only (not auto-deleted)
-- Transfer report written to `src/data/pages/fieldnotes/transfers/`
+- Transfer report written to `src/data/pages/wikinotes/transfers/`
 
 ### Workflow
 

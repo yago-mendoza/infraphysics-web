@@ -315,7 +315,7 @@ function getAllMarkdownFiles(dir, isRoot = false) {
     const stat = fs.statSync(fullPath);
 
     if (stat.isDirectory()) {
-      if (item === 'fieldnotes' || item === 'FinBoard') continue;
+      if (item === 'wikinotes' || item === 'FinBoard') continue;
       files.push(...getAllMarkdownFiles(fullPath));
     } else if (!isRoot && item.endsWith('.md') && !item.startsWith('_') && item !== 'README.md' && item !== 'STYLE.md') {
       files.push(fullPath);
@@ -455,7 +455,7 @@ function extractWikinoteMeta(filename, filePath) {
   const searchText = preLinkHtml.replace(/<[^>]*>/g, '').toLowerCase();
 
   return {
-    metadata: { id, title: address, displayTitle, name, category: 'fieldnotes', date, description, address, addressParts, references, trailingRefs, searchText, aliases, supersedes, distinct },
+    metadata: { id, title: address, displayTitle, name, category: 'wikinotes', date, description, address, addressParts, references, trailingRefs, searchText, aliases, supersedes, distinct },
     preLinkHtml,
   };
 }
@@ -516,7 +516,7 @@ function processRegularPosts(cache, configHash, forceRebuild) {
 // --- Cached wikinotes ---
 
 function processWikinotesDir(cache, configHash, forceRebuild) {
-  const wikinotesDir = path.join(PAGES_DIR, 'fieldnotes');
+  const wikinotesDir = path.join(PAGES_DIR, 'wikinotes');
   if (!fs.existsSync(wikinotesDir)) return { results: [], cacheWikinotes: {} };
 
   const files = fs.readdirSync(wikinotesDir)
@@ -554,8 +554,8 @@ function processWikinotesDir(cache, configHash, forceRebuild) {
 
 console.log('Building content...');
 
-const WIKINOTES_INDEX_FILE = path.join(__dirname, '../src/data/fieldnotes-index.generated.json');
-const WIKINOTES_CONTENT_DIR = path.join(__dirname, '../public/fieldnotes');
+const WIKINOTES_INDEX_FILE = path.join(__dirname, '../src/data/wikinotes-index.generated.json');
+const WIKINOTES_CONTENT_DIR = path.join(__dirname, '../public/wikinotes');
 
 const forceRebuild = process.argv.includes('--force');
 const interactive = process.argv.includes('--interactive');
@@ -644,7 +644,7 @@ for (const entry of bkqtLabelWarnings) {
 if (syntaxWarnings > 0) {
   console.log('\n  \x1b[90mLegend:\x1b[0m');
   console.log('  \x1b[90m  LITERAL_TAG — custom syntax leaked into output (check for a missing closing tag)\x1b[0m');
-  console.log('  \x1b[90m  BKQT_LABEL  — wikinote typed notes take no label; fold it into the box text (fieldnotes/STYLE.md)\x1b[0m');
+  console.log('  \x1b[90m  BKQT_LABEL  — wikinote typed notes take no label; fold it into the box text (wikinotes/STYLE.md)\x1b[0m');
   console.log(`\x1b[1m[SYNTAX]\x1b[0m \x1b[33m${syntaxWarnings} warning(s)\x1b[0m`);
 }
 
@@ -671,11 +671,11 @@ fs.writeFileSync(OUTPUT_FILE, JSON.stringify(linkedRegularPosts, null, 2));
 const postsIndex = publicRegularPosts.map(({ content, ...meta }) => meta);
 fs.writeFileSync(POSTS_INDEX_FILE, JSON.stringify(postsIndex, null, 2));
 
-// Output 2: fieldnotes-index.generated.json (metadata only — no content)
+// Output 2: wikinotes-index.generated.json (metadata only — no content)
 const wikinotesIndex = linkedWikinotePosts.map(({ content, searchText, ...meta }) => ({ ...meta, searchText }));
 fs.writeFileSync(WIKINOTES_INDEX_FILE, JSON.stringify(wikinotesIndex, null, 2));
 
-// Output 3: public/fieldnotes/{id}.json (individual content files)
+// Output 3: public/wikinotes/{id}.json (individual content files)
 if (!fs.existsSync(WIKINOTES_CONTENT_DIR)) {
   fs.mkdirSync(WIKINOTES_CONTENT_DIR, { recursive: true });
 }
@@ -874,7 +874,7 @@ for (const note of wikinotesIndex) {
     t: note.title,
     d: note.description || '',
     img: null,
-    cat: 'fieldnotes',
+    cat: 'wikinotes',
     date: note.date || null,
   };
 }
@@ -882,8 +882,8 @@ for (const note of wikinotesIndex) {
 const OG_MANIFEST_FILE = path.join(__dirname, '../public/og-manifest.json');
 fs.writeFileSync(OG_MANIFEST_FILE, JSON.stringify(ogManifest));
 
-// Output 6b: public/fieldnotes-index.json (HTTP-fetchable copy of the index)
-const WIKINOTES_INDEX_PUBLIC = path.join(__dirname, '../public/fieldnotes-index.json');
+// Output 6b: public/wikinotes-index.json (HTTP-fetchable copy of the index)
+const WIKINOTES_INDEX_PUBLIC = path.join(__dirname, '../public/wikinotes-index.json');
 fs.writeFileSync(WIKINOTES_INDEX_PUBLIC, JSON.stringify(wikinotesIndex));
 
 // Output 7: public/sitemap.xml
@@ -1044,7 +1044,7 @@ fs.writeFileSync(LLMS_FILE, llmsContent);
 
 console.log(`Generated ${linkedRegularPosts.length} posts → ${OUTPUT_FILE}`);
 console.log(`Generated lightweight post index → ${POSTS_INDEX_FILE}`);
-console.log(`Generated ${linkedWikinotePosts.length} wikinotes → ${WIKINOTES_INDEX_FILE} + public/fieldnotes/`);
+console.log(`Generated ${linkedWikinotePosts.length} wikinotes → ${WIKINOTES_INDEX_FILE} + public/wikinotes/`);
 console.log(`Generated ${Object.keys(categories).length} categories → ${CATEGORIES_OUTPUT}`);
 console.log(`Generated ${Object.keys(ogManifest).length} entries → ${OG_MANIFEST_FILE}`);
 console.log(`Generated sitemap (${sitemapEntries.length} URLs) → ${SITEMAP_FILE}`);

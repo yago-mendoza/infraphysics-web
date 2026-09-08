@@ -207,7 +207,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
       { label: 'View Essays', keywords: ['essays', 'articles', 'opinion', 'longform'], icon: <ContentEntityIcon kind="essays" />, path: sectionPath('essays'), hideWhen: () => currentCategory === 'essays' },
       { label: 'View Bits2Bricks', keywords: ['technical', 'engineering', 'tutorials', 'bits'], icon: <ContentEntityIcon kind="bits2bricks" />, path: sectionPath('bits2bricks'), hideWhen: () => currentCategory === 'bits2bricks' },
       { label: 'Open Source / GitHub', keywords: ['code', 'repository', 'repo', 'source'], icon: <GitHubIcon size={22} />, path: 'https://github.com/infraphysics', external: true },
-      { label: 'Wiki', keywords: ['knowledge', 'brain', 'fieldnotes', 'concepts'], icon: <ContentEntityIcon kind="wiki" />, path: secondBrainPath() },
+      { label: 'Wiki', keywords: ['knowledge', 'brain', 'wikinotes', 'concepts'], icon: <ContentEntityIcon kind="wiki" />, path: secondBrainPath() },
       { label: 'Contact', keywords: ['email', 'message', 'talk', 'hire'], icon: <MailIcon />, path: '/contact' },
     ];
 

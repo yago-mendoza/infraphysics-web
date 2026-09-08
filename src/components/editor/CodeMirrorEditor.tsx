@@ -370,10 +370,10 @@ const CodeMirrorEditor = forwardRef<CodeMirrorHandle, Props>(({ value, onChange,
             flex: 'none !important',
           },
           '.cm-content': {
-            caretColor: 'var(--cat-fieldnotes-accent)',
+            caretColor: 'var(--cat-wikinotes-accent)',
           },
           '&.cm-focused .cm-cursor': {
-            borderLeftColor: 'var(--cat-fieldnotes-accent)',
+            borderLeftColor: 'var(--cat-wikinotes-accent)',
           },
           '.cm-gutters': {
             backgroundColor: 'var(--editor-gutter, rgba(0,0,0,0.2))',

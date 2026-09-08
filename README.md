@@ -103,13 +103,13 @@ infraphysics-web/
           README.md             # Essays editorial voice
         bits2bricks/          # .md posts + _category.yaml
           README.md             # Bits2Bricks editorial voice
-        fieldnotes/           # Individual {uid}.md files (1 per concept, UID-named)
+        wikinotes/           # Individual {uid}.md files (1 per concept, UID-named)
           README.md             # Wikinotes management guide (scripts, workflows, errors)
       agent-profile.json      # Author profile consumed by views and crawlers
       postSummaries.ts        # Lightweight post index for listings
       posts.generated.json    # Regular posts only (no wikinotes)
       posts-index.generated.json  # Post metadata without bodies
-      fieldnotes-index.generated.json  # Wikinote metadata (no content)
+      wikinotes-index.generated.json  # Wikinote metadata (no content)
       graph-relevance.generated.json   # PageRank + proximity per wikinote
       graph-thumb.generated.json       # Static wiki graph picture for the Home spotlight
       categories.generated.json
@@ -119,8 +119,8 @@ infraphysics-web/
       avatar.jpg              # Self-hosted portrait for the home identity anchor (240px, preloaded from index.html)
       articles/<article-id>/  # Local image assets grouped by article ID
       playgrounds/<article-id>/ # Self-contained interactive "playgrounds" (HTML/JS) per article, linked via [text](/playgrounds/<id>/<name>.html)
-      fieldnotes/             # {uid}.json content files (served as static assets)
-      fieldnotes-index.json   # Generated: wikinote metadata index (HTTP-fetched at runtime)
+      wikinotes/             # {uid}.json content files (served as static assets)
+      wikinotes-index.json   # Generated: wikinote metadata index (HTTP-fetched at runtime)
       og-manifest.json        # Generated: URL path → OG metadata + full text body for crawlers
       sitemap.xml             # Generated XML sitemap (route count follows current content)
       feed.xml                # Generated: RSS feed (latest 30 articles)
@@ -209,7 +209,7 @@ All colors flow through a three-layer cascade: CSS custom properties in `index.h
 
 ### Second Brain
 
-A flat knowledge graph of `{uid}.md` files in `fieldnotes/`. Each note has a stable 8-char UID (for references and URLs) and an `address` (hierarchical, `//`-separated, for display and neighborhood). Notes link to each other via `[[uid]]` wiki-links — renaming an address changes only one file's frontmatter. Build produces three outputs: a posts JSON (no wikinotes), a metadata index (no content), and individual `{uid}.json` content files served as static assets. At runtime, the metadata index is fetched via HTTP (cached by CDN, separate from the JS bundle) while note content is fetched on demand. For managing wikinotes, see **[src/data/pages/fieldnotes/README.md](src/data/pages/fieldnotes/README.md)**.
+A flat knowledge graph of `{uid}.md` files in `wikinotes/`. Each note has a stable 8-char UID (for references and URLs) and an `address` (hierarchical, `//`-separated, for display and neighborhood). Notes link to each other via `[[uid]]` wiki-links — renaming an address changes only one file's frontmatter. Build produces three outputs: a posts JSON (no wikinotes), a metadata index (no content), and individual `{uid}.json` content files served as static assets. At runtime, the metadata index is fetched via HTTP (cached by CDN, separate from the JS bundle) while note content is fetched on demand. For managing wikinotes, see **[src/data/pages/wikinotes/README.md](src/data/pages/wikinotes/README.md)**.
 
 **In-browser editor** (localhost only): Click a note's edit button to open a CodeMirror editor panel. Features: `[[` navigation dropdown (arrow keys + Enter to jump between notes, Tab to drill into children, filters as you type), smart term detection (highlights unlinked mentions of known notes in purple, offers Yes/No to convert to wiki-links), missing-parent stub creation from diagnostics, delete workflow with impact analysis (shows inbound refs, children, trailing refs — offers stub conversion or permanent delete with ref cleanup), uid protection (read-only, restored on save), resizable diagnostics panel, trailing refs widget, and auto-reload after save via HMR. The editor runs live validation on every keystroke, catching broken references, missing parents, and formatting issues before they reach the build — so most errors are fixed in real time without needing to run the full pipeline.
 
@@ -233,7 +233,7 @@ The build pipeline includes a 7-phase integrity checker that catches reference e
 | **Segment collisions** | Same concept name at different hierarchy paths — severity tiers (HIGH/MED/LOW), suppressible with `distinct` frontmatter | WARN |
 | Isolated note detection | Notes with no connections to the graph | INFO |
 
-When the build reports fixable issues (missing parents, segment collisions), **`npm run content:fix`** runs the same build but launches an interactive resolver: it walks you through each issue, creates stub notes, adds `distinct` entries, and collects merge instructions — all from the terminal. Pending merges are printed at the end as a ready-to-copy Claude instruction block. Full details: **[src/data/pages/fieldnotes/README.md](src/data/pages/fieldnotes/README.md#interactive-mode)**
+When the build reports fixable issues (missing parents, segment collisions), **`npm run content:fix`** runs the same build but launches an interactive resolver: it walks you through each issue, creates stub notes, adds `distinct` entries, and collects merge instructions — all from the terminal. Pending merges are printed at the end as a ready-to-copy Claude instruction block. Full details: **[src/data/pages/wikinotes/README.md](src/data/pages/wikinotes/README.md#interactive-mode)**
 
 There is also an optional deep audit script (`node scripts/check-references.js`) that adds duplicate trailing ref detection, redundant ref detection, and fuzzy duplicate detection. Full validation details: **[scripts/README.md](scripts/README.md)**
 
@@ -275,12 +275,12 @@ Serverless endpoints running as Cloudflare Pages Functions. All responses includ
 
 | Endpoint | Method | Description |
 |---|---|---|
-| `/api/fieldnotes/:uid/raw` | `GET` | Raw markdown + mtime for a wikinote |
-| `/api/fieldnotes/save` | `POST` | Write to disk + incremental rebuild |
-| `/api/fieldnotes/create` | `POST` | Create new note + rebuild |
-| `/api/fieldnotes/validate` | `POST` | Parse + validate without saving |
-| `/api/fieldnotes/analyze-refs` | `POST` | Pre-delete impact analysis (inbound refs, children) |
-| `/api/fieldnotes/delete` | `POST` | Delete note + optional trailing ref cleanup |
+| `/api/wikinotes/:uid/raw` | `GET` | Raw markdown + mtime for a wikinote |
+| `/api/wikinotes/save` | `POST` | Write to disk + incremental rebuild |
+| `/api/wikinotes/create` | `POST` | Create new note + rebuild |
+| `/api/wikinotes/validate` | `POST` | Parse + validate without saving |
+| `/api/wikinotes/analyze-refs` | `POST` | Pre-delete impact analysis (inbound refs, children) |
+| `/api/wikinotes/delete` | `POST` | Delete note + optional trailing ref cleanup |
 
 ---
 
@@ -306,7 +306,7 @@ The site is an SPA — without server-side rendering, crawlers see an empty `<di
 - **`<head>`**: OG tags, Twitter cards, canonical URL, and JSON-LD structured data (Article + BreadcrumbList for posts, WebSite for `/home`, ProfilePage with Person schema for `/about`)
 - **`<body>`**: Full article text in semantic `<article>` HTML with heading, paragraphs, date, and author footer — so AI crawlers can read and index the actual content, not just metadata
 
-The build generates `public/og-manifest.json` mapping every URL to its metadata **plus full plain text body** for regular posts. For wikinotes, the edge function fetches individual `public/fieldnotes/{uid}.json` at runtime and strips HTML. Section pages (`/blog/essays`, `/lab/projects`, etc.) include article listings.
+The build generates `public/og-manifest.json` mapping every URL to its metadata **plus full plain text body** for regular posts. For wikinotes, the edge function fetches individual `public/wikinotes/{uid}.json` at runtime and strips HTML. Section pages (`/blog/essays`, `/lab/projects`, etc.) include article listings.
 
 **Additional discovery files (all generated at build time):**
 
@@ -324,7 +324,7 @@ Routing (`public/_routes.json`) sends article paths, section pages, `/home`, and
 
 ### AI development guide
 
-Repository conventions live alongside the systems they describe: this README for architecture and deployment, `scripts/README.md` for the compiler, and `src/data/pages/fieldnotes/README.md` for knowledge-graph operations. Keep those documents synchronized when their respective contracts change.
+Repository conventions live alongside the systems they describe: this README for architecture and deployment, `scripts/README.md` for the compiler, and `src/data/pages/wikinotes/README.md` for knowledge-graph operations. Keep those documents synchronized when their respective contracts change.
 
 ---
 
@@ -342,7 +342,7 @@ npm run dev          # build content + start vite dev server (includes editor AP
 npm run build        # build content + production build
 ```
 
-**Local editor:** The Vite dev server automatically loads `vite-plugins/wikinote-editor.js`, which exposes the wikinote CRUD API at `/api/fieldnotes/*`. No extra setup — just `npm run dev` and the editor UI appears on Second Brain note pages.
+**Local editor:** The Vite dev server automatically loads `vite-plugins/wikinote-editor.js`, which exposes the wikinote CRUD API at `/api/wikinotes/*`. No extra setup — just `npm run dev` and the editor UI appears on Second Brain note pages.
 
 **KV APIs in dev:** Cloudflare Pages Functions are not available behind Vite. Localhost therefore reads the canonical counters from `https://infraphysics.net` over CORS. Local article views use `GET` so previewing does not alter production analytics; reaction toggles still target the canonical API. A failed request remains unavailable (`null`) and is never displayed as a false zero.
 
