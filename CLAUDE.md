@@ -262,6 +262,9 @@ The essays type system (Lora body and subtitle, Newsreader title and headings, 4
 ### Article body type is pinned with `!important` in `global.css` above 768px
 A block in `src/styles/global.css` ("One typographic voice") forces `font-size: 1.02rem !important` and `line-height: 1.76 !important` on every `.article-content p/li/td` at 768px and up, so a per-category rule without `!important` (the wiki's `0.875rem` in `wiki-content.css` was one) silently loses on desktop and only applies on phones. Category deltas for body size must carry `!important` too, or be added to that block.
 
+### Body type rules use direct-child selectors, so boxes must be listed explicitly
+The body face and size for articles live in `src/styles/article-layout.css` on `.article-content > p`, `> ul > li`, `> ol > li` and `section > p` (direct children, `!important`). Anything nested deeper, a paragraph or a list inside a typed box (`.bkqt`), a definition list, a future fence, does not match and falls back to the sans base of `.article-blog .article-content p`. That is how a keyconcept box in a Bits2Bricks article rendered in Inter inside a serif article. When adding a container that holds prose, add its `p` and `li` to both blocks of that rule (desktop and the 767px one); when writing a typography rule for article prose, never use `>` alone.
+
 ### Body heading sizes are pinned in `global.css` for every article
 The "One typographic voice" block in `src/styles/global.css` sets `.article-content h2` to 2rem and `h3` to 1.25rem with `!important` above 768px. Any per-category heading scale has to use `!important` from a more specific selector (`.article-blog:not(.article-essays) .article-content h2`, at the end of `article.css`, is the Bits2Bricks one) or the levels collapse: before that scale, `#` and `##` rendered at the same size and `###` at body size. The convention is `#` section, `##` subsection, `###` third level; every article starts at `#`.
 
