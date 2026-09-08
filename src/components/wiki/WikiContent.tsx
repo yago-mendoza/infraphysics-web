@@ -162,6 +162,10 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allWikiNotes, cl
     if (!el) return;
 
     const onOver = (e: MouseEvent) => {
+      // A drag with the button held is a text selection, not a hover: showing the
+      // preview mid-drag re-renders under the pointer and the selection jumps to
+      // the start of the previous paragraph. Leave the selection alone.
+      if (e.buttons !== 0) return;
       const target = e.target as HTMLElement;
       const link = target.closest('a.wiki-ref-resolved') as HTMLElement | null;
 

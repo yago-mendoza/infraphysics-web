@@ -4,7 +4,7 @@
 >
 > This document is iterated against real notes: a few are rewritten, the author comments on the result, the rules here change, and only then the rest of the wiki is aligned. Treat it as the current best statement, not as finished.
 >
-> Model notes to imitate: `feedback loop` (Math//dynamical systems), `covariance` (Math//statistics), `differential equations`, `oscillator` (Math//differential equations//ODE). Notes that show what to avoid: `MySQL` (opens with a fragment), `Quantization` (a block of text with no structure), `Besu` and `channel capacity` (bullet lists of fragments).
+> Model notes to imitate: `feedback loop` (mathematics//dynamical systems), `covariance` (mathematics//statistics), `differential equations`, `oscillator` (mathematics//differential equations//ODE), and the first rewrites reviewed with the author: `quantization` (density budget, payoff in a box), `channel capacity` (links to lighten, no history), `MySQL` (a product, so history allowed). `Besu` still shows what to avoid: a bullet list of fragments.
 
 ---
 
@@ -14,16 +14,23 @@
 - **Open with one or two paragraphs**, medium-long, that define the concept by its mechanism and say why it exists. Then, if the note has several distinct points, a bullet list where every bullet is a full argument. Several paragraphs in a row with no list are fine. A list with a single item is fine. What is not fine is a wall of short paragraphs, or fragments.
 - **Sentences, not labels.** "Relational database." is not an opening; "MySQL is a relational database that runs as a server process, and most of its character follows from that" is. "Formula (Shannon-Hartley): ..." is not a bullet; "Shannon and Hartley bound the rate by the bandwidth and the signal-to-noise ratio, ..." is.
 - **A bullet is an argument.** It starts with the claim and develops it in two or three sentences with the reason, the number or the equation that makes it true, and where relevant the limit of the claim. The bullets of `feedback loop` are the reference: each one could be a paragraph on its own.
-- **Say the limits.** "A property of this example is not a universal rule." A note that states where its claims stop is a note, not a summary.
+- **Say the limits.** *A property of this example is not a universal rule.* A note that states where its claims stop is a note, not a summary.
 - **Close with the exits.** The last bullet or sentence points to the notes that continue the subject: which one covers the connections, which the timing, which the stability.
+- **Density budget.** Two dense paragraphs in a row is the ceiling. When the second one is still going, the reader is carrying too much: break the rhythm. The consequence, the payoff, the *so what* of the definition goes into a `{bkqt/keyconcept}` box (the box holds the result, never the definition), and the rest becomes bullets. The `quantization` note is the reference: definition paragraph, mechanism paragraph, the payoff in a box, then bullets.
+- **Links are the lightening device.** A sentence that names three concepts reads easily when the three are links and badly when each is defined inline, because the reader can defer what is linked. When a paragraph feels dense and cannot be cut, add links before adding words. The first two paragraphs of `channel capacity` were rewritten this way.
+- **Advanced qualifiers go in parentheses.** If a clause exists only to be exact for a specialist (*plus a scale factor shared by a block of neighbours*), it goes in parentheses so the main sentence reads without it. If it cannot be read without it, it is a child note or it is dropped.
 
 ## Tone
 
 - Sober, technical, present tense. No exclamation, no selling adjectives, no "note that", no "it is important to", no lists of advantages.
 - No em-dashes anywhere. Use a parenthesis, a period or a comma and rebuild the sentence.
 - Second person only for a computational instruction ("name the velocity as a state").
-- Define by mechanism, not by category: "An equation whose unknown is a function and whose statement is about its rate of change", never "X is an important concept in Y".
+- Define by mechanism, not by category: *An equation whose unknown is a function and whose statement is about its rate of change*, never *X is an important concept in Y*.
 - English throughout, except proper nouns and quoted material.
+- **Calm, not compressed.** This is an engineering notebook, not a mathematics text, even when it borrows the register. One idea per sentence; a connective sentence that says why the next thing matters is welcome; three facts folded into one sentence is not. When a sentence has to be reread to be parsed, it is two sentences.
+- **Technical depth is bounded by the author.** The note may go as deep as the material the author brought or would recognise, and no deeper. A bullet that only a specialist could check (the internals of GPTQ, AWQ and LLM.int8, for instance) does not belong unless the author supplied it; name the method with a link if a note exists, otherwise leave it out. A note the author cannot read is a note the author will not maintain.
+- **No history unless it explains.** Dates, founders and *before X people thought Y* stay out of a concept note. History belongs only to things anchored in time (a product, a model generation like GPT-2, a protocol version) or when it explains a design decision or why the thing works the way it does. A historical contrast that survives that test is usually an interaction with the older concept, not a paragraph.
+- **No double quotes; italics instead, and never as the first word of a sentence.** The site-wide rule is in [../STYLE.md](../STYLE.md). *Four-bit* opening a sentence reads as a heading; rebuild so the term comes after a verb.
 
 ## Numbers and equations
 

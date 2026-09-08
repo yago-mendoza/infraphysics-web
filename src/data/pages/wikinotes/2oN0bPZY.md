@@ -5,19 +5,19 @@ name: "channel capacity"
 date: "2026-03-06"
 aliases: ["Shannon-Hartley theorem", "noisy-channel coding theorem"]
 ---
-The channel capacity is the largest rate, in bits per use of the channel, at which information can cross a noisy channel with an error probability that can be made as small as one likes. It is a property of the channel alone: the noise, the bandwidth, the power allowed at the input. It says nothing about any particular message and nothing about any particular code, only about what the best possible code could achieve. Shannon defined it in 1948, in the paper that founded [[avUhQygt]], and proved the two halves that make the number meaningful.
+The channel capacity is the fastest rate at which information can cross a noisy channel and still arrive intact, measured in bits per use of the channel. It belongs to the channel, not to the message: the noise, the bandwidth and the power allowed at the input fix it, and no choice of code can move it. What a code can do is get close to it.
 
-The coding theorem says that below capacity, codes exist whose error probability goes to zero as the block length grows, and that above capacity no code does: the error probability is bounded away from zero whatever the scheme. Before 1948 the working assumption was that noise imposed a trade-off, less error only at the price of less rate, all the way down to zero rate. Shannon showed instead a threshold: a nonzero rate at which noise costs nothing except delay and cleverness in the code.
+The result that gives the number its meaning has two halves. Below capacity there are codes whose errors vanish as the blocks get longer, so noise costs delay and cleverness but not correctness. Above capacity no code works: the errors stay, whatever the scheme. The surprise is that this is a threshold and not a slope. Noise does not trade a little rate for a little reliability all the way down; it draws a line, and on the near side of the line reliable communication is free.
 
-- For the archetypal channel, a band-limited signal of power \(S\) in additive white Gaussian noise of power \(N\) over a bandwidth \(B\), the capacity has a closed form, the Shannon-Hartley theorem.
+- For the textbook channel, a band-limited signal of power \(S\) in Gaussian noise of power \(N\) over a bandwidth \(B\), the capacity has a closed form, the Shannon-Hartley theorem.
 
 {math}
 C = B \log_2\!\left(1 + \frac{S}{N}\right)
 {/math}
 
-- The shape of the formula is the lesson. Capacity grows linearly with bandwidth and only logarithmically with signal-to-noise ratio: doubling the bandwidth doubles the rate, doubling the power adds one bit per second per hertz at high SNR and far less at low SNR. This is why a wider channel beats a louder transmitter, and why the last decibels of power are the most expensive way to buy throughput.
-- The quantity that the code has to overcome is the [[JsSUul6f]] the noise injects per symbol; capacity is the mutual information between input and output, maximised over the input distribution. Rate above capacity is not "harder to decode", it is information that never arrived.
-- Model capacity is an analogy, not an instance. A model too small for a task will keep making errors however it is prompted, the way a channel driven above capacity keeps making errors however it is coded, and [[iTljPiGW]] read like empirical measurements of that ceiling. [[Et5mN8wJ]] then looks like widening the channel: more compute per problem, more bits available to reduce the uncertainty of the answer, up to a ceiling fixed by [[2oNdlB5L]]. The analogy is useful for intuition and has no theorem behind it.
+- The shape of the formula is the lesson. Capacity grows linearly with bandwidth and only logarithmically with the signal-to-noise ratio: doubling the bandwidth doubles the rate, while doubling the power adds about one bit per second per hertz when the signal is already strong, and much less when it is weak. A wider channel beats a louder transmitter, and the last decibels of power are the most expensive way to buy [[Thr0ugh8]].
+- What the code has to overcome is the [[JsSUul6f]] the noise adds to every symbol. Capacity is the mutual information between input and output, taken over the best input distribution, so rate above capacity is not *harder to decode*; it is information that never arrived.
+- Model capacity is an analogy, not an instance. A model too small for a task keeps making errors however it is prompted, the way a channel driven above capacity keeps making errors however it is coded, and [[iTljPiGW]] read like empirical measurements of that ceiling. [[Et5mN8wJ]] then looks like widening the channel: more compute per problem, more bits to reduce the uncertainty of the answer, up to a ceiling fixed by [[2oNdlB5L]]. The analogy is useful for intuition and has no theorem behind it.
 
 ## Interactions
 
