@@ -104,7 +104,7 @@ Append relevant lessons to the **Gotchas** section below. Update or remove stale
 - Personal: `/home`, `/about`, `/contact`, `/thanks`
 - Lab: `/lab/projects` (dark theme)
 - Blog: `/blog/essays`, `/blog/bits2bricks` (light theme)
-- Wiki: `/wiki`, `/wiki/:uid` (legacy `/lab/second-brain/*` URLs redirect here)
+- Wiki: `/wiki`, `/wiki/:uid` (legacy `/lab/second-brain/*` URLs redirect here). No top bar: the global nav is hidden and slides in when the pointer nears the bottom edge (`useProximityReveal`, scroll reveal on touch), with a leading Back arrow to the page the reader came from.
 - Post detail: `/lab/:category/:id` (dark), `/blog/:category/:id` (light). Blog articles share one geometry (`article-geometry.css`): essays stack the hero under the meta, Bits2Bricks put it beside the title and number the section index.
 - Theme auto-switch: `/lab/*` → dark, `/blog/*` → light (instant, no transition). Manual toggle (Shift+T) still works per-page.
 - Backgrounds: Starfield (personal, dark only), DualGrid (lab/wiki), Clean (blog posts)

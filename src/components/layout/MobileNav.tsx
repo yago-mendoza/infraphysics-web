@@ -3,12 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
-import { CloseIcon, ExternalLinkIcon, Logo, MenuIcon, MoonIcon, SunIcon } from '../icons';
+import { BackChevronIcon, CloseIcon, ExternalLinkIcon, Logo, MenuIcon, MoonIcon, SunIcon } from '../icons';
 import { secondBrainPath } from '../../config/categories';
-import { NAV_MENUS } from './Sidebar';
+import { NAV_MENUS, type NavBackAction } from './Sidebar';
 import { useRevealOnScrollUp } from '../../hooks/useRevealOnScrollUp';
 
-export const MobileNav: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: boolean }> = ({ onOpenSearch, revealOnScrollUp = false }) => {
+export const MobileNav: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: boolean; back?: NavBackAction }> = ({ onOpenSearch, revealOnScrollUp = false, back }) => {
   const [open, setOpen] = useState(false);
   const revealed = useRevealOnScrollUp(revealOnScrollUp);
   const location = useLocation();
@@ -27,7 +27,8 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?:
   return (
     <div data-hidden={(!revealed && !open) || undefined} className="global-nav-shell nav-reveal md:hidden fixed inset-x-0 bottom-3 z-50 px-3">
       <div className="h-12 px-4 flex items-center justify-between bg-th-base/95 backdrop-blur-md border border-th-border rounded-md shadow-xl">
-        <Link to="/home" className="flex items-center gap-2" aria-label="InfraPhysics home">
+        {back && <button type="button" onClick={back.onClick} className="flex items-center pr-3 mr-3 border-r border-th-border text-th-tertiary" aria-label={back.label}><BackChevronIcon className="wiki-back-icon" /></button>}
+        <Link to="/home" className="flex items-center gap-2 min-w-0" aria-label="InfraPhysics home">
           <Logo className="w-4 h-4" color="var(--text-heading)" />
           <span className="text-sm text-th-heading">{links.find(([to]) => location.pathname === to || location.pathname.startsWith(to + '/'))?.[1] ?? 'InfraPhysics'}</span>
         </Link>

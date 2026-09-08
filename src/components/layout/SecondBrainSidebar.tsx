@@ -1099,7 +1099,7 @@ export const SecondBrainSidebar: React.FC = () => {
       {/* Desktop sidebar — spacer keeps content pushed right */}
       <div className="hidden md:block flex-shrink-0" style={{ width: SECOND_BRAIN_SIDEBAR_WIDTH }} />
       <aside
-        className="hidden md:flex flex-col fixed top-12 h-[calc(100vh-3rem)] border-r border-th-hub-border overflow-hidden"
+        className="hidden md:flex flex-col fixed top-0 h-screen border-r border-th-hub-border overflow-hidden"
         style={{
           left: SIDEBAR_WIDTH,
           width: SECOND_BRAIN_SIDEBAR_WIDTH,
@@ -1136,7 +1136,7 @@ export const SecondBrainSidebar: React.FC = () => {
 
       {graphExpanded && createPortal(
         <div
-          className={`fixed bottom-0 right-0 top-12 z-[60] overflow-hidden border-l border-th-hub-border bg-th-base transition-[opacity,transform,border-radius] duration-500 ease-[cubic-bezier(.22,1,.36,1)] ${graphExpandedVisible ? 'opacity-100 scale-100 rounded-none' : graphClosing ? 'pointer-events-none opacity-0 scale-[.12] rounded-xl' : 'pointer-events-none opacity-0 scale-[.985] rounded-none'}`}
+          className={`fixed bottom-0 right-0 top-0 z-[60] overflow-hidden border-l border-th-hub-border bg-th-base transition-[opacity,transform,border-radius] duration-500 ease-[cubic-bezier(.22,1,.36,1)] ${graphExpandedVisible ? 'opacity-100 scale-100 rounded-none' : graphClosing ? 'pointer-events-none opacity-0 scale-[.12] rounded-xl' : 'pointer-events-none opacity-0 scale-[.985] rounded-none'}`}
           style={{ left: SIDEBAR_WIDTH + SECOND_BRAIN_SIDEBAR_WIDTH, transformOrigin: '0 24%' }}
           role="region"
           aria-label="Expanded Wiki graph"

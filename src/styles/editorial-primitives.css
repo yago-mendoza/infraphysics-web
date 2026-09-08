@@ -304,7 +304,7 @@
   cursor: zoom-out;
 }
 
-.editorial-lightbox-open :is(.global-nav-shell, .article-floating-bar, .wiki-topbar) {
+.editorial-lightbox-open :is(.global-nav-shell, .article-floating-bar) {
   visibility: hidden !important;
   opacity: 0 !important;
   pointer-events: none !important;

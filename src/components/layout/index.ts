@@ -5,4 +5,3 @@ export * from './MobileNav';
 export * from './Footer';
 export * from './ArticleFloatingBar';
 export * from './AmbientRails';
-export * from './WikiTopBar';

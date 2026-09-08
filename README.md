@@ -75,7 +75,7 @@ infraphysics-web/
                               #   StartHere (four-door carousel under the intro) and WikiBanner (closing plate)
       article/                # ArticleBreadcrumbs, ArticleHashtags, BlogMetabar
       sections/               # SearchResultsList, ProjectsList, EssaysList, Bits2BricksGrid
-      layout/                 # Sidebar, MobileNav, Footer, AmbientRails, ArticleFloatingBar, WikiTopBar, SecondBrainSidebar
+      layout/                 # Sidebar, MobileNav, Footer, AmbientRails, ArticleFloatingBar, SecondBrainSidebar
       ui/                     # StatusBadge, Highlight, ComplexityBar
       icons/                  # SVG icon components
       editor/                 # Wikinote editor (localhost only): CodeMirror, diagnostics, term detection, navigation, trailing refs, new note panel, delete confirmation
@@ -154,6 +154,8 @@ infraphysics-web/
       useViewCount.ts         # Per-article view counter (POST on mount, IP-deduped)
       useReaction.ts          # Heart toggle with optimistic update + revert
       usePresence.ts          # Live presence counter
+      useRevealOnScrollUp.ts  # Nav reveal on upward scroll or at page end (articles, touch wiki)
+      useProximityReveal.ts   # Nav reveal when the pointer nears the bottom edge (wiki)
       useIsLocalhost.ts       # Localhost detection for editor gating
     styles/
       global.css              # Global styles (theme tokens, images, wiki-links, animations, components). Linked from index.html

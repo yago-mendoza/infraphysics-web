@@ -1,13 +1,16 @@
 // Desktop navigation: a floating pill bar. The active page is a filled accent pill and a gear opens a small settings
 // popover (Commands, Theme, Language) instead of scattering icons along the bar. About and Writing open a hover menu.
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useCursorPreference } from '../../contexts/CursorPreferenceContext';
-import { ExternalLinkIcon, GearIcon, Logo, MoonIcon, SearchIcon, SunIcon } from '../icons';
+import { BackChevronIcon, ExternalLinkIcon, GearIcon, Logo, MoonIcon, SearchIcon, SunIcon } from '../icons';
 import { secondBrainPath } from '../../config/categories';
 import { useRevealOnScrollUp } from '../../hooks/useRevealOnScrollUp';
+import { useProximityReveal } from '../../hooks/useProximityReveal';
+
+export interface NavBackAction { label: string; onClick: () => void }
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 export const COMMAND_KEY = isMac ? '⌘K' : 'Ctrl K';
@@ -30,10 +33,16 @@ export const NAV_MENUS: Record<MenuName, { to: string; label: string }[]> = {
 };
 const isMenu = (label: string): label is MenuName => label === 'About' || label === 'Writing';
 
-export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: boolean }> = ({ onOpenSearch, revealOnScrollUp = false }) => {
+export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: boolean; proximityReveal?: boolean; back?: NavBackAction }> = ({ onOpenSearch, revealOnScrollUp = false, proximityReveal = false, back }) => {
   const location = useLocation();
   // Article pages: the bar hides while reading and slides back in on an upward scroll.
-  const revealed = useRevealOnScrollUp(revealOnScrollUp);
+  // Wiki (proximityReveal): the bar is hidden until the pointer reaches the bottom edge, and stays while
+  // it has focus or an open menu. Without hover (touch) that mode falls back to the scroll reveal.
+  const hoverDevice = useMemo(() => typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches, []);
+  const proximity = proximityReveal && hoverDevice;
+  const scrollRevealed = useRevealOnScrollUp(revealOnScrollUp || (proximityReveal && !hoverDevice));
+  const nearEdge = useProximityReveal(proximity);
+  const [focusWithin, setFocusWithin] = useState(false);
   const [open, setOpen] = useState(false);          // compact page menu (md..xl)
   const [settings, setSettings] = useState(false);  // gear popover
   const [menu, setMenu] = useState<MenuName | null>(null); // hover menu (About / Writing)
@@ -55,6 +64,8 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
   // Hover menus: open immediately, close after a short grace period so the pointer can travel to the panel.
   const showMenu = (name: MenuName) => { if (closeTimer.current) window.clearTimeout(closeTimer.current); setMenu(name); };
   const hideMenu = () => { if (closeTimer.current) window.clearTimeout(closeTimer.current); closeTimer.current = window.setTimeout(() => setMenu(null), 140); };
+
+  const revealed = proximity ? (nearEdge || focusWithin || menu !== null || settings || open) : scrollRevealed;
 
   const isActive = (path: string, label: string) => label === 'Writing'
     ? location.pathname.startsWith('/blog/')
@@ -99,7 +110,9 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
           </nav>
         </div>
       )}
-      <header data-hidden={!revealed || undefined} className="global-nav-shell nav-reveal hidden md:flex fixed bottom-5 left-1/2 -translate-x-1/2 z-50 h-[3.25rem] items-center gap-1 px-1.5 rounded-2xl bg-th-base/95 backdrop-blur-md border border-th-border shadow-[0_18px_50px_-18px_rgba(0,0,0,.45)]">
+      {proximity && <div className="nav-edge-hint hidden md:block" data-hidden={revealed || undefined} aria-hidden="true" />}
+      <header data-hidden={!revealed || undefined} onFocusCapture={() => setFocusWithin(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocusWithin(false); }} className="global-nav-shell nav-reveal hidden md:flex fixed bottom-5 left-1/2 -translate-x-1/2 z-50 h-[3.25rem] items-center gap-1 px-1.5 rounded-2xl bg-th-base/95 backdrop-blur-md border border-th-border shadow-[0_18px_50px_-18px_rgba(0,0,0,.45)]">
+        {back && <button type="button" onClick={back.onClick} className="flex items-center h-9 pl-2 pr-1.5 mr-0.5 border-r border-th-border text-th-tertiary hover:text-th-heading transition-colors" aria-label={back.label} title={back.label}><BackChevronIcon className="wiki-back-icon" /></button>}
         <Link to="/home" className="group flex items-center gap-2 pl-2.5 pr-2 shrink-0" aria-label="InfraPhysics home">
           <Logo className="w-5 h-5 transition-transform group-hover:rotate-6" color="var(--text-heading)" />
           <span className="hidden xl:inline font-mono text-[10px] tracking-[0.18em] uppercase text-th-heading">InfraPhysics</span>

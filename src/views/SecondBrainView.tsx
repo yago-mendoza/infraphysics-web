@@ -1876,7 +1876,7 @@ export const SecondBrainView: React.FC = () => {
                 </div>
               )
             ) : !isSimplified ? (
-              <div className="lg:col-span-2 lg:sticky lg:top-12 lg:self-start">
+              <div className="lg:col-span-2 lg:sticky lg:top-4 lg:self-start">
                 <hr className="lg:hidden border-t border-th-border my-6" />
                 <div>
                   <NeighborhoodGraph

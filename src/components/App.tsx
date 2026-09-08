@@ -1,14 +1,14 @@
 // App shell: provides layout structure and top-level routing
 
 import React, { Suspense, useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { CursorPreferenceProvider, useCursorPreference } from '../contexts/CursorPreferenceContext';
 import { ArticleContextProvider } from '../contexts/ArticleContext';
 import { SecondBrainHubProvider } from '../contexts/SecondBrainHubContext';
 import { categoryGroup, isSecondBrainPath, secondBrainPath } from '../config/categories';
 import { postSummaries } from '../data/postSummaries';
-import { Sidebar, MobileNav, Footer, ArticleFloatingBar, AmbientRails, WikiTopBar } from './layout';
+import { Sidebar, MobileNav, Footer, ArticleFloatingBar, AmbientRails } from './layout';
 import { ErrorBoundary } from './ErrorBoundary';
 import { RetentionHints } from './RetentionHints';
 import { ExperimentalCursor } from './ExperimentalCursor';
@@ -53,6 +53,7 @@ const ARTICLE_RETURN_KEY = 'infraphysics:article-return-to';
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const previousLocationRef = useRef(location);
   // Where the article "Back" button goes: the last non-article page visited in this tab.
   const [articleReturnTo, setArticleReturnTo] = useState<string | null>(() => { try { return sessionStorage.getItem(ARTICLE_RETURN_KEY); } catch { return null; } });
@@ -155,6 +156,14 @@ const AppLayout: React.FC = () => {
     || location.pathname.startsWith('/lab/projects');
   const clockHome = location.pathname === '/home';
   const isSecondBrain = isSecondBrainPath(location.pathname);
+  const wikiBack = useMemo(() => ({ label: 'Return to previous section', onClick: () => {
+    let destination = '/home';
+    try {
+      const stored = sessionStorage.getItem('infraphysics:wiki-return-to');
+      if (stored && !isSecondBrainPath(stored)) destination = stored;
+    } catch { /* fall back to home */ }
+    navigate(destination);
+  } }), [navigate]);
   const isArticlePage = /^\/(blog|lab)\/[^/]+\/[^/]+/.test(location.pathname) && !isSecondBrain;
   // Project detail pages drop the grid and paint the page in the box surface color
   const isProjectArticle = isArticlePage && location.pathname.startsWith('/lab/projects/');
@@ -172,7 +181,12 @@ const AppLayout: React.FC = () => {
 
       {/* Navigation: floating bar (desktop) + mobile nav for articles, sidebar+mobile nav for everything else */}
       {isSecondBrain ? (
-        <WikiTopBar onOpenSearch={openSearch} />
+        /* Wiki: no chrome of its own. The global bar hides completely and slides in when the pointer
+           reaches the bottom edge (scroll up on touch); a leading arrow returns to where the reader came from. */
+        <>
+          <MobileNav onOpenSearch={openSearch} revealOnScrollUp back={wikiBack} />
+          <Sidebar onOpenSearch={openSearch} proximityReveal back={wikiBack} />
+        </>
       ) : isArticlePage ? (
         <>
           <MobileNav onOpenSearch={openSearch} revealOnScrollUp />
@@ -205,7 +219,7 @@ const AppLayout: React.FC = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 min-w-0 flex flex-col min-h-screen">
-        <main className={`flex-grow w-full relative z-10 ${isSecondBrain ? 'max-w-[112rem] px-4 md:px-10 pt-20 pb-24 md:pt-20 md:pb-28 mx-auto' : isArticlePage ? 'px-2 pt-[4.5rem] pb-20 md:px-6 md:pt-20 md:pb-28 article-main-viewport' : 'px-6 pt-20 pb-20 md:py-16 md:pb-28 main-center-viewport'}`}>
+        <main className={`flex-grow w-full relative z-10 ${isSecondBrain ? 'max-w-[112rem] px-4 md:px-10 pt-6 pb-24 md:pt-8 md:pb-28 mx-auto' : isArticlePage ? 'px-2 pt-[4.5rem] pb-20 md:px-6 md:pt-20 md:pb-28 article-main-viewport' : 'px-6 pt-20 pb-20 md:py-16 md:pb-28 main-center-viewport'}`}>
           <Suspense fallback={<div className="min-h-screen py-20 text-center text-th-tertiary text-sm animate-pulse">Loading…</div>}>
             <React.Fragment key={location.pathname}>
             <Routes>
