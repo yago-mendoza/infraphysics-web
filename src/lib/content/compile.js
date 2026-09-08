@@ -1,3 +1,4 @@
+import { capitalizeFirst, startsSentence } from './casing.js';
 // Shared markdown compilation pipeline
 // Used by both build-content.js (Node, with Shiki) and the browser editor (without Shiki).
 //
@@ -210,7 +211,7 @@ const CROSS_DOC_ICON = `<svg class="doc-ref-icon" viewBox="0 -960 960 960" fill=
 export function processAllLinks(html, uidToMeta, wikiLinksConfig, buildErrors) {
   if (wikiLinksConfig && !wikiLinksConfig.enabled) return html;
 
-  return html.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (match, ref, displayText) => {
+  return html.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (match, ref, displayText, offset) => {
     const crossDocMatch = ref.match(/^(projects|essays|bits2bricks)\/(.*)/);
 
     if (crossDocMatch) {
@@ -233,7 +234,10 @@ export function processAllLinks(html, uidToMeta, wikiLinksConfig, buildErrors) {
     const meta = uidToMeta.get(uid);
     const currentName = meta ? meta.name : uid;
     const pipeText = displayText ? displayText.trim() : null;
-    const display = pipeText && pipeText !== currentName ? pipeText : currentName;
+    let display = pipeText && pipeText !== currentName ? pipeText : currentName;
+    // Names are stored in mid-sentence casing; a bare [[uid]] that opens a
+    // sentence or a bullet gets its capital here (never for a proper name).
+    if (!pipeText && meta && !meta.proper && /^[a-z]/.test(display) && startsSentence(html, offset)) display = capitalizeFirst(display);
     return `<a class="wiki-ref" data-uid="${uid}">${display}</a>`;
   });
 }

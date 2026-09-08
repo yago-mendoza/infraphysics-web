@@ -1,7 +1,7 @@
 ---
 uid: "Rn8tKx5D"
-address: "Web Dev//rendering"
-name: "Rendering"
+address: "web dev//rendering"
+name: "rendering"
 date: "2026-03-12"
 ---
 Where and when HTML gets built. The single most important architectural decision for a web app: it determines what crawlers see, how fast the page loads, and how much JS the browser needs.

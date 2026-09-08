@@ -1,6 +1,6 @@
 ---
 uid: "1sqlzLdR"
-address: "Web Dev//SQL//DDL"
+address: "web dev//SQL//DDL"
 name: "DDL"
 date: "2026-03-15"
 ---

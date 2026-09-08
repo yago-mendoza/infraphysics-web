@@ -1,7 +1,7 @@
 ---
 uid: "JUby2DIy"
-address: "ML//Transformer//context window"
-name: "Context Window"
+address: "ML//transformer//context window"
+name: "context window"
 date: "2020-08-22"
 ---
 A program has RAM; an LLM inference has a **context window**: the finite token budget available to the model for that generation.

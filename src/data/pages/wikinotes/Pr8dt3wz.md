@@ -1,7 +1,7 @@
 ---
 uid: "Pr8dt3wz"
-address: "ML//Transformer//feed-forward network"
-name: "Feed-Forward Network"
+address: "ML//transformer//feed-forward network"
+name: "feed-forward network"
 date: "2018-09-10"
 aliases: ["MLP"]
 ---

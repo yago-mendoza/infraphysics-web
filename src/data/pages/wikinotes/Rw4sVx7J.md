@@ -1,7 +1,7 @@
 ---
 uid: "Rw4sVx7J"
-address: "Web Dev//deploy//direct deploy"
-name: "Direct Deploy"
+address: "web dev//deploy//direct deploy"
+name: "direct deploy"
 date: "2026-03-10"
 ---
 >> 26.03.10 - wrangler pages deploy dist. that's the whole deploy. no git push, no CI, no yaml files. 300 edge locations. this is just better.

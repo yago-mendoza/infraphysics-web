@@ -1,7 +1,7 @@
 ---
 uid: "HidAb1P9"
-address: "ML//agent//harness//hidden ABI"
-name: "Hidden ABI"
+address: "ML//agent//agent harness//hidden ABI"
+name: "hidden ABI"
 date: "2026-09-03"
 ---
 

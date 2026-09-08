@@ -1,7 +1,7 @@
 ---
 uid: "Ih8nK5xW"
-address: "ML//Transformer//attention//induction head"
-name: "Induction Head"
+address: "ML//transformer//attention//induction head"
+name: "induction head"
 date: "2026-03-08"
 ---
 One of the most important discoveries of [[UHGnehtS|mechanistic interpretability]]: concrete, verifiable, and functionally understood.

@@ -1,7 +1,7 @@
 ---
 uid: "Vb8kM2nQ"
-address: "ML//Transformer//tokenizer//vocabulary"
-name: "Vocabulary"
+address: "ML//transformer//tokenizer//vocabulary"
+name: "vocabulary"
 date: "2026-03-01"
 ---
 The finite set of tokens the model knows, every possible subword unit it can produce or consume.

@@ -1,7 +1,7 @@
 ---
 uid: "aufHHy2p"
 address: "ML//neural network//backpropagation"
-name: "Backpropagation"
+name: "backpropagation"
 date: "2017-09-15"
 ---
 The algorithm that makes neural nets learn: chain rule applied backwards through the graph.

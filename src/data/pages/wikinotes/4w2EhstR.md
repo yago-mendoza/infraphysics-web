@@ -1,7 +1,7 @@
 ---
 uid: "4w2EhstR"
-address: "CS//complexity theory"
-name: "Complexity Theory"
+address: "computer science//complexity theory"
+name: "complexity theory"
 date: "2026-03-06"
 ---
 The study of how many resources (time, space, randomness) a problem requires to solve: not whether it is solvable, but how hard it is.

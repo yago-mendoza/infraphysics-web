@@ -1,7 +1,7 @@
 ---
 uid: "gc9jYTaE"
-address: "ML//Alignment//AI safety"
-name: "AI Safety"
+address: "ML//alignment//AI safety"
+name: "AI safety"
 date: "2023-09-05"
 ---
 - Ensuring AI systems do what we actually want, not just what we measured.

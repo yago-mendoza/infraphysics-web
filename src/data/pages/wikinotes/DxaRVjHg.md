@@ -1,7 +1,7 @@
 ---
 uid: "DxaRVjHg"
 address: "ML//neural network//loss function"
-name: "Loss Function"
+name: "loss function"
 date: "2017-10-22"
 ---
 A loss function turns a prediction and target into an optimization signal. Training minimizes its aggregate value through [[aufHHy2p|backpropagation]], but the loss is a chosen proxy for desired behavior—not an objective measurement of how wrong the system is.

@@ -1,6 +1,6 @@
 ---
 uid: "HwkP17xq"
-address: "ML//Time Series//Hawkes process"
+address: "ML//time series//Hawkes process"
 name: "Hawkes process"
 date: "2026-07-04"
 ---

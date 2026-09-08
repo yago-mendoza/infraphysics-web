@@ -1,7 +1,7 @@
 ---
 uid: "z1zenyXi"
-address: "Blockchain//Besu//Self-Reference"
-name: "Self-Reference"
+address: "blockchain//Besu//self-reference"
+name: "self-reference"
 date: "2025-09-07"
 ---
 - Bootnode configured with its own enode in `--bootnodes`: causes P2P initialization anomalies.

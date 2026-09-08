@@ -1,7 +1,7 @@
 ---
 uid: "Ba6mR3kL"
-address: "ML//Inference//distributional shift//basin of attraction"
-name: "Basin of Attraction"
+address: "ML//inference//distributional shift//basin of attraction"
+name: "basin of attraction"
 date: "2026-03-03"
 ---
 Regions of [[RnKMoC3a|latent space]] where certain types of continuations are strongly preferred, and the model "falls into" them based on context.

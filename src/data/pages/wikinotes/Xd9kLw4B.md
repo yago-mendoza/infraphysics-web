@@ -1,6 +1,6 @@
 ---
 uid: "Xd9kLw4B"
-address: "Web Dev//framework//Hono"
+address: "web dev//framework//Hono"
 name: "Hono"
 date: "2026-03-10"
 ---

@@ -1,6 +1,6 @@
 ---
 uid: "nlro5GOJ"
-address: "Hardware//electronics//component//capacitor"
+address: "hardware//electronics//component//capacitor"
 name: "capacitor"
 date: "2026-02-15"
 ---

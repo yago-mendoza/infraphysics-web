@@ -1,9 +1,9 @@
 ---
 uid: "G1anmsE1"
-address: "Infrastructure//Supabase//SDK"
+address: "infrastructure//Supabase//SDK"
 name: "SDK"
 date: "2026-03-15"
-distinct: ["Web Dev//SDK"]
+distinct: ["web dev//SDK"]
 ---
 [[Sb7tRx5K|Supabase]]'s client library, the specific [[w2EGofgI|SDK]] that wraps Supabase's [[WlyXzixc|REST]] API into typed functions. `npm install @supabase/supabase-js` and you're talking to your database in TypeScript.
 - Initialize with URL + publishable [[PkRkL6kd|key]]: `createClient(SUPABASE_URL, SUPABASE_ANON_KEY)`. That's the whole setup.

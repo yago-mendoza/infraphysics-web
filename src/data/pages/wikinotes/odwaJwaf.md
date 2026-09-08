@@ -1,7 +1,7 @@
 ---
 uid: "odwaJwaf"
-address: "Security//OAuth 2.0//callback URL"
-name: "Callback URL"
+address: "security//OAuth 2.0//callback URL"
+name: "callback URL"
 date: "2026-03-15"
 ---
 The redirect address where Google sends the authorization code after the user consents. It's how Google knows where to deliver the handshake.

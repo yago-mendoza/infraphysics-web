@@ -1,6 +1,6 @@
 ---
 uid: "Ra2rH4nW"
-address: "ML//Training//RLAIF"
+address: "ML//training//RLAIF"
 name: "RLAIF"
 date: "2026-03-07"
 ---

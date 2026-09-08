@@ -1,7 +1,7 @@
 ---
 uid: "HaRn3sA1"
-address: "ML//agent//harness"
-name: "Agent Harness"
+address: "ML//agent//agent harness"
+name: "agent harness"
 date: "2026-09-03"
 ---
 

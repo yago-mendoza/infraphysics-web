@@ -1,6 +1,6 @@
 ---
 uid: "Sh7kM3nQ"
-address: "ML//Training//Safe RLHF"
+address: "ML//training//Safe RLHF"
 name: "Safe RLHF"
 date: "2026-03-01"
 ---

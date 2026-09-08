@@ -1,6 +1,6 @@
 ---
 uid: Xe6SbANI
-address: "ML//Training//dataset//Common Crawl"
+address: "ML//training//dataset//Common Crawl"
 name: "Common Crawl"
 date: "2021-02-08"
 ---

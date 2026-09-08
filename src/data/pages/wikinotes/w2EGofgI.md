@@ -1,6 +1,6 @@
 ---
 uid: "w2EGofgI"
-address: "Web Dev//SDK"
+address: "web dev//SDK"
 name: "SDK"
 date: "2026-03-15"
 ---

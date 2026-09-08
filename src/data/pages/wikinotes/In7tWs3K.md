@@ -1,6 +1,6 @@
 ---
 uid: "In7tWs3K"
-address: "Infrastructure//Vercel//Inngest"
+address: "infrastructure//Vercel//Inngest"
 name: "Inngest"
 date: "2026-03-12"
 ---

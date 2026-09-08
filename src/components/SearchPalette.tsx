@@ -340,7 +340,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
       .filter(({ haystack }) => haystack.includes(q))
       .slice(0, 5)
       .map(({ note }) => ({
-        label: note.name || note.displayTitle || note.title,
+        label: note.displayTitle || note.name || note.title,
         icon: <ContentEntityIcon kind="wiki" />,
         action: () => {
           try { localStorage.setItem('infraphysics:brain-result-clicked', '1'); } catch {}

@@ -1,7 +1,7 @@
 ---
 uid: "CybEval7"
 address: "ML//benchmark//cybersecurity evaluation"
-name: "Cybersecurity Evaluation"
+name: "cybersecurity evaluation"
 date: "2026-09-04"
 ---
 

@@ -1,6 +1,6 @@
 ---
 uid: "Vc3pLx8B"
-address: "Infrastructure//Vercel"
+address: "infrastructure//Vercel"
 name: "Vercel"
 date: "2026-03-12"
 ---

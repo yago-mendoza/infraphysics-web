@@ -1,6 +1,6 @@
 ---
 uid: "IcUoe3YA"
-address: "Hardware//electronics//component//clock"
+address: "hardware//electronics//component//clock"
 name: "clock"
 date: "2026-02-15"
 ---

@@ -1,7 +1,7 @@
 ---
 uid: "Hd4nK8xS"
-address: "ML//Transformer//attention//head"
-name: "Attention Head"
+address: "ML//transformer//attention//attention head"
+name: "attention head"
 date: "2026-03-08"
 ---
 One unit of [[dpYqVkke|multi-head attention]]: its own [[Pm5xH9bL|W_Q, W_K, W_V]] projections operating on a reduced dimension (e.g. 128-dim instead of 12288)

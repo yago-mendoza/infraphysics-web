@@ -1,6 +1,6 @@
 ---
 uid: "zS3Nqz7G"
-address: "Hardware//I/O"
+address: "hardware//I/O"
 name: "I/O"
 date: "2026-02-05"
 ---

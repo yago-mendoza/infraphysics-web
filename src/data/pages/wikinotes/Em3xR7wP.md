@@ -1,7 +1,7 @@
 ---
 uid: "Em3xR7wP"
-address: "ML//Transformer//tokenizer//embedding matrix"
-name: "Embedding Matrix"
+address: "ML//transformer//tokenizer//embedding matrix"
+name: "embedding matrix"
 date: "2026-03-02"
 ---
 Converts token IDs into dense vectors: token_id 4821 → vector[512 dims]. These are trainable parameters.

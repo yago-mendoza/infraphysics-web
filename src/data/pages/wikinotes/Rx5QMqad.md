@@ -1,7 +1,7 @@
 ---
 uid: "Rx5QMqad"
-address: "ML//Inference"
-name: "Inference"
+address: "ML//inference"
+name: "inference"
 date: "2026-02-15"
 ---
 Inference runs a trained model with current inputs to produce predictions or generations. The weights are used rather than learned, although the surrounding application may retrieve information, update memory or call tools between invocations.

@@ -1,7 +1,7 @@
 ---
 uid: "Ht6nWx3K"
-address: "Web Dev//build"
-name: "Build"
+address: "web dev//build"
+name: "build"
 date: "2026-03-10"
 ---
 Compiling source code (React, TypeScript, Sass...) into static files the browser can execute directly: HTML, CSS, and JavaScript.

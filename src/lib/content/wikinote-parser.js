@@ -2,6 +2,7 @@
 // Extracts frontmatter, references, trailing refs, and description from raw markdown.
 
 import { load as loadYaml } from 'js-yaml';
+import { displayName } from './casing.js';
 
 /**
  * Parse frontmatter from raw markdown using regex + js-yaml.
@@ -203,8 +204,9 @@ export function extractWikinoteMeta(raw) {
     metadata: {
       id: uid,
       title: address,
-      displayTitle: name,
+      displayTitle: displayName(name, frontmatter.proper === true),
       name,
+      proper: frontmatter.proper === true,
       category: 'wikinotes',
       date,
       description,
@@ -224,7 +226,7 @@ export function extractWikinoteMeta(raw) {
  * Serialize wikinote metadata + content back to raw markdown.
  * Used by the editor to reconstruct the file after edits to trailing refs.
  *
- * @param {{ uid: string, address: string, name: string, date: string, aliases?: string[], supersedes?: string, distinct?: string[] }} frontmatter
+ * @param {{ uid: string, address: string, name: string, date: string, proper?: boolean, aliases?: string[], supersedes?: string, distinct?: string[] }} frontmatter
  * @param {string} bodyContent - markdown body without trailing refs
  * @param {Array<{uid: string, annotation: string|null}>} trailingRefs
  * @returns {string}
@@ -235,6 +237,7 @@ export function serializeWikinote(frontmatter, bodyContent, trailingRefs) {
   lines.push(`address: "${frontmatter.address}"`);
   lines.push(`name: "${frontmatter.name}"`);
   lines.push(`date: "${frontmatter.date}"`);
+  if (frontmatter.proper) lines.push('proper: true');
   if (frontmatter.aliases && frontmatter.aliases.length > 0) {
     lines.push(`aliases: [${frontmatter.aliases.map(a => `"${a}"`).join(', ')}]`);
   }

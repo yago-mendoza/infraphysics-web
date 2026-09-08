@@ -1,7 +1,7 @@
 ---
 uid: "tHKwydrv"
-address: "Web Dev//environment variable"
-name: "Environment Variable"
+address: "web dev//environment variable"
+name: "environment variable"
 date: "2026-03-15"
 ---
 A variable that lives outside your code: in the server's environment, not in the source files. Accessed via `process.env.NAME` in [[Wk6jPs2D|Node.js]].

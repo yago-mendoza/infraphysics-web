@@ -1,6 +1,6 @@
 ---
 uid: "gpJAZA70"
-address: "Blockchain//Consensus//Quorum"
+address: "blockchain//consensus//Quorum"
 name: "Quorum"
 date: "2025-04-14"
 ---

@@ -1,7 +1,7 @@
 ---
 uid: "Sw3pJ7cR"
-address: "ML//Transformer//attention//sliding window attention"
-name: "Sliding Window Attention"
+address: "ML//transformer//attention//sliding window attention"
+name: "sliding window attention"
 date: "2026-02-25"
 ---
 Longformer-style: each token attends only to its w nearest neighbors + a few designated global tokens.

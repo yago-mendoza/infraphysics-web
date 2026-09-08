@@ -1,6 +1,6 @@
 ---
 uid: "CvXv15xo"
-address: "ML//Evaluation//cross-validation"
+address: "ML//evaluation//cross-validation"
 name: "cross-validation"
 date: "2026-07-04"
 ---

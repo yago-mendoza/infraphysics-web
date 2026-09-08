@@ -1,6 +1,6 @@
 ---
 uid: "Vp8rBm5J"
-address: "Web Dev//Vite"
+address: "web dev//Vite"
 name: "Vite"
 date: "2026-03-10"
 ---

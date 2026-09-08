@@ -1,7 +1,7 @@
 ---
 uid: "xr0O9rcf"
-address: "Web Dev//SQL//fuzzy matching"
-name: "Fuzzy Matching"
+address: "web dev//SQL//fuzzy matching"
+name: "fuzzy matching"
 date: "2026-03-14"
 ---
 Text search that tolerates typos, partial matches, and misspellings: returns results ranked by similarity instead of requiring exact matches.

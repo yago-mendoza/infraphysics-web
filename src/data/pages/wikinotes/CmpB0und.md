@@ -1,7 +1,7 @@
 ---
 uid: "CmpB0und"
-address: "Hardware//compute-bound"
-name: "Compute-Bound"
+address: "hardware//compute-bound"
+name: "compute-bound"
 date: "2026-09-04"
 ---
 

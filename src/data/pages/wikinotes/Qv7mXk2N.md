@@ -1,7 +1,7 @@
 ---
 uid: "Qv7mXk2N"
-address: "ML//Alignment//mechanistic interpretability//activation steering"
-name: "Activation Steering"
+address: "ML//alignment//mechanistic interpretability//activation steering"
+name: "activation steering"
 date: "2026-04-08"
 ---
 Intervening on a model's behavior by adding or subtracting concept vectors to/from the [[Rs6cD4vX|residual stream]] during inference; no weights are modified.

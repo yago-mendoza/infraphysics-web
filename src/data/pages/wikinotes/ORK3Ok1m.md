@@ -1,7 +1,7 @@
 ---
 uid: "ORK3Ok1m"
-address: "Hardware"
-name: "Hardware"
+address: "hardware"
+name: "hardware"
 date: "2026-02-06"
 ---
 The physical layer of computing: circuits, boards, and systems that execute software.

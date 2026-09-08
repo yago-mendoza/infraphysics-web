@@ -1,7 +1,7 @@
 ---
 uid: "TIQNpwbS"
 address: "ML//RAG//vector database"
-name: "Vector Database"
+name: "vector database"
 date: "2026-02-15"
 ---
 Stores vectors paired with resources (chunked to ~500 token paragraphs)

@@ -1,7 +1,7 @@
 ---
 uid: "En6fL2qY"
-address: "ML//Transformer//encoder"
-name: "Encoder"
+address: "ML//transformer//encoder"
+name: "encoder"
 date: "2026-02-24"
 ---
 [[MwbJnjdN|BERT]]-style architecture: [[vCs7RZqL|self-attention]] is fully bidirectional (no [[Cm7jR4sQ|masking]])

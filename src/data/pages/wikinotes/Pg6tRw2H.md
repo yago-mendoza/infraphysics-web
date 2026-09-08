@@ -1,6 +1,6 @@
 ---
 uid: "Pg6tRw2H"
-address: "Web Dev//SQL//PostgreSQL"
+address: "web dev//SQL//PostgreSQL"
 name: "PostgreSQL"
 date: "2026-03-12"
 ---

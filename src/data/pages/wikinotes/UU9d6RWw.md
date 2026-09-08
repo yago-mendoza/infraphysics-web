@@ -1,7 +1,7 @@
 ---
 uid: "UU9d6RWw"
-address: "Web Dev//SQL//index"
-name: "Index"
+address: "web dev//SQL//index"
+name: "index"
 date: "2026-03-15"
 ---
 A data structure that makes queries faster, like the index at the back of a book. Without it, the database scans every row (full table scan). With it, it jumps straight to the matching rows.

@@ -1,7 +1,7 @@
 ---
 uid: "tG39sLwD"
 address: "ML//hallucination"
-name: "Hallucination"
+name: "hallucination"
 date: "2026-03-04"
 ---
 - Models generating confident, plausible, but factually wrong content.

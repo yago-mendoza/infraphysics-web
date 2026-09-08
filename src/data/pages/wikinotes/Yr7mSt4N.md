@@ -1,6 +1,6 @@
 ---
 uid: "Yr7mSt4N"
-address: "Infrastructure//storage//managed database"
+address: "infrastructure//storage//managed database"
 name: "managed database"
 date: "2026-03-10"
 ---

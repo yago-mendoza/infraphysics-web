@@ -1,6 +1,6 @@
 ---
 uid: "Tm8rBx5K"
-address: "Infrastructure//timeout"
+address: "infrastructure//timeout"
 name: "timeout"
 date: "2026-03-12"
 ---

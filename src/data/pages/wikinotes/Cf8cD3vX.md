@@ -1,7 +1,7 @@
 ---
 uid: "Cf8cD3vX"
-address: "ML//Training//fine-tuning//catastrophic forgetting"
-name: "Catastrophic Forgetting"
+address: "ML//training//fine-tuning//catastrophic forgetting"
+name: "catastrophic forgetting"
 date: "2026-03-05"
 ---
 When [[esHo5jMx|fine-tuning]] on new data destroys knowledge learned during [[2oNdlB5L|pre-training]]. The model gets better at the new task but forgets everything else. The weights that encoded general knowledge get overwritten by task-specific gradients.

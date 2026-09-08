@@ -1,7 +1,7 @@
 ---
 uid: "Ct9xL5mW"
-address: "ML//Training//contrastive learning"
-name: "Contrastive Learning"
+address: "ML//training//contrastive learning"
+name: "contrastive learning"
 date: "2026-03-08"
 ---
 Train with pairs and triplets: (query, positive match, negative match). Push positive pairs closer in vector space, pull negative pairs apart.

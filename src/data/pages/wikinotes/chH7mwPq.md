@@ -1,6 +1,6 @@
 ---
 uid: "chH7mwPq"
-address: "Blockchain//Consensus//Clique"
+address: "blockchain//consensus//Clique"
 name: "Clique"
 date: "2025-04-14"
 ---

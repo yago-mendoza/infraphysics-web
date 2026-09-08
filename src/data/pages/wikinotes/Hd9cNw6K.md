@@ -1,7 +1,7 @@
 ---
 uid: "Hd9cNw6K"
-address: "Web Dev//runtime"
-name: "Runtime"
+address: "web dev//runtime"
+name: "runtime"
 date: "2026-03-10"
 ---
 The environment where code executes. The runtime provides the available APIs, memory limits, event loop, and execution model.

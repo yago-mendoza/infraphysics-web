@@ -1,7 +1,7 @@
 ---
 uid: "Ov3tJ8kR"
-address: "ML//Inference//extended thinking//overthinking"
-name: "Overthinking"
+address: "ML//inference//extended thinking//overthinking"
+name: "overthinking"
 date: "2026-03-05"
 ---
 Documented empirically: forcing long [[Et5mN8wJ|extended thinking]] on simple problems makes the model **worse**, not better.

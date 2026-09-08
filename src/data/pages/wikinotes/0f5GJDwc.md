@@ -1,6 +1,6 @@
 ---
 uid: "0f5GJDwc"
-address: "ML//Training//RLHF"
+address: "ML//training//RLHF"
 name: "RLHF"
 date: "2026-02-15"
 ---

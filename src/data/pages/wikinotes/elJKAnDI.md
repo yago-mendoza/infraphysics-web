@@ -1,6 +1,6 @@
 ---
 uid: "elJKAnDI"
-address: "ML//Multimodal//SAM"
+address: "ML//multimodal//SAM"
 name: "SAM"
 date: "2026-02-26"
 ---

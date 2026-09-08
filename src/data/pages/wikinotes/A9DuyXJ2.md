@@ -1,7 +1,7 @@
 ---
 uid: "A9DuyXJ2"
 address: "ML//CNN//convolution"
-name: "Convolution"
+name: "convolution"
 date: "2018-01-05"
 ---
 A convolution applies the same learned kernel at every spatial position, producing a local weighted sum. Small kernels can compose edges and textures into progressively larger receptive fields.

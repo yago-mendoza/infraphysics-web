@@ -1,6 +1,6 @@
 ---
 uid: "Mq4sLn8W"
-address: "Web Dev//SQL//MySQL"
+address: "web dev//SQL//MySQL"
 name: "MySQL"
 date: "2026-03-12"
 ---

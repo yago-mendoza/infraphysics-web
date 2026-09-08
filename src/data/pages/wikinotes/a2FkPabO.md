@@ -1,6 +1,6 @@
 ---
 uid: "a2FkPabO"
-address: "Hardware//GPU//integrated"
+address: "hardware//GPU//integrated"
 name: "integrated"
 date: "2026-02-05"
 ---

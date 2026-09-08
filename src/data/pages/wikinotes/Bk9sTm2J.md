@@ -1,7 +1,7 @@
 ---
 uid: "Bk9sTm2J"
-address: "Web Dev//backend"
-name: "Backend"
+address: "web dev//backend"
+name: "backend"
 date: "2026-03-12"
 ---
 Code that runs on a server, not in the browser. If it runs in the browser, it's [[ISjyfjZ6|frontend]], regardless of the language. What makes it "backend" is where it executes, not what language it's written in.

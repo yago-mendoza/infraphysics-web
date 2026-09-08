@@ -1,6 +1,6 @@
 ---
 uid: "Sv2nKx8R"
-address: "Web Dev//SQL"
+address: "web dev//SQL"
 name: "SQL"
 date: "2026-03-10"
 ---

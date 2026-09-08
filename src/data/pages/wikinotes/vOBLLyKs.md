@@ -1,7 +1,7 @@
 ---
 uid: "vOBLLyKs"
-address: "Blockchain//Sync"
-name: "Sync"
+address: "blockchain//sync"
+name: "sync"
 date: "2025-10-11"
 ---
 - Full sync: download all blocks from genesis, re-execute every transaction (days to weeks for Mainnet).

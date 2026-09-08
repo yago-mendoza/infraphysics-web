@@ -1,7 +1,7 @@
 ---
 uid: "Mn3gRp6H"
-address: "Web Dev//dev proxy"
-name: "Dev Proxy"
+address: "web dev//dev proxy"
+name: "dev proxy"
 date: "2026-03-10"
 ---
 >> 26.03.10 - vite proxies /api/* to wrangler on :8788. browser has no idea it's talking to two processes. this is the kind of thing that takes 40 minutes to understand and 3 seconds to configure. proxy: { '/api': { target: 'http://localhost:8788' } }. that's it. production doesn't need this because pages serves both from the same domain. the proxy only exists to make dev feel like prod. clean.

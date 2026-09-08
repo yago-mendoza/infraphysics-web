@@ -1,7 +1,7 @@
 ---
 uid: "ActP3rcp"
 address: "ML//agent//active perception"
-name: "Active Perception"
+name: "active perception"
 date: "2026-09-03"
 ---
 

@@ -53,7 +53,7 @@
 
 - `name` and the last address segment are the same string, in the form the term takes **in the middle of a sentence**: common nouns in lowercase (`feedback loop`, `initial condition`), proper nouns, products and acronyms in their own casing (`Kalman filter`, `PID controller`, `RLHF`, `EtherNet/IP`, `npm`).
 - Shortest canonical term. No articles, no trailing qualifiers, singular unless the concept is inherently plural (`differential equations` as a family, `Empty blocks` as a Besu term).
-- The title of the note, its card and its directory entry render the first letter capitalised automatically; a link mid-sentence shows the name verbatim; a link that opens a sentence or a bullet is capitalised by the compiler. A note whose name must never be recased (`npm`, `iOS`) declares `proper: true`. Until that rendering support lands, capitalise by hand at sentence starts with `[[uid|Feedback loop]]`.
+- The title of the note, its card, the search results and the directory show the first letter capitalised (`displayTitle`, built by `displayName()` in `src/lib/content/casing.js`); a bare `[[uid]]` mid-sentence shows the name verbatim; a bare `[[uid]]` that opens a sentence or a bullet is capitalised by the compiler. A note whose name must never be recased (`npm`, `iOS`) declares `proper: true` in its frontmatter. Never write `[[uid|Feedback loop]]` just to capitalise: the pipe is for a different wording, not for casing.
 - Parent segments follow the same rule.
 
 ## Paths

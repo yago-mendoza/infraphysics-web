@@ -1,7 +1,7 @@
 ---
 uid: "dddJeFpb"
-address: "Web Dev//frontend//layout"
-name: "Layout"
+address: "web dev//frontend//layout"
+name: "layout"
 date: "2026-03-10"
 ---
 Layout maps content and controls onto a finite [[1F2Inhbp|viewport]] while preserving hierarchy, reading order, and usable relationships across screen sizes.

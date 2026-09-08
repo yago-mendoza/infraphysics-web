@@ -1,7 +1,7 @@
 ---
 uid: "Kd3yK6jL"
-address: "ML//Training//knowledge distillation"
-name: "Knowledge Distillation"
+address: "ML//training//knowledge distillation"
+name: "knowledge distillation"
 date: "2026-03-02"
 ---
 Training a small "student" model to mimic a large "teacher" model's behavior, instead of training from scratch on raw data.

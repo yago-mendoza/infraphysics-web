@@ -1,6 +1,6 @@
 ---
 uid: "Z9W6rweD"
-address: "Hardware//CPU//core"
+address: "hardware//CPU//core"
 name: "core"
 date: "2026-02-05"
 ---

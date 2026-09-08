@@ -1,7 +1,7 @@
 ---
 uid: "Ar7mK4nQ"
 address: "ML//autoregressive"
-name: "Autoregressive"
+name: "autoregressive"
 date: "2026-02-25"
 ---
 The generation paradigm behind [[U7ljk7Wf|GPT]] and all decoder-only models: predict the next token given all previous tokens, one at a time, left to right.

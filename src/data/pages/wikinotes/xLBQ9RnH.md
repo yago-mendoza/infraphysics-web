@@ -1,7 +1,7 @@
 ---
 uid: "xLBQ9RnH"
-address: "Infrastructure//Docker//Volume"
-name: "Volume"
+address: "infrastructure//Docker//volume"
+name: "volume"
 date: "2025-02-03"
 ---
 - `-v /host/path:/container/path` creates a persistent bridge between host and container file systems.

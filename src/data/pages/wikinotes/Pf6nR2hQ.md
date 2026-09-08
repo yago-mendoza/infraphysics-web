@@ -1,7 +1,7 @@
 ---
 uid: "Pf6nR2hQ"
-address: "ML//Training//parameter freezing"
-name: "Parameter Freezing"
+address: "ML//training//parameter freezing"
+name: "parameter freezing"
 date: "2026-03-05"
 ---
 Choosing which model parameters to update during [[esHo5jMx|fine-tuning]] and which to lock (freeze)

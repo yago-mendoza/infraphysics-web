@@ -1,7 +1,7 @@
 ---
 uid: "Bk7UXmQT"
-address: "ML//Alignment//Goodhart's curse"
-name: "Goodhart's Curse"
+address: "ML//alignment//Goodhart's curse"
+name: "Goodhart's curse"
 date: "2026-02-15"
 ---
 When a measure becomes a target, it ceases to be a good measure.

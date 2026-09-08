@@ -1,7 +1,7 @@
 ---
 uid: "h7ZzT64Z"
 address: "ML//emergent behavior"
-name: "Emergent Behavior"
+name: "emergent behavior"
 date: "2022-08-10"
 ---
 - Capabilities that appear suddenly at scale: arithmetic, chain-of-thought reasoning, translation to unseen languages.

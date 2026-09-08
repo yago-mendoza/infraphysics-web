@@ -1,7 +1,7 @@
 ---
 uid: "Sandb0x1"
-address: "Security//sandbox"
-name: "Sandbox"
+address: "security//sandbox"
+name: "sandbox"
 date: "2026-09-04"
 ---
 

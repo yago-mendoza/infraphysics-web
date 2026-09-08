@@ -1,6 +1,6 @@
 ---
 uid: "Edr7P0nt"
-address: "Security//EDR"
+address: "security//EDR"
 name: "EDR"
 date: "2026-09-04"
 ---

@@ -1,7 +1,7 @@
 ---
 uid: "Dp2kN6wF"
-address: "ML//Transformer//attention//dot product"
-name: "Dot Product Attention"
+address: "ML//transformer//attention//dot product attention"
+name: "dot product attention"
 date: "2026-03-01"
 ---
 The mechanism that measures relevance: Q · Kᵀ produces an N×N matrix of alignment scores between every pair of tokens.

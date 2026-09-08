@@ -1,7 +1,7 @@
 ---
 uid: "Wkwgtznl"
-address: "Math//compositionality"
-name: "Compositionality"
+address: "mathematics//compositionality"
+name: "compositionality"
 date: "2026-03-06"
 ---
 The principle that complex functions can be built by composing simpler ones: \(f = f_n \circ f_{n-1} \circ \cdots \circ f_1\)

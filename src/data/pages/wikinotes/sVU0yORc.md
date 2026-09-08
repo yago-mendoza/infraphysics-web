@@ -1,6 +1,6 @@
 ---
 uid: "sVU0yORc"
-address: "ML//Multimodal//LLaVA"
+address: "ML//multimodal//LLaVA"
 name: "LLaVA"
 date: "2026-03-01"
 ---

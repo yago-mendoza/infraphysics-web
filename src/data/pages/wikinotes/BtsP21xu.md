@@ -1,6 +1,6 @@
 ---
 uid: "BtsP21xu"
-address: "Math//statistics//bootstrap"
+address: "mathematics//statistics//bootstrap"
 name: "bootstrap"
 date: "2026-07-04"
 ---

@@ -1,7 +1,7 @@
 ---
 uid: "Economy1"
-address: "Economics"
-name: "Economics"
+address: "economics"
+name: "economics"
 date: "2026-09-04"
 ---
 

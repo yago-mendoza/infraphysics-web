@@ -1,7 +1,7 @@
 ---
 uid: "mkgkTEX5"
-address: "Blockchain//Besu//Stall"
-name: "Stall"
+address: "blockchain//Besu//stall"
+name: "stall"
 date: "2025-05-18"
 ---
 Network "stall" = blocks stop being produced, transactions stuck in [[WVcyM3Sp|mempool]] forever.

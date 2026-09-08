@@ -1,7 +1,7 @@
 ---
 uid: "avBp6NIF"
-address: "ML//Training//dataset//synthetic data"
-name: "Synthetic Data"
+address: "ML//training//dataset//synthetic data"
+name: "synthetic data"
 date: "2024-01-20"
 ---
 Teaching AIs with other AIs' homework: it works surprisingly well until the errors start compounding and nobody remembers what the original looked like.

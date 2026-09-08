@@ -1,7 +1,7 @@
 ---
 uid: "6AczGctL"
-address: "Blockchain//Gossip"
-name: "Gossip"
+address: "blockchain//gossip"
+name: "gossip"
 date: "2025-03-08"
 ---
 - Cascade propagation: a node tells its neighbors, they tell theirs. Information spreads exponentially.

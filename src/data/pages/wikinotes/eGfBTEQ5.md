@@ -1,7 +1,7 @@
 ---
 uid: "eGfBTEQ5"
-address: "ML//Transformer//positional encoding"
-name: "Positional Encoding"
+address: "ML//transformer//positional encoding"
+name: "positional encoding"
 date: "2018-08-20"
 ---
 Without position info, a Transformer treats "gato muerde perro" the same as "perro muerde gato" (permutation invariant).

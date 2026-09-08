@@ -1,7 +1,7 @@
 ---
 uid: "WA8fVNaT"
 address: "ML//agent"
-name: "Agent"
+name: "agent"
 date: "2024-03-15"
 ---
 An AI agent repeatedly chooses actions from observations in pursuit of a task. In an LLM agent, the model proposes the next response or [[mydQy6ia|tool]] call and an [[HaRn3sA1|agent harness]] executes the surrounding loop.

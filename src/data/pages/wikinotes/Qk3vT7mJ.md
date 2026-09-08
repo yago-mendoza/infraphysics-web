@@ -1,6 +1,6 @@
 ---
 uid: "Qk3vT7mJ"
-address: "ML//Transformer//attention//Q, K, V"
+address: "ML//transformer//attention//Q, K, V"
 name: "Q, K, V"
 date: "2026-03-07"
 ---

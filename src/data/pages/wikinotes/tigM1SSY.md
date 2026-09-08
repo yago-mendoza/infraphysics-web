@@ -1,7 +1,7 @@
 ---
 uid: "tigM1SSY"
-address: "ML//Tree of Thought"
-name: "Tree of Thought"
+address: "ML//tree of thought"
+name: "tree of thought"
 date: "2026-02-28"
 ---
 - Generalization of [[ct4swTMy|chain of thought]]: explore multiple reasoning paths with lookahead and backtracking.

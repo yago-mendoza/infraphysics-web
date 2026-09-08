@@ -1,6 +1,6 @@
 ---
 uid: "Gk6tPm2H"
-address: "Web Dev//deploy//CI/CD"
+address: "web dev//deploy//CI/CD"
 name: "CI/CD"
 date: "2026-03-10"
 ---

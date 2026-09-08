@@ -1,7 +1,7 @@
 ---
 uid: "R00tAc5S"
-address: "Security//root access"
-name: "Root Access"
+address: "security//root access"
+name: "root access"
 date: "2026-09-04"
 ---
 

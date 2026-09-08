@@ -1,7 +1,7 @@
 ---
 uid: "Pm5xH9bL"
-address: "ML//Transformer//attention//projection matrices"
-name: "Projection Matrices"
+address: "ML//transformer//attention//projection matrices"
+name: "projection matrices"
 date: "2026-03-08"
 ---
 The learned weight matrices that create [[Qk3vT7mJ|Q, K, V]] from raw embeddings:

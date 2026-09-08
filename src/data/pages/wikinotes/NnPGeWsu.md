@@ -1,6 +1,6 @@
 ---
 uid: "NnPGeWsu"
-address: "Web Dev//deploy//CI/CD//GitHub Actions"
+address: "web dev//deploy//CI/CD//GitHub Actions"
 name: "GitHub Actions"
 date: "2026-03-14"
 ---

@@ -1,6 +1,6 @@
 ---
 uid: "ErlS10xj"
-address: "ML//Training//early stopping"
+address: "ML//training//early stopping"
 name: "early stopping"
 date: "2026-07-04"
 ---

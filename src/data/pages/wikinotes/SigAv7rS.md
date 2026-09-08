@@ -1,7 +1,7 @@
 ---
 uid: "SigAv7rS"
-address: "Security//signature-based antivirus"
-name: "Signature-Based Antivirus"
+address: "security//signature-based antivirus"
+name: "signature-based antivirus"
 date: "2026-09-04"
 ---
 

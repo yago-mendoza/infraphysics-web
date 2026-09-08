@@ -1,6 +1,6 @@
 ---
 uid: "WlyXzixc"
-address: "Web Dev//API//REST"
+address: "web dev//API//REST"
 name: "REST"
 date: "2026-03-15"
 ---

@@ -1,6 +1,6 @@
 ---
 uid: "WuElJPBw"
-address: "ML//Multimodal//YOLO"
+address: "ML//multimodal//YOLO"
 name: "YOLO"
 date: "2026-02-26"
 ---

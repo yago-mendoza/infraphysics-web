@@ -1,6 +1,6 @@
 ---
 uid: "egoxqpmC"
-address: "Hardware//CPU//ALU"
+address: "hardware//CPU//ALU"
 name: "ALU"
 date: "2026-02-05"
 ---

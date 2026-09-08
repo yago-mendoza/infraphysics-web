@@ -1,7 +1,7 @@
 ---
 uid: "AiStack7"
 address: "ML//AI infrastructure stack"
-name: "AI Infrastructure Stack"
+name: "AI infrastructure stack"
 date: "2026-09-04"
 ---
 

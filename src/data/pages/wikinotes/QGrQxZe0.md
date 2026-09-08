@@ -1,6 +1,6 @@
 ---
 uid: "QGrQxZe0"
-address: "CS//complexity theory//PSPACE"
+address: "computer science//complexity theory//PSPACE"
 name: "PSPACE"
 date: "2026-03-08"
 ---

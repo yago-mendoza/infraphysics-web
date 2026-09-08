@@ -1,6 +1,6 @@
 ---
 uid: "vf6KPYwT"
-address: "Tools//Google//APIs"
+address: "tools//Google//APIs"
 name: "APIs"
 date: "2026-03-10"
 ---

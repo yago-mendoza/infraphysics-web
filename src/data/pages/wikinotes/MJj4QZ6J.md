@@ -1,8 +1,8 @@
 ---
 uid: "MJj4QZ6J"
-address: "Hardware//laptop//UI"
+address: "hardware//laptop//UI"
 name: "UI"
-distinct: ["Web Dev//UI"]
+distinct: ["web dev//UI"]
 date: "2026-02-05"
 ---
 The laptop UI is the complete interaction surface between a person and the machine: display, keyboard, trackpad, camera, microphone, speakers, ports, indicators, firmware behavior, and operating-system feedback.

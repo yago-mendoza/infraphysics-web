@@ -1,7 +1,7 @@
 ---
 uid: "uMaVCTAm"
-address: "Networks//Gateway"
-name: "Gateway"
+address: "networks//gateway"
+name: "gateway"
 date: "2025-02-04"
 ---
 - Default gateway is the router's IP (e.g. 192.168.1.1), first hop for any traffic destined outside the LAN.

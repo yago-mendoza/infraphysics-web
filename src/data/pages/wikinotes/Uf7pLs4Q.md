@@ -1,6 +1,6 @@
 ---
 uid: "Uf7pLs4Q"
-address: "Web Dev//CRUD"
+address: "web dev//CRUD"
 name: "CRUD"
 date: "2026-03-10"
 ---

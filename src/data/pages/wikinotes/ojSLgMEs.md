@@ -1,7 +1,7 @@
 ---
 uid: "ojSLgMEs"
-address: "Blockchain//Block"
-name: "Block"
+address: "blockchain//block"
+name: "block"
 date: "2025-03-08"
 ---
 - Blocks bundle transactions, created by validators at regular intervals.

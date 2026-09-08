@@ -1,9 +1,9 @@
 ---
 uid: "J2OCjPpb"
-address: "Blockchain//Besu//Node Roles//Bootnode"
-name: "Bootnode"
+address: "blockchain//Besu//node roles//bootnode"
+name: "bootnode"
 date: "2026-02-17"
-distinct: ["Blockchain//Bootnode"]
+distinct: ["blockchain//bootnode"]
 ---
 - In a Besu network: other nodes list its enode in `--bootnodes`, the discovery entry point.
 - Not a special node type. Any node _can_ be a bootnode if others point to it.

@@ -1,6 +1,6 @@
 ---
 uid: "Bx3hKp8M"
-address: "Infrastructure//storage//bucket"
+address: "infrastructure//storage//bucket"
 name: "bucket"
 date: "2026-03-10"
 ---

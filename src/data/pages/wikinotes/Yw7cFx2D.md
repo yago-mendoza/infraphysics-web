@@ -1,6 +1,6 @@
 ---
 uid: "Yw7cFx2D"
-address: "Web Dev//npx"
+address: "web dev//npx"
 name: "npx"
 date: "2026-03-10"
 ---

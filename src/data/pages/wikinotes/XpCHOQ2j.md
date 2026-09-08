@@ -1,7 +1,7 @@
 ---
 uid: "XpCHOQ2j"
 address: "ML//prompt injection"
-name: "Prompt Injection"
+name: "prompt injection"
 date: "2026-02-27"
 ---
 - Attack where adversarial text in the input overrides the system prompt or instructions.

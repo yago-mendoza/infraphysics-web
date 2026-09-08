@@ -1,6 +1,6 @@
 ---
 uid: "Lk2rXj6D"
-address: "Infrastructure//Cloudflare//Workers"
+address: "infrastructure//Cloudflare//Workers"
 name: "Workers"
 date: "2026-03-10"
 ---

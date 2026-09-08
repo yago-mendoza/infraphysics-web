@@ -1,7 +1,7 @@
 ---
 uid: "w0TIn2t1"
-address: "Blockchain//State"
-name: "State"
+address: "blockchain//state"
+name: "state"
 date: "2025-03-09"
 ---
 - "World state" = snapshot of all account balances, contract storage, nonces at a given block height.

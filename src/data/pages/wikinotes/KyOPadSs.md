@@ -1,7 +1,7 @@
 ---
 uid: "KyOPadSs"
-address: "Security//token"
-name: "Token"
+address: "security//token"
+name: "token"
 date: "2026-03-15"
 ---
 A string that proves something: identity, permission, or both. Three types show up in an app with [[Oa3kTm7D|OAuth]]:

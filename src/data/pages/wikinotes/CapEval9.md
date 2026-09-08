@@ -1,7 +1,7 @@
 ---
 uid: "CapEval9"
 address: "ML//capability evaluation"
-name: "Capability Evaluation"
+name: "capability evaluation"
 date: "2026-09-04"
 ---
 

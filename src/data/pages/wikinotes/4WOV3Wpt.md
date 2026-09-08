@@ -1,7 +1,7 @@
 ---
 uid: "4WOV3Wpt"
-address: "ML//Transformer//encoder-decoder"
-name: "Encoder-Decoder"
+address: "ML//transformer//encoder-decoder"
+name: "encoder-decoder"
 date: "2018-08-20"
 ---
 The original Transformer architecture: [[En6fL2qY|encoder]] processes input bidirectionally, [[Dc8sW4nR|decoder]] generates output autoregressively.

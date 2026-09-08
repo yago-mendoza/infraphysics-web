@@ -1,6 +1,6 @@
 ---
 uid: "Al5fD9kX"
-address: "ML//Transformer//positional encoding//ALiBi"
+address: "ML//transformer//positional encoding//ALiBi"
 name: "ALiBi"
 date: "2026-03-02"
 ---

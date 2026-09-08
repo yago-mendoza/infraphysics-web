@@ -1,7 +1,7 @@
 ---
 uid: "ClosdM7P"
 address: "ML//closed model"
-name: "Closed Model"
+name: "closed model"
 date: "2026-09-04"
 ---
 

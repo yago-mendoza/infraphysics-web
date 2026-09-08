@@ -1,8 +1,8 @@
 ---
 uid: "Xgibd7Nl"
-address: "Hardware//storage//cache"
+address: "hardware//storage//cache"
 name: "cache"
-distinct: ["Hardware//CPU//cache", "Networks//cache"]
+distinct: ["hardware//CPU//cache", "networks//cache"]
 date: "2026-02-06"
 ---
 - Fast buffer (usually DRAM or SLC flash) between the host and the storage medium.

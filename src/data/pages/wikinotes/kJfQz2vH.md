@@ -1,7 +1,7 @@
 ---
 uid: kJfQz2vH
-address: "ML//Training//distributed training"
-name: "Distributed Training"
+address: "ML//training//distributed training"
+name: "distributed training"
 date: "2022-01-20"
 ---
 

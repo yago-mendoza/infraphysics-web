@@ -1,6 +1,6 @@
 ---
 uid: "S4Lv70Vk"
-address: "Hardware//chip//desktop CPU"
+address: "hardware//chip//desktop CPU"
 name: "desktop CPU"
 date: "2026-02-15"
 ---

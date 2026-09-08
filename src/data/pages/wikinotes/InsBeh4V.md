@@ -1,7 +1,7 @@
 ---
 uid: "InsBeh4V"
 address: "ML//agent//instrumental behavior"
-name: "Instrumental Behavior"
+name: "instrumental behavior"
 date: "2026-09-04"
 ---
 

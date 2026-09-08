@@ -1,7 +1,7 @@
 ---
 uid: "Sr7tD3vH"
 address: "ML//RAG//sentence transformer"
-name: "Sentence Transformer"
+name: "sentence transformer"
 date: "2026-03-05"
 ---
 [[MwbJnjdN|BERT]] or RoBERTa models fine-tuned with [[Ct9xL5mW|contrastive learning]] specifically for producing semantically meaningful sentence embeddings.

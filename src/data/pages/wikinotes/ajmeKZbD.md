@@ -1,7 +1,7 @@
 ---
 uid: ajmeKZbD
-address: "ML//Training//dataset//data contamination"
-name: "Data Contamination"
+address: "ML//training//dataset//data contamination"
+name: "data contamination"
 date: "2023-06-15"
 ---
 

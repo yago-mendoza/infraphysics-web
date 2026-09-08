@@ -1,7 +1,7 @@
 ---
 uid: "JdSKWaAz"
-address: "Systems Theory//Ashby's Law"
-name: "Ashby's Law"
+address: "systems theory//Ashby's law"
+name: "Ashby's law"
 date: "2026-03-08"
 ---
 W. Ross Ashby's Law of Requisite Variety (1956): "only variety can absorb variety": a controller must have at least as many possible responses as the environment has possible disturbances.

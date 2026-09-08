@@ -1,7 +1,7 @@
 ---
 uid: "Fo4opNIG"
-address: "Blockchain//Consensus"
-name: "Consensus"
+address: "blockchain//consensus"
+name: "consensus"
 date: "2025-04-14"
 ---
 - The rules for who creates the next block and how the network agrees it's valid.

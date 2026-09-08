@@ -1,6 +1,6 @@
 ---
 uid: "58TuBQEb"
-address: "Hardware//NVIDIA//Orin"
+address: "hardware//NVIDIA//Orin"
 name: "Orin"
 date: "2026-02-15"
 ---

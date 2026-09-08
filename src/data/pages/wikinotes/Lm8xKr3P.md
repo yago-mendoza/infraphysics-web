@@ -1,6 +1,6 @@
 ---
 uid: "Lm8xKr3P"
-address: "Web Dev//SEO//AEO//llms.txt"
+address: "web dev//SEO//AEO//llms.txt"
 name: "llms.txt"
 date: "2026-03-08"
 ---

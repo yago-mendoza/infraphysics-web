@@ -1,6 +1,6 @@
 ---
 uid: "PrATEjcr"
-address: "Hardware//peripheral"
+address: "hardware//peripheral"
 name: "peripheral"
 date: "2026-02-05"
 ---

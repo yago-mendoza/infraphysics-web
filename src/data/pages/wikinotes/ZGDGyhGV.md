@@ -1,7 +1,7 @@
 ---
 uid: "ZGDGyhGV"
-address: "infraphysics//Localhost Editor"
-name: "Localhost Editor"
+address: "infraphysics//localhost editor"
+name: "localhost editor"
 date: "2026-03-19"
 ---
 

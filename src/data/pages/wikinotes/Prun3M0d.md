@@ -1,7 +1,7 @@
 ---
 uid: "Prun3M0d"
-address: "ML//model compression//pruning"
-name: "Model Pruning"
+address: "ML//model compression//model pruning"
+name: "model pruning"
 date: "2026-09-04"
 ---
 

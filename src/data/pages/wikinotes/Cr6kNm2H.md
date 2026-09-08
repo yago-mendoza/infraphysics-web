@@ -1,7 +1,7 @@
 ---
 uid: "Cr6kNm2H"
-address: "Infrastructure//Vercel//Cron Jobs"
-name: "Cron Jobs"
+address: "infrastructure//Vercel//cron jobs"
+name: "cron jobs"
 date: "2026-03-12"
 ---
 Scheduled [[Vf6kRm2D|Vercel Functions]] that run at fixed intervals. Defined in `vercel.json` with cron syntax.

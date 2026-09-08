@@ -1,7 +1,7 @@
 ---
 uid: "Firew4lL"
-address: "Networks//firewall"
-name: "Firewall"
+address: "networks//firewall"
+name: "firewall"
 date: "2026-09-04"
 ---
 

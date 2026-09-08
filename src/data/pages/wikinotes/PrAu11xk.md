@@ -1,6 +1,6 @@
 ---
 uid: "PrAu11xk"
-address: "ML//Evaluation//PR-AUC"
+address: "ML//evaluation//PR-AUC"
 name: "PR-AUC"
 date: "2026-07-04"
 ---

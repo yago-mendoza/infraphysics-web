@@ -1,7 +1,7 @@
 ---
 uid: "MemB0und"
-address: "Hardware//memory-bound"
-name: "Memory-Bound"
+address: "hardware//memory-bound"
+name: "memory-bound"
 date: "2026-09-04"
 ---
 

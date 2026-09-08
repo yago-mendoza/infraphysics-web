@@ -1,7 +1,7 @@
 ---
 uid: "Llm7G3nQ"
 address: "ML//large language model"
-name: "Large Language Model"
+name: "large language model"
 date: "2026-09-04"
 ---
 

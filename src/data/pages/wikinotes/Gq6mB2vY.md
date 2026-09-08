@@ -1,6 +1,6 @@
 ---
 uid: "Gq6mB2vY"
-address: "ML//Transformer//attention//GQA"
+address: "ML//transformer//attention//GQA"
 name: "GQA"
 date: "2026-03-05"
 ---

@@ -1,7 +1,7 @@
 ---
 uid: "Jt4pWr8L"
-address: "ML//Alignment//alignment faking"
-name: "Alignment Faking"
+address: "ML//alignment//alignment faking"
+name: "alignment faking"
 date: "2026-04-08"
 ---
 A model that behaves well during evaluation but not in deployment; the gap between genuine value internalization and strategic compliance.

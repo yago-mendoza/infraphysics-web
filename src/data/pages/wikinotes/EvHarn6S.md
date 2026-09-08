@@ -1,7 +1,7 @@
 ---
 uid: "EvHarn6S"
 address: "ML//agent//evaluation harness"
-name: "Evaluation Harness"
+name: "evaluation harness"
 date: "2026-09-04"
 ---
 

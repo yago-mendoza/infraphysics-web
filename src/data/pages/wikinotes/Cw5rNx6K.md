@@ -1,7 +1,7 @@
 ---
 uid: "Cw5rNx6K"
-address: "Web Dev//SEO//Crawler"
-name: "Crawler"
+address: "web dev//SEO//crawler"
+name: "crawler"
 date: "2026-03-08"
 ---
 - Automated programs that systematically browse the web to discover and index content. Also called spiders or bots.

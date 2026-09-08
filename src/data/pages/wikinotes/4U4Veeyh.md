@@ -1,6 +1,6 @@
 ---
 uid: 4U4Veeyh
-address: "ML//Training//dataset//The Stack"
+address: "ML//training//dataset//The Stack"
 name: "The Stack"
 date: "2026-02-25"
 ---

@@ -1,7 +1,7 @@
 ---
 uid: "WVcyM3Sp"
-address: "Blockchain//Mempool"
-name: "Mempool"
+address: "blockchain//mempool"
+name: "mempool"
 date: "2025-03-08"
 ---
 - The "waiting room" for unconfirmed transactions. Every node maintains its own.

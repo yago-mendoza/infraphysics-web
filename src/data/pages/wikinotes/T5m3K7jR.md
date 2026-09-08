@@ -1,6 +1,6 @@
 ---
 uid: "T5m3K7jR"
-address: "ML//Transformer//encoder-decoder//T5"
+address: "ML//transformer//encoder-decoder//T5"
 name: "T5"
 date: "2026-02-25"
 ---

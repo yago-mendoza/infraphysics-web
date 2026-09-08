@@ -65,6 +65,8 @@ export interface WikiNoteMeta {
   title: string;
   displayTitle?: string;
   name: string;
+  /** Never recase the name (npm, iOS): title and sentence-start links keep it verbatim. */
+  proper?: boolean;
   category: 'wikinotes';
   date: string;
   description: string;

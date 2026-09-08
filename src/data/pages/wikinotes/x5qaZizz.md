@@ -1,7 +1,7 @@
 ---
 uid: "x5qaZizz"
-address: "ML//Mixture of Experts"
-name: "Mixture of Experts"
+address: "ML//mixture of experts"
+name: "mixture of experts"
 date: "2026-03-01"
 aliases: ["MoE"]
 ---

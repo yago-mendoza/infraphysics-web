@@ -1,6 +1,6 @@
 ---
 uid: "uCuLAMTU"
-address: "Blockchain//Wallet//Metamask"
+address: "blockchain//wallet//Metamask"
 name: "Metamask"
 date: "2025-07-06"
 ---

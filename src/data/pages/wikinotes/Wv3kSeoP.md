@@ -1,7 +1,7 @@
 ---
 uid: "Wv3kSeoP"
-address: "Web Dev"
-name: "Web Dev"
+address: "web dev"
+name: "web dev"
 date: "2026-03-08"
 ---
 Web development builds software on top of an unusually hostile distributed system: untrusted clients, variable networks, evolving browsers, cached intermediaries, and servers that may be continents away.

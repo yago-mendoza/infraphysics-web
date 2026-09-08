@@ -1,7 +1,7 @@
 ---
 uid: "u4ZNJKCV"
-address: "Security"
-name: "Security"
+address: "security"
+name: "security"
 date: "2025-09-07"
 ---
 - Blockchain security combines cryptographic guarantees with operational best practices.

@@ -1,7 +1,7 @@
 ---
 uid: "Xc9nBf3K"
-address: "ML//Alignment//evaluation awareness"
-name: "Evaluation Awareness"
+address: "ML//alignment//evaluation awareness"
+name: "evaluation awareness"
 date: "2026-04-08"
 ---
 A model's ability to detect that it is being tested or evaluated, without being explicitly told.

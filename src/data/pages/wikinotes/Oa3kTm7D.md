@@ -1,6 +1,6 @@
 ---
 uid: "Oa3kTm7D"
-address: "Security//OAuth 2.0"
+address: "security//OAuth 2.0"
 name: "OAuth 2.0"
 date: "2026-03-12"
 ---

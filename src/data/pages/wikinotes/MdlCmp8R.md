@@ -1,7 +1,7 @@
 ---
 uid: "MdlCmp8R"
 address: "ML//model compression"
-name: "Model Compression"
+name: "model compression"
 date: "2026-09-04"
 ---
 

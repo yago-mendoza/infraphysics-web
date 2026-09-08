@@ -1,7 +1,7 @@
 ---
 uid: "Kg1BQEh8"
-address: "Web Dev//frontend//cookie"
-name: "Cookie"
+address: "web dev//frontend//cookie"
+name: "cookie"
 date: "2026-03-15"
 ---
 The browser's native memory. A small file that the browser stores per website and sends automatically with every HTTP request. Your code doesn't control it. Chrome (or Firefox, or Safari) does.

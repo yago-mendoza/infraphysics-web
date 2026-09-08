@@ -1,7 +1,7 @@
 ---
 uid: "VramMem5"
-address: "Hardware//model memory footprint"
-name: "Model Memory Footprint"
+address: "hardware//model memory footprint"
+name: "model memory footprint"
 date: "2026-09-04"
 ---
 

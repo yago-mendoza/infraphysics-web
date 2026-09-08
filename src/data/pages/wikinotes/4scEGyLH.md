@@ -1,7 +1,7 @@
 ---
 uid: "4scEGyLH"
-address: "Blockchain//Besu//Empty Blocks"
-name: "Empty Blocks"
+address: "blockchain//Besu//empty blocks"
+name: "empty blocks"
 date: "2025-10-11"
 ---
 - Clique produces blocks at fixed intervals (`blockPeriodSeconds`) even when there are no transactions.

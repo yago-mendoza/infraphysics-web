@@ -1,7 +1,7 @@
 ---
 uid: "PrvEsc6L"
-address: "Security//privilege escalation"
-name: "Privilege Escalation"
+address: "security//privilege escalation"
+name: "privilege escalation"
 date: "2026-09-04"
 ---
 

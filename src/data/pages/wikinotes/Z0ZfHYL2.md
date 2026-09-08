@@ -1,6 +1,6 @@
 ---
 uid: "Z0ZfHYL2"
-address: "ML//Multimodal//Whisper"
+address: "ML//multimodal//Whisper"
 name: "Whisper"
 date: "2026-02-27"
 ---

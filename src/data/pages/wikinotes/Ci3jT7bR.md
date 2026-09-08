@@ -1,7 +1,7 @@
 ---
 uid: "Ci3jT7bR"
-address: "ML//Alignment//mechanistic interpretability//circuit"
-name: "Circuit"
+address: "ML//alignment//mechanistic interpretability//circuit"
+name: "circuit"
 date: "2026-03-06"
 ---
 A minimal subgraph of a neural network that implements a specific behavior: the exact set of neurons, [[ml8njOQc|attention]] heads, and [[Pr8dt3wz|MLP]] layers that collaborate to produce a particular computation.

@@ -1,7 +1,7 @@
 ---
 uid: "B5zrSBqy"
-address: "Security//cryptography//Key Pair"
-name: "Key Pair"
+address: "security//cryptography//key pair"
+name: "key pair"
 date: "2025-06-14"
 ---
 - Private key: 256-bit random number, generated off-chain, never shared, never sent over the network.

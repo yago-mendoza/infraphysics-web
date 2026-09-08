@@ -1,7 +1,7 @@
 ---
 uid: "2GCBLdlB"
-address: "ML//Transformer//LM head"
-name: "LM Head"
+address: "ML//transformer//LM head"
+name: "LM head"
 date: "2026-02-15"
 ---
 The final layer that converts the last vector of the [[Rs6cD4vX|residual stream]] into [[Lg7cD3vX|logits]] over the [[Vb8kM2nQ|vocabulary]]

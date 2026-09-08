@@ -1,8 +1,8 @@
 ---
 uid: "rItXgdUN"
-address: "Hardware//CPU//cache"
+address: "hardware//CPU//cache"
 name: "cache"
-distinct: ["Hardware//storage//cache", "Networks//cache"]
+distinct: ["hardware//storage//cache", "networks//cache"]
 date: "2026-02-06"
 ---
 Small, fast SRAM sitting between the [[Z9W6rweD|core]] and main [[jBm8Zuu2|RAM]]

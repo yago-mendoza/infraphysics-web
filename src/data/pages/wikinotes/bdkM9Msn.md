@@ -1,7 +1,7 @@
 ---
 uid: "bdkM9Msn"
 address: "ML//transfer learning"
-name: "Transfer Learning"
+name: "transfer learning"
 date: "2018-09-10"
 ---
 - Train on a big task, reuse the learned features for a smaller one.

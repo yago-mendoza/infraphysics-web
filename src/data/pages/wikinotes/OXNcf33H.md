@@ -1,7 +1,7 @@
 ---
 uid: "OXNcf33H"
-address: "Web Dev//UI//Schema-Driven UI//Configurable Data Model"
-name: "Configurable Data Model"
+address: "web dev//UI//schema-driven UI//configurable data model"
+name: "configurable data model"
 date: "2026-03-19"
 ---
 

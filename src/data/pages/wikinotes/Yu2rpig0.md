@@ -1,6 +1,6 @@
 ---
 uid: "Yu2rpig0"
-address: "Hardware//I/O//MMIO"
+address: "hardware//I/O//MMIO"
 name: "MMIO"
 date: "2026-02-05"
 ---

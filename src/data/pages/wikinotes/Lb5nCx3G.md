@@ -1,6 +1,6 @@
 ---
 uid: "Lb5nCx3G"
-address: "Infrastructure//AWS//Lambda"
+address: "infrastructure//AWS//Lambda"
 name: "Lambda"
 date: "2026-03-12"
 ---

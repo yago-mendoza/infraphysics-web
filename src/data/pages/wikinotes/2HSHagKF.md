@@ -1,7 +1,7 @@
 ---
 uid: "2HSHagKF"
-address: "Blockchain//Wallet//Keystore"
-name: "Keystore"
+address: "blockchain//wallet//keystore"
+name: "keystore"
 date: "2025-10-11"
 ---
 - Legacy approach: each account stored as an individual encrypted JSON file in `/data/keystore`.

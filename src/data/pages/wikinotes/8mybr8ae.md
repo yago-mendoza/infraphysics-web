@@ -1,7 +1,7 @@
 ---
 uid: "8mybr8ae"
-address: "Blockchain//Chain ID"
-name: "Chain ID"
+address: "blockchain//chain ID"
+name: "chain ID"
 date: "2025-03-22"
 ---
 - Unique integer identifier for each blockchain network: Mainnet=1, Sepolia=11155111, custom=anything.

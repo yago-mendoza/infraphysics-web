@@ -1,6 +1,6 @@
 ---
 uid: "kdkcNzZi"
-address: "Hardware//laptop"
+address: "hardware//laptop"
 name: "laptop"
 date: "2026-03-11"
 ---

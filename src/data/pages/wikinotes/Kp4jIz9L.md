@@ -1,7 +1,7 @@
 ---
 uid: "Kp4jIz9L"
 address: "ML//reasoning model"
-name: "Reasoning Model"
+name: "reasoning model"
 date: "2026-02-25"
 ---
 Models trained to "think" before answering via [[Et5mN8wJ|extended thinking]]: generate intermediate reasoning tokens, then produce the final answer from a richer [[JUby2DIy|context]]

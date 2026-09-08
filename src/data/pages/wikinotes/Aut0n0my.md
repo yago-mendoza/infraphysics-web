@@ -1,7 +1,7 @@
 ---
 uid: "Aut0n0my"
-address: "ML//agent//autonomy"
-name: "Agent Autonomy"
+address: "ML//agent//agent autonomy"
+name: "agent autonomy"
 date: "2026-09-04"
 ---
 

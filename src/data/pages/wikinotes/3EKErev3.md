@@ -1,7 +1,7 @@
 ---
 uid: "3EKErev3"
-address: "ML//Alignment"
-name: "Alignment"
+address: "ML//alignment"
+name: "alignment"
 date: "2026-02-15"
 ---
 The scalable oversight problem: we can't supervise what we can't understand.

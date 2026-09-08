@@ -1,7 +1,7 @@
 ---
 uid: "bNGmRCsR"
-address: "ML//Training"
-name: "Training"
+address: "ML//training"
+name: "training"
 date: "2026-02-15"
 ---
 Training adjusts model parameters to reduce an objective over examples or interactions. For modern language models it may include [[2oNdlB5L|pre-training]], instruction-focused [[qcqxPFA0|SFT]] and preference or reward optimization through methods such as [[0f5GJDwc|RLHF]] and [[YwfNaR4R|DPO]].

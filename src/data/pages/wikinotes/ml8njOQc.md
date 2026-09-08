@@ -1,7 +1,7 @@
 ---
 uid: "ml8njOQc"
-address: "ML//Transformer//attention"
-name: "Attention"
+address: "ML//transformer//attention"
+name: "attention"
 date: "2018-06-15"
 ---
 Attention existed before the 2017 paper. The key contribution of "Attention Is All You Need" was that attention was... all you needed, no [[mBCcy7bn|recurrence]]. [[vCs7RZqL|Self-attention]] specifically was novel.

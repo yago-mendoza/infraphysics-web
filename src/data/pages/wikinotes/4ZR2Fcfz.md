@@ -1,7 +1,7 @@
 ---
 uid: "4ZR2Fcfz"
-address: "Blockchain//Besu//Deployment"
-name: "Deployment"
+address: "blockchain//Besu//deployment"
+name: "deployment"
 date: "2025-05-18"
 ---
 - Correct order: 1) Create Docker network → 2) Generate keys → 3) Build genesis.json with those keys → 4) Launch bootnode → 5) Launch remaining nodes.

@@ -1,7 +1,7 @@
 ---
 uid: "DfDepth8"
-address: "Security//defense in depth"
-name: "Defense in Depth"
+address: "security//defense in depth"
+name: "defense in depth"
 date: "2026-09-04"
 ---
 

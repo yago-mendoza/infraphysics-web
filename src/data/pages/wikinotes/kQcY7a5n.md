@@ -1,7 +1,7 @@
 ---
 uid: "kQcY7a5n"
-address: "Blockchain//Wallet//HD Wallet"
-name: "HD Wallet"
+address: "blockchain//wallet//HD wallet"
+name: "HD wallet"
 date: "2025-06-14"
 ---
 - Hierarchical Deterministic: one master seed → infinite key pairs in a reproducible tree.

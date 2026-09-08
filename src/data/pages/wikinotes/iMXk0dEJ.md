@@ -1,7 +1,7 @@
 ---
 uid: "iMXk0dEJ"
-address: "ML//Inference//Sampling//top-k"
-name: "Top-K"
+address: "ML//inference//sampling//top-k"
+name: "top-k"
 date: "2020-10-15"
 ---
 Top-k sampling keeps only the \(k\) highest-probability next tokens, renormalizes their probabilities, and samples from that reduced set. At \(k=1\) it becomes greedy decoding.

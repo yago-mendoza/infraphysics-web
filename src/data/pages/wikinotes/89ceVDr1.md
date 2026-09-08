@@ -1,7 +1,7 @@
 ---
 uid: "89ceVDr1"
-address: "ML//Inference//KV cache"
-name: "KV Cache"
+address: "ML//inference//KV cache"
+name: "KV cache"
 date: "2023-04-18"
 ---
 During autoregressive generation, the KV cache stores attention keys and values for previous tokens instead of recomputing them at every step.

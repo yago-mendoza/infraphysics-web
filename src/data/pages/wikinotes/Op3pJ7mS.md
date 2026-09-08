@@ -1,7 +1,7 @@
 ---
 uid: "Op3pJ7mS"
-address: "ML//Training//on-policy vs off-policy"
-name: "On-Policy vs Off-Policy"
+address: "ML//training//on-policy vs off-policy"
+name: "on-policy vs off-policy"
 date: "2026-02-23"
 ---
 **On-policy**: the model generates data during training, then learns from its own outputs. [[rxVjxTLA|PPO]] is on-policy: it scores outputs that the current policy produced.

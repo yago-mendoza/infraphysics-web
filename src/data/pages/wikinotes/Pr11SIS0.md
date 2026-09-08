@@ -1,7 +1,7 @@
 ---
 uid: "Pr11SIS0"
-address: "ML//Inference//Sampling//temperature"
-name: "Temperature"
+address: "ML//inference//sampling//temperature"
+name: "temperature"
 date: "2020-10-15"
 ---
 Scales [[Lg7cD3vX|logits]] before [[Sm8rH4nW|softmax]]: logits / T.

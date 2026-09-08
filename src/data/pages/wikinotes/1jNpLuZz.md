@@ -1,6 +1,6 @@
 ---
 uid: "1jNpLuZz"
-address: "Web Dev//UI//Schema-Driven UI//EAV"
+address: "web dev//UI//schema-driven UI//EAV"
 name: "EAV"
 date: "2026-03-19"
 ---

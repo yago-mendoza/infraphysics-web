@@ -1,7 +1,7 @@
 ---
 uid: "Eb4kN7xS"
-address: "ML//Training//exposure bias"
-name: "Exposure Bias"
+address: "ML//training//exposure bias"
+name: "exposure bias"
 date: "2026-03-02"
 ---
 A student who only ever practiced with answer keys, then had to take the exam using its own messy drafts as reference. During [[qcqxPFA0|SFT]], the model always sees **correct** context (human-written training data). At inference, it sees its own previous outputs, which may contain errors.

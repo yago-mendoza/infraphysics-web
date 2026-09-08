@@ -1,6 +1,6 @@
 ---
 uid: "PRWiYzcG"
-address: "Web Dev//UI//GUI"
+address: "web dev//UI//GUI"
 name: "GUI"
 date: "2026-02-05"
 ---

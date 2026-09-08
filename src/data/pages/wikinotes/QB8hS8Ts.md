@@ -1,6 +1,6 @@
 ---
 uid: "QB8hS8Ts"
-address: "Hardware//storage"
+address: "hardware//storage"
 name: "storage"
 date: "2026-02-06"
 ---

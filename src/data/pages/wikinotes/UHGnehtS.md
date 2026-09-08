@@ -1,7 +1,7 @@
 ---
 uid: "UHGnehtS"
-address: "ML//Alignment//mechanistic interpretability"
-name: "Mechanistic Interpretability"
+address: "ML//alignment//mechanistic interpretability"
+name: "mechanistic interpretability"
 date: "2026-02-16"
 ---
 Studying what each [[RnKMoC3a|latent]] feature actually represents; trying to open the black box.

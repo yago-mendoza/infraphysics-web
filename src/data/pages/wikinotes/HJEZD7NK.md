@@ -1,6 +1,6 @@
 ---
 uid: "HJEZD7NK"
-address: "Security//cryptography"
+address: "security//cryptography"
 name: "cryptography"
 date: "2025-06-14"
 ---

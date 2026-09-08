@@ -1,7 +1,7 @@
 ---
 uid: "Ex5rTm9K"
-address: "Web Dev//API//external API"
-name: "External API"
+address: "web dev//API//external API"
+name: "external API"
 date: "2026-03-12"
 ---
 Pattern where your app makes HTTP requests directly to a third-party service. The service doesn't run inside your server. It lives somewhere else, and you consume it via HTTP.

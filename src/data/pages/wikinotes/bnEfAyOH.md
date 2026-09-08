@@ -1,6 +1,6 @@
 ---
 uid: "bnEfAyOH"
-address: "Tools//Claude Code//.claude//settings"
+address: "tools//Claude Code//.claude//settings"
 name: "settings"
 date: "2026-02-06"
 ---

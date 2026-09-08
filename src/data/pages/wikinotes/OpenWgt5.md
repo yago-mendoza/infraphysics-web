@@ -1,7 +1,7 @@
 ---
 uid: "OpenWgt5"
 address: "ML//open-weight model"
-name: "Open-Weight Model"
+name: "open-weight model"
 date: "2026-09-04"
 ---
 

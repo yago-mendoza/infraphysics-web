@@ -1,6 +1,6 @@
 ---
 uid: "qcqxPFA0"
-address: "ML//Training//SFT"
+address: "ML//training//SFT"
 name: "SFT"
 date: "2026-02-15"
 ---

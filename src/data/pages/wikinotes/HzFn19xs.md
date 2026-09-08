@@ -1,6 +1,6 @@
 ---
 uid: "HzFn19xs"
-address: "ML//Time Series//hazard function"
+address: "ML//time series//hazard function"
 name: "hazard function"
 date: "2026-07-04"
 ---

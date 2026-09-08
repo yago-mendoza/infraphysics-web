@@ -1,8 +1,8 @@
 ---
 uid: "Qw9dFn5L"
-address: "Infrastructure//storage"
+address: "infrastructure//storage"
 name: "storage"
-distinct: ["Hardware//storage"]
+distinct: ["hardware//storage"]
 date: "2026-03-10"
 ---
 Data persistence managed by a cloud provider. Unlike physical [[QB8hS8Ts|storage]] (HDDs, SSDs, flash), you don't manage the hardware. The provider handles replication, durability, backups, and scaling.

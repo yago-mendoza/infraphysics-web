@@ -1,7 +1,7 @@
 ---
 uid: "SidCh4nL"
-address: "Security//side channel"
-name: "Side Channel"
+address: "security//side channel"
+name: "side channel"
 date: "2026-09-04"
 ---
 

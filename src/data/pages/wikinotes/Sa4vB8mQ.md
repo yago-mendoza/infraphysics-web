@@ -1,7 +1,7 @@
 ---
 uid: "Sa4vB8mQ"
 address: "ML//neural network//sparse autoencoder"
-name: "Sparse Autoencoder"
+name: "sparse autoencoder"
 date: "2026-03-05"
 ---
 Tool for extracting interpretable [[Ft9pL5hS|features]] from [[Sp2tK6jL|superposed]] neural activations.

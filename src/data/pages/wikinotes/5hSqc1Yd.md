@@ -1,6 +1,6 @@
 ---
 uid: "5hSqc1Yd"
-address: "Robotics//sensor//camera"
+address: "robotics//sensor//camera"
 name: "camera"
 date: "2026-02-15"
 ---

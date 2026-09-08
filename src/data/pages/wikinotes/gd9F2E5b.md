@@ -1,7 +1,7 @@
 ---
 uid: "gd9F2E5b"
-address: "Systems Theory//emergence"
-name: "Emergence"
+address: "systems theory//emergence"
+name: "emergence"
 date: "2026-03-08"
 ---
 Macro-level behavior that arises from micro-level interactions without being explicitly designed or programmed: the whole does something the parts do not.

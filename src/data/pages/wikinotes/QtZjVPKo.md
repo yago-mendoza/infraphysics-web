@@ -1,7 +1,7 @@
 ---
 uid: "QtZjVPKo"
-address: "ML//Transformer"
-name: "Transformer"
+address: "ML//transformer"
+name: "transformer"
 date: "2026-02-15"
 ---
 The architecture behind GPT, BERT, and every modern LLM.

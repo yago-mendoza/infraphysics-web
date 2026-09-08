@@ -1,7 +1,7 @@
 ---
 uid: "WeLIuxyC"
-address: "ML//Multimodal//text-to-image"
-name: "Text-To-Image"
+address: "ML//multimodal//text-to-image"
+name: "text-to-image"
 date: "2022-08-10"
 ---
 - Generate images from text descriptions.

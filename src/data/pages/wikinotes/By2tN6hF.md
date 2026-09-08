@@ -1,7 +1,7 @@
 ---
 uid: "By2tN6hF"
-address: "ML//Transformer//tokenizer//byte-level model"
-name: "Byte-Level Model"
+address: "ML//transformer//tokenizer//byte-level model"
+name: "byte-level model"
 date: "2026-02-24"
 ---
 Models that tokenize at the byte level (256 possible tokens) instead of subwords.

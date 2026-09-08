@@ -1,7 +1,7 @@
 ---
 uid: "OnPrem7S"
-address: "Infrastructure//on-premises"
-name: "On-Premises Infrastructure"
+address: "infrastructure//on-premises infrastructure"
+name: "on-premises infrastructure"
 date: "2026-09-04"
 ---
 

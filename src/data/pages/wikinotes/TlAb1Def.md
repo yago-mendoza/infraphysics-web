@@ -1,7 +1,7 @@
 ---
 uid: "TlAb1Def"
-address: "ML//agent//harness//tool interface"
-name: "Tool Interface"
+address: "ML//agent//agent harness//tool interface"
+name: "tool interface"
 date: "2026-09-03"
 ---
 

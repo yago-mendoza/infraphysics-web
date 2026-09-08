@@ -1,7 +1,7 @@
 ---
 uid: "Pv3wHm8R"
-address: "Web Dev//domain"
-name: "Domain"
+address: "web dev//domain"
+name: "domain"
 date: "2026-03-10"
 ---
 A human-readable name (like `3clabs.io`) that points to an IP address where a server lives.

@@ -1,7 +1,7 @@
 ---
 uid: "4WpUCWOW"
-address: "Brains"
-name: "Brains"
+address: "brains"
+name: "brains"
 date: "2026-09-01"
 ---
 Brains are adaptive control systems built from noisy biological components. They connect cellular dynamics, learning, perception, memory, action, and subjective experience across scales that are individually understandable but collectively unresolved.

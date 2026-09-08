@@ -1,6 +1,6 @@
 ---
 uid: "Siem4L0g"
-address: "Security//SIEM"
+address: "security//SIEM"
 name: "SIEM"
 date: "2026-09-04"
 ---

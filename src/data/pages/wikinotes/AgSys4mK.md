@@ -1,7 +1,7 @@
 ---
 uid: "AgSys4mK"
 address: "ML//agent//agentic system"
-name: "Agentic System"
+name: "agentic system"
 date: "2026-09-04"
 ---
 

@@ -1,7 +1,7 @@
 ---
 uid: "PYsPVUGS"
-address: "Blockchain//Wallet//Signing"
-name: "Signing"
+address: "blockchain//wallet//signing"
+name: "signing"
 date: "2025-07-07"
 ---
 - Metamask receives signing requests from DApps, shows them to the user, signs with the local private key.

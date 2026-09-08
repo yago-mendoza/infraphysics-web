@@ -1,7 +1,7 @@
 ---
 uid: "Mn7cR3xF"
 address: "ML//neural network//monosemanticity"
-name: "Monosemanticity"
+name: "monosemanticity"
 date: "2026-03-06"
 ---
 The interpretability holy grail: one neuron, one meaning: no double shifts, no moonlighting, just clean signal. The opposite of [[Sp2tK6jL|superposition]].

@@ -1,7 +1,7 @@
 ---
 uid: "Ts5nR2mH"
-address: "ML//Inference//extended thinking//tree search"
-name: "Tree Search"
+address: "ML//inference//extended thinking//tree search"
+name: "tree search"
 date: "2026-03-06"
 ---
 Beyond linear thinking: explore multiple reasoning branches, evaluate them, choose the best.

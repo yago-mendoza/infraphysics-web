@@ -1,7 +1,7 @@
 ---
 uid: "ISjyfjZ6"
-address: "Web Dev//frontend"
-name: "Frontend"
+address: "web dev//frontend"
+name: "frontend"
 date: "2026-03-10"
 ---
 The frontend is the part of a software system executed or rendered near the user. On the web it combines document structure, presentation, interaction, local state, and communication with [[Ap8rTm3K|API]]s.

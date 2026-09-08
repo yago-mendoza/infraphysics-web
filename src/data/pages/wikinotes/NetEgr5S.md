@@ -1,7 +1,7 @@
 ---
 uid: "NetEgr5S"
-address: "Networks//network egress"
-name: "Network Egress"
+address: "networks//network egress"
+name: "network egress"
 date: "2026-09-04"
 ---
 

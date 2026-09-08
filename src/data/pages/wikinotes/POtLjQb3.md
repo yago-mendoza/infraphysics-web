@@ -1,6 +1,6 @@
 ---
 uid: "POtLjQb3"
-address: "Hardware//electronics//latch-up"
+address: "hardware//electronics//latch-up"
 name: "latch-up"
 date: "2026-02-15"
 ---

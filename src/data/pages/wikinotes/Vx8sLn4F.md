@@ -1,7 +1,7 @@
 ---
 uid: "Vx8sLn4F"
-address: "Web Dev//SQL//vector extension"
-name: "Vector Extension"
+address: "web dev//SQL//vector extension"
+name: "vector extension"
 date: "2026-03-12"
 ---
 The concept of adding vector storage and [[Cs3jT7bR|cosine similarity]] search capabilities to an existing [[Rdb7Xm3K|relational database]]. Instead of using a dedicated [[TIQNpwbS|vector database]], you extend your SQL database to handle [[haA3MDhG|embeddings]].

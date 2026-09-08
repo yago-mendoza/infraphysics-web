@@ -1,7 +1,7 @@
 ---
 uid: "2oNdlB5L"
-address: "ML//Training//Pre-training"
-name: "Pre-training"
+address: "ML//training//pre-training"
+name: "pre-training"
 date: "2026-02-15"
 ---
 Imagine a baby alien staring at the static of the universe. It stares at billions of sentences until it realizes "the pilot has turned on the..." is followed by "seatbelt sign" and not "karaoke machine".

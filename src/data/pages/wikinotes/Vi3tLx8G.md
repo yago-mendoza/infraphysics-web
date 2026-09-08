@@ -1,6 +1,6 @@
 ---
 uid: "Vi3tLx8G"
-address: "Infrastructure//Cloudflare//Workers//V8 isolate"
+address: "infrastructure//Cloudflare//Workers//V8 isolate"
 name: "V8 isolate"
 date: "2026-03-12"
 ---

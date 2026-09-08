@@ -1,6 +1,6 @@
 ---
 uid: "Jt7nKx4S"
-address: "Web Dev//DNS"
+address: "web dev//DNS"
 name: "DNS"
 date: "2026-03-10"
 ---

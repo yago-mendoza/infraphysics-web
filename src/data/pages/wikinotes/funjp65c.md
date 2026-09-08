@@ -1,6 +1,6 @@
 ---
 uid: "funjp65c"
-address: "Hardware//electronics//component"
+address: "hardware//electronics//component"
 name: "component"
 date: "2026-02-06"
 ---

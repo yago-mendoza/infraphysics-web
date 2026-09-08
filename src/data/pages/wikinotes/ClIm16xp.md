@@ -1,6 +1,6 @@
 ---
 uid: "ClIm16xp"
-address: "ML//Evaluation//class imbalance"
+address: "ML//evaluation//class imbalance"
 name: "class imbalance"
 date: "2026-07-04"
 ---

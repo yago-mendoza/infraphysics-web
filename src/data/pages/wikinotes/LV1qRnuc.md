@@ -1,7 +1,7 @@
 ---
 uid: "LV1qRnuc"
 address: "ML//code generation"
-name: "Code Generation"
+name: "code generation"
 date: "2026-03-06"
 ---
 - LLMs specialized or fine-tuned for writing, editing, and reasoning about code.

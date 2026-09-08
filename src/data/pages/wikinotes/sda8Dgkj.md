@@ -1,9 +1,9 @@
 ---
 uid: sda8Dgkj
-address: "Web Dev//UI"
+address: "web dev//UI"
 name: "UI"
 date: "2026-02-13"
-distinct: ["Hardware//laptop//UI"]
+distinct: ["hardware//laptop//UI"]
 ---
 
 User interface is the boundary through which a person observes and changes a system. A [[PRWiYzcG|GUI]] is one implementation; terminals, voice, gestures, physical controls, and even error messages are interfaces as well.

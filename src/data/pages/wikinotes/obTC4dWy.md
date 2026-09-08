@@ -1,7 +1,7 @@
 ---
 uid: "obTC4dWy"
 address: "ML//neural network//overfitting"
-name: "Overfitting"
+name: "overfitting"
 date: "2018-03-08"
 ---
 Overfitting occurs when a model captures patterns specific to its training sample that do not generalize to the target distribution. Memorization can contribute, but memorization and generalization are not strict opposites in large models.

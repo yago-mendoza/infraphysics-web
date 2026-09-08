@@ -1,7 +1,7 @@
 ---
 uid: "EEUGaAWQ"
-address: "ML//Alignment//jailbreak"
-name: "Jailbreak"
+address: "ML//alignment//jailbreak"
+name: "jailbreak"
 date: "2024-01-20"
 ---
 - Bypassing safety training to make a model produce restricted content.

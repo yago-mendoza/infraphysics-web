@@ -1,7 +1,7 @@
 ---
 uid: "Lg7cD3vX"
-address: "ML//Transformer//logits"
-name: "Logits"
+address: "ML//transformer//logits"
+name: "logits"
 date: "2026-02-28"
 ---
 Raw scores over the entire [[Vb8kM2nQ|vocabulary]] before normalization: Wu × normalized_output = logits.

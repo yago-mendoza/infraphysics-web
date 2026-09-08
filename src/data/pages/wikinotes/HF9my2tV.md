@@ -1,6 +1,6 @@
 ---
 uid: "HF9my2tV"
-address: "Web Dev//UI//Schema-Driven UI//DSL"
+address: "web dev//UI//schema-driven UI//DSL"
 name: "DSL"
 date: "2026-03-19"
 ---

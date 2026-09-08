@@ -1,7 +1,7 @@
 ---
 uid: "Mc4xR8wP"
-address: "ML//Training//dataset//model collapse"
-name: "Model Collapse"
+address: "ML//training//dataset//model collapse"
+name: "model collapse"
 date: "2026-03-08"
 ---
 An ouroboros in gradient space: train on your own outputs, and each generation forgets a little more of what made the original interesting. The [[Td5yK2jL|tail distribution]] erodes first, then the whole distribution narrows.

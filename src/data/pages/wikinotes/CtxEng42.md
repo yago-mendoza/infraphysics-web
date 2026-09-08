@@ -1,7 +1,7 @@
 ---
 uid: "CtxEng42"
 address: "ML//agent//context engineering"
-name: "Context Engineering"
+name: "context engineering"
 date: "2026-09-03"
 ---
 

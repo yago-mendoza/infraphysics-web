@@ -1,6 +1,6 @@
 ---
 uid: "Og6nRx2K"
-address: "Web Dev//SEO//Open Graph"
+address: "web dev//SEO//Open Graph"
 name: "Open Graph"
 date: "2026-03-08"
 ---

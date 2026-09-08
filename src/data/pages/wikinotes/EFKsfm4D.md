@@ -1,7 +1,7 @@
 ---
 uid: EFKsfm4D
-address: "ML//Training//dataset"
-name: "Dataset"
+address: "ML//training//dataset"
+name: "dataset"
 date: "2021-02-08"
 ---
 

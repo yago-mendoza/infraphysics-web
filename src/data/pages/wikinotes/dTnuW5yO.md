@@ -1,7 +1,7 @@
 ---
 uid: "dTnuW5yO"
-address: "ML//Transformer//residual connection"
-name: "Residual Connection"
+address: "ML//transformer//residual connection"
+name: "residual connection"
 date: "2018-09-10"
 ---
 x + f(x): add the input directly to the output of each sublayer.

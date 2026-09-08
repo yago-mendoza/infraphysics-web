@@ -1,7 +1,7 @@
 ---
 uid: "vCs7RZqL"
-address: "ML//Transformer//attention//self-attention"
-name: "Self-Attention"
+address: "ML//transformer//attention//self-attention"
+name: "self-attention"
 date: "2018-07-05"
 ---
 [[Qk3vT7mJ|Q, K, V]] all come from the same sequence, each token attends to all others including itself.

@@ -1,7 +1,7 @@
 ---
 uid: "8rIt8ncJ"
-address: "Blockchain//Besu//Node Roles//Full Node"
-name: "Full Node"
+address: "blockchain//Besu//node roles//full node"
+name: "full node"
 date: "2026-02-17"
 ---
 - Stores and verifies the entire chain: downloads every block, validates every transaction.

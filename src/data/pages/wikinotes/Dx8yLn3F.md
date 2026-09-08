@@ -1,7 +1,7 @@
 ---
 uid: "Dx8yLn3F"
-address: "Web Dev//deploy"
-name: "Deploy"
+address: "web dev//deploy"
+name: "deploy"
 date: "2026-03-10"
 ---
 The act of putting code into production so users can access it.

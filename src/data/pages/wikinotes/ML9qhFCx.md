@@ -1,7 +1,7 @@
 ---
 uid: "ML9qhFCx"
-address: "Blockchain//Besu//Enode"
-name: "Enode"
+address: "blockchain//Besu//enode"
+name: "enode"
 date: "2025-05-03"
 ---
 - Format: `enode://<public-key>@<ip>:<port>`, cryptographic identity + network location in one URL.

@@ -1,7 +1,7 @@
 ---
 uid: "l3B9q1cM"
 address: "ML//RAG//chunking strategy"
-name: "Chunking Strategy"
+name: "chunking strategy"
 date: "2024-03-15"
 ---
 - How you split documents for [[haA3MDhG|embedding]] and retrieval.

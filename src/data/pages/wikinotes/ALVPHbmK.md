@@ -1,7 +1,7 @@
 ---
 uid: "ALVPHbmK"
-address: "Blockchain//Besu//Config"
-name: "Config"
+address: "blockchain//Besu//config"
+name: "config"
 date: "2025-05-03"
 ---
 - `config.toml` simplifies `docker run` commands: groups static settings in a file.

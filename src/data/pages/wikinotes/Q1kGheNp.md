@@ -1,8 +1,8 @@
 ---
 uid: "Q1kGheNp"
-address: "Networks//cache"
+address: "networks//cache"
 name: "cache"
-distinct: ["Hardware//CPU//cache", "Hardware//storage//cache"]
+distinct: ["hardware//CPU//cache", "hardware//storage//cache"]
 date: "2026-02-06"
 ---
 - A store that holds copies of frequently requested content closer to the consumer.

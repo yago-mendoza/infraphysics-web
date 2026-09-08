@@ -1,7 +1,7 @@
 ---
 uid: "AtkSurf7"
-address: "Security//attack surface"
-name: "Attack Surface"
+address: "security//attack surface"
+name: "attack surface"
 date: "2026-09-04"
 ---
 

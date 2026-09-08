@@ -1,6 +1,6 @@
 ---
 uid: "Px5mK9cJ"
-address: "ML//benchmark//perplexity"
+address: "ML//benchmark//Perplexity"
 name: "Perplexity"
 date: "2026-02-25"
 ---

@@ -1,7 +1,7 @@
 ---
 uid: "PkRkL6kd"
-address: "Security//API key"
-name: "API Key"
+address: "security//API key"
+name: "API key"
 date: "2026-03-15"
 ---
 A credential that identifies your app to a service. Two kinds, and they live in different places:

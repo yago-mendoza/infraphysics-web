@@ -1,7 +1,7 @@
 ---
 uid: "Cs3jT7bR"
 address: "ML//neural network//embedding//cosine similarity"
-name: "Cosine Similarity"
+name: "cosine similarity"
 date: "2026-03-05"
 ---
 Measures angular alignment between two vectors: cos(θ) = (A·B)/(|A||B|). Range [-1, 1]. 1 = same direction, 0 = orthogonal, -1 = opposite.

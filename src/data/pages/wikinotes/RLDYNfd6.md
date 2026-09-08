@@ -1,6 +1,6 @@
 ---
 uid: "RLDYNfd6"
-address: "Web Dev//SQL//PostgreSQL//pg_trgm"
+address: "web dev//SQL//PostgreSQL//pg_trgm"
 name: "pg_trgm"
 date: "2026-03-14"
 ---

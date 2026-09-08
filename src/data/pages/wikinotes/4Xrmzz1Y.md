@@ -1,7 +1,7 @@
 ---
 uid: "4Xrmzz1Y"
-address: "Math"
-name: "Mathematics"
+address: "mathematics"
+name: "mathematics"
 date: "2026-02-25"
 distinct: ["ML//benchmark//MATH"]
 ---

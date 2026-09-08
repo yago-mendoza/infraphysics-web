@@ -1,7 +1,7 @@
 ---
 uid: "QCZzt6BG"
-address: "Industrial"
-name: "Industrial"
+address: "industrial"
+name: "industrial"
 date: "2026-09-01"
 ---
 Industrial systems turn materials, energy, information, equipment, and human work into repeatable output. The field sits where optimization meets machinery and where elegant models meet shifts, queues, maintenance, procurement, and failure.

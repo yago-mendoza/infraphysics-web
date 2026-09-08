@@ -1,6 +1,6 @@
 ---
 uid: "Tb5mWr3J"
-address: "Web Dev//SQL//SQLite"
+address: "web dev//SQL//SQLite"
 name: "SQLite"
 date: "2026-03-10"
 ---

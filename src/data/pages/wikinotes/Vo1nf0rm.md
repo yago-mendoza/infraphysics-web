@@ -1,7 +1,7 @@
 ---
 uid: "Vo1nf0rm"
 address: "ML//agent//value of information"
-name: "Value of Information"
+name: "value of information"
 date: "2026-09-03"
 ---
 

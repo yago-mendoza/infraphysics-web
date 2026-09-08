@@ -1,6 +1,6 @@
 ---
 uid: "j7ZpMrPl"
-address: "Hardware//NVIDIA//H100"
+address: "hardware//NVIDIA//H100"
 name: "H100"
 date: "2023-03-20"
 ---

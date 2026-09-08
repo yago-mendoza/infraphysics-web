@@ -1,7 +1,7 @@
 ---
 uid: "Gd5tR8wP"
 address: "ML//neural network//gradient descent"
-name: "Gradient Descent"
+name: "gradient descent"
 date: "2026-03-07"
 ---
 The optimization algorithm that makes neural networks learn: compute how wrong the model is ([[DxaRVjHg|loss function]]), compute which direction to adjust each weight ([[aufHHy2p|backpropagation]]), then nudge weights in that direction.

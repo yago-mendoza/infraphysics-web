@@ -1,6 +1,6 @@
 ---
 uid: "NmSjnVn2"
-address: "Infrastructure//Supabase//Auth//handshake"
+address: "infrastructure//Supabase//auth//handshake"
 name: "handshake"
 date: "2026-03-15"
 ---

@@ -1,7 +1,7 @@
 ---
 uid: "Cm7jR4sQ"
-address: "ML//Transformer//attention//causal masking"
-name: "Causal Masking"
+address: "ML//transformer//attention//causal masking"
+name: "causal masking"
 date: "2026-03-06"
 ---
 Set the upper triangle of the attention matrix to -∞ (→ 0 after [[Sm8rH4nW|softmax]]) so tokens can't attend to future positions.

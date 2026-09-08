@@ -1,6 +1,6 @@
 ---
 uid: "Sn4yK2jL"
-address: "ML//Transformer//tokenizer//SentencePiece"
+address: "ML//transformer//tokenizer//SentencePiece"
 name: "SentencePiece"
 date: "2026-03-06"
 ---

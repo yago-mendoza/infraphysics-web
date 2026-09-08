@@ -1,7 +1,7 @@
 ---
 uid: esHo5jMx
-address: "ML//Training//fine-tuning"
-name: "Fine-Tuning"
+address: "ML//training//fine-tuning"
+name: "fine-tuning"
 date: "2021-06-12"
 ---
 

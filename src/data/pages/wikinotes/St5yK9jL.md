@@ -1,7 +1,7 @@
 ---
 uid: "St5yK9jL"
-address: "ML//Transformer//tokenizer//special tokens"
-name: "Special Tokens"
+address: "ML//transformer//tokenizer//special tokens"
+name: "special tokens"
 date: "2026-03-08"
 ---
 Tokens with structural meaning, not linguistic meaning:

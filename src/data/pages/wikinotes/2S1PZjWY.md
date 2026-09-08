@@ -1,6 +1,6 @@
 ---
 uid: "2S1PZjWY"
-address: "Hardware//CPU//register"
+address: "hardware//CPU//register"
 name: "register"
 date: "2026-02-05"
 ---

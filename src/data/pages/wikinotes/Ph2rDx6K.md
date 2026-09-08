@@ -1,6 +1,6 @@
 ---
 uid: "Ph2rDx6K"
-address: "Infrastructure//PostHog"
+address: "infrastructure//PostHog"
 name: "PostHog"
 date: "2026-03-12"
 ---

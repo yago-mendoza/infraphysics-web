@@ -1,6 +1,6 @@
 ---
 uid: "Xdr8C0rR"
-address: "Security//XDR"
+address: "security//XDR"
 name: "XDR"
 date: "2026-09-04"
 ---

@@ -1,7 +1,7 @@
 ---
 uid: "Ev3pNx7L"
-address: "Web Dev//API//event-driven API"
-name: "Event-driven API"
+address: "web dev//API//event-driven API"
+name: "event-driven API"
 date: "2026-03-12"
 ---
 Pattern where your app fires an event and the actual processing happens outside your request. Your [[Vf6kRm2D|Vercel Function]] returns immediately; the heavy work runs asynchronously in a job queue.

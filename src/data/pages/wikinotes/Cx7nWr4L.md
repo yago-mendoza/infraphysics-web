@@ -1,6 +1,6 @@
 ---
 uid: "Cx7nWr4L"
-address: "Web Dev//SEO//robots.txt"
+address: "web dev//SEO//robots.txt"
 name: "robots.txt"
 date: "2026-03-08"
 ---

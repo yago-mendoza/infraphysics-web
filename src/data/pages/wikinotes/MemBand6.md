@@ -1,7 +1,7 @@
 ---
 uid: "MemBand6"
-address: "Hardware//memory bandwidth"
-name: "Memory Bandwidth"
+address: "hardware//memory bandwidth"
+name: "memory bandwidth"
 date: "2026-09-04"
 ---
 

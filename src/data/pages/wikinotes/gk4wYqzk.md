@@ -1,6 +1,6 @@
 ---
 uid: "gk4wYqzk"
-address: "Tools//Claude Code"
+address: "tools//Claude Code"
 name: "Claude Code"
 date: "2026-02-06"
 ---

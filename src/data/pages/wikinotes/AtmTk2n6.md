@@ -1,7 +1,7 @@
 ---
 uid: "AtmTk2n6"
-address: "Systems Theory//atom to token"
-name: "From atom to token"
+address: "systems theory//from atom to token"
+name: "from atom to token"
 date: "2026-09-03"
 ---
 

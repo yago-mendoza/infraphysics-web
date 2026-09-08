@@ -1,6 +1,6 @@
 ---
 uid: "Se7tBm3D"
-address: "Infrastructure//Sentry"
+address: "infrastructure//Sentry"
 name: "Sentry"
 date: "2026-03-12"
 ---

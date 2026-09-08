@@ -1,7 +1,7 @@
 ---
 uid: "IjOYtr23"
-address: "Infrastructure//Docker//Lifecycle"
-name: "Lifecycle"
+address: "infrastructure//Docker//lifecycle"
+name: "lifecycle"
 date: "2025-02-03"
 ---
 - `--rm` creates ephemeral "use-and-discard" containers, perfect for one-shot tools like key generation.

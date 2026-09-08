@@ -243,6 +243,9 @@ React Router 7 runs every `navigate()` as a React transition, so a plain `setSta
 ### Horizontal overflow is clipped with `overflow-x: clip`, never `hidden`
 `html, body` in `global.css` and the root wrapper in `App.tsx` use `overflow-x: clip`. `hidden` would turn each of them into a scroll container, and then `position: sticky` anywhere below (the blog article index in `ArticlePostView`, any future sticky rail) anchors to that non-scrolling box and never sticks. `clip` clips the same without creating a scroll container. If you need to clip an ancestor of something sticky, use `clip`.
 
+### Wikinote names are stored in mid-sentence casing
+`name` (and the last address segment) is written as the term reads inside a sentence: `feedback loop`, `Kalman filter`, `RLHF`. The build sets `displayTitle` to the capitalised form (`displayName()` in `src/lib/content/casing.js`) and every title, card, search result and directory entry uses it; a bare `[[uid]]` shows the name verbatim mid-sentence and is capitalised by the compiler when it opens a sentence or a bullet (`startsSentence()`). `proper: true` in the frontmatter blocks both. Never capitalise a name in the file to fix a title, and never write `[[uid|Feedback loop]]` to fix a sentence start: both are handled. Rules in `src/data/pages/wikinotes/STYLE.md`.
+
 ### The content type is called wikinotes everywhere (renamed Sep 2026)
 Sources live in `src/data/pages/wikinotes/`, the build writes `public/wikinotes/{uid}.json` and `public/wikinotes-index.json`, the category key is `'wikinotes'` (og-manifest and the Pages Function), the dev endpoints are `/api/wikinotes/*` and the accent is `--cat-wikinotes-accent`. Public URLs never carried the old name (`/wiki/:uid`). If "fieldnote" appears anywhere it is stale text, not a contract; the only legitimate mentions are historical (the site-building article, old notes).
 

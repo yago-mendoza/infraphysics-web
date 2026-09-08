@@ -1,7 +1,7 @@
 ---
 uid: "H7v6Q9oF"
-address: "Blockchain//Consensus//Voting"
-name: "Voting"
+address: "blockchain//consensus//voting"
+name: "voting"
 date: "2025-04-14"
 ---
 - `clique_propose(address, true)` from an existing validator starts the voting process to add a new one.

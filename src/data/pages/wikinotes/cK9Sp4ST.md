@@ -1,7 +1,7 @@
 ---
 uid: "cK9Sp4ST"
-address: "Blockchain"
-name: "Blockchain"
+address: "blockchain"
+name: "blockchain"
 date: "2025-02-22"
 ---
 - A distributed ledger replicated across many nodes, no single point of failure.

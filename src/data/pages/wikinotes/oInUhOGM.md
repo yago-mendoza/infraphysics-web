@@ -1,6 +1,6 @@
 ---
 uid: oInUhOGM
-address: "Hardware//GPU//architecture"
+address: "hardware//GPU//architecture"
 name: "architecture"
 date: "2026-02-05"
 ---

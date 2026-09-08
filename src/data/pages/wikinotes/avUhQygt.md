@@ -1,6 +1,6 @@
 ---
 uid: "avUhQygt"
-address: "Math//information theory"
+address: "mathematics//information theory"
 name: "information theory"
 date: "2026-03-02"
 ---

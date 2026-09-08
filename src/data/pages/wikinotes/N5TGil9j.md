@@ -1,7 +1,7 @@
 ---
 uid: "N5TGil9j"
-address: "Infrastructure//Docker//Subnet"
-name: "Subnet"
+address: "infrastructure//Docker//subnet"
+name: "subnet"
 date: "2025-02-03"
 ---
 - Docker networks use private IP ranges (172.x.x.x typically), separate from host LAN (192.168.x.x)

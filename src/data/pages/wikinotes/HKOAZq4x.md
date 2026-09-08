@@ -1,6 +1,6 @@
 ---
 uid: "HKOAZq4x"
-address: "Infrastructure//Supabase//credentials"
+address: "infrastructure//Supabase//credentials"
 name: "credentials"
 date: "2026-03-15"
 ---

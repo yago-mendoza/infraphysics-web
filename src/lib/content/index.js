@@ -37,3 +37,4 @@ export {
 } from './address.js';
 
 export { generateUid } from './uid.js';
+export { capitalizeFirst, displayName, startsSentence } from './casing.js';

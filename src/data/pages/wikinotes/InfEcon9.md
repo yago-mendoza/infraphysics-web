@@ -1,7 +1,7 @@
 ---
 uid: "InfEcon9"
-address: "ML//Inference//inference economics"
-name: "Inference Economics"
+address: "ML//inference//inference economics"
+name: "inference economics"
 date: "2026-09-04"
 ---
 

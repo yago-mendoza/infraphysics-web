@@ -1,6 +1,6 @@
 ---
 uid: "As8kTm3F"
-address: "Web Dev//framework//Astro"
+address: "web dev//framework//Astro"
 name: "Astro"
 date: "2026-03-12"
 ---

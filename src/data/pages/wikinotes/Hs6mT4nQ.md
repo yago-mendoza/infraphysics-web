@@ -1,6 +1,6 @@
 ---
 uid: "Hs6mT4nQ"
-address: "Math//Hessian"
+address: "mathematics//Hessian"
 name: "Hessian"
 date: "2026-03-11"
 ---

@@ -1,7 +1,7 @@
 ---
 uid: "x0YktUDc"
-address: "Blockchain//Besu//Docker Path"
-name: "Docker Path"
+address: "blockchain//Besu//Docker path"
+name: "Docker path"
 date: "2025-05-18"
 ---
 - "Docker-only" workflow: use the Besu Docker image for everything, no local Java/JDK needed.

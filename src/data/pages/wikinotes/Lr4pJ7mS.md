@@ -1,7 +1,7 @@
 ---
 uid: "Lr4pJ7mS"
 address: "ML//neural network//optimizer//learning rate"
-name: "Learning Rate"
+name: "learning rate"
 date: "2026-03-05"
 ---
 The step size for [[Gd5tR8wP|gradient descent]]: how much to adjust weights per update. Too high and training diverges (loss explodes), too low and it takes forever or gets stuck in shallow minima.

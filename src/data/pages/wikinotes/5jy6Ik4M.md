@@ -1,7 +1,7 @@
 ---
 uid: "5jy6Ik4M"
 address: "ML//agent//function calling"
-name: "Function Calling"
+name: "function calling"
 date: "2024-03-15"
 ---
 Function calling is a structured model output containing a tool identifier and arguments, commonly represented as JSON. The application validates the call, executes ordinary code, returns an observation, and may invoke the model again.

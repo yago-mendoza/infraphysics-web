@@ -1,6 +1,6 @@
 ---
 uid: "DGPxwG79"
-address: "Networks//RPC//JSON-RPC"
+address: "networks//RPC//JSON-RPC"
 name: "JSON-RPC"
 date: "2025-08-19"
 ---

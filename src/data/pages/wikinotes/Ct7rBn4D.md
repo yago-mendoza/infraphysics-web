@@ -1,6 +1,6 @@
 ---
 uid: "Ct7rBn4D"
-address: "Infrastructure//Cloudflare//Workers//CPU time"
+address: "infrastructure//Cloudflare//Workers//CPU time"
 name: "CPU time"
 date: "2026-03-12"
 ---

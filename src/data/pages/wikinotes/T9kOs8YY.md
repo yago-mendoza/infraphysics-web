@@ -1,7 +1,7 @@
 ---
 uid: "T9kOs8YY"
-address: "ML//Inference//speculative decoding"
-name: "Speculative Decoding"
+address: "ML//inference//speculative decoding"
+name: "speculative decoding"
 date: "2023-11-10"
 ---
 - Use a small draft model to predict several tokens ahead, verify with the large model in one forward pass.

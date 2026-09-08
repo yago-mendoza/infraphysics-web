@@ -1,7 +1,7 @@
 ---
 uid: "SgpRlmXe"
 address: "ML//RAG//reranker"
-name: "Reranker"
+name: "reranker"
 date: "2026-03-04"
 ---
 - Second-pass model that re-scores retrieved documents for query relevance.

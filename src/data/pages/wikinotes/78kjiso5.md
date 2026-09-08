@@ -1,7 +1,7 @@
 ---
 uid: "78kjiso5"
 address: "ML//RNN//sequence-to-sequence"
-name: "Sequence-To-Sequence"
+name: "sequence-to-sequence"
 date: "2018-06-15"
 ---
 - Encoder RNN compresses input to a fixed-size vector, decoder RNN generates output from it.

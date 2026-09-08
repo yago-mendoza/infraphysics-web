@@ -1,6 +1,6 @@
 ---
 uid: e9JZ4ItW
-address: "ML//Training//fine-tuning//QLoRA"
+address: "ML//training//fine-tuning//QLoRA"
 name: "QLoRA"
 date: "2026-02-26"
 ---

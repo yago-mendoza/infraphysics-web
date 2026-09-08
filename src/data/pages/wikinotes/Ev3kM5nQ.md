@@ -1,6 +1,6 @@
 ---
 uid: "Ev3kM5nQ"
-address: "Math//eigenvalue"
+address: "mathematics//eigenvalue"
 name: "eigenvalue"
 date: "2026-03-11"
 ---

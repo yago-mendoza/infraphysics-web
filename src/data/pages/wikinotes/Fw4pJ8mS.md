@@ -1,7 +1,7 @@
 ---
 uid: "Fw4pJ8mS"
-address: "ML//Transformer//forward pass"
-name: "Forward Pass"
+address: "ML//transformer//forward pass"
+name: "forward pass"
 date: "2026-03-03"
 ---
 One complete pass through the network: [[Em3xR7wP|embeddings]] + [[eGfBTEQ5|positional encoding]] → { [[ml8njOQc|Attention]] → [[Pr8dt3wz|MLP]] } × N layers → [[mcdxPW3m|layer norm]] → [[2GCBLdlB|LM head]] → [[Lg7cD3vX|logits]] → [[Sm8rH4nW|softmax]] → token.

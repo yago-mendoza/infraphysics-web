@@ -1,7 +1,7 @@
 ---
 uid: "AuCtR1l9"
 address: "ML//agent//autoregressive control"
-name: "Autoregressive control"
+name: "autoregressive control"
 date: "2026-09-03"
 ---
 

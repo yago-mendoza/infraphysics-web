@@ -1,6 +1,6 @@
 ---
 uid: "QSPGKDnh"
-address: "Robotics//sensor"
+address: "robotics//sensor"
 name: "sensor"
 date: "2026-02-05"
 ---

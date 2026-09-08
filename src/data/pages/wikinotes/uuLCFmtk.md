@@ -1,6 +1,6 @@
 ---
 uid: "uuLCFmtk"
-address: "Robotics//sensor//smart sensor"
+address: "robotics//sensor//smart sensor"
 name: "smart sensor"
 date: "2026-02-05"
 ---

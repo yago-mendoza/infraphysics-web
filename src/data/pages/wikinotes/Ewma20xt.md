@@ -1,6 +1,6 @@
 ---
 uid: "Ewma20xt"
-address: "ML//Time Series//EWMA"
+address: "ML//time series//EWMA"
 name: "EWMA"
 date: "2026-07-04"
 ---

@@ -1,7 +1,7 @@
 ---
 uid: "mydQy6ia"
 address: "ML//agent//tool use"
-name: "Tool Use"
+name: "tool use"
 date: "2024-03-15"
 ---
 Tool use lets a model request operations such as search, code execution, file access, database queries, and browser interaction. [[5jy6Ik4M|Function calling]] is a common structured transport for those requests.

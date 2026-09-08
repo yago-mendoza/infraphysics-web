@@ -1,6 +1,6 @@
 ---
 uid: "Ax4kJn8M"
-address: "Web Dev//SEO//AEO"
+address: "web dev//SEO//AEO"
 name: "AEO"
 date: "2026-03-08"
 ---

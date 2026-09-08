@@ -1,7 +1,7 @@
 ---
 uid: "WQZa0enf"
-address: "Blockchain//Wallet"
-name: "Wallet"
+address: "blockchain//wallet"
+name: "wallet"
 date: "2025-07-06"
 ---
 - Cryptocurrency wallet = key management software: doesn't "store" coins, coins live on-chain.

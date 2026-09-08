@@ -1,6 +1,6 @@
 ---
 uid: "m0VJ5a3l"
-address: "ML//Transformer//positional encoding//RoPE"
+address: "ML//transformer//positional encoding//RoPE"
 name: "RoPE"
 date: "2023-03-20"
 ---

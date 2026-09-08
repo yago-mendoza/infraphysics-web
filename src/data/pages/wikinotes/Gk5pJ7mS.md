@@ -1,7 +1,7 @@
 ---
 uid: "Gk5pJ7mS"
-address: "ML//Inference//greedy decoding"
-name: "Greedy Decoding"
+address: "ML//inference//greedy decoding"
+name: "greedy decoding"
 date: "2026-03-02"
 ---
 Always pick the best-looking option right now, and hope the sequence works itself out. At each [[Ds4pJ8kF|decoding step]], pick the single token with the highest probability from the [[Lg7cD3vX|logits]]. No randomness, no exploration, always the argmax.

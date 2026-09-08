@@ -1,7 +1,7 @@
 ---
 uid: "haA3MDhG"
 address: "ML//neural network//embedding"
-name: "Embedding"
+name: "embedding"
 date: "2018-03-08"
 ---
 Mapping discrete tokens to dense vectors: "king" becomes [0.2, -0.5, 0.8, ...]. Typical dimension: 12K+ in large models.

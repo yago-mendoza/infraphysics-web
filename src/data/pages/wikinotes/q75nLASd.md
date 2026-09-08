@@ -1,7 +1,7 @@
 ---
 uid: "q75nLASd"
 address: "ML//model"
-name: "Model"
+name: "model"
 date: "2026-03-08"
 ---
 Concrete implementations of ML architectures: trained artifacts with specific weights, capabilities, and release contexts. Includes both proprietary (GPT-4, Claude, Gemini) and [[hupst9j9|open-weight]] families (LLaMA, DeepSeek, Qwen, Mistral).

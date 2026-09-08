@@ -1,6 +1,6 @@
 ---
 uid: "Cs5nWm7K"
-address: "Infrastructure//edge computing//cold start"
+address: "infrastructure//edge computing//cold start"
 name: "cold start"
 date: "2026-03-12"
 ---

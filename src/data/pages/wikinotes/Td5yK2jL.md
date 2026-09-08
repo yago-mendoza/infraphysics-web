@@ -1,7 +1,7 @@
 ---
 uid: "Td5yK2jL"
-address: "ML//Training//dataset//tail distribution"
-name: "Tail Distribution"
+address: "ML//training//dataset//tail distribution"
+name: "tail distribution"
 date: "2026-03-01"
 ---
 The rare events at the edges of a probability distribution: the 0.1% cases that standard training underweights.

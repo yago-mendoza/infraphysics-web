@@ -1,7 +1,7 @@
 ---
 uid: "Thr0ugh8"
-address: "Infrastructure//throughput"
-name: "Throughput"
+address: "infrastructure//throughput"
+name: "throughput"
 date: "2026-09-04"
 ---
 

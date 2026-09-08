@@ -1,7 +1,7 @@
 ---
 uid: "Zer0Day7"
-address: "Security//zero-day"
-name: "Zero-Day"
+address: "security//zero-day"
+name: "zero-day"
 date: "2026-09-04"
 ---
 

@@ -1,7 +1,7 @@
 ---
 uid: "u0He1l4k"
-address: "Blockchain//Besu//Race Condition"
-name: "Race Condition"
+address: "blockchain//Besu//race condition"
+name: "race condition"
 date: "2025-09-07"
 ---
 Non-deterministic startup: launching nodes in rapid succession without pauses can leave some nodes isolated.

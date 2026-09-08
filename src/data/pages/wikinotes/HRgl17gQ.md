@@ -1,6 +1,6 @@
 ---
 uid: HRgl17gQ
-address: "ML//Training//GRPO"
+address: "ML//training//GRPO"
 name: "GRPO"
 date: "2026-03-03"
 ---

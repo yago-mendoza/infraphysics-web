@@ -1,7 +1,7 @@
 ---
 uid: "Tco5OwnR"
-address: "Economics//total cost of ownership"
-name: "Total Cost of Ownership"
+address: "economics//total cost of ownership"
+name: "total cost of ownership"
 date: "2026-09-04"
 ---
 

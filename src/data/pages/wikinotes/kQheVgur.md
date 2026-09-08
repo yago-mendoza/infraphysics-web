@@ -1,6 +1,6 @@
 ---
 uid: "kQheVgur"
-address: "Hardware//electronics"
+address: "hardware//electronics"
 name: "electronics"
 date: "2026-02-15"
 ---

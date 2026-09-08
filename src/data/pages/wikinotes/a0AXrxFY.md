@@ -1,7 +1,7 @@
 ---
 uid: "a0AXrxFY"
-address: "ML//Red teaming"
-name: "Red Teaming"
+address: "ML//red teaming"
+name: "red teaming"
 date: "2026-02-15"
 ---
 Stress tests on LLM behavior: hire people (or AIs) to break your model on purpose.

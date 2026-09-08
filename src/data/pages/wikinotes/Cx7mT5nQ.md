@@ -1,6 +1,6 @@
 ---
 uid: "Cx7mT5nQ"
-address: "Math//curse of dimensionality"
+address: "mathematics//curse of dimensionality"
 name: "curse of dimensionality"
 date: "2026-03-11"
 ---

@@ -1,6 +1,6 @@
 ---
 uid: "LxUj37D3"
-address: "Hardware//GPU//discrete"
+address: "hardware//GPU//discrete"
 name: "discrete"
 date: "2026-02-05"
 ---

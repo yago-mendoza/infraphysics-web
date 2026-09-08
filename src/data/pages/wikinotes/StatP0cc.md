@@ -1,6 +1,6 @@
 ---
 uid: "StatP0cc"
-address: "Math//statistics"
+address: "mathematics//statistics"
 name: "statistics"
 date: "2026-07-04"
 ---

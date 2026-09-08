@@ -1,6 +1,6 @@
 ---
 uid: "oaFI1HMZ"
-address: "Tools//Google"
+address: "tools//Google"
 name: "Google"
 date: "2026-03-11"
 ---

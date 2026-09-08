@@ -1,7 +1,7 @@
 ---
 uid: "T0U5VL9d"
-address: "Infrastructure//Docker//Port Mapping"
-name: "Port Mapping"
+address: "infrastructure//Docker//port mapping"
+name: "port mapping"
 date: "2025-02-03"
 ---
 - `-p 9999:8545` maps host port 9999 to container port 8545, the bridge between worlds.

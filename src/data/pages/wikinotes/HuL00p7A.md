@@ -1,7 +1,7 @@
 ---
 uid: "HuL00p7A"
-address: "Security//human-in-the-loop"
-name: "Human-in-the-Loop"
+address: "security//human-in-the-loop"
+name: "human-in-the-loop"
 date: "2026-09-04"
 ---
 

@@ -1,6 +1,6 @@
 ---
 uid: "FpGa7Cfg"
-address: "Hardware//chip//FPGA"
+address: "hardware//chip//FPGA"
 name: "FPGA"
 date: "2026-09-03"
 ---

@@ -1,7 +1,7 @@
 ---
 uid: "ebRm86zw"
 address: "ML//RAG//hybrid search"
-name: "Hybrid Search"
+name: "hybrid search"
 date: "2024-03-15"
 ---
 - Combine [[TIQNpwbS|vector]] similarity (semantic) with keyword matching (BM25)

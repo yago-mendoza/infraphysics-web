@@ -1,7 +1,7 @@
 ---
 uid: "0YSqmnyU"
-address: "Blockchain//Besu//Node Roles//RPC Node"
-name: "RPC Node"
+address: "blockchain//Besu//node roles//RPC node"
+name: "RPC node"
 date: "2026-02-17"
 ---
 - Port mapped with `-p` in Docker: external applications (dApps, wallets, scripts) connect here.

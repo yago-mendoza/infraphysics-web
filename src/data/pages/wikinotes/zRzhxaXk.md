@@ -1,6 +1,6 @@
 ---
 uid: "zRzhxaXk"
-address: "Hardware//NVIDIA//CUDA"
+address: "hardware//NVIDIA//CUDA"
 name: "CUDA"
 date: "2019-08-10"
 ---

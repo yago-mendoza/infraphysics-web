@@ -1,7 +1,7 @@
 ---
 uid: "Dc8sW4nR"
-address: "ML//Transformer//decoder"
-name: "Decoder"
+address: "ML//transformer//decoder"
+name: "decoder"
 date: "2026-03-02"
 ---
 [[U7ljk7Wf|GPT]]-style architecture: [[vCs7RZqL|self-attention]] with [[Cm7jR4sQ|causal masking]]: each token only sees tokens before it.

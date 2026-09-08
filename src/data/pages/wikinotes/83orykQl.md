@@ -1,7 +1,7 @@
 ---
 uid: "83orykQl"
-address: "ML//Training//reward model"
-name: "Reward Model"
+address: "ML//training//reward model"
+name: "reward model"
 date: "2026-02-15"
 ---
 A neural network trained to score AI outputs on a scalar: "how good is this response?"

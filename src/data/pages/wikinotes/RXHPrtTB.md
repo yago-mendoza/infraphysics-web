@@ -1,7 +1,7 @@
 ---
 uid: "RXHPrtTB"
 address: "ML//neural network//activation function"
-name: "Activation Function"
+name: "activation function"
 date: "2017-10-22"
 ---
 - The non-linearity between layers.

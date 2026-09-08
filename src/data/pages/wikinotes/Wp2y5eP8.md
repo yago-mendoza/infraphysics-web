@@ -1,7 +1,7 @@
 ---
 uid: "Wp2y5eP8"
-address: "Blockchain//Bootnode"
-name: "Bootnode"
+address: "blockchain//bootnode"
+name: "bootnode"
 date: "2025-03-09"
 ---
 Discovery entry point: new nodes contact bootnodes to learn about other peers in the network.

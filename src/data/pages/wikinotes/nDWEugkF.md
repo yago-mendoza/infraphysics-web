@@ -1,7 +1,7 @@
 ---
 uid: "nDWEugkF"
-address: "Networks//Port"
-name: "Port"
+address: "networks//port"
+name: "port"
 date: "2025-02-04"
 ---
 - Ports are like apartment numbers on an IP address: each service gets its own.

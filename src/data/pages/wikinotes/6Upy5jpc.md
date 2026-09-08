@@ -1,7 +1,7 @@
 ---
 uid: "6Upy5jpc"
-address: "Blockchain//Besu//Node Roles"
-name: "Node Roles"
+address: "blockchain//Besu//node roles"
+name: "node roles"
 date: "2025-05-18"
 ---
 - Every Besu node is a full node. The roles describe what additional responsibilities it carries.

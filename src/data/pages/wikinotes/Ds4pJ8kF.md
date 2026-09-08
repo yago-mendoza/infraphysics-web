@@ -1,7 +1,7 @@
 ---
 uid: "Ds4pJ8kF"
-address: "ML//Inference//decoding step"
-name: "Decoding Step"
+address: "ML//inference//decoding step"
+name: "decoding step"
 date: "2026-03-08"
 ---
 One [[Fw4pJ8mS|forward pass]] = one new token generated. The full inference = a sequence of decoding steps.

@@ -1,7 +1,7 @@
 ---
 uid: "Ep1st3mI"
-address: "ML//agent//harness//epistemic interface"
-name: "Epistemic Interface"
+address: "ML//agent//agent harness//epistemic interface"
+name: "epistemic interface"
 date: "2026-09-03"
 ---
 

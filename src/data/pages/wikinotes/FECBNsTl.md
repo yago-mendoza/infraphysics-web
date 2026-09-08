@@ -1,7 +1,7 @@
 ---
 uid: "FECBNsTl"
-address: "Blockchain//Besu//Automation"
-name: "Automation"
+address: "blockchain//Besu//automation"
+name: "automation"
 date: "2025-05-18"
 ---
 - Script idempotency: always start with a cleanup section to remove previous containers and networks.

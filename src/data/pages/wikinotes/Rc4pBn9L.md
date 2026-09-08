@@ -1,6 +1,6 @@
 ---
 uid: "Rc4pBn9L"
-address: "Web Dev//framework//React"
+address: "web dev//framework//React"
 name: "React"
 date: "2026-03-12"
 distinct: ["ML//agent//ReAct"]

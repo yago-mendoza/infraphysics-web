@@ -1,7 +1,7 @@
 ---
 uid: "zSFOpgNO"
-address: "ML//Transformer//tokenizer"
-name: "Tokenizer"
+address: "ML//transformer//tokenizer"
+name: "tokenizer"
 date: "2018-09-10"
 ---
 Breaks text into subword tokens: "unbelievable" → "un" + "believ" + "able". Input into pieces = tokens (also chunks of image, or sound)

@@ -1,7 +1,7 @@
 ---
 uid: "SpcGam3Q"
 address: "ML//agent//specification gaming"
-name: "Specification Gaming"
+name: "specification gaming"
 date: "2026-09-04"
 ---
 

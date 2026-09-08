@@ -1,7 +1,7 @@
 ---
 uid: "rttI47hN"
-address: "Systems Theory"
-name: "Systems Theory"
+address: "systems theory"
+name: "systems theory"
 date: "2026-03-02"
 ---
 The study of systems as wholes: how components interact, self-organize, and produce behavior that cannot be predicted from parts alone.

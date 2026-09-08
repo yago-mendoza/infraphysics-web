@@ -1,7 +1,7 @@
 ---
 uid: "UFgfX2Jv"
-address: "Blockchain//Besu//Genesis"
-name: "Genesis"
+address: "blockchain//Besu//genesis"
+name: "genesis"
 date: "2025-05-02"
 ---
 `genesis.json` defines the blockchain at birth: chainId, consensus type, initial state, gas limits.

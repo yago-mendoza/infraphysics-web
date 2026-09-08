@@ -1,7 +1,7 @@
 ---
 uid: "PrjC4wIH"
-address: "Web Dev//SQL//trigger"
-name: "Trigger"
+address: "web dev//SQL//trigger"
+name: "trigger"
 date: "2026-03-15"
 ---
 Code that runs automatically when something happens in a table. You don't call it. The database calls it for you.

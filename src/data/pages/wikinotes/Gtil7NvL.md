@@ -1,7 +1,7 @@
 ---
 uid: "Gtil7NvL"
-address: "Tools"
-name: "Tools"
+address: "tools"
+name: "tools"
 date: "2026-09-01"
 ---
 Tools are the workbench: editors, platforms, consoles, services, and automation used to inspect or change other systems. They are organized here by operational ownership rather than academic field.

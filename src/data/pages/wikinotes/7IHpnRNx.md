@@ -1,7 +1,7 @@
 ---
 uid: "7IHpnRNx"
 address: "ML//neural network//vanishing gradient"
-name: "Vanishing Gradient"
+name: "vanishing gradient"
 date: "2018-03-08"
 ---
 - Gradients shrink exponentially through deep layers: chain rule multiplies many small numbers.

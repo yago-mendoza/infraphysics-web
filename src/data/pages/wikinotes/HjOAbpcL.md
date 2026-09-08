@@ -1,6 +1,6 @@
 ---
 uid: "HjOAbpcL"
-address: "Hardware//NVIDIA//Jetson"
+address: "hardware//NVIDIA//Jetson"
 name: "Jetson"
 date: "2026-02-15"
 ---

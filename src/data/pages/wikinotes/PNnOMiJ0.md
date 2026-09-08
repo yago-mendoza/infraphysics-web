@@ -1,6 +1,6 @@
 ---
 uid: "PNnOMiJ0"
-address: "ML//Multimodal//TTS"
+address: "ML//multimodal//TTS"
 name: "TTS"
 date: "2026-03-06"
 ---

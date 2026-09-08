@@ -1,6 +1,6 @@
 ---
 uid: "Pv3kBx9D"
-address: "Web Dev//SQL//PostgreSQL//pgvector"
+address: "web dev//SQL//PostgreSQL//pgvector"
 name: "pgvector"
 date: "2026-03-12"
 ---

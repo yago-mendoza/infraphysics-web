@@ -1,7 +1,7 @@
 ---
 uid: "Sp2tK6jL"
 address: "ML//neural network//superposition"
-name: "Superposition"
+name: "superposition"
 date: "2026-03-06"
 ---
 Every neuron moonlights: representing dozens of concepts at once, because the model has more ideas than it has neurons to store them in. Neurons represent many different [[Ft9pL5hS|features]] simultaneously through linear combination: angles between feature directions are not perfectly perpendicular.

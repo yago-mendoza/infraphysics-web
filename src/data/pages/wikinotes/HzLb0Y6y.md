@@ -1,7 +1,7 @@
 ---
 uid: "HzLb0Y6y"
-address: "Blockchain//Wallet//Seed Phrase"
-name: "Seed Phrase"
+address: "blockchain//wallet//seed phrase"
+name: "seed phrase"
 date: "2025-06-14"
 ---
 - 12-24 words (BIP-39 standard), a human-readable encoding of random entropy.

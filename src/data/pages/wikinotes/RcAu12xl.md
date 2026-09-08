@@ -1,6 +1,6 @@
 ---
 uid: "RcAu12xl"
-address: "ML//Evaluation//ROC-AUC"
+address: "ML//evaluation//ROC-AUC"
 name: "ROC-AUC"
 date: "2026-07-04"
 ---

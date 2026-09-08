@@ -1,7 +1,7 @@
 ---
 uid: "CloudCmp"
-address: "Infrastructure//cloud computing"
-name: "Cloud Computing"
+address: "infrastructure//cloud computing"
+name: "cloud computing"
 date: "2026-09-04"
 ---
 

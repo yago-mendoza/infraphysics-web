@@ -1,7 +1,7 @@
 ---
 uid: "Nohc505O"
-address: "Blockchain//Besu//Funding"
-name: "Funding"
+address: "blockchain//Besu//funding"
+name: "funding"
 date: "2025-09-07"
 ---
 - "Chicken and egg": need an address to fund it in genesis, but can't create genesis until keys are generated.

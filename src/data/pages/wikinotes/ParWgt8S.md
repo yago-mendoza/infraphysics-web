@@ -1,7 +1,7 @@
 ---
 uid: "ParWgt8S"
 address: "ML//parameters and weights"
-name: "Parameters and Weights"
+name: "parameters and weights"
 date: "2026-09-04"
 ---
 

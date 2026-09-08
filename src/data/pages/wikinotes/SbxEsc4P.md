@@ -1,7 +1,7 @@
 ---
 uid: "SbxEsc4P"
-address: "Security//sandbox escape"
-name: "Sandbox Escape"
+address: "security//sandbox escape"
+name: "sandbox escape"
 date: "2026-09-04"
 ---
 

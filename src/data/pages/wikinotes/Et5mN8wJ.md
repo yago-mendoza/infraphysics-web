@@ -1,7 +1,7 @@
 ---
 uid: "Et5mN8wJ"
-address: "ML//Inference//extended thinking"
-name: "Extended Thinking"
+address: "ML//inference//extended thinking"
+name: "extended thinking"
 date: "2026-03-02"
 ---
 Generate intermediate reasoning tokens before the final answer, the core technique behind [[Kp4jIz9L|reasoning models]] (o1, o3, R1, QwQ)

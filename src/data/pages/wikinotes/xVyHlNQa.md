@@ -1,6 +1,6 @@
 ---
 uid: "xVyHlNQa"
-address: "Hardware//peripheral//ESP32"
+address: "hardware//peripheral//ESP32"
 name: "ESP32"
 date: "2026-02-05"
 ---

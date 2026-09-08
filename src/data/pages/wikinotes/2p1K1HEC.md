@@ -1,6 +1,6 @@
 ---
 uid: "2p1K1HEC"
-address: "Hardware//I/O//DMA"
+address: "hardware//I/O//DMA"
 name: "DMA"
 date: "2026-02-05"
 ---

@@ -1,6 +1,6 @@
 ---
 uid: "gKR2I1Nu"
-address: "Hardware//chip//MCU"
+address: "hardware//chip//MCU"
 name: "MCU"
 date: "2026-02-05"
 ---

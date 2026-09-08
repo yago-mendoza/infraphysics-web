@@ -1,7 +1,7 @@
 ---
 uid: "AgL00p8Q"
 address: "ML//agent//agent loop"
-name: "Agent Loop"
+name: "agent loop"
 date: "2026-09-04"
 ---
 

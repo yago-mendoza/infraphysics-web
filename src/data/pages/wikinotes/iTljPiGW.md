@@ -1,7 +1,7 @@
 ---
 uid: "iTljPiGW"
 address: "ML//scaling laws"
-name: "Scaling Laws"
+name: "scaling laws"
 date: "2020-10-15"
 ---
 Kaplan et al. (2020): performance follows power laws in compute, data, and parameters.

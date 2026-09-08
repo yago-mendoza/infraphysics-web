@@ -1,7 +1,7 @@
 ---
 uid: "j9Y9JsUA"
 address: "ML//neural network//optimizer"
-name: "Optimizer"
+name: "optimizer"
 date: "2017-12-03"
 ---
 How to update weights after computing gradients.

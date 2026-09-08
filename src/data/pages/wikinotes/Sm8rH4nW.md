@@ -1,7 +1,7 @@
 ---
 uid: "Sm8rH4nW"
 address: "ML//neural network//softmax"
-name: "Softmax"
+name: "softmax"
 date: "2026-03-08"
 ---
 Converts a vector of raw scores ([[Lg7cD3vX|logits]]) into probabilities that sum to 1: exp(xᵢ)/Σexp(xⱼ)

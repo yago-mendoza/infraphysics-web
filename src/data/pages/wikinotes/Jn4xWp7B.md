@@ -1,6 +1,6 @@
 ---
 uid: "Jn4xWp7B"
-address: "Infrastructure//serverless"
+address: "infrastructure//serverless"
 name: "serverless"
 date: "2026-03-10"
 ---

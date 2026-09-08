@@ -1,7 +1,7 @@
 ---
 uid: "Batch1ng"
-address: "ML//Inference//batching"
-name: "Inference Batching"
+address: "ML//inference//inference batching"
+name: "inference batching"
 date: "2026-09-04"
 ---
 

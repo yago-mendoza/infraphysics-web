@@ -1,6 +1,6 @@
 ---
 uid: "O8l8z5vL"
-address: "Tools//Claude Code///btw"
+address: "tools//Claude Code///btw"
 name: "/btw"
 date: "2026-03-11"
 ---

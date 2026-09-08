@@ -1,7 +1,7 @@
 ---
 uid: "MulAg7nT"
 address: "ML//agent//multi-agent system"
-name: "Multi-Agent System"
+name: "multi-agent system"
 date: "2026-09-04"
 ---
 

@@ -1,6 +1,6 @@
 ---
 uid: "PgionCm1"
-address: "Networks//RPC"
+address: "networks//RPC"
 name: "RPC"
 date: "2025-08-19"
 ---

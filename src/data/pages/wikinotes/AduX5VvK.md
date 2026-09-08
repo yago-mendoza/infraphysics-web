@@ -1,7 +1,7 @@
 ---
 uid: "AduX5VvK"
-address: "CS"
-name: "Computer Science"
+address: "computer science"
+name: "computer science"
 date: "2026-03-08"
 ---
 The study of computation: what can be computed, how efficiently, and with what resources.

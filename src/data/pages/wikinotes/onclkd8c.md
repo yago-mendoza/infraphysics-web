@@ -1,6 +1,6 @@
 ---
 uid: "onclkd8c"
-address: "Networks//RPC//Infura"
+address: "networks//RPC//Infura"
 name: "Infura"
 date: "2025-08-19"
 ---

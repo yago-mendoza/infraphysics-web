@@ -1,6 +1,6 @@
 ---
 uid: "pJmh7BBn"
-address: "ML//Multimodal//CLIP"
+address: "ML//multimodal//CLIP"
 name: "CLIP"
 date: "2022-01-20"
 ---

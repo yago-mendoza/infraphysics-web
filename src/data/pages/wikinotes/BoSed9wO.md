@@ -1,7 +1,7 @@
 ---
 uid: "BoSed9wO"
-address: "infraphysics//Content Pipeline"
-name: "Content Pipeline"
+address: "infraphysics//content pipeline"
+name: "content pipeline"
 date: "2026-03-19"
 ---
 

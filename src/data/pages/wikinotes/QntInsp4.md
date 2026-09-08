@@ -1,7 +1,7 @@
 ---
 uid: "QntInsp4"
-address: "Math//quantum-inspired algorithms"
-name: "Quantum-Inspired Algorithms"
+address: "mathematics//quantum-inspired algorithms"
+name: "quantum-inspired algorithms"
 date: "2026-09-04"
 ---
 

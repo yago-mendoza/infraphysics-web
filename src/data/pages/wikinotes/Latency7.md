@@ -1,7 +1,7 @@
 ---
 uid: "Latency7"
-address: "Infrastructure//latency"
-name: "Latency"
+address: "infrastructure//latency"
+name: "latency"
 date: "2026-09-04"
 ---
 

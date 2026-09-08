@@ -1,7 +1,7 @@
 ---
 uid: "Dr6kN2wY"
 address: "ML//neural network//embedding//directionality"
-name: "Directionality"
+name: "directionality"
 date: "2026-03-02"
 ---
 Directions in [[haA3MDhG|embedding]] space encode semantic relationships: king - man + woman ≈ queen (gender direction), cat → cats (plural direction)

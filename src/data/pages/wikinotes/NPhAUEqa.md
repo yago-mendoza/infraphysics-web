@@ -1,7 +1,7 @@
 ---
 uid: "NPhAUEqa"
-address: "Blockchain//Consensus//Attestation"
-name: "Attestation"
+address: "blockchain//consensus//attestation"
+name: "attestation"
 date: "2025-04-14"
 ---
 - In PoS, a random subset of validators is selected as the "attestation committee" for each slot.

@@ -1,6 +1,6 @@
 ---
 uid: "X0GHHYNe"
-address: "Hardware//chip//microcomputer"
+address: "hardware//chip//microcomputer"
 name: "microcomputer"
 date: "2026-02-15"
 ---

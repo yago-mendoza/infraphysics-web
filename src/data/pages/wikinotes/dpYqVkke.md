@@ -1,7 +1,7 @@
 ---
 uid: "dpYqVkke"
-address: "ML//Transformer//attention//multi-head attention"
-name: "Multi-Head Attention"
+address: "ML//transformer//attention//multi-head attention"
+name: "multi-head attention"
 date: "2018-08-20"
 ---
 Run [[vCs7RZqL|self-attention]] multiple times in parallel with different learned [[Pm5xH9bL|projections]]: each [[Hd4nK8xS|head]] operates on a reduced subspace.

@@ -1,7 +1,7 @@
 ---
 uid: "MdRl1fce"
-address: "ML//agent//harness//model-relative interface design"
-name: "Model-relative interface design"
+address: "ML//agent//agent harness//model-relative interface design"
+name: "model-relative interface design"
 date: "2026-09-03"
 ---
 

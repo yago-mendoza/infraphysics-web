@@ -1,6 +1,6 @@
 ---
 uid: "Pr7mK4nX"
-address: "ML//Training//reward model//PRM"
+address: "ML//training//reward model//PRM"
 name: "PRM"
 date: "2026-03-08"
 aliases: ["process reward model"]

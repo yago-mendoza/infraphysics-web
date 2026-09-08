@@ -1,7 +1,7 @@
 ---
 uid: "Cm5rBw9D"
-address: "Web Dev//platform CLI"
-name: "Platform CLI"
+address: "web dev//platform CLI"
+name: "platform CLI"
 date: "2026-03-10"
 ---
 Command-line tool provided by a cloud/hosting platform for managing deployments and services. Every major platform has one:

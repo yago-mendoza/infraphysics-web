@@ -1,7 +1,7 @@
 ---
 uid: "dL13xOGB"
-address: "Blockchain//Besu//Node Roles//Validator"
-name: "Validator"
+address: "blockchain//Besu//node roles//validator"
+name: "validator"
 date: "2026-02-17"
 ---
 - Address listed in genesis [[W30pa8xC|extraData]]: authorized to sign blocks in IBFT/QBFT consensus.

@@ -1,6 +1,6 @@
 ---
 uid: "iegOPp9Q"
-address: "Security//RLS"
+address: "security//RLS"
 name: "RLS"
 date: "2026-03-15"
 aliases: ["Row Level Security"]

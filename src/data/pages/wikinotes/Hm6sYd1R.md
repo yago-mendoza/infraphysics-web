@@ -1,7 +1,7 @@
 ---
 uid: "Hm6sYd1R"
-address: "ML//Alignment//mechanistic interpretability//activation verbalizer"
-name: "Activation Verbalizer"
+address: "ML//alignment//mechanistic interpretability//activation verbalizer"
+name: "activation verbalizer"
 date: "2026-04-08"
 ---
 A technique for translating numerical activation vectors from intermediate model layers into natural language descriptions; reading what neurons "think."

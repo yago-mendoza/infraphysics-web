@@ -1,7 +1,7 @@
 ---
 uid: "Rs6cD4vX"
-address: "ML//Transformer//residual stream"
-name: "Residual Stream"
+address: "ML//transformer//residual stream"
+name: "residual stream"
 date: "2026-03-05"
 ---
 The "highway" that carries information through the entire transformer: the vector that gets iteratively modified by [[ml8njOQc|attention]] and [[Pr8dt3wz|MLP]] blocks via [[dTnuW5yO|residual connections]]

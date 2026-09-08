@@ -1,6 +1,6 @@
 ---
 uid: "PtPr18xr"
-address: "ML//Time Series//point process"
+address: "ML//time series//point process"
 name: "point process"
 date: "2026-07-04"
 ---

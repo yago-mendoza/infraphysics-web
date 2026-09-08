@@ -1,7 +1,7 @@
 ---
 uid: "U99MuNPb"
-address: "Tools//Google//Analytics"
-name: "Analytics"
+address: "tools//Google//analytics"
+name: "analytics"
 date: "2026-03-10"
 ---
 Google's web and app analytics platform. Tracks user behavior after they arrive on your site. Currently on GA4 (replaced Universal Analytics in 2024).

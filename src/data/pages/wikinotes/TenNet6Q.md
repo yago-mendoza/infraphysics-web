@@ -1,7 +1,7 @@
 ---
 uid: "TenNet6Q"
-address: "Math//tensor network"
-name: "Tensor Network"
+address: "mathematics//tensor network"
+name: "tensor network"
 date: "2026-09-04"
 ---
 

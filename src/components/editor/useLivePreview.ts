@@ -88,9 +88,9 @@ export function useLivePreview(
   const deferred = useDeferredValue(rawContent);
 
   const uidToMeta = useMemo(() => {
-    const map = new Map<string, { address: string; name: string }>();
+    const map = new Map<string, { address: string; name: string; proper: boolean }>();
     for (const n of allNotes) {
-      map.set(n.id, { address: n.address, name: n.name || n.displayTitle });
+      map.set(n.id, { address: n.address, name: n.name || n.displayTitle, proper: n.proper === true });
     }
     return map;
   }, [allNotes]);

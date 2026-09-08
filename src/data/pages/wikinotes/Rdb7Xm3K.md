@@ -1,7 +1,7 @@
 ---
 uid: "Rdb7Xm3K"
-address: "Web Dev//SQL//relational database"
-name: "Relational Database"
+address: "web dev//SQL//relational database"
+name: "relational database"
 date: "2026-03-12"
 ---
 Databases organized in tables with rows and columns, where relationships between tables are defined via foreign keys and queried via JOINs. The "relational" part means data is structured in relations (tables) and the language to query them is [[Sv2nKx8R|SQL]].

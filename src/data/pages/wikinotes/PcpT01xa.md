@@ -1,7 +1,7 @@
 ---
 uid: "PcpT01xa"
 address: "ML//neural network//perceptron"
-name: "Perceptron"
+name: "perceptron"
 date: "2026-07-04"
 ---
 The original single-neuron classifier (Rosenblatt, 1958). Weights each input, sums, adds a bias, and thresholds.

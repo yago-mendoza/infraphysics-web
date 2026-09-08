@@ -1,7 +1,7 @@
 ---
 uid: "LZEkMuDa"
-address: "ML//Transformer//attention//cross-attention"
-name: "Cross-Attention"
+address: "ML//transformer//attention//cross-attention"
+name: "cross-attention"
 date: "2020-03-15"
 ---
 Q from one sequence, K and V from another: how the [[Dc8sW4nR|decoder]] "looks at" the [[En6fL2qY|encoder]] output.

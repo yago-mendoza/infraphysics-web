@@ -1,6 +1,6 @@
 ---
 uid: "C3w8sWpi"
-address: "Blockchain//Besu"
+address: "blockchain//Besu"
 name: "Besu"
 date: "2025-05-02"
 ---

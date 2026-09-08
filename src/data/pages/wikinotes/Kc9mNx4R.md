@@ -1,7 +1,7 @@
 ---
 uid: "Kc9mNx4R"
-address: "ML//Knowledge Cutoff"
-name: "Knowledge Cutoff"
+address: "ML//knowledge cutoff"
+name: "knowledge cutoff"
 date: "2026-03-08"
 ---
 - The date at which an LLM's training data was frozen. Everything published after this date is invisible to the model unless retrieved in real time.

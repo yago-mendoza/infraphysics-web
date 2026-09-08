@@ -1,7 +1,7 @@
 ---
 uid: "SocEng4R"
-address: "Security//social engineering"
-name: "Social Engineering"
+address: "security//social engineering"
+name: "social engineering"
 date: "2026-09-04"
 ---
 

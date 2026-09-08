@@ -1,7 +1,7 @@
 ---
 uid: "Expl01tQ"
-address: "Security//exploit"
-name: "Exploit"
+address: "security//exploit"
+name: "exploit"
 date: "2026-09-04"
 ---
 

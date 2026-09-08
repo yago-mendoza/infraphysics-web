@@ -1,7 +1,7 @@
 ---
 uid: "5qpyTXdv"
-address: "ML//Inference//Sampling"
-name: "Sampling"
+address: "ML//inference//sampling"
+name: "sampling"
 date: "2026-02-15"
 ---
 Choosing the next token from the probability distribution over the vocabulary.

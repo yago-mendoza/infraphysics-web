@@ -1,6 +1,6 @@
 ---
 uid: "Fa9tL3hP"
-address: "ML//Transformer//attention//Flash Attention"
+address: "ML//transformer//attention//Flash Attention"
 name: "Flash Attention"
 date: "2026-02-23"
 ---

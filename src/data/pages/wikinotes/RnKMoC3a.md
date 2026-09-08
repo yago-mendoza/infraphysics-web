@@ -1,7 +1,7 @@
 ---
 uid: "RnKMoC3a"
-address: "ML//Transformer//latent space"
-name: "Latent Space"
+address: "ML//transformer//latent space"
+name: "latent space"
 date: "2026-02-15"
 ---
 High-dimensional activation paths where matrix multiplications route inputs into specific semantic clusters.

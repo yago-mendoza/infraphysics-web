@@ -1,6 +1,6 @@
 ---
 uid: "Nx9sGt5L"
-address: "Infrastructure//Cloudflare//Wrangler"
+address: "infrastructure//Cloudflare//Wrangler"
 name: "Wrangler"
 date: "2026-03-10"
 ---

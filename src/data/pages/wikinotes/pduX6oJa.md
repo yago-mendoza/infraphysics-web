@@ -1,9 +1,9 @@
 ---
 uid: "pduX6oJa"
-address: "Infrastructure//Docker//Network"
-name: "Network"
+address: "infrastructure//Docker//network"
+name: "network"
 date: "2025-02-03"
-distinct: ["Blockchain//Wallet//Network"]
+distinct: ["blockchain//wallet//network"]
 ---
 Docker creates virtual networks isolated from the host LAN, each with its own IP range.
 - `--network mi-red` connects a container to a named network.

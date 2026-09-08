@@ -1,6 +1,6 @@
 ---
 uid: "Tr4pDx8L"
-address: "Infrastructure//Vercel//Trigger.dev"
+address: "infrastructure//Vercel//Trigger.dev"
 name: "Trigger.dev"
 date: "2026-03-12"
 ---

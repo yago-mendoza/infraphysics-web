@@ -1,7 +1,7 @@
 ---
 uid: "ObjFun6c"
-address: "ML//agent//objective"
-name: "Agent Objective"
+address: "ML//agent//agent objective"
+name: "agent objective"
 date: "2026-09-04"
 ---
 

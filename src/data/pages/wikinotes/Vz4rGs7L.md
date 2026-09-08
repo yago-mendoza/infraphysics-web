@@ -1,6 +1,6 @@
 ---
 uid: "Vz4rGs7L"
-address: "Infrastructure//Cloudflare//Vectorize"
+address: "infrastructure//Cloudflare//Vectorize"
 name: "Vectorize"
 date: "2026-03-12"
 ---

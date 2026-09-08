@@ -1,7 +1,7 @@
 ---
 uid: "Vuln8rBL"
-address: "Security//vulnerability"
-name: "Vulnerability"
+address: "security//vulnerability"
+name: "vulnerability"
 date: "2026-09-04"
 ---
 

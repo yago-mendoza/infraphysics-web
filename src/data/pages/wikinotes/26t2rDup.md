@@ -1,6 +1,6 @@
 ---
 uid: "26t2rDup"
-address: "Hardware//manufacturing//PCB"
+address: "hardware//manufacturing//PCB"
 name: "PCB"
 date: "2026-02-05"
 ---

@@ -1,7 +1,7 @@
 ---
 uid: "Rt3kM5nQ"
-address: "ML//Mixture of Experts//router"
-name: "Router"
+address: "ML//mixture of experts//router"
+name: "router"
 date: "2026-03-08"
 ---
 The gating mechanism in [[x5qaZizz|Mixture of Experts]] that decides which experts process each token. A small neural network (often a single linear layer + [[Sm8rH4nW|softmax]]) that takes a token's representation and outputs a probability distribution over experts.

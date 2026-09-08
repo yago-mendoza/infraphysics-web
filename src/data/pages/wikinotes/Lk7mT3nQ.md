@@ -1,7 +1,7 @@
 ---
 uid: "Lk7mT3nQ"
 address: "ML//neural network//loss landscape"
-name: "Loss Landscape"
+name: "loss landscape"
 date: "2026-03-11"
 ---
 The surface you get when you plot the [[DxaRVjHg|loss function]] value against all possible combinations of a neural network's weights. Each point on the surface represents one specific configuration of weights and how badly the network performs with that configuration. The [[Gd5tR8wP|gradient descent]] optimizer moves across this surface, always trying to go downhill.

@@ -1,7 +1,7 @@
 ---
 uid: "ObsD3s1g"
-address: "ML//agent//harness//observation design"
-name: "Observation design"
+address: "ML//agent//agent harness//observation design"
+name: "observation design"
 date: "2026-09-03"
 ---
 

@@ -1,6 +1,6 @@
 ---
 uid: mCK28lZ6
-address: "ML//Training//constitutional AI"
+address: "ML//training//Constitutional AI"
 name: "Constitutional AI"
 date: "2026-02-15"
 ---

@@ -15,6 +15,7 @@ import {
   LANG_THEMES,
   DEFAULT_THEMES,
 } from '../src/lib/content/compile.js';
+import { displayName } from '../src/lib/content/casing.js';
 import { resolveIssues } from './resolve-issues.js';
 import compilerConfig from './compiler.config.js';
 
@@ -369,7 +370,8 @@ function extractWikinoteMeta(filename, filePath) {
   const id = uid;
   const addressParts = address.split('//').map(s => s.trim());
   const name = frontmatter.name || addressParts[addressParts.length - 1];
-  const displayTitle = name;
+  const proper = frontmatter.proper === true;
+  const displayTitle = displayName(name, proper);
 
   const aliases = frontmatter.aliases || null;
   const supersedes = frontmatter.supersedes || null;
@@ -455,7 +457,7 @@ function extractWikinoteMeta(filename, filePath) {
   const searchText = preLinkHtml.replace(/<[^>]*>/g, '').toLowerCase();
 
   return {
-    metadata: { id, title: address, displayTitle, name, category: 'wikinotes', date, description, address, addressParts, references, trailingRefs, searchText, aliases, supersedes, distinct },
+    metadata: { id, title: address, displayTitle, name, proper, category: 'wikinotes', date, description, address, addressParts, references, trailingRefs, searchText, aliases, supersedes, distinct },
     preLinkHtml,
   };
 }
@@ -583,7 +585,7 @@ saveCache({ version: 1, configHash, posts: cachePosts, wikinotes: cacheWikinotes
 // Build uidToMeta map for processAllLinks display resolution
 const uidToMeta = new Map();
 for (const post of wikinotePosts) {
-  uidToMeta.set(post.id, { address: post.address, name: post.name || post.displayTitle });
+  uidToMeta.set(post.id, { address: post.address, name: post.name || post.displayTitle, proper: post.proper === true });
 }
 
 // Set uidToMeta for processAllLinks

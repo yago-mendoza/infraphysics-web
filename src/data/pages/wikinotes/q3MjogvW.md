@@ -1,7 +1,7 @@
 ---
 uid: "q3MjogvW"
 address: "ML//neural network//loss function//cross-entropy"
-name: "Cross-Entropy"
+name: "cross-entropy"
 date: "2017-10-22"
 ---
 Cross-entropy compares a target probability distribution \(y\) with predicted probabilities \(p\):

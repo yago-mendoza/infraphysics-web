@@ -1,6 +1,6 @@
 ---
 uid: "3kgsj4Y4"
-address: "ML//Training//fine-tuning//LoRA"
+address: "ML//training//fine-tuning//LoRA"
 name: "LoRA"
 date: "2023-04-18"
 ---

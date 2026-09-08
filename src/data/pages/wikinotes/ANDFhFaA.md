@@ -1,7 +1,7 @@
 ---
 uid: "ANDFhFaA"
-address: "Blockchain//Wallet//Recovery"
-name: "Recovery"
+address: "blockchain//wallet//recovery"
+name: "recovery"
 date: "2025-07-07"
 ---
 - Seed phrase restoration: install fresh wallet → import seed → all accounts re-derived deterministically.

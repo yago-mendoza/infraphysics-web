@@ -1,7 +1,7 @@
 ---
 uid: "am0dWrWy"
-address: "Blockchain//Wallet//Derivation Path"
-name: "Derivation Path"
+address: "blockchain//wallet//derivation path"
+name: "derivation path"
 date: "2025-06-14"
 ---
 - BIP-44 standard: `m/44'/60'/0'/0/x` where x is the account index.

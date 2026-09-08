@@ -1,7 +1,7 @@
 ---
 uid: "uAoOThoW"
-address: "Networks//Localhost"
-name: "Localhost"
+address: "networks//localhost"
+name: "localhost"
 date: "2025-02-04"
 ---
 - `127.0.0.1` is the loopback address. Traffic never leaves the machine.

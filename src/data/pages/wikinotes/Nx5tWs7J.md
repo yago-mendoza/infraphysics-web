@@ -1,6 +1,6 @@
 ---
 uid: "Nx5tWs7J"
-address: "Web Dev//framework//Next.js"
+address: "web dev//framework//Next.js"
 name: "Next.js"
 date: "2026-03-12"
 ---

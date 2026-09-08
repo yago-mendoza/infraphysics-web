@@ -1,7 +1,7 @@
 ---
 uid: "qY2jOLny"
-address: "ML//Inference//quantization"
-name: "Quantization"
+address: "ML//inference//quantization"
+name: "quantization"
 date: "2023-03-20"
 ---
 Quantization represents model weights and sometimes activations or KV cache with fewer bits, for example moving from 16-bit floating point to 8-bit or 4-bit formats.

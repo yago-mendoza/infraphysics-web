@@ -1,7 +1,7 @@
 ---
 uid: "N8SypUVq"
-address: "Blockchain//Node"
-name: "Node"
+address: "blockchain//node"
+name: "node"
 date: "2025-02-22"
 ---
 **Full Node**: stores the current state, prunes old intermediate states, validates everything independently.

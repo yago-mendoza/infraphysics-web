@@ -1,7 +1,7 @@
 ---
 uid: "yk9AC6Sl"
-address: "Blockchain//Transaction"
-name: "Transaction"
+address: "blockchain//transaction"
+name: "transaction"
 date: "2025-03-08"
 ---
 - Lifecycle: wallet signs → RPC node receives → mempool → gossip to peers → validator includes in block → confirmed.

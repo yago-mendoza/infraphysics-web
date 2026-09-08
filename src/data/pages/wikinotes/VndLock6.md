@@ -1,7 +1,7 @@
 ---
 uid: "VndLock6"
-address: "Economics//vendor lock-in"
-name: "Vendor Lock-In"
+address: "economics//vendor lock-in"
+name: "vendor lock-in"
 date: "2026-09-04"
 ---
 

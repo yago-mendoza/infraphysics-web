@@ -1,7 +1,7 @@
 ---
 uid: "bKPquVKV"
 address: "ML//GAN//mode collapse"
-name: "Mode Collapse"
+name: "mode collapse"
 date: "2019-02-14"
 ---
 - The generator finds one output that fools the discriminator and keeps producing only that.

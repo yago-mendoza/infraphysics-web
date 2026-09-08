@@ -1,7 +1,7 @@
 ---
 uid: "hqUDso8y"
 address: "ML//prompt tuning"
-name: "Prompt Tuning"
+name: "prompt tuning"
 date: "2026-03-06"
 ---
 - Train a small set of continuous "soft prompt" vectors prepended to the input, keep the model frozen.

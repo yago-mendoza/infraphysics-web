@@ -3,7 +3,7 @@ uid: "nx78Mf8d"
 address: "infraphysics//CI/CD"
 name: "CI/CD"
 date: "2026-03-19"
-distinct: ["Web Dev//deploy//CI/CD"]
+distinct: ["web dev//deploy//CI/CD"]
 ---
 
 The automated validation pipeline that runs on every push to main via GitHub Actions.

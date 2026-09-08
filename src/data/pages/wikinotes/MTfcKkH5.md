@@ -1,6 +1,6 @@
 ---
 uid: "MTfcKkH5"
-address: "Hardware//chip"
+address: "hardware//chip"
 name: "chip"
 date: "2026-02-05"
 ---

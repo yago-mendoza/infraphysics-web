@@ -1,6 +1,6 @@
 ---
 uid: "2oN0bPZY"
-address: "Math//information theory//channel capacity"
+address: "mathematics//information theory//channel capacity"
 name: "channel capacity"
 date: "2026-03-06"
 ---

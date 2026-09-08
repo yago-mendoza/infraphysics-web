@@ -1,7 +1,7 @@
 ---
 uid: "Da9cD4vX"
-address: "ML//Training//dataset//data augmentation"
-name: "Data Augmentation"
+address: "ML//training//dataset//data augmentation"
+name: "data augmentation"
 date: "2026-02-25"
 ---
 Creating new training examples by transforming existing ones: flip an image, add noise, paraphrase text, mask tokens. The goal is to expand the effective dataset size without collecting new data.

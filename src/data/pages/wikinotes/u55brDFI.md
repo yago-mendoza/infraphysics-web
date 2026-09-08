@@ -1,7 +1,7 @@
 ---
 uid: "u55brDFI"
-address: "Security//Replay Attack"
-name: "Replay Attack"
+address: "security//replay attack"
+name: "replay attack"
 date: "2025-09-07"
 ---
 - Replaying a transaction signed for one chain on another chain with the same chainId.

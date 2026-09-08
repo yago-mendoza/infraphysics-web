@@ -1,7 +1,7 @@
 ---
 uid: "Sd3mPx7R"
-address: "Web Dev//SEO//Structured Data"
-name: "Structured Data"
+address: "web dev//SEO//structured data"
+name: "structured data"
 date: "2026-03-08"
 ---
 - Machine-readable metadata embedded in HTML that describes the content's meaning: not just what it looks like, but what it *is*.

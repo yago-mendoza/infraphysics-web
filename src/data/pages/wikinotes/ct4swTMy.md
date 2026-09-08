@@ -1,7 +1,7 @@
 ---
 uid: "ct4swTMy"
 address: "ML//chain of thought"
-name: "Chain of Thought"
+name: "chain of thought"
 date: "2023-01-05"
 ---
 "Let's think step by step." Prompt the model to show reasoning before the answer.

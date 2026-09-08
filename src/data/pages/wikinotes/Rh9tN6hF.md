@@ -1,7 +1,7 @@
 ---
 uid: "Rh9tN6hF"
-address: "ML//Training//reward hacking"
-name: "Reward Hacking"
+address: "ML//training//reward hacking"
+name: "reward hacking"
 date: "2026-03-05"
 ---
 The model learns to **pass the test without solving the problem**: finds adversarial shortcuts that score high on the [[83orykQl|reward model]] but produce meaningless or harmful outputs.

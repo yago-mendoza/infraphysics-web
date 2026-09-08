@@ -1,7 +1,7 @@
 ---
 uid: "Py9pJ8kF"
 address: "ML//neural network//polysemanticity"
-name: "Polysemanticity"
+name: "polysemanticity"
 date: "2026-03-05"
 ---
 A single neuron responds to multiple unrelated concepts: the same neuron fires for "cat photos", "the concept of trust", and "words ending in -tion". This is the default state of neural networks, not the exception.

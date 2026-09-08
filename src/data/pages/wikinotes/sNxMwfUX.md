@@ -1,6 +1,6 @@
 ---
 uid: "sNxMwfUX"
-address: "Hardware//manufacturing//firmware"
+address: "hardware//manufacturing//firmware"
 name: "firmware"
 date: "2026-02-05"
 ---

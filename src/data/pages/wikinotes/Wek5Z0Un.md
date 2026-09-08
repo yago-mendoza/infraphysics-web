@@ -1,7 +1,7 @@
 ---
 uid: "Wek5Z0Un"
 address: "ML//diffusion model//consistency model"
-name: "Consistency Model"
+name: "consistency model"
 date: "2026-02-26"
 ---
 - Distillation: train a model to map any noise level directly to the clean image in one step.

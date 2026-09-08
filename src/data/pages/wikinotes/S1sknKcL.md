@@ -1,6 +1,6 @@
 ---
 uid: "S1sknKcL"
-address: "ML//Multimodal//BLIP"
+address: "ML//multimodal//BLIP"
 name: "BLIP"
 date: "2026-03-06"
 ---

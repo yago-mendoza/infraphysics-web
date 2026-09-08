@@ -1,6 +1,6 @@
 ---
 uid: "JsSUul6f"
-address: "Math//information theory//entropy"
+address: "mathematics//information theory//entropy"
 name: "entropy"
 date: "2026-02-24"
 ---

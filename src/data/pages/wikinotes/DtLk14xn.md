@@ -1,6 +1,6 @@
 ---
 uid: "DtLk14xn"
-address: "ML//Evaluation//data leakage"
+address: "ML//evaluation//data leakage"
 name: "data leakage"
 date: "2026-07-04"
 ---

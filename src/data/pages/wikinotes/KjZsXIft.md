@@ -1,6 +1,6 @@
 ---
 uid: "KjZsXIft"
-address: "ML//Transformer//tokenizer//BPE"
+address: "ML//transformer//tokenizer//BPE"
 name: "BPE"
 date: "2019-01-20"
 ---

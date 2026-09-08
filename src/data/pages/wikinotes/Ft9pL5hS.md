@@ -1,7 +1,7 @@
 ---
 uid: "Ft9pL5hS"
 address: "ML//neural network//feature"
-name: "Feature"
+name: "feature"
 date: "2026-03-05"
 ---
 A direction in activation space that represents a concept: "Michael Jordan", "basketball", "plural", "code syntax".

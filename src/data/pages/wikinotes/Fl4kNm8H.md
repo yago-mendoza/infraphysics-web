@@ -1,6 +1,6 @@
 ---
 uid: "Fl4kNm8H"
-address: "Infrastructure//Fly.io"
+address: "infrastructure//Fly.io"
 name: "Fly.io"
 date: "2026-03-12"
 ---

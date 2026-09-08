@@ -1,7 +1,7 @@
 ---
 uid: "Rce9K2mP"
-address: "Security//remote code execution"
-name: "Remote Code Execution"
+address: "security//remote code execution"
+name: "remote code execution"
 date: "2026-09-04"
 ---
 

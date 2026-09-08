@@ -1,7 +1,7 @@
 ---
 uid: "vRoRcYcl"
 address: "ML//neural network//dropout"
-name: "Dropout"
+name: "dropout"
 date: "2018-01-05"
 ---
 - During training, randomly masks activations with probability \(p\) and rescales the survivors. At inference the full network is used without random masks.

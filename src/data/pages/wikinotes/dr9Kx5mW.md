@@ -1,6 +1,6 @@
 ---
 uid: "dr9Kx5mW"
-address: "Math//dimensionality reduction"
+address: "mathematics//dimensionality reduction"
 name: "dimensionality reduction"
 date: "2026-03-11"
 ---

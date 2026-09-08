@@ -1,7 +1,7 @@
 ---
 uid: "BehDet9N"
-address: "Security//behavioral detection"
-name: "Behavioral Detection"
+address: "security//behavioral detection"
+name: "behavioral detection"
 date: "2026-09-04"
 ---
 

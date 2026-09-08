@@ -1,7 +1,7 @@
 ---
 uid: "LatMov3N"
-address: "Security//lateral movement"
-name: "Lateral Movement"
+address: "security//lateral movement"
+name: "lateral movement"
 date: "2026-09-04"
 ---
 

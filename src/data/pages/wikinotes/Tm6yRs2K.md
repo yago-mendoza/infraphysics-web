@@ -1,6 +1,6 @@
 ---
 uid: "Tm6yRs2K"
-address: "Infrastructure//edge computing"
+address: "infrastructure//edge computing"
 name: "edge computing"
 date: "2026-03-10"
 ---

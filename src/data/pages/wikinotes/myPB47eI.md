@@ -1,6 +1,6 @@
 ---
 uid: "myPB47eI"
-address: "Tools//OpenStreetMap"
+address: "tools//OpenStreetMap"
 name: "OpenStreetMap"
 date: "2026-03-10"
 ---

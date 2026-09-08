@@ -1,7 +1,7 @@
 ---
 uid: "EmC00rdN"
 address: "ML//agent//emergent coordination"
-name: "Emergent Coordination"
+name: "emergent coordination"
 date: "2026-09-04"
 ---
 

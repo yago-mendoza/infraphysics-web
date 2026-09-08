@@ -1,7 +1,7 @@
 ---
 uid: "Jf5tCm8N"
-address: "Web Dev//framework"
-name: "Framework"
+address: "web dev//framework"
+name: "framework"
 date: "2026-03-10"
 ---
 A software framework supplies structure and calls application code at predefined extension points. That inversion of control distinguishes it from a library: you call a library; a framework often calls you.

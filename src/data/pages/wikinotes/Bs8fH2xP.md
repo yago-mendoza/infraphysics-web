@@ -1,7 +1,7 @@
 ---
 uid: "Bs8fH2xP"
-address: "ML//Inference//beam search"
-name: "Beam Search"
+address: "ML//inference//beam search"
+name: "beam search"
 date: "2026-03-02"
 ---
 A decoding strategy that keeps the top-K most probable partial sequences at each step, instead of committing to a single token. At each [[Ds4pJ8kF|decoding step]], expand all K candidates by one token, score them, keep the best K.

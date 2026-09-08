@@ -1,6 +1,6 @@
 ---
 uid: "YwfNaR4R"
-address: "ML//Training//DPO"
+address: "ML//training//DPO"
 name: "DPO"
 date: "2026-02-15"
 ---

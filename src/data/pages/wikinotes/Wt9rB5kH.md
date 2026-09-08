@@ -1,7 +1,7 @@
 ---
 uid: "Wt9rB5kH"
-address: "ML//Transformer//weight tying"
-name: "Weight Tying"
+address: "ML//transformer//weight tying"
+name: "weight tying"
 date: "2026-03-05"
 ---
 One matrix, two jobs: the same table that translates words into vectors also translates vectors back into words, just transposed. The [[Em3xR7wP|embedding matrix]] E that converts token IDs into vectors is reused, transposed, as the [[2GCBLdlB|LM head]] that converts the final vector back into vocabulary scores.

@@ -1,7 +1,7 @@
 ---
 uid: "MisCfg8R"
-address: "Security//misconfiguration"
-name: "Security Misconfiguration"
+address: "security//security misconfiguration"
+name: "security misconfiguration"
 date: "2026-09-04"
 ---
 

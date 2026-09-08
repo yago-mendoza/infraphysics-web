@@ -1,6 +1,6 @@
 ---
 uid: "edK1Fj7n"
-address: "Security//steganography"
+address: "security//steganography"
 name: "steganography"
 date: "2026-02-15"
 ---

@@ -1,6 +1,6 @@
 ---
 uid: "rxVjxTLA"
-address: "ML//Training//PPO"
+address: "ML//training//PPO"
 name: "PPO"
 date: "2026-02-15"
 ---

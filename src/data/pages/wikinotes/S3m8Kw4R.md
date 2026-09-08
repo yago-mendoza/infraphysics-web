@@ -1,6 +1,6 @@
 ---
 uid: "S3m8Kw4R"
-address: "Infrastructure//AWS//S3"
+address: "infrastructure//AWS//S3"
 name: "S3"
 date: "2026-03-12"
 ---

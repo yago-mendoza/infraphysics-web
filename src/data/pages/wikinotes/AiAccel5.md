@@ -1,7 +1,7 @@
 ---
 uid: "AiAccel5"
-address: "Hardware//AI accelerator"
-name: "AI Accelerator"
+address: "hardware//AI accelerator"
+name: "AI accelerator"
 date: "2026-09-04"
 ---
 

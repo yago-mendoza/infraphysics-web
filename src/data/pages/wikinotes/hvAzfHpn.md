@@ -1,7 +1,7 @@
 ---
 uid: hvAzfHpn
-address: "ML//Inference//semantic continuity"
-name: "Semantic Continuity"
+address: "ML//inference//semantic continuity"
+name: "semantic continuity"
 date: "2026-03-05"
 ---
 

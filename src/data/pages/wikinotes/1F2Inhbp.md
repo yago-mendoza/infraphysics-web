@@ -1,7 +1,7 @@
 ---
 uid: "1F2Inhbp"
-address: "Web Dev//frontend//layout//viewport"
-name: "Viewport"
+address: "web dev//frontend//layout//viewport"
+name: "viewport"
 date: "2026-03-10"
 ---
 The rectangular area of the browser window where content is visible. Everything the user can see without scrolling fits inside the viewport. Its dimensions drive responsive design, media queries, and viewport-relative units.

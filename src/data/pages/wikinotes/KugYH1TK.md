@@ -1,7 +1,7 @@
 ---
 uid: "KugYH1TK"
 address: "ML//RAG//embedding model"
-name: "Embedding Model"
+name: "embedding model"
 date: "2026-03-07"
 ---
 - Dedicated models trained to produce dense vector representations optimized for retrieval.

@@ -1,7 +1,7 @@
 ---
 uid: "DataRs6D"
-address: "Infrastructure//data residency"
-name: "Data Residency"
+address: "infrastructure//data residency"
+name: "data residency"
 date: "2026-09-04"
 ---
 

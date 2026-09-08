@@ -1,7 +1,7 @@
 ---
 uid: "sr0JBXRW"
 address: "ML//diffusion model"
-name: "Diffusion Model"
+name: "diffusion model"
 date: "2022-05-05"
 ---
 - Add noise step by step until pure static, then train a [[YrmsQuhU|neural net]] to reverse the process.

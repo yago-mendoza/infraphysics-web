@@ -1,7 +1,7 @@
 ---
 uid: "1gCBEfat"
-address: "Security//Minimum Privilege"
-name: "Minimum Privilege"
+address: "security//minimum privilege"
+name: "minimum privilege"
 date: "2025-09-07"
 ---
 

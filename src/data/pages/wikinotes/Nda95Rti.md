@@ -1,6 +1,6 @@
 ---
 uid: "Nda95Rti"
-address: "Infrastructure//Cloudflare//Wrangler//.wrangler"
+address: "infrastructure//Cloudflare//Wrangler//.wrangler"
 name: ".wrangler"
 date: "2026-03-14"
 ---

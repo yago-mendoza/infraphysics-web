@@ -1,6 +1,6 @@
 ---
 uid: "7xWE1VgH"
-address: "Blockchain//Consensus//PoS"
+address: "blockchain//consensus//PoS"
 name: "PoS"
 date: "2025-04-14"
 ---

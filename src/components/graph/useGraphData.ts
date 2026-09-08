@@ -35,7 +35,7 @@ export interface EdgeVisibility {
 export function buildGraphData(index: BrainIndex, centralityMap: Record<string, number>): GraphData {
   const nodes: GraphNode[] = index.allWikiNotes.map(note => ({
     id: note.id,
-    name: note.name,
+    name: note.displayTitle || note.name,
     address: note.address || note.title,
     centrality: centralityMap[note.id] ?? 0,
     refCount: (note.references?.length || 0) + (index.backlinksMap.get(note.id)?.length || 0),

@@ -1,7 +1,7 @@
 ---
 uid: "YrmsQuhU"
 address: "ML//neural network"
-name: "Neural Network"
+name: "neural network"
 date: "2017-09-15"
 ---
 - Function that maps inputs to outputs through layers of learned weights.

@@ -1,6 +1,6 @@
 ---
 uid: "3kmFrjfS"
-address: "Networks//RPC//CORS"
+address: "networks//RPC//CORS"
 name: "CORS"
 date: "2025-08-19"
 ---

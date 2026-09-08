@@ -1,6 +1,6 @@
 ---
 uid: "Sm9pLx3R"
-address: "Web Dev//SEO//sitemap"
+address: "web dev//SEO//sitemap"
 name: "sitemap"
 date: "2026-03-08"
 ---

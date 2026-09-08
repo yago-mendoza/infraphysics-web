@@ -1,7 +1,7 @@
 ---
 uid: "TvW02yaC"
-address: "Blockchain//Fork"
-name: "Fork"
+address: "blockchain//fork"
+name: "fork"
 date: "2025-03-09"
 ---
 - Temporary forks happen when two validators create competing blocks at the same height due to network latency.

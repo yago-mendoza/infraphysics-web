@@ -1,7 +1,7 @@
 ---
 uid: "Tj137ydg"
 address: "ML//diffusion model//latent diffusion"
-name: "Latent Diffusion"
+name: "latent diffusion"
 date: "2022-08-10"
 ---
 - Run diffusion in compressed latent space instead of pixel space.

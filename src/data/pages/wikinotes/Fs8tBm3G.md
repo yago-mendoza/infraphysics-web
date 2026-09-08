@@ -1,6 +1,6 @@
 ---
 uid: "Fs8tBm3G"
-address: "Infrastructure//Cloudflare//Pages"
+address: "infrastructure//Cloudflare//Pages"
 name: "Pages"
 date: "2026-03-10"
 ---

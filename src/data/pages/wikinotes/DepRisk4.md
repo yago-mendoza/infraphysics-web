@@ -1,7 +1,7 @@
 ---
 uid: "DepRisk4"
 address: "ML//deployment risk"
-name: "Deployment Risk"
+name: "deployment risk"
 date: "2026-09-04"
 ---
 

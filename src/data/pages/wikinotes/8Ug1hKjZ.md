@@ -1,6 +1,6 @@
 ---
 uid: 8Ug1hKjZ
-address: "ML//Training//fine-tuning//ReFT"
+address: "ML//training//fine-tuning//ReFT"
 name: "ReFT"
 date: "2026-03-06"
 ---

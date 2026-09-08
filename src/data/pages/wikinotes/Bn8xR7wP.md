@@ -1,7 +1,7 @@
 ---
 uid: "Bn8xR7wP"
 address: "ML//neural network//batch normalization"
-name: "Batch Normalization"
+name: "batch normalization"
 date: "2026-02-28"
 ---
 Normalize each layer's activations across the mini-batch to have zero mean and unit variance, then apply a learnable scale and shift. Introduced in 2015, it was the first normalization technique that made deep networks reliably trainable.

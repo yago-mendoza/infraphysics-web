@@ -1,6 +1,6 @@
 ---
 uid: "HaT1Oozw"
-address: "Hardware//ARM"
+address: "hardware//ARM"
 name: "ARM"
 date: "2026-02-05"
 ---

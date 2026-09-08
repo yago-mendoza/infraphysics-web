@@ -1,7 +1,7 @@
 ---
 uid: "AgCnt9Zm"
-address: "Security//agent containment"
-name: "Agent Containment"
+address: "security//agent containment"
+name: "agent containment"
 date: "2026-09-03"
 ---
 

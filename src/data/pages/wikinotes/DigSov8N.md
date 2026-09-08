@@ -1,7 +1,7 @@
 ---
 uid: "DigSov8N"
-address: "Infrastructure//digital sovereignty"
-name: "Digital Sovereignty"
+address: "infrastructure//digital sovereignty"
+name: "digital sovereignty"
 date: "2026-09-04"
 ---
 

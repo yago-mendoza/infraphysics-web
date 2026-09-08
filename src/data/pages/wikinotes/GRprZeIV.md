@@ -1,6 +1,6 @@
 ---
 uid: "GRprZeIV"
-address: "ML//Multimodal//OCR"
+address: "ML//multimodal//OCR"
 name: "OCR"
 date: "2026-03-07"
 ---

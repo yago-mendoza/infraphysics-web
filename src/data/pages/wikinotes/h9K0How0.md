@@ -1,7 +1,7 @@
 ---
 uid: "h9K0How0"
-address: "Systems Theory//cybernetics"
-name: "Cybernetics"
+address: "systems theory//cybernetics"
+name: "cybernetics"
 date: "2026-03-06"
 ---
 The science of control and communication in systems, founded by Norbert Wiener (1948), same year as Shannon's information theory.
