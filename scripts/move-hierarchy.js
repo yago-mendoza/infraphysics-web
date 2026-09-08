@@ -51,7 +51,7 @@ if (oldPrefix === newPrefix) {
 // === Phase 1: Build rename map ===
 
 const wikinoteFiles = fs.readdirSync(WIKINOTES_DIR)
-  .filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md');
+  .filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md' && f !== 'STYLE.md');
 
 // Parse address from each wikinote
 const notesByAddress = new Map();

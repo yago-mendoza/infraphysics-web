@@ -60,7 +60,7 @@ function parseAllWikinotes() {
   }
 
   const files = fs.readdirSync(WIKINOTES_DIR)
-    .filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md');
+    .filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md' && f !== 'STYLE.md');
 
   const notes = [];
 

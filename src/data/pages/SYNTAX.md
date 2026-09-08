@@ -42,7 +42,7 @@ Substantial Markdown content.
 {/bkqt}
 ```
 
-Supported types are `note`, `tip`, `warning`, `danger` and `keyconcept`. Labels are optional. All types share one visual treatment and inherit the article category accent; the type only preserves semantic meaning. Quotations use ordinary Markdown; pullquotes do not exist.
+Supported types are `note`, `tip`, `warning`, `danger` and `keyconcept`. Labels are optional. All types share one visual treatment and inherit the article category accent; the type only preserves semantic meaning. In wikinotes typed notes take no label: a label after the pipe is dropped by the compiler and reported as a `[SYNTAX] BKQT_LABEL` warning (see [fieldnotes/STYLE.md](fieldnotes/STYLE.md)). Quotations use ordinary Markdown; pullquotes do not exist.
 
 ```text
 > Quoted text.

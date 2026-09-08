@@ -177,6 +177,16 @@ function compileMarkdown(rawMd, articleDate) {
   });
 }
 
+// Wikinotes: typed-note labels are dropped by the compiler; each one is
+// collected here and reported as a [SYNTAX] warning at the end of the build.
+const bkqtLabelWarnings = [];
+function compileWikinote(rawMd, articleDate, relativePath) {
+  const droppedLabels = [];
+  const html = _compileMarkdown(rawMd, articleDate, { markedInstance: marked, compilerConfig, highlighter, katex, wikinote: true, droppedLabels });
+  for (const label of droppedLabels) bkqtLabelWarnings.push(`${relativePath} → "${label}"`);
+  return html;
+}
+
 // uidToMeta is set in main() before link processing runs
 let _uidToMeta = new Map();
 
@@ -307,7 +317,7 @@ function getAllMarkdownFiles(dir, isRoot = false) {
     if (stat.isDirectory()) {
       if (item === 'fieldnotes' || item === 'FinBoard') continue;
       files.push(...getAllMarkdownFiles(fullPath));
-    } else if (!isRoot && item.endsWith('.md') && !item.startsWith('_') && item !== 'README.md') {
+    } else if (!isRoot && item.endsWith('.md') && !item.startsWith('_') && item !== 'README.md' && item !== 'STYLE.md') {
       files.push(fullPath);
     }
   }
@@ -437,7 +447,7 @@ function extractWikinoteMeta(filename, filePath) {
 
   // Wikinotes use breaks:true — single newline → <br>, double newline → new <p>
   marked.setOptions({ ...compilerConfig.marked, breaks: true });
-  const preLinkHtml = compileMarkdown(contentMd.trim(), date);
+  const preLinkHtml = compileWikinote(contentMd.trim(), date, path.relative(PAGES_DIR, filePath).replace(/\\/g, '/'));
   marked.setOptions(compilerConfig.marked); // restore
   checkBoldWikiLinks(preLinkHtml, fileContent, path.relative(PAGES_DIR, filePath).replace(/\\/g, '/'));
   // Interaction annotations describe edges, not the intrinsic content of the
@@ -510,7 +520,7 @@ function processWikinotesDir(cache, configHash, forceRebuild) {
   if (!fs.existsSync(wikinotesDir)) return { results: [], cacheWikinotes: {} };
 
   const files = fs.readdirSync(wikinotesDir)
-    .filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md');
+    .filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md' && f !== 'STYLE.md');
 
   const cacheValid = cache?.version === 1 && cache?.configHash === configHash && !forceRebuild;
   const cachedNotes = cacheValid ? (cache.wikinotes || {}) : {};
@@ -626,9 +636,15 @@ for (const post of allLinkedPosts) {
     syntaxWarnings++;
   }
 }
+for (const entry of bkqtLabelWarnings) {
+  if (syntaxWarnings === 0) console.log('\n\x1b[1m[SYNTAX]\x1b[0m \x1b[90mscripts/build-content.js\x1b[0m');
+  console.log(`  \x1b[33mWARN \x1b[0m  [BKQT_LABEL] typed-note label ignored in a wikinote: ${entry}`);
+  syntaxWarnings++;
+}
 if (syntaxWarnings > 0) {
   console.log('\n  \x1b[90mLegend:\x1b[0m');
   console.log('  \x1b[90m  LITERAL_TAG — custom syntax leaked into output (check for a missing closing tag)\x1b[0m');
+  console.log('  \x1b[90m  BKQT_LABEL  — wikinote typed notes take no label; fold it into the box text (fieldnotes/STYLE.md)\x1b[0m');
   console.log(`\x1b[1m[SYNTAX]\x1b[0m \x1b[33m${syntaxWarnings} warning(s)\x1b[0m`);
 }
 

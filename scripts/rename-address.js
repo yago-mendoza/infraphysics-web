@@ -40,7 +40,7 @@ if (oldAddress === newAddress) {
 
 // Find source file by scanning frontmatter for address match
 const wikinoteFiles = fs.readdirSync(WIKINOTES_DIR)
-  .filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md');
+  .filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md' && f !== 'STYLE.md');
 
 let sourceFile = null;
 for (const filename of wikinoteFiles) {

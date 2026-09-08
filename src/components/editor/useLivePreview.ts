@@ -113,6 +113,7 @@ export function useLivePreview(
       markedInstance: previewMarked,
       compilerConfig,
       highlighter: null,
+      wikinote: true,
     });
 
     // 4. Resolve [[uid]] → <a class="wiki-ref">

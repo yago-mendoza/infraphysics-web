@@ -162,7 +162,7 @@ function generateUid() {
  */
 function createStubNote(address) {
   // Check if any existing file already has this address
-  const files = fs.readdirSync(WIKINOTES_DIR).filter(f => f.endsWith('.md') && f !== 'README.md');
+  const files = fs.readdirSync(WIKINOTES_DIR).filter(f => f.endsWith('.md') && f !== 'README.md' && f !== 'STYLE.md');
   for (const file of files) {
     const content = fs.readFileSync(path.join(WIKINOTES_DIR, file), 'utf-8');
     const addrMatch = content.match(/^address:\s*["']?(.+?)["']?\s*$/m);
@@ -189,7 +189,7 @@ function findFileForAddress(address) {
   const conventionPath = path.join(WIKINOTES_DIR, conventionName);
   if (fs.existsSync(conventionPath)) return conventionPath;
 
-  const files = fs.readdirSync(WIKINOTES_DIR).filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md');
+  const files = fs.readdirSync(WIKINOTES_DIR).filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md' && f !== 'STYLE.md');
   for (const file of files) {
     const filePath = path.join(WIKINOTES_DIR, file);
     const content = fs.readFileSync(filePath, 'utf-8');

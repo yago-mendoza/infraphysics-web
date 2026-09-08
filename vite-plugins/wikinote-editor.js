@@ -142,7 +142,7 @@ marked.setOptions({ renderer: customRenderer, ...compilerConfig.marked });
  */
 function loadAllWikinotes() {
   const files = fs.readdirSync(WIKINOTES_DIR)
-    .filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md');
+    .filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md' && f !== 'STYLE.md');
 
   const posts = [];
   const uidToMeta = new Map();

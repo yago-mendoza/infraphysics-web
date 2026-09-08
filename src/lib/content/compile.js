@@ -145,7 +145,7 @@ function processBlockquoteContent(content, placeholders, markedInstance) {
   return htmlParts.join('\n');
 }
 
-export function processCustomBlockquotes(markdown, placeholders, markedInstance) {
+export function processCustomBlockquotes(markdown, placeholders, markedInstance, opts = {}) {
   const typePattern = Object.keys(BKQT_TYPES).join('|');
   const regex = new RegExp(
     `^\\{bkqt\\/(${typePattern})(?:\\|([^}]*))?\\}\\s*\\n([\\s\\S]*?)\\n\\s*\\{\\/bkqt\\}`,
@@ -154,6 +154,12 @@ export function processCustomBlockquotes(markdown, placeholders, markedInstance)
   return markdown.replace(regex, (_, type, customLabel, content) => {
     const config = BKQT_TYPES[type];
     const body = processBlockquoteContent(content, placeholders, markedInstance);
+    // Wikinotes: typed notes carry no label. A label written after the pipe is
+    // dropped here and reported by the build, so the author folds it into the text.
+    if (opts.dropLabels) {
+      if (customLabel && customLabel.trim() && opts.droppedLabels) opts.droppedLabels.push(customLabel.trim());
+      return `<div class="bkqt bkqt-${type}"><div class="bkqt-body">${body}</div></div>`;
+    }
     const label = customLabel ? customLabel.trim() : config.label;
     return `<div class="bkqt bkqt-${type}"><div class="bkqt-body"><span class="bkqt-label">${label}</span>${body}</div></div>`;
   });
@@ -531,16 +537,18 @@ export function highlightCodeBlocks(html, highlighter) {
  * @param {Object} options.markedInstance - configured marked instance
  * @param {Object} options.compilerConfig - compiler.config.js object
  * @param {Object|null} [options.highlighter] - Shiki highlighter (null = skip)
+ * @param {boolean} [options.wikinote] - wikinote mode: typed-note labels are dropped
+ * @param {string[]|null} [options.droppedLabels] - receives every dropped label (build warnings)
  * @returns {string} - compiled HTML
  */
 export function compileMarkdown(rawMd, articleDate, options) {
-  const { markedInstance, compilerConfig, highlighter = null, katex = null } = options;
+  const { markedInstance, compilerConfig, highlighter = null, katex = null, wikinote = false, droppedLabels = null } = options;
 
   rawMd = rawMd.replace(/\r\n/g, '\n');
   const { text, placeholders } = protectBackticks(rawMd);
   const withSyntax = applyPreProcessors(text, compilerConfig.preProcessors);
   const withMath = processMath(withSyntax, katex);
-  const withBkqt = processCustomBlockquotes(withMath, placeholders, markedInstance);
+  const withBkqt = processCustomBlockquotes(withMath, placeholders, markedInstance, { dropLabels: wikinote, droppedLabels });
   const restored = restoreBackticks(withBkqt, placeholders);
   const withUrls = processExternalUrls(restored);
   const withSafeTableRefs = protectReferencePipesInTables(withUrls);

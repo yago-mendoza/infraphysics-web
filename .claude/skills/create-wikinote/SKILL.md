@@ -9,7 +9,8 @@ Process the user's raw input ($ARGUMENTS) into one or more well-structured wikin
 ## Required reading
 
 Before ANY work, read these files — but only the sections you need, not cover-to-cover:
-- `src/data/pages/README.md` — frontmatter schemas, naming conventions, wiki-link syntax, trailing refs rules
+- `src/data/pages/fieldnotes/STYLE.md` — how a note is written: shape (never a bare bullet list), tone, body versus Interactions, names and casing, equations, bold, paths, size, allowed syntax. Read it whole.
+- `src/data/pages/README.md` — frontmatter schemas, wiki-link syntax, trailing refs rules
 - `src/data/pages/fieldnotes/README.md` — scripts, workflows, cascading effects
 
 Also load the existing wikinotes index to know what's already in the knowledge base:
@@ -24,7 +25,7 @@ Read the entire input holistically. Before doing anything, think:
 2. **Does any of this belong in EXISTING notes?** Search the index for concepts that already exist. If the input adds new information to an existing concept, the plan should say "enrich existing note X" — not create a duplicate.
 
 3. **For each NEW note**, propose:
-   - **address** — every segment in sentence case: first letter capital, the rest as in prose (`Channel capacity`, not `Channel Capacity` nor `channel capacity`); products, proper nouns and acronyms keep their own casing (`Gmail API`, `RLHF`). Full rule in `src/data/pages/README.md` (Wikinote names). Use `//` hierarchy separator. See **Address depth philosophy** below for nesting rules.
+   - **address** — every segment as the term reads mid-sentence: common nouns lowercase (`channel capacity`), products, proper nouns and acronyms keep their own casing (`Gmail API`, `RLHF`). Full rule in `src/data/pages/README.md` (Wikinote names). Use `//` hierarchy separator. See **Address depth philosophy** below for nesting rules.
    - **name** — the display name
    - **1-line summary** of what it will contain
    - **parent** — where it nests in the existing tree. Check if parent exists. If not, flag for stub.

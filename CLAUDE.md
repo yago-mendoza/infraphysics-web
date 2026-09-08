@@ -25,6 +25,7 @@ Mandatory triggers — when X happens, do Y.
 | [projects/README.md](src/data/pages/projects/README.md) | Projects editorial voice, storytelling patterns, ctx annotation conventions |
 | [essays/README.md](src/data/pages/essays/README.md) | Essays editorial voice, serif typography, blockquote label rules, ctx restrictions |
 | [bits2bricks/README.md](src/data/pages/bits2bricks/README.md) | Bits2Bricks editorial voice, tutorial structure |
+| [fieldnotes/STYLE.md](src/data/pages/fieldnotes/STYLE.md) | **Always consult before writing or rewriting a wikinote.** Shape, tone, body versus Interactions, names and casing, paths, size, allowed syntax |
 
 **2. Verify factual claims.** When writing content that states dates, names, technical specs, historical events, or statistics — use web search to check accuracy. Do not assume recalled facts are correct.
 
@@ -224,8 +225,8 @@ The maze (islands, edges, origins) is grown once per `(cols, rows)` and reused e
 ### Wikinote interactions are graph edges, not reciprocal citations
 The graph is bidirectional even when an interaction is written on only one note. For a conceptual pair, keep the clearest causal explanation on one side instead of adding reciprocal trailing refs to both files. Reciprocal entries create `DUPLICATE TRAILING REFS` noise in `check-references.js` without adding connectivity. After a bulk creation pass, run the audit and remove every duplicate introduced by the new notes before considering the batch complete.
 
-### Bulk-editing wikinote frontmatter catches README.md too
-`src/data/pages/fieldnotes/README.md` contains a literal `distinct:` line inside a yaml example block, so any bulk script that pattern-matches frontmatter across `fieldnotes/*.md` will silently rewrite the documentation example. Exclude `README.md` (filenames of real notes are always 8-char UIDs). Also: after any `move-hierarchy`/`rename-address` batch, `distinct` entries elsewhere go stale because they store addresses, not UIDs — the build's `STALE_DISTINCT` warnings list every one; fix them before committing.
+### Bulk-editing wikinote frontmatter catches README.md and STYLE.md too
+`src/data/pages/fieldnotes/README.md` contains a literal `distinct:` line inside a yaml example block, so any bulk script that pattern-matches frontmatter across `fieldnotes/*.md` will silently rewrite the documentation example. Exclude `README.md` and `STYLE.md` (filenames of real notes are always 8-char UIDs; every script that lists notes filters both names by hand). Also: after any `move-hierarchy`/`rename-address` batch, `distinct` entries elsewhere go stale because they store addresses, not UIDs — the build's `STALE_DISTINCT` warnings list every one; fix them before committing.
 
 ### Home graphs are build-time pictures, not the live graph
 Both wiki graphs on `/home` come from `src/data/graph-thumb.generated.json`, produced by `scripts/compute-graph-thumb.js` at the end of every build (seeded 3D layout, identical across builds). Both the carousel door and the closing plate draw it as inline SVG (`GraphThumb.tsx`), recoloured per placement through the `graph-thumb-*` classes. They copy the root palette and edge colours from `useGraphData.ts`; if those change, update the script and the components. The pinned piece in the carousel is the newest post with `featured: true`.

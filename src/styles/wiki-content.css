@@ -65,21 +65,25 @@
   margin: 0.5rem 0 0.15rem;
 }
 
-/* Tighter vertical rhythm for wikinotes —
-   Single paragraph break = minimal gap, feels like next line.
-   Headings provide the real visual separation. */
+/* Vertical rhythm for wikinotes: a paragraph break is a small gap, a little
+   more air between paragraphs and lists than a plain line break. */
 .article-wiki .article-content p {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.4rem;
 }
 
 .article-wiki .article-content ul,
 .article-wiki .article-content ol {
-  margin: 0.2rem 0;
+  margin: 0.35rem 0;
 }
 
 .article-wiki .article-content li {
-  margin-bottom: 0.05rem;
+  margin-bottom: 0.12rem;
 }
+
+/* Typed notes in a wikinote: no label (the compiler drops it; this covers
+   cached output), and the box text at the body size, never larger. */
+.article-wiki .article-content .bkqt { font-size: 0.875rem; }
+.article-wiki .article-content .bkqt-label { display: none; }
 
 /* Small-text (>) between list items — no visual break, stays in flow */
 /* Code blocks — Linux terminal style (no macOS dots, slim bar, purple tint) */

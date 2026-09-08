@@ -50,14 +50,7 @@ The `description` is card/metadata copy. Body text before the first heading is t
 
 ### Wikinote names
 
-The `name` of a wikinote and the last segment of its `address` are the same string, and they follow sentence case:
-
-- Capitalise the first letter and write the rest as in ordinary prose: `Channel capacity`, `Masked language modeling`, `Empty blocks`.
-- Never Title Case (`Empty Blocks`) and never all lowercase by default (`actuator`). A name is a label, not a fragment of a sentence.
-- Proper nouns, products and acronyms keep their own casing wherever they fall: `Gmail API`, `MQTT broker`, `K-means`, `RLHF`, `ResNet`, `EtherNet/IP`.
-- Use the shortest canonical term. No articles, no trailing qualifiers, singular unless the concept is inherently plural (`Empty blocks`).
-- Parent segments of the address obey the same rule (`Blockchain//Besu//Empty blocks`).
-- A wiki-link renders the name verbatim, so mid-sentence write `[[uid|channel capacity]]` when the name is not a proper noun and the capital would look wrong in prose.
+The `name` of a wikinote and the last segment of its `address` are the same string, written as the term appears in the middle of a sentence: common nouns in lowercase (`feedback loop`), proper nouns, products and acronyms in their own casing (`Kalman filter`, `RLHF`, `EtherNet/IP`). Shortest canonical term, no articles, singular unless the concept is inherently plural. The title, card and directory capitalise the first letter when rendering. Full rules, and everything else about how a note is written (shape, tone, body versus Interactions, equations, bold, paths, size, allowed syntax), in [fieldnotes/STYLE.md](fieldnotes/STYLE.md).
 
 ## Build
 
