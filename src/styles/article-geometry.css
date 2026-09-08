@@ -71,3 +71,15 @@
 .article-geometry.article-page-wrapper .glab-meta-row .article-heart-btn:hover,
 .article-geometry.article-page-wrapper .glab-meta-row .article-heart-btn.hearted,
 .article-geometry.article-page-wrapper .glab-meta-row .article-share-btn:hover { background: none; border: 0; }
+
+/* Full-width figures in the blog geometry break out of the reading column to the right, into the
+   free margin, and drop the article-wide height cap; the caption follows. No breakout below 1200px.
+   editorial-primitives.css (loaded with the article body) centres figure.img-full with
+   margin-left: 50% + translateX(-50%) and lets it grow past the column, which here would push it
+   left over the sticky index: pinned to the column's left edge at every width instead. */
+.article-geometry .glab-body .article-content figure.img-full { width: 100%; max-width: 100%; margin-left: 0; margin-right: 0; transform: none; }
+.article-geometry .glab-body .article-content figure.img-full img { width: 100%; max-width: 100% !important; }
+@media (min-width: 1200px) {
+  .article-geometry .glab-body .article-content figure.img-full { width: calc(100% + min(14rem, 18vw)); max-width: none; }
+  .article-geometry .glab-body .article-content figure.img-full img { max-height: none !important; }
+}

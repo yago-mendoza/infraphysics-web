@@ -81,7 +81,7 @@
   text-decoration-color: currentColor;
 }
 
-.article-content :is(.doc-ref-projects, .doc-ref-essays, .doc-ref-bits2bricks) {
+.article-content :is(.doc-ref-projects, .doc-ref-essays, .doc-ref-bits2bricks, .doc-ref-playgrounds) {
   color: inherit !important;
   text-decoration-line: underline !important;
   text-decoration-thickness: 1px !important;
@@ -89,7 +89,7 @@
   text-underline-offset: 0.18em !important;
 }
 
-.article-content :is(.doc-ref-projects, .doc-ref-essays, .doc-ref-bits2bricks):hover {
+.article-content :is(.doc-ref-projects, .doc-ref-essays, .doc-ref-bits2bricks, .doc-ref-playgrounds):hover {
   color: inherit !important;
   text-decoration-color: currentColor !important;
 }
@@ -139,7 +139,7 @@
 /* Cross-document links use a solid page glyph. Keep this separate from the
    stroked external-link icon: the legacy external rule otherwise erases the
    filled Material symbol in both themes. */
-.article-content :is(.doc-ref-projects, .doc-ref-essays, .doc-ref-bits2bricks) .doc-ref-icon {
+.article-content :is(.doc-ref-projects, .doc-ref-essays, .doc-ref-bits2bricks, .doc-ref-playgrounds) .doc-ref-icon {
   display: inline-block;
   width: 1.08em !important;
   height: 1.08em !important;

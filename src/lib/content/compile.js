@@ -201,6 +201,9 @@ const CROSS_DOC_CATEGORIES = {
   playgrounds: { path: '/playgrounds', suffix: '.html' },
 };
 
+// Playground pages get a sliders glyph (two bars with a knob) instead of the page glyph: same filled
+// style, same size, so the link reads as a site document that happens to be interactive.
+const PLAYGROUND_ICON = `<svg class="doc-ref-icon" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M120-640h720v80H120zM120-320h720v80H120z"/><circle cx="360" cy="-600" r="120"/><circle cx="600" cy="-280" r="120"/></svg>`;
 const CROSS_DOC_ICON = `<svg class="doc-ref-icon" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M280-280h280v-80H280v80Zm0-160h400v-80H280v80Zm0-160h400v-80H280v80Zm-80 480q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"/></svg>`;
 
 /**
@@ -229,7 +232,8 @@ export function processAllLinks(html, uidToMeta, wikiLinksConfig, buildErrors) {
       }
 
       const href = `${config.path}/${slug.trim()}${config.suffix || ''}`;
-      return `<a class="doc-ref doc-ref-${category}" href="${href}" target="_blank" rel="noopener noreferrer">${CROSS_DOC_ICON}${displayText.trim()}</a>`;
+      const icon = category === 'playgrounds' ? PLAYGROUND_ICON : CROSS_DOC_ICON;
+      return `<a class="doc-ref doc-ref-${category}" href="${href}" target="_blank" rel="noopener noreferrer">${icon}${displayText.trim()}</a>`;
     }
 
     // UID-based wiki-ref
