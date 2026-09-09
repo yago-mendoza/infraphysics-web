@@ -296,3 +296,7 @@ A `{math}` … `{/math}` or `{bkqt/…}` … `{/bkqt}` fence written directly be
 Public article and Wiki URLs and source filenames use explicit slugs. Keep IDs stable; never derive filenames from IDs. Use `scripts/rename-content-slug.js` for a URL rename and preserve `slugAliases`. Address renames do not change URLs. See [CONTENT-URLS.md](scripts/CONTENT-URLS.md). Engagement and Giscus retain numeric storage keys.
 
 Reserve guide filenames (`readme`, `style`, `agents`) as well as Windows device names when choosing a slug. URL history may use inline or multiline YAML; keep both forms covered by the rename tests. Repeating the initial migration must preserve its original report.
+
+### CV print action
+
+The shared About toolbar opens `/Yago-Mendoza-CV.pdf` in a new tab for printing with the browser's PDF viewer. Do not call `window.print()` on Profile or Stack: the website's CV-only print styles hide those pages. The download action uses the same PDF with the `download` attribute.

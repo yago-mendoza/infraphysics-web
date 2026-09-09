@@ -15,7 +15,7 @@ export const AboutTopBar: React.FC<{ active: AboutSection }> = ({ active }) => (
       {sections.map(section => section.id === active ? <span className="about-topbar-active" key={section.id}>{section.label}</span> : <Link to={section.to} key={section.id}>{section.label}</Link>)}
       <span className="about-topbar-actions">
         <a className="about-topbar-icon" href="/Yago-Mendoza-CV.pdf" download aria-label="Download CV as PDF" title="Download CV as PDF"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14" /></svg></a>
-        <button className="about-topbar-icon" type="button" onClick={() => window.print()} aria-label="Print page" title="Print page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8V3h10v5M7 17H5a2 2 0 0 1-2-2v-5h18v5a2 2 0 0 1-2 2h-2M7 14h10v7H7z" /></svg></button>
+        <a className="about-topbar-icon" href="/Yago-Mendoza-CV.pdf" target="_blank" rel="noopener noreferrer" aria-label="Open CV PDF to print" title="Open CV PDF to print"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8V3h10v5M7 17H5a2 2 0 0 1-2-2v-5h18v5a2 2 0 0 1-2 2h-2M7 14h10v7H7z" /></svg></a>
       </span>
     </nav>
   </div>
