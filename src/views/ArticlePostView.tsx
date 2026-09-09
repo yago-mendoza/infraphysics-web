@@ -8,28 +8,31 @@ import { getProjectDisplayTechnologies } from '../lib/projectPresentation';
 import { initBrainIndex, type BrainIndex } from '../lib/brainIndex';
 import { getActiveChain, ACTIVE_HEADING_THRESHOLD } from '../lib/headings';
 import { WikiContent } from '../components/wiki/WikiContent';
-import { CATEGORY_CONFIG, sectionPath as getSectionPath, postPath, isBlogCategory } from '../config/categories';
+import { CATEGORY_CONFIG, STATUS_CONFIG, sectionPath as getSectionPath, postPath, isBlogCategory, categoryGroup } from '../config/categories';
 import { ArrowRightIcon, GitHubIcon, LinkedInIcon, TwitterIcon, RedditIcon, HackerNewsIcon, ClipboardIcon, CheckIcon, ShareIcon, HeartIcon, EyeIcon } from '../components/icons';
 
 import { ArticleHashtags } from '../components/article/ArticleHashtags';
 import { BlogMetabar } from '../components/article/BlogMetabar';
+import { ProjectBrief } from '../components/article/ProjectBrief';
 import { posts } from '../data/data';
 import { Post } from '../types';
 import { useArticleContext } from '../contexts/ArticleContext';
 import { useKeyboardShortcuts, ShortcutDef } from '../hooks/useKeyboardShortcuts';
 import { useViewCount } from '../hooks/useViewCount';
 import { useReaction } from '../hooks/useReaction';
+import { ARTICLE_VIEWS_DISPLAY_MIN, ARTICLE_HEARTS_DISPLAY_MIN } from '../config/analytics';
 import { useTheme } from '../contexts/ThemeContext';
 import Giscus from '@giscus/react';
 import '../styles/article.css';
 import '../styles/article-layout.css';
 import '../styles/article-geometry.css';
+import '../styles/project-page.css';
 
 interface ArticlePostViewProps {
   post: Post;
 }
 
-const GiscusComments: React.FC = () => {
+const GiscusComments: React.FC<{ legacyPath: string }> = ({ legacyPath }) => {
   const { theme } = useTheme();
   return (
     <div className="article-comments">
@@ -38,7 +41,8 @@ const GiscusComments: React.FC = () => {
         repoId="R_kgDORbJE3A"
         category="Comments"
         categoryId="DIC_kwDORbJE3M4C3Z8Y"
-        mapping="pathname"
+        mapping="specific"
+        term={legacyPath.slice(1)}
         strict="1"
         reactionsEnabled="1"
         emitMetadata="0"
@@ -58,6 +62,9 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const isBlog = isBlogCategory(post.category);
   const isEssays = post.category === 'essays';
   const visibleProjectTechnologies = post.category === 'projects' ? getProjectDisplayTechnologies(post.technologies) : [];
+  const project = post.category === 'projects' ? post : null;
+  const projectTags = project?.tags ?? [];
+  const statusCfg = project?.status ? STATUS_CONFIG[project.status] : null;
   const [copied, setCopied] = useState(false);
   const [contentCopied, setContentCopied] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
@@ -96,8 +103,12 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
   const formattedDate = useMemo(() => formatDateTerminal(post.date), [post.date]);
   const readingTime = useMemo(() => calculateReadingTime(post.content), [post.content]);
-  const { views } = useViewCount(location.pathname);
-  const { hearts, hearted, toggle: toggleHeart } = useReaction(location.pathname);
+  const legacyPath = `/${categoryGroup(post.category)}/${post.category}/${post.id}`;
+  const { views } = useViewCount(legacyPath);
+  const { hearts, hearted, toggle: toggleHeart } = useReaction(legacyPath);
+  // Counters are always tracked; small ones are not displayed (config/analytics.ts).
+  const shownViews = views != null && views >= ARTICLE_VIEWS_DISPLAY_MIN ? views : null;
+  const shownHearts = hearts != null && (hearts >= ARTICLE_HEARTS_DISPLAY_MIN || hearted) ? hearts : null;
 
   const authorName = post.author || 'Yago Mendoza';
   const authorPath = authorName.toLowerCase() === 'yago mendoza' ? '/about' : '/contact';
@@ -419,50 +430,36 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
         onClick={() => setShareOpen(o => !o)}
         title="Share"
       >
-        {!isBlog && <ShareIcon size={14} />}
-        {isBlog && 'Share'}
+        <ShareIcon size={14} />
       </button>
       {shareOpen && (
-        <div className="article-share-dropdown">
-          <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out: ${shareTitle}`)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer">
-            <TwitterIcon size={14} /> Share on X
-          </a>
-          <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer">
-            <LinkedInIcon size={14} /> Share on LinkedIn
-          </a>
-          <a href={`https://reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer">
-            <RedditIcon size={14} /> Share on Reddit
-          </a>
-          <a href={`https://news.ycombinator.com/submitlink?u=${encodeURIComponent(shareUrl)}&t=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer">
-            <HackerNewsIcon size={14} /> Hacker News
-          </a>
-          <button onClick={() => {
+        <div className="article-share-dropdown" role="menu">
+          <small>Share this piece</small>
+          <a role="menuitem" href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out: ${shareTitle}`)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer"><b>01</b><span>X</span><TwitterIcon size={13} /></a>
+          <a role="menuitem" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer"><b>02</b><span>LinkedIn</span><LinkedInIcon size={13} /></a>
+          <a role="menuitem" href={`https://reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer"><b>03</b><span>Reddit</span><RedditIcon size={13} /></a>
+          <a role="menuitem" href={`https://news.ycombinator.com/submitlink?u=${encodeURIComponent(shareUrl)}&t=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer"><b>04</b><span>Hacker News</span><HackerNewsIcon size={13} /></a>
+          <div className="article-share-dropdown-sep" />
+          <button role="menuitem" onClick={() => {
             navigator.clipboard.writeText(shareUrl);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
-          }}>
-            {copied ? <CheckIcon size={14} /> : <ClipboardIcon size={14} />}
-            {copied ? 'Copied!' : 'Copy link'}
-          </button>
-          <div className="article-share-dropdown-sep" />
-          <button onClick={() => {
+          }}><b>05</b><span>{copied ? 'Link copied' : 'Copy link'}</span>{copied ? <CheckIcon size={13} /> : <ClipboardIcon size={13} />}</button>
+          <button role="menuitem" onClick={() => {
             const el = document.querySelector('.article-content');
             if (el) {
               navigator.clipboard.writeText((el as HTMLElement).innerText);
               setContentCopied(true);
               setTimeout(() => setContentCopied(false), 2000);
             }
-          }}>
-            {contentCopied ? <CheckIcon size={14} /> : <ClipboardIcon size={14} />}
-            {contentCopied ? 'Copied!' : 'Copy content'}
-          </button>
+          }}><b>06</b><span>{contentCopied ? 'Text copied' : 'Copy the text'}</span>{contentCopied ? <CheckIcon size={13} /> : <ClipboardIcon size={13} />}</button>
         </div>
       )}
     </div>
   );
 
   return (
-    <div className={`article-page-wrapper article-${post.category}${isBlog ? ' article-blog' : ''}${isBlog ? ' article-geometry' : ''} animate-fade-in`}>
+    <div className={`article-page-wrapper article-${post.category}${isBlog ? ' article-blog article-geometry' : ' pj'} animate-fade-in`}>
       {createPortal(
         <div ref={progressRef} className="article-progress-bar" style={{ backgroundColor: `var(--cat-${post.category}-accent)` }} />,
         document.body
@@ -491,12 +488,12 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                 </p>
                 <div className="article-engagement-row article-essays-engagement">
                   <div className="article-engagement-left">
-                    {views != null && (
-                      <span className="article-meta-views"><EyeIcon size={15} /> {views}</span>
+                    {shownViews != null && (
+                      <span className="article-meta-views"><EyeIcon size={15} /> {shownViews}</span>
                     )}
                     {hearts != null && (
                       <button onClick={toggleHeart} className={`article-heart-btn${hearted ? ' hearted' : ''}`} title={hearted ? 'Unlike' : 'Like'}>
-                        <HeartIcon size={15} filled={hearted} /> {hearts}
+                        <HeartIcon size={15} filled={hearted} />{shownHearts != null && <> {shownHearts}</>}
                       </button>
                     )}
                   </div>
@@ -510,163 +507,102 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               </figure>
             )}
           </div>
-          <div className="glab-grid">
-            <aside className={`glab-index${isEssays ? '' : ' glab-index-numbered'}`} id="article-toc">
-              {topHeadings.length > 1 && (
-                <>
-                  <small>{isEssays ? 'In this article' : 'Sections'}</small>
-                  <ol>
-                    {topHeadings.map((h, i) => <li key={h.id}><a href={`#${h.id}`} className="article-toc-link" onClick={event => { event.preventDefault(); document.getElementById(h.id)?.scrollIntoView({ behavior: 'instant', block: 'start' }); }}>{!isEssays && <b>{String(i + 1).padStart(2, '0')}</b>}<span>{h.text}</span></a></li>)}
-                  </ol>
-                </>
-              )}
-            </aside>
+          {/* A piece with a single section has no index: the rail is not rendered and the body sits centred in the column. */}
+          <div className={`glab-grid${topHeadings.length > 1 ? '' : ' glab-grid-solo'}`}>
+            {topHeadings.length > 1 && (
+              <aside className={`glab-index${isEssays ? '' : ' glab-index-numbered'}`} id="article-toc">
+                <small>{isEssays ? 'In this article' : 'Sections'}</small>
+                <ol>
+                  {topHeadings.map((h, i) => <li key={h.id}><a href={`#${h.id}`} className="article-toc-link" onClick={event => { event.preventDefault(); document.getElementById(h.id)?.scrollIntoView({ behavior: 'instant', block: 'start' }); }}>{!isEssays && <b>{String(i + 1).padStart(2, '0')}</b>}<span>{h.text}</span></a></li>)}
+                </ol>
+              </aside>
+            )}
             <div className="glab-body">
               <WikiContent
                 html={contentWithIds}
                 allWikiNotes={brainIndex?.allWikiNotes}
                 className="article-content"
               />
-              <GiscusComments />
+              <GiscusComments legacyPath={legacyPath} />
             </div>
           </div>
         </article>
       ) : (
-      <article className="article-container">
-
-        {/* ── HERO IMAGE (projects only — grayscale) ── */}
-        {!isBlog && post.thumbnail && (
-          <div className={`article-hero thumb-${post.thumbnailAspect || 'full'} shade-${post.thumbnailShading || 'heavy'}`}>
-            <img
-              src={post.thumbnail}
-              alt={post.displayTitle || post.title}
-              loading="lazy"
-              className="article-hero-img"
-              style={thumbFocusStyle}
-            />
-            <div className="article-hero-gradient" />
-          </div>
-        )}
-
-        {/* ── BODY ── */}
-        <div className="article-body">
-
-          {/* Nav row (projects only): tags on the left, engagement buttons on the right.
-              Blog articles rely on the floating top bar's back link instead. */}
-          {!isBlog && (
-            <div className="article-nav-row">
-              <div className="article-nav-tags">
-                {post.tags && post.tags.length > 0 && (
-                  <div className="article-pills article-pills-topics" aria-label="Project topics">
-                    {post.tags.map(tag => (
-                      <span key={tag} className="article-pill article-pill-topic">{tag}</span>
-                    ))}
-                  </div>
-                )}
-                {visibleProjectTechnologies.length > 0 && (
-                  <div className="article-pills article-pills-tech" aria-label="Project technologies">
-                    {visibleProjectTechnologies.map(tech => (
-                      <span key={tech} className="article-pill article-pill-tech">{tech}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="article-engagement-row">
-                {views != null && (
-                  <span className="article-meta-views"><EyeIcon size={15} /> {views}</span>
-                )}
-                {hearts != null && (
-                  <button onClick={toggleHeart} className={`article-heart-btn${hearted ? ' hearted' : ''}`} title={hearted ? 'Unlike' : 'Like'}>
-                    <HeartIcon size={15} filled={hearted} /> {hearts}
-                  </button>
-                )}
-                <a
-                  href={post.github || 'https://github.com/yago-mendoza'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="article-social-btn article-social-github"
-                  title={post.github ? 'View on GitHub' : 'GitHub'}
-                >
-                  <GitHubIcon size={18} />
-                </a>
-                {shareDropdown}
-              </div>
-            </div>
-          )}
-
-          {/* Blog image — above meta/title (blog only) */}
-          {isBlog && post.thumbnail && (
-            <div className={`article-blog-image thumb-${post.thumbnailAspect || 'full'}`}>
-              <img
-                src={post.thumbnail}
-                alt={post.displayTitle || post.title}
-                loading="lazy"
-                className="article-blog-image-img"
-                style={thumbFocusStyle}
-              />
-            </div>
-          )}
-
-          {/* META — above title for blog (moved to metabar below title), below for projects */}
-
-          {/* Tag pills — below meta, above title (blog only) */}
-          {isBlog && <ArticleHashtags tags={post.tags} technologies={post.technologies} />}
-
-          {/* TITLE — displayTitle large + subtitle below smaller/gray */}
-          <div className="article-title-block">
-            <h1 className="article-title">
-              {post.displayTitle || post.title}
-            </h1>
-            {post.subtitle && (
-              <p className="article-subtitle">{post.subtitle}</p>
-            )}
-          </div>
-
-          {/* META — below title for projects */}
-          {!isBlog && (
-            <div className="article-meta">
-              <span className="article-meta-date">{formattedDate}</span>
-              <span className="article-meta-reading-time">{readingTime} min read</span>
-              <Link to={authorPath} className="article-meta-author">{authorName}</Link>
-            </div>
-          )}
-
-          {/* Meta bar (blog non-essays only — essays has its own in header card) */}
-          {isBlog && post.category !== 'essays' && (
-            <BlogMetabar date={post.date} authorName={authorName} authorPath={authorPath} readingTime={readingTime} views={views} hearts={hearts} hearted={hearted} toggleHeart={toggleHeart} shareDropdown={shareDropdown} formatDate={formatDate} />
-          )}
-
-          {/* NOTES + DIVIDERS (projects only) */}
-          {!isBlog && (
-            <>
-              {/* Thin gray line between meta and notes */}
-              <div className="article-divider-thin" />
-
-              {/* TLDR — single compact paragraph */}
-              {tldrText && (
-                <div className="article-notes">
-                  <p className="article-notes-line">{tldrText}</p>
+      /* Projects: the full-bleed cover fading into the page, title and byline on it over a soft
+         scrim, the brief strip, a labelled summary, the body beside a numbered index and a facts
+         sheet (project-page.css). */
+      <article className="pj-page">
+        <header>
+          <div className="pj-plate">{post.thumbnail && <img src={post.thumbnail} alt="" loading="eager" style={thumbFocusStyle} />}</div>
+          <div className="pj-column pj-plate-text">
+            <div className="pj-plate-scrim">
+              <nav className="pj-crumb" aria-label="Breadcrumb">
+                <Link to="/home">home</Link><span>/</span><Link to={getSectionPath(post.category)}>lab</Link><span>/</span><b>{catCfg?.title ?? post.category}</b>
+              </nav>
+              <p className="pj-meta">
+                {statusCfg && <><span className="pj-status" style={{ '--status': statusCfg.dotColor } as React.CSSProperties}><i />{statusCfg.label.toLowerCase()}</span><span>·</span></>}
+                <Link to={authorPath}>{authorName}</Link>
+                <span>·</span><time dateTime={post.date}>{formattedDate}</time>
+                <span>·</span><span>{readingTime} min read</span>
+                {post.complexity != null && <><span>·</span><span>complexity {post.complexity}/10</span></>}
+              </p>
+              <h1 className="pj-title">{post.displayTitle || post.title}</h1>
+              {post.subtitle && <p className="pj-subtitle">{post.subtitle}</p>}
+              {(visibleProjectTechnologies.length > 0 || projectTags.length > 0) && (
+                <div className="pj-chips">
+                  {visibleProjectTechnologies.map(tech => <span key={tech} className="is-tech">{tech}</span>)}
+                  {projectTags.map(tag => <span key={tag}>{tag}</span>)}
                 </div>
               )}
-
-              {/* Thick white line before article */}
-              <div className="article-divider-thick" />
-            </>
-          )}
-
-          {/* Table of Contents — projects uses lateral TOC in floating bar (same as blog) */}
-
-          {/* Article content */}
-          <WikiContent
-            html={contentWithIds}
-            allWikiNotes={brainIndex?.allWikiNotes}
-            className="article-content"
-          />
-
-          {/* Comments — Giscus (GitHub Discussions) */}
-          <GiscusComments />
-
-
+            </div>
+          </div>
+        </header>
+        <ProjectBrief postId={post.id} />
+        <div className="pj-column pj-grid">
+          <div className="pj-body">
+            {tldrText && (
+              <section className="pj-summary" aria-label="Summary">
+                <small>Summary</small>
+                <p className="pj-lead">{tldrText}</p>
+              </section>
+            )}
+            <WikiContent
+              html={contentWithIds}
+              allWikiNotes={brainIndex?.allWikiNotes}
+              className="article-content"
+            />
+            <GiscusComments legacyPath={legacyPath} />
+          </div>
+          <aside className="pj-rail" id="article-toc">
+            {topHeadings.length > 1 && (
+              <nav className="pj-index" aria-label="Sections">
+                <small>Sections</small>
+                <ol>
+                  {topHeadings.map((h, i) => <li key={h.id}><a href={`#${h.id}`} className="article-toc-link" onClick={event => { event.preventDefault(); document.getElementById(h.id)?.scrollIntoView({ behavior: 'instant', block: 'start' }); }}><b>{String(i + 1).padStart(2, '0')}</b><span>{h.text}</span></a></li>)}
+                </ol>
+              </nav>
+            )}
+            <dl className="pj-facts">
+              {statusCfg && <div><dt>Status</dt><dd><span className="pj-status" style={{ '--status': statusCfg.dotColor } as React.CSSProperties}><i />{statusCfg.label.toLowerCase()}</span></dd></div>}
+              <div><dt>Date</dt><dd>{formattedDate}</dd></div>
+              <div><dt>Reading</dt><dd>{readingTime} min</dd></div>
+              {post.complexity != null && <div><dt>Complexity</dt><dd>{post.complexity} / 10</dd></div>}
+              {visibleProjectTechnologies.length > 0 && <div><dt>Stack</dt><dd>{visibleProjectTechnologies.join(', ')}</dd></div>}
+              {projectTags.length > 0 && <div><dt>Topics</dt><dd>{projectTags.join(', ')}</dd></div>}
+              <div><dt>Author</dt><dd><Link to={authorPath}>{authorName}</Link></dd></div>
+              {project?.github && <div><dt>Source</dt><dd><a href={project.github} target="_blank" rel="noopener noreferrer">GitHub</a></dd></div>}
+              {project?.demo && <div><dt>Demo</dt><dd><a href={project.demo} target="_blank" rel="noopener noreferrer">Live</a></dd></div>}
+            </dl>
+            <div className="article-engagement-row pj-engagement">
+              {shownViews != null && <span className="article-meta-views"><EyeIcon size={15} /> {shownViews}</span>}
+              {hearts != null && (
+                <button onClick={toggleHeart} className={`article-heart-btn${hearted ? ' hearted' : ''}`} title={hearted ? 'Unlike' : 'Like'}>
+                  <HeartIcon size={15} filled={hearted} />{shownHearts != null && <> {shownHearts}</>}
+                </button>
+              )}
+              {shareDropdown}
+            </div>
+          </aside>
         </div>
       </article>
       )}

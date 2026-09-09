@@ -1,0 +1,10 @@
+﻿.ctx-preview-nav { display:flex; justify-content:space-between; align-items:center; gap:16px; max-width:1100px; margin:0 auto 32px; font:11px var(--font-mono); color:var(--art-text-mid); }
+.ctx-preview-nav > div { display:flex; gap:6px; }
+.ctx-preview-nav a { padding:7px 10px; border:1px solid currentColor; border-radius:4px; opacity:.55; }
+.ctx-preview-nav a[aria-current], .ctx-preview-nav a:hover { opacity:1; }
+
+@media(max-width:600px) {
+  .ctx-preview-nav { align-items:flex-start; font-size:10px; }
+  .ctx-preview-nav > span { max-width:120px; }
+  .ctx-preview-nav a { padding:6px 8px; }
+}

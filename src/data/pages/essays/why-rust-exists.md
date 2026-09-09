@@ -1,0 +1,202 @@
+---
+slug: why-rust-exists
+id: "4419076"
+displayTitle: "Why Rust exists"
+category: essays
+date: "2026-02-05"
+lang: en
+thumbnail: https://cdn.infraphysics.net/articles/4419076/cover.webp
+thumbnailAspect: banner
+subtitle: "Ownership, borrowing, and the compiler that won't let you cheat."
+tags: ["Rust","programming language","memory safety","OS"]
+complexity: 5
+featured: false
+related: ["7733621", "7722440", "6184744"]
+hidden: false
+---
+
+# Why Rust exists
+
+The first time I tried to write Rust, the compiler rejected my code fourteen times in twenty minutes. Not for logic errors. Not for typos. For *ownership violations*.
+
+I didn't know what an ownership violation was. I didn't know I was violating anything. I just wanted to pass a string to a function and then use it again afterwards. Apparently, in Rust, that's a *crime*.
+
+I closed the editor. I went for a walk. I came back three days later and tried again.
+
+It wasn't even my first contact. I'd found Rust years earlier, fell down a compiler rabbit hole while studying electronics, left it, and came back when Solana and Linus Torvalds made it impossible to ignore. Fair warning: this piece is pure idolatry. I have thick layers of concepts left to learn, and it's refreshing to see ideas that C and C++ seemed to have copyrighted reborn in a new paradigm.
+
+That was roughly the start of one of the most rewarding (and most infuriating) learning experiences I've had as a programmer. And to understand *why* Rust works the way it does, you need to understand the problem it was built to solve. Because it's a big one. A really, really expensive one.
+
+## Seventy percent
+
+Here's a fun fact that isn't fun at all: **roughly 70% of all security vulnerabilities in large C and C++ codebases are memory safety bugs.** Not "roughly" as in "we think, maybe." Roughly as in Microsoft, Google, and Apple have independently published reports confirming exactly this number. Seventy percent. Seven out of ten.
+
+What does "memory safety bug" mean? It means the program tried to use memory it shouldn't have. It read from a place that had already been freed. It wrote past the end of a buffer. It dereferenced a pointer that pointed to nothing. It handed out two mutable references to the same data and then watched in horror as they stomped on each other.
+
+{bkqt/danger}
+Buffer overflows, a single category of memory bug, have been the root cause of some of the most devastating security breaches in computing history. Heartbleed (2014), WannaCry (2017), and countless others trace back to C code that read or wrote a few bytes past where it should have. Billions of dollars. Millions of compromised systems. All because a program counted wrong.
+{/bkqt}
+
+These aren't rare edge cases. They are the **default failure mode** of systems programming in C and C++. If you write enough C, you *will* introduce memory bugs. Not because you're bad at your job, but because the language gives you a loaded gun, removes the safety, and says "try not to point it at your foot." The human brain is simply not good enough to manually track every allocation, every free, every pointer, every lifetime, across a codebase of any meaningful size.
+
+So for decades, the industry had two options. And they both sucked.
+
+## Garbage collection or manual memory
+
+**Option one: garbage collection.**
+
+Languages like Java, Python, Go, and C# said: "okay, clearly humans can't be trusted with memory. So we'll handle it for you." A background process, the garbage collector, periodically scans the heap, finds objects nobody's using anymore, and frees them automatically. Problem solved.
+
+Except... not really. Garbage collectors introduce latency spikes. They consume memory overhead (sometimes substantial). They make performance unpredictable: your program might pause for 50 milliseconds at any moment while the GC does its thing. For a web server, that's usually fine. For a game engine running at 60fps, that's a dropped frame. For an embedded system in a pacemaker, that's potentially fatal.
+
+{bkqt/note}
+Garbage collection is the right trade-off for most software. If you're writing a CRUD app, an API server, a data pipeline, a mobile app. GC languages are great. The performance tax is small and the productivity gain is enormous. The problem is that some software can't afford the tax at all.
+{/bkqt}
+
+**Option two: manual memory management.**
+
+C and C++ said: "you're the programmer. You know when memory should be allocated and freed. Do it yourself." This gives you total control and zero overhead. It also gives you use-after-free, double-free, dangling pointers, buffer overflows, data races, and an entire zoo of bugs that have collectively cost the industry more money than most countries' GDP.
+
+So that's the landscape. You get safety but lose control, or you get control but lose safety.
+
+For forty years, everyone assumed those were the only two options.
+
+## A third option
+
+In 2006, Graydon Hoare, a Mozilla engineer, started working on a side project. He was tired of the C++ bugs in Firefox. Specifically, he was tired of the *same categories* of C++ bugs showing up over and over, despite smart people trying hard to avoid them. So he started designing a language where those bugs would be *structurally impossible*.
+
+Not caught at runtime. Not caught by a linter. Not caught by code review. **Impossible to express in the first place.**
+
+That language became Rust. And its core innovation is a concept called ownership.
+
+## Three rules
+
+Rust's ownership system is built on three rules. That's it. Three rules. They sound almost trivially simple. They have consequences that will break your brain.
+
+{bkqt/keyconcept}
+*Rule 1.* Every value in Rust has exactly one owner. When the owner goes out of scope, the value is dropped (freed). No garbage collector. No manual `free()`. The compiler inserts the cleanup code for you, at compile time, in exactly the right place.
+{/bkqt}
+
+{bkqt/keyconcept}
+*Rule 2.* Ownership can be *moved* from one variable to another. But once it moves, the original variable is dead. You cannot use it. The compiler will reject any attempt to touch it. This is what caught me on day one: I passed a string to a function, which *moved* ownership into that function, and then tried to use the string afterwards. Rust said no. The string was gone.
+{/bkqt}
+
+{bkqt/keyconcept}
+*Rule 3.* If you don't want to move ownership, you can *borrow* a value. A borrow is a reference, a pointer that doesn't own the data. Rust enforces one ironclad constraint: you can have either one mutable reference or any number of immutable references, but never both at the same time. This single rule eliminates data races at compile time.
+{/bkqt}
+
+That's the entire memory model. Three rules. No garbage collector. No manual memory management. The compiler enforces safety, and the generated code is as fast as C.
+
+It sounds too good to be true. The catch is that learning to work within these rules feels, at first, like writing code in a straitjacket.
+
+## Fighting the compiler
+
+The borrow checker is the part of the Rust compiler that enforces the ownership rules. It is, simultaneously, the most hated and most loved feature of the language.
+
+When you're new to Rust, the borrow checker is your enemy. You write perfectly reasonable-looking code. The compiler rejects it. You restructure. Rejected again. You google the error message. You read a blog post. You restructure again. Rejected *again*. You start questioning your career choices.
+
+```rust
+fn main() {
+    let mut data = vec![1, 2, 3];
+    let first = &data[0];     // immutable borrow
+    data.push(4);             // mutable borrow — REJECTED
+    println!("{}", first);
+}
+```
+
+This code looks fine. You took a reference to the first element, then pushed a new element. What's the problem?
+
+The problem is that `push` might reallocate the vector's internal buffer. If it does, `first` is now pointing at freed memory. In C++, this compiles silently and produces a use-after-free bug that might crash your program three weeks later in production at 2am on a Sunday. In Rust, the compiler catches it *before your code ever runs*.
+
+{bkqt/tip}
+The borrow checker isn't fighting you. It's showing you bugs you didn't know you were about to write. Every time the compiler says "no," it's preventing a bug that would have existed in C++ or C. The shift in perspective (from "the compiler is blocking me" to "the compiler is protecting me") is the moment Rust clicks.
+{/bkqt}
+
+After a few weeks (or months, depending on your background), something changes. The borrow checker stops feeling like an obstacle. It starts feeling like a superpower. You realize that if your code compiles, an entire *category* of bugs simply cannot exist in it. No use-after-free. No data races. No null pointer dereferences. No double frees. Gone. Structurally impossible.
+
+The confidence this gives you is hard to overstate. You can refactor aggressively. You can write concurrent code without fear. You can hand your codebase to someone else and know that the compiler will catch their memory mistakes just like it caught yours.
+
+## The rest of the language
+
+Ownership is the headline feature, but Rust has a bunch of other design choices that are quietly excellent.
+
+**No null.** There is no `null` in Rust. Instead, you have `Option<T>`, a type that is either `Some(value)` or `None`. The compiler *forces* you to handle the `None` case. You cannot forget. This eliminates null pointer exceptions, what Tony Hoare (the inventor of null) called his "billion-dollar mistake."
+
+```rust
+fn find_user(id: u32) -> Option<User> {
+    // returns Some(user) or None
+}
+
+// the compiler forces you to handle both cases
+match find_user(42) {
+    Some(user) => println!("found: {}", user.name),
+    None => println!("user not found"),
+}
+```
+
+**No exceptions.** Rust doesn't have try/catch. Errors are values: specifically, `Result<T, E>`, which is either `Ok(value)` or `Err(error)`. You handle errors explicitly, in the type system, at every call site. The `?` operator makes this ergonomic:
+
+```rust
+fn read_config() -> Result<Config, io::Error> {
+    let contents = fs::read_to_string("config.toml")?;  // ? propagates errors
+    let config = parse_toml(&contents)?;
+    Ok(config)
+}
+```
+
+**Pattern matching.** Rust's `match` is exhaustive: the compiler verifies you've handled every possible case. Combined with enums that can carry data (algebraic data types), this is absurdly powerful:
+
+```rust
+enum Shape {
+    Circle(f64),           // radius
+    Rectangle(f64, f64),   // width, height
+    Triangle(f64, f64, f64), // three sides
+}
+
+fn area(shape: &Shape) -> f64 {
+    match shape {
+        Shape::Circle(r) => std::f64::consts::PI * r * r,
+        Shape::Rectangle(w, h) => w * h,
+        Shape::Triangle(a, b, c) => {
+            let s = (a + b + c) / 2.0;
+            (s * (s - a) * (s - b) * (s - c)).sqrt()
+        }
+    }
+    // add a new variant to Shape? compiler error until you handle it here.
+}
+```
+
+**Zero-cost abstractions.** Iterators, closures, generics, trait objects: they all compile down to the same machine code you'd write by hand in C. "Zero-cost" means you pay no runtime overhead for using high-level constructs. The compiler optimizes them away completely.
+
+## Who's shipping it
+
+Rust isn't a toy language or an academic experiment. It's in production at:
+
+- **Mozilla**: parts of Firefox's rendering engine (Servo/Stylo)
+- **Amazon**: Firecracker (the VM that powers Lambda and Fargate)
+- **Microsoft**: rewriting core Windows components from C++
+- **Google**: Android's bluetooth stack, parts of Fuchsia
+- **Cloudflare**: Pingora, their HTTP proxy that handles a significant chunk of internet traffic
+- **Discord**: rewrote their read states service from Go to Rust for predictable latency
+- **Linux kernel**: Rust is now an officially supported language for kernel modules (this is a *massive* endorsement)
+
+The pattern is consistent: organizations that need C-level performance with fewer bugs are reaching for Rust. Not instead of Python or JavaScript, but instead of C and C++.
+
+## The pain is the point
+
+Here's what took me the longest to understand about Rust.
+
+The difficulty isn't a design flaw. It's not that Graydon Hoare and the Rust team couldn't figure out how to make the language easier. It's that **the difficulty is the language telling you something true about your problem.**
+
+When the borrow checker rejects your code, it's not being pedantic. It's revealing a genuine tension in your design: two parts of your program want conflicting access to the same data, and you haven't resolved that conflict. In other languages, this conflict still exists. You just don't see it until production.
+
+Rust makes the implicit explicit. It forces you to think about ownership, lifetimes, and data flow *up front*, at design time, rather than discovering those issues later as bugs. It's the programming language equivalent of "measure twice, cut once," except the ruler screams at you if you try to cut without measuring.
+
+{bkqt/note}
+Rust is not the right tool for every job. If you're prototyping, if latency doesn't matter, if your team doesn't have time for the learning curve: use Python, use Go, use TypeScript. Rust's value proposition is specific: maximum performance with maximum safety, at the cost of initial development speed. Know when that trade-off makes sense.
+{/bkqt}
+
+
+I still get rejected by the borrow checker. Regularly. The difference is that now, when it says no, my first instinct isn't frustration. It's curiosity. *What am I not seeing?* What conflict exists in my design that I haven't noticed yet?
+
+The compiler knows. It always knows. And slowly, painfully, beautifully, it teaches you to see it too.

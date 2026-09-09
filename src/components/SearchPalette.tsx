@@ -204,8 +204,8 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
       { label: 'Experience / CV', keywords: ['resume', 'career', 'work', 'education', 'degree'], icon: <UserIcon />, path: '/about/cv' },
       { label: 'Stack', keywords: ['skills', 'tools', 'technology', 'software', 'hardware'], icon: <UserIcon />, path: '/about/stack' },
       { label: 'View Projects', keywords: ['portfolio', 'builds', 'work', 'lab'], icon: <ContentEntityIcon kind="projects" />, path: sectionPath('projects'), hideWhen: () => currentCategory === 'projects' },
-      { label: 'View Essays', keywords: ['essays', 'articles', 'opinion', 'longform'], icon: <ContentEntityIcon kind="essays" />, path: sectionPath('essays'), hideWhen: () => currentCategory === 'essays' },
-      { label: 'View Bits2Bricks', keywords: ['technical', 'engineering', 'tutorials', 'bits'], icon: <ContentEntityIcon kind="bits2bricks" />, path: sectionPath('bits2bricks'), hideWhen: () => currentCategory === 'bits2bricks' },
+      { label: 'View Essays', keywords: ['essays', 'articles', 'opinion', 'longform'], icon: <span className="palette-icon-lg"><ContentEntityIcon kind="essays" /></span>, path: sectionPath('essays'), hideWhen: () => currentCategory === 'essays' },
+      { label: 'View Bits2Bricks', keywords: ['technical', 'engineering', 'tutorials', 'bits'], icon: <span className="palette-icon-lg"><ContentEntityIcon kind="bits2bricks" /></span>, path: sectionPath('bits2bricks'), hideWhen: () => currentCategory === 'bits2bricks' },
       { label: 'Open Source / GitHub', keywords: ['code', 'repository', 'repo', 'source'], icon: <GitHubIcon size={22} />, path: 'https://github.com/infraphysics', external: true },
       { label: 'Wiki', keywords: ['knowledge', 'brain', 'wikinotes', 'concepts'], icon: <ContentEntityIcon kind="wiki" />, path: secondBrainPath() },
       { label: 'Contact', keywords: ['email', 'message', 'talk', 'hire'], icon: <MailIcon />, path: '/contact' },
@@ -250,7 +250,7 @@ export const SearchPalette: React.FC<SearchPaletteProps> = ({ isOpen, onClose })
     result.push({
       label: `CAD cursor (${aestheticCursor ? 'On' : 'Off'})`,
       keywords: ['cursor', 'cad', 'crosshair', 'aesthetic', 'mouse', 'pointer', 'speed', 'performance', 'lag', 'latency', 'fps', 'animation', 'effects', 'smooth'],
-      icon: <span className="w-[22px] h-[22px] flex items-center justify-center font-mono text-base text-th-secondary">+</span>,
+      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 3l14 8.5-6.2 1.6L9.5 19z" /></svg>,
       action: () => executeAndClose(toggleAestheticCursor),
       group: 'global',
     });

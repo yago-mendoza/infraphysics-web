@@ -44,3 +44,6 @@ _generation/
 *.njsproj
 *.sln
 *.sw?
+
+# Article image masters (scripts/media.js); the CDN manifest in src/data/ is tracked instead
+media/

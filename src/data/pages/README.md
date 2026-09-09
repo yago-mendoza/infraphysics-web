@@ -6,6 +6,7 @@ Markdown in this directory is compiled at build time with marked, Shiki and a de
 
 | Need | Document |
 |---|---|
+| Hard writing rules, all categories | [STYLE.md](STYLE.md) |
 | Supported authoring syntax | [SYNTAX.md](SYNTAX.md) |
 | Compiler, cache, outputs and validation | [scripts/README.md](../../../scripts/README.md) |
 | Wikinote operations | [wikinotes/README.md](wikinotes/README.md) |
@@ -30,9 +31,29 @@ Read in this order: this file, then `STYLE.md`, then `SYNTAX.md` (grammar and th
 
 Prefer cross-document references over repeating material. Use `[[projects/id|label]]`, `[[essays/id|label]]`, `[[bits2bricks/id|label]]` or a Wiki UID/address as documented in `SYNTAX.md`.
 
+## Semantic review of wikilinks
+
+Choose body links through contextual editorial review, including when an LLM writes the article. Do not automatically turn matching words into links. Read the sentence in its paragraph and the destination note's actual body. Ask whether following the link would explain the concept used at that point. If it only explains a related concept, a different sense, or a narrower application absent from the passage, leave the words as plain text.
+
+An explicit `[[uid|display text]]` records that editorial choice. Display text may differ grammatically from the note title, but must not conceal a change of meaning. Prefer naming a technical method explicitly when that makes the link clearer. Ordinary words and rhetorical comparisons do not need links merely because a matching Wiki entry exists. Fewer useful links are better than dense but misleading annotations.
+
+For example, simulated event streams are not necessarily AI-generated training data: a note focused on recursive AI training is not a useful destination simply because it is titled *synthetic data*. Likewise, *simulator* in a comparison with a microscope can remain plain text. The compiler checks syntax and destinations; a successful build is not a semantic review. Field of View consumes the annotations after that review and must never determine which links get written.
+
 ## Front matter
 
 Every page starts with YAML front matter. Category-specific fields and examples live in the category README.
+
+### File names and public URLs
+
+Articles and Wiki notes require an explicit `slug` in lowercase kebab-case and a matching `<slug>.md` filename. Keep `id`/`uid` stable. Optional `slugAliases` retains previous URL slugs; it is independent of concept `aliases`. Title or address changes leave the slug unchanged. See [content URL operations](../../../scripts/CONTENT-URLS.md) for safe renames and compatibility.
+
+### Tags and the Home map
+
+Public projects, Bits2Bricks and essays require concept `tags`. They drive discovery and the build-time Field of View map, so select them from the article's actual subject, methods and application. Usually three to six central concepts are enough; avoid incidental mentions and editorial labels such as `personal` or `hype`. Each tag must resolve unambiguously to a Wiki name, alias or full address. Missing or ambiguous concepts fail compilation. Create a useful concept note when one is truly missing, following the Wiki workflow.
+
+Keep the implementation stack in `technologies`. For the simulation project, `tags: [ML, time series, healthcare, simulation, evaluation]` describes its subject and method; `technologies: [Python, PyTorch, NumPy, JavaScript]` describes how it was built. A tool belongs in both only when the article substantially discusses the tool itself. Application tags do not establish clinical validity or production deployment.
+
+Each article distributes its base weight across its tags. Distinct Wiki links in the body add a secondary contribution with diminishing returns and a 25% ceiling; repeating a link does not add weight. Both signals inherit the Wiki hierarchy: `time series` belongs to ML, so tagging or linking it relates the article to ML. Links between Wiki notes do not transfer coverage; the evidence must appear in the article itself. Extra tags redistribute the base weight rather than increasing it. Choose tags and links to represent the text faithfully, not to promote a domain in the map. Run `npm run content` after editing. A selected domain also needs a brief explanation of why it matters to the author in `src/data/field-of-view-context.json`; the build reports missing entries. See [AGENTS.md](AGENTS.md) for the authoring checklist and [Field of View](../../../scripts/FIELD-OF-VIEW.md) for the exact method.
 
 Quote dates and strings containing YAML-sensitive punctuation, especially `: `, `#`, `[`, `{`, `>`, `|`, `*` or `&`. An accidentally parsed object can reach React as content and cause a render error.
 

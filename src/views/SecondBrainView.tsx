@@ -1,6 +1,6 @@
 // Second Brain / Concept Wiki view component — theme-aware
 
-import React, { Suspense, startTransition, useCallback, useState, useEffect, useRef, useMemo } from 'react';
+import React, { startTransition, useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { secondBrainPath, secondBrainUidFromPath } from '../config/categories';
@@ -14,38 +14,26 @@ import { BridgeScoreBadge } from '../components/wiki/BridgeScoreBadge';
 
 import { useGraphRelevance } from '../hooks/useGraphRelevance';
 import type { SortMode, SearchMode, FilterState, ViewMode } from '../hooks/useSecondBrainHub';
-import { SearchIcon, PencilIcon, DiceIcon, ClipboardIcon, CheckIcon } from '../components/icons';
+import { SearchIcon, ClipboardIcon, CheckIcon, WikiBrainIcon } from '../components/icons';
 import { noteLabel, type WikiNoteMeta } from '../types';
-import { refreshBrainIndex, type Connection } from '../lib/brainIndex';
+import { type Connection } from '../lib/brainIndex';
 import { ICON_REF_IN, ICON_REF_OUT } from '../lib/icons';
 import { exportNotesAsMarkdown } from '../lib/exportNotes';
 import { CopyExportModal } from '../components/wiki/CopyExportModal';
 import { resolveWikiLinks } from '../lib/wikilinks';
 import { WikiLinkPreview } from '../components/wiki/WikiLinkPreview';
-import { useIsLocalhost } from '../hooks/useIsLocalhost';
-import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../constants/layout';
-import { useWikinoteEditor } from '../components/editor/useWikinoteEditor';
-import { useLivePreview } from '../components/editor/useLivePreview';
-import { NewNotePanel } from '../components/editor/NewNotePanel';
-import { posts } from '../data/data';
 import { assignRootColors, hexToRgb, ROOT_NEUTRAL } from '../components/graph/useGraphData';
 
-// Lazy-load EditorPanel — never imported on public site, zero bundle impact
-const EditorPanel = React.lazy(() => import('../components/editor/EditorPanel').then(m => ({ default: m.EditorPanel })));
 import '../styles/article.css';
 import '../styles/wiki-content.css';
+import { ErrorConceptView } from './ErrorConceptView';
 
 /** Display-friendly address: `//` → `/` */
 const displayAddress = (addr: string) => addr.replace(/\/\//g, ' / ');
 
-/** Module-level flag: open editor after note creation (survives route remounts) */
-let _pendingEditUid: string | null = null;
-
-/** Module-level: global edit mode survives route remounts (grid ↔ detail) */
-let _globalEditMode = false;
-let _autoSaveOnSwitch = true;
-
 const SORT_OPTIONS: { value: SortMode; label: string }[] = [
+  { value: 'most-articles', label: 'most articles' },
+  { value: 'fewest-articles', label: 'fewest articles' },
   { value: 'a-z', label: 'A\u2013Z' },
   { value: 'centrality', label: 'central' },
   { value: 'newest', label: 'newest' },
@@ -113,9 +101,29 @@ const Chip: React.FC<{
   );
 };
 
+// --- Phone menu: a native <select> renders as the OS wants; this one renders as the console does ---
+const MobileMenu: React.FC<{ label: string; value: string; options: { value: string; label: string }[]; onChange: (value: string) => void; className?: string }> = ({ label, value, options, onChange, className }) => {
+  const [open, setOpen] = useState(false);
+  const current = options.find(o => o.value === value)?.label ?? label;
+  return (
+    <div className={`md:hidden relative ${className ?? ''}`}>
+      <button type="button" aria-haspopup="listbox" aria-expanded={open} aria-label={label} onClick={() => setOpen(o => !o)} className="wiki-mobile-menu-btn"><span>{current}</span><i aria-hidden="true">{open ? '\u25B4' : '\u25BE'}</i></button>
+      {open && (
+        <>
+          <button type="button" aria-label="Close" className="fixed inset-0 z-30 cursor-default" onClick={() => setOpen(false)} />
+          <div role="listbox" className="wiki-mobile-menu">
+            {options.map(o => <button key={o.value} type="button" role="option" aria-selected={o.value === value} onClick={() => { onChange(o.value); setOpen(false); }} className={o.value === value ? 'is-current' : ''}>{o.label}</button>)}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 // --- Activity Heatmap (GitHub-style) ---
 const DAY_NAMES = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const MONTH_LABELS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const ActivityHeatmap: React.FC<{
   allNotes: WikiNoteMeta[];
@@ -124,6 +132,8 @@ const ActivityHeatmap: React.FC<{
 }> = ({ allNotes, dateFilter, onDateClick }) => {
   const [year, setYear] = useState(() => new Date().getFullYear());
   const [temporalPreviewIds, setTemporalPreviewIds] = useState<Set<string> | null>(null);
+  // Phones: the month that is open as a grid of large day cells (null = none).
+  const [phoneMonth, setPhoneMonth] = useState<number | null>(null);
 
   useEffect(() => {
     const receivePreview = (event: Event) => {
@@ -294,6 +304,26 @@ const ActivityHeatmap: React.FC<{
   };
 
   const currentYear = new Date().getFullYear();
+  // Phones: the month is the unit (cells are too small to tap and there is no hover to preview).
+  const phoneDays = useMemo(() => {
+    if (phoneMonth === null) return null;
+    const m = String(phoneMonth + 1).padStart(2, '0');
+    const total = new Date(year, phoneMonth + 1, 0).getDate();
+    const lead = new Date(year, phoneMonth, 1).getDay();
+    const days = [] as Array<{ date: string; day: number; count: number }>;
+    for (let d = 1; d <= total; d++) { const date = `${year}-${m}-${String(d).padStart(2, '0')}`; days.push({ date, day: d, count: noteIdsByDate.get(date)?.length ?? 0 }); }
+    return { lead, days };
+  }, [phoneMonth, year, noteIdsByDate]);
+  const togglePhoneMonth = (i: number) => {
+    if (phoneMonth === i) { setPhoneMonth(null); if (activeMonth === i) handleMonthClick(i); return; }
+    setPhoneMonth(i);
+    if (activeMonth !== i) handleMonthClick(i);
+  };
+  const monthCounts = useMemo(() => {
+    const counts = new Array<number>(12).fill(0);
+    noteIdsByDate.forEach((ids, date) => { if (date.startsWith(String(year))) counts[parseInt(date.slice(5, 7), 10) - 1] += ids.length; });
+    return counts;
+  }, [noteIdsByDate, year]);
 
   const handleMonthClick = (monthIndex: number) => {
     const m = String(monthIndex + 1).padStart(2, '0');
@@ -378,7 +408,26 @@ const ActivityHeatmap: React.FC<{
         <button onClick={() => setYear(y => Math.min(y + 1, currentYear))} disabled={year >= currentYear} className="text-[10px] text-th-muted hover:text-th-secondary disabled:opacity-30 transition-colors">&rsaquo;</button>
       </div>
       {/* Grid: one row of weeks, or two on narrow layouts */}
-      <div ref={calendarRef} className="overflow-hidden pb-1">
+      <div className="md:hidden grid grid-cols-4 gap-1 mt-1 mb-1.5">
+        {MONTH_SHORT.map((label, i) => { const active = activeMonth === i; const count = monthCounts[i]; return (
+          <button key={label} type="button" onClick={() => togglePhoneMonth(i)} aria-expanded={phoneMonth === i} className={`flex items-center justify-between px-2 h-9 rounded-sm border text-[10px] font-mono transition-colors ${active || phoneMonth === i ? 'text-violet-300 border-violet-400/60 bg-violet-500/10' : count ? 'text-th-secondary border-th-hub-border' : 'text-th-muted border-transparent'}`}>
+            <span>{label}</span><span className="tabular-nums text-[9px] opacity-70">{count || ''}</span>
+          </button>
+        ); })}
+        {phoneDays && (
+          <div className="col-span-4 mt-1 grid grid-cols-7 gap-[3px]" aria-label={`Days of ${MONTH_SHORT[phoneMonth!]} ${year}`}>
+            {DAY_NAMES.map((name, i) => <span key={i} className="text-center text-[8px] text-th-muted leading-none pb-1">{name}</span>)}
+            {Array.from({ length: phoneDays.lead }, (_, i) => <span key={`lead-${i}`} />)}
+            {phoneDays.days.map(({ date, day, count }) => (
+              <button key={date} type="button" onClick={() => handleCellClick(date)} disabled={count === 0} className={`aspect-square rounded-sm border text-[10px] font-mono tabular-nums flex flex-col items-center justify-center gap-0.5 transition-colors ${isSelected(date) ? 'border-violet-400 text-violet-300' : isInRange(date) ? 'border-violet-400/40 text-th-secondary' : count ? 'border-th-hub-border text-th-secondary' : 'border-transparent text-th-muted/50'}`} style={{ backgroundColor: cellColor(date, count, true) }}>
+                <span>{day}</span>{count > 0 && <span className="text-[8px] opacity-70">{count}</span>}
+              </button>
+            ))}
+          </div>
+        )}
+        {dateFilter && <button type="button" onClick={() => onDateClick(null)} className="col-span-4 h-8 rounded-sm border border-th-hub-border text-[9px] font-mono uppercase tracking-wider text-th-tertiary">clear dates</button>}
+      </div>
+      <div ref={calendarRef} className="hidden md:block overflow-hidden pb-1">
         {weekRows.map((rowWeeks, rowIndex) => (
           <div key={rowIndex} ref={rowIndex === 0 ? gridRef : undefined} className={`flex gap-[2px] cursor-pointer${rowIndex > 0 ? ' mt-2' : ''}`} style={{ width: '100%' }} onClick={e => handleGridClick(e, rowWeeks)} onMouseLeave={() => window.dispatchEvent(new CustomEvent('wiki-calendar-preview', { detail: null }))}>
             {/* Day labels */}
@@ -427,7 +476,7 @@ const ActivityHeatmap: React.FC<{
       </div>
       {/* Month tap targets */}
       {monthRows.map((months, rowIndex) => (
-        <div key={rowIndex} className="flex gap-[1px] mt-1.5">
+        <div key={rowIndex} className="hidden md:flex gap-[1px] mt-1.5">
           {months.map(i => {
             const label = MONTH_LABELS[i];
             const active = activeMonth === i;
@@ -492,7 +541,8 @@ const DockedToolbar: React.FC<{
   sortedResults, connectionsMap,
 }) => {
     const isSimplified = viewMode === 'simplified';
-    const [filtersOpen, setFiltersOpen] = useState(true);
+    // Phones start with the filters folded; a tap on the row opens them.
+    const [filtersOpen, setFiltersOpen] = useState(() => typeof window === 'undefined' || !window.matchMedia('(max-width: 767px)').matches);
 
     // Panel visibility is independent from filter state. Active constraints
     // must survive a collapse without forcing the controls back open.
@@ -553,6 +603,8 @@ const DockedToolbar: React.FC<{
 
     return (
       <div className="mb-3 border border-th-hub-border rounded-sm" style={{ backgroundColor: 'var(--hub-sidebar-bg)' }}>
+        {/* Phones: say where we are before the search box. */}
+        <div className="md:hidden wiki-phone-ident"><WikiBrainIcon size={12} className="text-violet-400" /><b>wiki</b><span>InfraPhysics</span><i>{allNotes.length} notes</i></div>
         {/* Row 1: Search + mode chips */}
         <div className="flex items-center gap-2 px-3 py-2 border-b border-th-hub-border min-w-0">
           <span className="text-th-tertiary flex-shrink-0"><SearchIcon /></span>
@@ -613,6 +665,7 @@ const DockedToolbar: React.FC<{
                     filterState.depthMax !== Infinity,
                     filterState.dateFilter != null,
                     filterState.wordCountMin > 0 || filterState.wordCountMax < Infinity,
+                    filterState.articleCountBelow !== null,
                     !!directoryScope,
                   ].filter(Boolean).length})
                 </span>
@@ -632,19 +685,16 @@ const DockedToolbar: React.FC<{
           {isFiltersVisible && (
             <div className="pb-2 pt-2">
               {/* All filters in one row: dropdowns + separator + toggle pills */}
-              <div className="flex items-center gap-1.5 md:gap-3 md:flex-wrap overflow-x-auto md:overflow-visible px-3 hub-scrollbar sb-filter-row">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 py-2 md:py-0 md:gap-3 px-3 sb-filter-row">
+                <label className="flex items-center gap-1 text-[10px] text-th-tertiary" title="Distinct public articles with a body wikilink; each article counts once. No tags or unlinked words.">
+                  articles &lt;
+                  <input aria-label="Article count below" type="number" min="1" step="1" placeholder="∞" value={filterState.articleCountBelow ?? ''}
+                    onChange={e => { const n = e.target.value === '' ? null : Number(e.target.value); if (n === null || Number.isInteger(n) && n >= 1) updateFilter('articleCountBelow', n); }}
+                    className="w-12 border border-th-hub-border bg-th-surface px-1 py-0.5 text-th-primary" />
+                </label>
                 <div className="flex items-center gap-1 text-[10px] text-th-tertiary relative">
                   <span>roots</span>
-                  <select
-                    value={directoryScope ?? ''}
-                    onChange={(e) => setDirectoryScope(e.target.value || null)}
-                    aria-label="Root"
-                    className="md:hidden appearance-none rounded-sm border border-th-hub-border bg-th-surface px-1.5 py-0.5 font-mono text-[11px] text-th-primary focus:outline-none focus:border-th-border-active"
-                    style={{ backgroundColor: 'var(--hub-sidebar-bg)', colorScheme: 'dark', maxWidth: '9rem' }}
-                  >
-                    <option value="">all</option>
-                    {scopeOptions.map(opt => <option key={opt.path} value={opt.path}>{opt.path} ({opt.count})</option>)}
-                  </select>
+                  <MobileMenu label="Root" value={directoryScope ?? ''} onChange={value => setDirectoryScope(value || null)} options={[{ value: '', label: 'all' }, ...scopeOptions.map(opt => ({ value: opt.path, label: `${opt.path} (${opt.count})` }))]} />
                   <div className="relative hidden md:block">
                     <input
                       type="text"
@@ -756,16 +806,7 @@ const DockedToolbar: React.FC<{
             const sortOptions = isSimplified ? SIMPLIFIED_SORT_OPTIONS : SORT_OPTIONS;
             return (
               <>
-                <select
-                  value={sortMode}
-                  onChange={(e) => setSortMode(e.target.value as SortMode)}
-                  className="md:hidden appearance-none rounded-sm border border-th-hub-border bg-th-surface px-2 py-1 font-mono text-[11px] uppercase tracking-[.08em] text-th-secondary shadow-none focus:outline-none focus:border-th-border-active"
-                  style={{ backgroundColor: 'var(--hub-sidebar-bg)', colorScheme: 'dark' }}
-                >
-                  {sortOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
+                <MobileMenu label="Sort" value={sortMode} onChange={value => setSortMode(value as SortMode)} options={sortOptions.map(opt => ({ value: opt.value, label: opt.label }))} className="uppercase tracking-[.08em]" />
                 {sortOptions.map(opt => (
                   <button
                     key={opt.value}
@@ -843,6 +884,7 @@ const DockedToolbar: React.FC<{
               <Chip label={filterState.dateFilter.replace('..', ' \u2192 ')} onDismiss={() => updateFilter('dateFilter', null)} />
             )}
             {filterState.isolated && <Chip label="isolated" onDismiss={() => updateFilter('isolated', false)} />}
+            {filterState.articleCountBelow !== null && <Chip label={`articles < ${filterState.articleCountBelow}`} onDismiss={() => updateFilter('articleCountBelow', null)} />}
             {filterState.leaf && <Chip label="leaf" onDismiss={() => updateFilter('leaf', false)} />}
             {filterState.bridgesOnly && <Chip label="bridges" onDismiss={() => updateFilter('bridgesOnly', false)} color="amber" />}
             {filterState.depthMin > 1 && <Chip label={`depth \u2265 ${filterState.depthMin}`} onDismiss={() => updateFilter('depthMin', 1)} />}
@@ -870,7 +912,8 @@ const GridCard = React.memo<{
   onCardClick: (note: WikiNoteMeta) => void;
   incoming: number;
   outgoing: number;
-}>(({ note, idx, focused, visited, onCardClick, incoming, outgoing }) => (
+  articles: number;
+}>(({ note, idx, focused, visited, onCardClick, incoming, outgoing, articles }) => (
   <Link
     data-idx={idx}
     to={secondBrainPath(note.id)}
@@ -881,6 +924,7 @@ const GridCard = React.memo<{
       <span className={`text-sm font-medium transition-colors group-hover:text-th-primary ${visited ? 'text-blue-400/70' : 'text-violet-400'}`}>
         {noteLabel(note)}
       </span>
+      <span className="ml-auto text-[9px] text-th-tertiary whitespace-nowrap" title="Distinct articles linking this note">{articles} articles</span>
     </div>
     <div className="text-[10px] text-th-tertiary mb-1">
       {(note.addressParts?.length ?? note.address?.split('//').length ?? 1) === 1
@@ -940,8 +984,6 @@ export const SecondBrainView: React.FC = () => {
     invalidateContent,
     allWikiNotes,
     stats,
-    showNewNote,
-    setShowNewNote,
     viewMode,
     setViewMode,
   } = hub;
@@ -952,89 +994,18 @@ export const SecondBrainView: React.FC = () => {
   const { getRelevance, getPercentile } = useGraphRelevance();
   const { trail, scheduleReset, scheduleExtend, truncateTrail, clearTrail } =
     useNavigationTrail({ activePost, directoryNavRef });
-  const isLocalhost = useIsLocalhost();
   const { id: urlId } = useParams<{ id: string }>();
 
-  // Redirect invalid UIDs to grid
   useEffect(() => {
-    if (urlId && !activePost && !indexLoading) {
-      navigate(secondBrainPath(), { replace: true });
+    if (activePost && urlId && window.location.pathname !== secondBrainPath(activePost.id)) {
+      navigate(secondBrainPath(activePost.id) + window.location.search + window.location.hash, { replace: true });
     }
-  }, [urlId, activePost, indexLoading, navigate]);
+  }, [urlId, activePost, navigate]);
 
-  const wikinoteEditor = useWikinoteEditor();
-  const { previewHtml } = useLivePreview(wikinoteEditor.rawContent, allWikiNotes, noteById);
+  // An unknown uid shows the wiki-accented 404 (rendered after every hook, just before the main return).
+  const missingNote = Boolean(urlId && !activePost && !indexLoading);
 
-  // Live interactions preview — override compiled connections with editor's live trailing refs
-  const effectiveConnections = useMemo((): Connection[] => {
-    if (!wikinoteEditor.isEditing || !activePost) return connections;
-    const liveRefs = wikinoteEditor.liveTrailingRefs;
-    const seen = new Set<string>();
-    const result: Connection[] = [];
-
-    // From live trailing refs (editor's current state)
-    for (const ref of liveRefs) {
-      const target = noteById.get(ref.uid);
-      if (!target || ref.uid === activePost.id) continue;
-      seen.add(ref.uid);
-      // Check if target has a compiled trailing ref pointing back
-      const reverseRef = (target.trailingRefs || []).find(r => r.uid === activePost.id);
-      result.push({ note: target, annotation: ref.annotation, reverseAnnotation: reverseRef?.annotation ?? null });
-    }
-
-    // Keep reverse-only connections (other notes pointing to this note, not in live refs)
-    for (const conn of connections) {
-      if (!seen.has(conn.note.id)) result.push(conn);
-    }
-
-    return result;
-  }, [wikinoteEditor.isEditing, wikinoteEditor.liveTrailingRefs, activePost, connections, noteById]);
-
-  // Global edit mode — once toggled, every note auto-opens in the editor
-  const [globalEditMode, _setGlobalEditMode] = useState(_globalEditMode);
-  const setGlobalEditMode = useCallback((v: boolean | ((prev: boolean) => boolean)) => {
-    _setGlobalEditMode(prev => {
-      const next = typeof v === 'function' ? v(prev) : v;
-      _globalEditMode = next;
-      return next;
-    });
-  }, []);
-  const [autoSaveOnSwitch, _setAutoSaveOnSwitch] = useState(_autoSaveOnSwitch);
-  const setAutoSaveOnSwitch = useCallback((v: boolean | ((prev: boolean) => boolean)) => {
-    _setAutoSaveOnSwitch(prev => {
-      const next = typeof v === 'function' ? v(prev) : v;
-      _autoSaveOnSwitch = next;
-      return next;
-    });
-  }, []);
-
-  // Auto-open editor when globalEditMode is ON and activePost changes
-  useEffect(() => {
-    if (!globalEditMode || !activePost?.id || !isLocalhost) return;
-    if (activePost.id === wikinoteEditor.editingUid) return; // already editing this one
-
-    const switchTo = async () => {
-      if (wikinoteEditor.isDirty && autoSaveOnSwitch) {
-        await wikinoteEditor.save();
-      }
-      wikinoteEditor.openEditor(activePost.id);
-    };
-    switchTo();
-  }, [activePost?.id, globalEditMode]);
-
-  // Open editor after note creation (module-level flag survives route remounts)
-  useEffect(() => {
-    if (_pendingEditUid && activePost?.id === _pendingEditUid) {
-      const uid = _pendingEditUid;
-      _pendingEditUid = null;
-      wikinoteEditor.openEditor(uid);
-    }
-  }, [activePost]);
-
-  // Close new note modal when navigating to a different note
-  useEffect(() => {
-    if (showNewNote) setShowNewNote(false);
-  }, [activePost?.id]);
+  const effectiveConnections: Connection[] = connections;
 
   // Simplified mode: force name-only search and clear filters on switch
   useEffect(() => {
@@ -1060,14 +1031,13 @@ export const SecondBrainView: React.FC = () => {
   }, [setFilterState]);
 
   // Type-to-search: any printable key focuses toolbar input
-  // Disabled while focused in CodeMirror, inputs, or creating a new note
+  // Disabled while focused in inputs or editable elements
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (showNewNote) return;
       const el = e.target as HTMLElement;
       const tag = el.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-      if (el.closest('.cm-editor') || el.isContentEditable) return;
+      if (el.isContentEditable) return;
       if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
 
       // Backspace: delete last character from query
@@ -1088,7 +1058,7 @@ export const SecondBrainView: React.FC = () => {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [query, setQuery, showNewNote]);
+  }, [query, setQuery]);
 
   // Wiki-link click handler — extend trail with the clicked concept
   const handleWikiLinkClick = useCallback((conceptId: string) => {
@@ -1212,34 +1182,6 @@ export const SecondBrainView: React.FC = () => {
       if (frame) cancelAnimationFrame(frame);
     };
   }, []);
-
-  // Listen for HMR wikinote updates — force re-render after brainIndex refresh
-  const [, forceUpdate] = useState(0);
-  useEffect(() => {
-    const handler = () => forceUpdate(n => n + 1);
-    window.addEventListener('wikinote-hmr', handler);
-    return () => window.removeEventListener('wikinote-hmr', handler);
-  }, []);
-
-  // Navigate to previous note when the currently-viewed note is deleted
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      if (detail?.action === 'delete' && detail?.uid === activePost?.id) {
-        // Close editor before navigating away
-        wikinoteEditor.closeEditor();
-        // Find the previous note in the trail (skip the deleted one)
-        const prev = trail.slice().reverse().find(t => t.id !== activePost.id);
-        if (prev) {
-          navigate(secondBrainPath(prev.id));
-        } else {
-          navigate(secondBrainPath());
-        }
-      }
-    };
-    window.addEventListener('wikinote-hmr', handler);
-    return () => window.removeEventListener('wikinote-hmr', handler);
-  }, [activePost?.id, navigate, trail, wikinoteEditor]);
 
   // Copy export modal state
   const [showCopyModal, setShowCopyModal] = useState(false);
@@ -1412,7 +1354,6 @@ export const SecondBrainView: React.FC = () => {
     if (showDetail) return; // Only active in list view
 
     const handler = (e: KeyboardEvent) => {
-      if (wikinoteEditor.isEditing) return;
       const el = e.target as HTMLElement;
       const tag = el.tagName;
       if (el.isContentEditable) return;
@@ -1492,14 +1433,13 @@ export const SecondBrainView: React.FC = () => {
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [showDetail, focusedIdx, visibleResults, getColCount, handleGridCardClick, navigate, searchActive, activePost, clearSearch, wikinoteEditor.isEditing]);
+  }, [showDetail, focusedIdx, visibleResults, getColCount, handleGridCardClick, navigate, searchActive, activePost, clearSearch]);
 
   // --- Detail-view arrow-key navigation (right column boxes) ---
   useEffect(() => {
     if (!showDetail) return;
 
     const handler = (e: KeyboardEvent) => {
-      if (wikinoteEditor.isEditing) return;
       const el = e.target as HTMLElement;
       const tag = el.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
@@ -1551,14 +1491,13 @@ export const SecondBrainView: React.FC = () => {
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [showDetail, detailItems, focusedDetailIdx, handleConnectionClick, navigate, availableZones, activeZone, wikinoteEditor.isEditing]);
+  }, [showDetail, detailItems, focusedDetailIdx, handleConnectionClick, navigate, availableZones, activeZone]);
 
   // Escape in detail view — navigate back to grid
   useEffect(() => {
     if (!showDetail) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
-      if (wikinoteEditor.isEditing) return; // don't close detail while editing
       const el = e.target as HTMLElement;
       if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable) return;
       e.preventDefault();
@@ -1566,7 +1505,7 @@ export const SecondBrainView: React.FC = () => {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [showDetail, navigate, wikinoteEditor.isEditing]);
+  }, [showDetail, navigate]);
 
   // Hide detail focus highlight on mouse click (re-shown on next arrow key)
   useEffect(() => {
@@ -1580,8 +1519,10 @@ export const SecondBrainView: React.FC = () => {
     return <div className="animate-fade-in py-12 text-center text-xs text-th-tertiary">Loading index...</div>;
   }
 
+  if (missingNote) return <ErrorConceptView accent="wiki" />;
+
   return (
-    <div className="animate-fade-in">
+    <div className={`animate-fade-in${showDetail ? '' : ' pt-4 md:pt-5'}`}>
       {/* Toolbar — always mounted so type-to-search input exists in DOM.
           Hidden in detail view to avoid layout shift, but input stays focusable. */}
       <div style={showDetail ? { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0, pointerEvents: 'none' } : undefined}>
@@ -1655,9 +1596,9 @@ export const SecondBrainView: React.FC = () => {
       {/* Detail view — conditional so it doesn't render during search.
            Grid below stays always-mounted for instant search entry. */}
       {showDetail && (
-        <div className={globalEditMode && isLocalhost ? 'flex gap-6 items-start' : isSimplified ? 'max-w-3xl' : 'max-w-6xl grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-10'}>
+        <div className={isSimplified ? 'max-w-3xl' : 'max-w-6xl grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-10'}>
           {/* Left: metadata always visible, body fades when content loads */}
-          <div className={globalEditMode && isLocalhost ? 'flex-1 min-w-0' : 'lg:col-span-3'}>
+          <div className="lg:col-span-3">
             <div className="flex items-center gap-2 mb-1">
               <h2 className="text-2xl font-bold text-th-heading">
                 {noteLabel(activePost!)}
@@ -1744,7 +1685,7 @@ export const SecondBrainView: React.FC = () => {
               >
                 <div className="article-page-wrapper article-wiki">
                   <WikiContent
-                    html={wikinoteEditor.isEditing ? previewHtml : resolvedHtml}
+                    html={resolvedHtml}
                     className="article-content"
                     onWikiLinkClick={handleWikiLinkClick}
                     isVisited={isVisited}
@@ -1832,50 +1773,8 @@ export const SecondBrainView: React.FC = () => {
             </div>
           </div>
 
-          {/* Right panel: Editor (when editing) or Context (zone panels) */}
-            {globalEditMode && isLocalhost ? (
-              wikinoteEditor.isEditing ? (
-                <Suspense fallback={<div className="flex items-center justify-center text-th-muted text-xs" style={{ width: 550, flexShrink: 0 }}>Loading editor...</div>}>
-                  <EditorPanel
-                    editor={wikinoteEditor}
-                    allNotes={allWikiNotes}
-                    allPosts={posts}
-                    contextContent={
-                      <>
-                        <div>
-                          <NeighborhoodGraph
-                            neighborhood={neighborhood}
-                            currentNote={activePost!}
-                            onNoteClick={handleConnectionClick}
-                            isVisited={isVisited}
-                            activeZone={zoneFilter ? activeZone : null}
-                            onActiveZoneChange={(zone) => { setZoneFilter(true); setActiveZone(zone); }}
-                            onNotePreview={handleNeighborhoodPreview}
-                            homonymParents={homonymParents}
-                            onHomonymNavigate={(homonym) => {
-                              scheduleExtend(homonym);
-                              navigate(secondBrainPath(homonym.id));
-                            }}
-                          />
-                        </div>
-                        <label className="flex items-center gap-1.5 mt-3 mb-1 cursor-pointer select-none">
-                          <input type="checkbox" checked={zoneFilter} onChange={() => setZoneFilter(v => !v)} className="accent-violet-400 w-3 h-3" />
-                          <span className="text-[10px] text-th-muted">filter by zone</span>
-                        </label>
-                        <div className="mt-2">
-                          <RelevanceLeaderboard mode="family" familyItems={familyItems} noteById={noteById} onNoteClick={handleConnectionClick} isVisited={isVisited} getPercentile={getPercentile} />
-                        </div>
-                      </>
-                    }
-                  />
-                </Suspense>
-              ) : (
-                /* Editor loading — reserve space with same width to prevent layout jump */
-                <div className="flex items-center justify-center text-th-muted text-xs" style={{ width: 550, flexShrink: 0 }}>
-                  Loading editor...
-                </div>
-              )
-            ) : !isSimplified ? (
+          {/* Right panel: context (zone panels) */}
+            {!isSimplified ? (
               <div className="lg:col-span-2 lg:sticky lg:top-4 lg:self-start">
                 <hr className="lg:hidden border-t border-th-border my-6" />
                 <div>
@@ -1938,6 +1837,7 @@ export const SecondBrainView: React.FC = () => {
                       onCardClick={handleGridCardClick}
                       outgoing={note.references?.length || 0}
                       incoming={(backlinksMap.get(note.id) || []).length}
+                      articles={hub.articleUsage.get(note.id)?.length || 0}
                     />
                 ))
               ) : (
@@ -1952,89 +1852,6 @@ export const SecondBrainView: React.FC = () => {
             )}
           </div>
 
-          {/* Editing upbar — fixed at top, localhost only */}
-          {isLocalhost && createPortal(
-            <div
-              className="hidden lg:flex fixed top-0 right-0 z-[35] h-7 items-center justify-between px-3 border-b border-violet-400/10"
-              style={{ left: SIDEBAR_WIDTH + SECOND_BRAIN_SIDEBAR_WIDTH, backgroundColor: 'var(--hub-sidebar-bg)' }}
-            >
-              {/* Left — editing label + auto-save */}
-              <div className="flex items-center gap-2">
-                {globalEditMode && (
-                  <>
-                    <div className="flex items-center gap-1.5">
-                      <PencilIcon size={11} />
-                      <span className="text-[10px] text-violet-400 font-medium">editing</span>
-                    </div>
-                    <span className="w-px h-3.5 bg-th-hub-border" />
-                    <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={autoSaveOnSwitch}
-                        onChange={() => setAutoSaveOnSwitch(v => !v)}
-                        className="accent-violet-400 w-3 h-3"
-                      />
-                      <span className="text-[9px] text-th-muted">auto-save</span>
-                    </label>
-                  </>
-                )}
-              </div>
-              {/* Right — action icons */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={async () => {
-                    if (wikinoteEditor.isDirty) {
-                      if (!window.confirm('You have unsaved changes. Discard and navigate?')) return;
-                    }
-                    const candidates = allWikiNotes.filter(n => n.id !== activePost?.id);
-                    if (candidates.length === 0) return;
-                    const random = candidates[Math.floor(Math.random() * candidates.length)];
-                    navigate(secondBrainPath(random.id));
-                  }}
-                  className="w-6 h-6 flex items-center justify-center text-violet-400/60 hover:text-violet-400 transition-colors"
-                  title="Random note"
-                  aria-label="Random note"
-                >
-                  <DiceIcon size={13} />
-                </button>
-                <span className="w-px h-3.5 bg-th-hub-border" />
-                <button
-                  onClick={() => {
-                    setShowNewNote(true);
-                  }}
-                  className="w-6 h-6 flex items-center justify-center text-violet-400/60 hover:text-violet-400 transition-colors"
-                  title="New note"
-                  aria-label="New note"
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <path d="M12 5v14M5 12h14" />
-                  </svg>
-                </button>
-                <span className="w-px h-3.5 bg-th-hub-border" />
-                <button
-                  onClick={async () => {
-                    if (globalEditMode) {
-                      if (wikinoteEditor.isDirty) await wikinoteEditor.save();
-                      wikinoteEditor.closeEditor();
-                      setGlobalEditMode(false);
-                    } else {
-                      setGlobalEditMode(true);
-                    }
-                  }}
-                  className={`w-6 h-6 flex items-center justify-center transition-colors ${globalEditMode
-                    ? 'text-violet-400'
-                    : 'text-violet-400/60 hover:text-violet-400'
-                    }`}
-                  title={globalEditMode ? 'Exit editing mode' : 'Enter editing mode'}
-                  aria-label={globalEditMode ? 'Exit editing mode' : 'Enter editing mode'}
-                >
-                  <PencilIcon size={13} />
-                </button>
-              </div>
-            </div>,
-            document.body
-          )}
-
           {/* Mobile floating search button — portal to body to escape animate-fade-in transform stacking context */}
           {showDetail && createPortal(
             <button
@@ -2045,7 +1862,7 @@ export const SecondBrainView: React.FC = () => {
                   toolbarInputRef.current?.focus();
                 }, 100);
               }}
-              className="lg:hidden fixed bottom-[72px] right-4 z-40 w-11 h-11 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+              className="wiki-fab lg:hidden fixed bottom-[72px] right-4 z-40 w-11 h-11 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
               aria-label="Search concepts"
             >
               <SearchIcon />
@@ -2057,7 +1874,7 @@ export const SecondBrainView: React.FC = () => {
           {!showDetail && showScrollTop && visibleCount > BATCH_SIZE && createPortal(
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="lg:hidden fixed bottom-16 right-4 z-40 w-11 h-11 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+              className="wiki-fab lg:hidden fixed bottom-16 right-4 z-40 w-11 h-11 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
               aria-label="Back to top"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -2085,28 +1902,6 @@ export const SecondBrainView: React.FC = () => {
             />
           )}
 
-          {/* New note modal — portaled, works from any view (menu or detail) */}
-          {showNewNote && isLocalhost && createPortal(
-            <div
-              className="fixed inset-0 z-50 flex items-start justify-center pt-16 bg-black/70 backdrop-blur-sm"
-              onMouseDown={(e) => { if (e.target === e.currentTarget) setShowNewNote(false); }}
-            >
-              <div className="w-full max-w-md mx-4">
-                <NewNotePanel
-                  allNotes={allWikiNotes}
-                  onCreated={async (uid) => {
-                    setShowNewNote(false);
-                    _pendingEditUid = uid;
-                    setGlobalEditMode(true);
-                    await refreshBrainIndex(uid);
-                    navigate(secondBrainPath(uid));
-                  }}
-                  onCancel={() => setShowNewNote(false)}
-                />
-              </div>
-            </div>,
-            document.body
-          )}
         </div>
       );
 };

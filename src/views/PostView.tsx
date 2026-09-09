@@ -1,16 +1,20 @@
 // Post view router — delegates to ArticlePostView for all categories
 
 import React, { useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Navigate, useLocation, useParams } from 'react-router-dom';
+import { contentRoutes } from '../lib/contentRoutes';
 import { posts } from '../data/data';
 import { ArticlePostView } from './ArticlePostView';
+import { ErrorConceptView } from './ErrorConceptView';
 
 const HISTORY_KEY = 'infraphysics:article-history';
 const MAX_HISTORY = 20;
 
 export const PostView: React.FC = () => {
-  const { category, id } = useParams();
-  const post = posts.find(p => p.id === id && p.category === category);
+  const { category } = useParams();
+  const location = useLocation();
+  const route = contentRoutes.resolve(location.pathname);
+  const post = posts.find(p => p.id === route?.id && p.category === category);
 
   useEffect(() => {
     if (!post) return;
@@ -23,15 +27,8 @@ export const PostView: React.FC = () => {
     } catch { /* localStorage unavailable */ }
   }, [post]);
 
-  if (!post) return (
-    <div className="py-20 text-center">
-      <div className="text-6xl mb-4 text-th-muted">404</div>
-      <p className="text-th-tertiary">Entry not found in the archive</p>
-      <Link to="/home" className="inline-block mt-6 px-4 py-2 bg-th-active text-th-heading text-sm hover:bg-th-active-hover transition-colors border border-th-border">
-        Return Home
-      </Link>
-    </div>
-  );
+  if (!post) return <ErrorConceptView />;
 
+  if (location.pathname !== route.canonical) return <Navigate to={route.canonical + location.search + location.hash} replace />;
   return <ArticlePostView post={post} />;
 };

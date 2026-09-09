@@ -1,12 +1,14 @@
 /* Final article layout layer. Keep this imported after article.css. */
+/* Lazy article CSS stays loaded across SPA navigation. Exclude Wiki wrappers
+   without changing selector specificity, so notes never inherit this layout. */
 
 @media (min-width: 768px) {
-  .article-page-wrapper {
+  .article-page-wrapper:where(:not(.article-wiki)) {
     box-sizing: border-box !important;
     margin-inline: auto !important;
   }
 
-  .article-essays.article-page-wrapper {
+  .article-essays.article-page-wrapper:where(:not(.article-wiki)) {
     width: 100% !important;
     max-width: 104rem !important;
   }
@@ -23,7 +25,7 @@
     padding-inline: clamp(2rem, 4vw, 4rem) !important;
   }
 
-  .article-blog:not(.article-essays).article-page-wrapper {
+  .article-blog:not(.article-essays).article-page-wrapper:where(:not(.article-wiki)) {
     width: 100% !important;
     max-width: 104rem !important;
   }
@@ -39,7 +41,7 @@
     max-width: none !important;
   }
 
-  .article-projects.article-page-wrapper {
+  .article-projects.article-page-wrapper:where(:not(.article-wiki)) {
     width: 100% !important;
     max-width: 108rem !important;
   }
@@ -56,7 +58,7 @@
     padding-inline: clamp(2rem, 5vw, 5rem) !important;
   }
 
-  .article-page-wrapper .article-content {
+  .article-page-wrapper:where(:not(.article-wiki)) .article-content {
     width: 100% !important;
     max-width: none !important;
   }
@@ -70,52 +72,74 @@
   }
 }
 
-.article-page-wrapper .article-content > p,
-.article-page-wrapper .article-content > ul > li,
-.article-page-wrapper .article-content > ol > li,
-.article-page-wrapper .article-content section > p {
+/* Body type. Direct-child selectors on purpose (headings, boxes and figures set their own), so the
+   text inside a typed box has to be listed explicitly or it falls back to the sans base. */
+.article-page-wrapper:where(:not(.article-wiki)) .article-content > p,
+.article-page-wrapper:where(:not(.article-wiki)) .article-content > ul > li,
+.article-page-wrapper:where(:not(.article-wiki)) .article-content > ol > li,
+.article-page-wrapper:where(:not(.article-wiki)) .article-content section > p,
+.article-page-wrapper:where(:not(.article-wiki)) .article-content .bkqt p,
+.article-page-wrapper:where(:not(.article-wiki)) .article-content .bkqt li {
   font-family: var(--font-serif) !important;
   font-size: clamp(1.13rem, 1.25vw, 1.27rem) !important;
   line-height: 1.78 !important;
   letter-spacing: -0.008em !important;
 }
 
+/* A "loose" Markdown list (blank line between items) wraps each item in
+   <li><p>…</p></li>. That inner paragraph is not a direct child of the
+   content column, so without this rule it misses the prose face above and
+   falls back to the generic paragraph rule (sans, smaller). Make it read
+   exactly like its <li>. */
+.article-page-wrapper:where(:not(.article-wiki)) .article-content :is(ul, ol) > li > p {
+  font: inherit !important;
+  letter-spacing: inherit !important;
+  color: inherit;
+  margin: 0;
+}
+.article-page-wrapper:where(:not(.article-wiki)) .article-content :is(ul, ol) > li > p + p {
+  margin-top: .5em;
+}
+
 /* Lift the complete reading system with the prose, not just top-level
    paragraphs. These are intentionally modest increments so tables, notes and
    captions remain secondary while no longer looking like interface microcopy. */
-.article-page-wrapper .article-subtitle {
+.article-page-wrapper:where(:not(.article-wiki)) .article-subtitle {
   font-size: clamp(1.08rem, 1.55vw, 1.26rem) !important;
 }
 
-.article-page-wrapper .article-blog-metabar {
+.article-page-wrapper:where(:not(.article-wiki)) .article-blog-metabar {
   font-size: 1.09rem !important;
 }
 
-.article-page-wrapper .article-content .bkqt p,
-.article-page-wrapper .article-content .bkqt li,
-.article-page-wrapper .article-content .defn,
-.article-page-wrapper .article-content td,
-.article-page-wrapper .article-content th {
+.article-page-wrapper:where(:not(.article-wiki)) .article-content .bkqt p,
+.article-page-wrapper:where(:not(.article-wiki)) .article-content .bkqt li,
+.article-page-wrapper:where(:not(.article-wiki)) .article-content .defn {
   font-size: 1rem !important;
 }
+/* Tables stay compact (article.css sets the ledger style); a four or five
+   column table must fit the reading column without a horizontal scroll. */
+.article-page-wrapper:where(:not(.article-wiki)) .article-content td {
+  font-size: 0.86rem !important;
+}
 
-.article-page-wrapper .article-content figcaption,
-.article-page-wrapper .article-content .annotations,
-.article-page-wrapper .article-content .ann-note {
+.article-page-wrapper:where(:not(.article-wiki)) .article-content figcaption,
+.article-page-wrapper:where(:not(.article-wiki)) .article-content .annotations,
+.article-page-wrapper:where(:not(.article-wiki)) .article-content .ann-note {
   font-size: 0.82rem !important;
   line-height: 1.55;
 }
 
 /* Category wrappers must not change the opening rhythm or title weight. */
-.article-page-wrapper .article-title { font-weight: 400 !important; }
-.article-page-wrapper .article-content > :first-child { margin-top: 0.4rem !important; }
+.article-page-wrapper:where(:not(.article-wiki)) .article-title { font-weight: 400 !important; }
+.article-page-wrapper:where(:not(.article-wiki)) .article-content > :first-child { margin-top: 0.4rem !important; }
 
 /* The article header uses the complete reading column. Legacy editorial skins
    constrained titles to 16–17 characters and subtitles to 38rem, producing an
    artificial empty strip on the right even when the page itself was wider. */
-.article-page-wrapper .article-title-block,
-.article-page-wrapper .article-title,
-.article-page-wrapper .article-subtitle {
+.article-page-wrapper:where(:not(.article-wiki)) .article-title-block,
+.article-page-wrapper:where(:not(.article-wiki)) .article-title,
+.article-page-wrapper:where(:not(.article-wiki)) .article-subtitle {
   width: 100%;
   max-width: none !important;
 }
@@ -152,26 +176,27 @@
   margin-right: auto;
 }
 
-/* A centered image that fills 100% of the prose column still reads as
-   left-anchored. Give ordinary single figures visible, balanced side air;
-   explicit full-width figures retain their breakout behaviour. */
-.article-page-wrapper .article-content figure:not(.img-full):not(.img-pair-fig) {
+/* Ordinary single figures span the whole prose column, edge to edge with the
+   text; explicit full-width figures retain their breakout behaviour. (An earlier
+   pass gave them 92% for side air; the author preferred the image to reach the
+   margins.) */
+.article-page-wrapper:where(:not(.article-wiki)) .article-content figure:not(.img-full):not(.img-pair-fig) {
   box-sizing: border-box;
   display: grid !important;
   justify-items: center;
-  width: 92% !important;
+  width: 100% !important;
   max-width: 100%;
   margin-left: auto !important;
   margin-right: auto !important;
 }
 
-.article-page-wrapper .article-content figure:not(.img-full):not(.img-pair-fig) > figcaption {
+.article-page-wrapper:where(:not(.article-wiki)) .article-content figure:not(.img-full):not(.img-pair-fig) > figcaption {
   box-sizing: border-box;
   width: 100%;
   text-align: center;
 }
 
-.article-page-wrapper .article-content figure:not(.img-full):not(.img-pair-fig) > img {
+.article-page-wrapper:where(:not(.article-wiki)) .article-content figure:not(.img-full):not(.img-pair-fig) > img {
   display: block;
   width: 100%;
   height: auto;
@@ -181,7 +206,7 @@
 
 /* The sole composite image primitive: exactly two authored figures sharing
    one balanced row. It stays inside wiki/article bounds and stacks on mobile. */
-.article-page-wrapper .article-content .img-pair {
+.article-page-wrapper:where(:not(.article-wiki)) .article-content .img-pair {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: start;
@@ -190,7 +215,7 @@
   margin: 2rem auto;
 }
 
-.article-page-wrapper .article-content .img-pair > figure.img-pair-item {
+.article-page-wrapper:where(:not(.article-wiki)) .article-content .img-pair > figure.img-pair-item {
   display: grid;
   justify-items: center;
   width: 100% !important;
@@ -198,30 +223,30 @@
   margin: 0 !important;
 }
 
-.article-page-wrapper .article-content .img-pair img {
+.article-page-wrapper:where(:not(.article-wiki)) .article-content .img-pair img {
   display: block;
   width: 100%;
   height: auto;
   margin-inline: auto;
 }
 
-.article-page-wrapper .article-content .img-pair figcaption {
+.article-page-wrapper:where(:not(.article-wiki)) .article-content .img-pair figcaption {
   width: 100%;
   text-align: center;
 }
 
 @media (max-width: 767px) {
-  .article-page-wrapper .article-content figure:not(.img-full):not(.img-pair-fig) {
+  .article-page-wrapper:where(:not(.article-wiki)) .article-content figure:not(.img-full):not(.img-pair-fig) {
     width: 100% !important;
   }
 
-  .article-page-wrapper .article-content .img-pair {
+  .article-page-wrapper:where(:not(.article-wiki)) .article-content .img-pair {
     grid-template-columns: 1fr;
   }
 }
 
 /* Code blocks use a neutral technical header, never macOS window chrome. */
-.article-page-wrapper .article-content .code-terminal-dots {
+.article-page-wrapper:where(:not(.article-wiki)) .article-content .code-terminal-dots {
   display: none !important;
 }
 
@@ -254,8 +279,8 @@
 
 /* Compact tables sit on the article axis. Oversized tables still resolve auto
    margins to zero and retain left-to-right scrolling from the first column. */
-.article-page-wrapper .article-content .table-wrapper > table,
-.article-page-wrapper .article-content > table {
+.article-page-wrapper:where(:not(.article-wiki)) .article-content .table-wrapper > table,
+.article-page-wrapper:where(:not(.article-wiki)) .article-content > table {
   margin-left: auto !important;
   margin-right: auto !important;
 }
@@ -275,10 +300,12 @@
 }
 
 @media (max-width: 767px) {
-  .article-page-wrapper .article-content > p,
-  .article-page-wrapper .article-content > ul > li,
-  .article-page-wrapper .article-content > ol > li,
-  .article-page-wrapper .article-content section > p {
+  .article-page-wrapper:where(:not(.article-wiki)) .article-content > p,
+  .article-page-wrapper:where(:not(.article-wiki)) .article-content > ul > li,
+  .article-page-wrapper:where(:not(.article-wiki)) .article-content > ol > li,
+  .article-page-wrapper:where(:not(.article-wiki)) .article-content section > p,
+  .article-page-wrapper:where(:not(.article-wiki)) .article-content .bkqt p,
+  .article-page-wrapper:where(:not(.article-wiki)) .article-content .bkqt li {
     font-size: 1.08rem !important;
     line-height: 1.72 !important;
   }
@@ -291,56 +318,62 @@
    Lives here, at the very end of the last layer, because global.css and the
    blocks above pin essay type with !important. Change values here, not there.
    ───────────────────────────────────────────────────────────────────────────── */
-.article-essays.article-page-wrapper {
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) {
   --essay-measure: 40rem;
   --essay-body-font: 'Lora', Georgia, 'Times New Roman', serif;
   --essay-display-font: 'Newsreader', Georgia, 'Times New Roman', serif;
 }
 
 /* One reading column for header, meta, body and hero */
-.article-essays.article-page-wrapper .article-content,
-.article-essays.article-page-wrapper .article-title-block,
-.article-essays.article-page-wrapper .article-essays-meta-engagement {
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content,
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-title-block,
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-essays-meta-engagement {
   width: 100% !important;
   max-width: var(--essay-measure) !important;
   margin-inline: auto !important;
 }
-.article-essays.article-page-wrapper .article-essays-hero-image {
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-essays-hero-image {
   width: min(var(--essay-measure), calc(100% - 2 * clamp(2rem, 4vw, 4rem))) !important;
   max-width: none !important;
 }
 /* thumbnailWidth: full — wider than the text, edge to edge with the card padding */
-.article-essays.article-page-wrapper .article-essays-hero-image.thumb-width-full {
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-essays-hero-image.thumb-width-full {
   width: calc(100% - 2 * clamp(2rem, 4vw, 4rem)) !important;
 }
 /* thumbnailAspect: full means the whole image, never a height crop */
-.article-essays.article-page-wrapper .article-essays-hero-image.thumb-full img {
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-essays-hero-image.thumb-full img {
   max-height: none !important;
   object-fit: contain !important;
 }
 @media (max-width: 767px) {
-  .article-essays.article-page-wrapper .article-essays-hero-image,
-  .article-essays.article-page-wrapper .article-essays-hero-image.thumb-width-full { width: 100% !important; }
+  .article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-essays-hero-image,
+  .article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-essays-hero-image.thumb-width-full { width: 100% !important; }
 }
 
 /* Body: Lora 1.06/1.8. Paragraphs, list items and blockquote text alike. */
-.article-essays.article-page-wrapper .article-content { font-family: var(--essay-body-font); }
-.article-essays.article-page-wrapper .article-content p,
-.article-essays.article-page-wrapper .article-content li {
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content { font-family: var(--essay-body-font); }
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content p,
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content li {
   font-family: var(--essay-body-font) !important;
-  font-size: 1.06rem !important;
   line-height: 1.8 !important;
   letter-spacing: 0 !important;
 }
-.article-essays.article-page-wrapper .article-content > p { margin-block: 0 1.25em !important; }
-.article-essays.article-page-wrapper .article-content li { margin-block-end: .7em !important; }
-.article-essays.article-page-wrapper .article-content li > p { margin-block: 0 .5em !important; }
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content p,
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content li,
+.article-bits2bricks.article-page-wrapper:where(:not(.article-wiki)) .article-content p,
+.article-bits2bricks.article-page-wrapper:where(:not(.article-wiki)) .article-content li {
+  /* Shared reading size; each category retains its own typeface. */
+  font-size: 1.06rem !important;
+}
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content > p { margin-block: 0 1.25em !important; }
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content li { margin-block-end: .7em !important; }
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content li > p { margin-block: 0 .5em !important; }
 
 /* Content headings follow the title face */
-.article-essays.article-page-wrapper .article-content h1,
-.article-essays.article-page-wrapper .article-content h2,
-.article-essays.article-page-wrapper .article-content h3,
-.article-essays.article-page-wrapper .article-content h4 {
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content h1,
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content h2,
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content h3,
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content h4 {
   font-family: var(--essay-display-font) !important;
   font-weight: 500 !important;
   font-style: normal !important;
@@ -348,20 +381,20 @@
   line-height: 1.2 !important;
   text-transform: none !important;
 }
-.article-essays.article-page-wrapper .article-content h1 { font-size: 1.9rem !important; margin-top: 2.6rem !important; margin-bottom: .9rem !important; }
-.article-essays.article-page-wrapper .article-content h2 { font-size: 1.6rem !important; margin-top: 2.6rem !important; margin-bottom: .9rem !important; }
-.article-essays.article-page-wrapper .article-content h3 { font-size: 1.3rem !important; margin-top: 2rem !important; margin-bottom: .7rem !important; }
-.article-essays.article-page-wrapper .article-content h4 { font-size: 1.1rem !important; margin-top: 1.6rem !important; margin-bottom: .5rem !important; }
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content h1 { font-size: 1.9rem !important; margin-top: 2.6rem !important; margin-bottom: .9rem !important; }
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content h2 { font-size: 1.6rem !important; margin-top: 2.6rem !important; margin-bottom: 1.35rem !important; }
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content h3 { font-size: 1.3rem !important; margin-top: 2rem !important; margin-bottom: 1rem !important; }
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content h4 { font-size: 1.1rem !important; margin-top: 1.6rem !important; margin-bottom: .5rem !important; }
 
 /* Title (r14) and subtitle (r6) */
-.article-essays.article-page-wrapper .article-title {
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-title {
   font-family: var(--essay-display-font) !important;
   font-size: clamp(2.3rem, 5vw, 3.6rem) !important;
   font-weight: 400 !important;
   line-height: 1.04 !important;
   letter-spacing: -.02em !important;
 }
-.article-essays.article-page-wrapper .article-subtitle {
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-subtitle {
   font-family: var(--essay-body-font) !important;
   font-style: italic !important;
   font-size: 1.15rem !important;
@@ -372,19 +405,19 @@
 }
 
 /* Meta row: same serif, small, no dot separators, no pills around views / hearts / share */
-.article-essays.article-page-wrapper .article-essays-meta-engagement,
-.article-essays.article-page-wrapper .article-essays-meta-engagement .article-blog-metabar {
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-essays-meta-engagement,
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-essays-meta-engagement .article-blog-metabar {
   font-family: var(--essay-body-font) !important;
   font-size: .85rem !important;
   letter-spacing: 0;
   color: var(--art-text-mid);
 }
-.article-essays.article-page-wrapper .article-blog-metabar-left { gap: 1.25rem; }
-.article-essays.article-page-wrapper .article-blog-metabar-sep { display: none; }
-.article-essays.article-page-wrapper .article-engagement-row { gap: 1.25rem; }
-.article-essays.article-page-wrapper .article-meta-views,
-.article-essays.article-page-wrapper .article-heart-btn,
-.article-essays.article-page-wrapper .article-share-btn {
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-blog-metabar-left { gap: 1.25rem; }
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-blog-metabar-sep { display: none; }
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-engagement-row { gap: 1.25rem; }
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-meta-views,
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-heart-btn,
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-share-btn {
   height: auto;
   padding: 0;
   border: 0;
@@ -394,17 +427,17 @@
   font-size: .85rem !important;
   color: var(--art-text-mid);
 }
-.article-essays.article-page-wrapper .article-meta-views:hover,
-.article-essays.article-page-wrapper .article-heart-btn:hover,
-.article-essays.article-page-wrapper .article-heart-btn.hearted,
-.article-essays.article-page-wrapper .article-share-btn:hover {
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-meta-views:hover,
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-heart-btn:hover,
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-heart-btn.hearted,
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-share-btn:hover {
   background: none;
   border: 0;
 }
-.article-essays.article-page-wrapper .article-essays-body { padding-top: 1.75rem !important; }
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-essays-body { padding-top: 1.75rem !important; }
 
 /* Drop cap on the opening paragraph */
-.article-essays.article-page-wrapper .article-content > p:first-of-type::first-letter {
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content > p:first-of-type::first-letter {
   float: left;
   font-family: var(--essay-display-font);
   font-weight: 400;
@@ -412,4 +445,15 @@
   line-height: .78;
   padding: .08em .12em 0 0;
   color: var(--art-accent);
+}
+
+/* Lifted paragraph ({lift} … {/lift}): the display italic, a touch larger, in the
+   heading colour. !important because the body rules above pin family and size. */
+.article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content > p.para-lift {
+  margin: 2.2em 0 !important;
+  font-family: var(--essay-display-font) !important;
+  font-style: italic;
+  font-size: 1.16rem !important;
+  line-height: 1.66 !important;
+  color: var(--text-heading);
 }

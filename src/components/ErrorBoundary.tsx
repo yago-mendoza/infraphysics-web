@@ -1,5 +1,6 @@
 import React from 'react';
 import { secondBrainPath } from '../config/categories';
+import { ErrorConceptView } from '../views/ErrorConceptView';
 
 interface Props {
   children: React.ReactNode;
@@ -42,43 +43,11 @@ export class ErrorBoundary extends (React.Component as new (props: Props) => {
 
     const handleReset = () => this.setState({ hasError: false, error: null });
     const isSecondBrain = window.location.pathname.startsWith(secondBrainPath());
-    const accent = isSecondBrain ? 'var(--cat-wikinotes-accent)' : 'var(--text-secondary)';
 
+    // The same lost robot as the 404 page, with an ERR sign and a retry; wiki accent inside the wiki.
     return (
-      <div className="flex items-center justify-center min-h-[40vh] px-6">
-        <div
-          className="max-w-sm w-full rounded-md border p-6 space-y-4"
-          style={{
-            borderColor: `color-mix(in srgb, ${accent} 25%, transparent)`,
-            background: `color-mix(in srgb, ${accent} 4%, var(--bg-surface))`,
-          }}
-        >
-          <p className="text-sm text-th-secondary text-center">
-            Something went wrong.
-          </p>
-          <div className="flex gap-3 justify-center pt-1">
-            <button
-              onClick={handleReset}
-              className="px-4 py-1.5 text-xs rounded-sm transition-colors"
-              style={{
-                border: `1px solid color-mix(in srgb, ${accent} 30%, transparent)`,
-                color: `color-mix(in srgb, ${accent} 80%, var(--text-primary))`,
-              }}
-            >
-              Try again
-            </button>
-            <a
-              href="/home"
-              className="px-4 py-1.5 text-xs rounded-sm transition-colors"
-              style={{
-                border: `1px solid color-mix(in srgb, ${accent} 30%, transparent)`,
-                color: `color-mix(in srgb, ${accent} 80%, var(--text-primary))`,
-              }}
-            >
-              Go home
-            </a>
-          </div>
-        </div>
+      <div className="min-h-screen px-6 flex items-center justify-center">
+        <ErrorConceptView kind="error" accent={isSecondBrain ? 'wiki' : undefined} onRetry={handleReset} />
       </div>
     );
   }

@@ -8,7 +8,7 @@ For syntax features, see **[SYNTAX.md](../SYNTAX.md)**. For general authoring ru
 
 ### Frontmatter
 
-Every bits2bricks article starts with a YAML frontmatter block. Filenames use `YYMMDD-{id}.md` where `{id}` is the 7-digit numeric ID (e.g. `260308-5917362.md`). The `id` field determines URLs — the filename is only for directory organization.
+Every bits2bricks article starts with a YAML frontmatter block. Filenames use `<slug>.md`. The explicit `slug` field determines the public URL; `id` remains the stable internal identity. See [URL conventions](../../../../scripts/CONTENT-URLS.md).
 
 Bits2Bricks use universal fields plus `complexity`. No other category-specific extras.
 
@@ -23,7 +23,7 @@ Bits2Bricks use universal fields plus `complexity`. No other category-specific e
 | `thumbnailAspect` | no | string | Crop ratio: `full` (default), `wide` (16/7), `banner` (16/4), `strip` (16/2). |
 | `thumbnailShading` | no | string | Overlay: `heavy`, `light`, `none` (default). |
 | `thumbnailFocus` | no | number | Vertical crop anchor for the banner, % from top: `0` = top, `50` = center (default), `100` = bottom. Only bites on cover-cropped aspects (`wide`/`banner`/`strip`), not `full`. Use it to keep the important part of a tall image in frame. |
-| `tags` | no | string[] | Topic tags for filter system. `[tag1, tag2]`. |
+| `tags` | yes | string[] | Central concepts resolving to Wiki notes; feed discovery and Home's Field of View. See [tagging policy](../README.md#tags-and-the-home-map). |
 | `subtitle` | no | string | Below the title in the article header. |
 | `related` | no | string[] | Post IDs (quoted numerics) for the "Related" section. |
 | `featured` | no | boolean | Shows in "Latest Work" on home page. |
@@ -39,11 +39,11 @@ id: "5917362"
 displayTitle: "Transformers from scratch"
 category: bits2bricks
 date: "2026-02-07"
-thumbnail: https://cdn.infraphysics.net/5917362-banner.jpg
+thumbnail: https://cdn.infraphysics.net/articles/5917362/cover.webp
 thumbnailAspect: wide
 thumbnailShading: heavy
 description: "A patient, ground-up explanation of transformer architecture."
-tags: [ai, transformers, deep-learning]
+tags: [ML, transformer, neural network]
 complexity: 8
 featured: true
 tldr:
@@ -67,6 +67,7 @@ related: ["4028591"]
 
 - **Do not confuse accessibility with compression.** When adapting a substantial technical report, preserve the derivation, component model and points where theory disagrees with the experiment. The conversational voice should carry the technical depth, not replace it.
 - **Give old work a present-tense reason to exist.** A recovered project becomes more interesting when the author explains what they misunderstood then, what they would build differently now and how the older method relates to current practice.
+- **Declare the engineering use before the derivation.** Explain the concrete problem, whether the method is used in practice, and what the example actually validates. Advanced mathematics should resolve a question about computation, evidence or identification, not merely decorate a recovered exercise.
 
 ---
 
@@ -82,6 +83,7 @@ related: ["4028591"]
 
 - **Rebuild missing technical figures.** If the source report used incidence matrices, causal graphs or block diagrams to carry the reasoning, recreate equivalent web-native diagrams. Result plots alone are evidence, not explanation.
 - **Preserve the source's visual grammar.** When rebuilding a LaTeX/TikZ figure, reproduce its actual matrix, graph topology, causal markings, colours and labels. Do not replace it with a generic explanatory infographic merely covering the same topic.
+- **No interactive embeds in articles.** For article 3142718 the author asked to remove an in-page simulation (iframe playground plus generated plots) and go back to the report's own figures: photos of the Simulink run and faithful SVG rebuilds of the LaTeX matrices and diagrams. Explanations live in prose, equations and static images. When a claim from the source turns out to be wrong (units, a lazy explanation), correct it in the text and say it was wrong; do not replace the evidence with a new simulation.
 
 ---
 
@@ -93,8 +95,9 @@ Bits2Bricks lean heavily on:
 - **Definition lists** (`- TERM:: desc`) for introducing terminology
 - **Image pairs** (`"pair"`) for two diagrams that should be compared directly; prose never sits beside an image
 - **`{bkqt/tip}`** for practical shortcuts and gotchas
+- **Parameter sheets** (`{params} … {/params}`, `key = value # note` per line) for symbols, constants and settings. Never a *symbol / meaning / value* table for that.
 
-Generic blockquote labels ("Note", "Tip", "Warning") are fine in bits2bricks — the format is utilitarian.
+Typed boxes have no title ([STYLE.md](../STYLE.md) rule 4): `{bkqt/tip}` and straight into the text. A lead, if needed, is the first sentence of the box.
 
 **Accent-colored elements.** All blockquote types render in the category accent color (blue) — there is no per-type color distinction. Wiki-links also use the blue accent instead of the default purple. Inline footnote references and notes render in italic. This behavior is shared with essays; only projects uses the per-type blockquote color palette.
 

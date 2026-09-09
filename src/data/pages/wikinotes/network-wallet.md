@@ -1,0 +1,16 @@
+---
+slug: network-wallet
+uid: "vUgG0AQ4"
+address: "blockchain//wallet//network"
+name: "network"
+date: "2025-07-07"
+distinct: ["infrastructure//Docker//network"]
+---
+- Switching networks in Metamask = changing the RPC endpoint URL + Chain ID.
+- Metamask has zero knowledge of Docker networks. It only understands RPC URLs and chainIds.
+- Connecting to local Besu: add custom network with `http://localhost:9999` + the genesis chainId.
+- DApps like Uniswap fail on local networks: the smart contracts don't exist there (different chain)
+
+## Interactions
+
+- [[8mybr8ae|Chain ID]] : : ChainId tells Metamask which blockchain to sign for, crucial for [[u55brDFI|replay protection]]

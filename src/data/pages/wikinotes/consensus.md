@@ -1,0 +1,16 @@
+---
+slug: consensus
+uid: "Fo4opNIG"
+address: "blockchain//consensus"
+name: "consensus"
+date: "2025-04-14"
+---
+- The rules for who creates the next block and how the network agrees it's valid.
+- PoW (deprecated): compete by mining hash puzzles. Enormous energy waste.
+- PoA ([[chH7mwPq|Clique]]): authorized signers take turns. Fast, efficient, permissioned.
+- PoS ([[7xWE1VgH|PoS]]): stake ETH, get randomly selected. Energy efficient, open participation.
+
+## Interactions
+
+- [[chH7mwPq|Clique]] : : PoA for private/consortium networks
+- [[7xWE1VgH|PoS]] : : PoS for public networks like Ethereum Mainnet

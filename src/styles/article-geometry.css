@@ -44,6 +44,9 @@
 /* The body column is the reading measure; category rules may cap it again at their own measure. */
 .article-geometry .glab-body .article-content { width: 100% !important; max-width: 42rem !important; margin-inline: 0 !important; }
 .article-geometry .glab-body .article-comments { max-width: 42rem; }
+/* No index (single section): one column, body centred at the reading measure. */
+.glab-grid-solo { grid-template-columns: minmax(0, 1fr); }
+.glab-grid-solo .glab-body { width: 100%; max-width: 42rem; margin-inline: auto; }
 
 @media (max-width: 900px) {
   .glab-grid { grid-template-columns: 1fr; gap: 1.5rem; }
@@ -60,7 +63,7 @@
 
 /* Numbered section index (Bits2Bricks) */
 .article-geometry .glab-index-numbered a.article-toc-link { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .5rem; align-items: baseline; }
-.article-geometry .glab-index-numbered a.article-toc-link b { color: var(--art-accent); font: 600 9px/1.4 var(--font-mono); }
+.article-geometry .glab-index-numbered a.article-toc-link b { color: var(--art-accent); font: 600 .72rem/1.4 var(--font-mono); }
 
 /* Engagement row in the meta line: quiet text, no pills (essays get the same from article-layout.css). */
 .article-geometry.article-page-wrapper .glab-meta-row .article-engagement-row { gap: 1.25rem; }
@@ -79,3 +82,18 @@
    that is reset here, the author does not want figures past the column. */
 .article-geometry .glab-body .article-content figure.img-full { width: 100% !important; max-width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; transform: none !important; }
 .article-geometry .glab-body .article-content figure.img-full img { width: 100%; max-width: 100% !important; }
+
+/* Essays on a phone: the index is not a stack of links under a rule (that is the Bits2Bricks
+   shape, which works because it is numbered) but one quiet run in the essay's italic, the
+   sections separated by dots, like a contents line on a title page. */
+@media (max-width: 900px) {
+  .article-geometry.article-essays .glab-index { padding-top: 0; border-top: 0; }
+  .article-geometry.article-essays .glab-index small { margin-bottom: .55rem; }
+  .article-geometry.article-essays .glab-index ol { display: flex; flex-wrap: wrap; gap: .3rem 0; }
+  .article-geometry.article-essays .glab-index li { display: inline; }
+  .article-geometry.article-essays .glab-index li:not(:last-child)::after { content: "·"; margin: 0 .55rem; color: var(--text-muted); }
+  .article-geometry.article-essays .glab-index a.article-toc-link { display: inline; font: italic 400 .98rem/1.6 var(--essay-body-font); color: var(--text-secondary); }
+  .article-geometry.article-essays .glab-index a.article-toc-link.is-active,
+  .article-geometry.article-essays .glab-index a.article-toc-link.article-toc-link--active { font-weight: 400; text-decoration: underline; text-decoration-color: var(--art-accent); text-underline-offset: .22em; }
+  .article-geometry.article-essays .glab-grid { gap: 2.4rem; }
+}

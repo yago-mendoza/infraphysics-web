@@ -1,35 +1,71 @@
-/* Wiki banner (Home, under "Ideas in public"): a centred line and the wiki
-   plate above a real capture of the wiki console inside a browser window.
-   The capture is shown slightly larger than its frame, anchored top-left, so
-   the mini graph and the calendar fill the window. Follows the page theme;
-   the capture swaps with it. */
+/* Wiki block (Home, under "Ideas in public"): a strip along the top edge, the line and its
+   sentence, the domain mosaic laid out like the Field of view map above it (plot left, reading
+   column right, same 22rem height), and the console capture peeking in from the bottom. */
 
 .wiki-banner-wrap { padding-top:0; margin-bottom:clamp(2rem,5vw,3.5rem); }
-.wiki-banner { position:relative; display:grid; grid-template-columns:1fr; justify-items:center; gap:1.2rem; padding:1.8rem 1.6rem 0; overflow:hidden; border:1px solid var(--border-default); background:color-mix(in srgb,var(--bg-surface) 60%,var(--bg-base)); color:var(--text-secondary); isolation:isolate; }
-.wb-copy { display:grid; gap:.5rem; justify-items:center; text-align:center; }
-.wb-copy small { color:var(--text-muted); font:9px/1.3 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; }
-.wb-copy strong { max-width:26rem; color:var(--text-heading); font:400 1.45rem/1.08 var(--font-serif); letter-spacing:-.02em; }
-.wb-foot { display:flex; align-items:center; gap:1rem; margin-bottom:.4rem; }
-.wb-foot em { color:var(--text-tertiary); font:normal 9px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; transition:color .16s ease; }
-.wiki-banner:hover .wb-foot em { color:var(--text-heading); }
-.wb-mark { display:flex; align-items:center; gap:.6rem; padding:.6rem .9rem; border:1px solid currentColor; color:var(--cat-wikinotes-accent); transition:background-color .16s ease; }
-.wiki-banner:hover .wb-mark { background:color-mix(in srgb,var(--cat-wikinotes-accent) 12%,transparent); }
-.wb-logo { width:1.3rem; height:1.3rem; }
-.wb-mark b { font:600 11px/1 var(--font-mono); letter-spacing:.26em; text-transform:uppercase; }
+.wiki-banner { position:relative; display:grid; grid-template-columns:1fr; justify-items:center; gap:1.4rem; padding:1.8rem 1.6rem 0; overflow:hidden; border:1px solid color-mix(in srgb,var(--cat-wikinotes-accent) 18%,var(--border-default)); box-shadow:0 0 0 1px color-mix(in srgb,var(--cat-wikinotes-accent) 5%,transparent),0 30px 60px -40px color-mix(in srgb,var(--cat-wikinotes-accent) 22%,transparent); background:color-mix(in srgb,var(--bg-surface) 60%,var(--bg-base)); color:var(--text-secondary); isolation:isolate; }
+.wb-intro { display:grid; justify-items:center; text-align:center; gap:.6rem; }
+.wb-line { max-width:26rem; color:var(--text-heading); font:400 1.45rem/1.08 var(--font-serif); letter-spacing:-.02em; }
+.wb-explain { max-width:38rem; margin:.2rem 0 .4rem; color:var(--text-tertiary); font:400 .82rem/1.6 var(--font-sans); }
 
-.wb-window { display:block; width:min(100%,52rem); border:1px solid var(--border-default); border-bottom:0; border-radius:10px 10px 0 0; overflow:hidden; background:var(--bg-surface); box-shadow:0 24px 50px -28px rgba(0,0,0,.55); }
-.wb-window-bar { display:flex; align-items:center; gap:.4rem; padding:.55rem .8rem; border-bottom:1px solid var(--border-default); }
-.wb-window-bar i { width:.55rem; height:.55rem; border-radius:50%; background:var(--border-default); }
+/* The strip along the top edge of the box */
+.wiki-banner { justify-items:stretch; padding-top:0; }
+.wb-strip { display:flex; align-items:center; justify-content:space-between; gap:1rem; width:calc(100% + 3.2rem); margin:0 -1.6rem .2rem; padding:.6rem 1.2rem; border-bottom:1px solid var(--border-default); background:color-mix(in srgb,var(--bg-base) 55%,transparent); color:var(--text-muted); font:9px/1.3 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; }
+.wb-strip b { color:var(--cat-wikinotes-accent); font-weight:600; }
+.wb-strip-count { display:inline-flex; align-items:center; gap:.4rem; color:var(--cat-wikinotes-accent); }
+.wb-intro { justify-self:center; }
+
+/* The split: same proportions and height as .field-split-layout in global.css. */
+.wb-split { width:100%; display:grid; grid-template-columns:minmax(0,1.8fr) minmax(13rem,.7fr); border:1px solid var(--border-default); background:var(--bg-base); }
+.wb-territory-map { position:relative; height:22rem; overflow:hidden; border-right:1px solid var(--border-default); background:var(--bg-base); }
+.wb-territory { position:absolute; display:flex; justify-content:center; align-items:center; padding:0; border:1px solid var(--bg-base); background:color-mix(in srgb,var(--territory) 6%,var(--bg-surface)); color:var(--text-tertiary); overflow:hidden; cursor:pointer; transition:background-color .15s ease,opacity .15s ease; }
+.wb-territory > span { font:400 9.5px/1 var(--font-mono); letter-spacing:.08em; }
+.wb-territory:hover,.wb-territory.is-active { background:color-mix(in srgb,var(--territory) 16%,var(--bg-surface)); color:var(--text-heading); }
+.wb-territory.is-muted { opacity:.55; }
+.wb-territory:focus-visible { outline:2px solid var(--text-heading); outline-offset:-3px; z-index:1; }
+
+/* Reading column, in the map's voice: eyebrow, serif name, a line of text, a mono summary. */
+.wb-detail { position:relative; display:flex; flex-direction:column; justify-content:flex-end; gap:.7rem; min-width:0; padding:1.3rem; overflow:hidden; background:color-mix(in srgb,var(--bg-surface) 35%,transparent); isolation:isolate; }
+.wb-detail > small { color:var(--text-muted); font:7px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; }
+.wb-detail-heading { display:flex; align-items:center; justify-content:flex-start; gap:.55rem; }
+/* The brain sits right by the name, no box: it is the link to the note. */
+.wb-detail-brain { display:inline-grid; place-items:center; flex:none; color:var(--cat-wikinotes-accent); opacity:.85; transition:opacity .15s ease,transform .15s ease; }
+.wb-detail-brain:hover { opacity:1; transform:scale(1.12); }
+.wb-detail strong { color:var(--text-heading); font:400 1.35rem/1.1 var(--font-serif); }
+.wb-detail strong::first-letter { text-transform:uppercase; }
+.wb-detail p { margin:0; color:var(--text-tertiary); font-size:.73rem; line-height:1.55; }
+.wb-detail-summary { color:var(--text-muted); font:9px/1.4 var(--font-mono); }
+.wb-detail-cta { padding-top:.65rem; border-top:1px solid var(--border-default); color:var(--text-secondary); font:500 9px/1.4 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; transition:color .15s ease; }
+.wb-detail-cta:hover { color:var(--cat-wikinotes-accent); }
+
+@media (max-width:720px) {
+  .wiki-banner { padding:1.4rem 1.2rem 1.2rem; }
+  .wb-split { grid-template-columns:1fr; }
+  .wb-territory-map { height:15rem; border-right:0; border-bottom:1px solid var(--border-default); }
+  .wb-detail { min-height:9rem; }
+}
+@media (prefers-reduced-motion:reduce) { .wb-territory { transition:none; } }
+
+/* The console window under the mosaic: a browser frame at the width of the split, the capture at its real
+   proportion (no zoom), cut by the bottom edge of the box so the wiki is seen peeking in. */
+.wb-window { display:block; width:100%; margin-top:.4rem; border:1px solid var(--border-default); border-bottom:0; border-radius:10px 10px 0 0; overflow:hidden; background:var(--bg-surface); box-shadow:0 24px 50px -28px rgba(0,0,0,.55); transition:border-color .2s ease; }
+/* Hover: the console comes out of the shadow and the border and the button light in the wiki colour; nothing moves. */
+.wb-window:hover { border-color:color-mix(in srgb,var(--cat-wikinotes-accent) 45%,var(--border-default)); }
+.wb-window-bar { display:flex; align-items:center; gap:.4rem; padding:.55rem .8rem; border-bottom:1px solid var(--border-default); background:color-mix(in srgb,var(--bg-base) 70%,var(--bg-surface)); }
+.wb-window-bar i { width:.55rem; height:.55rem; border-radius:50%; background:color-mix(in srgb,var(--border-default) 70%,var(--bg-base)); }
 .wb-window-bar b { margin-left:.6rem; font:normal 9px/1 var(--font-mono); letter-spacing:.1em; color:var(--text-muted); }
-.wb-shot { position:relative; display:block; min-height:15rem; overflow:hidden; background:var(--bg-base); }
-/* 118% wide: a slight zoom into the console, cropping the right and bottom edges. */
-.wb-shot img { position:absolute; left:0; top:0; width:118%; max-width:none; height:auto; min-height:100%; object-fit:cover; object-position:left top; }
-.wb-shot::after { content:''; position:absolute; inset:0; background:linear-gradient(to bottom,transparent 60%,color-mix(in srgb,var(--bg-base) 70%,transparent)); pointer-events:none; }
+.wb-shot { position:relative; display:block; height:10.5rem; overflow:hidden; background:var(--bg-base); }
+.wb-shot img { display:block; width:100%; height:auto; max-width:none; filter:brightness(.55) saturate(.7); transition:filter .32s ease; }
+.wb-window:hover .wb-shot img { filter:brightness(.8) saturate(.9); }
+.wb-shot::after { content:""; position:absolute; inset:0; background:linear-gradient(to bottom,color-mix(in srgb,var(--bg-base) 25%,transparent),color-mix(in srgb,var(--bg-base) 80%,transparent)); pointer-events:none; }
+/* The button over the shadowed console */
+.wb-shot-cta { position:absolute; left:50%; top:50%; z-index:1; display:inline-flex; align-items:center; gap:.5rem; padding:.7rem 1.1rem; transform:translate(-50%,-50%); border:1px solid color-mix(in srgb,var(--cat-wikinotes-accent) 55%,var(--border-default)); background:color-mix(in srgb,var(--bg-base) 88%,transparent); color:var(--text-heading); font:600 10px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; box-shadow:0 12px 30px -14px rgba(0,0,0,.7); transition:background-color .2s ease,color .2s ease,border-color .2s ease; }
+.wb-shot-cta svg { color:var(--cat-wikinotes-accent); }
+.wb-shot-cta b { font-weight:600; transition:transform .25s ease; }
+.wb-window:hover .wb-shot-cta { border-color:var(--cat-wikinotes-accent); background:color-mix(in srgb,var(--cat-wikinotes-accent) 16%,var(--bg-base)); }
+.wb-window:hover .wb-shot-cta b { transform:translateX(.2rem); }
 .wb-shot-light { display:none; }
 [data-theme="light"] .wb-shot-dark { display:none; }
 [data-theme="light"] .wb-shot-light { display:block; }
-
-@media (max-width:720px) {
-  .wiki-banner { padding:1.4rem 1.4rem 0; }
-  .wb-shot { min-height:11rem; }
-}
+@media (max-width:720px) { .wb-shot { height:7.5rem; } .wb-shot-cta { padding:.6rem .9rem; } }
+@media (prefers-reduced-motion:reduce) { .wb-window, .wb-shot img, .wb-shot-cta b { transition:none; } }

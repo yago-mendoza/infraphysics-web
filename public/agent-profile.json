@@ -181,36 +181,36 @@
       "id": "2718281",
       "title": "TrialGPT: from a medical report to a shortlist of eligible trials",
       "category": "projects",
-      "description": "A clinical-trial matching tool: describe your case or upload a report, and TrialGPT finds relevant trials near you, checks the inclusion and exclusion criteria against your situation, and drafts a message to the trial coordinator.",
-      "url": "https://infraphysics.net/lab/projects/2718281"
+      "description": "A clinical-trial matching tool built at Foundation 29: describe your case or upload a report, and TrialGPT finds relevant trials near you in ClinicalTrials.gov and the European CTIS register, checks the inclusion and exclusion criteria against your situation clause by clause, and drafts a message to the trial coordinator. Covers the 2025 build, its eligibility reasoner and its failure modes, and how the live product works a year on.",
+      "url": "https://infraphysics.net/lab/projects/trialgpt-clinical-trial-matching"
     },
     {
       "id": "3142718",
       "title": "Model-based fault detection in a two-tank system",
       "category": "bits2bricks",
-      "description": "Building a model-based fault detector from thirteen equations, four residuals and a very small hydraulic system.",
-      "url": "https://infraphysics.net/blog/bits2bricks/3142718"
+      "description": "Model-based fault detection and isolation on a two-tank hydraulic plant under closed-loop control. Thirteen component relations are reduced by structural analysis to four analytical redundancy relations, evaluated as residuals on Simulink runs, thresholded on healthy data and matched against a fault-signature matrix. Covers detectability and isolability, the noise cost of differentiating level measurements, the failure of exact signature matching, and the calibration a physical installation would require.",
+      "url": "https://infraphysics.net/blog/bits2bricks/two-tank-fault-detection"
     },
     {
       "id": "3141592",
       "title": "A CRM for a health-tech startup, built solo in 72 hours",
       "category": "projects",
       "description": "A bespoke CRM for a health-tech startup, designed and shipped solo in 72 hours. A real product built as an experiment in AI-assisted engineering: 23 tables, 8 state machines, automated enrichment and stale-relationship detection.",
-      "url": "https://infraphysics.net/lab/projects/3141592"
+      "url": "https://infraphysics.net/lab/projects/health-tech-crm"
     },
     {
       "id": "6184744",
       "title": "Building this site: a markdown compiler, a theme system and a second brain",
       "category": "projects",
       "description": "How a systems engineer built a personal site with a custom markdown compiler, a second brain, and an AI development partner (and what went wrong along the way).",
-      "url": "https://infraphysics.net/lab/projects/6184744"
+      "url": "https://infraphysics.net/lab/projects/building-infraphysics"
     },
     {
       "id": "5917362",
       "title": "Transformers from scratch",
       "category": "bits2bricks",
       "description": "A patient, ground-up explanation of transformer architecture: how tokens become predictions, what attention really computes, where facts live, and why it all scales.",
-      "url": "https://infraphysics.net/blog/bits2bricks/5917362"
+      "url": "https://infraphysics.net/blog/bits2bricks/transformers-from-scratch"
     }
   ]
 }

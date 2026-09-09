@@ -6,3 +6,4 @@ export * from './wikilinks';
 export * from './brainIndex';
 export * from './color';
 export * from './search';
+export * from './cdn';

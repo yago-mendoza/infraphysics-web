@@ -6,13 +6,18 @@ import { WikiNoteMeta } from '../types';
 import { isSecondBrainPath, secondBrainPath, secondBrainUidFromPath } from '../config/categories';
 import { initBrainIndex, fetchNoteContent, getCachedNoteContent, prefetchNoteContent, type BrainIndex, type Connection, type Neighborhood } from '../lib/brainIndex';
 import { useGraphRelevance } from './useGraphRelevance';
+import fieldEvidence from '../data/field-of-view.generated.json';
+import { computeWikiArticleUsage } from '../lib/wikiArticleUsage';
+
+const articleUsage = computeWikiArticleUsage(fieldEvidence.candidates);
 
 export type SearchMode = 'name' | 'content' | 'backlinks' | 'all';
-export type SortMode = 'a-z' | 'centrality' | 'most-links' | 'fewest-links' | 'depth' | 'shuffle' | 'newest' | 'oldest';
+export type SortMode = 'a-z' | 'centrality' | 'most-links' | 'fewest-links' | 'depth' | 'shuffle' | 'newest' | 'oldest' | 'most-articles' | 'fewest-articles';
 export type DirectorySortMode = 'children' | 'alpha' | 'depth';
 export type ViewMode = 'simplified' | 'technical';
 
 export interface FilterState {
+  articleCountBelow: number | null; // Strict upper bound; 1 selects unused notes.
   isolated: boolean;
   leaf: boolean;
   hubThreshold: number;  // 0 = off
@@ -26,6 +31,7 @@ export interface FilterState {
 }
 
 const DEFAULT_FILTER_STATE: FilterState = {
+  articleCountBelow: null,
   isolated: false,
   leaf: false,
   hubThreshold: 0,
@@ -66,7 +72,6 @@ export const useSecondBrainHub = () => {
   const navigate = useNavigate();
   const { getIslands, getCentrality } = useGraphRelevance();
   const [query, setQuery] = useState('');
-  const [showNewNote, setShowNewNote] = useState(false);
   // Deferred query — React keeps the input responsive while the filter
   // pipeline uses the trailing value, allowing concurrent interruption.
   const deferredQuery = useDeferredValue(query);
@@ -93,12 +98,7 @@ export const useSecondBrainHub = () => {
       }
     };
     void load();
-    const handler = () => { void load(); };
-    window.addEventListener('wikinote-hmr', handler);
-    return () => {
-      cancelled = true;
-      window.removeEventListener('wikinote-hmr', handler);
-    };
+    return () => { cancelled = true; };
   }, []);
 
   const allWikiNotes = index?.allWikiNotes ?? [];
@@ -208,30 +208,6 @@ export const useSecondBrainHub = () => {
         setContentReadyId(activePost.id);
       });
     return () => { cancelled = true; };
-  }, [activePost]);
-
-  // Re-fetch content when HMR fires for the active note (e.g. after editor save)
-  useEffect(() => {
-    let cancelled = false;
-    const handler = (e: Event) => {
-      const uid = (e as CustomEvent).detail?.uid;
-      if (!uid || !activePost || uid !== activePost.id) return;
-      fetchNoteContent(activePost.id, true)
-        .then(html => {
-          if (!cancelled) {
-            setResolvedHtml(html);
-            setContentReadyId(activePost.id);
-          }
-        })
-        .catch(error => {
-          if (!cancelled) console.error(`Unable to refresh Wiki note ${activePost.id}`, error);
-        });
-    };
-    window.addEventListener('wikinote-hmr', handler);
-    return () => {
-      cancelled = true;
-      window.removeEventListener('wikinote-hmr', handler);
-    };
   }, [activePost]);
 
   // Prefetch content for likely navigation targets
@@ -462,13 +438,14 @@ export const useSecondBrainHub = () => {
   // coreFilteredNotes: all filters EXCEPT word count — used by histogram
   const coreFilteredNotes = useMemo(() => {
     const { isolated, leaf, hubThreshold, depthMin, depthMax, islandId, bridgesOnly, dateFilter } = filterState;
-    const hasAnyFilter = isolated || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || islandId != null || bridgesOnly || dateFilter != null;
+    const hasAnyFilter = filterState.articleCountBelow !== null || isolated || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || islandId != null || bridgesOnly || dateFilter != null;
     if (!hasAnyFilter) return scopedResults;
 
     const islands = getIslands();
     const bridgeUids = bridgesOnly && islands ? new Set(islands.cuts.map(c => c.uid)) : null;
 
     return scopedResults.filter(note => {
+      if (filterState.articleCountBelow !== null && (articleUsage.get(note.id)?.length || 0) >= filterState.articleCountBelow) return false;
       const depth = (note.addressParts || [note.title]).length;
       const outgoing = note.references?.length || 0;
       const incoming = (backlinksMap.get(note.id) || []).length;
@@ -515,6 +492,13 @@ export const useSecondBrainHub = () => {
 
     const sorted = [...filteredNotes];
     switch (sortMode) {
+      case 'most-articles':
+      case 'fewest-articles':
+        sorted.sort((a, b) => {
+          const diff = (articleUsage.get(a.id)?.length || 0) - (articleUsage.get(b.id)?.length || 0);
+          return (sortMode === 'fewest-articles' ? diff : -diff) || (a.address || a.title).localeCompare(b.address || b.title) || a.id.localeCompare(b.id);
+        });
+        break;
       case 'a-z':
         sorted.sort((a, b) => (a.address || a.title).localeCompare(b.address || b.title));
         break;
@@ -582,7 +566,7 @@ export const useSecondBrainHub = () => {
   // Check if any filter is active
   const hasActiveFilters = useMemo(() => {
     const { isolated, leaf, hubThreshold, depthMin, depthMax, islandId, bridgesOnly, dateFilter, wordCountMin, wordCountMax } = filterState;
-    return isolated || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || islandId != null || bridgesOnly || dateFilter != null || wordCountMin > 0 || wordCountMax < Infinity;
+    return filterState.articleCountBelow !== null || isolated || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || islandId != null || bridgesOnly || dateFilter != null || wordCountMin > 0 || wordCountMax < Infinity;
   }, [filterState]);
 
   // Signal from sidebar directory: "this click should reset the trail"
@@ -646,6 +630,7 @@ export const useSecondBrainHub = () => {
 
     // Data
     allWikiNotes,
+    articleUsage,
     noteById,
     addressToNoteId,
     backlinksMap,
@@ -672,10 +657,6 @@ export const useSecondBrainHub = () => {
     // Directory nav signal (sidebar → view trail reset)
     directoryNavRef,
     signalDirectoryNav,
-
-    // New note creation
-    showNewNote,
-    setShowNewNote,
 
     // View mode
     viewMode,

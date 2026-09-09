@@ -1,6 +1,6 @@
 // Four doors (wiki, pinned essay, a project, a Bits2Bricks lesson) in one
 // column-width carousel that sits under the Home intro: picture full-bleed,
-// four progress segments on top, copy bottom-left, halves to move. Progress
+// four progress segments on top, kicker, title and one summary line bottom-left, halves to move. Progress
 // is driven in script; a hover does not stop the rotation, it restarts the live
 // segment's countdown from zero so the door stays a full turn under the pointer.
 // Every door sets --sh-accent to its category accent.
@@ -10,7 +10,8 @@ import { Link } from 'react-router-dom';
 import { postSummaries as posts } from '../../data/postSummaries';
 import type { PostSummary } from '../../types';
 import { catAccentVar, postPath, secondBrainPath } from '../../config/categories';
-import { GraphThumb, wikiNoteCount } from './GraphThumb';
+import { cdn } from '../../lib/cdn';
+import { GraphThumb } from './GraphThumb';
 import '../../styles/start-here.css';
 
 const ESSAY_ID = '3358174';   // The years we thought we had (pinned)
@@ -23,11 +24,11 @@ interface Door {
   ref: string;          // A / B / C / D
   kicker: string;
   title: string;
-  line: string;
-  meta: string;
+  line: string;         // one small line that sums the whole piece up
   to: string;
   accent: string;       // CSS var reference
   post?: PostSummary;
+  image?: string;       // backdrop for doors without a post (CDN url)
 }
 
 const byId = (id: string) => posts.find(post => post.id === id);
@@ -35,21 +36,25 @@ const byId = (id: string) => posts.find(post => post.id === id);
 function buildDoors(): Door[] {
   const essay = byId(ESSAY_ID), project = byId(PROJECT_ID), b2b = byId(B2B_ID);
   const doors: Door[] = [
-    { key: 'wiki', ref: 'A', kicker: 'Wiki', title: 'One graph, every concept I keep.', line: 'Short notes on ML, hardware, infrastructure and systems, linked into a graph you can walk.', meta: `${wikiNoteCount} notes`, to: secondBrainPath(), accent: catAccentVar('wikinotes') },
+    { key: 'wiki', ref: 'A', kicker: 'Follow a concept', title: 'How systems respond to themselves', line: 'Feedback, its sign, and why the sign alone never decides stability.', to: secondBrainPath('iOGYFvso'), accent: catAccentVar('wikinotes'), image: cdn('site/home/carousel-feedback-loops.webp') },
   ];
-  if (essay) doors.push({ key: 'essay', ref: 'B', kicker: 'Essay', title: essay.displayTitle || essay.title, line: essay.subtitle || essay.description || '', meta: essay.date, to: postPath(essay.category, essay.id), accent: catAccentVar('essays'), post: essay });
-  if (project) doors.push({ key: 'project', ref: 'C', kicker: 'Project', title: project.displayTitle || project.title, line: project.description || '', meta: [('status' in project ? project.status : null), project.date].filter(Boolean).join(' · '), to: postPath(project.category, project.id), accent: catAccentVar('projects'), post: project });
-  if (b2b) doors.push({ key: 'b2b', ref: 'D', kicker: 'Bits2Bricks', title: b2b.displayTitle || b2b.title, line: b2b.description || '', meta: b2b.date, to: postPath(b2b.category, b2b.id), accent: catAccentVar('bits2bricks'), post: b2b });
+  if (essay) doors.push({ key: 'essay', ref: 'B', kicker: 'Read an argument', title: essay.displayTitle || essay.title, line: 'Astra arrives early. What it changes, and the one advantage that does not scale.', to: postPath(essay.category, essay.id), accent: catAccentVar('essays'), post: essay });
+  if (project) doors.push({ key: 'project', ref: 'C', kicker: 'Explore an experiment', title: project.displayTitle || project.title, line: 'Two models forecast simulated auras. The real result is what they may claim.', to: postPath(project.category, project.id), accent: catAccentVar('projects'), post: project });
+  if (b2b) doors.push({ key: 'b2b', ref: 'D', kicker: 'Understand a mechanism', title: b2b.displayTitle || b2b.title, line: 'Structural analysis yields four residuals that detect and isolate leak, valve, pump and sensor faults.', to: postPath(b2b.category, b2b.id), accent: catAccentVar('bits2bricks'), post: b2b });
   return doors;
 }
 
 const DOORS = buildDoors();
 const doorStyle = (door: Door) => ({ '--sh-accent': door.accent } as React.CSSProperties);
 
-/* Backdrop for one door: the graph as the wiki paints it (purple centrality ramp on a dark field), or the thumbnail. */
-const Visual: React.FC<{ door: Door }> = ({ door }) => door.key === 'wiki'
-  ? <span className="sh-visual sh-visual-graph"><GraphThumb className="graph-thumb" tone="purple" /></span>
-  : <span className="sh-visual sh-visual-thumb">{door.post?.thumbnail ? <img src={door.post.thumbnail} alt="" loading="lazy" /> : <i>{door.ref}</i>}</span>;
+/* Backdrop for one door: its own art or the post thumbnail; the wiki door falls back to the graph as the wiki paints it. */
+const Visual: React.FC<{ door: Door }> = ({ door }) => {
+  const src = door.image ?? door.post?.thumbnail;
+  if (src) return <span className="sh-visual sh-visual-thumb"><img src={src} alt="" loading="lazy" /></span>;
+  return door.key === 'wiki'
+    ? <span className="sh-visual sh-visual-graph"><GraphThumb className="graph-thumb" tone="purple" /></span>
+    : <span className="sh-visual sh-visual-thumb"><i>{door.ref}</i></span>;
+};
 
 export const StartHere: React.FC = () => {
   const [index, setIndex] = useState(0);
@@ -104,10 +109,9 @@ export const StartHere: React.FC = () => {
       <button type="button" className="sh-stories-half sh-stories-prev" aria-label="Previous" onClick={() => go(index - 1)} />
       <button type="button" className="sh-stories-half sh-stories-next" aria-label="Next" onClick={() => go(index + 1)} />
       <Link key={door.key} to={door.to} className="sh-card-copy">
-        <small>{door.ref} · {door.kicker} · {door.meta}</small>
+        <small>{door.kicker}</small>
         <strong>{door.title}</strong>
         <span>{door.line}</span>
-        <em>Open →</em>
       </Link>
     </div>
   );

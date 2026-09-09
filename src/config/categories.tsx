@@ -1,6 +1,7 @@
 // Category metadata with associated icons and colors — dark theme
 
 import React from 'react';
+import { contentRoutes } from '../lib/contentRoutes';
 import { GearIcon, ThreadIcon, GradCapIcon } from '../components/icons';
 
 export interface CategoryDisplayConfig {
@@ -53,7 +54,7 @@ export const categoryGroup = (category: string): 'lab' | 'blog' =>
 
 /** Full path to a post detail page, e.g. /lab/projects/my-id */
 export const postPath = (category: string, id: string): string =>
-  `/${categoryGroup(category)}/${category}/${id}`;
+  contentRoutes.path(category, id);
 
 /** Full path to a section listing, e.g. /blog/essays */
 export const sectionPath = (category: string): string =>
@@ -69,7 +70,11 @@ export const LEGACY_WIKI_PATH = '/lab/second-brain';
 
 /** Path to a Wiki concept, or the Wiki index if no uid is provided. */
 export const secondBrainPath = (uid?: string): string =>
-  uid ? `${WIKI_PATH}/${uid}` : WIKI_PATH;
+  uid ? contentRoutes.path('wikinotes', uid) : WIKI_PATH;
+
+/** The wiki with the graph workspace open on arrival (the home banner lands here). */
+export const GRAPH_SEGMENT = 'graph';
+export const secondBrainGraphPath = (): string => `${WIKI_PATH}/${GRAPH_SEGMENT}`;
 
 export const isSecondBrainPath = (pathname: string): boolean =>
   pathname === WIKI_PATH || pathname.startsWith(`${WIKI_PATH}/`)
@@ -77,7 +82,10 @@ export const isSecondBrainPath = (pathname: string): boolean =>
 
 export const secondBrainUidFromPath = (pathname: string): string | null => {
   for (const base of [WIKI_PATH, LEGACY_WIKI_PATH]) {
-    if (pathname.startsWith(`${base}/`)) return pathname.slice(base.length + 1) || null;
+    if (pathname.startsWith(`${base}/`)) {
+      const rest = pathname.slice(base.length + 1);
+      return rest && rest !== GRAPH_SEGMENT ? contentRoutes.resolve(pathname)?.id || null : null;
+    }
   }
   return null;
 };

@@ -20,6 +20,7 @@ import path from 'path';
 import matter from 'gray-matter';
 import { fileURLToPath } from 'url';
 import { customAlphabet } from 'nanoid';
+import { chooseWikiSlug, readContentFiles } from './content-files.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -49,7 +50,7 @@ function parseExistingWikinotes() {
     const addressParts = fm.address.split('//').map(s => s.trim());
     const name = fm.name || addressParts[addressParts.length - 1];
 
-    byUid.set(fm.uid, { uid: fm.uid, address: fm.address, name, filename });
+    byUid.set(fm.uid, { uid: fm.uid, address: fm.address, name, filename, slug: fm.slug, slugAliases: fm.slugAliases || [] });
 
     const key = name.toLowerCase();
     if (!nameToUids.has(key)) nameToUids.set(key, []);
@@ -195,6 +196,7 @@ const ambiguities = [];
 let updated = 0;
 let created = 0;
 const existingUids = new Set(byUid.keys());
+const usedSlugs = new Set(readContentFiles().filter(f => f.category === 'wikinotes').flatMap(f => [f.id, f.slug, ...f.aliases]));
 const seenUids = new Set();
 
 for (const { fullPath, relPath } of vaultFiles) {
@@ -217,19 +219,27 @@ for (const { fullPath, relPath } of vaultFiles) {
   if (uid && byUid.has(uid)) {
     // Update existing note
     seenUids.add(uid);
-    const frontmatter = buildWikinoteFrontmatter(uid, address, name, date, aliases, distinct, supersedes);
+    const existing = byUid.get(uid);
+    const frontmatter = buildWikinoteFrontmatter(uid, address, name, date, aliases, distinct, supersedes)
+      .replace(/^---\n/, `---\nslug: ${existing.slug}\nslugAliases: ${JSON.stringify(existing.slugAliases)}\n`);
     const content = frontmatter + '\n\n' + convertedBody + '\n';
-    const targetPath = path.join(WIKINOTES_DIR, `${uid}.md`);
+    const targetPath = path.join(WIKINOTES_DIR, existing.filename);
     fs.writeFileSync(targetPath, content, 'utf-8');
     updated++;
     report.push(`UPDATE  ${address} (${uid})`);
   } else {
     // Create new note
-    const newUid = generateUid();
+    let newUid;
+    do { newUid = generateUid(); } while (existingUids.has(newUid) || usedSlugs.has(newUid));
+    existingUids.add(newUid);
+    const slug = chooseWikiSlug(address, usedSlugs);
+    usedSlugs.add(slug);
+    usedSlugs.add(newUid);
     seenUids.add(newUid);
-    const frontmatter = buildWikinoteFrontmatter(newUid, address, name, date, aliases, distinct, supersedes);
+    const frontmatter = buildWikinoteFrontmatter(newUid, address, name, date, aliases, distinct, supersedes)
+      .replace(/^---\n/, `---\nslug: ${slug}\n`);
     const content = frontmatter + '\n\n' + convertedBody + '\n';
-    const targetPath = path.join(WIKINOTES_DIR, `${newUid}.md`);
+    const targetPath = path.join(WIKINOTES_DIR, `${slug}.md`);
     fs.writeFileSync(targetPath, content, 'utf-8');
     created++;
     report.push(`CREATE  ${address} (${newUid})`);

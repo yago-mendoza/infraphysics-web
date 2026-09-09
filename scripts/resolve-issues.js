@@ -9,6 +9,7 @@
 // instruction block is printed for easy delegation.
 
 import fs from 'fs';
+import { readContentFiles, chooseWikiSlug } from './content-files.js';
 import path from 'path';
 import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'url';
@@ -144,11 +145,7 @@ function randomStubPhrase() {
  */
 function generateUid() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const existing = new Set(
-    fs.readdirSync(WIKINOTES_DIR)
-      .filter(f => f.endsWith('.md'))
-      .map(f => f.replace('.md', ''))
-  );
+  const existing = new Set(readContentFiles().flatMap(f => [f.id, f.slug, ...f.aliases]));
   let uid;
   do {
     uid = '';
@@ -170,12 +167,14 @@ function createStubNote(address) {
   }
 
   const uid = generateUid();
-  const filename = `${uid}.md`;
+  const used = new Set(readContentFiles().filter(f => f.category === 'wikinotes').flatMap(f => [f.id, f.slug, ...f.aliases]));
+  const slug = chooseWikiSlug(address, used);
+  const filename = `${slug}.md`;
   const filePath = path.join(WIKINOTES_DIR, filename);
   const today = new Date().toISOString().split('T')[0];
   const name = address.split('//').pop().trim();
   const phrase = randomStubPhrase();
-  const content = `---\nuid: "${uid}"\naddress: "${address}"\nname: "${name}"\ndate: "${today}"\n---\n${phrase}\n`;
+  const content = `---\nslug: ${slug}\nuid: "${uid}"\naddress: "${address}"\nname: "${name}"\ndate: "${today}"\n---\n${phrase}\n`;
   fs.writeFileSync(filePath, content, 'utf-8');
   return { created: true, filePath };
 }

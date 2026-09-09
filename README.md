@@ -19,7 +19,6 @@ Personal website and knowledge system. Articles, projects, and a wiki of notes b
 - **Cloudflare R2** (image hosting)
 - **Giscus** (GitHub Discussions-backed comments on articles)
 - **Formspree** (contact form)
-- **CodeMirror 6** (in-browser wikinote editor, localhost only)
 
 ---
 
@@ -43,9 +42,18 @@ infraphysics-web/
     api/analytics.ts            # Lightweight analytics ingest
     api/presence.ts             # Live presence counter
   vite-plugins/
-    wikinote-editor.js         # Dev server plugin: wikinote CRUD API (localhost only, 6 endpoints)
+    media-sync.js              # Dev server plugin: syncs media/ to the CDN on start and whenever a master changes
+  media/                      # Image masters, gitignored (scripts/media.js mirrors the tree to R2)
+    articles/<id>/cover.<ext>   # Hero of an article: index card + article top
+    articles/<id>/figures/      # Illustrations inside the article body
+    site/<path>/<slug>.<ext>    # Page scaffolding art: home carousel, plates, about
   scripts/
     compiler.config.js        # Centralized compiler configuration
+    content-files.js          # Source inventory and slug validation
+    migrate-content-slugs.js  # Initial migration (dry run by default, backup on apply)
+    rename-content-slug.js    # Rename a URL/file while retaining its previous slug
+    content-routes.test.js    # Identity, redirects and metadata regression checks
+    CONTENT-URLS.md           # Readable URLs and source filename conventions
     build-content.js          # Markdown → JSON pipeline (triple output)
     validate-wikinotes.js    # Reference integrity checks
     resolve-issues.js         # Interactive issue resolver (segment collisions, missing parents)
@@ -58,8 +66,10 @@ infraphysics-web/
     obsidian-import.js        # Import Obsidian vault back to wikinotes
     compute-graph-relevance.js # Build-time PageRank + proximity → graph-relevance.generated.json
     compute-graph-thumb.js    # Build-time static layout of the wiki graph → graph-thumb.generated.json (Home spotlight)
+    media.js                  # Images: optimize masters from media/ and sync them to Cloudflare R2 (push/pull/ls/status/rm/mv/url)
     README.md                 # Build pipeline docs, cache format
   dev-scripts/
+    check-content-slugs.mjs   # Browser regression checks for readable and historical URLs
     dump-context.sh           # Dev tool: export codebase to a single TXT for LLM context
     og-banner.html            # Template for article OG banners
   room/                       # Design room: editorial + visual direction, roadmap, decisions (versioned)
@@ -71,19 +81,21 @@ infraphysics-web/
       RetentionHints.tsx      # Contextual nudges for undiscovered features (scroll depth, wikilinks, search)
       ExperimentalCursor.tsx  # Optional custom cursor (user preference)
       wiki/                   # Second Brain: WikiContent, WikiLinkPreview, NeighborhoodGraph, RelevanceLeaderboard, BridgeScoreBadge, NavigationTrail, CopyExportModal, SecondBrainGuide
+                              # Article presence sorting/filtering uses lib/wikiArticleUsage.ts
       personal/               # Personal pages: AboutTopBar, ContactLogoSculpture, GraphThumb, HomeVisualLab,
+                              #   WikiTerritories (compact root treemap; lib/partitionAreas.ts)
                               #   StartHere (four-door carousel under the intro) and WikiBanner (closing plate)
       article/                # ArticleBreadcrumbs, ArticleHashtags, BlogMetabar
       sections/               # SearchResultsList, ProjectsList, EssaysList, Bits2BricksGrid
-      layout/                 # Sidebar, MobileNav, Footer, AmbientRails, ArticleFloatingBar, SecondBrainSidebar
+      layout/                 # Sidebar, MobileNav, Footer, AmbientRails, SecondBrainSidebar
       ui/                     # StatusBadge, Highlight, ComplexityBar
       icons/                  # SVG icon components
-      editor/                 # Wikinote editor (localhost only): CodeMirror, diagnostics, term detection, navigation, trailing refs, new note panel, delete confirmation
       graph/                  # Shared force-directed 2D/3D graph explorer (MiniGraph) and data hooks
     views/
       HomeView.tsx            # Landing page
       SectionView.tsx         # Category listing (projects, essays, bits2bricks)
       PostView.tsx            # Single post renderer
+      ContextPreviewView.tsx  # TrialGPT context-note comparisons (/ctx1 through /ctx4; context-preview.css)
       ArticlePostView.tsx     # Article body renderer (wiki-links, hover previews)
       SecondBrainView.tsx     # Wikinotes explorer (/wiki)
       AboutView.tsx           # About page
@@ -91,19 +103,21 @@ infraphysics-web/
       StackView.tsx           # Tooling stack page (/about/stack)
       ContactView.tsx         # Contact form (Formspree)
       ThanksView.tsx          # Post-submit thank-you page
+      ErrorConceptView.tsx    # Illustrated 404 preview: lost robot with map (/err5)
     legacy/
       home-visuals/           # Retired home visual engine, kept for reference (see its README)
     data/
       pages/
         README.md               # Authoring hub (frontmatter, content types, editorial rules, pipeline)
-        SYNTAX.md               # Syntax reference (16 custom features, edge cases, quick ref)
+        SYNTAX.md               # Syntax reference (19 custom features, edge cases, quick ref)
+        STYLE.md                # Hard writing rules for every category (quotes, arrows, em-dashes, box titles, paragraph density, literal titles); the mechanical ones are [STYLE] build warnings
         projects/             # .md posts + _category.yaml
           README.md             # Projects editorial voice
         essays/              # .md posts + _category.yaml
           README.md             # Essays editorial voice
         bits2bricks/          # .md posts + _category.yaml
           README.md             # Bits2Bricks editorial voice
-        wikinotes/           # Individual {uid}.md files (1 per concept, UID-named)
+        wikinotes/           # Individual <slug>.md files (1 per concept, stable UID in frontmatter)
           README.md             # Wikinotes management guide (scripts, workflows, errors)
       agent-profile.json      # Author profile consumed by views and crawlers
       postSummaries.ts        # Lightweight post index for listings
@@ -112,12 +126,11 @@ infraphysics-web/
       wikinotes-index.generated.json  # Wikinote metadata (no content)
       graph-relevance.generated.json   # PageRank + proximity per wikinote
       graph-thumb.generated.json       # Static wiki graph picture for the Home spotlight
+      media-manifest.json     # What scripts/media.js has on the CDN: key, size, dimensions, cache-busting version (read by the build and by lib/cdn.ts)
       categories.generated.json
       data.ts                 # Runtime data loader
     public/
-      home-wiki-{dark,light}.png # Captures of the wiki console for the Home closing plate (retake when the wiki UI changes)
       avatar.jpg              # Self-hosted portrait for the home identity anchor (240px, preloaded from index.html)
-      articles/<article-id>/  # Local image assets grouped by article ID
       playgrounds/<article-id>/ # Self-contained HTML pages that belong to one article (interactive tables, simulations), linked with [[playgrounds/<id>/<name>|text]]
       wikinotes/             # {uid}.json content files (served as static assets)
       wikinotes-index.json   # Generated: wikinote metadata index (HTTP-fetched at runtime)
@@ -127,6 +140,7 @@ infraphysics-web/
       llms.txt                # Static: LLM-friendly site summary (manually maintained)
       llms-full.txt           # Generated: all articles in full plain text
       robots.txt              # Crawler directives + sitemap reference
+      home-wiki-{dark,light}.png # Console captures, the browser window peeking in under the Home wiki mosaic (retake when the console changes shape)
       _routes.json            # Cloudflare Pages routing (which paths invoke the Function)
       _redirects              # 301s for legacy /blog/threads/* URLs -> /blog/essays/*
     lib/
@@ -137,6 +151,7 @@ infraphysics-web/
       wikiAccent.ts           # Wiki accent for canvas/three.js code, derived from --wiki-accent (index.html)
       date.ts                 # Date formatting
       search.ts               # Search utilities
+      cdn.ts                  # cdn(key): public URL of a media-manifest.json object, with its ?v= stamp
       filterParams.ts         # URL filter param (de)serialization
       engagementApi.ts        # Views / hearts / stats API client
       brainIndex.ts           # Wikinotes index (singleton, lazy init, 7 in-memory Maps, HMR-aware)
@@ -156,17 +171,17 @@ infraphysics-web/
       usePresence.ts          # Live presence counter
       useRevealOnScrollUp.ts  # Nav reveal on upward scroll or at page end (articles, touch wiki)
       useProximityReveal.ts   # Nav reveal when the pointer nears the bottom edge (wiki)
-      useIsLocalhost.ts       # Localhost detection for editor gating
     styles/
       global.css              # Global styles (theme tokens, images, wiki-links, animations, components). Linked from index.html
       article.css             # Article post view styles (terminal/cyberpunk theme)
       article-layout.css      # Article page grid and reading column
       editorial-primitives.css # Shared editorial typography primitives
       wiki-content.css        # Wiki/second-brain content delta overrides
-      editor.css              # CodeMirror overrides for wikinote editor
       start-here.css          # Home four-door carousel under the intro
       article-geometry.css    # Blog article geometry (breadcrumb, sans title, rounded hero, sticky index; split header for Bits2Bricks)
       wiki-banner.css         # Home closing wiki plate
+      project-page.css        # Project article page: full-bleed cover plate, brief strip, summary, numbered index rail
+      error-concepts.css      # Minimal 404 previews and theme-aware SVG cartoons
     config/                   # Categories config, analytics, content entities
     constants/                # Layout, theme constants
     contexts/                 # Theme, article, Second Brain hub, cursor preference
@@ -219,9 +234,9 @@ The site is dark everywhere by default: one atmosphere from the home to the last
 
 ### Second Brain
 
-A flat knowledge graph of `{uid}.md` files in `wikinotes/`. Each note has a stable 8-char UID (for references and URLs) and an `address` (hierarchical, `//`-separated, for display and neighborhood). Notes link to each other via `[[uid]]` wiki-links — renaming an address changes only one file's frontmatter. Build produces three outputs: a posts JSON (no wikinotes), a metadata index (no content), and individual `{uid}.json` content files served as static assets. At runtime, the metadata index is fetched via HTTP (cached by CDN, separate from the JS bundle) while note content is fetched on demand. For managing wikinotes, see **[src/data/pages/wikinotes/README.md](src/data/pages/wikinotes/README.md)**.
+A flat knowledge graph of `<slug>.md` files in `wikinotes/`. Each note has a stable UID for references, an explicit slug for its public URL, and an `address` (hierarchical, `//`-separated, for display and neighborhood). Notes link through `[[uid]]`; an address rename changes only frontmatter. The build produces article JSON, a Wiki metadata index and individual `{uid}.json` payloads fetched on demand. See [Wiki management](src/data/pages/wikinotes/README.md) and [URL conventions](scripts/CONTENT-URLS.md).
 
-**In-browser editor** (localhost only): Click a note's edit button to open a CodeMirror editor panel. Features: `[[` navigation dropdown (arrow keys + Enter to jump between notes, Tab to drill into children, filters as you type), smart term detection (highlights unlinked mentions of known notes in purple, offers Yes/No to convert to wiki-links), missing-parent stub creation from diagnostics, delete workflow with impact analysis (shows inbound refs, children, trailing refs — offers stub conversion or permanent delete with ref cleanup), uid protection (read-only, restored on save), resizable diagnostics panel, trailing refs widget, and auto-reload after save via HMR. The editor runs live validation on every keystroke, catching broken references, missing parents, and formatting issues before they reach the build — so most errors are fixed in real time without needing to run the full pipeline.
+**Editing wikinotes:** notes are Markdown files in `src/data/pages/wikinotes/`, edited with any editor and checked by `npm run build` and the scripts in `scripts/` (see the wikinotes README). There is no in-browser editor.
 
 **Creating wikinotes:** Follow the preflight and creation workflow in the wikinotes management guide. It covers decomposition, deduplication, addressing, parent stubs and validation.
 
@@ -263,6 +278,8 @@ The `VIEWS` KV namespace stores all engagement data: view counts (`views:{slug}`
 
 Site-wide analytics include documented historical baselines from before the global endpoint existed. On 2026-09-01, the 27 published article counters summed to 249 verified views. A conservative allowance of 51 untracked views across Home, About, Writing, Wiki, index and Contact routes produces a 300-page-view baseline. Because sessions and unique visitors cannot be reconstructed from article counters, their 130-visit and 100-visitor baselines are explicitly estimates, based on roughly three pages per historical visitor and a modest return-visit rate. Live analytics accumulate on top of these frozen values.
 
+**Images:** the look is defined in [_generation/VISUAL-RUBRIC.md](_generation/VISUAL-RUBRIC.md) (premium cinematic industrial, three registers, kill list, prompt base); read it before generating or choosing one. Masters live in `media/` (gitignored), sorted by what they are: `articles/<id>/cover.<ext>` for a hero, `articles/<id>/figures/<slug>.<ext>` for body illustrations, `site/<path>/<slug>.<ext>` for page art. `npm run media -- push <id|site>` encodes them to WebP and uploads them to R2 under the same path, and `npm run build` syncs quietly. Components get urls through `cdn(key)` in `src/lib/cdn.ts`. The tracked `src/data/media-manifest.json` is what the build uses to stamp `?v=` on CDN urls and to flag references to files that were never pushed. Full workflow: **[scripts/README.md](scripts/README.md#article-images)**.
+
 **Routing:** `public/_routes.json` controls which paths invoke the Pages Function vs serve static assets. API paths (`/api/*`) and article paths (for OG tags) route to the Function; everything else is served directly from the build output.
 
 **Deploy:** Push to `main` triggers automatic deployment via Cloudflare Pages GitHub integration. No manual deploy step.
@@ -281,16 +298,6 @@ Serverless endpoints running as Cloudflare Pages Functions. All responses includ
 | `/api/reactions/{slug}` | `POST` | Toggle heart for caller's IP, return new count + hearted status |
 | `/api/stats` | `POST` | Bulk fetch: `{ slugs: [...] }` → `{ [slug]: { views, hearts } }` (capped at 50) |
 
-**Dev-only API** (served by `vite-plugins/wikinote-editor.js`, never deployed):
-
-| Endpoint | Method | Description |
-|---|---|---|
-| `/api/wikinotes/:uid/raw` | `GET` | Raw markdown + mtime for a wikinote |
-| `/api/wikinotes/save` | `POST` | Write to disk + incremental rebuild |
-| `/api/wikinotes/create` | `POST` | Create new note + rebuild |
-| `/api/wikinotes/validate` | `POST` | Parse + validate without saving |
-| `/api/wikinotes/analyze-refs` | `POST` | Pre-delete impact analysis (inbound refs, children) |
-| `/api/wikinotes/delete` | `POST` | Delete note + optional trailing ref cleanup |
 
 ---
 
@@ -300,9 +307,9 @@ Articles include engagement and navigation features layered on top of the base c
 
 - **View count + hearts** — POST on mount (IP-deduped), displayed in article header and section listings. Hearts are toggleable per IP.
 - **Giscus comments** — GitHub Discussions-backed comment widget at article footer. Config: `yago-mendoza/infraphysics-comments` repo.
-- **Floating bar** — Back to the page the reader came from, active heading indicator, reading progress and share. Essays and Bits2Bricks also carry a sticky index of the top-level sections beside the body.
+- **Contents control** — Project articles show a left-edge indicator (one line per top-level heading) that opens a lateral table of contents. Essays and Bits2Bricks carry a sticky index of the top-level sections beside the body instead. There is no fixed top bar in articles: the global nav slides in at the bottom edge with a Back arrow.
 - **Reading progress** — Horizontal progress bar at top of viewport, driven by scroll position via RAF.
-- **Active TOC tracking** — Scroll listener marks the current heading + its ancestor chain in the TOC. Shared algorithm between ArticlePostView and ArticleFloatingBar.
+- **Active TOC tracking** — Scroll listener marks the current heading + its ancestor chain in the TOC. One scroll listener in ArticlePostView toggles the active class on the index links of every category (blog side index, projects rail).
 - **Share dropdown** — Copy link, email feedback, Twitter/X share.
 - **Retention hints** — Contextual nudges for undiscovered features (wiki-link clicks, search usage, scroll depth, theme toggle). Triggered by usage counters in localStorage, shown as timed toasts.
 
@@ -341,11 +348,9 @@ Repository conventions live alongside the systems they describe: this README for
 
 ```bash
 npm install          # install dependencies
-npm run dev          # build content + start vite dev server (includes editor API on localhost)
+npm run dev          # build content + start vite dev server
 npm run build        # build content + production build
 ```
-
-**Local editor:** The Vite dev server automatically loads `vite-plugins/wikinote-editor.js`, which exposes the wikinote CRUD API at `/api/wikinotes/*`. No extra setup — just `npm run dev` and the editor UI appears on Second Brain note pages.
 
 **KV APIs in dev:** Cloudflare Pages Functions are not available behind Vite. Localhost therefore reads the canonical counters from `https://infraphysics.net` over CORS. Local article views use `GET` so previewing does not alter production analytics; reaction toggles still target the canonical API. A failed request remains unavailable (`null`) and is never displayed as a false zero.
 
@@ -373,3 +378,5 @@ Future features under consideration:
 - [ ] **LLM Conversational Assistant** — AI-powered search/Q&A over site content. MVP: Cloudflare Worker proxy to Claude Haiku API with system prompt + post summaries. Future: RAG with vector embeddings for semantic search. Includes "Ask Yago" persona mode.
 - [ ] **Stripe Donations** — One-time support via Stripe Payment Link (zero backend). Button in footer or `/about`. No memberships or auth initially.
 - [x] **Wiki Console graph explorer** — Shared mini/expanded force-directed map with 2D/3D views, semantic highlighting and centrality/root coloring at `/wiki`.
+
+Content uses readable filenames and URL slugs with stable internal IDs. See [URL conventions and renaming](scripts/CONTENT-URLS.md).

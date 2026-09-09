@@ -317,15 +317,12 @@ export function getCachedNoteContent(id: string): string | null {
 }
 
 /** Fetch + resolve wiki-links for a single note's content. Cached in memory. */
-export async function fetchNoteContent(id: string, bustCache = false): Promise<string> {
-  if (!bustCache) {
-    const cached = _contentCache.get(id);
-    if (cached) return cached;
-  }
+export async function fetchNoteContent(id: string): Promise<string> {
+  const cached = _contentCache.get(id);
+  if (cached) return cached;
 
   const index = getBrainIndex();
-  const url = bustCache ? `/wikinotes/${id}.json?t=${Date.now()}` : `/wikinotes/${id}.json`;
-  const resp = await fetch(url);
+  const resp = await fetch(`/wikinotes/${id}.json`);
   if (!resp.ok) return '<p>Content unavailable.</p>';
 
   const { content } = await resp.json();
@@ -350,52 +347,4 @@ export function prefetchNoteContent(ids: string[]): void {
       })
       .catch(() => {}); // Silent fail — prefetch is best-effort
   }
-}
-
-/**
- * Force-refresh the brain index by re-importing the generated JSON.
- * Clears the content cache for the specified UID (or all if not specified).
- * Dispatches a 'wikinote-hmr' custom event so views can react.
- */
-export async function refreshBrainIndex(uid?: string, action?: string): Promise<BrainIndex> {
-  // Invalidate content cache — on delete/stub, clear ALL cached HTML
-  // because any note referencing the target has stale rendered links.
-  if (action === 'delete' || action === 'stub') {
-    _contentCache.clear();
-  } else if (uid) {
-    _contentCache.delete(uid);
-  } else {
-    _contentCache.clear();
-  }
-
-  // Force re-init by clearing the cached index
-  _index = null;
-  _initPromise = null;
-
-  // In dev, fetch fresh data from the API (import() cache is stale)
-  let freshData: WikiNoteMeta[] | undefined;
-  try {
-    const resp = await fetch('/api/wikinotes/index');
-    if (resp.ok) {
-      const { notes } = await resp.json();
-      freshData = notes;
-    }
-  } catch { /* fall back to import */ }
-
-  const newIndex = await initBrainIndex(freshData);
-
-  // Notify React views
-  window.dispatchEvent(new CustomEvent('wikinote-hmr', { detail: { uid, action } }));
-
-  return newIndex;
-}
-
-// HMR listener — auto-refresh when the Vite plugin notifies of changes.
-// refreshBrainIndex fetches fresh data via the dev API, bypassing the
-// static JSON file entirely.
-if (import.meta.hot) {
-  import.meta.hot.accept();
-  import.meta.hot.on('wikinote-update', (data: { uid: string; action: string }) => {
-    refreshBrainIndex(data.uid, data.action);
-  });
 }

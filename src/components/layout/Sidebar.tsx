@@ -86,15 +86,15 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
   // Exact page for the About group; whole section (list + articles) for Writing.
   const isItemActive = (to: string) => to.startsWith('/blog/') ? location.pathname.startsWith(to) : location.pathname === to;
   const currentLabel = links.find(link => isActive(link.activePath ?? link.to, link.label))?.label ?? 'Explore';
-  const pill = (active: boolean) => `px-3.5 py-2 rounded-xl text-[12px] font-medium tracking-wide transition-colors ${active ? 'bg-th-nav-accent text-th-on-accent' : 'text-th-tertiary hover:text-th-heading hover:bg-th-surface-alt'}`;
-  // Menu triggers are not links: a lighter hover than a real destination.
-  const menuPill = (active: boolean) => `px-3.5 py-2 rounded-xl text-[12px] font-medium tracking-wide transition-colors ${active ? 'bg-th-nav-accent text-th-on-accent' : 'text-th-tertiary hover:text-th-heading hover:bg-th-surface-alt/40'}`;
+  // Inactive pills tint in the brand colour on hover (global.css, .nav-pill); menu triggers a touch lighter.
+  const pill = (active: boolean) => `nav-pill px-3.5 py-2 rounded-xl text-[12px] font-medium tracking-wide transition-colors ${active ? 'bg-th-nav-accent text-th-on-accent' : 'text-th-tertiary hover:text-th-heading'}`;
+  const menuPill = (active: boolean) => `nav-pill nav-pill-menu px-3.5 py-2 rounded-xl text-[12px] font-medium tracking-wide transition-colors ${active ? 'bg-th-nav-accent text-th-on-accent' : 'text-th-tertiary hover:text-th-heading'}`;
   const closeAll = () => { setOpen(false); setSettings(false); setMenu(null); };
   return (
     <>
       {(open || settings) && <button className="hidden md:block fixed inset-0 z-40" onClick={closeAll} aria-label="Close menu" />}
       {open && (
-        <div className="hidden md:block xl:hidden fixed z-50 bottom-[5.2rem] left-1/2 -translate-x-1/2 w-[22rem] max-w-[calc(100vw-2rem)] rounded-2xl border border-th-border bg-th-base shadow-2xl">
+        <div className="hidden md:block xl:hidden fixed z-50 bottom-[4rem] left-1/2 -translate-x-1/2 w-[22rem] max-w-[calc(100vw-2rem)] rounded-2xl border border-th-border bg-th-base shadow-2xl">
           <nav className="p-2" aria-label="Primary navigation">
             {links.map(link => {
               const active = isActive(link.activePath ?? link.to, link.label);
@@ -108,16 +108,16 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
                   </div>
                 );
               }
-              return <Link key={link.label} to={link.to} data-nav-category={link.label === 'Projects' ? 'projects' : undefined} data-active={active || undefined} className={`group flex items-center justify-between px-4 py-3 rounded-xl text-base ${active ? 'bg-th-nav-accent text-th-on-accent' : 'text-th-secondary hover:bg-th-surface-alt'}`}><span className="flex items-center gap-1.5">{link.label}{link.label === 'Wiki' && <WikiContextIcon />}</span><span className="text-[10px] font-mono opacity-60">→</span></Link>;
+              return <Link key={link.label} to={link.to} data-nav-category={link.label === 'Projects' ? 'projects' : link.label === 'Wiki' ? 'wikinotes' : undefined} data-active={active || undefined} className={`group flex items-center justify-between px-4 py-3 rounded-xl text-base ${active ? 'bg-th-nav-accent text-th-on-accent' : 'text-th-secondary hover:bg-th-surface-alt'}`}><span className="flex items-center gap-1.5">{link.label}{link.label === 'Wiki' && <WikiContextIcon />}</span><span className="text-[10px] font-mono opacity-60">→</span></Link>;
             })}
           </nav>
         </div>
       )}
       {proximity && <div className="nav-edge-hint hidden md:block" data-hidden={revealed || undefined} aria-hidden="true" />}
-      <header data-hidden={!revealed || undefined} onFocusCapture={() => setFocusWithin(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocusWithin(false); }} className="global-nav-shell nav-reveal hidden md:flex fixed bottom-5 left-1/2 -translate-x-1/2 z-50 h-[3.25rem] items-center gap-1 px-1.5 rounded-2xl bg-th-base/95 backdrop-blur-md border border-th-border shadow-[0_18px_50px_-18px_rgba(0,0,0,.45)]">
-        {back && <button type="button" onClick={back.onClick} className="flex items-center h-9 pl-2 pr-1.5 mr-0.5 border-r border-th-border text-th-tertiary hover:text-th-heading transition-colors" aria-label={back.label} title={back.label}><BackChevronIcon className="wiki-back-icon" /></button>}
+      <header data-hidden={!revealed || undefined} onFocusCapture={() => setFocusWithin(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocusWithin(false); }} className="global-nav-shell nav-reveal hidden md:flex fixed bottom-0 left-1/2 -translate-x-1/2 z-50 h-[3.25rem] items-center gap-1 px-1.5 rounded-t-2xl bg-th-base/95 backdrop-blur-md border border-b-0 border-th-border">
+        {back && <button type="button" onClick={back.onClick} className="flex items-center h-9 pl-2 pr-1.5 mr-0.5 border-r border-th-border text-th-tertiary hover:text-th-nav-accent transition-colors" aria-label={back.label} title={back.label}><BackChevronIcon className="wiki-back-icon" /></button>}
         <Link to="/home" className="group flex items-center gap-2 pl-2.5 pr-2 shrink-0" aria-label="InfraPhysics home">
-          <Logo className="w-5 h-5 transition-transform group-hover:rotate-6" color="var(--text-heading)" />
+          <Logo className="w-5 h-5 transition-transform group-hover:rotate-6" color="var(--nav-accent)" />
           <span className="hidden xl:inline font-mono text-[10px] tracking-[0.18em] uppercase text-th-heading">InfraPhysics</span>
         </Link>
         <nav className="hidden xl:flex items-center gap-0.5" aria-label="Primary navigation">
@@ -132,7 +132,7 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
                 </div>
               )}
             </div>
-          ) : <Link key={link.label} to={link.to} data-nav-category={link.label === 'Projects' ? 'projects' : undefined} data-active={isActive(link.activePath ?? link.to, link.label) || undefined} className={`group inline-flex items-center gap-1 ${pill(isActive(link.activePath ?? link.to, link.label))}`}>{link.label}{link.label === 'Wiki' && <WikiContextIcon />}</Link>)}
+          ) : <Link key={link.label} to={link.to} data-nav-category={link.label === 'Projects' ? 'projects' : link.label === 'Wiki' ? 'wikinotes' : undefined} data-active={isActive(link.activePath ?? link.to, link.label) || undefined} className={`group inline-flex items-center gap-1 ${pill(isActive(link.activePath ?? link.to, link.label))}`}>{link.label}{link.label === 'Wiki' && <WikiContextIcon />}</Link>)}
         </nav>
         <button onClick={() => { setSettings(false); setMenu(null); setOpen(v => !v); }} className="xl:hidden flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm text-th-heading hover:bg-th-surface-alt transition-colors">
           <span>{currentLabel}</span>
@@ -143,7 +143,7 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
             onClick={() => { setOpen(false); setMenu(null); setSettings(v => !v); }}
             aria-expanded={settings}
             aria-label="Settings"
-            className={`p-2.5 rounded-xl transition-colors ${settings ? 'bg-th-surface-alt text-th-heading' : 'text-th-tertiary hover:text-th-heading hover:bg-th-surface-alt'}`}
+            className={`nav-pill p-2.5 rounded-xl transition-colors ${settings ? 'is-open text-th-nav-accent' : 'text-th-tertiary hover:text-th-heading'}`}
           >
             <GearIcon />
           </button>

@@ -3,20 +3,18 @@
 import React, { useState, useRef, useEffect, useMemo, Suspense, startTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { isSecondBrainPath, secondBrainPath } from '../../config/categories';
+import { isSecondBrainPath, secondBrainGraphPath, secondBrainPath } from '../../config/categories';
 import { useHub } from '../../contexts/SecondBrainHubContext';
 import {
   ChevronIcon,
   FolderIcon,
   BarChartIcon,
-  SlidersIcon,
   CloseIcon,
   InfoIcon,
   WikiBrainIcon,
 } from '../icons';
 import { SecondBrainGuide } from '../wiki/SecondBrainGuide';
 import { useGraphRelevance } from '../../hooks/useGraphRelevance';
-import { useIsLocalhost } from '../../hooks/useIsLocalhost';
 import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../../constants/layout';
 import type { WikiNoteMeta } from '../../types';
 import type { TreeNode, FilterState, DirectorySortMode, SearchMode } from '../../hooks/useSecondBrainHub';
@@ -148,6 +146,7 @@ const TreeNodeItem: React.FC<{
   depth?: number;
   onConceptClick?: () => void;
   forceExpandDepth?: number;
+  maxVisibleDepth?: number;
   activePath?: string | null;
   getPercentile?: (uid: string) => number;
   collapseSignal?: number;
@@ -155,7 +154,7 @@ const TreeNodeItem: React.FC<{
   onPathPreview?: (path: string | null) => void;
   onPathPick?: (path: string) => void;
   relativeSize?: number;
-}> = ({ node, depth = 0, onConceptClick, forceExpandDepth = 0, activePath, getPercentile, collapseSignal = 0, accentColor, onPathPreview, onPathPick, relativeSize = 1 }) => {
+}> = ({ node, depth = 0, onConceptClick, forceExpandDepth = 0, maxVisibleDepth = Infinity, activePath, getPercentile, collapseSignal = 0, accentColor, onPathPreview, onPathPick, relativeSize = 1 }) => {
   const [expanded, setExpanded] = useState(false);
   const [manuallyCollapsed, setManuallyCollapsed] = useState(false);
   const prevSignal = useRef(collapseSignal);
@@ -174,13 +173,13 @@ const TreeNodeItem: React.FC<{
       setManuallyCollapsed(false);
     }
   }, [activePath]);
-  const hasChildren = node.children.length > 0;
+  const hasChildren = node.children.length > 0 && depth < maxVisibleDepth;
   // Auto-expand if active note is inside this node's subtree
   const isOnActivePath = !!(activePath && hasChildren && (activePath === node.path || activePath.startsWith(node.path + '//')));
   // Automatic expansion reveals matches, but explicit user intent always wins.
   // This keeps filtered/search trees fully foldable instead of reopening them
   // on every render while automatic expansion remains active.
-  const isExpanded = !manuallyCollapsed && (depth < forceExpandDepth || expanded || isOnActivePath);
+  const isExpanded = depth < maxVisibleDepth && !manuallyCollapsed && (depth < forceExpandDepth || expanded || isOnActivePath);
   // Keep children mounted after first expand so close animation works
   const [hasBeenExpanded, setHasBeenExpanded] = useState(false);
   useEffect(() => { if (isExpanded && hasChildren) setHasBeenExpanded(true); }, [isExpanded, hasChildren]);
@@ -188,7 +187,7 @@ const TreeNodeItem: React.FC<{
   const isActive = !!(activePath && node.concept && activePath === node.path);
   const isRoot = depth === 0;
   const displayLabel = node.label.charAt(0).toUpperCase() + node.label.slice(1);
-  const countSuffix = hasChildren ? ` (${node.childCount})` : '';
+  const countSuffix = node.children.length > 0 ? ` (${node.childCount})` : '';
   const centralityPct = node.concept && getPercentile ? getPercentile(node.concept.id) : 0;
 
   return (
@@ -280,6 +279,7 @@ const TreeNodeItem: React.FC<{
                   depth={depth + 1}
                   onConceptClick={onConceptClick}
                   forceExpandDepth={forceExpandDepth}
+                  maxVisibleDepth={maxVisibleDepth}
                   activePath={activePath}
                   getPercentile={getPercentile}
                   collapseSignal={collapseSignal}
@@ -460,7 +460,6 @@ export const SecondBrainSidebar: React.FC = () => {
   const hub = useHub();
   const navigate = useNavigate();
   const location = useLocation();
-  const isLocalhost = useIsLocalhost();
   const [guideOpen, setGuideOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [drawerMounted, setDrawerMounted] = useState(false);
@@ -506,6 +505,8 @@ export const SecondBrainSidebar: React.FC = () => {
   const expandGraph = (dimension: '2d' | '3d' = '2d') => {
     setGraphExpandDimension(dimension);
     if (graphMinimizeTimerRef.current !== null) window.clearTimeout(graphMinimizeTimerRef.current);
+    // On a phone the console must not fade out under the arriving workspace: drop it at once.
+    if (phone) { setDrawerVisible(false); setDrawerMounted(false); }
     setMobileOpen(false);
     setPreviewRoot(null);
     setPreviewPath(null);
@@ -519,9 +520,25 @@ export const SecondBrainSidebar: React.FC = () => {
   const minimizeGraph = (returnToMatrix = graphSelectionCleared && graphInput.trim().length > 0) => {
     setGraphClosing(true);
     setGraphExpandedVisible(false);
-    if (returnToMatrix) { setQuery(''); navigate(secondBrainPath()); }
+    // Arrived on /wiki/graph (the home banner): closing the workspace lands on the console.
+    if (returnToMatrix || location.pathname === secondBrainGraphPath()) { if (returnToMatrix) setQuery(''); navigate(secondBrainPath()); }
     graphMinimizeTimerRef.current = window.setTimeout(() => { setGraphExpanded(false); graphMinimizeTimerRef.current = null; }, 360);
   };
+
+  // /wiki/graph opens the workspace on arrival (the home banner lands here, on every screen size).
+  const onGraphRoute = location.pathname === secondBrainGraphPath();
+  useEffect(() => {
+    if (onGraphRoute && !graphExpanded) expandGraph('2d');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onGraphRoute]);
+  // On a phone the workspace is its own screen: no console beside it, nothing under it.
+  const [phone, setPhone] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches);
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px)');
+    const update = () => setPhone(media.matches);
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
 
   // Keep graph inspection alive while its underlying console route changes;
   // only leaving the wiki should dismiss the expanded workspace.
@@ -607,7 +624,7 @@ export const SecondBrainSidebar: React.FC = () => {
       return () => clearTimeout(id);
     } else {
       setDrawerVisible(false);
-      document.body.style.overflow = '';
+      document.body.style.overflow = graphExpanded ? 'hidden' : '';
       const id = setTimeout(() => setDrawerMounted(false), 250);
       return () => clearTimeout(id);
     }
@@ -615,6 +632,7 @@ export const SecondBrainSidebar: React.FC = () => {
 
   // Directory collapse-all: increment to reset all TreeNodeItem expanded state
   const [dirCollapseGen, setDirCollapseGen] = useState(0);
+  const [directoryLevels, setDirectoryLevels] = useState(Infinity);
 
   if (!hub) return null;
 
@@ -968,6 +986,15 @@ export const SecondBrainSidebar: React.FC = () => {
           )}
         </div>
 
+        <div className="flex gap-1 mb-2 text-[10px]">
+          <select aria-label="Directory root" value={directoryScope?.split('//')[0] || ''} onChange={e => setDirectoryScope(e.target.value || null)} className="min-w-0 flex-1 bg-th-surface text-th-secondary border border-th-hub-border px-1 py-1">
+            <option value="">all roots</option>
+            {allWikiNotes.filter(n => !n.address?.includes('//')).map(n => <option key={n.id} value={n.address || n.title}>{n.name || n.title}</option>)}
+          </select>
+          <select aria-label="Directory visible levels" title="Tree display only; does not filter results or the graph" value={String(directoryLevels)} onChange={e => { setDirectoryLevels(Number(e.target.value)); }} className="min-w-0 bg-th-surface text-th-secondary border border-th-hub-border px-1 py-1">
+            <option value="Infinity">all levels</option><option value="0">roots only</option><option value="1">+ children</option><option value="2">+ grandchildren</option>
+          </select>
+        </div>
         {(() => {
           const withChildren = areaOrderedTree.filter(n => n.children.length > 0);
           const leaves = areaOrderedTree.filter(n => n.children.length === 0);
@@ -983,10 +1010,11 @@ export const SecondBrainSidebar: React.FC = () => {
                 <div className="space-y-0.5">
                   {withChildren.map(node => (
                     <TreeNodeItem
-                      key={node.label}
+                      key={`${node.label}:${directoryLevels}`}
                       node={node}
                       onConceptClick={() => { signalDirectoryNav(); if (graphExpanded) minimizeGraph(false); }}
-                      forceExpandDepth={forceDirectoryDepth}
+                      forceExpandDepth={Number.isFinite(directoryLevels) ? Math.max(forceDirectoryDepth, directoryLevels) : forceDirectoryDepth}
+                      maxVisibleDepth={directoryQuery ? Infinity : directoryLevels}
                       activePath={directoryPreviewIds?.size ? null : activePost?.address ?? null}
                       getPercentile={getPercentile}
                       collapseSignal={dirCollapseGen}
@@ -1009,10 +1037,11 @@ export const SecondBrainSidebar: React.FC = () => {
                   <div>
                     {leaves.map(node => (
                       <TreeNodeItem
-                        key={node.label}
+                        key={`${node.label}:${directoryLevels}`}
                         node={node}
                         onConceptClick={() => { signalDirectoryNav(); if (graphExpanded) minimizeGraph(false); }}
-                        forceExpandDepth={forceDirectoryDepth}
+                        forceExpandDepth={Number.isFinite(directoryLevels) ? Math.max(forceDirectoryDepth, directoryLevels) : forceDirectoryDepth}
+                        maxVisibleDepth={directoryQuery ? Infinity : directoryLevels}
                         activePath={directoryPreviewIds?.size ? null : activePost?.address ?? null}
                         getPercentile={getPercentile}
                         collapseSignal={dirCollapseGen}
@@ -1040,10 +1069,10 @@ export const SecondBrainSidebar: React.FC = () => {
       {/* Mobile toggle button */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="md:hidden fixed bottom-4 right-4 z-40 w-11 h-11 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+        className="wiki-fab md:hidden fixed bottom-4 right-4 z-40 w-11 h-11 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
         aria-label="Open Wiki Console"
       >
-        <SlidersIcon />
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.2" /><circle cx="18" cy="8" r="2.2" /><circle cx="9" cy="18" r="2.2" /><circle cx="18" cy="17" r="2.2" /><path d="M8 7.2l7.8.7M7.1 8l1.2 7.8M11.2 17.6l4.6-.3M16.3 10.2l1.4 4.6" /></svg>
       </button>
 
       {/* Mobile drawer */}
@@ -1055,21 +1084,22 @@ export const SecondBrainSidebar: React.FC = () => {
           />
           <aside
             ref={drawerRef}
-            className={`absolute left-0 top-0 bottom-0 w-72 max-w-[85vw] flex flex-col overflow-hidden transition-transform duration-250 ease-out ${drawerVisible ? 'translate-x-0' : '-translate-x-full'}`}
+            className={`absolute inset-0 w-full flex flex-col overflow-hidden transition-transform duration-250 ease-out ${drawerVisible ? 'translate-x-0' : '-translate-x-full'}`}
             style={{ backgroundColor: 'var(--hub-sidebar-bg)' }}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
             {/* Header with close */}
-            <div className="px-3 py-3 border-b border-th-hub-border flex-shrink-0">
+            <div className="wiki-console-head px-3 py-3 border-b border-th-hub-border flex-shrink-0">
               <div className="flex items-center justify-between">
                 <Link to={secondBrainPath()} className="group flex items-center gap-1.5" onClick={() => setMobileOpen(false)}>
                   <WikiBrainIcon className="text-violet-400 group-hover:text-violet-300 transition-colors" size={15} />
                   <span><span className="text-[11px] lowercase tracking-wide font-semibold text-violet-400 group-hover:text-violet-300 transition-colors">wiki</span>{' '}
                   <span className="text-[11px] lowercase tracking-wide text-th-muted font-normal">console</span></span>
                 </Link>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] text-th-muted tabular-nums">{stats.totalConcepts} concepts</span>
                   <button
                     onClick={() => setGuideOpen(true)}
                     className="text-violet-400 hover:text-violet-300 transition-colors flex-shrink-0 leading-[0]"
@@ -1086,7 +1116,6 @@ export const SecondBrainSidebar: React.FC = () => {
                   </button>
                 </div>
               </div>
-              <div className="mt-1 text-right text-[9px] text-th-muted">{stats.totalConcepts} concepts</div>
             </div>
             {/* Scrollable sections */}
             <div className="flex-1 overflow-y-auto thin-scrollbar hub-scrollbar">
@@ -1099,7 +1128,7 @@ export const SecondBrainSidebar: React.FC = () => {
       {/* Desktop sidebar — spacer keeps content pushed right */}
       <div className="hidden md:block flex-shrink-0" style={{ width: SECOND_BRAIN_SIDEBAR_WIDTH }} />
       <aside
-        className="hidden md:flex flex-col fixed top-0 h-screen border-r border-th-hub-border overflow-hidden"
+        className="hidden md:flex flex-col fixed top-0 h-screen overflow-hidden"
         style={{
           left: SIDEBAR_WIDTH,
           width: SECOND_BRAIN_SIDEBAR_WIDTH,
@@ -1107,7 +1136,7 @@ export const SecondBrainSidebar: React.FC = () => {
           backgroundColor: 'var(--hub-sidebar-bg)',
         }}
       >
-        {/* Header — h-7 first row aligns with the editing upbar */}
+        {/* Header — h-7 first row */}
         <div className="border-b border-th-hub-border flex-shrink-0">
           <div className="px-3 h-7 flex items-center justify-between">
             <Link
@@ -1137,7 +1166,7 @@ export const SecondBrainSidebar: React.FC = () => {
       {graphExpanded && createPortal(
         <div
           className={`fixed bottom-0 right-0 top-0 z-[60] overflow-hidden border-l border-th-hub-border bg-th-base transition-[opacity,transform,border-radius] duration-500 ease-[cubic-bezier(.22,1,.36,1)] ${graphExpandedVisible ? 'opacity-100 scale-100 rounded-none' : graphClosing ? 'pointer-events-none opacity-0 scale-[.12] rounded-xl' : 'pointer-events-none opacity-0 scale-[.985] rounded-none'}`}
-          style={{ left: SIDEBAR_WIDTH + SECOND_BRAIN_SIDEBAR_WIDTH, transformOrigin: '0 24%' }}
+          style={{ left: phone ? 0 : SIDEBAR_WIDTH + SECOND_BRAIN_SIDEBAR_WIDTH, transformOrigin: phone ? '50% 50%' : '0 24%' }}
           role="region"
           aria-label="Expanded Wiki graph"
         >
@@ -1161,7 +1190,7 @@ export const SecondBrainSidebar: React.FC = () => {
               onClearSelection={() => setGraphSelectionCleared(true)}
             />
           </Suspense>
-          <div className={`group absolute left-20 right-20 top-3 z-[65] mx-auto max-w-2xl border border-th-hub-border bg-th-base/90 font-mono shadow-lg transition-opacity duration-500 focus-within:opacity-100 hover:opacity-100 ${graphInput ? 'opacity-90' : 'opacity-[.14]'}`}>
+          <div className={`group absolute ${phone ? 'left-16 right-3' : 'left-20 right-20'} top-3 z-[65] mx-auto max-w-2xl border border-th-hub-border bg-th-base/90 font-mono shadow-lg transition-opacity duration-500 focus-within:opacity-100 hover:opacity-100 ${graphInput ? 'opacity-90' : 'opacity-[.14]'}`}>
             <div className="flex h-9 items-center gap-2 px-3"><span className="text-violet-400">⌕</span><input ref={graphSearchInputRef} value={graphInput} onChange={event => { setGraphInput(event.target.value); setGraphSelectionCleared(true); setQuery(event.target.value); }} placeholder="search wiki…" autoComplete="off" spellCheck={false} className="min-w-0 flex-1 cursor-text bg-transparent text-[12px] text-th-primary outline-none placeholder:text-th-muted" />{graphStateReadout}{(hasActiveFilters || directoryScope) && <button type="button" onClick={() => { resetFilters(); setDirectoryScope(null); }} className="flex-none border-l border-th-hub-border pl-2 text-[8px] uppercase tracking-[.08em] text-amber-400 transition-colors hover:text-amber-300" title="Clear active filters, keep search">reset filters</button>}{graphInput && <button type="button" onClick={() => { setGraphInput(''); setGraphSelectionCleared(true); setQuery(''); }} className="text-th-muted hover:text-th-primary">×</button>}</div>
             <div className="grid grid-cols-4 gap-px border-t border-th-hub-border bg-th-hub-border p-px">{([['name', 'name'], ['content', 'content'], ['backlinks', 'referenced by'], ['all', 'all']] as Array<[SearchMode, string]>).map(([mode, label]) => <button key={mode} type="button" onClick={() => setSearchMode(mode)} className={`bg-th-base px-2 py-1.5 text-[9px] transition-colors ${searchMode === mode ? 'bg-violet-400/10 text-violet-400' : 'text-th-muted hover:bg-th-surface hover:text-th-secondary'}`}>{label}</button>)}</div>
           </div>
@@ -1169,7 +1198,7 @@ export const SecondBrainSidebar: React.FC = () => {
         document.body,
       )}
 
-      <SecondBrainGuide isOpen={guideOpen} onClose={() => setGuideOpen(false)} isLocalhost={isLocalhost} />
+      <SecondBrainGuide isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
     </>
   );
 };

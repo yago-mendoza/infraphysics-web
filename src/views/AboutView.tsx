@@ -1,7 +1,17 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { AboutTopBar } from '../components/personal/AboutTopBar';
+import { points as fieldPoints } from '../data/field-of-view.generated.json';
+import { secondBrainPath } from '../config/categories';
 
-const territories = ['systems thinking', 'control', 'robotics', 'infrastructure', 'AI', 'networks', 'mathematics', 'brains'];
+// The same domains the home map draws, computed from the published work at build time
+// (scripts/compute-field-of-view.js), ranked by coverage; each one opens its wikinote.
+const territories = [...fieldPoints].filter(p => p.eligible).sort((a, b) => b.support - a.support);
+// The dot keeps the colour of the quadrant the domain sits in on that map (x is coverage, y is practical
+// emphasis, both 0 to 100 from the bottom-left): oxide for well-covered practical work, blue for
+// well-covered essay-led work, grey for thin coverage on either side.
+const quadrant = (p: { x: number; y: number }) => p.x < 50 ? 'thin' : p.y >= 50 ? 'practical' : 'essay';
+const QUADRANT_LABEL = { practical: 'more coverage, projects and mechanisms', essay: 'more coverage, essay-led', thin: 'less coverage' } as const;
 
 export const AboutView: React.FC = () => (
   <>
@@ -13,8 +23,8 @@ export const AboutView: React.FC = () => (
           <h1 className="text-5xl md:text-7xl font-serif font-normal tracking-[-0.045em] leading-[0.95] text-th-heading">An engineer<br />following systems.</h1>
           <p className="mt-7 max-w-xl text-lg leading-relaxed text-th-secondary font-sans">I move between disciplines to find the structure underneath them: constraints, feedback, capacity, failure and the ways a system changes when reality pushes back.</p>
         </div>
-        <figure className="relative w-40 md:w-full aspect-[4/5]">
-          <span className="about-aperture" aria-hidden="true">
+        <figure className="relative w-40 md:w-full aspect-[4/5] order-first md:order-none">
+          <span className="about-aperture hidden md:block" aria-hidden="true">
             <i className="field-aperture-disc" style={{ '--aperture': '17px' } as React.CSSProperties}><b /></i>
           </span>
           <div className="absolute inset-0 translate-x-2 translate-y-2 border" style={{ borderColor: 'color-mix(in srgb, var(--brand-oxide-strong) 68%, transparent)' }} aria-hidden="true" />
@@ -36,10 +46,10 @@ export const AboutView: React.FC = () => (
       <h2 className="text-[10px] uppercase tracking-[0.2em] text-th-tertiary">Field of view</h2>
       <div className="flex flex-wrap gap-x-5 gap-y-3">
         {territories.map((item, index) => (
-          <span key={item} className="inline-flex items-center gap-2 text-sm text-th-secondary">
-            <span className={`w-1.5 h-1.5 rounded-full ${index % 3 === 0 ? 'bg-red-500' : index % 3 === 1 ? 'bg-blue-500' : 'bg-th-muted'}`} />
-            {item}<span className="text-[9px] font-mono text-th-muted">0{index + 1}</span>
-          </span>
+          <Link key={item.id} to={secondBrainPath(item.id)} className="about-field-chip inline-flex items-center gap-2 text-sm text-th-secondary" title={`${item.label}: ${QUADRANT_LABEL[quadrant(item)]}. Opens the wikinote.`}>
+            <span className={`about-field-dot is-${quadrant(item)}`} />
+            {item.label}<span className="about-list-num about-field-num">0{index + 1}</span>
+          </Link>
         ))}
       </div>
     </section>
@@ -54,8 +64,8 @@ export const AboutView: React.FC = () => (
           'Build enough to discover what explanation alone cannot.',
           'Keep what survives curiosity; discard the rest.',
         ].map((principle, index) => (
-          <li key={principle} className="grid grid-cols-[2rem_1fr] gap-3 text-base text-th-secondary font-sans">
-            <span className="text-[9px] font-mono text-th-muted pt-1">0{index + 1}</span><span>{principle}</span>
+          <li key={principle} className="grid grid-cols-[2.8rem_1fr] gap-3 text-base text-th-secondary font-sans">
+            <span className="about-list-num">0{index + 1}</span><span>{principle}</span>
           </li>
         ))}
       </ol>

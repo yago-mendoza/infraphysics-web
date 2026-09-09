@@ -17,7 +17,13 @@ import {
 } from '../src/lib/content/compile.js';
 import { displayName } from '../src/lib/content/casing.js';
 import { resolveIssues } from './resolve-issues.js';
+import { writeFieldOfView } from './compute-field-of-view.js';
 import compilerConfig from './compiler.config.js';
+import { routeEntries } from './content-files.js';
+import { createContentRoutes } from '../src/lib/content/routes.js';
+
+const contentRouteEntries = routeEntries();
+const contentRoutes = createContentRoutes(contentRouteEntries);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -169,12 +175,13 @@ const buildErrors = [];
 
 // ── Local wrappers that bind the shared functions to this build's config ──
 
-function compileMarkdown(rawMd, articleDate) {
+function compileMarkdown(rawMd, articleDate, droppedLabels = null) {
   return _compileMarkdown(rawMd, articleDate, {
     markedInstance: marked,
     compilerConfig,
     highlighter,
     katex,
+    droppedLabels,
   });
 }
 
@@ -192,7 +199,8 @@ function compileWikinote(rawMd, articleDate, relativePath) {
 let _uidToMeta = new Map();
 
 function processAllLinks(html) {
-  return _processAllLinks(html, _uidToMeta, compilerConfig.wikiLinks, buildErrors);
+  return _processAllLinks(html, _uidToMeta, compilerConfig.wikiLinks, buildErrors, contentRoutes)
+    .replace(/href="([^"]+)"/g, (_, href) => `href="${contentRoutes.canonicalize(href)}"`);
 }
 
 // ── File I/O ──
@@ -205,6 +213,51 @@ const AGENT_PROFILE_SOURCE = path.join(__dirname, '../src/data/agent-profile.jso
 const AGENT_PROFILE_FILE = path.join(__dirname, '../public/agent-profile.json');
 const SITE_URL = 'https://infraphysics.net';
 const agentProfile = JSON.parse(fs.readFileSync(AGENT_PROFILE_SOURCE, 'utf-8'));
+
+// Hard writing rules (src/data/pages/STYLE.md), checked on the markdown body of
+// every article that compiles and reported as [STYLE] warnings: double quotes in
+// prose (rule 1: use italics) and arrows between concepts (rule 2: write the
+// sequence out). Warnings rather than errors, because the rules postdate most of
+// the archive; a new or edited article should leave zero [STYLE] lines.
+function checkStyleRules(markdown, relativePath) {
+  const quoteHits = [], arrowHits = [], shortRuns = [];
+  let inFence = false, inMath = false, frontmatterFences = 0;
+  // Rule 5: a run of three or more consecutive short prose paragraphs.
+  let run = [];
+  const flushRun = () => { if (run.length >= 3) shortRuns.push(run[0]); run = []; };
+  markdown.split('\n').forEach((raw, index) => {
+    const line = raw.trim();
+    // Line numbers refer to the file, so the frontmatter is skipped here rather
+    // than stripped beforehand.
+    if (frontmatterFences < 2) { if (line === '---') frontmatterFences += 1; return; }
+    if (/^(```|~~~)/.test(line)) { inFence = !inFence; flushRun(); return; }
+    if (inFence) return;
+    // Math blocks and parameter sheets are not prose: skipped whole.
+    if (/^\{(math|params)(\/[a-z0-9]+)?\}/.test(line)) inMath = true;
+    if (inMath) { if (/\{\/(math|params)\}/.test(line)) inMath = false; flushRun(); return; }
+    const isProse = line && !/^(#|[-*+] |[a-z0-9]{1,3}\. |\d+\. |\||!\[|\{|<|>|\[\^)/.test(line);
+    if (!line) { /* paragraph break: keep the run open */ }
+    else if (!isProse) flushRun();
+    else {
+      const words = line.replace(/[*_`]/g, '').split(/\s+/).filter(Boolean).length;
+      if (words < 15) run.push(index + 1); else flushRun();
+    }
+    // Strip what may legitimately carry quotes or arrows: inline code, inline
+    // math, link and image targets (with their "center" position title), raw HTML.
+    const prose = raw
+      .replace(/`[^`]*`/g, '')
+      .replace(/\\\([\s\S]*?\\\)/g, '')
+      .replace(/\]\([^)]*\)/g, ']')
+      .replace(/<[^>]+>/g, '');
+    if (/→|←|⇒|⇐|⇔|↔|-->|->/.test(prose)) arrowHits.push(index + 1);
+    if (/"[^"\n]{1,200}"/.test(prose)) quoteHits.push(index + 1);
+  });
+  flushRun();
+  const show = hits => hits.slice(0, 4).join(', ') + (hits.length > 4 ? ` (+${hits.length - 4} more)` : '');
+  if (quoteHits.length) console.warn(`  \x1b[33m[STYLE] ${relativePath}: double quotes in prose on line ${show(quoteHits)} (use italics, STYLE.md rule 1)\x1b[0m`);
+  if (arrowHits.length) console.warn(`  \x1b[33m[STYLE] ${relativePath}: arrows in prose on line ${show(arrowHits)} (write the sequence out, STYLE.md rule 2)\x1b[0m`);
+  if (shortRuns.length) console.warn(`  \x1b[33m[STYLE] ${relativePath}: run of short one-line paragraphs starting at line ${show(shortRuns)} (dense paragraphs, STYLE.md rule 5)\x1b[0m`);
+}
 
 // Wiki-links are never bold. A wiki-link already carries its own visual weight
 // (icon, accent, underline); wrapping it in ** or putting ** inside its label is a
@@ -266,8 +319,18 @@ function processMarkdownFile(filePath) {
     buildErrors.push(msg);
   }
 
-  const htmlContent = compileMarkdown(content, frontmatter.date);
-  checkBoldWikiLinks(htmlContent, fileContent, path.relative(PAGES_DIR, filePath).replace(/\\/g, '/'));
+  const relativePath = path.relative(PAGES_DIR, filePath).replace(/\\/g, '/');
+  // Typed boxes take no title (STYLE.md rule 4): a label after the pipe is a build error.
+  const droppedLabels = [];
+  const htmlContent = compileMarkdown(content, frontmatter.date, droppedLabels);
+  for (const label of droppedLabels) {
+    const line = fileContent.split('\n').findIndex(l => l.includes('|' + label + '}')) + 1;
+    const msg = `${relativePath}:${line || '?'} typed box has a title "${label}" (boxes take no title; make it the first sentence of the box, STYLE.md rule 4)`;
+    console.error(`  \x1b[31mERROR: ${msg}\x1b[0m`);
+    buildErrors.push(msg);
+  }
+  checkBoldWikiLinks(htmlContent, fileContent, relativePath);
+  checkStyleRules(fileContent, relativePath);
 
   return {
     id: frontmatter.id,
@@ -591,11 +654,40 @@ for (const post of wikinotePosts) {
 // Set uidToMeta for processAllLinks
 _uidToMeta = uidToMeta;
 
+// --- CDN media (scripts/media.js) ---
+// Article images live on the CDN under keys listed in src/data/media-manifest.json.
+// Every CDN url in a post gets "?v=<content hash>" so a replaced image busts the
+// one-year edge/browser cache, and a url whose key is not in the manifest is
+// reported (typo, or a file that was never pushed). Covers also get a JPEG twin
+// for og:image, since several crawlers still ignore WebP previews.
+const MEDIA_MANIFEST_FILE = path.join(__dirname, '../src/data/media-manifest.json');
+const mediaManifest = fs.existsSync(MEDIA_MANIFEST_FILE) ? JSON.parse(fs.readFileSync(MEDIA_MANIFEST_FILE, 'utf-8')) : null;
+const mediaBase = (mediaManifest?.publicBase || 'https://cdn.infraphysics.net').replace(/\/+$/, '');
+const mediaUrlPattern = new RegExp(mediaBase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '/([A-Za-z0-9_./-]+\\.[a-z0-9]+)(\\?[^\\s"\')<>]*)?', 'g');
+const mediaWarnings = new Set();
+function stampMediaUrls(text, where) {
+  if (!text || !mediaManifest) return text;
+  return text.replace(mediaUrlPattern, (match, key) => {
+    const entry = mediaManifest.files[key];
+    if (!entry) { mediaWarnings.add(`${where}: ${key} is not in media-manifest.json (put the master in media/<id>/ and run "npm run media -- push")`); return match; }
+    return `${mediaBase}/${key}?v=${entry.v}`;
+  });
+}
+function ogImageFor(thumbnail) {
+  if (!thumbnail || !mediaManifest || !thumbnail.startsWith(mediaBase + '/')) return null;
+  const key = thumbnail.slice(mediaBase.length + 1).split('?')[0];
+  const twin = key.replace(/\.webp$/, '.jpg');
+  return twin !== key && mediaManifest.files[twin] ? `${mediaBase}/${twin}?v=${mediaManifest.files[twin].v}` : null;
+}
+
 // Apply unified [[link]] processing to all content (skipping <code> blocks)
 const linkedRegularPosts = regularPosts.map(post => ({
   ...post,
-  content: processOutsideCode(post.content, processAllLinks),
+  thumbnail: stampMediaUrls(post.thumbnail, `${post.category}/${post.id}`),
+  ogImage: ogImageFor(post.thumbnail),
+  content: stampMediaUrls(processOutsideCode(post.content, processAllLinks), `${post.category}/${post.id}`),
 }));
+for (const warning of mediaWarnings) console.warn(`  \x1b[33m[MEDIA] ${warning}\x1b[0m`);
 const linkedWikinotePosts = wikinotePosts.map(post => ({
   ...post,
   content: processOutsideCode(post.content, processAllLinks),
@@ -665,16 +757,20 @@ if (interactive && validation.issues.some(i => i.promptable)) {
   }
 }
 
+// Resolve article concepts before writing public outputs so invalid tags fail early.
+const postsIndex = publicRegularPosts.map(({ content, ...meta }) => meta);
+const wikinotesIndex = linkedWikinotePosts.map(({ content, searchText, ...meta }) => ({ ...meta, searchText }));
+writeFieldOfView(publicRegularPosts, wikinotesIndex);
+
 // Output 1: posts.generated.json (regular posts only — no wikinotes)
+fs.writeFileSync(path.join(__dirname, '../src/data/content-routes.generated.json'), JSON.stringify(contentRouteEntries, null, 2) + '\n');
 fs.writeFileSync(OUTPUT_FILE, JSON.stringify(linkedRegularPosts, null, 2));
 
 // Lightweight metadata for Home/Writing. Keeping article bodies out of the
 // initial route avoids parsing the complete corpus before it is needed.
-const postsIndex = publicRegularPosts.map(({ content, ...meta }) => meta);
 fs.writeFileSync(POSTS_INDEX_FILE, JSON.stringify(postsIndex, null, 2));
 
 // Output 2: wikinotes-index.generated.json (metadata only — no content)
-const wikinotesIndex = linkedWikinotePosts.map(({ content, searchText, ...meta }) => ({ ...meta, searchText }));
 fs.writeFileSync(WIKINOTES_INDEX_FILE, JSON.stringify(wikinotesIndex, null, 2));
 
 // Output 3: public/wikinotes/{id}.json (individual content files)
@@ -713,7 +809,7 @@ const selectedWork = agentProfile.selectedWorkIds
     title: post.displayTitle || post.title,
     category: post.category,
     description: post.description || '',
-    url: `${SITE_URL}/${catGroup(post.category)}/${post.category}/${post.id}`,
+    url: `${SITE_URL}${contentRoutes.path(post.category, post.id)}`,
   }));
 
 const publicAgentProfile = {
@@ -806,6 +902,8 @@ From systems to atoms and back. I picked up code because every engineer should �
 
 Yago Mendoza writes about machine learning infrastructure, distributed systems, scaling laws, AI alignment, and cross-domain pattern recognition. His work emphasizes that engineering principles transfer across substrates — supply chains and data pipelines follow the same optimization patterns.
 
+The Wiki domain map shows every root, with area proportional to its number of notes. Hover or select a domain to reveal its name, note count and share of the Wiki.
+
 Site sections:
 
 Projects — Engineering projects with technical deep-dives. InfraPhysics Web (custom markdown compiler, wiki-link knowledge graph, AI-assisted development) and FinBoard (zero-dependency personal finance dashboard).
@@ -838,11 +936,11 @@ ogManifest['/about/cv'] = {
 };
 
 for (const post of publicRegularPosts) {
-  const urlPath = `/${catGroup(post.category)}/${post.category}/${post.id}`;
+  const urlPath = contentRoutes.path(post.category, post.id);
   ogManifest[urlPath] = {
     t: post.displayTitle || post.title,
     d: post.description || '',
-    img: post.thumbnail || null,
+    img: post.ogImage || post.thumbnail || null,
     cat: post.category,
     date: post.date || null,
     text: htmlToText(post.content),
@@ -871,8 +969,9 @@ for (const [urlPath, meta] of Object.entries(sectionListings)) {
 }
 
 for (const note of wikinotesIndex) {
-  const urlPath = `/wiki/${note.id}`;
+  const urlPath = contentRoutes.path('wikinotes', note.id);
   ogManifest[urlPath] = {
+    id: note.id,
     t: note.title,
     d: note.description || '',
     img: null,
@@ -906,12 +1005,12 @@ for (const page of staticPages) {
   sitemapEntries.push(`  <url><loc>${SITE_URL}${page.loc}</loc><changefreq>${page.changefreq}</changefreq><priority>${page.priority}</priority></url>`);
 }
 for (const post of publicRegularPosts) {
-  const urlPath = `/${catGroup(post.category)}/${post.category}/${post.id}`;
+  const urlPath = contentRoutes.path(post.category, post.id);
   const lastmod = post.date ? `<lastmod>${post.date.slice(0, 10)}</lastmod>` : '';
   sitemapEntries.push(`  <url><loc>${SITE_URL}${urlPath}</loc>${lastmod}<changefreq>monthly</changefreq><priority>0.7</priority></url>`);
 }
 for (const note of wikinotesIndex) {
-  const urlPath = `/wiki/${note.id}`;
+  const urlPath = contentRoutes.path('wikinotes', note.id);
   const lastmod = note.date ? `<lastmod>${note.date.slice(0, 10)}</lastmod>` : '';
   sitemapEntries.push(`  <url><loc>${SITE_URL}${urlPath}</loc>${lastmod}<changefreq>weekly</changefreq><priority>0.5</priority></url>`);
 }
@@ -926,14 +1025,14 @@ const feedItems = publicRegularPosts
   .sort((a, b) => b.date.localeCompare(a.date))
   .slice(0, 30)
   .map(p => {
-    const urlPath = `/${catGroup(p.category)}/${p.category}/${p.id}`;
+    const urlPath = contentRoutes.path(p.category, p.id);
     const pubDate = new Date(p.date).toUTCString();
     const desc = (p.description || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const titleEsc = (p.displayTitle || p.title || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     return `    <item>
       <title>${titleEsc}</title>
       <link>${SITE_URL}${urlPath}</link>
-      <guid>${SITE_URL}${urlPath}</guid>
+      <guid>${SITE_URL}/${catGroup(p.category)}/${p.category}/${p.id}</guid>
       <pubDate>${pubDate}</pubDate>
       <description>${desc}</description>
       <category>${p.category}</category>
@@ -960,7 +1059,7 @@ const llmsFullSections = publicRegularPosts
   .filter(p => p.date)
   .sort((a, b) => b.date.localeCompare(a.date))
   .map(p => {
-    const urlPath = `${SITE_URL}/${catGroup(p.category)}/${p.category}/${p.id}`;
+    const urlPath = `${SITE_URL}${contentRoutes.path(p.category, p.id)}`;
     const plainText = htmlToText(p.content);
     return `## ${p.displayTitle || p.title}\n\nURL: ${urlPath}\nCategory: ${p.category}\nDate: ${p.date}\nDescription: ${p.description || ''}\n\n${plainText}`;
   });
@@ -985,7 +1084,7 @@ const llmsListing = (cat) => publicRegularPosts
   .filter(p => p.category === cat && p.date)
   .sort((a, b) => b.date.localeCompare(a.date))
   .map(p => {
-    const urlPath = `${SITE_URL}/${catGroup(p.category)}/${p.category}/${p.id}`;
+    const urlPath = `${SITE_URL}${contentRoutes.path(p.category, p.id)}`;
     const desc = p.description ? `: ${p.description}` : '';
     return `- [${p.displayTitle || p.title}](${urlPath})${desc}`;
   })

@@ -64,6 +64,7 @@ FILES=(
   "src/lib/wikilinks.ts"
   "src/lib/color.ts"
   "src/lib/search.ts"
+  "src/lib/cdn.ts"
   "src/lib/headings.ts"
   "src/lib/icons.ts"
 
@@ -111,13 +112,21 @@ FILES=(
   # --- Views ---
   "src/views/index.ts"
   "src/views/HomeView.tsx"
+  "src/components/personal/WikiTerritories.tsx"
+  "src/lib/partitionAreas.ts"
   "src/views/AboutView.tsx"
   "src/views/ContactView.tsx"
   "src/views/ThanksView.tsx"
+  "src/views/ErrorConceptView.tsx"
+  "src/styles/error-concepts.css"
   "src/views/SectionView.tsx"
   "src/views/PostView.tsx"
+  "src/views/ContextPreviewView.tsx"
+  "src/styles/context-preview.css"
   "src/views/ArticlePostView.tsx"
+  # "src/styles/project-page.css"
   "src/views/SecondBrainView.tsx"
+  "src/lib/wikiArticleUsage.ts"
   "src/views/SecondBrainGraphView.tsx"
   "src/components/graph/useGraphData.ts"
   "src/components/graph/GraphControls.tsx"
@@ -129,9 +138,15 @@ FILES=(
   # --- Build scripts ---
   "scripts/build-content.js"
   "scripts/compiler.config.js"
+  # "scripts/media.js"
   "scripts/validate-wikinotes.js"
   "scripts/resolve-issues.js"
   "scripts/rename-address.js"
+  "scripts/content-files.js"
+  "scripts/rename-content-slug.js"
+  "scripts/CONTENT-URLS.md"
+  "src/lib/content/routes.js"
+  "src/lib/contentRoutes.ts"
   "scripts/check-references.js"
   "scripts/analyze-pairs.js"
   "scripts/preflight.js"
@@ -142,11 +157,11 @@ FILES=(
   "src/data/pages/wikinotes/README.md"
 
   # --- Contenido representativo (1 por categoría + 1 wikinote, para mostrar frontmatter) ---
-  "src/data/pages/essays/260205-why-rust-exists.md"
-  "src/data/pages/bits2bricks/custom-syntax-pcb.md"
-  # Wikinote files are now named {uid}.md — pick a representative one
+  "src/data/pages/essays/why-rust-exists.md"
+  "src/data/pages/bits2bricks/transformers-from-scratch.md"
+  # Wikinote files are named <slug>.md — pick a representative one
   # ls src/data/pages/wikinotes/ for current filenames
-  # "src/data/pages/wikinotes/egoxqpmC.md"  # Hardware//CPU//ALU
+  # "src/data/pages/wikinotes/alu.md"  # Hardware//CPU//ALU
 )
 
 # ── Recopilar stats ───────────────────────────────────────────────────

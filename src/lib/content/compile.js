@@ -155,14 +155,69 @@ export function processCustomBlockquotes(markdown, placeholders, markedInstance,
   return markdown.replace(regex, (_, type, customLabel, content) => {
     const config = BKQT_TYPES[type];
     const body = processBlockquoteContent(content, placeholders, markedInstance);
-    // Wikinotes: typed notes carry no label. A label written after the pipe is
-    // dropped here and reported by the build, so the author folds it into the text.
-    if (opts.dropLabels) {
-      if (customLabel && customLabel.trim() && opts.droppedLabels) opts.droppedLabels.push(customLabel.trim());
-      return `<div class="bkqt bkqt-${type}"><div class="bkqt-body">${body}</div></div>`;
+    // Typed notes carry no title, anywhere (STYLE.md rule 4): neither the type's
+    // name nor a label written after the pipe is rendered. A label is collected
+    // so the build can report it (a warning for wikinotes, an error for articles)
+    // and the author folds it into the first sentence of the box.
+    void config;
+    if (customLabel && customLabel.trim() && opts.droppedLabels) opts.droppedLabels.push(customLabel.trim());
+    return `<div class="bkqt bkqt-${type}"><div class="bkqt-body">${body}</div></div>`;
+  });
+}
+
+// ── Lifted paragraph {lift}...{/lift} ──
+//
+// One paragraph the reader should be drawn to, set apart by type alone (essays
+// compose it in the display italic; elsewhere it is a plain paragraph). The
+// fence holds exactly one paragraph of inline Markdown.
+
+export function processLiftedParagraphs(markdown, placeholders, markedInstance) {
+  return markdown.replace(/^\{lift\}\s*\n([\s\S]*?)\n\s*\{\/lift\}/gm, (_, content) => {
+    const text = restoreBackticks(content.trim(), placeholders).replace(/\s*\n\s*/g, ' ');
+    return `<p class="para-lift">${markedInstance.parseInline(text)}</p>`;
+  });
+}
+
+// ── Parameter sheets {params}...{/params} ──
+//
+// A small configuration-file block for symbols, constants, fields, flags:
+//   {params}          (or {params/2} for two columns on wide screens)
+//   # Geometry        a group line: rendered as a small heading across the sheet
+//   A_1 = 0.0154 m^2 # tank cross-section
+//   k_pump = 1e-3    a value without a note is fine; a bare line without " = " is a key alone
+//   {/params}
+// " = " splits key and value, the last " # " splits value and note; the spaces
+// are mandatory so KaTeX and code inside the parts are never cut. A blank line
+// opens a gap between groups. Every part accepts inline Markdown, math and links.
+export function processParamSheets(markdown, placeholders, markedInstance) {
+  const regex = /^\{params(?:\/([a-z0-9]+))?\}[ \t]*\n([\s\S]*?)\n[ \t]*\{\/params\}/gm;
+  const inline = (s) => markedInstance.parseInline(restoreBackticks(s.trim(), placeholders));
+  return markdown.replace(regex, (_, option, body) => {
+    const parts = [];
+    let pendingGap = false;
+    for (const raw of body.split('\n')) {
+      const line = raw.trim();
+      if (!line) { pendingGap = parts.length > 0; continue; }
+      const gap = pendingGap ? ' params-gap' : '';
+      pendingGap = false;
+      if (line.startsWith('# ')) { parts.push(`<div class="params-group${gap}">${inline(line.slice(2))}</div>`); continue; }
+      const eq = line.indexOf(' = ');
+      let key = line, value = '', note = '';
+      if (eq >= 0) { key = line.slice(0, eq); value = line.slice(eq + 3); }
+      const source = eq >= 0 ? value : key;
+      const hash = source.lastIndexOf(' # ');
+      if (hash >= 0) {
+        note = source.slice(hash + 3);
+        if (eq >= 0) value = source.slice(0, hash); else key = source.slice(0, hash);
+      }
+      parts.push(
+        `<div class="params-row${gap}"><span class="params-key">${inline(key)}</span>` +
+        `<span class="params-val">${value ? inline(value) : ''}</span>` +
+        `<span class="params-note">${note ? inline(note) : ''}</span></div>`,
+      );
     }
-    const label = customLabel ? customLabel.trim() : config.label;
-    return `<div class="bkqt bkqt-${type}"><div class="bkqt-body"><span class="bkqt-label">${label}</span>${body}</div></div>`;
+    const cols = option === '2' ? ' params-cols-2' : '';
+    return `<div class="params${cols}">${parts.join('')}</div>`;
   });
 }
 
@@ -203,7 +258,7 @@ const CROSS_DOC_CATEGORIES = {
 
 // Playground pages get a sliders glyph (two bars with a knob) instead of the page glyph: same filled
 // style, same size, so the link reads as a site document that happens to be interactive.
-const PLAYGROUND_ICON = `<svg class="doc-ref-icon" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M120-640h720v80H120zM120-320h720v80H120z"/><circle cx="360" cy="-600" r="120"/><circle cx="600" cy="-280" r="120"/></svg>`;
+const PLAYGROUND_ICON = `<svg class="doc-ref-icon" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M440-120v-240h80v80h320v80H520v80h-80Zm-320-80v-80h240v80H120Zm160-160v-80H120v-80h160v-80h80v240h-80Zm160-80v-80h400v80H440Zm160-160v-240h80v80h160v80H680v80h-80Zm-480-80v-80h400v80H120Z"/></svg>`;
 const CROSS_DOC_ICON = `<svg class="doc-ref-icon" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M280-280h280v-80H280v80Zm0-160h400v-80H280v80Zm0-160h400v-80H280v80Zm-80 480q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"/></svg>`;
 
 /**
@@ -214,7 +269,7 @@ const CROSS_DOC_ICON = `<svg class="doc-ref-icon" viewBox="0 -960 960 960" fill=
  * @param {string[]} [buildErrors] - mutable array to push errors into
  * @returns {string}
  */
-export function processAllLinks(html, uidToMeta, wikiLinksConfig, buildErrors) {
+export function processAllLinks(html, uidToMeta, wikiLinksConfig, buildErrors, routes = null) {
   if (wikiLinksConfig && !wikiLinksConfig.enabled) return html;
 
   return html.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (match, ref, displayText, offset) => {
@@ -231,7 +286,11 @@ export function processAllLinks(html, uidToMeta, wikiLinksConfig, buildErrors) {
         return match;
       }
 
-      const href = `${config.path}/${slug.trim()}${config.suffix || ''}`;
+      let href = `${config.path}/${slug.trim()}${config.suffix || ''}`;
+      if (routes && category !== 'playgrounds') {
+        if (!routes.resolve(href)) buildErrors?.push(`Unknown cross-document link: ${ref}`);
+        href = routes.canonicalize(href);
+      }
       const icon = category === 'playgrounds' ? PLAYGROUND_ICON : CROSS_DOC_ICON;
       return `<a class="doc-ref doc-ref-${category}" href="${href}" target="_blank" rel="noopener noreferrer">${icon}${displayText.trim()}</a>`;
     }
@@ -414,50 +473,29 @@ export function normalizeListIndentation(markdown) {
 
 const MONTH_NAMES = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
 
-export function computeRelativeTime(articleDateStr, yy, mm, dd) {
-  if (!articleDateStr) return null;
-  const articleDate = new Date(articleDateStr);
-  if (isNaN(articleDate.getTime())) return null;
-  const annotDate = new Date(2000 + parseInt(yy, 10), parseInt(mm, 10) - 1, parseInt(dd, 10));
-
-  const diffMs = annotDate.getTime() - articleDate.getTime();
-  if (Math.abs(diffMs) < 86400000) return '(day zero)';
-
-  const isLater = diffMs > 0;
-  const [from, to] = isLater ? [articleDate, annotDate] : [annotDate, articleDate];
-
-  let years = to.getFullYear() - from.getFullYear();
-  let months = to.getMonth() - from.getMonth();
-  let days = to.getDate() - from.getDate();
-  if (days < 0) { months--; days += new Date(to.getFullYear(), to.getMonth(), 0).getDate(); }
-  if (months < 0) { years--; months += 12; }
-  const parts = [];
-  if (years > 0) parts.push(`${years}y`);
-  if (months > 0) parts.push(`${months}m`);
-  if (days > 0) parts.push(`${days}d`);
-  if (parts.length === 0) return null;
-  return `(${parts.join(' ')} ${isLater ? 'later' : 'earlier'})`;
-}
-
 export function processContextAnnotations(markdown, articleDate, markedInstance) {
   return markdown.replace(
-    /^(>> \d{2}\.\d{2}\.\d{2} - .+(?:\n>> \d{2}\.\d{2}\.\d{2} - .+)*)/gm,
+    /^(>> \d{2}\.\d{2}\.\d{2}(?: \[title: [^\]\r\n]+\])? - .+(?:\n>> \d{2}\.\d{2}\.\d{2}(?: \[title: [^\]\r\n]+\])? - .+)*)/gm,
     (block) => {
       const lines = block.split('\n');
       const entries = lines.map(line => {
-        const m = line.match(/^>> (\d{2})\.(\d{2})\.(\d{2}) - (.+)$/);
+        const m = line.match(/^>> (\d{2})\.(\d{2})\.(\d{2})(?: \[title: ([^\]\r\n]+)\])? - (.+)$/);
         if (!m) return '';
-        const [, yy, mm, dd, text] = m;
+        const [, yy, mm, dd, customTitle, text] = m;
+        const title = (customTitle?.trim() || 'A personal note').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         const monthIdx = parseInt(mm, 10) - 1;
         const monthName = MONTH_NAMES[monthIdx] || mm;
         const dateDisplay = `${yy} · ${monthName} ${dd}`;
-        const relative = computeRelativeTime(articleDate, yy, mm, dd);
-        const relativeHtml = relative ? `<span class="ctx-note-relative">${relative}</span>` : '';
         const parsedText = markedInstance.parseInline(text.trim());
-        return `<div class="ctx-note-entry"><div class="ctx-note-date-row"><span class="ctx-note-date">${dateDisplay}</span>${relativeHtml}</div><span class="ctx-note-text">${parsedText}</span></div>`;
-      });
-      const html = entries.filter(Boolean).join('<hr class="ctx-note-divider">');
-      return `<div class="ctx-note"><img src="https://avatars.githubusercontent.com/yago-mendoza" alt="" class="ctx-note-avatar" /><div class="ctx-note-body">${html}</div></div>\n\n`;
+        return { title, dateDisplay, parsedText };
+      }).filter(Boolean);
+      if (entries.length === 0) return block;
+      // Avatar, title and date of an entry. The first entry's meta lives in the summary, so the closed card
+      // already shows who and when; opening reveals its text beside it (article.css, E6b).
+      const meta = e => `<span class="ctx-note-meta"><img src="https://avatars.githubusercontent.com/yago-mendoza" alt="" class="ctx-note-avatar" /><span class="ctx-note-date-row"><span class="ctx-note-title">${e.title}</span><span class="ctx-note-date">${e.dateDisplay}</span></span></span>`;
+      const [first, ...rest] = entries;
+      const body = `<div class="ctx-note-text">${first.parsedText}</div>` + rest.map(e => `<hr class="ctx-note-divider"><div class="ctx-note-entry">${meta(e)}<div class="ctx-note-text">${e.parsedText}</div></div>`).join('');
+      return `<details class="ctx-note"><summary class="ctx-note-summary">${meta(first)}<span class="ctx-note-toggle"><span class="ctx-note-read">Read note</span><span class="ctx-note-close">Close note</span></span></summary><div class="ctx-note-body"><div class="ctx-note-body-inner">${body}</div></div></details>\n\n`;
     }
   );
 }
@@ -560,7 +598,9 @@ export function compileMarkdown(rawMd, articleDate, options) {
   const withSyntax = applyPreProcessors(text, compilerConfig.preProcessors);
   const withMath = processMath(withSyntax, katex);
   const withBkqt = processCustomBlockquotes(withMath, placeholders, markedInstance, { dropLabels: wikinote, droppedLabels });
-  const restored = restoreBackticks(withBkqt, placeholders);
+  const withLift = processLiftedParagraphs(withBkqt, placeholders, markedInstance);
+  const withParams = processParamSheets(withLift, placeholders, markedInstance);
+  const restored = restoreBackticks(withParams, placeholders);
   const withUrls = processExternalUrls(restored);
   const withSafeTableRefs = protectReferencePipesInTables(withUrls);
   const withDefs = processDefinitionLists(withSafeTableRefs, markedInstance);

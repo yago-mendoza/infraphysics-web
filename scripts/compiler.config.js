@@ -31,6 +31,9 @@ export default {
     { name: 'superscript',      pattern: /\{\^:([^}]+)\}/g,                             replace: '<sup>$1</sup>' },
     { name: 'subscript',        pattern: /\{v:([^}]+)\}/g,                              replace: '<sub>$1</sub>' },
     { name: 'keyboard',         pattern: /\{kbd:([^}]+)\}/g,                            replace: '<kbd>$1</kbd>' },
+    // Accent text: the only author-controlled colour. Takes the article accent
+    // (--art-accent), never a literal colour, so it follows category and theme.
+    { name: 'accent',           pattern: /\{accent:([^}]+)\}/g,                         replace: '<span class="accent-text">$1</span>' },
   ],
 
   // Validation flags

@@ -177,10 +177,34 @@ body {
 .home-field-wide { width:min(calc(100% + 7rem),calc(100vw - 3rem)); margin-left:50%; transform:translateX(-50%); padding-top:clamp(.5rem,2vw,1.4rem); }
 .field-plot-caption::after { content:''; height:1px; flex:1; background:var(--border-default); }.field-plot-caption small { order:2; color:var(--text-muted); font:inherit; }
 .field-plot { position:relative; height:20rem; overflow:hidden; border-block:1px solid var(--border-default); }
+.field-plot .field-plot-point::before { display:none !important; }
+.field-detail { width:100%; min-width:0; grid-column:1 / -1; display:flex; flex-direction:column; gap:.7rem; }
+.field-detail > small { color:var(--text-muted); font:7px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; }
+.field-detail-heading { display:flex; align-items:center; justify-content:space-between; gap:.8rem; }
+.field-detail .field-detail-title { color:inherit; text-decoration:none; transition:color .15s ease; }
+.field-detail .field-detail-title strong { transition:color .15s ease; }
+.field-detail .field-detail-title:hover strong,.field-detail .field-detail-title:focus-visible strong { color:var(--brand-oxide); }
+.field-detail-summary { position:relative; display:flex; align-items:center; gap:.45rem; color:var(--text-muted); font:9px/1.4 var(--font-mono); }
+.field-source-links { display:flex; flex-direction:column; gap:.65rem; font-size:.72rem; line-height:1.45; padding-top:.65rem; border-top:1px solid var(--border-default); }
+.field-source-links a { display:grid; grid-template-columns:.8rem 1fr; gap:.45rem; color:var(--text-secondary); text-decoration:none; }
+.field-source-links a:hover { color:var(--text-heading); }
+.field-source-title { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }
+.field-source-arrow { color:var(--brand-oxide); }
+.field-split-layout aside:has(.field-detail) { justify-content:flex-end; min-width:0; }
+.field-plot .field-plot-point span { white-space:normal; max-width:7rem; }
+/* Pill copy: two slots (label, coordinates). The closed slot collapses to 0fr and the open one to its text, so the pill is as wide as what it shows and the change animates. */
+.field-pill-copy { display:flex; align-items:center; }
+.field-plot .field-plot-point .field-pill-slot { display:grid; grid-template-columns:0fr; max-width:none; opacity:0; transition:grid-template-columns .28s cubic-bezier(.2,.8,.2,1),opacity .18s ease; }
+.field-plot .field-plot-point .field-pill-slot.is-visible { grid-template-columns:1fr; opacity:1; transition-delay:0s,.08s; }
+.field-plot .field-plot-point .field-pill-slot > span { display:block; min-width:0; max-width:none; overflow:hidden; white-space:nowrap; }
+@media (prefers-reduced-motion:reduce) { .field-plot .field-plot-point .field-pill-slot { transition:none; } }
+.field-plot .field-plot-point .field-coordinate-pair { font-family:var(--font-mono); white-space:nowrap; line-height:1.25; font-variant-numeric:tabular-nums; }
+.field-plot .field-plot-point.is-active { transform:translate(-50%,-50%); }
 .field-plot > .field-axis-x,.field-plot > .field-axis-y { position:absolute; z-index:1; background:var(--border-active); }
 .field-plot > .field-axis-x { left:0; right:0; top:52%; height:1px; }.field-plot > .field-axis-y { top:0; bottom:0; left:50%; width:1px; }
 .field-plot .field-axis-label { position:absolute; z-index:4; padding:.2rem .38rem; pointer-events:none; background:color-mix(in srgb,var(--bg-base) 90%,transparent); color:var(--text-muted); font:6.5px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; }
-.field-plot-point { position:absolute; z-index:3; left:var(--fx); top:var(--fy); display:grid; transform:translate(-50%,-50%); }
+/* width:max-content: an absolutely positioned box otherwise shrinks to the space left of its anchor, clipping pills near the right edge. */
+.field-plot-point { position:absolute; z-index:3; left:var(--fx); top:var(--fy); display:grid; width:max-content; transform:translate(-50%,-50%); }
 .field-plot-point::before { content:''; position:absolute; width:.48rem; height:.48rem; left:-.82rem; top:.2rem; border:1px solid var(--brand-oxide); border-radius:50%; background:var(--bg-base); }
 .field-plot-point b { color:var(--text-muted); font:7px/1 var(--font-mono); }.field-plot-point span { color:var(--text-secondary); font-size:.7rem; white-space:nowrap; }
 .field-plot > p { position:absolute; z-index:4; right:.75rem; bottom:.65rem; color:var(--text-muted); font:6.5px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; }
@@ -211,7 +235,7 @@ body {
 .field-plot-blueprint .field-plot-point::before { border-color:#3b78a7; background:var(--bg-base); }.field-plot-blueprint .field-plot-point span { color:color-mix(in srgb,#7eb5d8 65%,var(--text-heading)); }
 .field-projection-x,.field-projection-y { position:absolute; z-index:-1; display:block; border-color:color-mix(in srgb,#3b78a7 38%,transparent); border-style:dashed; pointer-events:none; }.field-projection-x { right:100%; top:.42rem; width:100vw; border-top-width:1px; }.field-projection-y { left:-.62rem; top:.55rem; height:100vh; border-left-width:1px; }
 .field-plot-interactive button.field-plot-point { border:0; padding:0; font:inherit; text-align:left; cursor:pointer; transition:opacity .2s ease,transform .22s cubic-bezier(.2,.8,.2,1),filter .2s ease; }
-.field-plot-interactive .field-plot-point.is-muted { opacity:.24; filter:grayscale(.65); }.field-plot-interactive .field-plot-point.is-active { z-index:6; transform:translate(-50%,-50%) scale(1.08); }
+.field-plot-interactive .field-plot-point.is-muted { opacity:.5; filter:grayscale(.65); }.field-plot-interactive .field-plot-point.is-active { z-index:6; transform:translate(-50%,-50%); }
 .field-plot-interactive .field-plot-point.is-active::before { background:var(--brand-oxide); box-shadow:0 0 0 .28rem color-mix(in srgb,var(--brand-oxide) 14%,transparent); }
 .field-plot-interactive .field-plot-point:focus-visible { outline:1px solid var(--brand-oxide); outline-offset:.35rem; }
 .field-evidence-editorial { min-height:5rem; display:grid; grid-template-columns:9rem 1fr; gap:1.5rem; align-items:start; padding:1.15rem 0; border-bottom:1px solid var(--border-default); }
@@ -451,6 +475,8 @@ body {
 
 [data-nav-category="projects"]:hover { color:var(--cat-projects-accent); }
 [data-nav-category="projects"][data-active="true"] { color:var(--cat-projects-accent); background:color-mix(in srgb,var(--cat-projects-accent) 12%,var(--bg-base)); }
+[data-nav-category="wikinotes"]:hover { color:var(--cat-wikinotes-accent); }
+[data-nav-category="wikinotes"][data-active="true"] { color:var(--cat-wikinotes-accent); background:color-mix(in srgb,var(--cat-wikinotes-accent) 12%,var(--bg-base)); }
 
 /* card-accent inherits from section-accent — no inline styles needed */
 .section-projects .listing-card { --card-accent: var(--section-accent); }
@@ -775,12 +801,39 @@ button:focus {
 .compact-flyout-link i { color:var(--text-muted); font:normal 12px/1 var(--font-mono); }
 /* Mobile sheet: grouped pages list their destinations as a flat chip row. */
 .mobile-nav-chips { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.7rem; }
-.mobile-nav-chips a { padding:.45rem .75rem; border:1px solid var(--border-default); border-radius:999px; color:var(--text-secondary); font:500 .8rem/1 var(--font-sans); }
-.mobile-nav-chips a:active { color:var(--text-heading); background:var(--bg-surface-alt); }
+/* Chips in the site language: square, mono uppercase, a brand tick in front, the border tinted oxide. */
+.mobile-nav-chips a { display:inline-flex; align-items:center; gap:.45rem; padding:.5rem .7rem; border:1px solid color-mix(in srgb,var(--nav-accent) 38%,var(--border-default)); border-radius:0; color:var(--text-secondary); font:500 9.5px/1 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; }
+.mobile-nav-chips a::before { content:""; width:5px; height:5px; background:var(--nav-accent); }
+.mobile-nav-chips a:active { color:var(--text-heading); background:color-mix(in srgb,var(--nav-accent) 14%,transparent); }
+.mobile-nav-chips a[data-active]::before { background:var(--text-on-accent); }
 .mobile-nav-chips a[data-active] { color:var(--text-on-accent); border-color:transparent; background:var(--nav-accent); }
 .sidebar-scrollbar { --_sb-thumb: var(--sidebar-section);    --_sb-hover: var(--sidebar-text); }
 .palette-scrollbar { --_sb-thumb: var(--text-muted);         --_sb-hover: var(--text-secondary); }
 .palette-scrollbar::-webkit-scrollbar { width: 5px; }
+
+/* Article pages: the page scrollbar wide enough to grab, quiet in colour.
+   The 6px site default (index.html) is fine for browsing but too thin to
+   click while reading. Chrome ignores the ::-webkit-scrollbar rules once
+   scrollbar-color or scrollbar-width is set on the same element, so the
+   standard properties are limited to Firefox. */
+html:has(main.article-main-viewport)::-webkit-scrollbar { width: 12px; }
+html:has(main.article-main-viewport)::-webkit-scrollbar-track { background: transparent; }
+html:has(main.article-main-viewport)::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--text-muted) 60%, transparent);
+  background-clip: padding-box;
+  border: 3px solid transparent;
+  border-radius: 999px;
+}
+html:has(main.article-main-viewport)::-webkit-scrollbar-thumb:hover,
+html:has(main.article-main-viewport)::-webkit-scrollbar-thumb:active {
+  background-color: color-mix(in srgb, var(--text-tertiary) 85%, transparent);
+}
+@supports (-moz-appearance: none) {
+  html:has(main.article-main-viewport) {
+    scrollbar-width: auto;
+    scrollbar-color: color-mix(in srgb, var(--text-muted) 60%, transparent) transparent;
+  }
+}
 
 /* Hidden scrollbar — keeps scroll functionality, hides track and thumb */
 .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -867,7 +920,6 @@ button:focus {
 
 /* Editorial shell: the empty margins carry quiet context on wide screens. */
 .ambient-rails { display: none; }
-.footer-presence { display:flex; flex-wrap:wrap; }
 .footer-external-links { display:contents; }
 @media (min-width: 1280px) {
   .ambient-rails { display: block; }
@@ -886,7 +938,6 @@ button:focus {
   .ambient-link { display: flex; align-items: center; justify-content: flex-end; gap: .18rem; width: 100%; margin-top: .38rem; color: var(--text-secondary); transition: color .15s ease; }
   .ambient-link svg { width:.62rem; height:.62rem; flex:none; stroke-width:1.15; }
   .footer-external-links { display:none; }
-  .footer-presence { display:none; }
   .ambient-link span { color: var(--text-muted); }
 .ambient-link:hover { color: var(--text-heading); }
 
@@ -932,7 +983,11 @@ button:focus {
 }
 
 .home-hero { isolation: isolate; }
-.home-intro-carousel { position: relative; z-index: 2; max-width: 40rem; }
+/* The hero band, where the clock field lives, sits on a plain ground: a full-width plate behind the hero hides the
+   page-wide dot field there and fades out at the bottom, so the dots only begin below the intro. */
+.home-hero::before { content: ""; position: absolute; z-index: -1; left: 50%; top: -8rem; bottom: 0; width: 100vw; transform: translateX(-50%); background: linear-gradient(to bottom, var(--bg-base) 0%, var(--bg-base) 80%, transparent 100%); pointer-events: none; }
+/* The carousel is a wide plate like the Field of view map (home-field-wide): text stays at the column, pictures break out. */
+.home-intro-carousel { position: relative; z-index: 2; }
 .home-field-note { margin-block: 0 .25rem; color: var(--text-secondary); font: .95rem/1.65 var(--font-sans); }
 .home-field-note.home-field-wide { padding-top: 0; }
 .home-identity-portrait { isolation: isolate; overflow: visible; }
@@ -976,11 +1031,13 @@ button:focus {
 .about-system-header { min-height: clamp(31rem, 58vw, 39rem); display: flex; flex-direction: column; justify-content: flex-end; }
 .about-system-header > :not(.about-system-visual) { position: relative; z-index: 2; }
 .about-page > section { position: relative; z-index: 2; }
-.about-system-visual { position: fixed; z-index: 0; inset: 0; width: 100vw; height: 100vh; opacity: .74; overflow: hidden; pointer-events: none; filter: invert(1) grayscale(1) brightness(1.9); -webkit-mask-image: radial-gradient(ellipse 92% 88% at 50% 42%, #000 0%, rgba(0,0,0,.92) 58%, rgba(0,0,0,.58) 82%, rgba(0,0,0,.22) 100%); mask-image: radial-gradient(ellipse 92% 88% at 50% 42%, #000 0%, rgba(0,0,0,.92) 58%, rgba(0,0,0,.58) 82%, rgba(0,0,0,.22) 100%); }
+.about-system-visual { position: fixed; z-index: 0; inset: 0; width: 100vw; height: 100vh; opacity: .25; overflow: hidden; pointer-events: none; filter: invert(1) grayscale(1) brightness(1.9); -webkit-mask-image: radial-gradient(ellipse 92% 88% at 50% 42%, #000 0%, rgba(0,0,0,.92) 58%, rgba(0,0,0,.58) 82%, rgba(0,0,0,.22) 100%); mask-image: radial-gradient(ellipse 92% 88% at 50% 42%, #000 0%, rgba(0,0,0,.92) 58%, rgba(0,0,0,.58) 82%, rgba(0,0,0,.22) 100%); }
 .about-active { background:var(--bg-base); }
 body:has(.about-active) { background-color:var(--bg-base); background-image:none; }
-[data-theme="light"] .about-system-visual { opacity:.31; filter:grayscale(1) contrast(.86); }
-[data-theme="light"] .projects-zone .about-system-visual { opacity:.5; filter:grayscale(1) contrast(1.25) brightness(.62); }
+/* Light: the plate is drawn at 30% alpha (see drawVectorField) and darkened here so the strokes read on white.
+   Kept a notch softer than pure black, with a half-pixel blur, so it stays behind the text. Dark is untouched. */
+[data-theme="light"] .about-system-visual { opacity:.68; filter:grayscale(1) contrast(1.2) brightness(.55) blur(.5px); }
+[data-theme="light"] .projects-zone .about-system-visual { opacity:.74; filter:grayscale(1) contrast(1.25) brightness(.5) blur(.5px); }
 .home-visual-experiment { position: absolute; z-index: 0; left: 50%; top: -8%; bottom: 8%; width: min(92rem, calc(100vw - 1rem)); transform: translateX(-50%); opacity: .58; pointer-events: auto; mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent); }
 .home-visual-1 {
   width: 100vw;
@@ -1096,16 +1153,16 @@ body:has(.about-active) { background-color:var(--bg-base); background-image:none
 .about1-capabilities { display: grid; grid-template-columns: 11rem minmax(0,1fr); gap: 2rem; padding: 2.7rem 0 3.8rem; border-top: 1px solid var(--border-default); }
 .about1-capabilities h2 { color: var(--text-heading); font-family: var(--font-serif); font-size: 1.7rem; font-weight: 400; }
 .about1-capabilities ol { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem 2rem; }
-.about1-capabilities li { display: grid; grid-template-columns: 1.6rem 1fr; gap: .5rem; color: var(--text-secondary); font-size: .8rem; line-height: 1.45; }
-.about1-capabilities li span { color: var(--brand-oxide); font: 8px/1.5 var(--font-mono); }
+.about1-capabilities li { display: grid; grid-template-columns: 2.6rem 1fr; gap: .5rem; color: var(--text-secondary); font-size: .8rem; line-height: 1.45; }
+.about1-capabilities li span { color: var(--brand-oxide); font: 500 .85rem/1.3 var(--font-mono); }
 .about1-stack-cta { display:grid; grid-template-columns:minmax(0,1fr) max-content; gap:2rem; align-items:center; padding:2.2rem 0; border-top:1px solid var(--border-default); }
 .about1-stack-cta h2 { color:var(--text-heading); font:400 1.7rem/1.1 var(--font-serif); }
 .about1-stack-cta p { max-width:30rem; margin-top:.55rem; color:var(--text-tertiary); font-size:.74rem; line-height:1.55; }
 .about1-stack-cta > a { display:inline-flex; align-items:center; gap:.65rem; padding:.75rem 1rem; border:1px solid var(--border-active); color:var(--text-heading); font:9px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; transition:color .16s ease,border-color .16s ease,background .16s ease; }
 .about1-stack-cta > a span { color:var(--brand-oxide); font-size:1rem; font-weight:700; }
 .about1-stack-cta > a:hover { color:var(--brand-oxide); border-color:var(--brand-oxide); background:color-mix(in srgb,var(--brand-oxide) 5%,transparent); }
-@media (max-width: 680px) { .about1-intro { grid-template-columns: 1fr; align-items: start; }.about1-proof-grid { grid-template-columns: 1fr; }.about1-capabilities { grid-template-columns: 1fr; }.about1-capabilities ol { grid-template-columns: 1fr; }.about1-path > a,.about1-path > div { grid-template-columns:minmax(4.6rem,max-content) minmax(0,max-content) minmax(.35rem,1fr) max-content; column-gap:.38rem; padding:.72rem 0; }.about1-path strong { font-size:.72rem; }.about1-path span,.about1-path time { font-size:.62rem; }.about1-stack-cta { grid-template-columns:1fr; align-items:start; }.about1-stack-cta > a { width:max-content; } }
-@media (max-width:680px) { .about-topbar { display:block; }.about-topbar > p { margin-bottom:1rem; }.about-topbar nav { display:grid; width:100%; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:center; gap:.75rem .35rem; text-align:center; }.about-topbar nav > a,.about-topbar-active { min-width:0; font-size:8px; white-space:nowrap; }.about-topbar-actions { grid-column:1 / -1; width:100%; margin:0; padding:.45rem 0 0; border-top:1px solid var(--border-default); border-left:0; justify-content:flex-end; } }
+@media (max-width: 680px) { .about1-intro { grid-template-columns: 1fr; align-items: start; }.about1-proof-grid { grid-template-columns: 1fr; }.about1-capabilities { grid-template-columns: 1fr; }.about1-capabilities ol { grid-template-columns: 1fr; }.about1-path > a,.about1-path > div { grid-template-columns:minmax(0,1fr) max-content; grid-template-areas:"name date" "role role"; column-gap:.8rem; row-gap:.18rem; padding:.72rem 0; border-top:1px solid var(--border-default); }.about1-path > :first-child { border-top:0; }.about1-path strong { grid-area:name; font-size:.8rem; white-space:normal; }.about1-path time { grid-area:date; font-size:.62rem; }.about1-path span { grid-area:role; font-size:.68rem; white-space:normal; }.about1-path i { display:none; }.about1-stack-cta { grid-template-columns:1fr; align-items:start; }.about1-stack-cta > a { width:max-content; } }
+@media (max-width:680px) { .about-topbar { display:block; margin-top:-3.4rem; padding-bottom:.9rem; }.about-topbar > p { display:none; }.about-topbar nav { display:flex; width:100%; align-items:center; gap:.9rem; }.about-topbar nav > a,.about-topbar-active { min-width:0; font-size:8.5px; white-space:nowrap; }.about-topbar-actions { margin-left:auto; padding-left:.55rem; gap:.1rem; }.about-topbar-icon { width:1.6rem; height:1.6rem; } }
 @media print { @page { size: A4; margin: 12mm 14mm; } body * { visibility: hidden; }.about1,.about1 * { visibility: visible; }.about1 { position: absolute; inset: 0 auto auto 0; width: 100%; }.about1-hero { padding-bottom: 2.5rem; }.about1-intro { padding-top: 2.5rem; }.about1-experience,.about1-proof,.about1-capabilities { break-inside: avoid; padding-block: 1.5rem; } }
 @media print { .about-topbar nav { display:none; } }
 
@@ -1377,10 +1434,11 @@ a.stack-row:hover .stack-arrow { color:var(--brand-oxide); transition-delay:75ms
 .project-exhibition-card .index-ruler { position:absolute; left:0; right:0; top:-.8rem; z-index:2; pointer-events:none; }
 .project-exhibition-image img { transform:none !important; transition:none; }
 .project-exhibition-card:hover img { filter:grayscale(16%); transform:none !important; }
-/* --thumb-zoom comes from frontmatter thumbnailZoom (EssaysList sets it inline); 1 = no zoom */
-.essays-editorial-image img { filter:grayscale(18%); transform:scale(var(--thumb-zoom, 1)) !important; transform-origin:center; transition:none; }
+/* --thumb-zoom comes from frontmatter thumbnailZoom (EssaysList sets it inline). Default 1.06: most
+   covers carry a one or two pixel frame baked into the file, and 6% pushes it out of the crop. */
+.essays-editorial-image img { filter:grayscale(18%); transform:scale(var(--thumb-zoom, 1.06)) !important; transform-origin:center; transition:none; }
 .essays-editorial-image:has(img) { background:#fff; }
-.essays-editorial-matrix article:hover img { filter:grayscale(18%); transform:scale(var(--thumb-zoom, 1)) !important; }
+.essays-editorial-matrix article:hover img { filter:grayscale(18%); transform:scale(var(--thumb-zoom, 1.06)) !important; }
 .bits-wall-image img { filter:grayscale(18%); transform:none !important; transition:none; }
 .bits-research-wall article:hover img { filter:grayscale(18%); transform:none !important; }
 .project-exhibition-copy { border-bottom:0; }
@@ -1442,3 +1500,71 @@ a.stack-row:hover .stack-arrow { color:var(--brand-oxide); transition-delay:75ms
 .bits-wall-image > b {
   font-size: .5625rem;
 }
+
+/* Global nav bar: sits on the bottom edge (no strip of page under it) with a hairline of the brand
+   colour along its top; inactive pills, the die and the gear tint in the same colour on hover. */
+header.global-nav-shell, .mobile-nav-bar { box-shadow: inset 0 1px 0 color-mix(in srgb, var(--nav-accent) 60%, transparent), 0 -14px 40px -22px rgba(0, 0, 0, .55); }
+.global-nav-shell .nav-pill:hover { background: color-mix(in srgb, var(--nav-accent) 14%, transparent); }
+.global-nav-shell .nav-pill-menu:hover { background: color-mix(in srgb, var(--nav-accent) 9%, transparent); }
+.global-nav-shell .nav-pill.is-open { background: color-mix(in srgb, var(--nav-accent) 16%, transparent); }
+.nav-edge-hint { background: var(--nav-accent); }
+
+/* Wiki floating buttons on phones sit above the nav bar whenever it is shown (MobileNav flags html). */
+.wiki-fab { transition: transform .28s cubic-bezier(.22,.75,.25,1); }
+html[data-mobile-nav="shown"] .wiki-fab { transform: translateY(-3.75rem); }
+/* The phone wiki console takes the whole screen and reads a size up. */
+.hub-drawer-mobile { zoom: 1.12; }
+
+/* Essay cards: a dark hairline just inside the picture, so a bright top edge no longer swallows the card border. */
+.essays-editorial-image::after { content: ""; position: absolute; inset: 0; z-index: 1; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bg-base) 62%, transparent); pointer-events: none; }
+.essays-editorial-image > b { z-index: 2; }
+/* Command palette: the writing icons at the size of the others. */
+.palette-icon-lg { display: inline-flex; }
+.palette-icon-lg svg { width: 20px; height: 20px; }
+/* Phone menu toys */
+.mobile-nav-toys button { display: flex; align-items: center; gap: .6rem; padding: .8rem .9rem; border: 1px solid var(--border-default); color: var(--text-secondary); font: 500 .78rem/1.2 var(--font-sans); }
+.mobile-nav-toys button svg { color: var(--nav-accent); flex-shrink: 0; }
+.mobile-nav-toys button:active { background: color-mix(in srgb, var(--nav-accent) 12%, transparent); }
+/* Wiki on a phone: an identity line above the search, and the brand hairline on the top edges of its panels. */
+.wiki-phone-ident { display: flex; align-items: center; gap: .45rem; margin: 0 0 .6rem; padding: .55rem .75rem; border: 1px solid var(--border-default); box-shadow: inset 0 2px 0 var(--brand-oxide); font: 9px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); }
+.wiki-phone-ident b { color: var(--wiki-400); font-weight: 600; }
+.wiki-phone-ident span { color: var(--text-heading); }
+.wiki-phone-ident i { margin-left: auto; font-style: normal; }
+.wiki-console-head { box-shadow: inset 0 2px 0 var(--brand-oxide); }
+
+/* Home on a phone: the visit counters above everything, where the desktop rails put them. */
+/* Pulled up through the 5rem main padding and the hero's 1rem so it sits 1.5rem from the top edge, the same as the side margin. */
+.home-presence-strip { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; margin:-4.5rem 0 3.6rem; color:var(--text-muted); font:9px/1.4 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; }
+.home-presence-strip span:first-child { color:var(--text-secondary); }
+.home-presence-strip i { font-style:normal; color:var(--nav-accent); }
+
+/* Phone menu: numbers at a real size, the wiki arrow at cap height, the foot clear of the bottom edge. */
+.mobile-nav-num { color:var(--nav-accent); font:500 1.05rem/1 var(--font-mono); letter-spacing:.04em; }
+.mobile-nav-ext.wiki-context-icon { width:1.4rem; height:1.4rem; margin-left:.15rem; opacity:.85; stroke-width:1.1; }
+
+/* Numbered lists on the About pages: numbers at a real size, in the brand colour, like the phone menu. */
+.about-list-num { color: var(--brand-oxide); font: 500 .85rem/1.5 var(--font-mono); letter-spacing: .04em; }
+
+/* About, field of view: the home map's domains as chips, a brand dot in front, the wikinote behind each. */
+.about-field-dot { width: 6px; height: 6px; flex: none; }
+.about-field-dot.is-practical { background: var(--brand-oxide); }
+.about-field-dot.is-essay { background: var(--cat-bits2bricks-accent); }
+.about-field-dot.is-thin { background: var(--text-muted); }
+.about-field-chip { transition: color .15s ease; }
+.about-field-chip:hover { color: var(--text-heading); }
+.about-field-num { font-size: .72rem; }
+
+/* Wiki on a phone: the roots and sort pickers are the console's own menus, not the OS's. */
+.wiki-mobile-menu-btn { display:inline-flex; align-items:center; gap:.5rem; max-width:11rem; padding:.35rem .6rem; border:1px solid var(--hub-sidebar-border); background:var(--hub-sidebar-bg, var(--bg-surface)); color:var(--text-primary); font:500 11px/1.3 var(--font-mono); }
+.wiki-mobile-menu-btn > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wiki-mobile-menu-btn i { color:var(--wiki-400); font-style:normal; font-size:9px; }
+.wiki-mobile-menu { position:absolute; top:calc(100% + .25rem); left:0; z-index:40; min-width:13rem; max-height:15rem; overflow-y:auto; padding:.25rem; border:1px solid var(--hub-sidebar-border); background:var(--hub-sidebar-bg, var(--bg-surface)); box-shadow:0 18px 40px -20px rgba(0,0,0,.7), inset 0 2px 0 var(--wiki-400); }
+.wiki-mobile-menu button { display:block; width:100%; padding:.55rem .7rem; text-align:left; color:var(--text-secondary); font:400 11px/1.3 var(--font-mono); }
+.wiki-mobile-menu button:active { background:color-mix(in srgb,var(--wiki-400) 14%,transparent); }
+.wiki-mobile-menu button.is-current { color:var(--wiki-400); background:color-mix(in srgb,var(--wiki-400) 10%,transparent); }
+
+/* Home: the rule between Ideas in public and the wiki block, at the column width like the section rules above it. */
+.home-section-rule { border:0; border-top:1px solid var(--border-default); margin:0 0 clamp(2rem,4vw,3rem); }
+
+/* Blog geometry: the share menu opens to the right of its button, clear of the section index. */
+@media (min-width: 768px) { .article-geometry .article-share-dropdown { left: 0; right: auto; } }

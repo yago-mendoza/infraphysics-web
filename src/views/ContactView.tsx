@@ -21,6 +21,10 @@ export const ContactView: React.FC = () => {
         <p className="text-[10px] uppercase tracking-[0.2em] text-th-tertiary mb-5">Contact / Madrid</p>
         <h1 className="max-w-3xl text-[2.85rem] md:text-[4.15rem] font-serif font-normal tracking-[-0.045em] leading-[0.96] text-th-heading">Bring an interesting problem.</h1>
         <p className="mt-7 max-w-2xl text-lg leading-relaxed text-th-secondary font-sans">Systems, infrastructure, robotics, research, technical writing, strange ideas with a concrete edge—or simply a conversation worth having.</p>
+        <div className="mt-7 text-sm leading-relaxed text-th-secondary space-y-3">
+          <p>You might be evaluating an AI system and wondering what evidence is enough, taking a prototype into real use, or trying to explain a difficult mechanism clearly.</p>
+          <p>A paper that changes an argument here, a counterexample, or a specific engineering question is also a good place to start. Tell me what you are trying to understand and where you are stuck.</p>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-[14rem_minmax(0,1fr)] gap-10 md:gap-16 py-10">

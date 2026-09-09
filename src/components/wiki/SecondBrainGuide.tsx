@@ -17,7 +17,6 @@ interface SubSection {
 }
 interface Section {
   label: string;
-  localhostOnly?: boolean;
   subsections?: SubSection[];
   content?: React.ReactNode; // direct content (no subs)
 }
@@ -35,6 +34,7 @@ const SECTIONS: Section[] = [
             <p>You don't need to browse manually — <strong className={tipStrong}>just start typing</strong> on your keyboard and the search bar opens automatically. Results filter live as you type.</p>
             <p>As you explore, the interface tracks where you've been: <span style={{ color: 'var(--wiki-link-visited)' }}>blue</span> names are notes you've already visited this session, <span className={tipAccent}>purple</span> ones are still unvisited. You'll see these colors everywhere — on grid cards, inside notes, and on the graph.</p>
             <p>The <strong className={tipStrong}>Wiki Console</strong> combines graph information, search, filters, and the directory without rebuilding the underlying knowledge graph.</p>
+            <p>The expanded workspace has its own address, <strong className={tipStrong}>/wiki/graph</strong>, which the home banner opens; closing it lands on the console. On a phone it takes the whole screen and the top-left button of its toolbar brings the console back.</p>
             <p>Both graphs color nodes by <strong className={tipStrong}>root family</strong> (the first segment of a note's address). In the expanded graph, the toolbar on the left can switch to the <span className={tipAccent}>purple</span> centrality scale, where lighter means more central; the choice is remembered. Search and filter results appear in cool periwinkle, temporary previews in bright orchid, and a committed selection in lime. Context stays visible underneath each layer, so you can distinguish looking from filtering and filtering from selecting. The <strong className={tipStrong}>central</strong> sort option orders results from most to least central. In the expanded graph, one click selects a node and its descendants, a second click on the same node opens it, right-click opens it directly, and a click on empty canvas drops the selection; nodes never show text labels, the hover card carries the name. In the mini graph a single tap on a node opens it, and the ⟲ control in its toolbar resets every filter, root and search at once.</p>
             <p>The site navigation stays out of the way in the wiki. Move the pointer to the <strong className={tipStrong}>bottom edge</strong> of the window (a small mark shows where) and the bar slides in, with search, the theme switch under the gear, and a <strong className={tipStrong}>Back</strong> arrow to the page you came from; on touch, scroll up instead. <code className={tipCode}>Shift+T</code> also toggles the theme.</p>
           </div>
@@ -197,51 +197,21 @@ const SECTIONS: Section[] = [
       </div>
     ),
   },
-  {
-    label: 'Editing',
-    localhostOnly: true,
-    subsections: [
-      {
-        label: 'Editor',
-        content: (
-          <div className="space-y-3">
-            <p>The editing toolbar at the top of the page (visible only on localhost) lets you modify notes directly in the browser.</p>
-            <p>Toggle <strong className={tipStrong}>Edit mode</strong> (pencil icon) to activate the editor panel. Once on, the editor opens automatically for every note you navigate to — you can browse and edit in one flow.</p>
-            <p>When <strong className={tipStrong}>Auto-save</strong> is enabled (checkbox in the toolbar), your changes are saved automatically when you navigate away to another note. No need to save manually.</p>
-            <p>The <strong className={tipStrong}>+ button</strong> creates a brand new note and opens it in the editor immediately. It also activates edit mode if it isn't already on.</p>
-            <p>The <strong className={tipStrong}>dice button</strong> jumps to a random note — useful for review passes when you want to check notes you haven't looked at recently.</p>
-          </div>
-        ),
-      },
-      {
-        label: 'Shortcuts',
-        content: (
-          <div className="space-y-3">
-            <p>Inside the editor, type <code className={tipCode}>[[</code> to open <strong className={tipStrong}>wiki-link autocomplete</strong>. A dropdown appears where you can search by name, alias, or address. Select a result to insert a link to that note.</p>
-            <p>The editor also detects <strong className={tipStrong}>unlinked terms</strong> — words in your note that match existing concept names but aren't linked yet. These show up as <span className={tipAccent}>purple highlights</span> in the text and as suggestions in the diagnostics panel below. Click <strong className={tipStrong}>[Yes]</strong> to convert a mention into a proper wiki-link, or <strong className={tipStrong}>[No]</strong> to dismiss.</p>
-            <p>If your note's address implies a parent that doesn't exist yet, the diagnostics panel will flag it as a <strong className={tipStrong}>missing parent</strong>. Click <strong className={tipStrong}>[Create stub]</strong> to generate a placeholder note for that parent automatically.</p>
-          </div>
-        ),
-      },
-    ],
-  },
 ];
 
 // --- Component ---
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  isLocalhost: boolean;
 }
 
-export const SecondBrainGuide: React.FC<Props> = ({ isOpen, onClose, isLocalhost }) => {
+export const SecondBrainGuide: React.FC<Props> = ({ isOpen, onClose }) => {
   const [activeSection, setActiveSection] = useState(0);
   const [activeSub, setActiveSub] = useState(0);
   const [expandedSections, setExpandedSections] = useState<Set<number>>(() => new Set([0]));
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Filter out localhostOnly sections when not on localhost
-  const visibleSections = SECTIONS.filter(s => !s.localhostOnly || isLocalhost);
+  const visibleSections = SECTIONS;
 
   // Reset on open
   useEffect(() => {

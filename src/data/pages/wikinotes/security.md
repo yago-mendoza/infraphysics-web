@@ -1,0 +1,15 @@
+---
+slug: security
+uid: "u4ZNJKCV"
+address: "security"
+name: "security"
+date: "2025-09-07"
+---
+- Blockchain security combines cryptographic guarantees with operational best practices.
+- Exposing RPC to the internet without restrictions = open door for denial-of-service attacks.
+- Even without private keys, an attacker can spam zero-cost transactions to fill blocks on a private network.
+- Defense in layers: CORS restrictions, selective port mapping, validator/RPC role separation.
+
+## Interactions
+
+- [[1gCBEfat|Minimum Privilege]] : : The single most impactful security principle for node deployment

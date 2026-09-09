@@ -6,9 +6,17 @@ For syntax features, see **[SYNTAX.md](../SYNTAX.md)**. For general authoring ru
 
 ---
 
+### Personal context annotations
+
+Personal context annotations use the shared collapsible `ctx` format: no summary excerpt while closed, author metadata beside the expanded text. Give a note a short optional title when it helps orient the reader; otherwise keep the default *A personal note*. Attribute syntax belongs in [SYNTAX.md](../SYNTAX.md#context-annotations).
+
+### Wikilinks are editorial choices
+
+Read the destination note and the local paragraph before linking; title similarity and successful compilation are insufficient. In a simulation project, a casual mention of a simulator does not need a mathematics link, and generated event streams should not lead to a note about recursive AI training. Keep technical methods explicit and leave uncertain or merely associative links out. Follow the [semantic review guidance](../README.md#semantic-review-of-wikilinks).
+
 ### Frontmatter
 
-Every project article starts with a YAML frontmatter block. Filenames use `YYMMDD-{id}.md` where `{id}` is the 7-digit numeric ID (e.g. `260121-6184744.md`). The `id` field determines URLs — the filename is only for directory organization.
+Every project article starts with a YAML frontmatter block. Filenames use `<slug>.md`. The explicit `slug` field determines the public URL; `id` remains the stable internal identity. See [URL conventions](../../../../scripts/CONTENT-URLS.md).
 
 Projects have the most category-specific fields: `status`, `technologies`, `github`, `demo`, `caseStudy`, `duration`.
 
@@ -24,13 +32,13 @@ Projects have the most category-specific fields: `status`, `technologies`, `gith
 | `thumbnailShading` | no | string | Overlay: `heavy`, `light`, `none` (default). |
 | `thumbnailFocus` | no | number | Vertical crop anchor for the banner, % from top: `0` = top, `50` = center (default), `100` = bottom. Only bites on cover-cropped aspects (`wide`/`banner`/`strip`), not `full`. Use it to keep the important part of a tall image in frame. |
 | `subtitle` | no | string | Below the title in the article header. |
-| `tags` | no | string[] | Topic tags for filter system. `[tag1, tag2]`. |
+| `tags` | yes | string[] | Central concepts, each resolving to one Wiki note. Feed discovery and Home's Field of View; see [tagging policy](../README.md#tags-and-the-home-map). |
 | `complexity` | no | number | Difficulty rating (1–10). Used for sorting/filtering. |
 | `featured` | no | boolean | Shows in "Latest Work" on home page. |
 | `tldr` | no | string | A single compact summary paragraph in the header area. **Always quote it.** (Legacy `string[]` arrays still work — joined into one paragraph — but write new ones as one quoted string.) |
 | `related` | no | string[] | Post IDs (quoted numerics) for the "Related" section. |
 | `status` | no | string | Lifecycle badge. Values: `ongoing` (violet), `deployed` (green), `completed` (blue), `arrested` (red). Defined in `STATUS_CONFIG` (`config/categories.tsx`). |
-| `technologies` | no | string[] | Tech stack pills in the header. `[TypeScript, React, Vite]`. |
+| `technologies` | no | string[] | Implementation stack pills, e.g. `[Python, PyTorch, NumPy]`. Stack entries do not affect Field of View. |
 | `github` | no | string | GitHub repo URL. Renders a clickable link in the header. |
 | `demo` | no | string | Live demo URL. Same treatment as `github`. |
 | `caseStudy` | no | string | External case study URL. |
@@ -53,7 +61,7 @@ thumbnailAspect: wide
 thumbnailShading: heavy
 description: "How a systems engineer built a personal site with a custom markdown compiler."
 status: ongoing
-tags: [React, Vite, Markdown, Second Brain]
+tags: [React.js, Vite, Markdown, knowledge management]
 complexity: 4
 technologies: [React, TypeScript, Vite, Tailwind CSS]
 github: https://github.com/yago-mendoza/infraphysics-web
@@ -77,7 +85,7 @@ related: ["1112121"]
 
 - **`{bkqt/tip}`** — the default. Lessons, tricks, patterns. The reader *learns* something.
 - **`{bkqt/keyconcept}`** — for foundational concepts the rest of the article builds on.
-- **`{bkqt/danger}` / `{bkqt/warning}`** — only if the *reader* is exposed to real risk. A mistake *you* made is not a danger to them. Use `{bkqt/danger|In Hindsight}` (always that exact label) for your own bad decisions — prescindible blocks that add context but aren't required for the narrative.
+- **`{bkqt/danger}` / `{bkqt/warning}`** — only if the *reader* is exposed to real risk. A mistake *you* made is not a danger to them. Open a hindsight box with `{bkqt/danger}` and the italic lead `*In hindsight.*` (boxes take no title, [STYLE.md](../STYLE.md) rule 4) for your own bad decisions — prescindible blocks that add context but aren't required for the narrative.
 - **Markdown quotes (`>`)** — sparingly, using the single restrained left-border treatment.
 
 ### Flow tools
@@ -111,7 +119,7 @@ intro text explaining the project...
 
 ### Structural patterns
 
-- Bad decisions get a consistent format (`{bkqt/danger|In Hindsight}`) and are always skippable — the article must work without them.
+- Bad decisions get a consistent format (`{bkqt/danger}` opened with the italic lead `*In hindsight.*`) and are always skippable — the article must work without them.
 - Bug stories are tips, not sections. A four-hour debugging session becomes a `{bkqt/tip}` that teaches the pattern, not a blow-by-blow with code blocks.
 - "What I'd do differently" isn't a final section — it's scattered where relevant, inside the red blockquotes.
 - Technical deep-dives connect to something narrative. Never a standalone wall of specs. If explaining a CSS cascade, tie it to the moment you discovered it or the bug it caused.

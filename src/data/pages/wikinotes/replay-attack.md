@@ -1,0 +1,15 @@
+---
+slug: replay-attack
+uid: "u55brDFI"
+address: "security//replay attack"
+name: "replay attack"
+date: "2025-09-07"
+---
+- Replaying a transaction signed for one chain on another chain with the same chainId.
+- Chain ID in the signature prevents cross-chain replay: different chains → different signature hashes (EIP-155)
+- Even with same chainId: nonce mismatch blocks replay. If the target chain's account nonce is ahead, the old nonce is rejected.
+- EIP-712 goes further: adds `verifyingContract` address to the signed domain. Prevents cross-contract replay on the same chain.
+
+## Interactions
+
+- [[8mybr8ae|Chain ID]] : : ChainId was specifically introduced to prevent cross-chain replay attacks

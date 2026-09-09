@@ -8,7 +8,7 @@ For syntax features, see **[SYNTAX.md](../SYNTAX.md)**. For general authoring ru
 
 ### Frontmatter
 
-Every essay starts with a YAML frontmatter block. Filenames use `YYMMDD-{id}.md` where `{id}` is the 7-digit numeric ID (e.g. `260207-5528103.md`). The `id` field determines URLs — the filename is only for directory organization.
+Every essay starts with a YAML frontmatter block. Filenames use `<slug>.md`. The explicit `slug` field determines the public URL; `id` remains the stable internal identity. See [URL conventions](../../../../scripts/CONTENT-URLS.md).
 
 Essays have several category-specific fields: `lang`, `hidden`, and `complexity`.
 
@@ -19,14 +19,14 @@ Essays have several category-specific fields: `lang`, `hidden`, and `complexity`
 | `category` | yes | string | Must be `essays`. |
 | `date` | yes | string | ISO 8601 (`YYYY-MM-DD`), quoted. Publication date. |
 | `lang` | no | string | Language code (`en`, `es`). Defaults to `en`. Non-English essays show a small language chip on the card. |
-| `thumbnail` | no | string | Hero image URL. Prefer Cloudflare R2 (`cdn.infraphysics.net`) or Unsplash. |
+| `thumbnail` | no | string | Hero image URL. Put the master in `media/articles/<id>/cover.<ext>`, run `npm run media -- push <id>`, and use the printed `https://cdn.infraphysics.net/articles/<id>/cover.webp`. Body figures go in `media/articles/<id>/figures/<slug>.<ext>` and are served as `articles/<id>/figures/<slug>.webp` (SVG keeps `.svg`). Unsplash urls still work. See [scripts/README.md](../../../../scripts/README.md#article-images). |
 | `thumbnailAspect` | no | string | Crop ratio: `full` (default), `wide` (16/7), `banner` (16/4), `strip` (16/2). |
 | `thumbnailShading` | no | string | Overlay: `heavy`, `light`, `none` (default). |
 | `thumbnailFocus` | no | number | Vertical crop anchor for the banner, % from top: `0` = top, `50` = center (default), `100` = bottom. Only bites on cover-cropped aspects (`wide`/`banner`/`strip`), not `full`. Use it to keep the important part of a tall image in frame. |
 | `thumbnailWidth` | no | string | Unset = the hero is as wide as the reading column, aligned with the text margins. `full` makes it wider, edge to edge with the page padding. With `thumbnailAspect: full` the image is always shown whole. |
 | `thumbnailZoom` | no | number | Scale factor for the card thumbnail in the essays grid (`1.15` = 15% zoom in). Use it when the card crop shows the image background. Unset = `1`. |
 | `subtitle` | no | string | Below the title in the article header. |
-| `tags` | no | string[] | Topic tags for filter system. `[tag1, tag2]`. |
+| `tags` | yes | string[] | Central concepts resolving to Wiki notes; feed discovery and Home's Field of View. See [tagging policy](../README.md#tags-and-the-home-map). |
 | `complexity` | no | number | Difficulty rating (1–10). Used for sorting/filtering. |
 | `featured` | no | boolean | Shows in "Latest Work" on home page. |
 | `related` | no | string[] | Post IDs (quoted numerics) for the "Related" section. |
@@ -47,10 +47,10 @@ displayTitle: "OpenClaw and the keys to your kingdom"
 category: essays
 date: "2026-02-07"
 lang: en
-thumbnail: https://cdn.infraphysics.net/5528103-banner.jpg
+thumbnail: https://cdn.infraphysics.net/articles/5528103/cover.webp
 thumbnailAspect: wide
 subtitle: "AI agents, system access, and a trademark claim that backfired."
-tags: [ai, security, agents]
+tags: [ML, security, agent]
 complexity: 4
 featured: true
 related: ["7463810", "8888777"]
@@ -67,6 +67,8 @@ Essays use **Lora** for body text, list items and the subtitle (italic), and **N
 Body font size is `0.95rem` with `line-height: 1.55` on mobile, scaling to `1rem` on desktop (uniform with bits2bricks).
 
 **Accent-colored elements.** Blockquotes, wiki-links, and inline footnotes all use the category accent color (rose). There is no per-type color distinction for blockquotes in essays — `tip`, `warning`, `danger`, and `keyconcept` all render in the same rose accent. Inline footnote references and notes render in italic.
+
+**Boxes are plates, the lifted paragraph is a voice.** In essays only, a typed box renders as a tinted plate that bleeds past the column edges (rose wash, slight radius, padding on all four sides; a hairline in dark). That look says *object apart*: use boxes for what the reader may skip and what sits outside the thread (an aside, a precision, a warning). For the one paragraph the reader must not skip and that belongs to the thread, use `{lift}` instead: a change of voice, never a box. The two never overlap. Bits2Bricks keeps the flat in-column box.
 
 ---
 
@@ -88,21 +90,15 @@ Body font size is `0.95rem` with `line-height: 1.55` on mobile, scaling to `1rem
 
 ### Blockquote labels
 
-Generic labels ("Note", "Warning", "Key concept") are **not allowed** in essays. The label must hint at the content — short but specific:
-
-- "What's actually on your disk" instead of "Warning"
-- "The supply chain" instead of "Key concept"
-- "The real cost" instead of "Note"
-
-This rule is essays-specific. Projects and bits2bricks can use generic labels.
-
-Blockquote labels in essays are rendered with serif font, no colon after the label, `display: block`, and `font-size: 0.95rem` (matching body text). This is automatic via CSS — no extra markup needed.
+Typed boxes have no title, in essays or anywhere else ([STYLE.md](../STYLE.md) rule 4). The compiler does not print the type's name and `{bkqt/type|Label}` is a build error. If a box needs a lead, make it the first sentence of the box, in italics when it has to stand apart: `*What's actually on your disk.*` followed by the text. The type (`note`, `tip`, `warning`, `danger`, `keyconcept`) only carries the semantics.
 
 ---
 
 ### Structure
 
 **Dense monologue over sectioned cliffhangers.** Essays work best as a continuous flow of thought, not as sections with dramatic reveals. Avoid headings that function as cliffhangers ("the canary", "it knows you're watching"). If the piece is dense enough, the reader follows the thought without needing signposts. Headings are optional — use them only when the topic genuinely shifts and the reader needs a breath, not for dramatic pacing.
+
+**When a heading does earn its place, name the mechanism, not the topic.** "Dead reckoning" over "The map problem": the reader should finish the section understanding why it was called that, and leave with a word they can keep using. Borrowed trade terms (navigation, medicine, law, cooking) do this best when they are rare but inferable. Full test and examples in [EDITORIAL-RUBRIC.md](../../../../_generation/EDITORIAL-RUBRIC.md) (§7, "Mechanism over topic").
 
 **Technical depth goes to wikinotes.** When an essay touches a technical concept that needs more than a sentence of explanation (activation steering procedures, SAE architecture, vector arithmetic), extract the definition into a wikinote and link it from the thread. The thread keeps the narrative and the "so what." The wikinote keeps the "how it works."
 
@@ -130,6 +126,7 @@ Essays lean heavily on:
 - **Bold text** (`**key claims**`) for terms and conclusions worth retaining
 - **Inline footnotes** (`^[explanation]`) for definitions and tangential context
 - **Typed blockquotes** for core arguments that need visual weight
+- **One lifted paragraph** (`{lift}` … `{/lift}`, see [SYNTAX.md](../SYNTAX.md)) for the paragraph the essay has been building towards: display italic, slightly larger, no box. At most one per essay; it is a change of voice, not an aside.
 - **Bold** for proper nouns and terms introduced for the first time
 
 ---

@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react';
 
-export function useProximityReveal(enabled: boolean, edge = 96): boolean {
+export function useProximityReveal(enabled: boolean, edge = 120): boolean {
   const [near, setNear] = useState(false);
   useEffect(() => {
     if (!enabled) { setNear(false); return; }

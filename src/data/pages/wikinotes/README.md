@@ -66,8 +66,8 @@ Quick check: search `address:` lines in `src/data/pages/wikinotes/*.md` for the 
 ### Creating a single wikinote
 
 1. Run the [pre-creation check](#pre-creation-check-segment-collisions) for the proposed address
-2. Create `src/data/pages/wikinotes/{uid}.md` where `{uid}` is a unique identifier (assigned by migration script or manually generated)
-3. Add frontmatter with `uid` (required), `address` (required), and `date` (required, `YYYY-MM-DD` string — never a full ISO timestamp)
+2. Create `src/data/pages/wikinotes/<slug>.md` using a unique descriptive kebab-case slug. Keep a separately generated stable `uid` in frontmatter.
+3. Add frontmatter with `slug` (required, matching the filename), `uid` (required), `address` (required), and `date` (required, `YYYY-MM-DD` string — never a full ISO timestamp)
 4. Write the body + trailing refs
 5. Run `npm run build` — fix any errors
 6. If the build warns about missing parents, create stub notes for them
@@ -349,7 +349,7 @@ Understanding what changes propagate where prevents subtle breakage.
 
 - `//` is the **hierarchy separator** (parent-child): `CPU//ALU` means "ALU under CPU"
 - `/` is part of a **segment name**: `I/O` is the concept "I/O", not "I under O"
-- Filenames use UIDs (`{uid}.md`), so the separator distinction doesn't affect filenames
+- Filenames use explicit slugs (`<slug>.md`), independently of hierarchy separators
 - In slugs/IDs (if address-derived): `//` → `--`, `/` → `-` (e.g. `I/O//MMIO` → `i-o--mmio`), but primary IDs are now UIDs
 
 ### Trailing refs must be contiguous at the end
@@ -391,9 +391,9 @@ distinct: ["Hardware//CPU//cache"]
 
 You do **not** also need to add `distinct: ["Networks//cache"]` to the Hardware//CPU//cache note.
 
-### Filename convention uses UIDs
+### Filename and identity are independent
 
-Filenames are `{uid}.md` (e.g. `OkJJJyxX.md`), not address-derived. The UID must be unique and stable. The `rename-address.js` script scans frontmatter to find files, not filenames, so no filename convention matching is required.
+Filenames are `<slug>.md`, for example `economics.md`. The UID remains unique and stable. Address renames scan frontmatter and leave the slug unchanged. To rename a public URL and file, use `scripts/rename-content-slug.js`; it preserves the previous slug. See [URL operations](../../../../scripts/CONTENT-URLS.md).
 
 ### Stub notes
 
@@ -417,7 +417,7 @@ The cache is also fully invalidated when `compiler.config.js` changes.
 
 ## Obsidian Sync
 
-> **Status: available but not the primary workflow.** Wikinotes are authored and edited via the localhost editor (Second Brain UI). Obsidian is a separate thinking space — not a mirror of this system. These scripts exist for one-off exports or if the workflow changes in the future. See the vault's `README.md` for the philosophical boundary between the two systems.
+> **Status: available but not the primary workflow.** Wikinotes are authored and edited as Markdown files in this folder, with the scripts in `scripts/` for renames, moves and audits (the in-browser editor was removed in Sep 2026). Obsidian is a separate thinking space — not a mirror of this system. These scripts exist for one-off exports or if the workflow changes in the future. See the vault's `README.md` for the philosophical boundary between the two systems.
 
 Bidirectional sync between infraphysics wikinotes and an Obsidian vault.
 

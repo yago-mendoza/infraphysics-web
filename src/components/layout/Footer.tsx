@@ -2,11 +2,9 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { usePresence } from '../../hooks/usePresence';
 
 export const Footer: React.FC = () => {
   const { pathname } = useLocation();
-  const presence = usePresence();
   const isBlog = pathname.startsWith('/blog');
   const isHome = pathname === '/home';
   const isContact = pathname === '/contact';
@@ -41,14 +39,8 @@ export const Footer: React.FC = () => {
                 <a href="https://x.com/ymdatweets" target="_blank" rel="noopener noreferrer" className="footer-social-link transition-colors">X</a>
               </span>}
             </div>
-            <p className="footer-presence mb-4 items-center gap-2 font-mono text-[10px] tracking-[0.04em] text-th-muted md:justify-end">
-              <span>{presence.visits == null ? '—' : presence.visits.toLocaleString()} visits</span>
-              <i aria-hidden="true">·</i>
-              <span>{presence.visitors == null ? '—' : presence.visitors.toLocaleString()} visitors</span>
-              <i aria-hidden="true">·</i>
-              <span>{presence.pageViews == null ? '—' : presence.pageViews.toLocaleString()} views</span>
-            </p>
-            <p className="text-[9px] font-mono uppercase tracking-[0.14em] text-th-muted">Madrid · ES / EN · © {new Date().getFullYear()}</p>
+            {/* Phones: place left, year right; desktop keeps one line. */}
+            <p className="flex justify-between md:block text-[9px] font-mono uppercase tracking-[0.14em] text-th-muted"><span>Madrid · ES / EN</span><span className="hidden md:inline"> · </span><span>© {new Date().getFullYear()}</span></p>
           </div>
         </div>
       </div>

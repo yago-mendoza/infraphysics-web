@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ExternalLinkIcon } from '../icons';
 import { usePresence } from '../../hooks/usePresence';
 import { isSecondBrainPath } from '../../config/categories';
+import { NotFoundContext } from '../../views/ErrorConceptView';
 
 export const AmbientRails: React.FC = () => {
   const location = useLocation();
   const presence = usePresence();
-  const isWiki = isSecondBrainPath(location.pathname);
+  const { notFound } = useContext(NotFoundContext);
+  // The wiki has its own chrome, but a missing page under /wiki is a plain page with the rails.
+  const isWiki = isSecondBrainPath(location.pathname) && !notFound;
 
   if (isWiki) return null;
   const place = presence.lastVisitor

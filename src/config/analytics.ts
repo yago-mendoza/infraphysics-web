@@ -16,3 +16,12 @@
 export const HISTORICAL_PAGEVIEW_OFFSET = 300;
 export const HISTORICAL_VISIT_OFFSET = 130;
 export const HISTORICAL_VISITOR_OFFSET = 100;
+
+/**
+ * Per-article counters are always tracked, but a small number reads as an
+ * empty room next to a finished piece. The view count is shown only from this
+ * many views; the heart button is always there, and its count appears from
+ * this many hearts (or as soon as the reader has hearted the piece).
+ */
+export const ARTICLE_VIEWS_DISPLAY_MIN = 40;
+export const ARTICLE_HEARTS_DISPLAY_MIN = 3;

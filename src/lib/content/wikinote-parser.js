@@ -234,6 +234,8 @@ export function extractWikinoteMeta(raw) {
 export function serializeWikinote(frontmatter, bodyContent, trailingRefs) {
   const lines = ['---'];
   lines.push(`uid: ${frontmatter.uid}`);
+  if (frontmatter.slug) lines.push(`slug: ${frontmatter.slug}`);
+  if (frontmatter.slugAliases?.length) lines.push(`slugAliases: ${JSON.stringify(frontmatter.slugAliases)}`);
   lines.push(`address: "${frontmatter.address}"`);
   lines.push(`name: "${frontmatter.name}"`);
   lines.push(`date: "${frontmatter.date}"`);

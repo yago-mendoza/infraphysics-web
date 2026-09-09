@@ -1,7 +1,10 @@
 // Cloudflare Pages Function — injects dynamic OG/meta tags + readable content for crawlers.
 // Non-crawlers get a passthrough to static assets (zero overhead).
 
+import { contentRoutes } from '../src/lib/contentRoutes';
+
 interface OgEntry {
+  id?: string;
   t: string;   // title
   d: string;   // description
   img: string | null;
@@ -38,6 +41,12 @@ function stripHtml(html: string): string {
 export const onRequest: PagesFunction = async (context) => {
   const { request, env } = context;
   const ua = request.headers.get('user-agent') || '';
+  const incoming = new URL(request.url);
+  const route = contentRoutes.resolve(incoming.pathname);
+  if (route && incoming.pathname !== route.canonical) {
+    incoming.pathname = route.canonical;
+    return Response.redirect(incoming.toString(), 301);
+  }
 
   // Non-crawlers: passthrough immediately
   if (!CRAWLERS.test(ua)) {
@@ -79,7 +88,7 @@ export const onRequest: PagesFunction = async (context) => {
   let bodyText = entry.text || '';
   if (!bodyText && entry.cat === 'wikinotes') {
     try {
-      const noteId = pathname.split('/').pop();
+      const noteId = entry.id;
       const contentRes = await env.ASSETS.fetch(new URL(`/wikinotes/${noteId}.json`, request.url));
       if (contentRes.ok) {
         const { content } = await contentRes.json() as { content: string };

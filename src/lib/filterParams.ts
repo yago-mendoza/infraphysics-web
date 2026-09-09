@@ -4,6 +4,9 @@
 import type { FilterState, SearchMode } from '../hooks/useSecondBrainHub';
 import type { WikiNoteMeta } from '../types';
 import type { BrainIndex } from './brainIndex';
+import evidence from '../data/field-of-view.generated.json';
+import { computeWikiArticleUsage } from './wikiArticleUsage';
+const articleUsage = computeWikiArticleUsage(evidence.candidates);
 
 // ─── Serialization ──────────────────────────────────────────────────
 
@@ -18,6 +21,7 @@ export function serializeFilters(
   if (searchMode !== 'name') p.set('sm', searchMode);
   if (directoryScope) p.set('scope', directoryScope);
   if (filters.isolated) p.set('iso', '1');
+  if (filters.articleCountBelow !== null) p.set('articlesBelow', String(filters.articleCountBelow));
   if (filters.leaf) p.set('leaf', '1');
   if (filters.hubThreshold > 0) p.set('hub', String(filters.hubThreshold));
   if (filters.depthMin > 1) p.set('dmin', String(filters.depthMin));
@@ -46,6 +50,7 @@ export function parseHubFilters(params: URLSearchParams): ParsedHubFilters {
   const searchMode = (params.get('sm') || 'name') as SearchMode;
   const directoryScope = params.get('scope') || null;
   const filters: FilterState = {
+    articleCountBelow: /^\d+$/.test(params.get('articlesBelow') || '') && Number(params.get('articlesBelow')) >= 1 ? Number(params.get('articlesBelow')) : null,
     isolated: params.get('iso') === '1',
     leaf: params.get('leaf') === '1',
     hubThreshold: parseInt(params.get('hub') || '0', 10) || 0,
@@ -58,6 +63,7 @@ export function parseHubFilters(params: URLSearchParams): ParsedHubFilters {
     wordCountMax: params.has('wcmax') ? parseInt(params.get('wcmax')!, 10) : Infinity,
   };
   const hasAny = !!(
+    filters.articleCountBelow !== null ||
     query || directoryScope ||
     filters.isolated || filters.leaf || filters.hubThreshold > 0 ||
     filters.depthMin > 1 || filters.depthMax < Infinity ||
@@ -114,6 +120,7 @@ export function applyHubFilters(
 
   // 3. Core filters
   const f = parsed.filters;
+  if (f.articleCountBelow !== null) notes = notes.filter(note => (articleUsage.get(note.id)?.length || 0) < f.articleCountBelow!);
   const hasCore = f.isolated || f.leaf || f.hubThreshold > 0 ||
     f.depthMin > 1 || f.depthMax < Infinity ||
     f.islandId != null || f.bridgesOnly || f.dateFilter != null;

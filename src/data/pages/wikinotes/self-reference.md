@@ -1,0 +1,15 @@
+---
+slug: self-reference
+uid: "z1zenyXi"
+address: "blockchain//Besu//self-reference"
+name: "self-reference"
+date: "2025-09-07"
+---
+- Bootnode configured with its own enode in `--bootnodes`: causes P2P initialization anomalies.
+- The node attempts to "discover itself" → enters retry loops → accepts incoming connections only intermittently.
+- Not a timing issue. The corrupted P2P state persists regardless of how long you wait.
+- Fix: never include a node's own enode in its `--bootnodes` list.
+
+## Interactions
+
+- [[u0He1l4k|Race Condition]] : : Self-referencing is the root cause of most "some nodes connect, others don't" problems

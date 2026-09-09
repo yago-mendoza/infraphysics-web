@@ -4,6 +4,8 @@
     "/api/views/*",
     "/api/reactions/*",
     "/api/stats",
+    "/api/analytics",
+    "/api/presence",
     "/home",
     "/about",
     "/lab/projects",
@@ -15,7 +17,12 @@
     "/blog/essays",
     "/blog/essays/*",
     "/blog/bits2bricks",
-    "/blog/bits2bricks/*"
+    "/blog/bits2bricks/*",
+    "/projects/*",
+    "/essays/*",
+    "/bits2bricks/*",
+    "/threads/*",
+    "/blog/threads/*"
   ],
   "exclude": []
 }

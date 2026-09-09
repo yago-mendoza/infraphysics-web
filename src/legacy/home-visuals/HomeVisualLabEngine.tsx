@@ -372,9 +372,12 @@ export const HomeVisualLab: React.FC<{
           }
           paths[channel].moveTo(px - ux * length, py - uy * length); paths[channel].lineTo(px + ux * length, py + uy * length);
       }
-      ctx.lineWidth = .65;
+      // The static plate (about, projects, home, wiki) draws at 3x alpha so it can read on white in
+      // light mode; .about-system-visual lowers its opacity in dark to keep the old weight there.
+      const alpha = staticMicroField ? .3 : .1;
+      ctx.lineWidth = staticMicroField ? .8 : .65;
       for (let channel = 0; channel < paths.length; channel++) {
-        ctx.strokeStyle = `rgba(${COLORS[channel]},.1)`;
+        ctx.strokeStyle = `rgba(${COLORS[channel]},${alpha})`;
         ctx.stroke(paths[channel]);
       }
     };

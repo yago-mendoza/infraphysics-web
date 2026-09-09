@@ -1,0 +1,1195 @@
+{
+  "version": 1,
+  "publicBase": "https://cdn.infraphysics.net",
+  "settings": "dd8519ee",
+  "updated": "2026-09-08",
+  "files": {
+    "articles/1112121/cover.jpg": {
+      "src": "articles/1112121/cover.png",
+      "srcHash": "d8203bb51d48",
+      "v": "7a8f2dee",
+      "width": 1200,
+      "height": 980,
+      "bytes": 114714,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/1112121/cover.webp": {
+      "src": "articles/1112121/cover.png",
+      "srcHash": "d8203bb51d48",
+      "v": "36b01a52",
+      "width": 1481,
+      "height": 1210,
+      "bytes": 116870,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/1112121/figures/analysis.webp": {
+      "src": "articles/1112121/figures/analysis.png",
+      "srcHash": "369340a1b86b",
+      "v": "001ce402",
+      "width": 1400,
+      "height": 665,
+      "bytes": 21052,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/1112121/figures/asset-detail.webp": {
+      "src": "articles/1112121/figures/asset-detail.png",
+      "srcHash": "3a3012ca4b3a",
+      "v": "9c750a39",
+      "width": 1400,
+      "height": 760,
+      "bytes": 39032,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/1112121/figures/dashboard.webp": {
+      "src": "articles/1112121/figures/dashboard.png",
+      "srcHash": "97fe2656bd66",
+      "v": "62e6ec97",
+      "width": 1400,
+      "height": 1199,
+      "bytes": 54536,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/1112121/figures/holdings.webp": {
+      "src": "articles/1112121/figures/holdings.png",
+      "srcHash": "968091296170",
+      "v": "25ddea88",
+      "width": 1400,
+      "height": 1580,
+      "bytes": 108266,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/1112121/figures/timeline.webp": {
+      "src": "articles/1112121/figures/timeline.png",
+      "srcHash": "96f026113848",
+      "v": "abefa5f6",
+      "width": 1400,
+      "height": 954,
+      "bytes": 57520,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/2387542/cover.jpg": {
+      "src": "articles/2387542/cover.jpeg",
+      "srcHash": "6f71cfca4cbb",
+      "v": "32c9e341",
+      "width": 1200,
+      "height": 798,
+      "bytes": 213198,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/2387542/cover.webp": {
+      "src": "articles/2387542/cover.jpeg",
+      "srcHash": "6f71cfca4cbb",
+      "v": "3be47b39",
+      "width": 1600,
+      "height": 1064,
+      "bytes": 296570,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/2718281/cover.jpg": {
+      "src": "articles/2718281/cover.png",
+      "srcHash": "98a35551f34d",
+      "v": "9757adfa",
+      "width": 1200,
+      "height": 900,
+      "bytes": 77613,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/2718281/cover.webp": {
+      "src": "articles/2718281/cover.png",
+      "srcHash": "98a35551f34d",
+      "v": "3e72731e",
+      "width": 1448,
+      "height": 1086,
+      "bytes": 80168,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/2718281/figures/results-dravet.webp": {
+      "src": "articles/2718281/figures/results-dravet.png",
+      "srcHash": "a213c9dea2a5",
+      "v": "cbab6098",
+      "width": 1400,
+      "height": 782,
+      "bytes": 73218,
+      "type": "image/webp",
+      "updated": "2026-09-08"
+    },
+    "articles/2929333/cover.jpg": {
+      "src": "articles/2929333/cover.png",
+      "srcHash": "1d4489b8d76f",
+      "v": "f73f5cdc",
+      "width": 1200,
+      "height": 706,
+      "bytes": 146531,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/2929333/cover.webp": {
+      "src": "articles/2929333/cover.png",
+      "srcHash": "1d4489b8d76f",
+      "v": "e59859f6",
+      "width": 1600,
+      "height": 942,
+      "bytes": 211624,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/3141592/cover.jpg": {
+      "src": "articles/3141592/cover.png",
+      "srcHash": "165cf1d616fd",
+      "v": "b75a18a2",
+      "width": 1200,
+      "height": 588,
+      "bytes": 46097,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/3141592/cover.webp": {
+      "src": "articles/3141592/cover.png",
+      "srcHash": "165cf1d616fd",
+      "v": "2af25ae1",
+      "width": 1404,
+      "height": 688,
+      "bytes": 46528,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/cover.jpg": {
+      "src": "articles/3142718/cover.png",
+      "srcHash": "782128107ace",
+      "v": "c200d280",
+      "width": 1200,
+      "height": 675,
+      "bytes": 141853,
+      "type": "image/jpeg",
+      "updated": "2026-09-08"
+    },
+    "articles/3142718/cover.webp": {
+      "src": "articles/3142718/cover.png",
+      "srcHash": "782128107ace",
+      "v": "dcebb304",
+      "width": 1600,
+      "height": 900,
+      "bytes": 177656,
+      "type": "image/webp",
+      "updated": "2026-09-08"
+    },
+    "articles/3142718/figures/healthy-r1.webp": {
+      "src": "articles/3142718/figures/healthy-r1.jpg",
+      "srcHash": "c24e126db59d",
+      "v": "2038121e",
+      "width": 1400,
+      "height": 638,
+      "bytes": 17348,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/healthy-r2.webp": {
+      "src": "articles/3142718/figures/healthy-r2.jpg",
+      "srcHash": "1bebd2cd76f8",
+      "v": "e0074273",
+      "width": 1400,
+      "height": 638,
+      "bytes": 14370,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/healthy-r3.webp": {
+      "src": "articles/3142718/figures/healthy-r3.jpg",
+      "srcHash": "347c6796e30c",
+      "v": "42138229",
+      "width": 1400,
+      "height": 638,
+      "bytes": 7862,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/healthy-r4.webp": {
+      "src": "articles/3142718/figures/healthy-r4.jpg",
+      "srcHash": "dc5c0d37d13b",
+      "v": "c03c0969",
+      "width": 1400,
+      "height": 638,
+      "bytes": 6884,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/incidence-matrix.svg": {
+      "src": "articles/3142718/figures/incidence-matrix.svg",
+      "srcHash": "19973e719dea",
+      "v": "19973e71",
+      "width": null,
+      "height": null,
+      "bytes": 3653,
+      "type": "image/svg+xml",
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/pump-fault-r4.webp": {
+      "src": "articles/3142718/figures/pump-fault-r4.jpg",
+      "srcHash": "8d8e5f4770ea",
+      "v": "f5f58a44",
+      "width": 1400,
+      "height": 638,
+      "bytes": 8402,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/relational-graph.webp": {
+      "src": "articles/3142718/figures/relational-graph.png",
+      "srcHash": "23c328bebaa9",
+      "v": "3d46a20b",
+      "width": 1400,
+      "height": 991,
+      "bytes": 67660,
+      "type": "image/webp",
+      "updated": "2026-09-08"
+    },
+    "articles/3142718/figures/sensor-fault-r3.webp": {
+      "src": "articles/3142718/figures/sensor-fault-r3.jpg",
+      "srcHash": "b1c6b506ec5b",
+      "v": "72f7dbfb",
+      "width": 1400,
+      "height": 638,
+      "bytes": 11246,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/sensor-fault-r4.webp": {
+      "src": "articles/3142718/figures/sensor-fault-r4.jpg",
+      "srcHash": "68102315ab75",
+      "v": "c5744b45",
+      "width": 1400,
+      "height": 638,
+      "bytes": 8276,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/simulink-model.webp": {
+      "src": "articles/3142718/figures/simulink-model.jpg",
+      "srcHash": "05b6b73546cb",
+      "v": "fa95a716",
+      "width": 1400,
+      "height": 1069,
+      "bytes": 46580,
+      "type": "image/webp",
+      "updated": "2026-09-08"
+    },
+    "articles/3142718/figures/tabla-arr.svg": {
+      "src": "articles/3142718/figures/tabla-arr.svg",
+      "srcHash": "12b26c594aa4",
+      "v": "12b26c59",
+      "width": null,
+      "height": null,
+      "bytes": 24973,
+      "type": "image/svg+xml",
+      "updated": "2026-09-08"
+    },
+    "articles/3142718/figures/tank-1-leak-r1.webp": {
+      "src": "articles/3142718/figures/tank-1-leak-r1.jpg",
+      "srcHash": "e55b709debf2",
+      "v": "0942ae8d",
+      "width": 1400,
+      "height": 638,
+      "bytes": 17298,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/tank-2-leak-r2.webp": {
+      "src": "articles/3142718/figures/tank-2-leak-r2.jpg",
+      "srcHash": "92007bdda384",
+      "v": "32c2407b",
+      "width": 1400,
+      "height": 638,
+      "bytes": 13680,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/two-tank-schematic.webp": {
+      "src": "articles/3142718/figures/two-tank-schematic.jpg",
+      "srcHash": "2616046e5256",
+      "v": "3d772e30",
+      "width": 1400,
+      "height": 979,
+      "bytes": 54518,
+      "type": "image/webp",
+      "updated": "2026-09-08"
+    },
+    "articles/3142718/figures/valve-fault-r1.webp": {
+      "src": "articles/3142718/figures/valve-fault-r1.jpg",
+      "srcHash": "2032a466526c",
+      "v": "30c2f4a7",
+      "width": 1400,
+      "height": 638,
+      "bytes": 15970,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/valve-fault-r2.webp": {
+      "src": "articles/3142718/figures/valve-fault-r2.jpg",
+      "srcHash": "064e7a182437",
+      "v": "6b6e9aea",
+      "width": 1400,
+      "height": 638,
+      "bytes": 13440,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/3358174/cover.jpg": {
+      "src": "articles/3358174/cover.png",
+      "srcHash": "3165f7781122",
+      "v": "28526de6",
+      "width": 1200,
+      "height": 546,
+      "bytes": 143316,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/3358174/cover.webp": {
+      "src": "articles/3358174/cover.png",
+      "srcHash": "3165f7781122",
+      "v": "b2bddbe6",
+      "width": 1600,
+      "height": 728,
+      "bytes": 248026,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/3819540/cover.jpg": {
+      "src": "articles/3819540/cover.jpeg",
+      "srcHash": "bff6f85e8297",
+      "v": "75e0b412",
+      "width": 920,
+      "height": 828,
+      "bytes": 45395,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/3819540/cover.webp": {
+      "src": "articles/3819540/cover.jpeg",
+      "srcHash": "bff6f85e8297",
+      "v": "f2d656e9",
+      "width": 920,
+      "height": 828,
+      "bytes": 35736,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/3819540/figures/feedforward.webp": {
+      "src": "articles/3819540/figures/feedforward.png",
+      "srcHash": "c9f06664f5bd",
+      "v": "43d6fd62",
+      "width": 1400,
+      "height": 788,
+      "bytes": 51868,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/3819540/figures/lstm.webp": {
+      "src": "articles/3819540/figures/lstm.png",
+      "srcHash": "e61a8f50e23e",
+      "v": "cfe99d2d",
+      "width": 1400,
+      "height": 437,
+      "bytes": 32250,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/3819540/figures/schema.webp": {
+      "src": "articles/3819540/figures/schema.jpeg",
+      "srcHash": "7f36c638101c",
+      "v": "cd7db833",
+      "width": 833,
+      "height": 607,
+      "bytes": 34750,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/3841205/cover.jpg": {
+      "src": "articles/3841205/cover.png",
+      "srcHash": "19107c24ce5c",
+      "v": "58004154",
+      "width": 1200,
+      "height": 800,
+      "bytes": 211356,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/3841205/cover.webp": {
+      "src": "articles/3841205/cover.png",
+      "srcHash": "19107c24ce5c",
+      "v": "53f9001d",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 332690,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/4028591/cover.jpg": {
+      "src": "articles/4028591/cover.jpg",
+      "srcHash": "b61b331d3a9b",
+      "v": "f0e18706",
+      "width": 827,
+      "height": 769,
+      "bytes": 177739,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/4028591/cover.webp": {
+      "src": "articles/4028591/cover.jpg",
+      "srcHash": "b61b331d3a9b",
+      "v": "0e12e9e6",
+      "width": 827,
+      "height": 769,
+      "bytes": 219754,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/4419076/cover.jpg": {
+      "src": "articles/4419076/cover.jpg",
+      "srcHash": "d9478e160f3e",
+      "v": "faf8bc7c",
+      "width": 1200,
+      "height": 675,
+      "bytes": 55323,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/4419076/cover.webp": {
+      "src": "articles/4419076/cover.jpg",
+      "srcHash": "d9478e160f3e",
+      "v": "aa8a137b",
+      "width": 1280,
+      "height": 720,
+      "bytes": 49822,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/4481937/cover.jpg": {
+      "src": "articles/4481937/cover.jpeg",
+      "srcHash": "2b324aafdd44",
+      "v": "93b40d8f",
+      "width": 1200,
+      "height": 670,
+      "bytes": 67384,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/4481937/cover.webp": {
+      "src": "articles/4481937/cover.jpeg",
+      "srcHash": "2b324aafdd44",
+      "v": "d5ed81ba",
+      "width": 1600,
+      "height": 893,
+      "bytes": 79766,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/5917362/cover.jpg": {
+      "src": "articles/5917362/cover.jpg",
+      "srcHash": "eeffd979f0f3",
+      "v": "bc41912b",
+      "width": 1200,
+      "height": 1175,
+      "bytes": 86968,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/5917362/cover.webp": {
+      "src": "articles/5917362/cover.jpg",
+      "srcHash": "eeffd979f0f3",
+      "v": "342a99d7",
+      "width": 1354,
+      "height": 1326,
+      "bytes": 92948,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/6184729/cover.jpg": {
+      "src": "articles/6184729/cover.png",
+      "srcHash": "5904e0b63380",
+      "v": "b1e9f747",
+      "width": 1200,
+      "height": 630,
+      "bytes": 15631,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/6184729/cover.webp": {
+      "src": "articles/6184729/cover.png",
+      "srcHash": "5904e0b63380",
+      "v": "00d521f2",
+      "width": 1200,
+      "height": 630,
+      "bytes": 9124,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/6184744/cover.jpg": {
+      "src": "articles/6184744/cover.png",
+      "srcHash": "9f1826efcc6b",
+      "v": "76066b24",
+      "width": 1200,
+      "height": 858,
+      "bytes": 127334,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/6184744/cover.webp": {
+      "src": "articles/6184744/cover.png",
+      "srcHash": "9f1826efcc6b",
+      "v": "41bcb3e5",
+      "width": 1600,
+      "height": 1143,
+      "bytes": 162456,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/6616933/cover.jpg": {
+      "src": "articles/6616933/cover.jpg",
+      "srcHash": "b91607148152",
+      "v": "d0eefa08",
+      "width": 1024,
+      "height": 513,
+      "bytes": 94856,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/6616933/cover.webp": {
+      "src": "articles/6616933/cover.jpg",
+      "srcHash": "b91607148152",
+      "v": "dfb80d44",
+      "width": 1024,
+      "height": 513,
+      "bytes": 89066,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/6820451/cover.jpg": {
+      "src": "articles/6820451/cover.png",
+      "srcHash": "73373ec5ad02",
+      "v": "41b4cf32",
+      "width": 1200,
+      "height": 800,
+      "bytes": 117642,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/6820451/cover.webp": {
+      "src": "articles/6820451/cover.png",
+      "srcHash": "73373ec5ad02",
+      "v": "9621b629",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 178224,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/7270022/cover.jpg": {
+      "src": "articles/7270022/cover.jpeg",
+      "srcHash": "07946dc59515",
+      "v": "89a9888c",
+      "width": 1200,
+      "height": 600,
+      "bytes": 55991,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/7270022/cover.webp": {
+      "src": "articles/7270022/cover.jpeg",
+      "srcHash": "07946dc59515",
+      "v": "75c95242",
+      "width": 1600,
+      "height": 800,
+      "bytes": 56628,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/7463810/cover.jpg": {
+      "src": "articles/7463810/cover.jpeg",
+      "srcHash": "e4641884a759",
+      "v": "cad27f9b",
+      "width": 932,
+      "height": 617,
+      "bytes": 23761,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/7463810/cover.webp": {
+      "src": "articles/7463810/cover.jpeg",
+      "srcHash": "e4641884a759",
+      "v": "749e4461",
+      "width": 932,
+      "height": 617,
+      "bytes": 15642,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/cover.jpg": {
+      "src": "articles/7654321/cover.jpeg",
+      "srcHash": "2cbb2142a9d6",
+      "v": "0ff99890",
+      "width": 1122,
+      "height": 1402,
+      "bytes": 183450,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/cover.webp": {
+      "src": "articles/7654321/cover.jpeg",
+      "srcHash": "2cbb2142a9d6",
+      "v": "949497e8",
+      "width": 1122,
+      "height": 1402,
+      "bytes": 183452,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/figures/clock.webp": {
+      "src": "articles/7654321/figures/clock.jpeg",
+      "srcHash": "2844ddde2e6a",
+      "v": "e91060bb",
+      "width": 1177,
+      "height": 717,
+      "bytes": 39388,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/figures/compare.webp": {
+      "src": "articles/7654321/figures/compare.jpeg",
+      "srcHash": "8f60898e0e24",
+      "v": "910cba44",
+      "width": 1400,
+      "height": 485,
+      "bytes": 11016,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/figures/logistic.webp": {
+      "src": "articles/7654321/figures/logistic.jpeg",
+      "srcHash": "84b2913518bc",
+      "v": "18f25775",
+      "width": 1280,
+      "height": 820,
+      "bytes": 32874,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/figures/lstm-loss.webp": {
+      "src": "articles/7654321/figures/lstm-loss.png",
+      "srcHash": "d56352f0ebda",
+      "v": "3cffe286",
+      "width": 1400,
+      "height": 597,
+      "bytes": 31792,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/figures/redundancy.webp": {
+      "src": "articles/7654321/figures/redundancy.jpeg",
+      "srcHash": "85e50a64c2cd",
+      "v": "76a5f0b3",
+      "width": 860,
+      "height": 837,
+      "bytes": 27686,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/figures/risk-map.webp": {
+      "src": "articles/7654321/figures/risk-map.png",
+      "srcHash": "86b9609f3835",
+      "v": "5aa81b8e",
+      "width": 1400,
+      "height": 875,
+      "bytes": 79288,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/figures/risk-phase.webp": {
+      "src": "articles/7654321/figures/risk-phase.png",
+      "srcHash": "5d7e761abd1c",
+      "v": "18a75d6a",
+      "width": 1400,
+      "height": 875,
+      "bytes": 41028,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/figures/risk-raster.webp": {
+      "src": "articles/7654321/figures/risk-raster.png",
+      "srcHash": "90f702e4e341",
+      "v": "1dfdab1a",
+      "width": 1400,
+      "height": 875,
+      "bytes": 320442,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/figures/risk-scatter.webp": {
+      "src": "articles/7654321/figures/risk-scatter.png",
+      "srcHash": "922aace3d6d9",
+      "v": "8cc0df3c",
+      "width": 1400,
+      "height": 875,
+      "bytes": 18664,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/7722440/cover.jpg": {
+      "src": "articles/7722440/cover.jpg",
+      "srcHash": "0a9d3b2541d3",
+      "v": "c224c8a6",
+      "width": 705,
+      "height": 616,
+      "bytes": 28805,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/7722440/cover.webp": {
+      "src": "articles/7722440/cover.jpg",
+      "srcHash": "0a9d3b2541d3",
+      "v": "43281b65",
+      "width": 705,
+      "height": 616,
+      "bytes": 22182,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/7733621/cover.jpg": {
+      "src": "articles/7733621/cover.png",
+      "srcHash": "ce303afcc0f7",
+      "v": "bc2eaa7d",
+      "width": 937,
+      "height": 698,
+      "bytes": 63725,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/7733621/cover.webp": {
+      "src": "articles/7733621/cover.png",
+      "srcHash": "ce303afcc0f7",
+      "v": "e1257e37",
+      "width": 937,
+      "height": 698,
+      "bytes": 48992,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/8266901/cover.jpg": {
+      "src": "articles/8266901/cover.jpeg",
+      "srcHash": "91edfeaf9b96",
+      "v": "d107fcad",
+      "width": 1200,
+      "height": 900,
+      "bytes": 204152,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/8266901/cover.webp": {
+      "src": "articles/8266901/cover.jpeg",
+      "srcHash": "91edfeaf9b96",
+      "v": "ef433e98",
+      "width": 1448,
+      "height": 1086,
+      "bytes": 287286,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/8888777/cover.jpg": {
+      "src": "articles/8888777/cover.png",
+      "srcHash": "41523daf6c55",
+      "v": "b80bea34",
+      "width": 1050,
+      "height": 572,
+      "bytes": 86965,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/8888777/cover.webp": {
+      "src": "articles/8888777/cover.png",
+      "srcHash": "41523daf6c55",
+      "v": "f9d80a04",
+      "width": 1050,
+      "height": 572,
+      "bytes": 73666,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/9150483/cover.jpg": {
+      "src": "articles/9150483/cover.png",
+      "srcHash": "acee93102441",
+      "v": "09db2a41",
+      "width": 1200,
+      "height": 665,
+      "bytes": 107564,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/9150483/cover.webp": {
+      "src": "articles/9150483/cover.png",
+      "srcHash": "acee93102441",
+      "v": "b8d1de48",
+      "width": 1600,
+      "height": 887,
+      "bytes": 161374,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "articles/9962668/cover.jpg": {
+      "src": "articles/9962668/cover.jpeg",
+      "srcHash": "69db9dfdd0aa",
+      "v": "0f73e961",
+      "width": 1200,
+      "height": 654,
+      "bytes": 99130,
+      "type": "image/jpeg",
+      "updated": "2026-09-07"
+    },
+    "articles/9962668/cover.webp": {
+      "src": "articles/9962668/cover.jpeg",
+      "srcHash": "69db9dfdd0aa",
+      "v": "512660ea",
+      "width": 1600,
+      "height": 872,
+      "bytes": 160610,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    },
+    "site/home/carousel-feedback-loops.webp": {
+      "src": "site/home/carousel-feedback-loops.png",
+      "srcHash": "7c0515f9841d",
+      "v": "d389ff64",
+      "width": 893,
+      "height": 421,
+      "bytes": 117984,
+      "type": "image/webp",
+      "updated": "2026-09-07"
+    }
+  },
+  "originals": {
+    "articles/1112121/cover.png": {
+      "hash": "d8203bb51d48",
+      "bytes": 665988,
+      "updated": "2026-09-07"
+    },
+    "articles/1112121/figures/analysis.png": {
+      "hash": "369340a1b86b",
+      "bytes": 131780,
+      "updated": "2026-09-07"
+    },
+    "articles/1112121/figures/asset-detail.png": {
+      "hash": "3a3012ca4b3a",
+      "bytes": 229231,
+      "updated": "2026-09-07"
+    },
+    "articles/1112121/figures/dashboard.png": {
+      "hash": "97fe2656bd66",
+      "bytes": 367244,
+      "updated": "2026-09-07"
+    },
+    "articles/1112121/figures/holdings.png": {
+      "hash": "968091296170",
+      "bytes": 573231,
+      "updated": "2026-09-07"
+    },
+    "articles/1112121/figures/timeline.png": {
+      "hash": "96f026113848",
+      "bytes": 314136,
+      "updated": "2026-09-07"
+    },
+    "articles/2387542/cover.jpeg": {
+      "hash": "6f71cfca4cbb",
+      "bytes": 330470,
+      "updated": "2026-09-07"
+    },
+    "articles/2718281/cover.png": {
+      "hash": "98a35551f34d",
+      "bytes": 1848870,
+      "updated": "2026-09-07"
+    },
+    "articles/2718281/figures/results-dravet.png": {
+      "hash": "a213c9dea2a5",
+      "bytes": 275763,
+      "updated": "2026-09-08"
+    },
+    "articles/2929333/cover.png": {
+      "hash": "1d4489b8d76f",
+      "bytes": 7170952,
+      "updated": "2026-09-07"
+    },
+    "articles/3141592/cover.png": {
+      "hash": "165cf1d616fd",
+      "bytes": 1083027,
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/cover.png": {
+      "hash": "782128107ace",
+      "bytes": 2149998,
+      "updated": "2026-09-08"
+    },
+    "articles/3142718/figures/causal-substitutions.svg": {
+      "hash": "39d5e9e5fd95",
+      "bytes": 4201,
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/fdi-architecture.svg": {
+      "hash": "7d192307bb6c",
+      "bytes": 2453,
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/healthy-r1.jpg": {
+      "hash": "c24e126db59d",
+      "bytes": 72349,
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/healthy-r2.jpg": {
+      "hash": "1bebd2cd76f8",
+      "bytes": 70874,
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/healthy-r3.jpg": {
+      "hash": "347c6796e30c",
+      "bytes": 53979,
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/healthy-r4.jpg": {
+      "hash": "dc5c0d37d13b",
+      "bytes": 61530,
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/incidence-matrix.svg": {
+      "hash": "19973e719dea",
+      "bytes": 3653,
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/pump-fault-r4.jpg": {
+      "hash": "8d8e5f4770ea",
+      "bytes": 63370,
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/relational-graph.png": {
+      "hash": "23c328bebaa9",
+      "bytes": 866282,
+      "updated": "2026-09-08"
+    },
+    "articles/3142718/figures/sensor-fault-r3.jpg": {
+      "hash": "b1c6b506ec5b",
+      "bytes": 60643,
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/sensor-fault-r4.jpg": {
+      "hash": "68102315ab75",
+      "bytes": 62866,
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/simulink-model.jpg": {
+      "hash": "05b6b73546cb",
+      "bytes": 988121,
+      "updated": "2026-09-08"
+    },
+    "articles/3142718/figures/tabla-arr.svg": {
+      "hash": "12b26c594aa4",
+      "bytes": 24973,
+      "updated": "2026-09-08"
+    },
+    "articles/3142718/figures/tank-1-leak-r1.jpg": {
+      "hash": "e55b709debf2",
+      "bytes": 71200,
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/tank-2-leak-r2.jpg": {
+      "hash": "92007bdda384",
+      "bytes": 70124,
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/two-tank-schematic.jpg": {
+      "hash": "2616046e5256",
+      "bytes": 1135356,
+      "updated": "2026-09-08"
+    },
+    "articles/3142718/figures/valve-fault-r1.jpg": {
+      "hash": "2032a466526c",
+      "bytes": 70549,
+      "updated": "2026-09-07"
+    },
+    "articles/3142718/figures/valve-fault-r2.jpg": {
+      "hash": "064e7a182437",
+      "bytes": 69558,
+      "updated": "2026-09-07"
+    },
+    "articles/3358174/cover.png": {
+      "hash": "3165f7781122",
+      "bytes": 2745646,
+      "updated": "2026-09-07"
+    },
+    "articles/3819540/cover.jpeg": {
+      "hash": "bff6f85e8297",
+      "bytes": 90616,
+      "updated": "2026-09-07"
+    },
+    "articles/3819540/figures/feedforward.png": {
+      "hash": "c9f06664f5bd",
+      "bytes": 1889956,
+      "updated": "2026-09-07"
+    },
+    "articles/3819540/figures/lstm.png": {
+      "hash": "e61a8f50e23e",
+      "bytes": 1769639,
+      "updated": "2026-09-07"
+    },
+    "articles/3819540/figures/schema.jpeg": {
+      "hash": "7f36c638101c",
+      "bytes": 80906,
+      "updated": "2026-09-07"
+    },
+    "articles/3841205/cover.png": {
+      "hash": "19107c24ce5c",
+      "bytes": 2947957,
+      "updated": "2026-09-07"
+    },
+    "articles/4028591/cover.jpg": {
+      "hash": "b61b331d3a9b",
+      "bytes": 321727,
+      "updated": "2026-09-07"
+    },
+    "articles/4419076/cover.jpg": {
+      "hash": "d9478e160f3e",
+      "bytes": 71248,
+      "updated": "2026-09-07"
+    },
+    "articles/4481937/cover.jpeg": {
+      "hash": "2b324aafdd44",
+      "bytes": 110401,
+      "updated": "2026-09-07"
+    },
+    "articles/5917362/cover.jpg": {
+      "hash": "eeffd979f0f3",
+      "bytes": 196750,
+      "updated": "2026-09-07"
+    },
+    "articles/6184729/cover.png": {
+      "hash": "5904e0b63380",
+      "bytes": 19974,
+      "updated": "2026-09-07"
+    },
+    "articles/6184744/cover.png": {
+      "hash": "9f1826efcc6b",
+      "bytes": 6934515,
+      "updated": "2026-09-07"
+    },
+    "articles/6616933/cover.jpg": {
+      "hash": "b91607148152",
+      "bytes": 105261,
+      "updated": "2026-09-07"
+    },
+    "articles/6820451/cover.png": {
+      "hash": "73373ec5ad02",
+      "bytes": 2518344,
+      "updated": "2026-09-07"
+    },
+    "articles/7270022/cover.jpeg": {
+      "hash": "07946dc59515",
+      "bytes": 90675,
+      "updated": "2026-09-07"
+    },
+    "articles/7463810/cover.jpeg": {
+      "hash": "e4641884a759",
+      "bytes": 42402,
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/cover.jpeg": {
+      "hash": "2cbb2142a9d6",
+      "bytes": 2350952,
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/figures/clock.jpeg": {
+      "hash": "2844ddde2e6a",
+      "bytes": 112632,
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/figures/compare.jpeg": {
+      "hash": "8f60898e0e24",
+      "bytes": 138630,
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/figures/logistic.jpeg": {
+      "hash": "84b2913518bc",
+      "bytes": 191053,
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/figures/lstm-loss.png": {
+      "hash": "d56352f0ebda",
+      "bytes": 231682,
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/figures/redundancy.jpeg": {
+      "hash": "85e50a64c2cd",
+      "bytes": 85108,
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/figures/risk-map.png": {
+      "hash": "86b9609f3835",
+      "bytes": 1131919,
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/figures/risk-phase.png": {
+      "hash": "5d7e761abd1c",
+      "bytes": 747598,
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/figures/risk-raster.png": {
+      "hash": "90f702e4e341",
+      "bytes": 1719703,
+      "updated": "2026-09-07"
+    },
+    "articles/7654321/figures/risk-scatter.png": {
+      "hash": "922aace3d6d9",
+      "bytes": 276431,
+      "updated": "2026-09-07"
+    },
+    "articles/7722440/cover.jpg": {
+      "hash": "0a9d3b2541d3",
+      "bytes": 61429,
+      "updated": "2026-09-07"
+    },
+    "articles/7733621/cover.png": {
+      "hash": "ce303afcc0f7",
+      "bytes": 946978,
+      "updated": "2026-09-07"
+    },
+    "articles/8266901/cover.jpeg": {
+      "hash": "91edfeaf9b96",
+      "bytes": 2830707,
+      "updated": "2026-09-07"
+    },
+    "articles/8888777/cover.png": {
+      "hash": "41523daf6c55",
+      "bytes": 160762,
+      "updated": "2026-09-07"
+    },
+    "articles/9150483/cover.png": {
+      "hash": "acee93102441",
+      "bytes": 7230052,
+      "updated": "2026-09-07"
+    },
+    "articles/9962668/cover.jpeg": {
+      "hash": "69db9dfdd0aa",
+      "bytes": 187284,
+      "updated": "2026-09-07"
+    },
+    "site/home/carousel-feedback-loops.png": {
+      "hash": "7c0515f9841d",
+      "bytes": 914566,
+      "updated": "2026-09-07"
+    }
+  }
+}

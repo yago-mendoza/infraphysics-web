@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { Post } from '../types';
 import { postPath } from '../config/categories';
 import { engagementApiUrl } from '../lib/engagementApi';
+import { contentRoutes } from '../lib/contentRoutes';
 
 export interface ArticleStats {
   views: number;
@@ -15,7 +16,8 @@ export function useArticleStats(posts: Post[]): Record<string, ArticleStats> {
     if (posts.length === 0) return;
     let cancelled = false;
 
-    const slugs = posts.map(p => postPath(p.category, p.id));
+    const publicPaths = posts.map(p => postPath(p.category, p.id));
+    const slugs = publicPaths.map(p => contentRoutes.storagePath(p));
 
     fetch(engagementApiUrl('/api/stats'), {
       method: 'POST',
@@ -24,7 +26,7 @@ export function useArticleStats(posts: Post[]): Record<string, ArticleStats> {
     })
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (!cancelled && data) setStats(data);
+        if (!cancelled && data) setStats(Object.fromEntries(publicPaths.map((p, i) => [p, data[slugs[i]]])));
       })
       .catch(() => {});
 

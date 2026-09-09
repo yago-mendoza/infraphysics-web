@@ -159,7 +159,9 @@ const MiniGraph: React.FC<{
   // Starting near its real viewport prevents an unnecessary WebGL/canvas
   // allocation and a misleading first camera fit before ResizeObserver fires.
   const [containerWidth, setContainerWidth] = useState(() => expanded && typeof window !== 'undefined' ? Math.max(320, window.innerWidth - 260) : 220);
-  const [containerHeight, setContainerHeight] = useState(() => expanded && typeof window !== 'undefined' ? Math.max(240, window.innerHeight - 48) : MINI_HEIGHT);
+  // On a phone the mini map lives in the full-screen console and takes near half the viewport.
+  const miniHeight = useMemo(() => !expanded && typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches ? Math.round(window.innerHeight * 0.42) : MINI_HEIGHT, [expanded]);
+  const [containerHeight, setContainerHeight] = useState(() => expanded && typeof window !== 'undefined' ? Math.max(240, window.innerHeight - 48) : miniHeight);
   const [isFramed, setIsFramed] = useState(false);
   const highlightFrameRef = useRef(0);
   const hoverFrameRef = useRef(0);
@@ -1337,7 +1339,7 @@ const MiniGraph: React.FC<{
       <div
         ref={containerRef}
         className="flex items-center justify-center text-th-muted text-[10px] animate-pulse"
-        style={{ height: expanded ? '100%' : MINI_HEIGHT }}
+        style={{ height: expanded ? '100%' : miniHeight }}
       >
         Loading...
       </div>
@@ -1348,7 +1350,7 @@ const MiniGraph: React.FC<{
     <div
       ref={containerRef}
       className={`relative ${selectionMode ? 'cursor-crosshair' : ''}`}
-      style={{ height: expanded ? '100%' : MINI_HEIGHT }}
+      style={{ height: expanded ? '100%' : miniHeight }}
       onMouseMove={!miniAnalysisEnabled ? handleNearestHover : handleMiniAreaHover}
       onMouseLeave={() => { setHoveredId(null); lastAreaSignatureRef.current = ''; if (miniAnalysisEnabled) { setDensityAreaIds(null); onAreaPreview?.(null); } }}
       onWheelCapture={holdMiniCamera}
@@ -1420,7 +1422,7 @@ const MiniGraph: React.FC<{
             backgroundColor="#000011"
           />}
         </div>
-        {!expanded && <nav aria-label="Mini graph tools" className="absolute bottom-1 left-1 z-20 flex items-center gap-px border border-th-hub-border bg-th-base/90 p-0.5 font-mono shadow-sm backdrop-blur-sm">
+        {!expanded && <nav aria-label="Mini graph tools" className="absolute bottom-1 left-1 z-20 flex items-center gap-px border border-th-hub-border bg-th-base p-0.5 font-mono shadow-md">
           {filtersActive && onResetFilters && <button type="button" title="Reset filters" aria-label="Reset filters" onClick={onResetFilters} className="flex h-5 w-5 items-center justify-center text-[11px] text-violet-400 transition-colors hover:text-violet-300">⟲</button>}
           <button
             type="button"

@@ -1,7 +1,7 @@
 import path from 'path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { wikinoteEditorPlugin } from './vite-plugins/wikinote-editor.js';
+import { mediaSyncPlugin } from './vite-plugins/media-sync.js';
 
 export default defineConfig({
   server: {
@@ -11,7 +11,7 @@ export default defineConfig({
       ignored: ['**/room/chrome-wiki-audit/**'],
     },
   },
-  plugins: [react(), wikinoteEditorPlugin()],
+  plugins: [react(), mediaSyncPlugin()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

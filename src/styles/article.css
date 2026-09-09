@@ -130,8 +130,6 @@
   --art-accent-hover-bg:    color-mix(in srgb, var(--art-accent) 5%, transparent);
 
   /* Context annotations */
-  --ctx-note-bg:      color-mix(in srgb, var(--art-accent) 4%, transparent);
-  --ctx-note-border:  color-mix(in srgb, var(--art-accent) 15%, transparent);
 
   /* Purple derivations */
   --art-purple-dim:  color-mix(in srgb, var(--art-purple) 30%, transparent);
@@ -148,8 +146,6 @@
   --art-accent-hover-border: color-mix(in srgb, var(--art-accent) 55%, transparent);
 
   /* Context annotations */
-  --ctx-note-bg:      color-mix(in srgb, var(--art-accent) 6%, transparent);
-  --ctx-note-border:  color-mix(in srgb, var(--art-accent) 25%, transparent);
 
   --art-purple-bg:           color-mix(in srgb, var(--art-purple) 8%, transparent);
   --art-purple-dim:          color-mix(in srgb, var(--art-purple) 40%, transparent);
@@ -422,48 +418,21 @@
   background: var(--art-accent-hover-bg);
 }
 
-.article-share-dropdown {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  right: 0;
-  background: var(--art-surface);
-  border: 1px solid var(--art-border);
-  border-radius: 4px;
-  padding: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  z-index: 20;
-  min-width: 10rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+/* Share menu, in the site's list language: a mono eyebrow, numbered rows (number in the category
+   accent, name in the sans, the network mark at the far end), hairlines between groups. On phones it is
+   a sheet pinned above the nav bar, full width, so it can never run off the screen. */
+.article-share-dropdown { position: absolute; top: calc(100% + 0.5rem); right: 0; z-index: 60; display: flex; flex-direction: column; min-width: 15rem; padding: 0.35rem 0.35rem 0.4rem; border: 1px solid var(--art-border); background: var(--art-surface); box-shadow: 0 18px 40px -20px rgba(0,0,0,0.7); }
+.article-share-dropdown > small { display: block; padding: 0.45rem 0.7rem 0.55rem; border-bottom: 1px solid var(--art-border); margin-bottom: 0.25rem; color: var(--art-accent); font: 600 9px/1 var(--font-mono); letter-spacing: 0.14em; text-transform: uppercase; }
+.article-share-dropdown a, .article-share-dropdown button { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr) auto; align-items: center; gap: 0.5rem; width: 100%; padding: 0.55rem 0.7rem; border: 0; background: none; color: var(--art-text-mid); font: 400 0.82rem/1.3 var(--font-sans); text-align: left; text-decoration: none; white-space: nowrap; cursor: pointer; transition: color 0.15s, background 0.15s; }
+.article-share-dropdown a b, .article-share-dropdown button b { color: var(--art-accent); font: 500 9px/1 var(--font-mono); letter-spacing: 0.06em; }
+.article-share-dropdown a svg, .article-share-dropdown button svg { color: var(--art-text-muted, var(--text-muted)); flex: none; transition: color 0.15s; }
+.article-share-dropdown a:hover, .article-share-dropdown button:hover { color: var(--art-text-title); background: var(--art-accent-bg); }
+.article-share-dropdown a:hover svg, .article-share-dropdown button:hover svg { color: var(--art-accent); }
+.article-share-dropdown-sep { height: 1px; background: var(--art-border); margin: 0.25rem 0; }
+@media (max-width: 767px) {
+  .article-share-dropdown { position: fixed; top: auto; right: 1rem; bottom: 5.25rem; left: 1rem; min-width: 0; }
+  .article-share-dropdown a, .article-share-dropdown button { padding: 0.85rem 0.8rem; font-size: 0.92rem; }
 }
-
-.article-share-dropdown a,
-.article-share-dropdown button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.7rem;
-  color: var(--art-text-mid);
-  text-decoration: none;
-  border: none;
-  background: none;
-  cursor: pointer;
-  border-radius: 2px;
-  transition: color 0.15s, background 0.15s;
-  white-space: nowrap;
-  font-family: inherit;
-}
-.article-share-dropdown a:hover,
-.article-share-dropdown button:hover {
-  color: var(--art-text-title);
-  background: var(--art-accent-bg);
-}
-.article-share-dropdown-sep {
-  height: 1px;
-  background: var(--art-border);
-  margin: 0.25rem 0;
 }
 
 /* A7. Tag pills — two rows: topics (purple) + technologies (accent) */
@@ -1230,6 +1199,56 @@
 
 /* B3. Typed blockquotes {bkqt:type:text} */
 
+/* Parameter sheet {params} … {/params}: a small configuration file for symbols,
+   constants and fields. key = value  # note, on the code surface, in mono, with
+   the value in the category accent. Columns align across rows through subgrid;
+   {params/2} lays the rows out two per line on wide screens. */
+.article-content .params {
+  display: grid;
+  grid-template-columns: max-content max-content minmax(0, 1fr);
+  column-gap: 1rem;
+  row-gap: .35rem;
+  margin: 1.6rem 0 2rem;
+  padding: 1rem 1.2rem;
+  background: var(--content-code-bg, var(--bg-surface));
+  border: 1px solid var(--border-default);
+  font-family: var(--font-mono);
+  font-size: .84rem;
+  line-height: 1.5;
+  letter-spacing: normal;
+  overflow-x: auto;
+}
+.article-content .params-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: max-content max-content minmax(0, 1fr);
+  column-gap: 1rem;
+  align-items: baseline;
+}
+@supports (grid-template-columns: subgrid) {
+  .article-content .params-row { grid-template-columns: subgrid; }
+}
+.article-content .params-key { color: var(--text-heading); }
+.article-content .params-val { color: var(--art-accent); white-space: nowrap; }
+.article-content .params-val:not(:empty)::before { content: '= '; color: var(--text-muted); }
+.article-content .params-note { color: var(--text-muted); min-width: 0; }
+.article-content .params-note:not(:empty)::before { content: '# '; }
+.article-content .params-group {
+  grid-column: 1 / -1;
+  margin-top: .25rem;
+  color: var(--text-muted);
+  font-size: .68rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.article-content .params-gap { margin-top: .9rem; }
+.article-content .params .katex { font-size: 1em; }
+@media (min-width: 720px) {
+  .article-content .params-cols-2 { grid-template-columns: repeat(2, max-content max-content minmax(0, 1fr)); column-gap: 2.5rem; }
+  .article-content .params-cols-2 .params-row { grid-column: span 3; }
+  .article-content .params-cols-2 .params-group, .article-content .params-cols-2 .params-gap { grid-column: 1 / -1; }
+}
+
 .article-content .bkqt {
   margin: 1.5rem 0;
   border-radius: 0;
@@ -1747,29 +1766,42 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   margin: 1.5rem 0;
 }
 
+/* Tables are a quiet ledger: no filled header bar, a small mono uppercase
+   header over one rule, hairline rows, compact type. Small enough that a
+   four or five column table fits the reading column without a horizontal
+   scroll (the wrapper still scrolls for the rare wide one). Name / value
+   lists are not tables: they use {params}. */
 .article-content table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.8rem;
-  min-width: 28rem;
+  font-size: 0.84rem;
+  min-width: 0;
 }
 
 .article-content th {
-  background: var(--art-surface-bar);
+  background: transparent;
   color: var(--art-accent);
+  font-family: var(--font-mono);
+  font-weight: 500;
   text-transform: uppercase;
-  font-size: 0.7rem;
-  letter-spacing: 0.05em;
-  padding: 0.5rem 0.75rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  padding: 0.3rem 0.55rem 0.45rem;
   border-bottom: 1px solid var(--art-border-strong);
   text-align: left;
+  vertical-align: bottom;
 }
 
 .article-content td {
-  padding: 0.5rem 0.75rem;
+  padding: 0.42rem 0.55rem;
   border-bottom: 1px solid var(--art-border-subtle);
   color: var(--art-text-body);
+  line-height: 1.45;
 }
+
+.article-content tr:last-child td { border-bottom: 1px solid var(--art-border-strong); }
+.article-content td:first-child, .article-content th:first-child { padding-left: 0; }
+.article-content td:last-child, .article-content th:last-child { padding-right: 0; }
 
 /* B12. Strong / Em */
 
@@ -1785,7 +1817,11 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 /* B13. Accent-colored text (--text--) */
 
 
-/* B13b. Accent-text adapts color inside blockquotes */
+/* B13b. Accent text {accent:word}: the article accent, nothing else */
+
+.article-content .accent-text {
+  color: var(--art-accent);
+}
 
 
 /* B14. <kbd> keyboard */
@@ -1831,10 +1867,11 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 .article-content .doc-ref-essays:hover  { border-bottom-color: var(--cat-essays-accent); }
 .article-content .doc-ref-bits2bricks:hover { border-bottom-color: var(--cat-bits2bricks-accent); }
 
-.article-content .doc-ref-external { color: #b0b0b0; border-bottom-color: rgba(156,163,175,0.35); }
-.article-content .doc-ref-external:hover { color: #d4d4d4; border-bottom-color: rgba(156,163,175,0.7); }
-[data-theme="light"] .article-content .doc-ref-external { color: #6b7280; border-bottom-color: rgba(107,114,128,0.5); }
-[data-theme="light"] .article-content .doc-ref-external:hover { color: #374151; border-bottom-color: rgba(107,114,128,0.9); }
+/* External links: a real underline in the text colour, not the faint accent rule the in-site refs use. */
+.article-content .doc-ref-external { color: #b0b0b0; border-bottom: 0; text-decoration: underline; text-decoration-color: currentColor; text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+.article-content .doc-ref-external:hover { color: #d4d4d4; }
+[data-theme="light"] .article-content .doc-ref-external { color: #6b7280; }
+[data-theme="light"] .article-content .doc-ref-external:hover { color: #374151; }
 
 .article-content .doc-ref-icon {
   display: inline-block;
@@ -1993,12 +2030,6 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   .article-content td {
     font-size: 0.9375rem;
     line-height: 1.55;
-  }
-  .article-content .ctx-note::before {
-    display: none;
-  }
-  .article-content .ctx-note {
-    padding-left: 0.75rem;
   }
 }
 
@@ -2308,8 +2339,8 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 .article-projects .article-content h2 { font-size:clamp(1.8rem,4vw,2.5rem); }
 .article-projects .article-content h3 { font-size:clamp(1.35rem,3vw,1.8rem); }
 .article-projects .article-content table { font-size:.76rem; }
-.article-projects .article-content th { color:var(--text-heading); background:transparent; }
-.article-projects .article-content td,.article-projects .article-content th { padding:.7rem .55rem; border-color:var(--border-default); }
+.article-projects .article-content th { color:var(--art-accent); background:transparent; }
+.article-projects .article-content td,.article-projects .article-content th { border-color:var(--border-default); }
 .article-projects + .article-related { max-width:82rem; margin-inline:auto; }
 .article-related-card,.article-related-card * { transform:none !important; }
 
@@ -2457,11 +2488,11 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
    perceptual contrast in both directions: darker in light, brighter in dark. */
 .article-page-wrapper:not(.article-wiki) .wiki-ref-resolved {
   color: color-mix(in srgb, var(--art-accent) 78%, var(--text-heading)) !important;
-  /* No dashed rule under the whole link: the label carries a dotted underline
-     (editorial-primitives.css) and the brain icon stays clean. */
+  /* No rule under the link, no band: one solid accent tint behind the whole chip. */
   border-bottom: 0 !important;
-  background-image: linear-gradient(to top, color-mix(in srgb, var(--art-accent) 30%, transparent) 0 .34em, transparent .34em);
-  transition: color .15s ease, background-image .15s ease;
+  background-image: none;
+  background-color: color-mix(in srgb, var(--art-accent) 14%, transparent);
+  transition: color .15s ease, background-color .15s ease;
 }
 
 /* One marker only: the label keeps no dotted rule of its own (editorial-primitives.css). */
@@ -2471,7 +2502,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 
 .article-page-wrapper:not(.article-wiki) .wiki-ref-resolved:hover {
   color: color-mix(in srgb, var(--art-accent) 62%, var(--text-heading)) !important;
-  background-image: linear-gradient(to top, color-mix(in srgb, var(--art-accent) 44%, transparent) 0 .34em, transparent .34em);
+  background-color: color-mix(in srgb, var(--art-accent) 24%, transparent);
 }
 
 .article-page-wrapper:not(.article-wiki) .wiki-ref-resolved .wiki-ref-icon {
@@ -2505,8 +2536,27 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   font-style: normal;
 }
 
+/* E2h. Essay boxes: a tinted plate that bleeds past the column edges, generous
+   padding on all four sides (the text never reaches the right edge), a slight
+   radius, no border in light. In dark a 6% wash barely separates from black,
+   so the tint rises and a one-pixel hairline of the accent draws the edge.
+   Bits2Bricks and projects keep the flat in-column box. */
+.article-essays .article-content .bkqt {
+  margin: 2.2em -1.6rem;
+  border-radius: 2px;
+  --bkqt-bg: color-mix(in srgb, var(--bkqt-color) 11%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bkqt-color) 22%, transparent);
+}
 .article-essays .article-content .bkqt-body {
-  padding: 1.2rem 0rem 1.2rem 1.2rem;
+  padding: 1.5rem 1.7rem 1.5rem 1.6rem;
+}
+[data-theme="light"] .article-essays .article-content .bkqt {
+  --bkqt-bg: color-mix(in srgb, var(--bkqt-color) 6%, transparent);
+  box-shadow: none;
+}
+@media (max-width: 767px) {
+  .article-essays .article-content .bkqt { margin-inline: -1rem; }
+  .article-essays .article-content .bkqt-body { padding: 1.2rem 1.1rem 1.2rem 1rem; }
 }
 
 /* E2d. Essays blockquote label — block above text, bold sans (not inline monospace) */
@@ -2701,94 +2751,53 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 }
 
 
-/* E6b. Context annotations (.ctx-note) — inline timestamped author notes */
-.article-content .ctx-note {
-  position: relative;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 0.5rem;
-  background: var(--ctx-note-bg);
-  border: 1px solid var(--ctx-note-border);
-  border-radius: 2px;
-  padding: 0.65rem 0.75rem;
-  margin: 1.25rem 0;
+/* E6b. Context annotations (.ctx-note) — inline timestamped author notes.
+   One layout in both states: a two-column grid with the header (avatar, title, date) in the left column,
+   the toggle pinned to the top-right corner and the text in the right column. Opening only grows the
+   text row, so nothing relocates before or after the transition. WikiContent toggles .is-open after
+   setting [open] so the reveal can transition, and drops [open] once the collapse has finished. */
+.article-content .ctx-note { display:grid; grid-template-columns:8.75rem minmax(0,1fr); column-gap:.9rem; align-items:start; position:relative; margin:1.5rem 0; padding:0 1rem; border:1px solid var(--art-border); border-radius:5px; background:var(--art-surface); }
+.article-content .ctx-note::before { display:none; }
+.article-content .ctx-note-summary { display:flex; align-items:flex-start; gap:1rem; padding:.85rem 0; cursor:pointer; list-style:none; color:var(--art-text-body); font-size:.8rem; }
+.article-content .ctx-note-summary::-webkit-details-marker { display:none; }
+.article-content .ctx-note-summary:focus-visible { outline:2px solid var(--art-accent); outline-offset:3px; }
+.article-content .ctx-note-toggle { position:absolute; top:.85rem; right:1rem; margin:0; white-space:nowrap; font: .6rem var(--font-mono); color:var(--art-accent); }
+.article-content .ctx-note-read::after { content:' +'; }
+.article-content .ctx-note-close::after { content:' \2212'; }
+/* The label follows .is-open (set at the click) rather than [open], which stays on until the collapse ends. */
+.article-content .ctx-note-close, .article-content .ctx-note.is-open .ctx-note-read { display:none; }
+.article-content .ctx-note.is-open .ctx-note-close { display:inline; }
+.article-content .ctx-note-meta { display:flex; align-items:flex-start; gap:.75rem; min-width:0; }
+.article-content .ctx-note-avatar { width:28px; height:28px; border-radius:50%; object-fit:cover; flex-shrink:0; margin:0; }
+.article-content .ctx-note-date-row { display:flex; flex-direction:column; align-items:flex-start; gap:.2rem; min-width:0; }
+.article-content .ctx-note-title { font:500 .65rem/1.5 var(--font-mono); color:var(--art-accent); overflow-wrap:anywhere; }
+.article-content .ctx-note-date { font:.6rem/1.5 var(--font-mono); color:var(--art-text-mid); background:none; padding:0; }
+/* The text column keeps clear of the toggle with a right margin; its bottom air lives inside the row that animates. */
+.article-content .ctx-note-body { display:grid; grid-template-rows:0fr; padding:.85rem 5.5rem 0 0; opacity:0; transform:translateY(-3px); transition:grid-template-rows .32s cubic-bezier(.2,.8,.2,1), opacity .26s ease .06s, transform .32s cubic-bezier(.2,.8,.2,1); }
+.article-content .ctx-note.is-open .ctx-note-body { grid-template-rows:1fr; opacity:1; transform:none; }
+.article-content .ctx-note-body-inner { min-height:0; overflow:hidden; }
+.article-content .ctx-note.is-open .ctx-note-body-inner { padding-bottom:1.15rem; }
+.article-content .ctx-note-text { display:block; font-family:inherit; font-size:.85rem; line-height:1.7; color:var(--art-text-body); min-width:0; }
+.article-content .ctx-note-text::first-letter { text-transform:uppercase; }
+/* Further entries in the same card keep their own header beside their text. */
+.article-content .ctx-note-entry { display:grid; grid-template-columns:8.75rem minmax(0,1fr); gap:.9rem; padding:.2rem 0; }
+.article-content .ctx-note-divider { border:0; border-top:1px solid var(--art-border); margin:1rem 0; }
+@media (prefers-reduced-motion:reduce) {
+  .article-content .ctx-note-summary, .article-content .ctx-note-body { transition:none; }
+}
+@media(max-width:600px) {
+  .article-content .ctx-note { grid-template-columns:1fr; }
+  .article-content .ctx-note-body { padding:0 0 0 0; }
+  .article-content .ctx-note-summary { padding-right:5rem; }
+  .article-content .ctx-note-entry { grid-template-columns:1fr; gap:.85rem; }
+  .article-content .ctx-note-date-row { flex-direction:row; flex-wrap:wrap; align-items:baseline; column-gap:.65rem; }
+  .article-content .ctx-note-title { flex-basis:100%; }
 }
 
-.article-content .ctx-note-avatar {
-  width: 26px;
-  height: 26px;
-  border-radius: 0.375rem;
-  object-fit: cover;
-  flex-shrink: 0;
-  border: 0.5px solid var(--art-border);
-  margin: 1px 0 0 0;
-}
-
-.article-content .ctx-note-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  min-width: 0;
-  flex: 1;
-}
-
-.article-content .ctx-note-entry {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.45rem 0;
-}
-
-.article-content .ctx-note-entry:first-child {
-  padding-top: 0;
-}
-
-.article-content .ctx-note-entry:last-child {
-  padding-bottom: 0;
-}
-
-.article-content .ctx-note-date-row {
-  display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
-}
-
-.article-content .ctx-note-date {
-  font-family: 'JetBrains Mono', var(--font-mono);
-  font-size: 0.6rem;
-  color: var(--art-accent);
-  background: color-mix(in srgb, var(--art-accent) 10%, transparent);
-  padding: 0.1rem 0.4rem;
-  border-radius: 2px;
-  white-space: nowrap;
-  letter-spacing: 0.02em;
-}
-
-.article-content .ctx-note-relative {
-  font-family: 'JetBrains Mono', var(--font-mono);
-  font-size: 0.55rem;
-  color: var(--art-text-dim);
-  white-space: nowrap;
-  letter-spacing: 0.02em;
-}
-
-.article-content .ctx-note-text {
-  font-family: 'JetBrains Mono', var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--art-text-mid);
-  line-height: 1.5;
-  display: block;
-}
-
-.article-content .ctx-note-text::first-letter {
-  text-transform: uppercase;
-}
-
-.article-content .ctx-note-divider {
-  border: none;
-  border-top: 1px solid var(--ctx-note-border);
-  margin: 0;
+/* Context typography at the desktop breakpoint; kept with the component. */
+@media (min-width: 768px) {
+  .article-content .ctx-note-text { font-size: 0.75rem; }
+  .article-content .ctx-note-date { font-size: 0.65rem; }
 }
 
 /* E7. Blog TOC — same box as projects, depth-scaled sizing
@@ -3036,16 +3045,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
     line-height: 1.55;
   }
 
-  /* Context annotations */
-  .article-content .ctx-note-text {
-    font-size: 0.75rem;
-  }
-  .article-content .ctx-note-date {
-    font-size: 0.65rem;
-  }
-  .article-content .ctx-note-relative {
-    font-size: 0.6rem;
-  }
+
 
   /* Headings */
   .article-content h1 {
@@ -3083,10 +3083,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
     font-size: 0.75rem;
   }
 
-  /* Table header */
-  .article-content th {
-    font-size: 0.75rem;
-  }
+  /* Table header keeps the ledger size from the base rule. */
 
   /* G2. Projects — smaller monospace body */
   .article-projects .article-content p,
@@ -3123,9 +3120,10 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
   .article-blog:not(.article-essays) .article-title { font-size:clamp(2.45rem,13vw,3.65rem); }
 }
 
+
 /* Bits2Bricks (blog, non-essay) heading scale by tag. global.css pins every article's h2 at 2rem and
    h3 at 1.25rem regular with !important, which made # and ## the same size and ### body-sized. */
 .article-blog:not(.article-essays) .article-content h1 { font-size: 2rem !important; font-weight: 400 !important; line-height: 1.15 !important; margin: 2.8rem 0 .9rem; }
-.article-blog:not(.article-essays) .article-content h2 { font-size: 1.5rem !important; font-weight: 600 !important; line-height: 1.25 !important; margin: 2.4rem 0 .7rem; }
-.article-blog:not(.article-essays) .article-content h3 { font-size: 1.2rem !important; font-weight: 600 !important; line-height: 1.3 !important; margin: 1.9rem 0 .5rem; }
+.article-blog:not(.article-essays) .article-content h2 { font-size: 1.5rem !important; font-weight: 600 !important; line-height: 1.25 !important; margin: 2.4rem 0 1.2rem; }
+.article-blog:not(.article-essays) .article-content h3 { font-size: 1.2rem !important; font-weight: 600 !important; line-height: 1.3 !important; margin: 1.9rem 0 .85rem; }
 .article-blog:not(.article-essays) .article-content h4 { font-size: 1.05rem !important; font-weight: 600 !important; line-height: 1.3 !important; margin: 1.6rem 0 .45rem; }

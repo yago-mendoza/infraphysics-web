@@ -86,8 +86,8 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allWikiNotes, cl
     let m;
     while ((m = hrefRegex.exec(resolvedHtml)) !== null) {
       const href = m[1];
-      const noteId = m[2];
-      if (!seen.has(noteId) && isVisited(noteId)) {
+      const noteId = secondBrainUidFromPath(href);
+      if (noteId && !seen.has(noteId) && isVisited(noteId)) {
         seen.add(noteId);
         selectors.push(`a.wiki-ref-resolved[href="${href}"]`);
       }
@@ -210,6 +210,28 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allWikiNotes, cl
     };
 
     const onClick = (e: MouseEvent) => {
+      // Context note: open the <details> first, then add .is-open on the next frame so the body can
+      // transition in; on close, transition out and only then remove [open] (article.css, E6b).
+      const ctxSummary = (e.target as HTMLElement).closest('.ctx-note-summary') as HTMLElement | null;
+      if (ctxSummary) {
+        if ((e.target as HTMLElement).closest('a')) return;
+        e.preventDefault();
+        const note = ctxSummary.parentElement as HTMLDetailsElement | null;
+        if (!note) return;
+        // Decide on .is-open, not on [open]: [open] lingers while the collapse plays, and a click in that
+        // window must reopen the note (cancelling the pending close) instead of doing nothing.
+        const pending = Number(note.dataset.closeTimer || 0);
+        if (!note.classList.contains('is-open')) {
+          if (pending) { window.clearTimeout(pending); delete note.dataset.closeTimer; }
+          note.open = true;
+          requestAnimationFrame(() => requestAnimationFrame(() => note.classList.add('is-open')));
+        } else {
+          note.classList.remove('is-open');
+          const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          note.dataset.closeTimer = String(window.setTimeout(() => { delete note.dataset.closeTimer; if (!note.classList.contains('is-open')) note.open = false; }, reduced ? 0 : 340));
+        }
+        return;
+      }
       const headingAnchor = (e.target as HTMLElement).closest('.heading-anchor-link') as HTMLButtonElement | null;
       if (headingAnchor) {
         e.preventDefault();

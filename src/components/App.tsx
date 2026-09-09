@@ -1,14 +1,15 @@
 // App shell: provides layout structure and top-level routing
 
 import React, { Suspense, useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { CursorPreferenceProvider, useCursorPreference } from '../contexts/CursorPreferenceContext';
 import { ArticleContextProvider } from '../contexts/ArticleContext';
 import { SecondBrainHubProvider } from '../contexts/SecondBrainHubContext';
-import { categoryGroup, isSecondBrainPath, secondBrainPath } from '../config/categories';
+import { isSecondBrainPath, secondBrainPath } from '../config/categories';
 import { postSummaries } from '../data/postSummaries';
-import { Sidebar, MobileNav, Footer, ArticleFloatingBar, AmbientRails } from './layout';
+import { contentRoutes } from '../lib/contentRoutes';
+import { Sidebar, MobileNav, Footer, AmbientRails } from './layout';
 import { ErrorBoundary } from './ErrorBoundary';
 import { RetentionHints } from './RetentionHints';
 import { ExperimentalCursor } from './ExperimentalCursor';
@@ -21,8 +22,11 @@ const CvView = React.lazy(() => import('../views/CvView').then(m => ({ default: 
 const StackView = React.lazy(() => import('../views/StackView').then(m => ({ default: m.StackView })));
 const ContactView = React.lazy(() => import('../views/ContactView').then(m => ({ default: m.ContactView })));
 const ThanksView = React.lazy(() => import('../views/ThanksView').then(m => ({ default: m.ThanksView })));
+// Eager: the 404 page must paint at once, never behind the Suspense fallback.
+import { ErrorConceptView, NotFoundContext } from '../views/ErrorConceptView';
 const SectionView = React.lazy(() => import('../views/SectionView').then(m => ({ default: m.SectionView })));
 const PostView = React.lazy(() => import('../views/PostView').then(m => ({ default: m.PostView })));
+const ContextPreviewView = React.lazy(() => import('../views/ContextPreviewView').then(m => ({ default: m.ContextPreviewView })));
 const SecondBrainView = React.lazy(() => import('../views/SecondBrainView').then(m => ({ default: m.SecondBrainView })));
 const SecondBrainSidebar = React.lazy(() => import('./layout/SecondBrainSidebar').then(m => ({ default: m.SecondBrainSidebar })));
 const SearchPalette = React.lazy(() => import('./SearchPalette').then(m => ({ default: m.SearchPalette })));
@@ -31,30 +35,43 @@ import { useKeyboardShortcuts, ShortcutDef } from '../hooks/useKeyboardShortcuts
 /** Redirect old /:category/:id URLs to grouped /lab|blog/:category/:id */
 const LegacyPostRedirect: React.FC = () => {
   const { category, id } = useParams();
+  const location = useLocation();
   if (!category || !id) return <Navigate to="/home" replace />;
   // A malformed grouped URL such as /lab/unknown must never become
   // /lab/lab/unknown through the legacy category redirect.
   if (category === 'lab' || category === 'blog') return <Navigate to="/home" replace />;
-  return <Navigate to={`/${categoryGroup(category)}/${category}/${id}`} replace />;
+  return <Navigate to={(contentRoutes.resolve(location.pathname)?.canonical || contentRoutes.path(category, id)) + location.search + location.hash} replace />;
 };
 
 const LegacyWikiRedirect: React.FC = () => {
   const { id } = useParams();
-  return <Navigate to={secondBrainPath(id)} replace />;
+  const location = useLocation();
+  return <Navigate to={secondBrainPath(id) + location.search + location.hash} replace />;
 };
 
 const LegacyEssaysRedirect: React.FC = () => {
   const { id } = useParams();
-  return <Navigate to={`/blog/essays/`} replace />;
+  const location = useLocation();
+  return <Navigate to={(id ? contentRoutes.path('essays', id) : '/blog/essays') + location.search + location.hash} replace />;
 };
 
 const ARTICLE_ROUTE = /^\/(?:blog|lab)\/[^/]+\/[^/]+/;
 const ARTICLE_RETURN_KEY = 'infraphysics:article-return-to';
+const SECTION_RETURN_KEY = 'infraphysics:section-return-to';
+const navigationSection = (path: string) => {
+  const pathname = path.split(/[?#]/)[0];
+  if (isSecondBrainPath(pathname)) return '/wiki';
+  if (/^\/(blog|lab)\//.test(pathname)) return pathname.split('/').slice(0, 3).join('/');
+  return pathname.split('/')[1] || 'home';
+};
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const previousLocationRef = useRef(location);
+  const [sectionReturnTo, setSectionReturnTo] = useState<string | null>(() => {
+    try { return sessionStorage.getItem(SECTION_RETURN_KEY); } catch { return null; }
+  });
   // Where the article "Back" button goes: the last non-article page visited in this tab.
   const [articleReturnTo, setArticleReturnTo] = useState<string | null>(() => { try { return sessionStorage.getItem(ARTICLE_RETURN_KEY); } catch { return null; } });
   useEffect(() => {
@@ -64,8 +81,10 @@ const AppLayout: React.FC = () => {
       setArticleReturnTo(target);
       try { sessionStorage.setItem(ARTICLE_RETURN_KEY, target); } catch { /* optional navigation memory */ }
     }
-    if (isSecondBrainPath(location.pathname) && !isSecondBrainPath(previous.pathname)) {
-      try { sessionStorage.setItem('infraphysics:wiki-return-to', `${previous.pathname}${previous.search}${previous.hash}`); } catch { /* optional navigation memory */ }
+    if (navigationSection(location.pathname) !== navigationSection(previous.pathname)) {
+      const target = `${previous.pathname}${previous.search}${previous.hash}`;
+      setSectionReturnTo(target);
+      try { sessionStorage.setItem(SECTION_RETURN_KEY, target); } catch { /* optional navigation memory */ }
     }
     previousLocationRef.current = location;
   }, [location]);
@@ -75,6 +94,8 @@ const AppLayout: React.FC = () => {
   const [searchLoaded, setSearchLoaded] = useState(false);
 
   useEffect(() => {
+    const route = contentRoutes.resolve(location.pathname);
+    if (route && location.pathname !== route.canonical) return;
     const now = Date.now();
     const sessionWindow = 30 * 60 * 1000;
     try {
@@ -91,7 +112,7 @@ const AppLayout: React.FC = () => {
       fetch('/api/analytics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: location.pathname, visitorId, sessionId }),
+        body: JSON.stringify({ path: contentRoutes.storagePath(location.pathname), visitorId, sessionId }),
         keepalive: true,
       }).catch(() => {});
     } catch { /* Analytics must never affect navigation. */ }
@@ -147,23 +168,30 @@ const AppLayout: React.FC = () => {
   const isBlog = location.pathname.startsWith('/blog');
   const isHome = location.pathname === '/' || location.pathname === '/home';
   const isAbout = location.pathname === '/about' || location.pathname.startsWith('/about/');
+  // A missing page (ErrorConceptView reports its path) drops the section chrome: no wiki sidebar, no article geometry, rails and footer back.
+  const [notFoundPath, setNotFoundPath] = useState<string | null>(null);
+  const notFound = notFoundPath === location.pathname;
+  const notFoundContext = useMemo(() => ({ notFound, report: setNotFoundPath }), [notFound]);
+  const isSecondBrain = isSecondBrainPath(location.pathname) && !notFound;
+  // The vector-field plate behind about and projects also sits behind home and the wiki.
   const hasSystemField = isAbout
+    || isHome
+    || isSecondBrain
     || location.pathname.startsWith('/blog/essays')
     || location.pathname.startsWith('/blog/bits2bricks')
     || location.pathname.startsWith('/lab/projects');
   const clockHome = location.pathname === '/home';
-  const isSecondBrain = isSecondBrainPath(location.pathname);
-  const wikiBack = useMemo(() => ({ label: 'Return to previous section', onClick: () => {
-    let destination = '/home';
-    try {
-      const stored = sessionStorage.getItem('infraphysics:wiki-return-to');
-      if (stored && !isSecondBrainPath(stored)) destination = stored;
-    } catch { /* fall back to home */ }
-    navigate(destination);
-  } }), [navigate]);
-  const isArticlePage = /^\/(blog|lab)\/[^/]+\/[^/]+/.test(location.pathname) && !isSecondBrain;
+  const hasPreviousSection = !!sectionReturnTo && sectionReturnTo.startsWith('/')
+    && !sectionReturnTo.startsWith('//')
+    && navigationSection(sectionReturnTo) !== navigationSection(location.pathname);
+  const sectionBack = useMemo(() => ({
+    label: hasPreviousSection ? 'Return to previous section' : 'Return home',
+    onClick: () => navigate(hasPreviousSection ? sectionReturnTo! : '/home'),
+  }), [navigate, hasPreviousSection, sectionReturnTo]);
+  const isContextPreview = /^\/ctx[1-4]$/.test(location.pathname);
+  const isArticlePage = ((/^\/(blog|lab)\/[^/]+\/[^/]+/.test(location.pathname) && !isSecondBrain) || isContextPreview) && !notFound;
   // Project detail pages drop the grid and paint the page in the box surface color
-  const isProjectArticle = isArticlePage && location.pathname.startsWith('/lab/projects/');
+  const isProjectArticle = isArticlePage && (location.pathname.startsWith('/lab/projects/') || isContextPreview);
 
 
   const content = (
@@ -181,19 +209,19 @@ const AppLayout: React.FC = () => {
         /* Wiki: no chrome of its own. The global bar hides completely and slides in when the pointer
            reaches the bottom edge (scroll up on touch); a leading arrow returns to where the reader came from. */
         <>
-          <MobileNav onOpenSearch={openSearch} revealOnScrollUp back={wikiBack} />
-          <Sidebar onOpenSearch={openSearch} proximityReveal back={wikiBack} />
+          {/* On a phone the bar stays put in the wiki: the reader should always know where to go next. */}
+          <MobileNav onOpenSearch={openSearch} back={sectionBack} />
+          <Sidebar onOpenSearch={openSearch} proximityReveal back={sectionBack} />
         </>
       ) : isArticlePage ? (
         <>
-          <MobileNav onOpenSearch={openSearch} revealOnScrollUp />
-          <Sidebar onOpenSearch={openSearch} revealOnScrollUp />
-          <ArticleFloatingBar onOpenSearch={openSearch} returnTo={articleReturnTo} />
+          <MobileNav onOpenSearch={openSearch} revealOnScrollUp back={sectionBack} />
+          <Sidebar onOpenSearch={openSearch} revealOnScrollUp proximityReveal back={sectionBack} />
         </>
       ) : (
         <>
-          <MobileNav onOpenSearch={openSearch} />
-          <Sidebar onOpenSearch={openSearch} />
+          <MobileNav onOpenSearch={openSearch} back={sectionBack} />
+          <Sidebar onOpenSearch={openSearch} back={sectionBack} />
         </>
       )}
 
@@ -216,7 +244,7 @@ const AppLayout: React.FC = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 min-w-0 flex flex-col min-h-screen">
-        <main className={`flex-grow w-full relative z-10 ${isSecondBrain ? 'max-w-[112rem] px-4 md:px-10 pt-6 pb-24 md:pt-8 md:pb-28 mx-auto' : isArticlePage ? 'px-2 pt-[4.5rem] pb-20 md:px-6 md:pt-20 md:pb-28 article-main-viewport' : 'px-6 pt-20 pb-20 md:py-16 md:pb-28 main-center-viewport'}`}>
+        <main className={`flex-grow w-full relative z-10 ${notFound ? 'px-6 flex items-center justify-center overflow-hidden' : isSecondBrain ? 'max-w-[112rem] px-4 md:px-10 pt-6 pb-24 md:pt-8 md:pb-28 mx-auto' : isArticlePage ? 'px-4 pt-[4.5rem] pb-20 md:px-6 md:pt-20 md:pb-28 article-main-viewport' : 'px-6 pt-20 pb-20 md:py-16 md:pb-28 main-center-viewport'}`}>
           <Suspense fallback={<div className="min-h-screen py-20 text-center text-th-tertiary text-sm animate-pulse">Loading…</div>}>
             <React.Fragment key={location.pathname}>
             <Routes>
@@ -229,6 +257,11 @@ const AppLayout: React.FC = () => {
               <Route path="/about/stack" element={<StackView />} />
               <Route path="/contact" element={<ContactView />} />
               <Route path="/thanks" element={<ThanksView />} />
+              <Route path="/err5" element={<ErrorConceptView />} />
+              <Route path="/ctx1" element={<ContextPreviewView variant={1} />} />
+              <Route path="/ctx2" element={<ContextPreviewView variant={2} />} />
+              <Route path="/ctx3" element={<ContextPreviewView variant={3} />} />
+              <Route path="/ctx4" element={<ContextPreviewView variant={4} />} />
 
               {/* Lab sections */}
               <Route path="/lab/projects" element={<SectionView category="projects" />} />
@@ -245,7 +278,7 @@ const AppLayout: React.FC = () => {
 
               {/* Wiki — canonical routes */}
               <Route path="/wiki" element={<SecondBrainView />} />
-              <Route path="/wiki/graph" element={<Navigate to="/wiki" replace />} />
+              <Route path="/wiki/graph" element={<SecondBrainView />} />
               <Route path="/wiki/:id" element={<SecondBrainView />} />
 
               {/* Legacy Wiki URLs remain valid as redirects. */}
@@ -253,7 +286,6 @@ const AppLayout: React.FC = () => {
               <Route path="/lab/second-brain/graph" element={<Navigate to="/wiki" replace />} />
               <Route path="/lab/second-brain/:id" element={<LegacyWikiRedirect />} />
 
-              {/* Essay style lab (experimental typography variants) */}
 
               {/* Post detail views */}
               <Route path="/lab/:category/:id" element={<PostView />} />
@@ -262,28 +294,21 @@ const AppLayout: React.FC = () => {
               {/* Legacy: old flat /:category/:id → grouped path */}
               <Route path="/:category/:id" element={<LegacyPostRedirect />} />
 
-              {/* 404 catch-all */}
-              <Route path="*" element={
-                <div className="py-20 text-center">
-                  <div className="text-6xl mb-4 text-th-muted">404</div>
-                  <p className="text-th-tertiary">Nothing here.</p>
-                  <Link to="/home" className="inline-block mt-6 px-4 py-2 bg-th-active text-th-heading text-sm hover:bg-th-active-hover transition-colors border border-th-border">
-                    Return Home
-                  </Link>
-                </div>
-              } />
+              {/* 404 catch-all: the lost robot (also previewable at /err5) */}
+              <Route path="*" element={<ErrorConceptView />} />
             </Routes>
             </React.Fragment>
           </Suspense>
         </main>
 
-        {!isSecondBrain && <Footer />}
+        {/* A missing page is the robot alone: no footer, nothing to scroll. */}
+        {!isSecondBrain && !notFound && <Footer />}
       </div>
     </div>
     </ErrorBoundary>
   );
 
-  return <ArticleContextProvider><SecondBrainHubProvider>{content}</SecondBrainHubProvider></ArticleContextProvider>;
+  return <NotFoundContext.Provider value={notFoundContext}><ArticleContextProvider><SecondBrainHubProvider>{content}</SecondBrainHubProvider></ArticleContextProvider></NotFoundContext.Provider>;
 };
 
 const App: React.FC = () => {

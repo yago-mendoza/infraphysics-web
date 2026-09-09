@@ -1,6 +1,6 @@
 // Home page view — minimalist cosmic landing
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useLayoutEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { postSummaries as posts } from '../data/postSummaries';
 import type { PostSummary } from '../types';
@@ -11,43 +11,86 @@ import { Highlight } from '../components/ui';
 import { HomeVisualLab, type HomeVisualVariant } from '../components/personal/HomeVisualLab';
 import { StartHere } from '../components/personal/StartHere';
 import { WikiBanner } from '../components/personal/WikiBanner';
+import { points as fieldCoordinates } from '../data/field-of-view.generated.json';
+import { secondBrainPath } from '../config/categories';
+import { placeFieldLabels } from '../lib/fieldLayout';
+import { usePresence } from '../hooks/usePresence';
 
 const categoryKeys = ['projects', 'essays', 'bits2bricks'] as const;
 const selectedWorkIds = ['2718281', '3142718', '3141592', '6184744', '5917362'] as const;
 type FieldVariant = 1 | 2 | 3 | 4 | 5;
-const fieldCoordinates = [
-  { label: 'control', x: 48, y: 48, evidence: 'Industrial engineering, dynamic systems and control-oriented modelling.' },
-  { label: 'robotics', x: 58, y: 38, evidence: 'ROS 2, sensing and the integration layer between software and machines.' },
-  { label: 'networks', x: 63, y: 55, evidence: 'Distributed-systems research and operating Hyperledger Besu infrastructure.' },
-  { label: 'infrastructure', x: 78, y: 72, evidence: 'Multi-provider AI systems, Azure deployment, observability and failure handling.' },
-  { label: 'intelligence', x: 88, y: 84, evidence: 'Clinical AI evaluation, product ownership and evidence for ship/no-ship decisions.' },
-  { label: 'brains', x: 38, y: 24, evidence: 'An active research interest spanning cognition, learning and representation.' },
-  { label: 'materials', x: 20, y: 34, evidence: 'Engineering foundations in physical constraints, simulation and failure modes.' },
-  { label: 'failure', x: 72, y: 66, evidence: 'Reliability thinking across safety-critical, operational and AI systems.' },
-];
 
 type FieldItem = (typeof fieldCoordinates)[number];
-const FieldPoints: React.FC<{ projections?: boolean; active?: string | null; onActivate?: (item: FieldItem) => void }> = ({ projections = false, active, onActivate }) => <>{fieldCoordinates.map((item, index) => {
-  const content = <>{projections && <><i className="field-projection-x" /><i className="field-projection-y" /></>}<b>{String(index + 1).padStart(2, '0')}</b><span>{item.label}</span></>;
-  const props = { className: `field-plot-point${active === item.label ? ' is-active' : ''}${active && active !== item.label ? ' is-muted' : ''}`, style: { '--fx': `${item.x}%`, '--fy': `${100 - item.y}%`, '--point-index': index } as React.CSSProperties };
-  return onActivate ? <button type="button" {...props} key={item.label} onMouseEnter={() => onActivate(item)} onFocus={() => onActivate(item)} onClick={() => onActivate(item)}>{content}</button> : <div {...props} key={item.label}>{content}</div>;
+const FieldPoints: React.FC<{ active?: string | null; onActivate?: (item: FieldItem) => void }> = ({ active, onActivate }) => {
+  const elements = useRef<(HTMLElement | null)[]>([]);
+  const [positions, setPositions] = useState(fieldCoordinates.map(item => ({ x: item.x, y: item.y })));
+  useLayoutEffect(() => {
+    const plot = elements.current[0]?.closest('.field-plot');
+    if (!plot) return;
+    const place = () => {
+      // Measure each pill at its widest text (label or coordinates), not at the slot currently open, so hovering never re-places the labels.
+      // Fractional rects (not offsetWidth, which rounds) so the value is identical at every frame of the width transition.
+      const widest = (element: HTMLElement | null) => {
+        if (!element) return 80;
+        const copy = element.querySelector<HTMLElement>('.field-pill-copy');
+        if (!copy) return element.offsetWidth;
+        const chrome = element.getBoundingClientRect().width - copy.getBoundingClientRect().width;
+        const inner = Array.from(copy.querySelectorAll<HTMLElement>('.field-pill-slot > span'));
+        return Math.ceil(chrome + Math.max(0, ...inner.map(span => span.scrollWidth)));
+      };
+      const next = placeFieldLabels(fieldCoordinates.map((item, index) => ({ ...item, width: widest(elements.current[index]), height: elements.current[index]?.offsetHeight || 24 })), plot.clientWidth, plot.clientHeight);
+      setPositions(previous => JSON.stringify(previous) === JSON.stringify(next) ? previous : next);
+    };
+    place();
+    const observer = new ResizeObserver(place);
+    observer.observe(plot);
+    elements.current.forEach(element => { if (element) observer.observe(element); });
+    return () => observer.disconnect();
+  }, []);
+  return <>{fieldCoordinates.map((item, index) => {
+  const selected = active === item.label;
+  const metrics = `(${Math.round(item.share * 100)}%, ${Math.round(item.practicalRatio * 100)}%)`;
+  // Each text sits in its own slot; the slot that is not showing collapses to zero width so the pill is as wide as its current text (global.css, .field-pill-slot).
+  const content = <><b>{String(index + 1).padStart(2, '0')}</b><span className="field-pill-copy" aria-hidden="true"><span className={`field-pill-slot${selected ? '' : ' is-visible'}`}><span>{item.label}</span></span><span className={`field-pill-slot field-coordinate-pair${selected ? ' is-visible' : ''}`}><span>{metrics}</span></span></span></>;
+  const props = { className: `field-plot-point${active === item.label ? ' is-active' : ''}${active && active !== item.label ? ' is-muted' : ''}`, style: { '--fx': `${positions[index].x}%`, '--fy': `${100 - positions[index].y}%`, '--point-index': index } as React.CSSProperties };
+  return onActivate ? <button ref={element => { elements.current[index] = element; }} type="button" aria-label={`${item.label}: ${Math.round(item.share * 100)}% coverage, ${Math.round(item.practicalRatio * 100)}% practical emphasis`} aria-pressed={selected} aria-controls="field-domain-detail" {...props} key={item.label} onMouseEnter={() => onActivate(item)} onFocus={() => onActivate(item)} onClick={() => onActivate(item)}>{content}</button> : <div ref={element => { elements.current[index] = element; }} {...props} key={item.label}>{content}</div>;
 })}</>;
-const AxisLabels = () => <><span className="field-axis-label field-axis-label-y-top">used in real systems</span><span className="field-axis-label field-axis-label-y-bottom">studied &amp; explored</span><span className="field-axis-label field-axis-label-x-left">background</span><span className="field-axis-label field-axis-label-x-right">current focus</span></>;
+};
+const AxisLabels = () => <><span className="field-axis-label field-axis-label-y-top">projects &amp; mechanisms</span><span className="field-axis-label field-axis-label-y-bottom">essay-led</span><span className="field-axis-label field-axis-label-x-left">less coverage</span><span className="field-axis-label field-axis-label-x-right">more coverage</span></>;
+
+const FieldDetail: React.FC<{ item: FieldItem | null }> = ({ item }) => (
+  <div className="field-detail" id="field-domain-detail">
+    <small>{item ? 'Selected domain' : 'Read the map'}</small>
+    <div className="field-detail-heading">
+      {/* The title itself is the link to the wiki note; it takes the brand colour on hover. */}
+      {item
+        ? <Link className="field-detail-title" to={secondBrainPath(item.id)} title={`Explore ${item.label} in the Wiki`}><strong>{item.label}</strong></Link>
+        : <strong>Practice and coverage</strong>}
+    </div>
+    {item ? <>
+      <p className="field-detail-rationale">{item.rationale}</p>
+      <div className="field-detail-summary">
+        <span>{item.relatedArticles} related articles</span>
+      </div>
+      <nav className="field-source-links" aria-label={`Articles behind ${item.label}`}>
+        {item.sources.slice(0, 3).map(source => <Link key={source.id} title={source.title} to={postPath(source.category as PostSummary['category'], source.id)}><span className="field-source-arrow" aria-hidden="true">↗</span><span className="field-source-title">{source.title}</span></Link>)}
+      </nav>
+    </> : <p>Select a domain to see its coverage, practical emphasis and supporting articles.</p>}
+  </div>
+);
 
 const FieldOfView: React.FC<{ variant: FieldVariant }> = ({ variant }) => {
   const [active, setActive] = useState<FieldItem | null>(null);
-  const evidence = active?.evidence ?? 'Move through the map to see the work behind each domain.';
-  const activeQuadrant = active
-    ? (active.x >= 50 ? 1 : 0) + (active.y < 48 ? 2 : 0)
-    : -1;
-  if (variant === 1) return <section className="home-field-index field-plot-study field-plot-minimal field-plot-interactive pb-14 md:pb-20"><div className="field-plot-caption"><span>Where practice meets curiosity.</span><small>Relative positions, not proficiency scores</small></div><div className="field-plot"><i className="field-axis-x" /><i className="field-axis-y" /><AxisLabels /><FieldPoints active={active?.label} onActivate={setActive} /></div><div className="field-evidence-editorial"><strong>{active?.label ?? 'Field of view'}</strong><p>{evidence}</p></div></section>;
-  if (variant === 2) return <section className="home-field-index field-plot-study field-plot-grid pb-14 md:pb-20"><div className="field-plot"><i className="field-axis-x" /><i className="field-axis-y" /><AxisLabels /><FieldPoints /><p>direction, not rank</p></div></section>;
-  if (variant === 3) return <section className="home-field-index field-plot-study field-plot-quadrants field-plot-interactive field-plot-split pb-14 md:pb-20"><div className="field-plot-caption"><span>Field of view</span><small>Evidence on demand</small></div><div className="field-split-layout"><div className="field-plot"><i className="field-axis-x" /><i className="field-axis-y" /><div className="field-quadrant-labels" aria-hidden="true">{['FOUNDATIONS', 'DEPLOYMENT', 'EXPLORATION', 'EMERGING PRACTICE'].map((label, index) => <span key={label} className={index === activeQuadrant ? 'is-active' : ''}>{label}</span>)}</div><AxisLabels /><FieldPoints active={active?.label} onActivate={setActive} /></div><aside><small>{active ? 'Selected domain' : 'Read the map'}</small><strong>{active?.label ?? 'Practice × attention'}</strong><p>{evidence}</p></aside></div></section>;
-  if (variant === 4) return <section className="home-field-index field-plot-study field-plot-topographic field-plot-interactive pb-14 md:pb-20"><div className="field-plot-caption"><span>Attention landscape</span><small>Hover or focus to isolate evidence</small></div><div className="field-plot"><svg className="field-contours" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"><ellipse cx="74" cy="22" rx="25" ry="17"/><ellipse cx="74" cy="22" rx="18" ry="12"/><ellipse cx="74" cy="22" rx="11" ry="7"/><ellipse cx="35" cy="42" rx="25" ry="14"/><ellipse cx="35" cy="42" rx="16" ry="9"/><path d="M0 49C18 39 31 57 51 48s31-26 49-17"/></svg><i className="field-axis-x" /><i className="field-axis-y" /><AxisLabels /><FieldPoints active={active?.label} onActivate={setActive} /><div className="field-evidence-overlay"><strong>{active?.label ?? 'Select a domain'}</strong><span>{evidence}</span></div></div></section>;
-  return <section className="home-field-index field-plot-study field-plot-blueprint field-plot-interactive pb-14 md:pb-20"><div className="field-plot-caption"><span>Operational coordinates</span><small>YM / FOV / 05</small></div><div className="field-plot"><i className="field-axis-x" /><i className="field-axis-y" /><AxisLabels /><FieldPoints projections active={active?.label} onActivate={setActive} /><p>direction, not rank</p></div><div className="field-evidence-console"><span>{active ? `0${fieldCoordinates.indexOf(active) + 1}` : '--'}</span><strong>{active?.label ?? 'Awaiting selection'}</strong><p>{evidence}</p></div></section>;
+  const evidence = <FieldDetail item={active} />;
+  if (variant === 1) return <section className="home-field-index field-plot-study field-plot-minimal field-plot-interactive"><div className="field-plot-caption"><span>Where the published work leads.</span><small>Coverage and practical emphasis</small></div><div className="field-plot"><i className="field-axis-x" /><i className="field-axis-y" /><AxisLabels /><FieldPoints active={active?.label} onActivate={setActive} /></div><div className="field-evidence-editorial">{evidence}</div></section>;
+  if (variant === 2) return <section className="home-field-index field-plot-study field-plot-grid"><div className="field-plot"><i className="field-axis-x" /><i className="field-axis-y" /><AxisLabels /><FieldPoints /><p>coverage rank</p></div></section>;
+  if (variant === 3) return <section className="home-field-index field-plot-study field-plot-quadrants field-plot-interactive field-plot-split"><div className="field-split-layout"><div className="field-plot"><i className="field-axis-x" /><i className="field-axis-y" /><AxisLabels /><FieldPoints active={active?.label} onActivate={setActive} /></div><aside>{evidence}</aside></div></section>;
+  if (variant === 4) return <section className="home-field-index field-plot-study field-plot-topographic field-plot-interactive"><div className="field-plot-caption"><span>Attention landscape</span><small>Hover or focus to isolate evidence</small></div><div className="field-plot"><svg className="field-contours" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"><ellipse cx="74" cy="22" rx="25" ry="17"/><ellipse cx="74" cy="22" rx="18" ry="12"/><ellipse cx="74" cy="22" rx="11" ry="7"/><ellipse cx="35" cy="42" rx="25" ry="14"/><ellipse cx="35" cy="42" rx="16" ry="9"/><path d="M0 49C18 39 31 57 51 48s31-26 49-17"/></svg><i className="field-axis-x" /><i className="field-axis-y" /><AxisLabels /><FieldPoints active={active?.label} onActivate={setActive} /><div className="field-evidence-overlay">{evidence}</div></div></section>;
+  return <section className="home-field-index field-plot-study field-plot-blueprint field-plot-interactive"><div className="field-plot-caption"><span>Operational coordinates</span><small>YM / FOV / 05</small></div><div className="field-plot"><i className="field-axis-x" /><i className="field-axis-y" /><AxisLabels /><FieldPoints active={active?.label} onActivate={setActive} /><p>coverage rank</p></div><div className="field-evidence-console">{evidence}</div></section>;
 };
 
 export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVariant?: FieldVariant }> = ({ visualVariant, fieldVariant = 1 }) => {
+  const presence = usePresence();
   const selectedWorkPosts = useMemo(() => selectedWorkIds
     .map(id => posts.find(post => post.id === id))
     .filter((post): post is PostSummary => Boolean(post)), []);
@@ -94,6 +137,14 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
         {visualVariant && <div className={`home-visual-experiment home-visual-${visualVariant}`} aria-hidden="true"><HomeVisualLab variant={visualVariant} interactivePointer showTachograph={false} /></div>}
         <div className="relative z-10 w-full">
           <div>
+          {/* Phones: the counters the desktop rails show, as one line above everything. */}
+          <p className="md:hidden home-presence-strip">
+            <span>{presence.visits == null ? '—' : presence.visits.toLocaleString()} visits</span>
+            <i aria-hidden="true">·</i>
+            <span>{presence.visitors == null ? '—' : presence.visitors.toLocaleString()} visitors</span>
+            <i aria-hidden="true">·</i>
+            <span>{presence.pageViews == null ? '—' : presence.pageViews.toLocaleString()} page views</span>
+          </p>
           {/* Identity anchor */}
           <div className="flex items-end gap-5 mb-10 home-identity-anchor">
             <div className="relative w-20 h-24 shrink-0 home-identity-portrait">
@@ -120,7 +171,7 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
           </p>
 
           <p className="text-th-secondary leading-relaxed text-base max-w-xl mb-4">
-            I picked up code because every engineer should&mdash;not to become a developer, but to move faster. Now I build at the boundary. This is my lab, my notebook, and my proof of work.
+            I build systems, study how they fail, and ask what evidence would let us trust them. This is my lab, my notebook, and my proof of work.
           </p>
 
           <p className="text-th-tertiary leading-relaxed text-sm max-w-xl">
@@ -128,7 +179,7 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
             I build, study and explain systems: robotics, control, infrastructure, intelligence, networks, brains and whatever else becomes too interesting to leave alone.
           </p>
           {/* Four doors, rotating: the wiki, an essay, a project, a lesson. */}
-          <div className="mt-10 home-intro-carousel"><StartHere /></div>
+          <div className="mt-10 home-intro-carousel home-field-wide"><StartHere /></div>
           </div>
           <aside className="hidden">
             <p className="text-[10px] uppercase tracking-[0.2em] text-th-tertiary mb-4">A personal laboratory</p>
@@ -162,6 +213,7 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Escape') { setSearchQuery(''); searchRef.current?.blur(); } }}
             placeholder="Search published work..."
+            aria-label="Search published work"
             spellCheck={false}
             autoComplete="off"
             className="w-full bg-transparent border-none ml-2.5 text-sm focus:outline-none placeholder-th-tertiary text-th-primary"
@@ -250,11 +302,19 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
         )}
       </section>
 
-      {/* Synthesis after the evidence: a plain note on what the map means, then the map itself, slightly wider than the column. */}
-      <p className="home-field-wide home-field-note">This is a map of where my attention actually goes. Every label is a field I work in, placed by two things: how much I use it in real systems, from left to right, and how much I keep studying it on my own, from bottom to top. The top right corner is what I ship for a living, the bottom left is what I read about at night, and hovering any label shows the work behind it.</p>
+      {/* Field of view: titled like the other shelves, then a plain note on what the map means, then the map itself, slightly wider than the column. */}
+      <section className="home-field-section pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
+      <div className="home-editorial-heading">
+        <div>
+          <h2>Field of view</h2>
+          <p>The subjects the work keeps returning to, with the evidence behind each one.</p>
+        </div>
+      </div>
+      <p className="home-field-note">A map of the published work. Further right means a higher coverage rank; higher means a greater share of projects and technical walkthroughs. Tags and Wiki links connect the domains. Select a label to see its (coverage, practical emphasis) and supporting articles.</p>
       <div className="home-field-wide">
         <FieldOfView variant={fieldVariant} />
       </div>
+      </section>
 
       {/* Ideas in public */}
       <section className="home-work-section pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
@@ -278,7 +338,8 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
         </div>
       </section>
 
-      {/* Closing plate: the wiki as sponsor of the whole thing. */}
+      {/* Closing plate: the wiki as sponsor of the whole thing, behind the same rule the other sections open with. */}
+      <hr className="home-section-rule" />
       <WikiBanner />
 
     </div>
