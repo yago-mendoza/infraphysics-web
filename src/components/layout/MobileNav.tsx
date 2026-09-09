@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import { BackChevronIcon, CloseIcon, DiceIcon, ExternalLinkIcon, Logo, MenuIcon, MoonIcon, SunIcon, WikiBrainIcon } from '../icons';
-import { postPath, secondBrainPath } from '../../config/categories';
+import { postPath, secondBrainPath, secondBrainGraphPath } from '../../config/categories';
 import { postSummaries } from '../../data/postSummaries';
 import { initBrainIndex } from '../../lib/brainIndex';
 import { NAV_MENUS, type NavBackAction } from './Sidebar';
@@ -43,6 +43,8 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?:
     return () => { document.body.style.overflow = ''; };
   }, [open]);
 
+  // The grouped rows: the desktop menus plus, on the phone only, a direct door to the graph.
+  const menus: Record<string, { to: string; label: string }[]> = { ...NAV_MENUS, Wiki: [{ to: secondBrainGraphPath(), label: 'Graph' }] };
   const links = [
     ['/home', 'Home'], ['/about', 'About'], ['/blog', 'Writing'],
     ['/lab/projects', 'Projects'], [secondBrainPath(), 'Wiki'], ['/contact', 'Contact'],
@@ -68,12 +70,13 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?:
             <button onClick={() => setOpen(false)} className="p-2 text-th-secondary" aria-label="Close navigation"><CloseIcon /></button>
           </div>
           <nav className="py-8">
-            {links.map(([to, label], index) => (label === 'About' || label === 'Writing') ? (
-              /* Grouped pages: the label plus a flat row of destinations, no nested list. */
+            {links.map(([to, label], index) => menus[label] ? (
+              /* Grouped pages: the label plus a flat row of destinations, no nested list. A single
+                 destination sits at the right end of the label's own row instead of under it. */
               <div key={to} className="grid grid-cols-[2.8rem_1fr] items-baseline py-4 border-b border-th-border">
                 <span className="mobile-nav-num">0{index + 1}</span>
-                <span className="text-3xl font-serif text-th-heading">{label}</span>
-                <span className="col-start-2 mobile-nav-chips">{NAV_MENUS[label].map(item => <Link key={item.to} to={item.to} data-active={(item.to.startsWith('/blog/') ? location.pathname.startsWith(item.to) : location.pathname === item.to) || undefined}>{item.label}</Link>)}</span>
+                <span className="flex items-center gap-2 text-3xl font-serif text-th-heading">{label}{label === 'Wiki' && <ExternalLinkIcon className="wiki-context-icon mobile-nav-ext" />}{menus[label].length === 1 && <span className="mobile-nav-chips mobile-nav-chips-inline">{menus[label].map(item => <Link key={item.to} to={item.to} data-active={location.pathname === item.to || undefined}>{item.label}</Link>)}</span>}</span>
+                {menus[label].length > 1 && <span className="col-start-2 mobile-nav-chips">{menus[label].map(item => <Link key={item.to} to={item.to} data-active={(item.to.startsWith('/blog/') ? location.pathname.startsWith(item.to) : location.pathname === item.to) || undefined}>{item.label}</Link>)}</span>}
               </div>
             ) : <Link key={to} to={to} className="grid grid-cols-[2.8rem_1fr] items-baseline py-4 border-b border-th-border"><span className="mobile-nav-num">0{index + 1}</span><span className="flex items-center gap-2 text-3xl font-serif text-th-heading">{label}{label === 'Wiki' && <ExternalLinkIcon className="wiki-context-icon mobile-nav-ext" />}</span></Link>)}
           </nav>
@@ -82,7 +85,7 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?:
             <button type="button" onClick={randomWikinote}><WikiBrainIcon size={17} /><span>Random wikinote</span></button>
           </div>
           <div className="flex items-center justify-between pt-4 text-xs text-th-tertiary">
-            <span>Madrid · ES / EN</span>
+            <span>Barcelona · ES / EN</span>
             <button onClick={toggleTheme} className="flex items-center gap-2 text-th-secondary">
               {theme === 'dark' ? <SunIcon /> : <MoonIcon />} Theme
             </button>

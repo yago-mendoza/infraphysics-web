@@ -33,7 +33,7 @@ export const WikiBanner: React.FC = () => (
         <span className="wb-shot">
           <img className="wb-shot-dark" src="/home-wiki-dark.png" alt="" loading="lazy" width={1040} height={560} />
           <img className="wb-shot-light" src="/home-wiki-light.png" alt="" loading="lazy" width={1040} height={560} />
-          <span className="wb-shot-cta"><WikiBrainIcon size={14} /> Open the console <b aria-hidden="true">→</b></span>
+          <span className="wb-shot-cta"><WikiBrainIcon size={14} /> Open the wiki <b aria-hidden="true">→</b></span>
         </span>
       </Link>
     </div>

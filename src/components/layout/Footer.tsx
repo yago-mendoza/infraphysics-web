@@ -40,7 +40,7 @@ export const Footer: React.FC = () => {
               </span>}
             </div>
             {/* Phones: place left, year right; desktop keeps one line. */}
-            <p className="flex justify-between md:block text-[9px] font-mono uppercase tracking-[0.14em] text-th-muted"><span>Madrid · ES / EN</span><span className="hidden md:inline"> · </span><span>© {new Date().getFullYear()}</span></p>
+            <p className="flex justify-between md:block text-[9px] font-mono uppercase tracking-[0.14em] text-th-muted"><span>Barcelona · ES / EN</span><span className="hidden md:inline"> · </span><span>© {new Date().getFullYear()}</span></p>
           </div>
         </div>
       </div>

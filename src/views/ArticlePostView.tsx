@@ -8,8 +8,8 @@ import { getProjectDisplayTechnologies } from '../lib/projectPresentation';
 import { initBrainIndex, type BrainIndex } from '../lib/brainIndex';
 import { getActiveChain, ACTIVE_HEADING_THRESHOLD } from '../lib/headings';
 import { WikiContent } from '../components/wiki/WikiContent';
-import { CATEGORY_CONFIG, STATUS_CONFIG, sectionPath as getSectionPath, postPath, isBlogCategory, categoryGroup } from '../config/categories';
-import { ArrowRightIcon, GitHubIcon, LinkedInIcon, TwitterIcon, RedditIcon, HackerNewsIcon, ClipboardIcon, CheckIcon, ShareIcon, HeartIcon, EyeIcon } from '../components/icons';
+import { CATEGORY_CONFIG, STATUS_CONFIG, sectionPath as getSectionPath, postPath, isBlogCategory, categoryGroup, catAccentVar } from '../config/categories';
+import { ArrowRightIcon, GitHubIcon, LinkedInIcon, TwitterIcon, RedditIcon, HackerNewsIcon, ClipboardIcon, RocketIcon, CheckIcon, ShareIcon, HeartIcon, EyeIcon } from '../components/icons';
 
 import { ArticleHashtags } from '../components/article/ArticleHashtags';
 import { BlogMetabar } from '../components/article/BlogMetabar';
@@ -68,24 +68,25 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const [copied, setCopied] = useState(false);
   const [contentCopied, setContentCopied] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  const shareRef = useRef<HTMLDivElement>(null);
+  const [shareClosing, setShareClosing] = useState(false);
+  // Close with the exit animation: the closing class plays, then the sheet unmounts.
+  const closeShare = useCallback(() => {
+    setShareClosing(true);
+    window.setTimeout(() => { setShareOpen(false); setShareClosing(false); }, 180);
+  }, []);
   const { setArticleState, clearArticleState, updateActiveHeading } = useArticleContext();
 
   // Async brain index for wiki-link resolution in articles
   const [brainIndex, setBrainIndex] = useState<BrainIndex | null>(null);
   useEffect(() => { initBrainIndex().then(setBrainIndex).catch(() => {}); }, []);
 
-  // Click outside closes share dropdown
+  // Escape closes the share sheet
   useEffect(() => {
     if (!shareOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (shareRef.current && !shareRef.current.contains(e.target as Node)) {
-        setShareOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [shareOpen]);
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') closeShare(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [shareOpen, closeShare]);
 
   // Compute next/prev posts within same category sorted by date
   const { nextPost, prevPost } = useMemo(() => {
@@ -292,14 +293,6 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
     const el = progressRef.current;
     if (!el) return;
 
-    // Place inside navbar, flush with its inner bottom edge
-    const nav = document.querySelector('.fixed.top-0.z-50') as HTMLElement | null;
-    if (nav && nav.offsetHeight > 0) {
-      const border = parseFloat(getComputedStyle(nav).borderBottomWidth) || 1;
-      const barH = parseFloat(getComputedStyle(el).height) || 3;
-      el.style.top = `${nav.offsetHeight - border - barH}px`;
-    }
-
     let rafId = 0;
     const tick = () => {
       // 100% when the comments block bottom reaches the viewport bottom
@@ -423,39 +416,47 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const shareUrl = `${window.location.origin}${location.pathname}`;
   const shareTitle = post.displayTitle || post.title;
 
+  // The share sheet: the page dims and one centred card lists the options side by side (copy link
+  // first), in the category accent. No heading, no numbers, no close: the veil and Escape close it.
+  // It is a portal, so the accent is set on the card itself.
   const shareDropdown = (
-    <div ref={shareRef} style={{ position: 'relative', display: 'inline-flex' }}>
+    <>
       <button
         className="article-share-btn"
-        onClick={() => setShareOpen(o => !o)}
+        onClick={() => setShareOpen(true)}
         title="Share"
+        aria-haspopup="dialog"
+        aria-expanded={shareOpen}
       >
         <ShareIcon size={14} />
       </button>
-      {shareOpen && (
-        <div className="article-share-dropdown" role="menu">
-          <small>Share this piece</small>
-          <a role="menuitem" href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out: ${shareTitle}`)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer"><b>01</b><span>X</span><TwitterIcon size={13} /></a>
-          <a role="menuitem" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer"><b>02</b><span>LinkedIn</span><LinkedInIcon size={13} /></a>
-          <a role="menuitem" href={`https://reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer"><b>03</b><span>Reddit</span><RedditIcon size={13} /></a>
-          <a role="menuitem" href={`https://news.ycombinator.com/submitlink?u=${encodeURIComponent(shareUrl)}&t=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer"><b>04</b><span>Hacker News</span><HackerNewsIcon size={13} /></a>
-          <div className="article-share-dropdown-sep" />
-          <button role="menuitem" onClick={() => {
-            navigator.clipboard.writeText(shareUrl);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-          }}><b>05</b><span>{copied ? 'Link copied' : 'Copy link'}</span>{copied ? <CheckIcon size={13} /> : <ClipboardIcon size={13} />}</button>
-          <button role="menuitem" onClick={() => {
-            const el = document.querySelector('.article-content');
-            if (el) {
-              navigator.clipboard.writeText((el as HTMLElement).innerText);
-              setContentCopied(true);
-              setTimeout(() => setContentCopied(false), 2000);
-            }
-          }}><b>06</b><span>{contentCopied ? 'Text copied' : 'Copy the text'}</span>{contentCopied ? <CheckIcon size={13} /> : <ClipboardIcon size={13} />}</button>
-        </div>
+      {shareOpen && createPortal(
+        <div className={`article-share-veil${shareClosing ? ' is-closing' : ''}`} role="presentation" onClick={e => { if (e.target === e.currentTarget) closeShare(); }}>
+          <div className="article-share-sheet" role="dialog" aria-modal="true" aria-label="Share this piece" style={{ '--share-accent': catAccentVar(post.category) } as React.CSSProperties}>
+            <div className="article-share-options">
+              <button type="button" onClick={() => {
+                navigator.clipboard.writeText(shareUrl);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}>{copied ? <CheckIcon size={18} /> : <ClipboardIcon size={18} />}<span>{copied ? 'Link copied' : 'Copy link'}</span></button>
+              <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out: ${shareTitle}`)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer"><TwitterIcon size={18} /><span>X</span></a>
+              <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer"><LinkedInIcon size={18} /><span>LinkedIn</span></a>
+              <a href={`https://reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer"><RedditIcon size={18} /><span>Reddit</span></a>
+              <a href={`https://news.ycombinator.com/submitlink?u=${encodeURIComponent(shareUrl)}&t=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer"><HackerNewsIcon size={18} /><span>Hacker News</span></a>
+              <button type="button" onClick={() => {
+                const el = document.querySelector('.article-content');
+                if (el) {
+                  navigator.clipboard.writeText((el as HTMLElement).innerText);
+                  setContentCopied(true);
+                  setTimeout(() => setContentCopied(false), 2000);
+                }
+              }}>{contentCopied ? <CheckIcon size={18} /> : <RocketIcon size={18} />}<span>{contentCopied ? 'Text copied' : 'Copy the text'}</span></button>
+            </div>
+          </div>
+        </div>,
+        document.body,
       )}
-    </div>
+    </>
   );
 
   return (

@@ -1,427 +1,259 @@
-// Consolidated Second Brain guide modal — replaces all individual InfoPopovers.
-// Two-column layout: left nav (sections/subsections) + right scrollable content.
-
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+// Keep searchable copy and displayed explanations together so the guide cannot drift from its index.
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronIcon } from '../icons';
+import { SearchIcon, CloseIcon } from '../icons';
 
-// --- Reuse tip classes from InfoPopover convention ---
-const tipStrong = 'text-th-primary';
-const tipAccent = 'text-violet-400';
-const tipCode = 'text-violet-400/80';
-
-// --- Section data ---
-interface SubSection {
-  label: string;
-  content: React.ReactNode;
-}
-interface Section {
-  label: string;
-  subsections?: SubSection[];
-  content?: React.ReactNode; // direct content (no subs)
+interface Topic {
+  id: string;
+  section: string;
+  title: string;
+  keywords?: string;
+  paragraphs: string[];
 }
 
-const SECTIONS: Section[] = [
-  {
-    label: 'Getting Started',
-    subsections: [
-      {
-        label: 'Overview',
-        content: (
-          <div className="space-y-3">
-            <p>The Second Brain is a <strong className={tipStrong}>knowledge graph</strong> — a collection of short notes (called <em>concepts</em>) connected to each other through links. Instead of organizing ideas into folders, you navigate by following connections between related concepts.</p>
-            <p>The <strong className={tipStrong}>grid</strong> is your starting point. Each card represents one concept. Click any card to read the full note and explore its connections.</p>
-            <p>You don't need to browse manually — <strong className={tipStrong}>just start typing</strong> on your keyboard and the search bar opens automatically. Results filter live as you type.</p>
-            <p>As you explore, the interface tracks where you've been: <span style={{ color: 'var(--wiki-link-visited)' }}>blue</span> names are notes you've already visited this session, <span className={tipAccent}>purple</span> ones are still unvisited. You'll see these colors everywhere — on grid cards, inside notes, and on the graph.</p>
-            <p>The <strong className={tipStrong}>Wiki Console</strong> combines graph information, search, filters, and the directory without rebuilding the underlying knowledge graph.</p>
-            <p>The expanded workspace has its own address, <strong className={tipStrong}>/wiki/graph</strong>, which the home banner opens; closing it lands on the console. On a phone it takes the whole screen and the top-left button of its toolbar brings the console back.</p>
-            <p>Both graphs color nodes by <strong className={tipStrong}>root family</strong> (the first segment of a note's address). In the expanded graph, the toolbar on the left can switch to the <span className={tipAccent}>purple</span> centrality scale, where lighter means more central; the choice is remembered. Search and filter results appear in cool periwinkle, temporary previews in bright orchid, and a committed selection in lime. Context stays visible underneath each layer, so you can distinguish looking from filtering and filtering from selecting. The <strong className={tipStrong}>central</strong> sort option orders results from most to least central. In the expanded graph, one click selects a node and its descendants, a second click on the same node opens it, right-click opens it directly, and a click on empty canvas drops the selection; nodes never show text labels, the hover card carries the name. In the mini graph a single tap on a node opens it, and the ⟲ control in its toolbar resets every filter, root and search at once.</p>
-            <p>The site navigation stays out of the way in the wiki. Move the pointer to the <strong className={tipStrong}>bottom edge</strong> of the window (a small mark shows where) and the bar slides in, with search, the theme switch under the gear, and a <strong className={tipStrong}>Back</strong> arrow to the page you came from; on touch, scroll up instead. <code className={tipCode}>Shift+T</code> also toggles the theme.</p>
-          </div>
-        ),
-      },
-      {
-        label: 'Keyboard',
-        content: (
-          <div className="space-y-3">
-            <p className="text-th-muted italic">Desktop only — these require a physical keyboard.</p>
-            <p>When you're on the grid, you can navigate entirely with the keyboard:</p>
-            <p><strong className={tipStrong}>Arrow keys</strong> move focus between cards. The focused card gets a subtle highlight.</p>
-            <p><strong className={tipStrong}>Enter</strong> opens the focused card.</p>
-            <p><strong className={tipStrong}>Escape</strong> clears whatever you've typed in the search bar and deselects the focused card.</p>
-            <p><strong className={tipStrong}>Any letter key</strong> jumps straight into the search bar — no need to click it first.</p>
-          </div>
-        ),
-      },
-    ],
-  },
-  {
-    label: 'Grid & Search',
-    subsections: [
-      {
-        label: 'Search Modes',
-        content: (
-          <div className="space-y-3">
-            <p>Above the grid, you'll see three search mode chips: <strong className={tipStrong}>name</strong>, <strong className={tipStrong}>content</strong>, and <strong className={tipStrong}>backlinks</strong>. These control <em>what</em> gets searched when you type:</p>
-            <p><strong className={tipStrong}>Name</strong> matches against note titles and their address paths (the hierarchical name, like <code className={tipCode}>chip / MCU / ARM</code>).</p>
-            <p><strong className={tipStrong}>Content</strong> does full-text search across the actual body of every note — useful when you remember a specific phrase but not which note it's in.</p>
-            <p><strong className={tipStrong}>Backlinks</strong> works in reverse: type a concept name, and it returns every note that <em>links to</em> that concept. If "CPU" links to "ARM", searching backlinks for "ARM" will return "CPU".</p>
-          </div>
-        ),
-      },
-      {
-        label: 'Filters',
-        content: (
-          <div className="space-y-3">
-            <p>Below the search bar there's a collapsible <strong className={tipStrong}>filters</strong> panel. These narrow down which cards appear on the grid:</p>
-            <p><strong className={tipStrong}>Isolated</strong> shows only notes with zero connections — they don't link anywhere and nothing links to them.</p>
-            <p><strong className={tipStrong}>Leaf</strong> shows notes at the end of a naming branch. For example, if <code className={tipCode}>chip//MCU//ARM</code> has no sub-notes, ARM is a leaf.</p>
-            <p><strong className={tipStrong}>Bridges</strong> highlights structurally critical notes. A bridge is a note that, if removed, would split its cluster of connected notes into separate groups. They're the glue holding parts of the graph together.</p>
-            <p><strong className={tipStrong}>Depth</strong> filters by hierarchy level. A root note like <code className={tipCode}>chip</code> has depth 1, <code className={tipCode}>chip//MCU</code> has depth 2, <code className={tipCode}>chip//MCU//ARM</code> has depth 3.</p>
-            <p><strong className={tipStrong}>Hubs &ge; N</strong> shows only notes with at least N total connections (incoming + outgoing). Useful for finding the most interconnected concepts.</p>
-            <p><strong className={tipStrong}>Heatmap</strong> is the calendar-style grid of colored squares. Click any day to filter notes created on that date. Click a second day to select a range.</p>
-          </div>
-        ),
-      },
-      {
-        label: 'Sorting',
-        content: (
-          <div className="space-y-3">
-            <p>The sort dropdown controls the order cards appear on the grid:</p>
-            <p><strong className={tipStrong}>A–Z</strong> sorts alphabetically by note name.</p>
-            <p><strong className={tipStrong}>Newest / Oldest</strong> sorts by creation date.</p>
-            <p><strong className={tipStrong}>Most / Fewest links</strong> sorts by total connection count — outgoing links plus incoming mentions.</p>
-            <p><strong className={tipStrong}>Depth</strong> sorts by how deep the note sits in the naming tree.</p>
-            <p><strong className={tipStrong}>Shuffle</strong> randomizes the order. Click again to reshuffle — useful for serendipitous discovery.</p>
-            <p>There's also an <strong className={tipStrong}>Unvisited</strong> toggle that hides cards you've already opened this session, so you can focus on what's left to explore.</p>
-          </div>
-        ),
-      },
-      {
-        label: 'Copy for context',
-        content: (
-          <div className="space-y-3">
-            <p>Next to the result count in the toolbar you'll see a <strong className={tipStrong}>clipboard icon</strong>. It copies all current search results as structured markdown — ready to paste into an LLM prompt as context.</p>
-            <p>The small <strong className={tipStrong}>meta/full</strong> toggle next to it controls how much detail is included. <strong className={tipStrong}>Meta</strong> exports just the address, date, and one-line description for each note — fast and compact. <strong className={tipStrong}>Full</strong> fetches the actual body text and annotated interactions — more context but takes a moment.</p>
-            <p>This works with any combination of search, scope, and filters — so you can narrow down to exactly the subset of knowledge you want to share with an LLM.</p>
-            <p>On a <strong className={tipStrong}>note detail page</strong>, a separate clipboard icon appears on the metadata line. This opens a <strong className={tipStrong}>scope selector</strong> where you can pick which related notes to include: parent, siblings, children, trailing refs (interactions), and backlinks. Toggle zones on and off to build exactly the context window you need.</p>
-          </div>
-        ),
-      },
-    ],
-  },
-  {
-    label: 'Note Detail',
-    subsections: [
-      {
-        label: 'Navigation',
-        content: (
-          <div className="space-y-3">
-            <p>When you open a note, a <strong className={tipStrong}>breadcrumb trail</strong> appears at the top showing the path you took to get there. It's like browser history but visible — you can see the chain of concepts you followed.</p>
-            <p>Click any crumb to jump back to that point. The first crumb, <strong className={tipStrong}>"all concepts"</strong>, always returns you to the grid.</p>
-            <p>Following a link inside a note's body <strong className={tipStrong}>extends</strong> the trail — so you can trace exactly how you arrived at a particular concept. But clicking a card from the grid <strong className={tipStrong}>resets</strong> the trail, starting a fresh path.</p>
-            <p>When the trail gets long, older crumbs collapse automatically to save space. They're still there — just hidden behind an overflow indicator.</p>
-          </div>
-        ),
-      },
-      {
-        label: 'Page Layout',
-        content: (
-          <div className="space-y-3">
-            <p>Each note page has a consistent structure from top to bottom:</p>
-            <p>Right below the title you'll see <strong className={tipStrong}>colored names</strong> — these are <span className={tipAccent}>mentions</span>, other notes that link <em>to</em> the one you're reading. Think of them as "who references me?" Click any to visit that note.</p>
-            <div className="border-t border-th-hub-border my-2" />
-            <p>The note body itself contains <strong className={tipStrong}>highlighted words</strong> — these are outgoing links to other concepts. Click one to follow the connection.</p>
-            <div className="border-t border-th-hub-border my-2" />
-            <p>The <strong className={tipStrong}>address path</strong> below the title (e.g. <code className={tipCode}>chip / MCU / ARM</code>) shows where the note sits in the naming hierarchy. Each segment is clickable — tap an ancestor to navigate up the tree.</p>
-            <p>The <strong className={tipStrong}>metadata line</strong> gives you a quick count: <code className={tipCode}>links ↓ N</code> = how many notes the current one links to, <code className={tipCode}>mentioned ↑ N</code> = how many notes link back here.</p>
-          </div>
-        ),
-      },
-      {
-        label: 'Interactions',
-        content: (
-          <div className="space-y-3">
-            <p>Below the note body, you may see a section called <strong className={tipStrong}>Interactions</strong>. These are different from regular links in the text.</p>
-            <p>An interaction annotation belongs to the <strong className={tipStrong}>edge</strong> between two concepts, not to the identity or intrinsic content of either node.</p>
-            <p>A regular link just says "A mentions B." An interaction is a <strong className={tipStrong}>curated, annotated relationship</strong> — it describes <em>how</em> two concepts relate. For example: "contrasts with", "depends on", "is an example of".</p>
-            <p>Interactions are <strong className={tipStrong}>bilateral</strong>: if note A has an interaction with note B, it automatically shows up on both sides. You don't need to add it twice.</p>
-            <p>Click any name in the interactions list to jump to that concept.</p>
-          </div>
-        ),
-      },
-    ],
-  },
-  {
-    label: 'Sidebar',
-    subsections: [
-      {
-        label: 'Stats',
-        content: (
-          <div className="space-y-3">
-            <p>The <strong className={tipStrong}>Graph Stats</strong> section in the sidebar gives you a bird's-eye view of the entire knowledge base:</p>
-            <p><strong className={tipStrong}>Concepts</strong> — total number of notes.</p>
-            <p><strong className={tipStrong}>Links</strong> — total references between notes, counting both body links and explicit interactions.</p>
-            <p><strong className={tipStrong}>Isolated</strong> — how many notes have zero connections to anything. A high number here means there are orphan notes waiting to be integrated.</p>
-            <p><strong className={tipStrong}>Avg refs</strong> — the average number of links per note. Higher means the graph is more interconnected.</p>
-            <p><strong className={tipStrong}>Max depth</strong> — the deepest level in the naming tree. For example, <code className={tipCode}>chip//MCU//ARM</code> has depth 3.</p>
-            <p><strong className={tipStrong}>Density</strong> — what percentage of all <em>possible</em> connections actually exist. 100% would mean every note links to every other note (unrealistic, but the number gives you a sense of how tightly woven the graph is).</p>
-            <p>Below the stats, a <strong className={tipStrong}>word count histogram</strong> shows the distribution of note lengths. Click any bar to filter the grid to notes within that word-count range.</p>
-          </div>
-        ),
-      },
-      {
-        label: 'Directory',
-        content: (
-          <div className="space-y-3">
-            <p>The <strong className={tipStrong}>Directory</strong> is a tree view that organizes notes by their <em>address</em> — a hierarchical naming path using <code className={tipCode}>//</code> as separator. For example, <code className={tipCode}>chip//MCU//ARM</code> means ARM lives under MCU, which lives under chip.</p>
-            <p>This tree reflects how concepts are <em>named</em>, not how they're linked. Two notes in the same branch might not link to each other at all, and two heavily linked notes might live in completely different branches.</p>
-            <p>Click a <strong className={tipStrong}>folder name</strong> (or the ⊙ icon) to <strong className={tipStrong}>scope</strong> the grid — only notes within that branch will appear. Click again to clear the scope.</p>
-            <p>When you open a note, its branch <strong className={tipStrong}>auto-expands</strong> in the directory so you can see where you are in the tree.</p>
-            <p>The <strong className={tipStrong}>small bars</strong> on the right side of each note show relative centrality — how many links that note has compared to others. Wider bar = more connected.</p>
-            <p>Use the <strong className={tipStrong}>filter input</strong> at the top to search within the tree by name. When any filter, search, or scope is active, branches with no matching notes are hidden automatically.</p>
-          </div>
-        ),
-      },
-    ],
-  },
-  {
-    label: 'Neighborhood',
-    content: (
-      <div className="space-y-3">
-        <p>When you're reading a note, a <strong className={tipStrong}>neighborhood graph</strong> appears on the right side showing the note's position in the naming hierarchy — its parent, siblings, and children based on the address path.</p>
-        <p>The graph is divided into three <strong className={tipStrong}>zones</strong>: the parent sits above, siblings are on the same level, and children are below. Tap a zone to filter the leaderboard underneath it to only show notes from that zone.</p>
-        <p>On desktop, you can also use <strong className={tipStrong}>arrow keys</strong> to switch between zones and navigate within them.</p>
-        <p>The <strong className={tipStrong}>white bar</strong> represents the current note. Other notes follow the same color convention: <span style={{ color: 'var(--wiki-link-visited)' }}>blue</span> = visited, <span className={tipAccent}>purple</span> = not yet visited.</p>
-        <p>Sometimes you'll see <strong className={tipStrong}>ghost dots</strong> — faint indicators that the same name exists under a different parent elsewhere in the tree. They help you spot when a concept appears in multiple places in the hierarchy.</p>
-      </div>
-    ),
-  },
+const TOPICS: Topic[] = [
+  { id: 'overview', section: 'Getting started', title: 'Explore the Wiki', keywords: 'overview getting started ayuda empezar', paragraphs: [
+    'The Wiki is a collection of short concept notes. Open a card to read a note, then follow links to related ideas. The directory organizes concepts by their address; the graph shows their connections.',
+    'The Wiki Console brings together the graph and directory. Search and filter & sort sit above the concept cards. On a phone, use Open Wiki Console to reveal the console.',
+    'This guide has its own search above the explanations. Try sorting, articles, or graph. Results search every topic and its text; selecting a result opens the relevant explanation without changing your Wiki search or filters.',
+    'Visited note links use blue; unvisited links use the Wiki accent. Visits are remembered in this browser tab for the session. Graph nodes use a separate color system explained under Graph colors.',
+    'To reveal the site navigation, move your pointer near the bottom edge or scroll up on touch. The Back arrow returns to your previous section. Shift+T switches the site theme when you are outside a text field.',
+  ] },
+  { id: 'keyboard', section: 'Getting started', title: 'Keyboard shortcuts', keywords: 'teclado atajos enter escape arrows', paragraphs: [
+    'Outside an input, type to focus the Wiki search. On the card grid, arrow keys move the highlighted card and Enter opens it. Arrow keys from the search field transfer navigation to the grid; Enter opens the highlighted result, or the first result if none is highlighted.',
+    'Escape clears the Wiki search and card focus. When reading a note, the neighborhood list also supports arrow-key navigation: left and right change zones, up and down move within a zone.',
+    'Inside this guide, typing searches only the help. Enter in the search opens the first result; Arrow Down moves to the result buttons. Tab moves between controls. Escape clears a help search first, then closes the guide. These keys do not navigate the Wiki behind it.',
+  ] },
+  { id: 'search', section: 'Search & results', title: 'Search fields', keywords: 'search modes buscar busqueda aliases backlinks referenced by all', paragraphs: [
+    'Name searches concept names, address paths, and aliases. Use it when you know roughly what the concept is called. Content searches the note text and description, which helps when you remember a phrase rather than a title.',
+    'Referenced by finds concepts that are linked from matching notes. The query is matched against the referring notes’ names, paths, text, and descriptions. For example, if a note about CPU links to ARM, searching CPU in referenced by can return ARM. It does not mean finding every note that mentions ARM.',
+    'The name, content, and referenced by buttons can be combined. Turn on one, two, or all three fields; a concept appears if any selected field matches. At least one field stays enabled. Search is case-insensitive and matches the text you enter; it is not a conversational or semantic search.',
+    'Search works together with the current scope and filters. If something seems missing, check the active chips below the controls. Clear the search and remove constraints to return to all concepts.',
+  ] },
+  { id: 'sorting', section: 'Search & results', title: 'Sorting', keywords: 'sort order ordenar ordenacion ordenación alphabetical random', paragraphs: [
+    'Open filter & sort below the search field to change the card order. Desktop shows the available choices inline; phones use the Sort menu. Sorting changes the order of your current results and keeps the search and filters in place.',
+    'Most articles / fewest articles: order by the number of distinct public articles that link to the concept in their body. Repeated links from one article count once. Tags and unlinked words do not count. Fewest articles brings unused concepts first; ties are ordered by address.',
+    'A–Z: alphabetical order by the full concept address, falling back to the title. Concepts from the same naming branch therefore stay together.',
+    'Central: highest graph centrality first. This is a structural score, not a count of article mentions or a rating of note quality.',
+    'Newest / oldest: order by the note’s date, not the date you last read it.',
+    'Most links / fewest links: order by outgoing references plus incoming references. This measures Wiki connections, separately from article usage.',
+    'Depth: shallowest addresses first. A root has depth 1, its child depth 2, and its grandchild depth 3.',
+    'Shuffle: randomize the current results. Choose shuffle again to get a fresh order.',
+  ] },
+  { id: 'filters', section: 'Search & results', title: 'Filters & scope', keywords: 'filtros hubs leaf isolated bridges depth roots reset', paragraphs: [
+    'Open filter & sort to reveal the controls. Closing this panel keeps its filters active. Constraints combine, so each result must satisfy every active filter. Remove individual chips below the controls, or use clear beside the collapsed panel to reset filters and scope while keeping the search.',
+    'Scope limits results to one address branch, including the branch concept itself and its descendants. Type a path in the scope field or choose a directory root. Clear the scope to search all branches again.',
+    'Articles < N keeps concepts linked by fewer than N distinct public articles. Set it to 1 to find concepts that no article links yet. Leave it empty for no article limit.',
+    'Depth min / max restrict the levels in the naming hierarchy. Roots have depth 1. The infinity symbol means there is no upper limit. Hubs ≥ N keeps concepts with at least N incoming plus outgoing Wiki references.',
+    'Isolated keeps concepts with no incoming or outgoing references. Leaf keeps concepts with no children in the naming hierarchy. A leaf can still have many references.',
+    'Bridges keeps concepts whose removal would disconnect part of their graph component. Use this to explore structural connectors between groups of notes.',
+    'The date calendar filters by a note’s date: select a day, then another day for a range. A word-count range can also be selected from the console histogram. Active date and word-count constraints appear as removable chips.',
+  ] },
+  { id: 'articles', section: 'Search & results', title: 'Article links & unvisited notes', keywords: 'articulos artículos visited blue purple unread', paragraphs: [
+    'Article counts show how many distinct public articles link to a concept in their body. They measure where the idea is used across projects, essays, and Bits2Bricks, separately from connections between Wiki notes.',
+    'Use most articles to start with concepts that appear often in articles. Use fewest articles or Articles < 1 to explore concepts that have not yet been used in an article.',
+    'Once you have visited notes, the Unvisited control can hide opened cards. Visit history is kept for this browser tab’s session. This control affects the card list; it does not remove those concepts from the knowledge graph.',
+  ] },
+  { id: 'copy', section: 'Search & results', title: 'Copy for context', keywords: 'export clipboard LLM markdown copiar exportar', paragraphs: [
+    'The clipboard beside the result count copies the current search and filter results as Markdown, including results beyond the cards currently loaded on screen. This is useful for collecting context for an LLM or your own notes.',
+    'Meta copies compact note metadata and descriptions. Full also loads note bodies and annotated interactions, so larger selections can take a moment.',
+    'Every bulk copy first shows a confirmation with the number of notes, the mode, the estimated size of the paste and, in full mode, the number of note files fetched. The dialog rates the load: a large paste can slow down or be truncated by the application you paste into, and a very large one can freeze it. Escape or Cancel closes it without copying.',
+    'On a note page, Copy for context opens a selection dialog. Choose the current note and related groups such as parent, siblings, children, interactions, and backlinks, then copy the selected context.',
+  ] },
+  { id: 'navigation', section: 'Reading a note', title: 'Navigation & addresses', keywords: 'breadcrumb trail URL enlace ruta history', paragraphs: [
+    'The breadcrumb trail records the concepts you followed. Select an earlier crumb to return to it, or all concepts to go back to the cards. Following links extends the trail; opening a grid card starts a new trail. Older steps collapse when space is limited.',
+    'The address below the title shows the naming hierarchy. Available ancestors are clickable. The address describes where the idea sits in the tree, while the breadcrumb describes your reading path.',
+    'Each concept has a readable URL that you can copy from the browser address bar. Old concept-ID links still resolve to the current address.',
+  ] },
+  { id: 'layout', section: 'Reading a note', title: 'Links, mentions & previews', keywords: 'page layout backlinks hover preview filtro', paragraphs: [
+    'The title identifies the concept and the address locates it in the hierarchy. Names beneath the address are mentions: notes that link to this concept from their body. Select a name to read the referring note.',
+    'Highlighted words in the note body link out to other concepts. Hoverable Wiki links can show a preview, so you can inspect a connection before navigating.',
+    'The metadata separates outgoing links from incoming body mentions. Interactions appear in their own section and describe annotated relationships.',
+    'When filters are active, in filter or outside filter tells you whether the open concept belongs to the current filtered set. You can still follow a connection outside that set.',
+  ] },
+  { id: 'interactions', section: 'Reading a note', title: 'Interactions', keywords: 'relationships relaciones annotations', paragraphs: [
+    'Interactions are annotated relationships between concepts, shown below the note body when available. A body link points to a concept; an interaction also explains the connection, such as a dependency, a contrast, or an example.',
+    'The annotation describes the relationship between the two ideas. It appears from both sides, so reading either concept can reveal the connection. Select the linked name to continue reading.',
+  ] },
+  { id: 'neighborhood', section: 'Reading a note', title: 'Neighborhood', keywords: 'family parent siblings children homonyms zonas familia', paragraphs: [
+    'The neighborhood places the current note among its parent, siblings, and children in the address hierarchy. It is a family view, rather than a map of every reference in the note.',
+    'Use filter by zone to narrow the related-note list to a family zone. The current note has its own highlighted bar; other names retain their visited or unvisited colors.',
+    'Faint ghost indicators identify same-name concepts under another parent. These are separate concepts with different contexts, not duplicate links to the current note.',
+  ] },
+  { id: 'directory', section: 'Wiki Console', title: 'Directory', keywords: 'tree arbol árbol folders levels centrality', paragraphs: [
+    'The directory follows the address hierarchy. For example, chip//MCU//ARM places ARM inside MCU inside chip. This describes how concepts are organized; reference links can connect notes across different branches.',
+    'Click a concept name to open its note. Use the chevron to expand or collapse its children. Opening a note reveals its branch. Collapse all folds the tree again.',
+    'Filter tree searches the directory. The root selector limits the current scope. The levels selector changes how much of the tree is displayed, without filtering the cards or graph.',
+    'The directory’s own sort buttons order branches alphabetically, by descendant count, or by depth. They are separate from the card sorting controls.',
+    'Small bars beside concepts show their centrality percentile. A longer bar means a higher structural rank within the Wiki, not a longer note or a larger article count. Active searches and filters can hide branches with no matching concepts.',
+  ] },
+  { id: 'statistics', section: 'Wiki Console', title: 'Graph statistics & word counts', keywords: 'stats density histogram estadisticas palabras', paragraphs: [
+    'Graph statistics summarizes the whole Wiki: nodes counts concepts, links counts references, isolated counts concepts without references, avg refs gives the average references per concept, and depth gives the deepest address level.',
+    'Density compares existing connections with the number of possible connections. These statistics describe the whole graph rather than the current card search.',
+    'The compact console’s word-count histogram shows note lengths. Select a bar to constrain results to that word-count range; remove its chip above the cards to clear it. Other active searches and filters narrow the notes represented in the histogram.',
+  ] },
+  { id: 'graph', section: 'Graph workspace', title: 'Open & navigate the graph', keywords: 'expand zoom pan 2d 3d grafo mapa', paragraphs: [
+    'The console mini graph gives a compact overview. Open the expanded graph for more space, or choose 3D. The /wiki/graph address opens this workspace directly. On phones it fills the screen; Close the graph returns to the console.',
+    'In the mini graph, select a node to open its note. In the expanded graph, one click selects a node and its descendants; a second click on that node opens it. Right-click opens it directly. Click empty space to clear the selection.',
+    'Use the expanded toolbar to switch 2D / 3D and Center graph to recover the overall view after moving around. Hover a node for its name and details.',
+    'The hierarchy and references controls switch which relationships are displayed: parent-child address structure, or content references and interactions. Changing the view does not edit the notes.',
+    'The mini graph’s Reset filters control clears the active search, filters, and scope. In the expanded search bar, reset filters keeps the search text.',
+  ] },
+  { id: 'colors', section: 'Graph workspace', title: 'Graph colors & selection', keywords: 'colores centrality roots highlights purple lime', paragraphs: [
+    'By default, graph nodes are colored by root family: the first part of their address. The expanded toolbar can switch to centrality colors, where lighter Wiki-accent tones mean higher centrality. Your color choice is remembered.',
+    'Current search and filter results use periwinkle, temporary previews use bright orchid, and a committed selection uses lime. The surrounding graph stays visible for context.',
+    'Graph colors communicate family, structural rank, and selection. The blue visited-link convention belongs to note links and is a separate cue.',
+  ] },
+  { id: 'graph-tools', section: 'Graph workspace', title: 'Area selection & graph dynamics', keywords: 'physics simulation repulsion gravity damping density copiar area', paragraphs: [
+    'In the expanded 2D view, Select area and copy notes lets you select a region for collecting note context; the same confirmation as the toolbar copy appears before the notes are fetched. Inspect local density helps examine a region of the graph. Center graph brings the overall view back into frame.',
+    'Graph dynamics adjusts the layout: repulsion spreads nodes apart, edge length sets their preferred separation, edge attraction pulls linked nodes together, and clearance reduces overlap. Damping controls how quickly movement settles; center gravity pulls the layout toward the middle.',
+    'These controls change the visual arrangement, not the notes, their links, or their centrality scores. Use reset defaults in graph dynamics to restore the initial layout settings.',
+  ] },
 ];
 
-// --- Component ---
-interface Props {
-  isOpen: boolean;
-  onClose: () => void;
-}
+const normalize = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const INDEX = TOPICS.map(topic => ({ topic, title: normalize(topic.title), text: normalize([topic.section, topic.title, topic.keywords, ...topic.paragraphs].join(' ')) }));
+const SECTIONS = [...new Set(TOPICS.map(topic => topic.section))];
+
+interface Props { isOpen: boolean; onClose: () => void }
 
 export const SecondBrainGuide: React.FC<Props> = ({ isOpen, onClose }) => {
-  const [activeSection, setActiveSection] = useState(0);
-  const [activeSub, setActiveSub] = useState(0);
-  const [expandedSections, setExpandedSections] = useState<Set<number>>(() => new Set([0]));
+  const [activeId, setActiveId] = useState('overview');
+  const [query, setQuery] = useState('');
+  const [paragraphIndex, setParagraphIndex] = useState(0);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const active = TOPICS.find(topic => topic.id === activeId)!;
+  const terms = normalize(query).trim().split(/\s+/).filter(Boolean);
+  const searching = terms.length > 0;
+  const results = searching ? INDEX.filter(entry => terms.every(term => entry.text.includes(term)))
+    .sort((a, b) => Number(terms.every(term => b.title.includes(term))) - Number(terms.every(term => a.title.includes(term))))
+    .map(({ topic }) => {
+      const paragraph = topic.paragraphs.findIndex(text => terms.every(term => normalize(text).includes(term)));
+      return { topic, paragraph: Math.max(0, paragraph) };
+    }) : [];
 
-  const visibleSections = SECTIONS;
-
-  // Reset on open
-  useEffect(() => {
-    if (isOpen) {
-      setActiveSection(0);
-      setActiveSub(0);
-      setExpandedSections(new Set([0]));
-    }
-  }, [isOpen]);
-
-  // Close on Escape
-  useEffect(() => {
-    if (!isOpen) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handler, true);
-    return () => window.removeEventListener('keydown', handler, true);
-  }, [isOpen, onClose]);
-
-  // Lock background scroll while modal is open
   useEffect(() => {
     if (!isOpen) return;
-    const prev = document.body.style.overflow;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
+    setQuery('');
+    setActiveId('overview');
+    setParagraphIndex(0);
+    inputRef.current?.focus();
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      if (previousFocus?.isConnected) previousFocus.focus();
+    };
   }, [isOpen]);
 
-  const selectSection = useCallback((idx: number, subIdx = 0) => {
-    setActiveSection(idx);
-    setActiveSub(subIdx);
-    setExpandedSections(prev => {
-      const next = new Set(prev);
-      next.add(idx);
-      return next;
-    });
-    contentRef.current?.scrollTo({ top: 0 });
-  }, []);
+  useEffect(() => {
+    if (searching || !isOpen) return;
+    const content = contentRef.current;
+    const paragraph = content?.querySelectorAll('p')[paragraphIndex];
+    if (content) content.scrollTop = paragraphIndex > 0 && paragraph ? paragraph.offsetTop - 16 : 0;
+  }, [activeId, paragraphIndex, searching, isOpen]);
 
-  const toggleExpanded = useCallback((idx: number) => {
-    setExpandedSections(prev => {
-      const next = new Set(prev);
-      if (next.has(idx)) next.delete(idx);
-      else next.add(idx);
-      return next;
-    });
-  }, []);
+  const openTopic = (topic: Topic, paragraph = 0) => {
+    setActiveId(topic.id);
+    setParagraphIndex(paragraph);
+    setQuery('');
+    requestAnimationFrame(() => headingRef.current?.focus({ preventScroll: true }));
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    // The Wiki listens on window for typing, arrows and Enter. Keep modal keys local.
+    event.stopPropagation();
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      if (query) { setQuery(''); inputRef.current?.focus(); }
+      else onClose();
+    }
+    if (event.key === 'Tab') {
+      const controls = [...(dialogRef.current?.querySelectorAll<HTMLElement>('button, input, select, [tabindex="0"]') ?? [])]
+        .filter(element => element.getClientRects().length && !element.hasAttribute('disabled'));
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (event.shiftKey && (document.activeElement === first || !controls.includes(document.activeElement as HTMLElement))) {
+        event.preventDefault(); last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault(); first?.focus();
+      }
+    }
+  };
 
   if (!isOpen) return null;
 
-  const section = visibleSections[activeSection];
-  const hasSubs = !!section?.subsections;
-  const body = hasSubs
-    ? section.subsections![activeSub]?.content
-    : section?.content;
-  const title = hasSubs
-    ? `${section.label} — ${section.subsections![activeSub]?.label}`
-    : section?.label;
-
   return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4"
-      onClick={onClose}
-    >
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 md:p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40" />
-
-      {/* Modal */}
-      <div
-        className="relative flex flex-col md:flex-row w-full max-w-3xl h-[80vh] md:h-[70vh] border border-violet-500/20 rounded-lg md:rounded-sm shadow-2xl overflow-hidden"
-        style={{ backgroundColor: 'var(--hub-sidebar-bg)' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header — always on top (mobile + desktop) */}
-        <div className="flex items-center justify-between px-4 md:px-5 py-3 border-b border-th-hub-border flex-shrink-0 md:hidden">
-          <h2 className="text-sm font-semibold text-th-primary truncate">{title}</h2>
-          <button
-            onClick={onClose}
-            className="text-th-muted hover:text-th-secondary transition-colors flex-shrink-0 ml-3"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Mobile nav — horizontal chips */}
-        <div className="md:hidden flex-shrink-0 border-b border-th-hub-border py-3 space-y-2">
-          {/* Section chips */}
-          <div className="flex gap-2 overflow-x-auto px-4 sb-guide-chips">
-            {visibleSections.map((sec, i) => (
-              <button
-                key={sec.label}
-                onClick={() => selectSection(i, 0)}
-                className={`flex-shrink-0 px-3 py-1.5 text-[11px] font-medium rounded transition-colors ${
-                  activeSection === i
-                    ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
-                    : 'text-th-tertiary border border-th-hub-border hover:text-th-secondary'
-                }`}
-              >
-                {sec.label}
-              </button>
-            ))}
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="wiki-guide-title"
+        className="relative flex flex-col w-full max-w-3xl h-[85dvh] md:h-[75vh] border border-violet-500/20 rounded-lg md:rounded-sm shadow-2xl overflow-hidden"
+        style={{ backgroundColor: 'var(--hub-sidebar-bg)' }} onClick={event => event.stopPropagation()} onKeyDown={handleKeyDown}>
+        <header className="flex items-center justify-between px-4 md:px-5 py-3 border-b border-th-hub-border shrink-0">
+          <h2 id="wiki-guide-title" className="text-sm font-semibold text-th-primary">How the Wiki works</h2>
+          <button type="button" onClick={onClose} aria-label="Close Wiki guide" className="p-2 text-th-muted hover:text-th-primary"><CloseIcon /></button>
+        </header>
+        <form role="search" aria-label="Wiki guide" className="px-4 md:px-5 py-3 border-b border-th-hub-border shrink-0"
+          onSubmit={event => { event.preventDefault(); if (results[0]) openTopic(results[0].topic, results[0].paragraph); }}>
+          <label htmlFor="wiki-guide-search" className="block text-[10px] text-th-muted mb-1.5">Find an explanation</label>
+          <div className="flex items-center gap-2 border border-th-hub-border bg-th-surface px-3 py-2 focus-within:border-violet-400">
+            <span className="text-th-muted shrink-0"><SearchIcon /></span>
+            <input ref={inputRef} id="wiki-guide-search" type="search" value={query} autoComplete="off" placeholder="Search help, e.g. sorting, articles, graph…"
+              className="w-full min-w-0 bg-transparent text-th-primary text-xs outline-none placeholder:text-th-muted"
+              onChange={event => setQuery(event.target.value)} onKeyDown={event => {
+                if (event.key === 'ArrowDown' && results.length) { event.preventDefault(); resultsRef.current?.querySelector('button')?.focus(); }
+              }} />
+            {query && <button type="button" aria-label="Clear help search" className="text-th-muted hover:text-th-primary p-1" onClick={() => { setQuery(''); inputRef.current?.focus(); }}><CloseIcon /></button>}
           </div>
-          {/* Subsection chips (if section has subs) */}
-          {section?.subsections && (
-            <div className="flex gap-1.5 overflow-x-auto px-4 sb-guide-chips">
-              {section.subsections.map((sub, j) => (
-                <button
-                  key={sub.label}
-                  onClick={() => selectSection(activeSection, j)}
-                  className={`flex-shrink-0 px-2.5 py-1 text-[10px] rounded transition-colors ${
-                    activeSub === j
-                      ? 'bg-violet-400/15 text-violet-400 border border-violet-400/25'
-                      : 'text-th-muted border border-transparent hover:text-th-tertiary'
-                  }`}
-                >
-                  {sub.label}
-                </button>
-              ))}
+        </form>
+        <div className="sr-only" role="status">{searching ? `${results.length} help topics found` : ''}</div>
+        {searching ? <div ref={resultsRef} className="min-h-0 flex-1 overflow-y-auto hub-scrollbar px-4 md:px-5 py-4">
+          <p className="text-[11px] text-th-muted mb-3">{results.length} {results.length === 1 ? 'topic' : 'topics'} found</p>
+          {results.length ? <div className="space-y-6">{results.map(({ topic, paragraph }) => <button key={topic.id} type="button" onClick={() => openTopic(topic, paragraph)}
+            className="group block w-full text-left py-1 focus-visible:outline focus-visible:outline-violet-400 focus-visible:outline-offset-4">
+            <span className="block text-[10px] text-th-muted mb-1">{topic.section}</span>
+            <span className="block text-sm text-violet-400 font-medium mb-1 group-hover:underline underline-offset-4">{topic.title}</span>
+            <span className="block text-xs text-th-secondary leading-relaxed">{topic.paragraphs[paragraph]}</span>
+          </button>)}</div> : <div className="text-sm text-th-secondary space-y-3">
+            <p>No explanations match this search. Try fewer words, or a control name such as sorting, scope, or referenced by.</p>
+            <button type="button" className="text-violet-400 underline" onClick={() => { setQuery(''); inputRef.current?.focus(); }}>Browse all topics</button>
+          </div>}
+        </div> : <div className="flex flex-col md:flex-row min-h-0 flex-1">
+          <div className="md:hidden px-4 py-3 border-b border-th-hub-border shrink-0">
+            <label htmlFor="wiki-guide-topic" className="sr-only">Browse help topics</label>
+            <select id="wiki-guide-topic" value={activeId} onChange={event => openTopic(TOPICS.find(topic => topic.id === event.target.value)!)}
+              className="w-full bg-th-surface border border-th-hub-border text-th-primary text-xs px-2 py-2">
+              {SECTIONS.map(section => <optgroup key={section} label={section}>{TOPICS.filter(topic => topic.section === section).map(topic => <option key={topic.id} value={topic.id}>{topic.title}</option>)}</optgroup>)}
+            </select>
+          </div>
+          <nav aria-label="Help topics" className="hidden md:block w-48 shrink-0 overflow-y-auto hub-scrollbar border-r border-th-hub-border py-3">
+            {SECTIONS.map(section => <div key={section} className="mb-3">
+              <h3 className="px-4 mb-1 text-[10px] font-medium text-th-muted">{section}</h3>
+              {TOPICS.filter(topic => topic.section === section).map(topic => <button key={topic.id} type="button" aria-current={activeId === topic.id ? 'true' : undefined} onClick={() => openTopic(topic)}
+                className={`block w-full text-left px-4 py-1.5 text-[11px] border-l-2 ${activeId === topic.id ? 'border-violet-400 text-violet-400 bg-violet-400/5' : 'border-transparent text-th-secondary hover:text-th-primary'}`}>{topic.title}</button>)}
+            </div>)}
+          </nav>
+          <section className="flex flex-col min-w-0 min-h-0 flex-1" aria-labelledby="wiki-guide-topic-title">
+            <div className="px-4 md:px-5 py-3 border-b border-th-hub-border shrink-0">
+              <p className="text-[10px] text-th-muted mb-1">{active.section}</p>
+              <h3 ref={headingRef} tabIndex={-1} id="wiki-guide-topic-title" className="text-sm font-semibold text-th-primary outline-none">{active.title}</h3>
             </div>
-          )}
-        </div>
-
-        {/* Desktop left nav — hidden on mobile */}
-        <nav className="hidden md:block w-48 flex-shrink-0 border-r border-th-hub-border overflow-y-auto hub-scrollbar py-3">
-          {visibleSections.map((sec, i) => {
-            const isActive = activeSection === i;
-            const isExpanded = expandedSections.has(i);
-            const hasSub = !!sec.subsections;
-
-            return (
-              <div key={sec.label}>
-                {/* Parent label */}
-                <button
-                  onClick={() => {
-                    if (hasSub) {
-                      if (isActive) {
-                        toggleExpanded(i);
-                      } else {
-                        selectSection(i, 0);
-                      }
-                    } else {
-                      selectSection(i);
-                    }
-                  }}
-                  className={`w-full text-left px-4 py-1.5 text-[11px] flex items-center gap-1.5 transition-colors ${
-                    isActive && !hasSub
-                      ? 'text-violet-400 border-l-2 border-violet-400 pl-[14px]'
-                      : 'text-th-secondary hover:text-th-primary border-l-2 border-transparent pl-[14px]'
-                  }`}
-                >
-                  {hasSub && (
-                    <span className="flex-shrink-0 text-th-muted">
-                      <ChevronIcon isOpen={isExpanded} />
-                    </span>
-                  )}
-                  <span>{sec.label}</span>
-                </button>
-
-                {/* Subsections */}
-                {hasSub && isExpanded && sec.subsections!.map((sub, j) => {
-                  const subActive = isActive && activeSub === j;
-                  return (
-                    <button
-                      key={sub.label}
-                      onClick={() => selectSection(i, j)}
-                      className={`w-full text-left py-1 text-[10px] transition-colors ${
-                        subActive
-                          ? 'text-violet-400 border-l-2 border-violet-400 pl-[30px]'
-                          : 'text-th-tertiary hover:text-th-secondary border-l-2 border-transparent pl-[30px]'
-                      }`}
-                    >
-                      {sub.label}
-                    </button>
-                  );
-                })}
-              </div>
-            );
-          })}
-        </nav>
-
-        {/* Right panel / content */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Desktop header — hidden on mobile (shown above instead) */}
-          <div className="hidden md:flex items-center justify-between px-5 py-3 border-b border-th-hub-border flex-shrink-0">
-            <h2 className="text-sm font-semibold text-th-primary truncate">{title}</h2>
-            <button
-              onClick={onClose}
-              className="text-th-muted hover:text-th-secondary transition-colors flex-shrink-0 ml-3"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Content */}
-          <div
-            ref={contentRef}
-            className="flex-1 overflow-y-auto hub-scrollbar px-4 md:px-5 py-4 text-[11px] text-th-secondary leading-relaxed"
-          >
-            {body}
-          </div>
-        </div>
+            <div ref={contentRef} className="relative min-h-0 flex-1 overflow-y-auto hub-scrollbar px-4 md:px-5 py-4 text-xs text-th-secondary leading-relaxed space-y-3">
+              {active.paragraphs.map((paragraph, index) => {
+                const colon = paragraph.indexOf(':');
+                return <p key={paragraph} className={index === paragraphIndex && paragraphIndex > 0 ? 'border-l-2 border-violet-400 pl-3' : undefined}>
+                  {colon > 0 && colon < 50 ? <><strong className="text-th-primary">{paragraph.slice(0, colon + 1)}</strong>{paragraph.slice(colon + 1)}</> : paragraph}
+                </p>;
+              })}
+            </div>
+          </section>
+        </div>}
       </div>
-    </div>,
-    document.body,
+    </div>, document.body,
   );
 };

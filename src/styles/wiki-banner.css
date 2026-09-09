@@ -67,5 +67,10 @@
 .wb-shot-light { display:none; }
 [data-theme="light"] .wb-shot-dark { display:none; }
 [data-theme="light"] .wb-shot-light { display:block; }
-@media (max-width:720px) { .wb-shot { height:7.5rem; } .wb-shot-cta { padding:.6rem .9rem; } }
+@media (max-width:720px) {
+  .wiki-banner { padding-bottom:0; }
+  .wb-shot { height:7.5rem; }
+  .wb-shot-cta { padding:.6rem .9rem; border-color:var(--cat-wikinotes-accent); background:color-mix(in srgb,var(--cat-wikinotes-accent) 14%,var(--bg-base)); color:var(--cat-wikinotes-accent); }
+  .wb-shot-cta svg { display:none; }
+}
 @media (prefers-reduced-motion:reduce) { .wb-window, .wb-shot img, .wb-shot-cta b { transition:none; } }

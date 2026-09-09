@@ -80,10 +80,10 @@ infraphysics-web/
       SearchPalette.tsx       # Global search overlay (Cmd+K)
       RetentionHints.tsx      # Contextual nudges for undiscovered features (scroll depth, wikilinks, search)
       ExperimentalCursor.tsx  # Optional custom cursor (user preference)
-      wiki/                   # Second Brain: WikiContent, WikiLinkPreview, NeighborhoodGraph, RelevanceLeaderboard, BridgeScoreBadge, NavigationTrail, CopyExportModal, SecondBrainGuide
+      wiki/                   # Second Brain: WikiContent, WikiLinkPreview, NeighborhoodGraph, RelevanceLeaderboard, BridgeScoreBadge, NavigationTrail, CopyExportModal, CopyConfirmModal, SecondBrainGuide
                               # Article presence sorting/filtering uses lib/wikiArticleUsage.ts
       personal/               # Personal pages: AboutTopBar, ContactLogoSculpture, GraphThumb, HomeVisualLab,
-                              #   WikiTerritories (compact root treemap; lib/partitionAreas.ts)
+                              #   WikiTerritories (compact root treemap; lib/partitionAreas.ts), PresenceInfo (the "i" by the visit counters)
                               #   StartHere (four-door carousel under the intro) and WikiBanner (closing plate)
       article/                # ArticleBreadcrumbs, ArticleHashtags, BlogMetabar
       sections/               # SearchResultsList, ProjectsList, EssaysList, Bits2BricksGrid
@@ -104,6 +104,7 @@ infraphysics-web/
       ContactView.tsx         # Contact form (Formspree)
       ThanksView.tsx          # Post-submit thank-you page
       ErrorConceptView.tsx    # Illustrated 404 preview: lost robot with map (/err5)
+      LinkedFromTestView.tsx  # Preview of the wiki card's Linked from menu with fake articles (/test/linked-from)
     legacy/
       home-visuals/           # Retired home visual engine, kept for reference (see its README)
     data/
@@ -310,7 +311,7 @@ Articles include engagement and navigation features layered on top of the base c
 - **Contents control** — Project articles show a left-edge indicator (one line per top-level heading) that opens a lateral table of contents. Essays and Bits2Bricks carry a sticky index of the top-level sections beside the body instead. There is no fixed top bar in articles: the global nav slides in at the bottom edge with a Back arrow.
 - **Reading progress** — Horizontal progress bar at top of viewport, driven by scroll position via RAF.
 - **Active TOC tracking** — Scroll listener marks the current heading + its ancestor chain in the TOC. One scroll listener in ArticlePostView toggles the active class on the index links of every category (blog side index, projects rail).
-- **Share dropdown** — Copy link, email feedback, Twitter/X share.
+- **Share sheet**: the share button dims the page and opens a centred card with the options side by side (X, LinkedIn, Reddit, Hacker News, copy link, copy the text).
 - **Retention hints** — Contextual nudges for undiscovered features (wiki-link clicks, search usage, scroll depth, theme toggle). Triggered by usage counters in localStorage, shown as timed toasts.
 
 ---

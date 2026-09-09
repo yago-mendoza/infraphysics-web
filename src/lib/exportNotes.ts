@@ -178,3 +178,51 @@ export function estimateWords(notes: WikiNoteMeta[]): number {
   }
   return total;
 }
+
+// ---------------------------------------------------------------------------
+// Size estimate before a copy (no fetch needed: searchText is the plain body)
+// ---------------------------------------------------------------------------
+
+export interface ExportEstimate {
+  notes: number;
+  fullMode: boolean;
+  /** Estimated bytes of the markdown that would land in the clipboard. */
+  bytes: number;
+  /** Rough token count (four characters per token). */
+  tokens: number;
+  /** Note files fetched before the copy (full mode only). */
+  requests: number;
+}
+
+export type ExportLoad = 'light' | 'heavy' | 'severe';
+
+/** Above these sizes a paste starts to hurt the receiving application, then the tab itself. */
+export const EXPORT_HEAVY_BYTES = 300 * 1024;
+export const EXPORT_SEVERE_BYTES = 1.5 * 1024 * 1024;
+
+export function estimateExport(
+  notes: WikiNoteMeta[],
+  connectionsMap: Map<string, Connection[]>,
+  fullMode: boolean,
+): ExportEstimate {
+  let bytes = 0;
+  for (const n of notes) {
+    const conns = connectionsMap.get(n.id)?.length ?? 0;
+    bytes += (n.address || n.title).length + 40; // heading, uid, date line, separators
+    if (fullMode) bytes += (n.searchText || '').length + 20 + conns * 70;
+    else bytes += (n.description || '').length + 14 + conns * 40;
+  }
+  return { notes: notes.length, fullMode, bytes, tokens: Math.round(bytes / 4), requests: fullMode ? notes.length : 0 };
+}
+
+export function exportLoad(estimate: ExportEstimate): ExportLoad {
+  if (estimate.bytes >= EXPORT_SEVERE_BYTES) return 'severe';
+  if (estimate.bytes >= EXPORT_HEAVY_BYTES) return 'heavy';
+  return 'light';
+}
+
+export function formatBytes(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${bytes} B`;
+}

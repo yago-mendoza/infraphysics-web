@@ -34,15 +34,21 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   const visitorKey = `analytics:visitor:${event.visitorId}`;
   const sessionKey = `analytics:session:${event.sessionId}`;
-  const [knownVisitor, knownSession] = await Promise.all([
+  // A page view is one person on one page per session window: a reload, or coming straight back to the
+  // same page, does not count again for half an hour. Moving to another page does.
+  const seenKey = `analytics:seen:${event.sessionId}:${event.path}`;
+  const [knownVisitor, knownSession, seenPage] = await Promise.all([
     env.VIEWS.get(visitorKey),
     env.VIEWS.get(sessionKey),
+    env.VIEWS.get(seenKey),
   ]);
 
-  const writes: Promise<unknown>[] = [
-    increment(env.VIEWS, 'analytics:pageviews'),
-    increment(env.VIEWS, `analytics:path:${event.path}`),
-  ];
+  const writes: Promise<unknown>[] = [];
+  if (!seenPage) {
+    writes.push(env.VIEWS.put(seenKey, '1', { expirationTtl: 60 * 30 }));
+    writes.push(increment(env.VIEWS, 'analytics:pageviews'));
+    writes.push(increment(env.VIEWS, `analytics:path:${event.path}`));
+  }
   if (!knownVisitor) {
     writes.push(env.VIEWS.put(visitorKey, '1'));
     writes.push(increment(env.VIEWS, 'analytics:visitors'));

@@ -107,6 +107,7 @@ FILES=(
   "src/components/wiki/WikiContent.tsx"
   "src/components/wiki/WikiLinkPreview.tsx"
   "src/components/wiki/CopyExportModal.tsx"
+  "src/components/wiki/CopyConfirmModal.tsx"
   "src/components/icons/index.tsx"
 
   # --- Views ---
@@ -118,6 +119,7 @@ FILES=(
   "src/views/ContactView.tsx"
   "src/views/ThanksView.tsx"
   "src/views/ErrorConceptView.tsx"
+  "src/views/LinkedFromTestView.tsx"
   "src/styles/error-concepts.css"
   "src/views/SectionView.tsx"
   "src/views/PostView.tsx"

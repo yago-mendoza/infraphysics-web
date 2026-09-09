@@ -15,6 +15,7 @@ import { points as fieldCoordinates } from '../data/field-of-view.generated.json
 import { secondBrainPath } from '../config/categories';
 import { placeFieldLabels } from '../lib/fieldLayout';
 import { usePresence } from '../hooks/usePresence';
+import { PresenceInfo } from '../components/personal/PresenceInfo';
 
 const categoryKeys = ['projects', 'essays', 'bits2bricks'] as const;
 const selectedWorkIds = ['2718281', '3142718', '3141592', '6184744', '5917362'] as const;
@@ -144,13 +145,14 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
             <span>{presence.visitors == null ? '—' : presence.visitors.toLocaleString()} visitors</span>
             <i aria-hidden="true">·</i>
             <span>{presence.pageViews == null ? '—' : presence.pageViews.toLocaleString()} page views</span>
+            <PresenceInfo />
           </p>
           {/* Identity anchor */}
           <div className="flex items-end gap-5 mb-10 home-identity-anchor">
-            <div className="relative w-20 h-24 shrink-0 home-identity-portrait">
+            <Link to="/about" aria-label="Who I am" className="relative block w-20 h-24 shrink-0 home-identity-portrait">
               <div className="absolute -right-2 -bottom-2 w-full h-full border" style={{ borderColor: 'color-mix(in srgb, var(--brand-oxide-strong) 72%, transparent)' }} aria-hidden="true" />
               <img src="/avatar.jpg" alt="Yago Mendoza" width={240} height={240} loading="eager" fetchPriority="high" decoding="async" className="relative w-full h-full border border-th-border object-cover grayscale contrast-110" />
-            </div>
+            </Link>
             <div>
               <p className="text-xl tracking-tight text-th-heading">Yago Mendoza</p>
               <p className="text-xs text-th-tertiary font-mono tracking-wide">industrial engineer · polymathing</p>
@@ -185,7 +187,7 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
             <p className="text-[10px] uppercase tracking-[0.2em] text-th-tertiary mb-4">A personal laboratory</p>
             <p className="text-sm leading-relaxed text-th-secondary">For ideas that survive curiosity long enough to become public.</p>
             <div className="mt-8 space-y-2 text-[10px] font-mono text-th-tertiary">
-              <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500" /> Madrid, Spain</div>
+              <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500" /> Barcelona, Spain</div>
               <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-blue-500" /> Systems / robotics / intelligence</div>
               <Link to="/contact" className="inline-block pt-3 text-th-heading hover:text-red-500 transition-colors">Open a conversation →</Link>
             </div>

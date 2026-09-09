@@ -18,7 +18,7 @@ export const ContactView: React.FC = () => {
       <ContactLogoSculpture />
       <div className="contact-content-layer">
       <header className="pt-4 pb-12 md:pb-16 border-b border-th-border">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-th-tertiary mb-5">Contact / Madrid</p>
+        <p className="text-[10px] uppercase tracking-[0.2em] text-th-tertiary mb-5">Contact / Barcelona</p>
         <h1 className="max-w-3xl text-[2.85rem] md:text-[4.15rem] font-serif font-normal tracking-[-0.045em] leading-[0.96] text-th-heading">Bring an interesting problem.</h1>
         <p className="mt-7 max-w-2xl text-lg leading-relaxed text-th-secondary font-sans">Systems, infrastructure, robotics, research, technical writing, strange ideas with a concrete edge—or simply a conversation worth having.</p>
         <div className="mt-7 text-sm leading-relaxed text-th-secondary space-y-3">

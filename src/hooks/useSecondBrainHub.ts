@@ -11,7 +11,18 @@ import { computeWikiArticleUsage } from '../lib/wikiArticleUsage';
 
 const articleUsage = computeWikiArticleUsage(fieldEvidence.candidates);
 
-export type SearchMode = 'name' | 'content' | 'backlinks' | 'all';
+export type SearchField = 'name' | 'content' | 'backlinks';
+/** Which fields the query is matched against: one field, two joined with '+', or 'all'. */
+export type SearchMode = SearchField | 'all' | `${SearchField}+${SearchField}`;
+export const SEARCH_FIELDS: SearchField[] = ['name', 'content', 'backlinks'];
+export const fieldsOfMode = (mode: SearchMode): SearchField[] =>
+  mode === 'all' ? [...SEARCH_FIELDS] : (mode.split('+') as SearchField[]).filter(f => SEARCH_FIELDS.includes(f));
+export const modeOfFields = (fields: SearchField[]): SearchMode => {
+  const picked = SEARCH_FIELDS.filter(f => fields.includes(f));
+  if (picked.length === 0) return 'name';
+  if (picked.length === SEARCH_FIELDS.length) return 'all';
+  return picked.join('+') as SearchMode;
+};
 export type SortMode = 'a-z' | 'centrality' | 'most-links' | 'fewest-links' | 'depth' | 'shuffle' | 'newest' | 'oldest' | 'most-articles' | 'fewest-articles';
 export type DirectorySortMode = 'children' | 'alpha' | 'depth';
 export type ViewMode = 'simplified' | 'technical';
@@ -115,22 +126,52 @@ export const useSecondBrainHub = () => {
   // Parse ID from pathname since this hook runs outside <Routes>
   const id = useMemo(() => secondBrainUidFromPath(location.pathname) ?? undefined, [location.pathname]);
   const [searchMode, setSearchMode] = useState<SearchMode>('name');
+  const searchFields = useMemo(() => fieldsOfMode(searchMode), [searchMode]);
+  // Fields stack: a click adds or removes one, and the last one cannot be removed.
+  const toggleSearchField = useCallback((field: SearchField) => {
+    setSearchMode(current => {
+      const fields = fieldsOfMode(current);
+      const next = fields.includes(field) ? fields.filter(f => f !== field) : [...fields, field];
+      // Clearing the last chip falls back to the default, a name search.
+      return modeOfFields(next.length ? next : ['name']);
+    });
+  }, []);
 
   // Content search gets an extra 150ms debounce on top of useDeferredValue
   // because it scans searchText across all notes (heavier than name matching).
   const [debouncedContentQuery, setDebouncedContentQuery] = useState('');
   useEffect(() => {
-    if (searchMode !== 'content' && searchMode !== 'all') {
+    if (!searchFields.includes('content')) {
       setDebouncedContentQuery(query);
       return;
     }
     const timer = setTimeout(() => setDebouncedContentQuery(query), 150);
     return () => clearTimeout(timer);
-  }, [query, searchMode]);
+  }, [query, searchFields]);
 
   const [sortMode, setSortMode] = useState<SortMode>('a-z');
   const [filterState, setFilterState] = useState<FilterState>(DEFAULT_FILTER_STATE);
   const [directoryScope, setDirectoryScope] = useState<string | null>(null); // tree path
+
+  // A scope or a query in the url (the home mosaic links to /wiki/graph?scope=ML) is applied once the
+  // index is loaded, matching the root case-insensitively, and then removed from the url so a manual
+  // reset is not undone by it.
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const scope = params.get('scope');
+    const q = params.get('q');
+    if (!scope && !q) return;
+    if (scope && !index) return;
+    if (scope) {
+      const wanted = scope.toLowerCase();
+      const root = index!.allWikiNotes.map(n => (n.addressParts || n.address?.split('//') || [n.title])[0]).find(r => r && r.toLowerCase() === wanted);
+      setDirectoryScope(root ?? scope);
+    }
+    if (q) setQuery(q);
+    params.delete('scope'); params.delete('q');
+    const rest = params.toString();
+    navigate(location.pathname + (rest ? `?${rest}` : '') + location.hash, { replace: true });
+  }, [location.search, index]); // eslint-disable-line react-hooks/exhaustive-deps
   const [directoryQuery, setDirectoryQuery] = useState('');
   const [directorySortMode, setDirectorySortMode] = useState<DirectorySortMode>('alpha');
   const [shuffleSeed, setShuffleSeed] = useState(() => Math.floor(Math.random() * 0xffffffff));
@@ -390,7 +431,7 @@ export const useSecondBrainHub = () => {
 
   // --- Multi-mode search ---
   const searchResults = useMemo(() => {
-    const effectiveQuery = searchMode === 'content' || searchMode === 'all' ? debouncedContentQuery : deferredQuery;
+    const effectiveQuery = searchFields.includes('content') ? debouncedContentQuery : deferredQuery;
     if (!effectiveQuery) return allWikiNotes;
     const q = effectiveQuery.toLowerCase();
 
@@ -407,21 +448,10 @@ export const useSecondBrainHub = () => {
       return address.includes(q) || displayTitle.includes(q) || (linker.searchText || '').includes(q) || linker.description.toLowerCase().includes(q);
     });
 
-    if (searchMode === 'name') return allWikiNotes.filter(matchesName);
-
-    if (searchMode === 'content') {
-      // Use pre-built searchText for content search (no need to load full HTML)
-      return allWikiNotes.filter(matchesContent);
-    }
-
-    if (searchMode === 'backlinks') {
-      return allWikiNotes.filter(matchesBacklinks);
-    }
-
-    if (searchMode === 'all') return allWikiNotes.filter(note => matchesName(note) || matchesContent(note) || matchesBacklinks(note));
-
-    return allWikiNotes;
-  }, [deferredQuery, debouncedContentQuery, searchMode, allWikiNotes, backlinksMap]);
+    // A note matches when any of the selected fields matches (content uses the pre-built searchText).
+    const byName = searchFields.includes('name'), byContent = searchFields.includes('content'), byLinks = searchFields.includes('backlinks');
+    return allWikiNotes.filter(note => (byName && matchesName(note)) || (byContent && matchesContent(note)) || (byLinks && matchesBacklinks(note)));
+  }, [deferredQuery, debouncedContentQuery, searchFields, allWikiNotes, backlinksMap]);
 
   // --- Directory scope filter ---
   const scopedResults = useMemo(() => {
@@ -608,6 +638,8 @@ export const useSecondBrainHub = () => {
     searchActive,
     searchMode,
     setSearchMode,
+    searchFields,
+    toggleSearchField,
 
     // Sort
     sortMode,

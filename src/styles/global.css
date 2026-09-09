@@ -801,6 +801,7 @@ button:focus {
 .compact-flyout-link i { color:var(--text-muted); font:normal 12px/1 var(--font-mono); }
 /* Mobile sheet: grouped pages list their destinations as a flat chip row. */
 .mobile-nav-chips { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.7rem; }
+.mobile-nav-chips-inline { margin-top:0; margin-left:auto; }
 /* Chips in the site language: square, mono uppercase, a brand tick in front, the border tinted oxide. */
 .mobile-nav-chips a { display:inline-flex; align-items:center; gap:.45rem; padding:.5rem .7rem; border:1px solid color-mix(in srgb,var(--nav-accent) 38%,var(--border-default)); border-radius:0; color:var(--text-secondary); font:500 9.5px/1 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; }
 .mobile-nav-chips a::before { content:""; width:5px; height:5px; background:var(--nav-accent); }
@@ -1526,7 +1527,7 @@ html[data-mobile-nav="shown"] .wiki-fab { transform: translateY(-3.75rem); }
 .mobile-nav-toys button svg { color: var(--nav-accent); flex-shrink: 0; }
 .mobile-nav-toys button:active { background: color-mix(in srgb, var(--nav-accent) 12%, transparent); }
 /* Wiki on a phone: an identity line above the search, and the brand hairline on the top edges of its panels. */
-.wiki-phone-ident { display: flex; align-items: center; gap: .45rem; margin: 0 0 .6rem; padding: .55rem .75rem; border: 1px solid var(--border-default); box-shadow: inset 0 2px 0 var(--brand-oxide); font: 9px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); }
+.wiki-phone-ident { display: flex; align-items: center; gap: .45rem; margin: 0 0 .6rem; padding: .55rem .75rem; border: 1px solid color-mix(in srgb, var(--wiki-400) 30%, var(--border-default)); background: color-mix(in srgb, var(--wiki-500) 7%, transparent); font: 9px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); }
 .wiki-phone-ident b { color: var(--wiki-400); font-weight: 600; }
 .wiki-phone-ident span { color: var(--text-heading); }
 .wiki-phone-ident i { margin-left: auto; font-style: normal; }
@@ -1558,7 +1559,7 @@ html[data-mobile-nav="shown"] .wiki-fab { transform: translateY(-3.75rem); }
 .wiki-mobile-menu-btn { display:inline-flex; align-items:center; gap:.5rem; max-width:11rem; padding:.35rem .6rem; border:1px solid var(--hub-sidebar-border); background:var(--hub-sidebar-bg, var(--bg-surface)); color:var(--text-primary); font:500 11px/1.3 var(--font-mono); }
 .wiki-mobile-menu-btn > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .wiki-mobile-menu-btn i { color:var(--wiki-400); font-style:normal; font-size:9px; }
-.wiki-mobile-menu { position:absolute; top:calc(100% + .25rem); left:0; z-index:40; min-width:13rem; max-height:15rem; overflow-y:auto; padding:.25rem; border:1px solid var(--hub-sidebar-border); background:var(--hub-sidebar-bg, var(--bg-surface)); box-shadow:0 18px 40px -20px rgba(0,0,0,.7), inset 0 2px 0 var(--wiki-400); }
+.wiki-mobile-menu { position:absolute; top:calc(100% + .25rem); left:0; z-index:40; min-width:13rem; max-height:15rem; overflow-y:auto; padding:.25rem; border:1px solid var(--hub-sidebar-border); background:var(--hub-sidebar-bg, var(--bg-surface)); box-shadow:0 18px 40px -20px rgba(0,0,0,.7); }
 .wiki-mobile-menu button { display:block; width:100%; padding:.55rem .7rem; text-align:left; color:var(--text-secondary); font:400 11px/1.3 var(--font-mono); }
 .wiki-mobile-menu button:active { background:color-mix(in srgb,var(--wiki-400) 14%,transparent); }
 .wiki-mobile-menu button.is-current { color:var(--wiki-400); background:color-mix(in srgb,var(--wiki-400) 10%,transparent); }
@@ -1566,5 +1567,77 @@ html[data-mobile-nav="shown"] .wiki-fab { transform: translateY(-3.75rem); }
 /* Home: the rule between Ideas in public and the wiki block, at the column width like the section rules above it. */
 .home-section-rule { border:0; border-top:1px solid var(--border-default); margin:0 0 clamp(2rem,4vw,3rem); }
 
-/* Blog geometry: the share menu opens to the right of its button, clear of the section index. */
-@media (min-width: 768px) { .article-geometry .article-share-dropdown { left: 0; right: auto; } }
+
+/* The "i" by the visit counters: near invisible until the counter is hovered; a click opens the card in the
+   middle of the screen over a dimmed page. */
+.presence-info { display: inline-grid; place-items: center; width: .95rem; height: .95rem; margin: 0 .45rem 0 0; vertical-align: middle; position: relative; top: -.12em; border: 1px solid var(--border-default); border-radius: 50%; color: var(--text-muted); font: 500 8px/1 var(--font-mono); opacity: .35; cursor: pointer; transition: opacity .15s ease, color .15s ease, border-color .15s ease; }
+.home-presence-strip .presence-info { margin: 0 0 0 .1rem; top: 0; }
+.ambient-rail-right > div:hover .presence-info, .home-presence-strip .presence-info, .presence-info:hover, .presence-info:focus-visible { opacity: 1; color: var(--nav-accent); border-color: var(--nav-accent); }
+.home-presence-strip .presence-info { opacity: .6; }
+.presence-info-veil { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 1.5rem; background: color-mix(in srgb, var(--bg-base) 72%, transparent); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); animation: presence-veil-in .18s ease both; }
+.presence-info-card { display: grid; gap: .1rem; width: min(24rem, 100%); padding: .9rem .4rem .5rem; border: 1px solid var(--border-default); background: var(--bg-base); box-shadow: 0 30px 70px -30px rgba(0,0,0,.8); animation: presence-card-in .22s cubic-bezier(.22,.75,.25,1) both; }
+.presence-info-card > small { padding: 0 .8rem .6rem; margin-bottom: .3rem; border-bottom: 1px solid var(--border-default); color: var(--nav-accent); font: 600 9px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
+.presence-info-card > span { display: grid; grid-template-columns: 5.6rem 1fr; gap: .6rem; padding: .45rem .8rem; color: var(--text-secondary); font: 400 11px/1.55 var(--font-mono); letter-spacing: .02em; }
+.presence-info-card > span b { color: var(--nav-accent); font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+.presence-info-close { justify-self: end; margin: .4rem .4rem 0 0; padding: .45rem .7rem; border: 1px solid var(--border-default); color: var(--text-tertiary); font: 500 9px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; transition: color .15s ease, border-color .15s ease; }
+.presence-info-close:hover { color: var(--text-heading); border-color: var(--nav-accent); }
+@keyframes presence-veil-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes presence-card-in { from { opacity: 0; transform: translateY(.5rem); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .presence-info-veil, .presence-info-card { animation: none; } }
+
+/* Wiki cards: the articles that link a note, as the article mark and a count; a click lists them. */
+.wiki-articles-chip { display: inline-flex; align-items: center; gap: .3rem; padding: .15rem .4rem; border: 1px solid transparent; color: var(--text-tertiary); font: 500 9px/1 var(--font-mono); letter-spacing: .06em; transition: color .15s ease, border-color .15s ease, background .15s ease; }
+.wiki-articles-chip svg { width: 11px; height: 11px; }
+.wiki-articles-chip.is-empty { opacity: .45; cursor: default; }
+.wiki-articles-chip:not(.is-empty):hover, .wiki-articles-chip.is-open { color: var(--wiki-400); border-color: color-mix(in srgb, var(--wiki-400) 45%, transparent); background: color-mix(in srgb, var(--wiki-400) 10%, transparent); }
+.wiki-articles-veil { position: fixed; inset: 0; z-index: 80; }
+.wiki-articles-menu { position: fixed; z-index: 81; display: grid; align-content: start; overflow-y: auto; overscroll-behavior: contain; min-width: 15rem; max-width: min(24rem, calc(100vw - 1rem)); padding: .25rem; border: 1px solid var(--hub-sidebar-border); background: var(--hub-sidebar-bg, var(--bg-surface)); box-shadow: 0 18px 40px -20px rgba(0,0,0,.7); }
+.wiki-articles-menu > button { display: grid; grid-template-columns: 6px minmax(0, 1fr) auto; align-items: center; gap: .6rem; width: 100%; padding: .55rem .7rem; text-align: left; color: var(--text-secondary); font: 400 .8rem/1.3 var(--font-sans); }
+.wiki-articles-menu > button i { width: 6px; height: 6px; border-radius: 50%; }
+.wiki-articles-menu > button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wiki-articles-menu > button b { color: var(--text-muted); font: 500 8px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+.wiki-articles-menu > button:hover { color: var(--text-heading); background: color-mix(in srgb, var(--wiki-400) 10%, transparent); }
+
+/* Graph workspace controls that must be found at a glance: reset, close, and the edge switches. */
+.graph-reset { display: inline-flex; align-items: center; gap: .4rem; padding: .5rem .8rem; border: 1px solid var(--wiki-400); background: color-mix(in srgb, var(--wiki-500) 28%, var(--bg-base)); color: var(--wiki-200, #ddd6fe); font: 600 10px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; box-shadow: 0 10px 30px -14px color-mix(in srgb, var(--wiki-500) 80%, transparent); transition: background-color .15s ease, color .15s ease; }
+.graph-reset:hover { background: color-mix(in srgb, var(--wiki-500) 45%, var(--bg-base)); color: #fff; }
+.graph-reset-mini { height: 1.25rem; padding: 0 .45rem; font-size: 8px; letter-spacing: .08em; box-shadow: none; }
+.graph-close { display: inline-flex; align-items: center; gap: .45rem; padding: .5rem .8rem; border: 1px solid var(--wiki-400); background: color-mix(in srgb, var(--wiki-500) 16%, var(--bg-base)); color: var(--wiki-300, #c4b5fd); font: 600 10px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; transition: color .15s ease, border-color .15s ease; }
+.graph-close:hover { color: #fff; background: color-mix(in srgb, var(--wiki-500) 32%, var(--bg-base)); }
+.graph-edges { position: absolute; left: 1rem; top: 1rem; z-index: 50; display: flex; align-items: center; gap: .25rem; padding: .25rem; border: 1px solid var(--hub-sidebar-border); background: var(--bg-base); font-family: var(--font-mono); box-shadow: 0 18px 40px -20px rgba(0,0,0,.7); }
+.graph-edges > small { margin-right: .35rem; color: var(--text-muted); font: 600 8px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
+.graph-edges > button { display: inline-flex; align-items: center; gap: .5rem; padding: .45rem .6rem; border: 1px solid transparent; color: var(--text-muted); font: 500 9px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; transition: color .15s ease, border-color .15s ease, background .15s ease; }
+.graph-edges > button i { display: block; width: 1.1rem; height: 2px; opacity: .35; transition: opacity .15s ease; }
+.graph-edges > button.is-on { color: var(--text-heading); border-color: var(--hub-sidebar-border); background: color-mix(in srgb, var(--wiki-500) 10%, transparent); }
+.graph-edges > button.is-on i { opacity: 1; }
+.graph-edges > button:hover { color: var(--text-heading); }
+/* The last tool in the column carries no rule under it. */
+nav[aria-label="Graph tools"] > :last-child { border-bottom-width: 0; margin-bottom: 0; padding-bottom: 0; }
+/* Phones: the search box takes the top row alone; the edge switches and the reset/close sit under it, and the tools column under those. */
+@media (max-width: 767px) { .graph-edges { left: .6rem; top: 5.4rem; } div.graph-topright { right: .6rem; top: 5.4rem; flex-direction: column-reverse; align-items: flex-end; gap: .4rem; } nav[aria-label="Graph tools"] { left: .6rem; top: 8.3rem; } .graph-reset, .graph-close { padding: .45rem .6rem; } }
+/* The tally cell at the end of the wiki search row: count, meta or full, copy. Its own ground and colour. */
+.wiki-tally { display: inline-flex; align-items: center; gap: .55rem; margin-left: auto; align-self: stretch; padding: .5rem .8rem; border-left: 1px solid var(--hub-sidebar-border); background: color-mix(in srgb, var(--wiki-500) 7%, var(--bg-base)); color: var(--wiki-200, #ddd6fe); }
+.wiki-tally > span:first-child { color: var(--wiki-300, #c4b5fd); font-weight: 600; }
+/* On phones the tally sits inside the identity strip: no ground of its own, pushed to the right end. */
+.wiki-tally-phone { margin-left: auto; align-self: center; padding: 0; border: 0; background: none; gap: .45rem; text-transform: none; letter-spacing: 0; }
+
+/* The check before a bulk copy of wikinotes: same card as the presence note, violet, with a load rating. */
+.copy-confirm-veil { z-index: 10000; }
+.copy-confirm-card { width: min(27rem, 100%); padding-top: .5rem; box-shadow: 0 30px 70px -30px rgba(0,0,0,.8); }
+.copy-confirm-card > small { color: var(--wiki-400); }
+.copy-confirm-card > span { grid-template-columns: 4.6rem 1fr; }
+.copy-confirm-card > span b { color: var(--wiki-400); }
+.copy-confirm-load { display: flex; align-items: flex-start; gap: .55rem; margin: .5rem .4rem 0; padding: .6rem .7rem; border: 1px solid var(--border-default); color: var(--text-secondary); font: 400 11px/1.55 var(--font-mono); letter-spacing: .02em; }
+.copy-confirm-load i, .copy-confirm-size i { flex: none; display: inline-block; width: 7px; height: 7px; margin-top: .35rem; border-radius: 50%; background: var(--wiki-400); }
+.copy-confirm-card.is-heavy .copy-confirm-load { border-color: color-mix(in srgb, #f59e0b 45%, transparent); background: color-mix(in srgb, #f59e0b 7%, transparent); }
+.copy-confirm-card.is-heavy .copy-confirm-load i, .copy-confirm-size.is-heavy i { background: #f59e0b; }
+.copy-confirm-card.is-severe .copy-confirm-load { border-color: color-mix(in srgb, #ef4444 50%, transparent); background: color-mix(in srgb, #ef4444 8%, transparent); color: var(--text-heading); }
+.copy-confirm-card.is-severe .copy-confirm-load i, .copy-confirm-size.is-severe i { background: #ef4444; }
+.copy-confirm-actions { display: flex; justify-content: center; gap: .5rem; margin-top: .5rem; padding-top: .6rem; border-top: 1px solid var(--border-default); }
+.copy-confirm-actions .presence-info-close { margin: .4rem 0 0; }
+.copy-confirm-actions .presence-info-close:hover { border-color: var(--wiki-400); }
+.copy-confirm-go { margin: .4rem .4rem 0 0; padding: .45rem .8rem; border: 1px solid var(--wiki-400); background: color-mix(in srgb, var(--wiki-500) 28%, var(--bg-base)); color: var(--wiki-200, #ddd6fe); font: 600 9px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; transition: background-color .15s ease, color .15s ease; }
+.copy-confirm-go:hover, .copy-confirm-go:focus-visible { background: color-mix(in srgb, var(--wiki-500) 45%, var(--bg-base)); color: #fff; outline: none; }
+.copy-confirm-card.is-severe .copy-confirm-go { border-color: color-mix(in srgb, #ef4444 60%, transparent); background: color-mix(in srgb, #ef4444 16%, var(--bg-base)); color: var(--text-heading); }
+.copy-confirm-size { display: inline-flex; align-items: center; gap: .35rem; color: var(--text-muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+.copy-confirm-size i { margin-top: 0; width: 6px; height: 6px; }

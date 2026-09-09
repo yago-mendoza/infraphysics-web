@@ -24,6 +24,7 @@ const ContactView = React.lazy(() => import('../views/ContactView').then(m => ({
 const ThanksView = React.lazy(() => import('../views/ThanksView').then(m => ({ default: m.ThanksView })));
 // Eager: the 404 page must paint at once, never behind the Suspense fallback.
 import { ErrorConceptView, NotFoundContext } from '../views/ErrorConceptView';
+const LinkedFromTestView = React.lazy(() => import('../views/LinkedFromTestView').then(m => ({ default: m.LinkedFromTestView })));
 const SectionView = React.lazy(() => import('../views/SectionView').then(m => ({ default: m.SectionView })));
 const PostView = React.lazy(() => import('../views/PostView').then(m => ({ default: m.PostView })));
 const ContextPreviewView = React.lazy(() => import('../views/ContextPreviewView').then(m => ({ default: m.ContextPreviewView })));
@@ -258,6 +259,8 @@ const AppLayout: React.FC = () => {
               <Route path="/contact" element={<ContactView />} />
               <Route path="/thanks" element={<ThanksView />} />
               <Route path="/err5" element={<ErrorConceptView />} />
+              {/* Preview of the wiki card's Linked from menu with fictitious articles */}
+              <Route path="/test/linked-from" element={<LinkedFromTestView />} />
               <Route path="/ctx1" element={<ContextPreviewView variant={1} />} />
               <Route path="/ctx2" element={<ContextPreviewView variant={2} />} />
               <Route path="/ctx3" element={<ContextPreviewView variant={3} />} />

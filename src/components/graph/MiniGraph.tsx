@@ -9,6 +9,9 @@ import { initBrainIndex, type BrainIndex } from '../../lib/brainIndex';
 import { useGraphRelevance } from '../../hooks/useGraphRelevance';
 import { buildGraphData, type GraphData, type GraphNode, type GraphLink, type EdgeVisibility, EDGE_COLORS, assignRootColors, hexToRgb, ROOT_NEUTRAL } from './useGraphData';
 import { wikiRamp, wikiStepCss } from '../../lib/wikiAccent';
+import { estimateExport } from '../../lib/exportNotes';
+import { CopyConfirmModal } from '../wiki/CopyConfirmModal';
+import { RocketIcon } from '../icons';
 
 export type GraphColorMode = 'centrality' | 'roots';
 type SelectionRect = { x0: number; y0: number; x1: number; y1: number };
@@ -21,7 +24,7 @@ const DEFAULT_PHYSICS: PhysicsSettings = { repulsion: -30, linkDistance: 58, lin
 const NODE_SCALE = 1.8;
 const EDGE_PRESENCE = 2;
 const AreaInspectIcon: React.FC<{ size?: number }> = ({ size = 14 }) => <span aria-hidden="true" style={{ fontSize: size, lineHeight: 1 }}>%</span>;
-const CopyIcon: React.FC = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="1" /><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" /></svg>;
+const CopyIcon: React.FC = () => <RocketIcon size={14} />;
 const PHYSICS_STORAGE_KEY = 'wiki-graph-physics-v4';
 // v9 tethers truly isolated notes near the constellation so one unconnected
 // point cannot dictate the camera bounds.
@@ -201,6 +204,7 @@ const MiniGraph: React.FC<{
   const [dragSelect, setDragSelect] = useState<SelectionRect | null>(null);
   const [copyState, setCopyState] = useState<'idle' | 'copying' | 'copied'>('idle');
   const [copyStats, setCopyStats] = useState<{ chars: number; tokens: number } | null>(null);
+  const [pendingCopy, setPendingCopy] = useState<Set<string> | null>(null); // a selection waiting for its confirmation
   const [offscreenIndicators, setOffscreenIndicators] = useState<OffscreenIndicator[]>([]);
   const [physics, setPhysics] = useState<PhysicsSettings>(() => {
     try { return { ...DEFAULT_PHYSICS, ...JSON.parse(localStorage.getItem(PHYSICS_STORAGE_KEY) ?? '{}') }; }
@@ -624,7 +628,7 @@ const MiniGraph: React.FC<{
       setMultiSelected(ids);
       setCopyStats(null);
       graph.refresh?.();
-      void copySelection(ids);
+      if (ids.size > 0) setPendingCopy(ids);
     };
 
     element.addEventListener('mousedown', onMouseDown, true);
@@ -635,7 +639,7 @@ const MiniGraph: React.FC<{
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     };
-  }, [copySelection, dimension, expanded, filtered, multiSelected, selectionMode]);
+  }, [dimension, expanded, filtered, multiSelected, selectionMode]);
 
   useEffect(() => {
     const canvas = containerRef.current?.querySelector('canvas');
@@ -1423,7 +1427,7 @@ const MiniGraph: React.FC<{
           />}
         </div>
         {!expanded && <nav aria-label="Mini graph tools" className="absolute bottom-1 left-1 z-20 flex items-center gap-px border border-th-hub-border bg-th-base p-0.5 font-mono shadow-md">
-          {filtersActive && onResetFilters && <button type="button" title="Reset filters" aria-label="Reset filters" onClick={onResetFilters} className="flex h-5 w-5 items-center justify-center text-[11px] text-violet-400 transition-colors hover:text-violet-300">⟲</button>}
+          {filtersActive && onResetFilters && <><button type="button" title="Reset filters" aria-label="Reset filters" onClick={onResetFilters} className="graph-reset graph-reset-mini">⟲ reset</button><i className="mx-0.5 h-3 w-px bg-th-hub-border" /></>}
           <button
             type="button"
             aria-pressed={miniAnalysisEnabled}
@@ -1451,8 +1455,7 @@ const MiniGraph: React.FC<{
           ><i className="block h-px w-3.5" style={{ backgroundColor: mode === 'hierarchy' ? EDGE_COLORS.hierarchy : EDGE_COLORS.body, transform: mode === 'hierarchy' ? 'rotate(35deg)' : undefined }} /><span className="sr-only">{mode}</span></button>)}
           {onExpand && <><i className="mx-0.5 h-3 w-px bg-th-hub-border" /><button type="button" onClick={onExpand3d} title="Expand in 3D" aria-label="Expand in 3D" className="grid h-5 min-w-5 place-items-center px-1 text-[8px] font-semibold tracking-[.08em] text-th-muted transition-colors hover:bg-th-surface hover:text-violet-300">3D</button>{onExpand3d && <button type="button" onClick={onExpand} title="Expand graph" aria-label="Expand graph" className="grid h-5 w-5 place-items-center text-th-muted transition-colors hover:bg-th-surface hover:text-violet-300"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 1h4v4M5 11H1V7M11 1L7 5M1 11l4-4" /></svg></button>}</>}
         </nav>}
-        {expanded && <nav aria-label="Graph tools" className="absolute left-4 top-4 z-50 flex w-11 flex-col border border-th-hub-border bg-th-base p-1 font-mono shadow-xl">
-          {onMinimize && <button type="button" onClick={onMinimize} title="Minimize graph" aria-label="Minimize graph" className="mb-2 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 text-th-muted transition-colors hover:bg-th-surface hover:text-violet-300"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"><path d="M1.5 4.5h3v-3M10.5 7.5h-3v3M4.5 4.5l-3-3M7.5 7.5l3 3" /></svg></button>}
+        {expanded && <nav aria-label="Graph tools" className="absolute left-4 top-[3.6rem] z-50 flex w-11 flex-col border border-th-hub-border bg-th-base p-1 font-mono shadow-xl">
           <div className="mb-1 border-b border-th-hub-border pb-1">
             {(['2d', '3d'] as const).map(mode => <button key={mode} type="button" title={`${mode.toUpperCase()} view`} onPointerEnter={() => { if (mode === '3d') void import('react-force-graph-3d'); }} onFocus={() => { if (mode === '3d') void import('react-force-graph-3d'); }} onClick={() => { if (mode === dimension) return; physicsTouchedRef.current = true; topologyChangedRef.current = true; topologyCameraCancelledRef.current = false; setPhysicsSettling(true); setDimension(mode); if (mode === '3d') setSelectionMode(false); }} className={`mb-0.5 grid h-8 w-full place-items-center text-[9px] font-semibold uppercase ${dimension === mode ? 'bg-violet-400/15 text-violet-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}>{mode}</button>)}
           </div>
@@ -1464,10 +1467,22 @@ const MiniGraph: React.FC<{
           <button type="button" title="Center graph" onClick={centerGraph} className="mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 text-base leading-none text-th-muted hover:bg-th-surface hover:text-violet-300">⌖</button>
           {dimension === '2d' && <button type="button" title="Select area and copy notes" onClick={() => { setSelectionMode(value => !value); setMiniAnalysisEnabled(false); setDensityAreaIds(null); onAreaPreview?.(null); setHoveredId(null); setDragSelect(null); selectionStartRef.current = null; selectionRectRef.current = null; }} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 ${selectionMode ? 'bg-cyan-400/15 text-cyan-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><CopyIcon /></button>}
           {dimension === '2d' && <button type="button" aria-pressed={miniAnalysisEnabled} title="Inspect local density" onClick={() => { setMiniAnalysisEnabled(value => { const next = !value; if (!next) { setDensityAreaIds(null); onAreaPreview?.(null); } return next; }); setSelectionMode(false); setDragSelect(null); }} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 ${miniAnalysisEnabled ? 'bg-violet-400/15 text-violet-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><AreaInspectIcon /></button>}
-          <div className="pt-0.5">
-            {(['content', 'hierarchy'] as const).map(mode => { const active = mode === 'hierarchy' ? visibility.hierarchy : visibility.body || visibility.interaction; return <button key={mode} type="button" title={mode === 'hierarchy' ? 'Path hierarchy' : 'Content references and interactions'} aria-pressed={active} onClick={() => setEdgeMode(mode)} className={`relative mb-0.5 grid h-8 w-full place-items-center hover:bg-th-surface ${active ? 'opacity-100' : 'opacity-25'}`}><i className="block h-px w-5" style={{ backgroundColor: mode === 'hierarchy' ? EDGE_COLORS.hierarchy : EDGE_COLORS.body, transform: mode === 'hierarchy' ? 'rotate(35deg)' : undefined }} /><span className="absolute bottom-0.5 right-1 text-[6px] uppercase text-th-muted">{mode === 'hierarchy' ? 'P' : 'C'}</span></button>; })}
-          </div>
         </nav>}
+        {/* Expanded: the two controls that must never be missed, top right. */}
+        {expanded && <div className="graph-topright absolute right-4 top-4 z-50 flex items-center gap-2">
+          {filtersActive && onResetFilters && <button type="button" onClick={onResetFilters} className="graph-reset">⟲ Reset filters</button>}
+          {onMinimize && <button type="button" onClick={onMinimize} title="Close the graph (Esc)" aria-label="Close the graph" className="graph-close"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M1.5 4.5h3v-3M10.5 7.5h-3v3M4.5 4.5l-3-3M7.5 7.5l3 3" /></svg> Close</button>}
+        </div>}
+        {/* Expanded: the edge switches, top left, above the tools column. */}
+        {expanded && <div className="graph-edges" role="group" aria-label="Edges shown">
+          {(['content', 'hierarchy'] as const).map(mode => { const active = mode === 'hierarchy' ? visibility.hierarchy : visibility.body || visibility.interaction; return <button key={mode} type="button" aria-pressed={active} title={mode === 'hierarchy' ? 'Path hierarchy' : 'Content references and interactions'} onClick={() => setEdgeMode(mode)} className={active ? 'is-on' : ''}><i style={{ backgroundColor: mode === 'hierarchy' ? EDGE_COLORS.hierarchy : EDGE_COLORS.body, transform: mode === 'hierarchy' ? 'rotate(35deg)' : undefined }} /><span>{mode === 'hierarchy' ? 'hierarchy' : 'references'}</span></button>; })}
+        </div>}
+        {pendingCopy && index && <CopyConfirmModal
+          estimate={estimateExport([...pendingCopy].map(id => index.noteById.get(id)).filter((n): n is NonNullable<typeof n> => !!n), new Map(), true)}
+          source="Graph area selection"
+          onConfirm={() => { const ids = pendingCopy; setPendingCopy(null); void copySelection(ids); }}
+          onCancel={() => { setPendingCopy(null); setMultiSelected(new Set()); graphRef.current?.refresh?.(); }}
+        />}
         {expanded && copyState !== 'idle' && <div role="status" className="pointer-events-none absolute bottom-6 left-1/2 z-[80] -translate-x-1/2 border border-cyan-400/30 bg-th-base/95 px-4 py-2 font-mono text-[10px] text-cyan-300 shadow-xl backdrop-blur-sm">{copyState === 'copying' ? `copying ${multiSelected.size} notes…` : `${multiSelected.size} notes copied${copyStats ? ` · ~${copyStats.tokens.toLocaleString()} tokens` : ''}`}</div>}
         {expanded && dragSelect && <div className="pointer-events-none absolute z-40 border border-cyan-300 bg-cyan-300/10" style={{ left: Math.min(dragSelect.x0, dragSelect.x1), top: Math.min(dragSelect.y0, dragSelect.y1), width: Math.abs(dragSelect.x1 - dragSelect.x0), height: Math.abs(dragSelect.y1 - dragSelect.y0) }} />}
         {expanded && dimension === '2d' && offscreenIndicators.map(indicator => { const vertical = indicator.side === 'left' || indicator.side === 'right'; const style: React.CSSProperties = vertical ? { top: `${indicator.position * 100}%`, [indicator.side]: 6, transform: 'translateY(-50%)' } : { left: `${indicator.position * 100}%`, [indicator.side]: 6, transform: 'translateX(-50%)' }; const arrow = { left: '◀', right: '▶', top: '▲', bottom: '▼' }[indicator.side]; return <div key={indicator.side} className="pointer-events-none absolute z-10 flex items-center gap-1 rounded-full border border-violet-400/25 bg-th-base px-1.5 py-1 font-mono text-[8px] tabular-nums text-violet-300 shadow-md" style={style}><span>{arrow}</span><span>{indicator.count}</span></div>; })}

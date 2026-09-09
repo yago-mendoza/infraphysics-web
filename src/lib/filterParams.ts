@@ -1,7 +1,7 @@
 // Serialize/deserialize Second Brain filter state to/from URL search params.
 // Used to propagate filters from the list view to the graph view.
 
-import type { FilterState, SearchMode } from '../hooks/useSecondBrainHub';
+import { fieldsOfMode, modeOfFields, type FilterState, type SearchMode } from '../hooks/useSecondBrainHub';
 import type { WikiNoteMeta } from '../types';
 import type { BrainIndex } from './brainIndex';
 import evidence from '../data/field-of-view.generated.json';
@@ -47,7 +47,7 @@ export interface ParsedHubFilters {
 
 export function parseHubFilters(params: URLSearchParams): ParsedHubFilters {
   const query = params.get('q') || '';
-  const searchMode = (params.get('sm') || 'name') as SearchMode;
+  const searchMode = modeOfFields(fieldsOfMode((params.get('sm') || 'name') as SearchMode));
   const directoryScope = params.get('scope') || null;
   const filters: FilterState = {
     articleCountBelow: /^\d+$/.test(params.get('articlesBelow') || '') && Number(params.get('articlesBelow')) >= 1 ? Number(params.get('articlesBelow')) : null,
@@ -98,15 +98,8 @@ export function applyHubFilters(
       const dt = (linker.displayTitle || linker.title).toLowerCase();
       return addr.includes(q) || dt.includes(q) || (linker.searchText || '').includes(q) || linker.description.toLowerCase().includes(q);
     });
-    if (parsed.searchMode === 'name') {
-      notes = notes.filter(matchesName);
-    } else if (parsed.searchMode === 'content') {
-      notes = notes.filter(matchesContent);
-    } else if (parsed.searchMode === 'backlinks') {
-      notes = notes.filter(matchesBacklinks);
-    } else if (parsed.searchMode === 'all') {
-      notes = notes.filter(n => matchesName(n) || matchesContent(n) || matchesBacklinks(n));
-    }
+    const fields = fieldsOfMode(parsed.searchMode);
+    notes = notes.filter(n => (fields.includes('name') && matchesName(n)) || (fields.includes('content') && matchesContent(n)) || (fields.includes('backlinks') && matchesBacklinks(n)));
   }
 
   // 2. Directory scope
@@ -172,7 +165,7 @@ export function applyHubFilters(
 
 export function describeFilters(parsed: ParsedHubFilters): string[] {
   const parts: string[] = [];
-  if (parsed.query) parts.push(`search: "${parsed.query}"${parsed.searchMode !== 'name' ? ` (${parsed.searchMode})` : ''}`);
+  if (parsed.query) parts.push(`search: "${parsed.query}"${parsed.searchMode !== 'name' ? ` (${fieldsOfMode(parsed.searchMode).join(', ')})` : ''}`);
   if (parsed.directoryScope) parts.push(`scope: ${parsed.directoryScope.replace(/\/\//g, ' / ')}`);
   const f = parsed.filters;
   if (f.isolated) parts.push('isolated only');

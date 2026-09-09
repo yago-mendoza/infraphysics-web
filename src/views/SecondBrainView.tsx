@@ -13,12 +13,14 @@ import { RelevanceLeaderboard, type FamilyItem } from '../components/wiki/Releva
 import { BridgeScoreBadge } from '../components/wiki/BridgeScoreBadge';
 
 import { useGraphRelevance } from '../hooks/useGraphRelevance';
-import type { SortMode, SearchMode, FilterState, ViewMode } from '../hooks/useSecondBrainHub';
-import { SearchIcon, ClipboardIcon, CheckIcon, WikiBrainIcon } from '../components/icons';
+import type { SortMode, SearchMode, SearchField, FilterState, ViewMode } from '../hooks/useSecondBrainHub';
+import { SearchIcon, RocketIcon, CheckIcon, WikiBrainIcon, FileTextIcon } from '../components/icons';
+import { postPath, catAccentVar } from '../config/categories';
 import { noteLabel, type WikiNoteMeta } from '../types';
 import { type Connection } from '../lib/brainIndex';
 import { ICON_REF_IN, ICON_REF_OUT } from '../lib/icons';
-import { exportNotesAsMarkdown } from '../lib/exportNotes';
+import { exportNotesAsMarkdown, estimateExport } from '../lib/exportNotes';
+import { CopyConfirmModal } from '../components/wiki/CopyConfirmModal';
 import { CopyExportModal } from '../components/wiki/CopyExportModal';
 import { resolveWikiLinks } from '../lib/wikilinks';
 import { WikiLinkPreview } from '../components/wiki/WikiLinkPreview';
@@ -50,11 +52,11 @@ const SIMPLIFIED_SORT_OPTIONS: { value: SortMode; label: string }[] = [
 ];
 
 // --- Search Mode Chips ---
-const SEARCH_MODES: { value: SearchMode; label: string }[] = [
-  { value: 'name', label: 'name' },
-  { value: 'content', label: 'content' },
-  { value: 'backlinks', label: 'referenced by' },
-  { value: 'all', label: 'all' },
+// The fields a query is matched against. They stack: any combination, at least one.
+const SEARCH_MODES: { value: SearchField; label: string; hint: string }[] = [
+  { value: 'name', label: 'name', hint: 'Match node names, paths and aliases' },
+  { value: 'content', label: 'content', hint: 'Match text inside notes' },
+  { value: 'backlinks', label: 'referenced by', hint: 'Find nodes referenced by matching notes' },
 ];
 
 // --- StepperInput (inline, moved from sidebar) ---
@@ -512,6 +514,8 @@ const DockedToolbar: React.FC<{
   setQuery: (q: string) => void;
   searchMode: SearchMode;
   setSearchMode: (m: SearchMode) => void;
+  searchFields: SearchField[];
+  toggleSearchField: (f: SearchField) => void;
   sortMode: SortMode;
   setSortMode: (m: SortMode) => void;
   filterState: FilterState;
@@ -532,7 +536,7 @@ const DockedToolbar: React.FC<{
   sortedResults: WikiNoteMeta[];
   connectionsMap: Map<string, Connection[]>;
 }> = ({
-  query, setQuery, searchMode, setSearchMode,
+  query, setQuery, searchMode, setSearchMode, searchFields, toggleSearchField,
   sortMode, setSortMode,
   filterState, updateFilter, hasActiveFilters, resetFilters,
   directoryScope, setDirectoryScope,
@@ -541,8 +545,8 @@ const DockedToolbar: React.FC<{
   sortedResults, connectionsMap,
 }) => {
     const isSimplified = viewMode === 'simplified';
-    // Phones start with the filters folded; a tap on the row opens them.
-    const [filtersOpen, setFiltersOpen] = useState(() => typeof window === 'undefined' || !window.matchMedia('(max-width: 767px)').matches);
+    // The filters start folded everywhere; a click on the row opens them.
+    const [filtersOpen, setFiltersOpen] = useState(false);
 
     // Panel visibility is independent from filter state. Active constraints
     // must survive a collapse without forcing the controls back open.
@@ -552,9 +556,11 @@ const DockedToolbar: React.FC<{
     const [bulkCopyState, setBulkCopyState] = useState<'idle' | 'copying' | 'copied'>('idle');
     const [bulkCopyStats, setBulkCopyStats] = useState<string | null>(null);
     const [bulkCopyMode, setBulkCopyMode] = useState(false); // false = metadata, true = full
+    const [bulkCopyConfirm, setBulkCopyConfirm] = useState(false); // the check before the copy runs
 
     const handleBulkCopy = useCallback(async () => {
       if (sortedResults.length === 0) return;
+      setBulkCopyConfirm(false);
       setBulkCopyState('copying');
       try {
         const parts: string[] = [];
@@ -601,12 +607,78 @@ const DockedToolbar: React.FC<{
       return scopeOptions.filter(o => o.path.toLowerCase().includes(q)).slice(0, 12);
     }, [scopeOptions, scopeInput]);
 
+    // Sort controls: a menu on phones, inline buttons on desktop. They live inside the filter panel in
+    // the technical mode and in the results row in the simplified one, which has no panel.
+    const sortOptions = isSimplified ? SIMPLIFIED_SORT_OPTIONS : SORT_OPTIONS;
+    const sortControls = (
+      <>
+        <MobileMenu label="Sort" value={sortMode} onChange={value => setSortMode(value as SortMode)} options={sortOptions.map(opt => ({ value: opt.value, label: opt.label }))} className="uppercase tracking-[.08em]" />
+        {sortOptions.map(opt => (
+          <button
+            key={opt.value}
+            onClick={() => setSortMode(opt.value)}
+            className={`hidden md:inline-block text-[10px] px-1.5 py-0.5 rounded-sm transition-colors ${sortMode === opt.value
+              ? 'text-violet-400 bg-violet-400/10'
+              : 'text-th-tertiary hover:text-th-secondary'
+              }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+        {!isSimplified && hasVisited && (
+          <>
+            <span className="text-th-hub-border">|</span>
+            <button
+              onClick={() => setUnvisitedOnly((v: boolean) => !v)}
+              className={`text-[10px] px-1.5 py-0.5 rounded-sm transition-colors ${unvisitedOnly ? 'text-blue-400' : 'text-th-tertiary hover:text-blue-400'
+                }`}
+            >
+              unvisited
+            </button>
+          </>
+        )}
+      </>
+    );
+    // The tally (count, meta or full, copy): one JSX, two homes. Desktop shows it at the end of the search
+    // row; phones show it at the right end of the identity strip, where the plain note count used to be.
+    const tallyInner = (
+      <>
+            <span className="text-[9px] text-th-secondary tabular-nums">{sortedCount} {hasActiveFilters || query || directoryScope ? 'results' : 'notes'}</span>
+            {(hasActiveFilters || query || directoryScope) && allNotes.length > 0 && (
+              <>
+                <span className="text-[9px] text-th-muted tabular-nums">{Math.round((sortedCount / allNotes.length) * 100)}%</span>
+                <span className="inline-block w-10 h-1 rounded-full" style={{ backgroundColor: 'var(--bg-surface-alt)' }}>
+                  <span className="block h-full rounded-full" style={{ width: `${Math.min((sortedCount / allNotes.length) * 100, 100)}%`, backgroundColor: 'color-mix(in srgb, var(--wiki-500) 60%, transparent)' }} />
+                </span>
+              </>
+            )}
+            <button
+              onClick={() => setBulkCopyMode(m => !m)}
+              className="text-[9px] text-th-muted hover:text-th-secondary transition-colors"
+              title={bulkCopyMode ? 'Full mode (fetches content)' : 'Metadata mode (fast)'}
+            >
+              {bulkCopyMode ? 'full' : 'meta'}
+            </button>
+            <button
+              onClick={() => setBulkCopyConfirm(true)}
+              disabled={bulkCopyState === 'copying' || sortedCount === 0}
+              className="text-th-tertiary hover:text-violet-400 transition-colors disabled:opacity-30"
+              title="Copy all results for LLM context"
+            >
+              {bulkCopyState === 'copied' ? <CheckIcon size={12} /> : bulkCopyState === 'copying' ? <span className="text-[9px]">...</span> : <RocketIcon size={12} />}
+            </button>
+            {bulkCopyStats && (
+              <span className="text-[8px] text-violet-400/70 tabular-nums">{bulkCopyStats}</span>
+            )}
+      </>
+    );
     return (
       <div className="mb-3 border border-th-hub-border rounded-sm" style={{ backgroundColor: 'var(--hub-sidebar-bg)' }}>
         {/* Phones: say where we are before the search box. */}
-        <div className="md:hidden wiki-phone-ident"><WikiBrainIcon size={12} className="text-violet-400" /><b>wiki</b><span>InfraPhysics</span><i>{allNotes.length} notes</i></div>
-        {/* Row 1: Search + mode chips */}
-        <div className="flex items-center gap-2 px-3 py-2 border-b border-th-hub-border min-w-0">
+        <div className="md:hidden wiki-phone-ident"><WikiBrainIcon size={12} className="text-violet-400" /><b>wiki</b><span>InfraPhysics</span><span className="wiki-tally wiki-tally-phone">{tallyInner}</span></div>
+        {/* Row 1: Search, and at its end the tally cell (count, meta or full, copy) in its own colour. */}
+        <div className="flex flex-wrap items-center gap-2 border-b border-th-hub-border min-w-0">
+        <div className="flex flex-1 basis-[14rem] items-center gap-2 px-3 py-2 min-w-0">
           <span className="text-th-tertiary flex-shrink-0"><SearchIcon /></span>
           <input
             ref={inputRef}
@@ -631,15 +703,27 @@ const DockedToolbar: React.FC<{
             <button onClick={() => setQuery('')} className="text-th-tertiary hover:text-th-secondary text-[14px] md:text-[13px] leading-none flex-shrink-0 px-0.5">&times;</button>
           )}
         </div>
+        {/* The tally on desktop; on phones it lives in the identity strip above the search. */}
+        <span className="wiki-tally hidden md:inline-flex">{tallyInner}</span>
+        </div>
+        {bulkCopyConfirm && (
+          <CopyConfirmModal
+            estimate={estimateExport(sortedResults, connectionsMap, bulkCopyMode)}
+            source={query ? `Search results for “${query}”` : directoryScope ? `Notes under ${directoryScope}` : hasActiveFilters ? 'Filtered notes' : 'Every note in the wiki'}
+            onConfirm={() => { void handleBulkCopy(); }}
+            onCancel={() => setBulkCopyConfirm(false)}
+          />
+        )}
 
-        {!isSimplified && <div className="grid grid-cols-4 gap-px border-b border-th-hub-border bg-th-hub-border p-px" aria-label="Search field">
-          {SEARCH_MODES.map(mode => <button
+        {!isSimplified && <div className="grid grid-cols-3 gap-px border-b border-th-hub-border bg-th-hub-border p-px" role="group" aria-label="Search fields (stack as many as you need)">
+          {SEARCH_MODES.map(mode => { const on = searchFields.includes(mode.value); return <button
             key={mode.value}
             type="button"
-            onClick={() => setSearchMode(mode.value)}
-            title={mode.value === 'name' ? 'Match node names, paths and aliases' : mode.value === 'content' ? 'Match text inside notes' : mode.value === 'backlinks' ? 'Find nodes referenced by matching notes' : 'Search names, content and references together'}
-            className={`bg-th-base px-2 py-1.5 text-[10px] transition-colors ${searchMode === mode.value ? 'bg-violet-400/10 font-medium text-violet-400' : 'text-th-tertiary hover:bg-th-surface hover:text-th-secondary'}`}
-          >{mode.label}</button>)}
+            aria-pressed={on}
+            onClick={() => toggleSearchField(mode.value)}
+            title={mode.hint}
+            className={`bg-th-base px-2 py-1.5 text-[10px] transition-colors ${on ? 'bg-violet-400/10 font-medium text-violet-400' : 'text-th-tertiary hover:bg-th-surface hover:text-th-secondary'}`}
+          >{mode.label}</button>; })}
         </div>}
 
         {/* Row 2: Filters (collapsible) — technical mode only */}
@@ -653,7 +737,7 @@ const DockedToolbar: React.FC<{
               aria-expanded={isFiltersVisible}
             >
               <span>{isFiltersVisible ? '\u25BE' : '\u25B8'}</span>
-              <span className="uppercase tracking-wider text-[9px] font-medium">filters</span>
+              <span className="uppercase tracking-wider text-[9px] font-medium">filter &amp; sort</span>
               {(hasActiveFilters || !!directoryScope) && (
                 <span className="text-[9px] text-violet-400 tabular-nums">
                   ({[
@@ -794,78 +878,20 @@ const DockedToolbar: React.FC<{
                   onDateClick={(d) => updateFilter('dateFilter', d)}
                 />
               </div>
+              {/* Sort last: the order of the results, under the calendar. */}
+              <div className="flex flex-wrap items-center gap-1.5 px-3 pt-2 mt-2 border-t border-th-hub-border">
+                <span className="text-[9px] uppercase tracking-wider text-th-muted mr-1">sort</span>
+                {sortControls}
+              </div>
             </div>
           )}
         </div>
         )}
 
-        {/* Row 3: Sort + unvisited + count + active chips */}
+        {/* Row 3: the simplified sort, or the reset and active chips; nothing when there is nothing to show. */}
+        {(isSimplified || hasActiveFilters || !!directoryScope) && (
         <div className="flex items-center gap-1.5 px-3 py-1.5 flex-wrap">
-          {/* Sort: compact dropdown on mobile, inline buttons on desktop */}
-          {(() => {
-            const sortOptions = isSimplified ? SIMPLIFIED_SORT_OPTIONS : SORT_OPTIONS;
-            return (
-              <>
-                <MobileMenu label="Sort" value={sortMode} onChange={value => setSortMode(value as SortMode)} options={sortOptions.map(opt => ({ value: opt.value, label: opt.label }))} className="uppercase tracking-[.08em]" />
-                {sortOptions.map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setSortMode(opt.value)}
-                    className={`hidden md:inline-block text-[10px] px-1.5 py-0.5 rounded-sm transition-colors ${sortMode === opt.value
-                      ? 'text-violet-400 bg-violet-400/10'
-                      : 'text-th-tertiary hover:text-th-secondary'
-                      }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </>
-            );
-          })()}
-          {!isSimplified && hasVisited && (
-            <>
-              <span className="text-th-hub-border">|</span>
-              <button
-                onClick={() => setUnvisitedOnly((v: boolean) => !v)}
-                className={`text-[10px] px-1.5 py-0.5 rounded-sm transition-colors ${unvisitedOnly ? 'text-blue-400' : 'text-th-tertiary hover:text-blue-400'
-                  }`}
-              >
-                unvisited
-              </button>
-            </>
-          )}
-
-          {/* Count + copy — pushed to the right */}
-          <span className="flex items-center gap-1.5 ml-auto">
-            <span className="text-[9px] text-th-secondary tabular-nums">{sortedCount} {hasActiveFilters || query || directoryScope ? 'results' : 'notes'}</span>
-            {(hasActiveFilters || query || directoryScope) && allNotes.length > 0 && (
-              <>
-                <span className="text-[9px] text-th-muted tabular-nums">{Math.round((sortedCount / allNotes.length) * 100)}%</span>
-                <span className="inline-block w-10 h-1 rounded-full" style={{ backgroundColor: 'var(--bg-surface-alt)' }}>
-                  <span className="block h-full rounded-full" style={{ width: `${Math.min((sortedCount / allNotes.length) * 100, 100)}%`, backgroundColor: 'color-mix(in srgb, var(--wiki-500) 60%, transparent)' }} />
-                </span>
-              </>
-            )}
-            <button
-              onClick={() => setBulkCopyMode(m => !m)}
-              className="text-[9px] text-th-muted hover:text-th-secondary transition-colors"
-              title={bulkCopyMode ? 'Full mode (fetches content)' : 'Metadata mode (fast)'}
-            >
-              {bulkCopyMode ? 'full' : 'meta'}
-            </button>
-            <button
-              onClick={handleBulkCopy}
-              disabled={bulkCopyState === 'copying' || sortedCount === 0}
-              className="text-th-tertiary hover:text-violet-400 transition-colors disabled:opacity-30"
-              title="Copy all results for LLM context"
-            >
-              {bulkCopyState === 'copied' ? <CheckIcon size={12} /> : bulkCopyState === 'copying' ? <span className="text-[9px]">...</span> : <ClipboardIcon size={12} />}
-            </button>
-            {bulkCopyStats && (
-              <span className="text-[8px] text-violet-400/70 tabular-nums">{bulkCopyStats}</span>
-            )}
-          </span>
-
+          {isSimplified && sortControls}
           {/* Reset + active chips — technical only */}
           {!isSimplified && (
           <div className="flex items-center gap-1 flex-wrap">
@@ -899,9 +925,62 @@ const DockedToolbar: React.FC<{
           </div>
           )}
         </div>
+        )}
       </div>
     );
   };
+
+// --- Articles chip: the article mark and a count; a click lists the articles that link this note and
+// opens them. Rendered through a portal so no link nests inside the card link. ---
+type UsedIn = { id: string; title: string; category: string };
+/** Space the menu needs below the chip before it flips above it; also its height cap. */
+const ARTICLES_MENU_MIN = 224;
+const ARTICLES_MENU_MAX = 352;
+export const ArticlesChip: React.FC<{ articles: UsedIn[] }> = ({ articles }) => {
+  const [anchor, setAnchor] = useState<DOMRect | null>(null);
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!anchor) return;
+    const close = () => setAnchor(null);
+    window.addEventListener('scroll', close, { passive: true });
+    window.addEventListener('resize', close);
+    return () => { window.removeEventListener('scroll', close); window.removeEventListener('resize', close); };
+  }, [anchor]);
+  const count = articles.length;
+  // Placement: below the chip when there is room, above it near the bottom edge; the height is capped
+  // to the space on that side (and to ARTICLES_MENU_MAX) and the list scrolls inside.
+  const placement = useMemo(() => {
+    if (!anchor) return null;
+    const below = window.innerHeight - anchor.bottom - 12;
+    const above = anchor.top - 12;
+    const up = below < ARTICLES_MENU_MIN && above > below;
+    const room = Math.max(120, Math.min(ARTICLES_MENU_MAX, up ? above : below));
+    const right = Math.max(8, window.innerWidth - anchor.right);
+    return up ? { bottom: window.innerHeight - anchor.top + 6, right, maxHeight: room } : { top: anchor.bottom + 6, right, maxHeight: room };
+  }, [anchor]);
+  return (
+    <>
+      <button type="button" disabled={count === 0} aria-haspopup={count > 0 ? "menu" : undefined} aria-expanded={!!anchor}
+        title={count === 0 ? "No article links this note yet" : `${count} article${count === 1 ? "" : "s"} link this note`}
+        className={`wiki-articles-chip${count === 0 ? " is-empty" : ""}${anchor ? " is-open" : ""}`}
+        onClick={event => { event.preventDefault(); event.stopPropagation(); if (count === 0) return; setAnchor(anchor ? null : event.currentTarget.getBoundingClientRect()); }}>
+        <FileTextIcon /><span>{count}</span>
+      </button>
+      {anchor && createPortal(
+        <div className="wiki-articles-veil" onClick={event => { event.stopPropagation(); setAnchor(null); }}>
+          <div role="menu" className="wiki-articles-menu" style={placement ?? undefined} onClick={event => event.stopPropagation()}>
+            {articles.map(article => (
+              <button key={article.id} type="button" role="menuitem" onClick={() => { setAnchor(null); navigate(postPath(article.category, article.id)); }}>
+                <i style={{ background: catAccentVar(article.category) }} /><span>{article.title}</span><b>{article.category}</b>
+              </button>
+            ))}
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
+  );
+};
 
 // --- Memoized Grid Card — only re-renders when its own data changes ---
 const GridCard = React.memo<{
@@ -912,7 +991,7 @@ const GridCard = React.memo<{
   onCardClick: (note: WikiNoteMeta) => void;
   incoming: number;
   outgoing: number;
-  articles: number;
+  articles: UsedIn[];
 }>(({ note, idx, focused, visited, onCardClick, incoming, outgoing, articles }) => (
   <Link
     data-idx={idx}
@@ -924,7 +1003,7 @@ const GridCard = React.memo<{
       <span className={`text-sm font-medium transition-colors group-hover:text-th-primary ${visited ? 'text-blue-400/70' : 'text-violet-400'}`}>
         {noteLabel(note)}
       </span>
-      <span className="ml-auto text-[9px] text-th-tertiary whitespace-nowrap" title="Distinct articles linking this note">{articles} articles</span>
+      <span className="ml-auto"><ArticlesChip articles={articles} /></span>
     </div>
     <div className="text-[10px] text-th-tertiary mb-1">
       {(note.addressParts?.length ?? note.address?.split('//').length ?? 1) === 1
@@ -967,6 +1046,8 @@ export const SecondBrainView: React.FC = () => {
     clearSearch,
     searchMode,
     setSearchMode,
+    searchFields,
+    toggleSearchField,
     directoryScope,
     setDirectoryScope,
     filterState,
@@ -1531,6 +1612,8 @@ export const SecondBrainView: React.FC = () => {
           setQuery={setQuery}
           searchMode={searchMode}
           setSearchMode={setSearchMode}
+          searchFields={searchFields}
+          toggleSearchField={toggleSearchField}
           sortMode={sortMode}
           setSortMode={setSortMode}
           filterState={filterState}
@@ -1621,7 +1704,7 @@ export const SecondBrainView: React.FC = () => {
                 title="Copy for context"
                 aria-label="Copy for context"
               >
-                <ClipboardIcon size={14} />
+                <RocketIcon size={14} />
               </button>
             </div>
             <div className="text-[11px] text-th-tertiary mb-2">
@@ -1837,7 +1920,7 @@ export const SecondBrainView: React.FC = () => {
                       onCardClick={handleGridCardClick}
                       outgoing={note.references?.length || 0}
                       incoming={(backlinksMap.get(note.id) || []).length}
-                      articles={hub.articleUsage.get(note.id)?.length || 0}
+                      articles={hub.articleUsage.get(note.id) ?? []}
                     />
                 ))
               ) : (

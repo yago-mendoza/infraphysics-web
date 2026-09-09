@@ -21,7 +21,7 @@ const stack: StackItem[] = [
   { name: 'Hugging Face', description: 'Models, datasets and an open ecosystem for applied machine learning.', category: 'AI', slug: 'huggingface', href: 'https://huggingface.co/' },
   { name: 'OpenAI', description: 'Foundation models and APIs for reliable, tool-using AI applications.', category: 'AI', icon: '/tool-icons/openai.svg', href: 'https://openai.com/' },
   { name: 'Azure AI Foundry', description: 'Enterprise model deployment, evaluation and operational governance.', category: 'AI', icon: '/tool-icons/azure.svg', href: 'https://ai.azure.com/' },
-  { name: 'Linux', description: 'The operating environment beneath almost everything I deploy and debug.', category: 'Infrastructure', slug: 'linux', href: 'https://kernel.org/', monochrome: true },
+  { name: 'Linux', description: 'Where most of what I build ends up running, and where I go to debug it.', category: 'Infrastructure', slug: 'linux', href: 'https://kernel.org/', monochrome: true },
   { name: 'Docker', description: 'Reproducible services and a clean boundary between code and infrastructure.', category: 'Infrastructure', slug: 'docker', href: 'https://www.docker.com/' },
   { name: 'Kubernetes', description: 'Orchestration for resilient, observable and independently scalable services.', category: 'Infrastructure', slug: 'kubernetes', href: 'https://kubernetes.io/' },
   { name: 'OpenTelemetry', description: 'Vendor-neutral traces, metrics and logs for understanding live systems.', category: 'Infrastructure', slug: 'opentelemetry', href: 'https://opentelemetry.io/', monochrome: true },

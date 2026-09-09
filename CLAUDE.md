@@ -86,7 +86,7 @@ Root `README.md` is a hub — max 3 lines per topic, then link to a specialized 
 
 ### On Second Brain UX change
 
-If a change affects non-obvious behavior in the Second Brain (keyboard shortcuts, navigation, visual indicators, filters), update the **GuidePopup** tips in `src/components/layout/SecondBrainSidebar.tsx`.
+If a change affects user-facing behavior in the Second Brain (keyboard shortcuts, navigation, visual indicators, filters), update the searchable topics in `src/components/wiki/SecondBrainGuide.tsx`. The sidebar's information button opens this guide. Its search index is derived from the displayed explanations; keep control names and behavior aligned with the current UI.
 
 ### On context dump request
 
@@ -288,6 +288,12 @@ The body face and size for articles live in `src/styles/article-layout.css` on `
 ### Body heading sizes are pinned in `global.css` for every article
 The "One typographic voice" block in `src/styles/global.css` sets `.article-content h2` to 2rem and `h3` to 1.25rem with `!important` above 768px. Any per-category heading scale has to use `!important` from a more specific selector (`.article-blog:not(.article-essays) .article-content h2`, at the end of `article.css`, is the Bits2Bricks one) or the levels collapse: before that scale, `#` and `##` rendered at the same size and `###` at body size. The convention is `#` section, `##` subsection, `###` third level; every article starts at `#`.
 
+### iOS input zoom is blocked from `index.html`, not from CSS
+Safari on iPhone zooms into any focused field whose text is under 16px. A one-line script after the viewport meta in `index.html` appends `maximum-scale=1` on iOS only: Safari ignores it for pinch zoom but honours it for that automatic zoom, and Android (which would lose pinch zoom) never sees it. Do not fix it by bumping input sizes to 16px on phones, and do not add `maximum-scale` to the meta itself.
+
+### Every bulk copy of wikinotes goes through `CopyConfirmModal`
+The toolbar copy (`SecondBrainView`), the graph area selection (`MiniGraph`) and the per-note dialog (`CopyExportModal`) all show the size and load rating from `estimateExport()` in `src/lib/exportNotes.ts` before anything is fetched or written to the clipboard. The estimate needs no fetch because `searchText` in `wikinotes-index.json` is the plain body of each note; the thresholds (300 KB heavy, 1.5 MB severe) live next to it. A new copy path must open the modal first, not call the exporter directly.
+
 ### Block fences (`{math}`, `{bkqt}`) need blank lines around them
 A `{math}` … `{/math}` or `{bkqt/…}` … `{/bkqt}` fence written directly between list items or paragraphs (no blank line before the opening tag or after the closing one) closes the block and the compiler emits everything after it as literal text: `**bold**`, `[links](url)` and the following bullets stay unrendered, and the build prints no error (only the `[SYNTAX]` guard notices when a markdown link survives). Always put a blank line before the opening tag and after the closing tag. Documented in `SYNTAX.md` (Typed notes, Chemical and mathematical forms).
 
@@ -300,3 +306,9 @@ Reserve guide filenames (`readme`, `style`, `agents`) as well as Windows device 
 ### CV print action
 
 The shared About toolbar opens `/Yago-Mendoza-CV.pdf` in a new tab for printing with the browser's PDF viewer. Do not call `window.print()` on Profile or Stack: the website's CV-only print styles hide those pages. The download action uses the same PDF with the `download` attribute.
+
+### Wiki help keyboard isolation
+
+Help search results use a borderless text list, visually distinct from concept cards. Directory root/level selects must use `wiki-root-select`: it supplies opaque theme backgrounds and primary text for both the control and its native options. Translucent surface backgrounds can leave native menus unreadable.
+
+The Wiki guide owns keyboard events while open: stop propagation before the Wiki's window-level type-to-search and grid handlers receive them. Keep focus inside the dialog and restore it to the information button on close. Search results open a topic and scroll to the matching paragraph; help queries must never change the concept search or navigate the underlying page.

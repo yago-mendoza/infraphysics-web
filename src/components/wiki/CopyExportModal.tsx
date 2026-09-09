@@ -6,8 +6,8 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { type WikiNoteMeta } from '../../types';
 import type { Connection, Neighborhood } from '../../lib/brainIndex';
-import { exportNotesAsMarkdown, estimateWords } from '../../lib/exportNotes';
-import { ClipboardIcon, CheckIcon, CloseIcon } from '../icons';
+import { exportNotesAsMarkdown, estimateWords, estimateExport, exportLoad, formatBytes } from '../../lib/exportNotes';
+import { RocketIcon, CheckIcon, CloseIcon } from '../icons';
 
 type ZoneKey =
   | 'self' | 'parent' | 'siblings' | 'children'
@@ -322,6 +322,8 @@ export const CopyExportModal: React.FC<Props> = ({
   }, [zones, activeZones]);
 
   const wordEst = useMemo(() => estimateWords(selectedNotes), [selectedNotes]);
+  const sizeEst = useMemo(() => estimateExport(selectedNotes, connectionsMap, true), [selectedNotes, connectionsMap]);
+  const load = exportLoad(sizeEst);
   const pct = totalNotes > 0 ? Math.round((selectedNotes.length / totalNotes) * 100) : 0;
   const pctLabel = selectedNotes.length > 0 && pct === 0 ? '<1%' : `${pct}%`;
   const pctWidth = totalNotes > 0 ? Math.min((selectedNotes.length / totalNotes) * 100, 100) : 0;
@@ -397,6 +399,7 @@ export const CopyExportModal: React.FC<Props> = ({
               {selectedNotes.length} {selectedNotes.length === 1 ? 'note' : 'notes'} · ~{wordEst > 1000 ? `${(wordEst / 1000).toFixed(1)}k` : wordEst} words
             </span>
             <span className="text-[10px] text-th-muted tabular-nums">{pctLabel} of wiki</span>
+            <span className={`copy-confirm-size is-${load}`} title={load === 'light' ? 'Fits in a chat box or an editor' : load === 'heavy' ? 'A large paste: some chat boxes and editors slow down or truncate it' : 'A very large paste: the tab and the target application may freeze'}><i /> {formatBytes(sizeEst.bytes)}</span>
             <span className="inline-block w-16 h-1 rounded-full" style={{ backgroundColor: 'var(--bg-surface-alt)' }}>
               <span
                 className="block h-full rounded-full transition-all"
@@ -416,7 +419,7 @@ export const CopyExportModal: React.FC<Props> = ({
             ) : copyState === 'copying' ? (
               <>...</>
             ) : (
-              <><ClipboardIcon size={12} /> Copy</>
+              <><RocketIcon size={13} /> Copy</>
             )}
           </button>
         </div>

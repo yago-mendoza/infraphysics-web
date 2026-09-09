@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ExternalLinkIcon } from '../icons';
 import { usePresence } from '../../hooks/usePresence';
+import { PresenceInfo } from '../personal/PresenceInfo';
 import { isSecondBrainPath } from '../../config/categories';
 import { NotFoundContext } from '../../views/ErrorConceptView';
 
@@ -26,13 +27,13 @@ export const AmbientRails: React.FC = () => {
         </div>
         <div>
           <p className="ambient-label">Based in</p>
-          <p className="ambient-value">Madrid, Spain</p>
-          <p className="ambient-coordinate">40.4168 N · 3.7038 W</p>
+          <p className="ambient-value">Barcelona, Spain</p>
+          <p className="ambient-coordinate">41.3874 N · 2.1686 E</p>
         </div>
       </aside>
       <aside className="ambient-rail ambient-rail-right">
         <div>
-          <p className="ambient-visit-number">{presence.visits == null ? '—' : presence.visits.toLocaleString()}</p>
+          <p className="ambient-visit-number"><PresenceInfo />{presence.visits == null ? '—' : presence.visits.toLocaleString()}</p>
           <p className="ambient-visit-meta">
             <span className="ambient-visit-label">visits</span>
             <span className="ambient-visit-separator" aria-hidden="true">·</span>

@@ -17,7 +17,7 @@ import { SecondBrainGuide } from '../wiki/SecondBrainGuide';
 import { useGraphRelevance } from '../../hooks/useGraphRelevance';
 import { SIDEBAR_WIDTH, SECOND_BRAIN_SIDEBAR_WIDTH } from '../../constants/layout';
 import type { WikiNoteMeta } from '../../types';
-import type { TreeNode, FilterState, DirectorySortMode, SearchMode } from '../../hooks/useSecondBrainHub';
+import type { TreeNode, FilterState, DirectorySortMode, SearchField } from '../../hooks/useSecondBrainHub';
 
 // Lazy-load MiniGraph — heavy dep (react-force-graph-2d)
 const MiniGraph = React.lazy(() => import('../graph/MiniGraph'));
@@ -637,7 +637,7 @@ export const SecondBrainSidebar: React.FC = () => {
   if (!hub) return null;
 
   const {
-    query, setQuery, searchMode, setSearchMode,
+    query, setQuery, searchFields, toggleSearchField,
     filterState, setFilterState,
     directoryScope, setDirectoryScope,
     directoryQuery, setDirectoryQuery,
@@ -987,11 +987,11 @@ export const SecondBrainSidebar: React.FC = () => {
         </div>
 
         <div className="flex gap-1 mb-2 text-[10px]">
-          <select aria-label="Directory root" value={directoryScope?.split('//')[0] || ''} onChange={e => setDirectoryScope(e.target.value || null)} className="min-w-0 flex-1 bg-th-surface text-th-secondary border border-th-hub-border px-1 py-1">
+          <select aria-label="Directory root" value={directoryScope?.split('//')[0] || ''} onChange={e => setDirectoryScope(e.target.value || null)} className="wiki-root-select min-w-0 flex-1 border border-th-hub-border px-1 py-1">
             <option value="">all roots</option>
             {allWikiNotes.filter(n => !n.address?.includes('//')).map(n => <option key={n.id} value={n.address || n.title}>{n.name || n.title}</option>)}
           </select>
-          <select aria-label="Directory visible levels" title="Tree display only; does not filter results or the graph" value={String(directoryLevels)} onChange={e => { setDirectoryLevels(Number(e.target.value)); }} className="min-w-0 bg-th-surface text-th-secondary border border-th-hub-border px-1 py-1">
+          <select aria-label="Directory visible levels" title="Tree display only; does not filter results or the graph" value={String(directoryLevels)} onChange={e => { setDirectoryLevels(Number(e.target.value)); }} className="wiki-root-select min-w-0 border border-th-hub-border px-1 py-1">
             <option value="Infinity">all levels</option><option value="0">roots only</option><option value="1">+ children</option><option value="2">+ grandchildren</option>
           </select>
         </div>
@@ -1183,6 +1183,8 @@ export const SecondBrainSidebar: React.FC = () => {
               activeRoot={scopedRoot}
               onAreaPreview={setMiniAreaIds}
               onMinimize={() => minimizeGraph()}
+              filtersActive={hasActiveFilters || !!directoryScope || searchActive}
+              onResetFilters={() => { resetFilters(); setDirectoryScope(null); setQuery(''); }}
               onColorModeChange={setGraphColorMode}
               activeNodeId={graphSelectionCleared ? null : activePost?.id ?? null}
               onNodeSelect={node => { setGraphSelectionCleared(false); minimizeGraph(false); openGraphNode(node); }}
@@ -1190,9 +1192,9 @@ export const SecondBrainSidebar: React.FC = () => {
               onClearSelection={() => setGraphSelectionCleared(true)}
             />
           </Suspense>
-          <div className={`group absolute ${phone ? 'left-16 right-3' : 'left-20 right-20'} top-3 z-[65] mx-auto max-w-2xl border border-th-hub-border bg-th-base/90 font-mono shadow-lg transition-opacity duration-500 focus-within:opacity-100 hover:opacity-100 ${graphInput ? 'opacity-90' : 'opacity-[.14]'}`}>
+          <div className={`group absolute ${phone ? 'left-3 right-3' : 'left-20 right-20'} top-3 z-[65] mx-auto max-w-2xl border border-th-hub-border bg-th-base/90 font-mono shadow-lg transition-opacity duration-500 focus-within:opacity-100 hover:opacity-100 ${graphInput ? 'opacity-90' : 'opacity-[.14]'}`}>
             <div className="flex h-9 items-center gap-2 px-3"><span className="text-violet-400">⌕</span><input ref={graphSearchInputRef} value={graphInput} onChange={event => { setGraphInput(event.target.value); setGraphSelectionCleared(true); setQuery(event.target.value); }} placeholder="search wiki…" autoComplete="off" spellCheck={false} className="min-w-0 flex-1 cursor-text bg-transparent text-[12px] text-th-primary outline-none placeholder:text-th-muted" />{graphStateReadout}{(hasActiveFilters || directoryScope) && <button type="button" onClick={() => { resetFilters(); setDirectoryScope(null); }} className="flex-none border-l border-th-hub-border pl-2 text-[8px] uppercase tracking-[.08em] text-amber-400 transition-colors hover:text-amber-300" title="Clear active filters, keep search">reset filters</button>}{graphInput && <button type="button" onClick={() => { setGraphInput(''); setGraphSelectionCleared(true); setQuery(''); }} className="text-th-muted hover:text-th-primary">×</button>}</div>
-            <div className="grid grid-cols-4 gap-px border-t border-th-hub-border bg-th-hub-border p-px">{([['name', 'name'], ['content', 'content'], ['backlinks', 'referenced by'], ['all', 'all']] as Array<[SearchMode, string]>).map(([mode, label]) => <button key={mode} type="button" onClick={() => setSearchMode(mode)} className={`bg-th-base px-2 py-1.5 text-[9px] transition-colors ${searchMode === mode ? 'bg-violet-400/10 text-violet-400' : 'text-th-muted hover:bg-th-surface hover:text-th-secondary'}`}>{label}</button>)}</div>
+            <div className="grid grid-cols-3 gap-px border-t border-th-hub-border bg-th-hub-border p-px" role="group" aria-label="Search fields">{([['name', 'name'], ['content', 'content'], ['backlinks', 'referenced by']] as Array<[SearchField, string]>).map(([field, label]) => { const on = searchFields.includes(field); return <button key={field} type="button" aria-pressed={on} onClick={() => toggleSearchField(field)} className={`bg-th-base px-2 py-1.5 text-[9px] transition-colors ${on ? 'bg-violet-400/10 text-violet-400' : 'text-th-muted hover:bg-th-surface hover:text-th-secondary'}`}>{label}</button>; })}</div>
           </div>
         </div>,
         document.body,
