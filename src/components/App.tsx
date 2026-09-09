@@ -25,6 +25,8 @@ const ThanksView = React.lazy(() => import('../views/ThanksView').then(m => ({ d
 // Eager: the 404 page must paint at once, never behind the Suspense fallback.
 import { ErrorConceptView, NotFoundContext } from '../views/ErrorConceptView';
 const LinkedFromTestView = React.lazy(() => import('../views/LinkedFromTestView').then(m => ({ default: m.LinkedFromTestView })));
+const ShareCardsView = React.lazy(() => import('../views/ShareCardsView').then(m => ({ default: m.ShareCardsView })));
+const OgCardView = React.lazy(() => import('../views/OgCardView').then(m => ({ default: m.OgCardView })));
 const SectionView = React.lazy(() => import('../views/SectionView').then(m => ({ default: m.SectionView })));
 const PostView = React.lazy(() => import('../views/PostView').then(m => ({ default: m.PostView })));
 const ContextPreviewView = React.lazy(() => import('../views/ContextPreviewView').then(m => ({ default: m.ContextPreviewView })));
@@ -261,6 +263,13 @@ const AppLayout: React.FC = () => {
               <Route path="/err5" element={<ErrorConceptView />} />
               {/* Preview of the wiki card's Linked from menu with fictitious articles */}
               <Route path="/test/linked-from" element={<LinkedFromTestView />} />
+              {/* Share cards, development only: the gallery, and the single-card page scripts/og-cards.js photographs */}
+              {import.meta.env.DEV && <>
+                <Route path="/og" element={<ShareCardsView />} />
+                <Route path="/og/:kind" element={<ShareCardsView />} />
+                <Route path="/og/:kind/:variant" element={<ShareCardsView />} />
+                <Route path="/og/card/:kind/:id" element={<OgCardView />} />
+              </>}
               <Route path="/ctx1" element={<ContextPreviewView variant={1} />} />
               <Route path="/ctx2" element={<ContextPreviewView variant={2} />} />
               <Route path="/ctx3" element={<ContextPreviewView variant={3} />} />

@@ -68,6 +68,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   const [copied, setCopied] = useState(false);
   const [contentCopied, setContentCopied] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [indexOpen, setIndexOpen] = useState(false);
   const [shareClosing, setShareClosing] = useState(false);
   // Close with the exit animation: the closing class plays, then the sheet unmounts.
   const closeShare = useCallback(() => {
@@ -416,6 +417,27 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
   const relatedLabel = catCfg?.relatedLabel || 'Related Articles';
 
+  // Phones: a floating Sections button opens the index as a bottom sheet, wherever the reader is.
+  const mobileIndex = topHeadings.length > 1 && (
+    <>
+      <button type="button" className="article-index-fab" onClick={() => setIndexOpen(true)} aria-haspopup="dialog" aria-expanded={indexOpen}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></svg>
+        Sections
+      </button>
+      {indexOpen && createPortal(
+        <div className="article-index-veil" role="presentation" onClick={e => { if (e.target === e.currentTarget) setIndexOpen(false); }}>
+          <div className="article-index-sheet" role="dialog" aria-modal="true" aria-label="Sections" style={{ '--art-accent': catAccentVar(post.category) } as React.CSSProperties}>
+            <small>Sections</small>
+            <ol>
+              {topHeadings.map((h, i) => <li key={h.id}><a href={`#${h.id}`} onClick={event => { event.preventDefault(); setIndexOpen(false); document.getElementById(h.id)?.scrollIntoView({ behavior: 'instant', block: 'start' }); }}><b>{String(i + 1).padStart(2, '0')}</b><span>{h.text}</span></a></li>)}
+            </ol>
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
+  );
+
   const shareUrl = `${window.location.origin}${location.pathname}`;
   const shareTitle = post.displayTitle || post.title;
 
@@ -477,6 +499,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
         <>
         {/* The thin black bar on the top edge of every article page. */}
         <div className="article-topbar" aria-hidden="true" />
+        {mobileIndex}
         <article className={`glab${isEssays ? '' : ' glab-split'}`}>
           <div className="glab-head">
             <div className="glab-head-text">
@@ -517,7 +540,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                 {/* The author, above the index: the portrait and the name, as the home presents the site. */}
                 <Link to={authorPath} className="glab-author">
                   {authorStack}
-                  <span><b>{authorName}</b>{authorPath === '/about' && <small>industrial &amp; software engineer</small>}</span>
+                  <span><b>{authorName}</b>{authorPath === '/about' && <small>infraphysicist</small>}</span>
                 </Link>
                 <small>{isEssays ? 'In this article' : 'Sections'}</small>
                 <ol>
@@ -542,6 +565,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
          sheet (project-page.css). */
       <article className="pj-page">
         <div className="article-topbar" aria-hidden="true" />
+        {mobileIndex}
         <header>
           <div className="pj-plate">{post.thumbnail && <img src={post.thumbnail} alt="" loading="eager" style={thumbFocusStyle} />}</div>
           <div className="pj-column pj-plate-text">

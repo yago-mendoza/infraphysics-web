@@ -10,6 +10,7 @@
     "dev": "npm run content && vite",
     "build": "node scripts/media.js sync --soft && npm run content && vite build",
     "media": "node scripts/media.js",
+    "og": "node scripts/og-cards.js",
     "preview": "vite preview",
     "obsidian:export": "node scripts/obsidian-export.js",
     "obsidian:import": "node scripts/obsidian-import.js"

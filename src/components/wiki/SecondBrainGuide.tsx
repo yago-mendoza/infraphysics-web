@@ -101,13 +101,23 @@ const TOPICS: Topic[] = [
   ] },
   { id: 'colors', section: 'Graph workspace', title: 'Graph colors & selection', keywords: 'colores centrality roots highlights purple lime', paragraphs: [
     'By default, graph nodes are colored by root family: the first part of their address. The expanded toolbar can switch to centrality colors, where lighter Wiki-accent tones mean higher centrality. Your color choice is remembered.',
-    'Current search and filter results use periwinkle, temporary previews use bright orchid, and a committed selection uses lime. The surrounding graph stays visible for context.',
+    'Current search and filter results use periwinkle, a temporary preview (hovering a node or a directory entry) lights each node up brighter in its own colour, and a committed selection uses lime. The surrounding graph stays visible for context.',
     'Graph colors communicate family, structural rank, and selection. The blue visited-link convention belongs to note links and is a separate cue.',
   ] },
   { id: 'graph-tools', section: 'Graph workspace', title: 'Area selection & graph dynamics', keywords: 'physics simulation repulsion gravity damping density copiar area', paragraphs: [
     'In the expanded 2D view, Select area and copy notes lets you select a region for collecting note context; the same confirmation as the toolbar copy appears before the notes are fetched. Inspect local density helps examine a region of the graph. Center graph brings the overall view back into frame.',
     'Graph dynamics adjusts the layout: repulsion spreads nodes apart, edge length sets their preferred separation, edge attraction pulls linked nodes together, and clearance reduces overlap. Damping controls how quickly movement settles; center gravity pulls the layout toward the middle.',
     'These controls change the visual arrangement, not the notes, their links, or their centrality scores. Use reset defaults in graph dynamics to restore the initial layout settings.',
+  ] },
+  { id: 'mini-aids', section: 'Graph workspace', title: 'Mini graph: radius and pins', keywords: 'neighbourhood radius hops pin pinned miniatura vecindad', paragraphs: [
+    'The bottom-right controls of the mini graph act on the note you are reading. Radius (r1, r2, r3) fades everything farther than that many hops from the open note, so the map reads as a local neighbourhood; clicking past r3 switches it off.',
+    'Pins flag up to three notes with a numbered marker on both graphs. Pin a note from its card (the marker beside Copy for context) or from the expanded graph; the pin control on the mini graph shows or hides the markers. Radius, pins, freeze and the node size are remembered in this browser.',
+  ] },
+  { id: 'expanded-aids', section: 'Graph workspace', title: 'Expanded graph: path, isolate, timeline, lenses, legend, image', keywords: 'shortest path route camino isolate subtree component timeline date age lens orphans bridges cited articles legend map image png size degree length density radius freeze', paragraphs: [
+    'Shortest path: click the route control, then a start note and an end note. While the end is not pinned, hovering any note previews the route from the start. The route is drawn in cyan over the edges currently shown, and the panel lists every stop; each stop opens its note. If there is no route, try the other edge mode.',
+    'Isolate keeps only the address subtree of the selected note on the canvas; a second click widens it to the whole connected component; a third shows everything again. The graph frames what remains. Node size can follow centrality, the number of connections, or the length of the note. Inspect local density opens a slider beside the tool to set the study radius.',
+    'The timeline shows the graph as it was on a date: drag the slider or play the sweep from the first note to the last. Age colours notes from cool (oldest) to warm (newest). Lenses single out orphans (no links), bridges (notes whose removal would split their component), notes cited by published articles (a thicker ring means more articles), or this session’s trail. Everything else recedes without disappearing.',
+    'The legend (the map control) is open by default and explains node colours, edge types and every ring. The camera control asks whether to copy the graph alone or the graph with the open panels, as a PNG image. Hovering a directory entry marks its node in lime; clicking one selects the node without opening the note. Closing the graph keeps every mode and the camera for the next time it opens. Escape closes the most recent aid first.',
   ] },
 ];
 

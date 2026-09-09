@@ -200,6 +200,12 @@ export const useSecondBrainHub = () => {
   // forceVisitedUpdate in deps forces a new function reference when the visited set
   // changes, triggering re-renders in consumers despite the ref-based closure.
   const isVisited = useCallback((noteId: string) => visitedRef.current.has(noteId), [forceVisitedUpdate]);
+  // The graph's session-trail lens offers to forget the visits of this tab.
+  const clearVisited = useCallback(() => {
+    visitedRef.current = new Set();
+    try { sessionStorage.removeItem('sb-visited'); } catch { /* optional */ }
+    forceVisitedUpdate(n => n + 1);
+  }, []);
 
   // Active post from URL — O(1) lookup
   const activePost = useMemo(() => {
@@ -685,6 +691,7 @@ export const useSecondBrainHub = () => {
 
     // Visited tracking (session-scoped)
     isVisited,
+    clearVisited,
 
     // Directory nav signal (sidebar → view trail reset)
     directoryNavRef,

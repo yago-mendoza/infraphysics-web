@@ -980,6 +980,38 @@ for (const note of wikinotesIndex) {
   };
 }
 
+// Pages and playgrounds that only exist for the share card: a title and a line, no body text.
+ogManifest['/about/stack'] = { t: `${agentProfile.identity.name} | Stack`, d: 'The tools I reach for, and the few I would defend.', img: null, cat: null, date: agentProfile.lastUpdated, text: profileText };
+ogManifest['/contact'] = { t: 'Get in touch — Yago Mendoza', d: 'Ideas, collaborations, corrections. Barcelona, ES / EN.', img: null, cat: null, date: null };
+const playgroundsDir = path.join(__dirname, '../public/playgrounds');
+if (fs.existsSync(playgroundsDir)) {
+  for (const articleId of fs.readdirSync(playgroundsDir)) {
+    const dir = path.join(playgroundsDir, articleId);
+    if (!fs.statSync(dir).isDirectory()) continue;
+    const parent = publicRegularPosts.find(p => p.id === articleId);
+    for (const file of fs.readdirSync(dir).filter(f => f.endsWith('.html'))) {
+      const html = fs.readFileSync(path.join(dir, file), 'utf8');
+      const title = (html.match(/<title>([^<]*)<\/title>/i)?.[1] || file.replace(/\.html$/, '')).replace(/\s+—\s+/g, ': ').trim();
+      ogManifest[`/playgrounds/${articleId}/${file}`] = { t: title, d: parent ? `An interactive page from the article ${parent.displayTitle || parent.title}.` : 'An interactive page.', img: null, cat: null, date: parent?.date || null };
+    }
+  }
+}
+
+// Share cards: scripts/og-cards.js photographs one per url and records it in src/data/og-cards.json;
+// each recorded card replaces the plain cover (or the generic image) as og:image.
+const OG_CARDS_FILE = path.join(__dirname, '../src/data/og-cards.json');
+if (fs.existsSync(OG_CARDS_FILE)) {
+  const ogCards = JSON.parse(fs.readFileSync(OG_CARDS_FILE, 'utf8'));
+  const cardsBase = (ogCards.publicBase || mediaBase).replace(/\/+$/, '');
+  let applied = 0;
+  for (const [urlPath, card] of Object.entries(ogCards.cards || {})) {
+    if (!ogManifest[urlPath]) continue;
+    ogManifest[urlPath].img = `${cardsBase}/${card.key}?v=${card.v}`;
+    applied++;
+  }
+  console.log(`[OG] ${applied} share cards applied`);
+}
+
 const OG_MANIFEST_FILE = path.join(__dirname, '../public/og-manifest.json');
 fs.writeFileSync(OG_MANIFEST_FILE, JSON.stringify(ogManifest));
 

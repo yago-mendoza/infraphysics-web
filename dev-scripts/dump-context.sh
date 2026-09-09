@@ -50,6 +50,7 @@ FILES=(
   "src/hooks/useKeyboardShortcuts.ts"
   "src/hooks/useNavigationTrail.ts"
   "src/hooks/useSecondBrainHub.ts"
+  "src/hooks/useGraphPrefs.ts"
   "src/hooks/useViewCount.ts"
   "src/hooks/useReaction.ts"
   "src/hooks/useArticleStats.ts"
@@ -120,6 +121,11 @@ FILES=(
   "src/views/ThanksView.tsx"
   "src/views/ErrorConceptView.tsx"
   "src/views/LinkedFromTestView.tsx"
+  "src/views/ShareCardsView.tsx"
+  "src/views/shareCardDesigns.tsx"
+  "src/views/OgCardView.tsx"
+  "src/lib/shareCards.ts"
+  "scripts/og-cards.js"
   "src/styles/error-concepts.css"
   "src/views/SectionView.tsx"
   "src/views/PostView.tsx"
@@ -131,6 +137,7 @@ FILES=(
   "src/lib/wikiArticleUsage.ts"
   "src/views/SecondBrainGraphView.tsx"
   "src/components/graph/useGraphData.ts"
+  "src/components/graph/graphAnalysis.ts"
   "src/components/graph/GraphControls.tsx"
 
   # --- Styles ---

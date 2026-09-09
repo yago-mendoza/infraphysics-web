@@ -39,6 +39,8 @@ export const ContactView: React.FC = () => {
         </aside>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Formspree reads this as the subject of its notification; the visitor's `email` field becomes the Reply-To on its own. */}
+          <input type="hidden" name="_subject" value="New message from the InfraPhysics contact page" />
           <label className="block">
             <span className="block text-[10px] uppercase tracking-[0.16em] text-th-tertiary mb-2">Your name</span>
             <input name="name" required className="w-full bg-transparent border-0 border-b border-th-border px-0 py-3 text-th-heading outline-none focus:border-th-heading transition-colors" />

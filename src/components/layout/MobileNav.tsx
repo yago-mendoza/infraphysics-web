@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
-import { BackChevronIcon, CloseIcon, DiceIcon, ExternalLinkIcon, Logo, MenuIcon, MoonIcon, SunIcon, WikiBrainIcon } from '../icons';
+import { CloseIcon, DiceIcon, ExternalLinkIcon, MenuIcon, MoonIcon, SunIcon, WikiBrainIcon } from '../icons';
 import { postPath, secondBrainPath, secondBrainGraphPath } from '../../config/categories';
 import { postSummaries } from '../../data/postSummaries';
 import { initBrainIndex } from '../../lib/brainIndex';
@@ -51,16 +51,11 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?:
   ] as const;
 
   return (
-    <div data-hidden={(!revealed && !open) || undefined} className="global-nav-shell nav-reveal md:hidden fixed inset-x-0 bottom-3 z-50 px-3">
-      <div className="mobile-nav-bar h-12 px-4 flex items-center justify-between bg-th-base/95 backdrop-blur-md border border-th-border rounded-md">
-        {back && <button type="button" onClick={back.onClick} className="flex items-center pr-3 mr-3 border-r border-th-border text-th-tertiary" aria-label={back.label}><BackChevronIcon className="wiki-back-icon" /></button>}
-        <Link to="/home" className="flex items-center gap-2 min-w-0" aria-label="InfraPhysics home">
-          <Logo className="w-4 h-4" color="var(--text-heading)" />
-          <span className="text-sm text-th-heading">{links.find(([to]) => location.pathname === to || location.pathname.startsWith(to + '/'))?.[1] ?? 'InfraPhysics'}</span>
-        </Link>
-        <div className="flex items-center gap-1 text-th-tertiary">
-          <button onClick={() => setOpen(true)} className="flex items-center gap-2 pl-3 border-l border-th-border text-xs" aria-label="Open navigation">Menu <MenuIcon /></button>
-        </div>
+    <div data-hidden={(!revealed && !open) || undefined} className="global-nav-shell nav-reveal nav-corner md:hidden fixed right-3 bottom-3 z-50">
+      {/* A pill in the corner: the section we are in, then Menu. The phone's own browser bar carries back and the url. */}
+      <div className="mobile-nav-bar h-11 pl-4 pr-3 inline-flex items-center gap-3 bg-th-base/95 backdrop-blur-md border border-th-border rounded-md">
+        <span className="text-xs text-th-tertiary whitespace-nowrap">{links.find(([to]) => location.pathname === to || location.pathname.startsWith(to + '/'))?.[1] ?? 'InfraPhysics'}</span>
+        <button onClick={() => setOpen(true)} className="flex items-center gap-2 pl-3 border-l border-th-border text-xs text-th-heading" aria-label="Open navigation">Menu <MenuIcon /></button>
       </div>
 
       {open && (

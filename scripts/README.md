@@ -85,6 +85,7 @@ Malformed or retired syntax leaking into output is caught by the syntax guard. R
 | `analyze-pairs.js` | Relationship inspection |
 | `compute-graph-relevance.js` | Graph scoring data |
 | `compute-graph-thumb.js` | Deterministic force layout of the wiki graph for the Home spotlight |
+| `og-cards.js` | Share cards (og:image). With the dev server running, `npm run og -- --base http://localhost:3000` drives headless Chrome through `/og/card/<kind>/<id>` for every article, playground, wiki note, section and personal page, encodes a 1200 x 630 JPEG under 550 KB, uploads it to R2 as `og/<kind>/<id>.jpg` and records it in `src/data/og-cards.json` (tracked). Incremental: a card is redone only when its text, cover or the design sources change; `--force` redoes the scope, `--dry` renders without writing, `--limit N` samples. Then `npm run content` points `og-manifest.json` at the cards |
 | `obsidian-export.js` / `obsidian-import.js` | Obsidian synchronization |
 | `media.js` | Article images: optimize masters from `media/` and sync them to Cloudflare R2 |
 | `check-tank-lesson.mjs` / `render-tank-figures.mjs` | Validate article 3142718's teaching simulation and regenerate its vector plots; see [experiment notes](../public/playgrounds/3142718/README.md) |

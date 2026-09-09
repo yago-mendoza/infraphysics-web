@@ -1,0 +1,125 @@
+/* Share cards (/test/share-cards): each card is laid out at 1200 x 630 and scaled to the column, so
+   what is seen here is what a headless capture would render. Colours are constants: a share card is
+   seen outside the site, in other people's apps, never in the reader's theme. The accent arrives on
+   .sc-accent as --sc-accent (a category accent, the wiki violet or the oxide). */
+
+.sc-page-wrap { max-width: 68rem; margin: 0 auto; padding: 2rem 1rem 6rem; color: var(--text-secondary); }
+.sc-head h1 { margin: 0 0 .6rem; color: var(--text-heading); font: 400 2rem/1.1 var(--font-serif); letter-spacing: -.02em; }
+.sc-head p { max-width: 42rem; margin: 0 0 1.2rem; font: 400 .9rem/1.6 var(--font-sans); }
+.sc-select { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .6rem; }
+.sc-select a { display: inline-flex; align-items: center; gap: .5rem; padding: .45rem .75rem; border: 1px solid var(--border-default); color: var(--text-tertiary); font: 500 9px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
+.sc-select a:hover { color: var(--text-heading); }
+.sc-select a[aria-current] { color: var(--text-heading); border-color: var(--nav-accent); background: color-mix(in srgb, var(--nav-accent) 12%, transparent); }
+.sc-select-v { margin-bottom: 2rem; }
+.sc-select-v a span { letter-spacing: .06em; text-transform: none; }
+.sc-empty { color: var(--text-muted); font: 400 11px/1 var(--font-mono); }
+
+/* The render stage (OgCardView): the card pinned over the whole viewport at its exact size. */
+.og-stage { position: fixed; top: 0; left: 0; z-index: 10000; width: 1200px; height: 630px; overflow: hidden; background: #0d0e0d; }
+
+/* The frame: caption, then the 1200 x 630 stage scaled by width. */
+.sc-frame { margin: 0 0 2rem; }
+.sc-frame figcaption { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .5rem; }
+.sc-frame figcaption code { color: var(--text-tertiary); font: 400 11px/1 var(--font-mono); }
+.sc-frame figcaption button { padding: .35rem .6rem; border: 1px solid var(--border-default); color: var(--text-muted); font: 500 8px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
+.sc-frame figcaption button:hover { color: var(--text-heading); }
+.sc-stage { position: relative; width: 100%; aspect-ratio: 1200 / 630; overflow: hidden; border: 1px solid var(--border-default); box-shadow: 0 30px 60px -30px rgba(0,0,0,.7); container-type: inline-size; }
+.sc-scale { position: absolute; top: 0; left: 0; width: 1200px; height: 630px; transform-origin: top left; transform: scale(calc(100cqw / 1200px)); }
+.sc-accent { position: absolute; inset: 0; }
+
+/* Crop guides */
+.sc-guides { position: absolute; inset: 0; pointer-events: none; }
+.sc-guides i { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 2px dashed rgba(255,255,255,.55); }
+.sc-guides i b { position: absolute; left: 0; top: 0; padding: 6px 10px; background: rgba(0,0,0,.6); color: #fff; font: 500 14px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
+.sc-guides .g-191 { width: 1200px; height: 628px; border-color: rgba(120,220,120,.8); }
+.sc-guides .g-191 b { color: #9ef29e; }
+.sc-guides .g-2 { width: 1200px; height: 600px; border-color: rgba(120,180,255,.8); }
+.sc-guides .g-2 b { top: auto; bottom: 0; color: #a8ccff; }
+.sc-guides .g-1 { width: 630px; height: 630px; border-color: rgba(255,200,90,.85); }
+.sc-guides .g-1 b { left: auto; right: 0; color: #ffd27a; }
+
+/* ---- The card. All sizes in px on purpose: a 1200 x 630 canvas. ---- */
+.sc-card { position: absolute; inset: 0; overflow: hidden; background: #0d0e0d; color: #ece7da; font-family: var(--font-sans); }
+.sc-ground { position: absolute; inset: 0; width: 100%; height: 100%; }
+.sc-body { position: absolute; left: 100px; right: 100px; bottom: 160px; z-index: 2; display: grid; gap: 24px; }
+/* Framed cards: more air between the frame and the foot line, the text a little higher. */
+.sc-article .sc-body, .sc-section .sc-body, .sc-wiki .sc-body { bottom: 204px; }
+.sc-article .sc-foot, .sc-section .sc-foot, .sc-wiki .sc-foot { bottom: 98px; }
+.sc-body.is-left { right: 480px; bottom: auto; top: 50%; transform: translateY(-50%); }
+.sc-inline-mark { margin-top: 10px; }
+/* A long wiki path is cut with an ellipsis at the column width instead of running out of the card. */
+.sc-kicker { justify-self: start; max-width: 100%; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 12px 16px; border: 2px solid color-mix(in srgb, var(--sc-accent) 70%, transparent); background: rgba(13,14,13,.55); color: var(--sc-accent); font: 600 22px/1 var(--font-mono); letter-spacing: .16em; text-transform: uppercase; }
+.sc-title { margin: 0; max-width: 1000px; color: #fbf8f1; font: 500 90px/1.04 var(--font-sans); letter-spacing: -.035em; text-wrap: balance; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.sc-title.is-long { font-size: 72px; }
+.sc-article .sc-title { -webkit-line-clamp: 2; }
+.sc-body.is-left .sc-title { font-size: 74px; }
+.sc-body.is-left .sc-title.is-long { font-size: 58px; -webkit-line-clamp: 4; }
+.sc-line { margin: 0; max-width: 940px; color: rgba(236,231,218,.82); font: 400 31px/1.4 var(--font-sans); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sc-foot { position: absolute; left: 100px; right: 100px; bottom: 60px; z-index: 2; display: flex; align-items: center; justify-content: space-between; }
+.sc-mark { display: inline-flex; align-items: center; gap: 14px; color: #fbf8f1; }
+.sc-mark svg { width: 44px; height: 44px; }
+.sc-mark b { font: 700 26px/1 var(--font-mono); letter-spacing: .16em; text-transform: uppercase; }
+.sc-mark > span { margin-left: 6px; padding-left: 20px; border-left: 2px solid rgba(236,231,218,.25); color: rgba(236,231,218,.6); font: 400 21px/1 var(--font-mono); letter-spacing: .08em; }
+.sc-author { display: inline-flex; align-items: center; gap: 16px; color: rgba(236,231,218,.88); font: 500 25px/1 var(--font-sans); white-space: nowrap; }
+.sc-author img { width: 58px; height: 58px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(236,231,218,.35); }
+
+/* Engineering paper and the drawing frame: articles, shelves and wiki. */
+/* The paper is grey, not the accent, and quiet: the accent belongs to the frame and the chip. */
+.sc-paper path { fill: none; stroke: rgba(236,231,218,.07); stroke-width: 1; }
+.sc-paper #sc-coarse path { stroke: rgba(236,231,218,.14); stroke-width: 1.2; }
+.sc-frame-line { position: absolute; inset: 40px; z-index: 1; border: 2px solid color-mix(in srgb, var(--sc-accent) 70%, transparent); pointer-events: none; }
+.sc-frame-line::before, .sc-frame-line::after { content: ""; position: absolute; width: 26px; height: 26px; border: 2px solid var(--sc-accent); }
+.sc-frame-line::before { left: -2px; top: -2px; border-right: 0; border-bottom: 0; }
+.sc-frame-line::after { right: -2px; bottom: -2px; border-left: 0; border-top: 0; }
+
+/* The clock maze in the card's colour. */
+.sc-clocks { fill: none; stroke: var(--sc-accent); stroke-linecap: round; opacity: .7; }
+.sc-clocks circle { stroke-width: 1.6; stroke-opacity: .7; }
+.sc-clocks path { stroke-width: 2.2; stroke-opacity: .9; }
+.sc-clocks line { stroke-width: 1.4; stroke-opacity: .45; }
+
+/* The monolith: the mark extruded by offset copies, faint, behind everything. */
+/* As on Contact: the whole stack sits at a low opacity; the layers inside are relative to it. */
+.sc-monolith { position: absolute; left: 50%; top: 50%; width: 1100px; height: 1190px; transform: translate(-50%, -50%) rotate(5deg); opacity: .06; pointer-events: none; }
+.sc-monolith svg { position: absolute; inset: 0; width: 100%; height: 100%; color: #ece7da; }
+.sc-monolith-layer { opacity: .16; }
+.sc-monolith-layer:nth-child(1) { transform: translate(-10px, 13px); } .sc-monolith-layer:nth-child(2) { transform: translate(-8.75px, 11.4px); } .sc-monolith-layer:nth-child(3) { transform: translate(-7.5px, 9.8px); } .sc-monolith-layer:nth-child(4) { transform: translate(-6.25px, 8.2px); } .sc-monolith-layer:nth-child(5) { transform: translate(-5px, 6.6px); } .sc-monolith-layer:nth-child(6) { transform: translate(-3.75px, 5px); } .sc-monolith-layer:nth-child(7) { transform: translate(-2.5px, 3.3px); } .sc-monolith-layer:nth-child(8) { transform: translate(-1.25px, 1.6px); }
+.sc-monolith-face { opacity: .95; }
+/* Sections: the monolith larger than the card, cropped, off to the right, and quieter; the clock maze
+   lives on the right and dissolves towards the left, as the home does vertically. */
+.sc-monolith.is-left { left: 34%; top: 46%; width: 1500px; height: 1620px; opacity: .05; filter: blur(1px); }
+/* Everywhere: the mark in the foot takes the card colour (category, wiki purple, oxide). */
+.sc-mark svg { color: var(--sc-accent); }
+.sc-section .sc-clocks { -webkit-mask-image: linear-gradient(to left, #000 6%, transparent 52%); mask-image: linear-gradient(to left, #000 6%, transparent 52%); }
+
+/* Article: the cover dimmed under everything, a shade so the type reads. */
+.sc-cover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(.42) saturate(.85); }
+.sc-cover-shade { position: absolute; inset: 0; background: linear-gradient(to top, rgba(13,14,13,.9) 0%, rgba(13,14,13,.55) 40%, rgba(13,14,13,.2) 100%); }
+
+/* Playground: a greyed ground, and the kicker carries a small mark that says the page is interactive. */
+.sc-playground { background: color-mix(in srgb, var(--sc-accent) 14%, #0d0e0d); }
+.sc-playground .sc-kicker::before { content: ""; display: inline-block; width: 12px; height: 12px; margin: 0 12px 2px 0; border-radius: 50%; background: var(--sc-accent); vertical-align: middle; box-shadow: 0 0 0 4px color-mix(in srgb, var(--sc-accent) 30%, transparent); }
+
+/* Variant B: the contour map as a watermark on every article. */
+.sc-contours path { fill: none; stroke: var(--sc-accent); stroke-width: 1.4; opacity: .16; }
+
+/* Wiki notes: the brain monolith, square like the glyph, off to the right. */
+.sc-wiki .sc-monolith { left: 70%; width: 1000px; height: 1000px; }
+
+/* Personal page: the black ground, the control traces, the dashed fault line, the portrait beside it. */
+.sc-page { background: #070807; }
+/* A touch fainter than the console: the traces are a ground here, not a reading. */
+.sc-scope-grid line { stroke: rgba(236,231,218,.045); stroke-width: 1; }
+.sc-scope-band { fill: color-mix(in srgb, var(--sc-accent) 5%, transparent); }
+.sc-scope-fault { stroke: var(--sc-accent); stroke-width: 2; stroke-dasharray: 10 8; opacity: .6; }
+.sc-trace { fill: none; stroke-width: 2; }
+.sc-trace-1 { stroke: rgba(236,231,218,.22); }
+.sc-trace-2 { stroke: rgba(236,231,218,.12); }
+.sc-trace-3 { stroke: var(--sc-accent); stroke-width: 2.4; opacity: .45; }
+.sc-portrait { position: absolute; right: 100px; top: 50%; width: 300px; height: 360px; transform: translateY(-50%); z-index: 2; }
+.sc-portrait img { position: relative; z-index: 1; display: block; width: 100%; height: 100%; object-fit: cover; border: 2px solid rgba(236,231,218,.2); }
+.sc-portrait::after { content: ""; position: absolute; inset: 0; transform: translate(22px, 22px); border: 2px solid color-mix(in srgb, var(--sc-accent) 85%, transparent); }
+/* Pages: the monolith pushed to the left edge. */
+.sc-page .sc-monolith { left: 14%; }
+/* On the personal pages the mark carries the oxide. */
+.sc-page .sc-mark svg { color: var(--sc-accent); }

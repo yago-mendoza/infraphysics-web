@@ -22,6 +22,8 @@ export const AboutView: React.FC = () => (
         <div>
           <h1 className="text-5xl md:text-7xl font-serif font-normal tracking-[-0.045em] leading-[0.95] text-th-heading">An engineer<br />following systems.</h1>
           <p className="mt-7 max-w-xl text-lg leading-relaxed text-th-secondary font-sans">I move between disciplines to find the structure underneath them: constraints, feedback, capacity, failure and the ways a system changes when reality pushes back.</p>
+          {/* The coined title, defined once, where the word is first met. */}
+          <p className="about-definition mt-6 max-w-xl text-sm leading-relaxed text-th-tertiary font-sans"><b>infraphysicist</b>An infraphysicist works below the interface: the physics, the infrastructure and the failure modes of a system, whatever it runs on.</p>
         </div>
         <figure className="relative w-40 md:w-full aspect-[4/5] order-first md:order-none">
           <span className="about-aperture hidden md:block" aria-hidden="true">

@@ -14,8 +14,11 @@ export function useProximityReveal(enabled: boolean, edge = 120): boolean {
     let lastY = -1;
     const onMove = (event: PointerEvent) => {
       lastY = event.clientY;
+      // A control that lives near the bottom edge (the graph's timeline bar) marks itself
+      // data-nav-quiet: the bar must not slide in over it while the pointer is on it.
+      const quiet = !!(event.target as Element | null)?.closest?.('[data-nav-quiet]');
       if (frame) return;
-      frame = requestAnimationFrame(() => { frame = 0; setNear(lastY >= window.innerHeight - edge); });
+      frame = requestAnimationFrame(() => { frame = 0; setNear(!quiet && lastY >= window.innerHeight - edge); });
     };
     const onLeave = () => setNear(false);
     window.addEventListener('pointermove', onMove, { passive: true });

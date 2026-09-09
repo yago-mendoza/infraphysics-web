@@ -66,6 +66,7 @@ infraphysics-web/
     obsidian-import.js        # Import Obsidian vault back to wikinotes
     compute-graph-relevance.js # Build-time PageRank + proximity → graph-relevance.generated.json
     compute-graph-thumb.js    # Build-time static layout of the wiki graph → graph-thumb.generated.json (Home spotlight)
+    og-cards.js               # Share cards: photographs every url's card from the dev server, uploads to R2, records src/data/og-cards.json (npm run og)
     media.js                  # Images: optimize masters from media/ and sync them to Cloudflare R2 (push/pull/ls/status/rm/mv/url)
     README.md                 # Build pipeline docs, cache format
   dev-scripts/
@@ -105,6 +106,9 @@ infraphysics-web/
       ThanksView.tsx          # Post-submit thank-you page
       ErrorConceptView.tsx    # Illustrated 404 preview: lost robot with map (/err5)
       LinkedFromTestView.tsx  # Preview of the wiki card's Linked from menu with fake articles (/test/linked-from)
+      ShareCardsView.tsx      # Share card gallery, dev only (/og/<kind>/<a|b>)
+      OgCardView.tsx          # One share card at 1200 x 630, dev only (/og/card/<kind>/<id>), photographed by scripts/og-cards.js
+      shareCardDesigns.tsx    # The share card of each kind: paper and frame with the cover, the clock maze, the brain, or the control traces with the portrait
     legacy/
       home-visuals/           # Retired home visual engine, kept for reference (see its README)
     data/
@@ -314,6 +318,10 @@ Articles include engagement and navigation features layered on top of the base c
 - **Active TOC tracking** — Scroll listener marks the current heading + its ancestor chain in the TOC. One scroll listener in ArticlePostView toggles the active class on the index links of every category (blog side index, projects rail).
 - **Share sheet**: the share button dims the page and opens a centred card with the options side by side (X, LinkedIn, Reddit, Hacker News, copy link, copy the text).
 - **Retention hints** — Contextual nudges for undiscovered features (wiki-link clicks, search usage, scroll depth, theme toggle). Triggered by usage counters in localStorage, shown as timed toasts.
+
+### Contact form (Formspree)
+
+`/contact` posts to Formspree form `xojwnobl` from `src/views/ContactView.tsx` and redirects to `/thanks`. Submissions live in the Formspree dashboard: sign in at [formspree.io](https://formspree.io) with `contact@infraphysics.net` (password in the password manager, never in this repo), open the form, tab *Submissions*. Notification emails go to the address set in the form's *Settings*; to receive them elsewhere, add that address there and confirm Formspree's verification email.
 
 ---
 

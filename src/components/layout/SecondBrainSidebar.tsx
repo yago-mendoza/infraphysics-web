@@ -145,6 +145,10 @@ const TreeNodeItem: React.FC<{
   node: TreeNode;
   depth?: number;
   onConceptClick?: () => void;
+  /** Hovered concept, for the graph to mark the node itself (not only its branch). */
+  onConceptPreview?: (id: string | null) => void;
+  /** When given, a click selects the node on the graph instead of opening the note. */
+  onConceptSelect?: (id: string) => void;
   forceExpandDepth?: number;
   maxVisibleDepth?: number;
   activePath?: string | null;
@@ -154,7 +158,7 @@ const TreeNodeItem: React.FC<{
   onPathPreview?: (path: string | null) => void;
   onPathPick?: (path: string) => void;
   relativeSize?: number;
-}> = ({ node, depth = 0, onConceptClick, forceExpandDepth = 0, maxVisibleDepth = Infinity, activePath, getPercentile, collapseSignal = 0, accentColor, onPathPreview, onPathPick, relativeSize = 1 }) => {
+}> = ({ node, depth = 0, onConceptClick, onConceptPreview, onConceptSelect, forceExpandDepth = 0, maxVisibleDepth = Infinity, activePath, getPercentile, collapseSignal = 0, accentColor, onPathPreview, onPathPick, relativeSize = 1 }) => {
   const [expanded, setExpanded] = useState(false);
   const [manuallyCollapsed, setManuallyCollapsed] = useState(false);
   const prevSignal = useRef(collapseSignal);
@@ -193,8 +197,8 @@ const TreeNodeItem: React.FC<{
   return (
     <div>
       <div
-        onMouseEnter={() => onPathPreview?.(node.path)}
-        onMouseLeave={() => onPathPreview?.(null)}
+        onMouseEnter={() => { onPathPreview?.(node.path); onConceptPreview?.(node.concept?.id ?? null); }}
+        onMouseLeave={() => { onPathPreview?.(null); onConceptPreview?.(null); }}
         className={`relative flex items-center gap-1 py-1.5 md:py-0.5 group ${
           isActive ? 'bg-violet-400/5' : ''
         } ${isRoot ? 'border-l-2 border-violet-400/20' : ''}`}
@@ -228,7 +232,7 @@ const TreeNodeItem: React.FC<{
             <>
               <Link
                 to={secondBrainPath(node.concept.id)}
-                onClick={onConceptClick}
+                onClick={event => { if (onConceptSelect) { event.preventDefault(); onConceptSelect(node.concept!.id); return; } onConceptClick?.(); }}
                 className="text-[11px] text-th-secondary hover:text-violet-400 transition-colors truncate"
               >
                 {displayLabel}
@@ -242,7 +246,7 @@ const TreeNodeItem: React.FC<{
             <>
               <Link
                 to={secondBrainPath(node.concept.id)}
-                onClick={onConceptClick}
+                onClick={event => { if (onConceptSelect) { event.preventDefault(); onConceptSelect(node.concept!.id); return; } onConceptClick?.(); }}
                 className="text-[11px] text-th-secondary hover:text-violet-400 transition-colors truncate"
               >
                 {displayLabel}
@@ -286,6 +290,8 @@ const TreeNodeItem: React.FC<{
                   accentColor={accentColor}
                   onPathPreview={onPathPreview}
                   onPathPick={onPathPick}
+                  onConceptPreview={onConceptPreview}
+                  onConceptSelect={onConceptSelect}
                   relativeSize={Math.max(1, child.childCount + (child.concept ? 1 : 0)) / Math.max(1, ...node.children.map(sibling => sibling.childCount + (sibling.concept ? 1 : 0)))}
                 />
               ))}
@@ -475,6 +481,10 @@ export const SecondBrainSidebar: React.FC = () => {
   const [graphSelectionCleared, setGraphSelectionCleared] = useState(false);
   const [previewRoot, setPreviewRoot] = useState<string | null>(null);
   const [previewPath, setPreviewPath] = useState<string | null>(null);
+  // Directory to graph: the hovered concept is marked on the node itself; in the expanded workspace a
+  // directory click selects the node (lime) without opening its note.
+  const [previewNodeId, setPreviewNodeId] = useState<string | null>(null);
+  const [graphPickedId, setGraphPickedId] = useState<string | null>(null);
   const [miniAreaIds, setMiniAreaIds] = useState<Set<string> | null>(null);
   const [wikiLinkPreviewId, setWikiLinkPreviewId] = useState<string | null>(null);
   const [calendarPreviewIds, setCalendarPreviewIds] = useState<Set<string> | null>(null);
@@ -510,6 +520,7 @@ export const SecondBrainSidebar: React.FC = () => {
     setMobileOpen(false);
     setPreviewRoot(null);
     setPreviewPath(null);
+    setGraphPickedId(null);
     setMiniAreaIds(null);
     setGraphInput(query || activePost?.title || '');
     setGraphSelectionCleared(false);
@@ -653,6 +664,10 @@ export const SecondBrainSidebar: React.FC = () => {
     hasActiveFilters,
     searchActive,
     resetFilters,
+    isVisited,
+    clearVisited,
+    articleUsage,
+    searchMode,
   } = hub;
 
   useEffect(() => {
@@ -792,6 +807,8 @@ export const SecondBrainSidebar: React.FC = () => {
   }, [allWikiNotes]);
 
   const scopedRoot = directoryScope && rootOptions.some(option => option.root === directoryScope) ? directoryScope : '';
+  // Graph trail lens: this tab's visits.
+  const visitedIds = useMemo(() => new Set(allWikiNotes.filter(note => isVisited(note.id)).map(note => note.id)), [allWikiNotes, isVisited]);
 
   // Build highlight set from sortedResults when searching
   const graphHighlightIds = useMemo(() => {
@@ -820,7 +837,6 @@ export const SecondBrainSidebar: React.FC = () => {
   const graphStateReadout = (graphHighlightIds || transientGraphHighlightIds) ? (
     <span className="flex items-center gap-2 font-mono text-[8px] normal-case tracking-normal text-th-muted" aria-label="Graph visual state">
       {graphHighlightIds && <span className="flex items-center gap-1 text-indigo-300" title={`${graphHighlightIds.size} current matrix results`}><i className="h-1.5 w-1.5 rounded-full bg-indigo-300" />{graphHighlightIds.size}</span>}
-      {transientGraphHighlightIds && <span className="flex items-center gap-1 text-fuchsia-400" title={`${transientGraphHighlightIds.size} temporarily previewed nodes`}><i className="h-1.5 w-1.5 rounded-full bg-fuchsia-400" />{transientGraphHighlightIds.size}</span>}
     </span>
   ) : null;
   const temporalPreviewIds = useMemo(() => {
@@ -869,9 +885,10 @@ export const SecondBrainSidebar: React.FC = () => {
               onExpand={() => expandGraph('2d')}
               onExpand3d={() => expandGraph('3d')}
               onNodeSelect={openGraphNode}
+              previewNodeId={previewNodeId}
               activeNodeId={activePost?.id ?? null}
               filtersActive={hasActiveFilters || !!directoryScope || searchActive}
-              onResetFilters={() => { resetFilters(); setDirectoryScope(null); setQuery(''); }}
+              onResetFilters={() => { resetFilters(); setDirectoryScope(null); setQuery(''); setGraphInput(''); setGraphSelectionCleared(true); }}
             />
           </Suspense>
         </div>
@@ -1020,6 +1037,8 @@ export const SecondBrainSidebar: React.FC = () => {
                       collapseSignal={dirCollapseGen}
                       accentColor={rootColorMap.get(node.path.split('//')[0]) ?? ROOT_NEUTRAL}
                       onPathPreview={setPreviewPath}
+                      onConceptPreview={setPreviewNodeId}
+                      onConceptSelect={graphExpanded ? id => { setGraphPickedId(id); setGraphSelectionCleared(false); } : undefined}
                       onPathPick={path => setDirectoryScope(directoryScope === path ? null : path)}
                       relativeSize={Math.max(1, node.childCount + (node.concept ? 1 : 0)) / maxBranchSize}
 
@@ -1047,6 +1066,8 @@ export const SecondBrainSidebar: React.FC = () => {
                         collapseSignal={dirCollapseGen}
                         accentColor={rootColorMap.get(node.path.split('//')[0]) ?? ROOT_NEUTRAL}
                         onPathPreview={setPreviewPath}
+                      onConceptPreview={setPreviewNodeId}
+                      onConceptSelect={graphExpanded ? id => { setGraphPickedId(id); setGraphSelectionCleared(false); } : undefined}
                         onPathPick={path => setDirectoryScope(directoryScope === path ? null : path)}
                         relativeSize={Math.max(1, node.childCount + (node.concept ? 1 : 0)) / maxBranchSize}
   
@@ -1069,7 +1090,7 @@ export const SecondBrainSidebar: React.FC = () => {
       {/* Mobile toggle button */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="wiki-fab md:hidden fixed bottom-4 right-4 z-40 w-11 h-11 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+        className="wiki-fab md:hidden fixed bottom-4 left-4 z-40 w-11 h-11 rounded-full bg-violet-500/90 text-th-on-accent shadow-lg flex items-center justify-center active:scale-95 transition-transform"
         aria-label="Open Wiki Console"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.2" /><circle cx="18" cy="8" r="2.2" /><circle cx="9" cy="18" r="2.2" /><circle cx="18" cy="17" r="2.2" /><path d="M8 7.2l7.8.7M7.1 8l1.2 7.8M11.2 17.6l4.6-.3M16.3 10.2l1.4 4.6" /></svg>
@@ -1165,7 +1186,7 @@ export const SecondBrainSidebar: React.FC = () => {
 
       {graphExpanded && createPortal(
         <div
-          className={`fixed bottom-0 right-0 top-0 z-[60] overflow-hidden border-l border-th-hub-border bg-th-base transition-[opacity,transform,border-radius] duration-500 ease-[cubic-bezier(.22,1,.36,1)] ${graphExpandedVisible ? 'opacity-100 scale-100 rounded-none' : graphClosing ? 'pointer-events-none opacity-0 scale-[.12] rounded-xl' : 'pointer-events-none opacity-0 scale-[.985] rounded-none'}`}
+          className={`fixed bottom-0 right-0 top-0 z-[45] overflow-hidden border-l border-th-hub-border bg-th-base transition-[opacity,transform,border-radius] duration-500 ease-[cubic-bezier(.22,1,.36,1)] ${graphExpandedVisible ? 'opacity-100 scale-100 rounded-none' : graphClosing ? 'pointer-events-none opacity-0 scale-[.12] rounded-xl' : 'pointer-events-none opacity-0 scale-[.985] rounded-none'}`}
           style={{ left: phone ? 0 : SIDEBAR_WIDTH + SECOND_BRAIN_SIDEBAR_WIDTH, transformOrigin: phone ? '50% 50%' : '0 24%' }}
           role="region"
           aria-label="Expanded Wiki graph"
@@ -1184,16 +1205,20 @@ export const SecondBrainSidebar: React.FC = () => {
               onAreaPreview={setMiniAreaIds}
               onMinimize={() => minimizeGraph()}
               filtersActive={hasActiveFilters || !!directoryScope || searchActive}
-              onResetFilters={() => { resetFilters(); setDirectoryScope(null); setQuery(''); }}
+              onResetFilters={() => { resetFilters(); setDirectoryScope(null); setQuery(''); setGraphInput(''); setGraphSelectionCleared(true); }}
               onColorModeChange={setGraphColorMode}
-              activeNodeId={graphSelectionCleared ? null : activePost?.id ?? null}
+              activeNodeId={graphSelectionCleared ? null : (graphPickedId ?? activePost?.id ?? null)}
+              previewNodeId={previewNodeId}
               onNodeSelect={node => { setGraphSelectionCleared(false); minimizeGraph(false); openGraphNode(node); }}
               onNodeOpen={node => { setGraphSelectionCleared(false); minimizeGraph(false); window.setTimeout(() => navigate(secondBrainPath(node.id)), 220); }}
-              onClearSelection={() => setGraphSelectionCleared(true)}
+              onClearSelection={() => { setGraphSelectionCleared(true); setGraphPickedId(null); }}
+              visitedIds={visitedIds}
+              onClearVisited={clearVisited}
+              articleUsage={articleUsage}
             />
           </Suspense>
-          <div className={`group absolute ${phone ? 'left-3 right-3' : 'left-20 right-20'} top-3 z-[65] mx-auto max-w-2xl border border-th-hub-border bg-th-base/90 font-mono shadow-lg transition-opacity duration-500 focus-within:opacity-100 hover:opacity-100 ${graphInput ? 'opacity-90' : 'opacity-[.14]'}`}>
-            <div className="flex h-9 items-center gap-2 px-3"><span className="text-violet-400">⌕</span><input ref={graphSearchInputRef} value={graphInput} onChange={event => { setGraphInput(event.target.value); setGraphSelectionCleared(true); setQuery(event.target.value); }} placeholder="search wiki…" autoComplete="off" spellCheck={false} className="min-w-0 flex-1 cursor-text bg-transparent text-[12px] text-th-primary outline-none placeholder:text-th-muted" />{graphStateReadout}{(hasActiveFilters || directoryScope) && <button type="button" onClick={() => { resetFilters(); setDirectoryScope(null); }} className="flex-none border-l border-th-hub-border pl-2 text-[8px] uppercase tracking-[.08em] text-amber-400 transition-colors hover:text-amber-300" title="Clear active filters, keep search">reset filters</button>}{graphInput && <button type="button" onClick={() => { setGraphInput(''); setGraphSelectionCleared(true); setQuery(''); }} className="text-th-muted hover:text-th-primary">×</button>}</div>
+          <div className={`group absolute ${phone ? 'left-3 right-3' : 'left-20 right-20'} top-3 z-[46] mx-auto max-w-2xl border border-th-hub-border bg-th-base/90 font-mono shadow-lg transition-opacity duration-500 focus-within:opacity-100 hover:opacity-100 ${graphInput || phone ? 'opacity-100' : 'opacity-[.14]'}`}>
+            <div className="flex h-9 items-center gap-2 px-3"><span className="text-violet-400">⌕</span><input ref={graphSearchInputRef} value={graphInput} onChange={event => { setGraphInput(event.target.value); setGraphSelectionCleared(true); setQuery(event.target.value); }} placeholder="search wiki…" autoComplete="off" spellCheck={false} className="min-w-0 flex-1 cursor-text bg-transparent text-[12px] text-th-primary outline-none placeholder:text-th-muted" />{graphStateReadout}{(hasActiveFilters || directoryScope || graphInput) && <button type="button" onClick={() => { resetFilters(); setDirectoryScope(null); setGraphInput(''); setQuery(''); setGraphSelectionCleared(true); }} className="flex-none border-l border-th-hub-border pl-2 text-[8px] uppercase tracking-[.08em] text-amber-400 transition-colors hover:text-amber-300" title="Clear the filters and the search">reset filters</button>}{graphInput && <button type="button" onClick={() => { setGraphInput(''); setGraphSelectionCleared(true); setQuery(''); }} className="text-th-muted hover:text-th-primary">×</button>}</div>
             <div className="grid grid-cols-3 gap-px border-t border-th-hub-border bg-th-hub-border p-px" role="group" aria-label="Search fields">{([['name', 'name'], ['content', 'content'], ['backlinks', 'referenced by']] as Array<[SearchField, string]>).map(([field, label]) => { const on = searchFields.includes(field); return <button key={field} type="button" aria-pressed={on} onClick={() => toggleSearchField(field)} className={`bg-th-base px-2 py-1.5 text-[9px] transition-colors ${on ? 'bg-violet-400/10 text-violet-400' : 'text-th-muted hover:bg-th-surface hover:text-th-secondary'}`}>{label}</button>; })}</div>
           </div>
         </div>,

@@ -15,6 +15,7 @@ import { BridgeScoreBadge } from '../components/wiki/BridgeScoreBadge';
 import { useGraphRelevance } from '../hooks/useGraphRelevance';
 import type { SortMode, SearchMode, SearchField, FilterState, ViewMode } from '../hooks/useSecondBrainHub';
 import { SearchIcon, RocketIcon, CheckIcon, WikiBrainIcon, FileTextIcon } from '../components/icons';
+import { useSharedPref, GRAPH_PINS_KEY, MAX_PINS, togglePinned } from '../hooks/useGraphPrefs';
 import { postPath, catAccentVar } from '../config/categories';
 import { noteLabel, type WikiNoteMeta } from '../types';
 import { type Connection } from '../lib/brainIndex';
@@ -1076,6 +1077,8 @@ export const SecondBrainView: React.FC = () => {
   const { trail, scheduleReset, scheduleExtend, truncateTrail, clearTrail } =
     useNavigationTrail({ activePost, directoryNavRef });
   const { id: urlId } = useParams<{ id: string }>();
+  // Pinned notes: flagged with a number on both graphs; the card can pin or unpin the note it shows.
+  const [graphPins, setGraphPins] = useSharedPref<string[]>(GRAPH_PINS_KEY, []);
 
   useEffect(() => {
     if (activePost && urlId && window.location.pathname !== secondBrainPath(activePost.id)) {
@@ -1705,6 +1708,15 @@ export const SecondBrainView: React.FC = () => {
                 aria-label="Copy for context"
               >
                 <RocketIcon size={14} />
+              </button>
+              <button
+                onClick={() => setGraphPins(pins => togglePinned(pins, activePost!.id))}
+                aria-pressed={graphPins.includes(activePost!.id)}
+                className={`ml-2 shrink-0 transition-colors ${graphPins.includes(activePost!.id) ? 'text-pink-300 hover:text-pink-200' : 'text-th-tertiary hover:text-pink-300'}`}
+                title={graphPins.includes(activePost!.id) ? 'Unpin from the graph' : `Pin on the graph (up to ${MAX_PINS} notes, numbered)`}
+                aria-label={graphPins.includes(activePost!.id) ? 'Unpin from the graph' : 'Pin on the graph'}
+              >
+                <svg width="13" height="13" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M6 11 2.5 4h7z" />{graphPins.includes(activePost!.id) && <text x="6" y="7.2" textAnchor="middle" fontSize="4.6" fontFamily="ui-monospace, monospace" fill="var(--bg-base)">{graphPins.indexOf(activePost!.id) + 1}</text>}</svg>
               </button>
             </div>
             <div className="text-[11px] text-th-tertiary mb-2">

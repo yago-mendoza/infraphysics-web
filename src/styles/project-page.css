@@ -122,7 +122,9 @@
 
 @media (max-width: 900px) {
   .pj-grid { grid-template-columns: 1fr; gap: 1.5rem; }
-  .pj-rail { position: static; }
+  /* The rail comes first (the facts above the body); the index is reached from the floating button. */
+  .pj-rail { position: static; order: -1; }
+  .pj-index { display: none; }
   .pj-brief dl { grid-template-columns: 1fr 1fr; }
   .pj-plate { height: clamp(20rem, 58vh, 30rem); margin-top: -1rem; }
   .pj-plate-text { margin-top: -9rem; }
