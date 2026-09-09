@@ -7,10 +7,6 @@
 .article-geometry.article-page-wrapper { max-width: none !important; }
 .glab { width: min(68rem, 100%); margin-inline: auto; padding: 1rem 0 2rem; }
 
-.glab-crumb { display: flex; gap: .55rem; margin-bottom: 1.4rem; color: var(--text-muted); font: 9px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
-.glab-crumb a { color: var(--text-tertiary); }
-.glab-crumb a:hover { color: var(--text-heading); }
-.glab-crumb b { color: var(--art-accent); font-weight: 600; }
 
 .article-geometry .article-hashtags { margin: 0 0 .9rem; }
 
@@ -18,9 +14,12 @@
 .glab-subtitle { margin: 0 0 1rem; max-width: 46rem; color: var(--text-secondary); font: 400 1.1rem/1.5 var(--font-sans); }
 .article-geometry.article-essays .glab-subtitle { font-family: var(--essay-body-font); font-style: italic; }
 .glab-meta-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .8rem 1.5rem; margin: 0 0 1.8rem; }
-.glab-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: .55rem; margin: 0; color: var(--text-muted); font: 9px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
+.glab-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem; margin: 0; color: var(--text-muted); font: 9px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
 .glab-meta a { color: var(--text-heading); font-weight: 600; }
 .glab-meta a:hover { color: var(--art-accent); }
+/* The author in the meta row keeps his name as a name: sans, mixed case, level with the date. */
+.glab-meta a.author-link { font: 500 .8rem/1 var(--font-sans); letter-spacing: -.01em; text-transform: none; }
+.glab-meta time { color: var(--text-secondary); }
 .glab-meta-row .article-engagement-row { margin: 0; }
 
 .glab-hero { margin: 0 0 2.6rem; overflow: hidden; border-radius: 14px; background: var(--bg-surface-alt); }
@@ -29,7 +28,17 @@
 .glab-hero.thumb-full img { max-height: 34rem; object-fit: contain; }
 
 .glab-grid { display: grid; grid-template-columns: 15.5rem minmax(0, 1fr); gap: 3rem; align-items: start; }
-.glab-index { position: sticky; top: 5.5rem; padding-top: .9rem; border-top: 1px solid var(--border-default); }
+/* The rail starts level with the first line of the body: no rule above it. */
+.glab-index { position: sticky; top: 5.5rem; padding-top: 0; }
+.glab-index a.glab-author, .glab-author { display: flex; align-items: center; gap: .6rem; margin-bottom: 1rem; padding: .35rem 0 .9rem; border-bottom: 1px solid var(--border-default); color: var(--text-heading); }
+.glab-author-stack { position: relative; display: inline-block; flex: none; margin-left: 1rem; }
+.glab-author-logo { position: absolute; top: 0; left: -1.15rem; z-index: 0; display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%; border: 1px solid var(--border-default); background: var(--bg-surface-alt, var(--bg-surface)); color: var(--text-heading); }
+.glab-author-logo svg { width: 2.25rem; height: 2.25rem; }
+.glab-author-photo { position: relative; z-index: 1; display: block; width: 2.6rem; height: 2.6rem; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-default); box-shadow: 0 0 0 2px var(--bg-base); }
+.glab-author > span { display: grid; gap: .2rem; }
+.glab-index .glab-author small, .glab-author small { display: block; margin: 0; color: var(--text-muted); font: 400 .72rem/1.3 var(--font-sans); letter-spacing: 0; text-transform: none; }
+.glab-author b { font: 600 .85rem/1.2 var(--font-sans); letter-spacing: -.01em; }
+.glab-author:hover b { color: var(--art-accent); }
 .glab-index small { display: block; margin-bottom: 1.1rem; color: var(--text-muted); font: 9px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
 .glab-index ol { margin: 0; padding: 0; list-style: none; display: grid; gap: .55rem; }
 .glab-index a { display: block; color: var(--text-secondary); font: 400 .82rem/1.35 var(--font-sans); transition: color .15s ease; }

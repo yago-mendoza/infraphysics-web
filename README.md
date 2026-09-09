@@ -132,6 +132,7 @@ infraphysics-web/
       data.ts                 # Runtime data loader
     public/
       avatar.jpg              # Self-hosted portrait for the home identity anchor (240px, preloaded from index.html)
+      avatar-mini.jpg         # 64px round portrait beside the author name in articles (from avatar.jpg via sharp)
       playgrounds/<article-id>/ # Self-contained HTML pages that belong to one article (interactive tables, simulations), linked with [[playgrounds/<id>/<name>|text]]
       wikinotes/             # {uid}.json content files (served as static assets)
       wikinotes-index.json   # Generated: wikinote metadata index (HTTP-fetched at runtime)

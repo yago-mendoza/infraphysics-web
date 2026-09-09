@@ -30,10 +30,6 @@
 .pj.article-projects .article-content .bkqt-body { padding: 1rem 1.25rem; }
 .pj.article-projects .article-content > p:first-child { margin-top: 0; }
 
-.pj-crumb { display: flex; gap: .55rem; margin-bottom: 1rem; color: var(--text-muted); font: 9px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
-.pj-crumb a { color: var(--text-tertiary); }
-.pj-crumb a:hover { color: var(--text-heading); }
-.pj-crumb b { color: var(--art-accent); font-weight: 600; }
 
 .pj-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem; margin: 0 0 1rem; color: var(--text-secondary); font: 9px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
 .pj-meta a, .pj-meta .pj-status { color: var(--text-heading); font-weight: 600; }
@@ -53,7 +49,7 @@
 /* Full-bleed, starting under the top edge (main pads 5rem); the text is a normal page-width block
    pulled up over its lower third, so it aligns with the columns below. */
 /* A thick solid band sits above the cover (a border on the plate, so the page grid never shows through it): the page reads as framed rather than bled to the edge. */
-.pj-plate { position: relative; box-sizing: content-box; width: 100vw; margin: -5rem 0 0 calc(50% - 50vw); height: clamp(26rem, 72vh, 44rem); border-top: 3.5rem solid var(--art-surface); overflow: hidden; background: var(--bg-surface-alt); }
+.pj-plate { position: relative; box-sizing: content-box; width: 100vw; margin: -1.5rem 0 0 calc(50% - 50vw); /* main pads 5rem; the 3.5rem topbar sits above, the plate starts right under it */ height: clamp(26rem, 72vh, 44rem); overflow: hidden; background: var(--bg-surface-alt); }
 .pj-plate img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .pj-plate::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, var(--art-surface) 0%, color-mix(in srgb, var(--art-surface) 78%, transparent) 30%, transparent 64%); }
 .pj-plate-text { position: relative; z-index: 1; margin-top: -15rem; padding: 0 0 2.4rem; }
@@ -99,6 +95,15 @@
 .pj-facts dd { margin: 0; color: var(--text-secondary); font: 400 .8rem/1.5 var(--font-sans); }
 .pj-facts dd a { color: var(--text-heading); }
 .pj-facts dd a:hover { color: var(--art-accent); }
+/* The author row: the portrait makes the value taller, so the label centres on it instead of sitting on the baseline. */
+.pj-facts > .pj-fact-author { align-items: center; }
+.pj-facts > .pj-fact-author .author-link { gap: .55rem; white-space: nowrap; }
+/* The sheet column is narrow: the two circles are a size down here. */
+.pj-facts .glab-author-stack { margin-left: .9rem; }
+.pj-facts .glab-author-logo, .pj-facts .glab-author-photo { width: 2rem; height: 2rem; }
+.pj-facts .glab-author-logo { left: -.9rem; }
+.pj-facts .glab-author-logo svg { width: 1.7rem; height: 1.7rem; }
+.pj-facts > .pj-fact-author dt { line-height: 1; }
 .pj-facts dd .pj-status { font: 9px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--text-heading); }
 
 /* Views, heart and share: quiet text in the rail, no pills. */
@@ -119,14 +124,14 @@
   .pj-grid { grid-template-columns: 1fr; gap: 1.5rem; }
   .pj-rail { position: static; }
   .pj-brief dl { grid-template-columns: 1fr 1fr; }
-  .pj-plate { height: clamp(20rem, 58vh, 30rem); margin-top: -4.5rem; border-top-width: 2.5rem; }
+  .pj-plate { height: clamp(20rem, 58vh, 30rem); margin-top: -1rem; }
   .pj-plate-text { margin-top: -9rem; }
 }
 @media (max-width: 767px) {
   .pj.article-projects .article-content .bkqt { font-size: 1.08rem !important; line-height: 1.72 !important; }
   .pj-lead { font-size: 1.08rem; line-height: 1.66; }
   .pj-brief dd { font-size: 1rem; }
-  .pj-meta, .pj-crumb { font-size: 10px; }
+  .pj-meta { font-size: 10px; }
   .pj-chips span { font-size: 9px; }
   .pj-index a.article-toc-link { font-size: .9rem; }
 }

@@ -3,13 +3,13 @@
 import React, { useMemo, useEffect, useState, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { formatDate, formatDateTerminal, calculateReadingTime } from '../lib';
+import { formatDate, formatDateTerminal } from '../lib';
 import { getProjectDisplayTechnologies } from '../lib/projectPresentation';
 import { initBrainIndex, type BrainIndex } from '../lib/brainIndex';
 import { getActiveChain, ACTIVE_HEADING_THRESHOLD } from '../lib/headings';
 import { WikiContent } from '../components/wiki/WikiContent';
 import { CATEGORY_CONFIG, STATUS_CONFIG, sectionPath as getSectionPath, postPath, isBlogCategory, categoryGroup, catAccentVar } from '../config/categories';
-import { ArrowRightIcon, GitHubIcon, LinkedInIcon, TwitterIcon, RedditIcon, HackerNewsIcon, ClipboardIcon, RocketIcon, CheckIcon, ShareIcon, HeartIcon, EyeIcon } from '../components/icons';
+import { ArrowRightIcon, GitHubIcon, LinkedInIcon, TwitterIcon, RedditIcon, HackerNewsIcon, ClipboardIcon, RocketIcon, CheckIcon, ShareIcon, HeartIcon, EyeIcon, Logo } from '../components/icons';
 
 import { ArticleHashtags } from '../components/article/ArticleHashtags';
 import { BlogMetabar } from '../components/article/BlogMetabar';
@@ -103,7 +103,6 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   // Status label + dot color
 
   const formattedDate = useMemo(() => formatDateTerminal(post.date), [post.date]);
-  const readingTime = useMemo(() => calculateReadingTime(post.content), [post.content]);
   const legacyPath = `/${categoryGroup(post.category)}/${post.category}/${post.id}`;
   const { views } = useViewCount(legacyPath);
   const { hearts, hearted, toggle: toggleHeart } = useReaction(legacyPath);
@@ -113,6 +112,10 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
 
   const authorName = post.author || 'Yago Mendoza';
   const authorPath = authorName.toLowerCase() === 'yago mendoza' ? '/about' : '/contact';
+  // The two circles, the site behind the author, for the blog card and the project sheet (the site owner only).
+  const authorStack = authorPath === '/about' ? <span className="glab-author-stack"><i className="glab-author-logo" aria-hidden="true"><Logo color="currentColor" /></i><img className="glab-author-photo" src="/avatar.jpg" alt="" width={240} height={240} loading="lazy" decoding="async" /></span> : null;
+  // The author link: the name with the small round portrait beside it (the site owner only).
+  const authorLink = <Link to={authorPath} className="author-link">{authorPath === '/about' && <img className="author-mini" src="/avatar-mini.jpg" alt="" width={32} height={32} loading="lazy" decoding="async" />}{authorName}</Link>;
 
   // Banner vertical crop anchor — object-position Y% (0 = top, 50 = center, 100 = bottom).
   // Only bites on cover-cropped aspects (wide/banner/strip); `full` shows the whole image.
@@ -471,10 +474,10 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
            sticky index of top-level sections on the left, body on the right.
            Essays stack the hero under the meta; Bits2Bricks put the hashtags
            above the title, the hero beside it and number the index. */
+        <>
+        {/* The thin black bar on the top edge of every article page. */}
+        <div className="article-topbar" aria-hidden="true" />
         <article className={`glab${isEssays ? '' : ' glab-split'}`}>
-          <nav className="glab-crumb" aria-label="Breadcrumb">
-            <Link to="/home">home</Link><span>/</span><Link to={getSectionPath(post.category)}>blog</Link><span>/</span><b>{catCfg?.title ?? post.category}</b>
-          </nav>
           <div className="glab-head">
             <div className="glab-head-text">
               {!isEssays && <ArticleHashtags tags={post.tags} technologies={post.technologies} />}
@@ -482,9 +485,8 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               {post.subtitle && <p className="glab-subtitle">{post.subtitle}</p>}
               <div className="glab-meta-row">
                 <p className="glab-meta">
-                  <Link to={authorPath}>{authorName}</Link>
-                  <span>·</span><time dateTime={post.date}>{formattedDate}</time>
-                  <span>·</span><span>{readingTime} min read</span>
+                  {topHeadings.length <= 1 && <>{authorLink}<span>·</span></>}
+                  <time dateTime={post.date}>{formattedDate}</time>
                   {!isEssays && post.complexity != null && <><span>·</span><span>complexity {post.complexity}/10</span></>}
                 </p>
                 <div className="article-engagement-row article-essays-engagement">
@@ -512,6 +514,11 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
           <div className={`glab-grid${topHeadings.length > 1 ? '' : ' glab-grid-solo'}`}>
             {topHeadings.length > 1 && (
               <aside className={`glab-index${isEssays ? '' : ' glab-index-numbered'}`} id="article-toc">
+                {/* The author, above the index: the portrait and the name, as the home presents the site. */}
+                <Link to={authorPath} className="glab-author">
+                  {authorStack}
+                  <span><b>{authorName}</b>{authorPath === '/about' && <small>industrial &amp; software engineer</small>}</span>
+                </Link>
                 <small>{isEssays ? 'In this article' : 'Sections'}</small>
                 <ol>
                   {topHeadings.map((h, i) => <li key={h.id}><a href={`#${h.id}`} className="article-toc-link" onClick={event => { event.preventDefault(); document.getElementById(h.id)?.scrollIntoView({ behavior: 'instant', block: 'start' }); }}>{!isEssays && <b>{String(i + 1).padStart(2, '0')}</b>}<span>{h.text}</span></a></li>)}
@@ -528,23 +535,21 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
             </div>
           </div>
         </article>
+        </>
       ) : (
       /* Projects: the full-bleed cover fading into the page, title and byline on it over a soft
          scrim, the brief strip, a labelled summary, the body beside a numbered index and a facts
          sheet (project-page.css). */
       <article className="pj-page">
+        <div className="article-topbar" aria-hidden="true" />
         <header>
           <div className="pj-plate">{post.thumbnail && <img src={post.thumbnail} alt="" loading="eager" style={thumbFocusStyle} />}</div>
           <div className="pj-column pj-plate-text">
             <div className="pj-plate-scrim">
-              <nav className="pj-crumb" aria-label="Breadcrumb">
-                <Link to="/home">home</Link><span>/</span><Link to={getSectionPath(post.category)}>lab</Link><span>/</span><b>{catCfg?.title ?? post.category}</b>
-              </nav>
               <p className="pj-meta">
                 {statusCfg && <><span className="pj-status" style={{ '--status': statusCfg.dotColor } as React.CSSProperties}><i />{statusCfg.label.toLowerCase()}</span><span>·</span></>}
-                <Link to={authorPath}>{authorName}</Link>
+                {authorLink}
                 <span>·</span><time dateTime={post.date}>{formattedDate}</time>
-                <span>·</span><span>{readingTime} min read</span>
                 {post.complexity != null && <><span>·</span><span>complexity {post.complexity}/10</span></>}
               </p>
               <h1 className="pj-title">{post.displayTitle || post.title}</h1>
@@ -584,13 +589,12 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               </nav>
             )}
             <dl className="pj-facts">
+              <div className="pj-fact-author"><dt>Author</dt><dd><Link to={authorPath} className="author-link">{authorStack}{authorName}</Link></dd></div>
               {statusCfg && <div><dt>Status</dt><dd><span className="pj-status" style={{ '--status': statusCfg.dotColor } as React.CSSProperties}><i />{statusCfg.label.toLowerCase()}</span></dd></div>}
               <div><dt>Date</dt><dd>{formattedDate}</dd></div>
-              <div><dt>Reading</dt><dd>{readingTime} min</dd></div>
               {post.complexity != null && <div><dt>Complexity</dt><dd>{post.complexity} / 10</dd></div>}
               {visibleProjectTechnologies.length > 0 && <div><dt>Stack</dt><dd>{visibleProjectTechnologies.join(', ')}</dd></div>}
               {projectTags.length > 0 && <div><dt>Topics</dt><dd>{projectTags.join(', ')}</dd></div>}
-              <div><dt>Author</dt><dd><Link to={authorPath}>{authorName}</Link></dd></div>
               {project?.github && <div><dt>Source</dt><dd><a href={project.github} target="_blank" rel="noopener noreferrer">GitHub</a></dd></div>}
               {project?.demo && <div><dt>Demo</dt><dd><a href={project.demo} target="_blank" rel="noopener noreferrer">Live</a></dd></div>}
             </dl>
