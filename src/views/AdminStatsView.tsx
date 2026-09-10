@@ -25,8 +25,16 @@ export function AdminStatsView() {
   const load = async (event: React.FormEvent) => {
     event.preventDefault(); setBusy(true); setError(''); setReport(null);
     try {
-      const response = await fetch('/api/admin/counters', {method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`}, body:JSON.stringify({op:'report', from:from || undefined, to:to || undefined}), cache:'no-store'});
-      if (!response.ok) throw new Error(response.status === 401 ? 'Credencial incorrecta o acceso aún sin configurar.' : 'El informe no está disponible. Comprueba la activación del contador.');
+      const response = await fetch('/api/admin/counters', {method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${token.trim()}`}, body:JSON.stringify({op:'report', from:from || undefined, to:to || undefined}), cache:'no-store'});
+      if (!response.ok) {
+        const messages: Record<number, string> = {
+          401: 'Credencial incorrecta o acceso aún sin configurar.',
+          403: 'La API ha rechazado el acceso desde esta dirección.',
+          404: 'La API de estadísticas no está disponible en esta dirección.',
+          503: 'El servicio de estadísticas no ha podido responder. Inténtalo de nuevo.',
+        };
+        throw new Error(messages[response.status] || `No se pudo cargar el informe (HTTP ${response.status}).`);
+      }
       setReport(await response.json()); setToken('');
     } catch (err) { setError(err instanceof Error ? err.message : 'No se pudo cargar el informe.'); }
     finally { setBusy(false); }

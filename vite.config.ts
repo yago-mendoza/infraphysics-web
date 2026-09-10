@@ -7,6 +7,15 @@ export default defineConfig({
   server: {
     port: 3000,
     host: 'localhost',
+    proxy: {
+      '/api/admin/counters': {
+        target: 'https://infraphysics.net',
+        changeOrigin: true,
+        configure: proxy => {
+          proxy.on('proxyReq', request => request.setHeader('Origin', 'https://infraphysics.net'));
+        },
+      },
+    },
     watch: {
       ignored: ['**/room/chrome-wiki-audit/**'],
     },
