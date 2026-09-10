@@ -370,6 +370,25 @@ function loadCategoryConfig(filePath) {
   return loadYaml(content);
 }
 
+// A translated sibling (`<slug>.es.md`) is compiled like any post and then folded into
+// its English twin as `translations[lang]`; it is never a post of its own (same id).
+const isLanguageVariant = filename => /\.[a-z]{2}\.md$/.test(filename);
+const variantLang = filename => filename.match(/\.([a-z]{2})\.md$/)?.[1] || null;
+
+function getLanguageVariantFiles(dir) {
+  const files = [];
+  for (const item of fs.readdirSync(dir)) {
+    const fullPath = path.join(dir, item);
+    if (fs.statSync(fullPath).isDirectory()) {
+      if (item === 'wikinotes' || item === 'FinBoard') continue;
+      files.push(...getLanguageVariantFiles(fullPath));
+    } else if (isLanguageVariant(item)) {
+      files.push(fullPath);
+    }
+  }
+  return files;
+}
+
 function getAllMarkdownFiles(dir, isRoot = false) {
   const files = [];
   const items = fs.readdirSync(dir);
@@ -381,7 +400,7 @@ function getAllMarkdownFiles(dir, isRoot = false) {
     if (stat.isDirectory()) {
       if (item === 'wikinotes' || item === 'FinBoard') continue;
       files.push(...getAllMarkdownFiles(fullPath));
-    } else if (!isRoot && item.endsWith('.md') && !item.startsWith('_') && item !== 'README.md' && item !== 'STYLE.md') {
+    } else if (!isRoot && item.endsWith('.md') && !item.startsWith('_') && item !== 'README.md' && item !== 'STYLE.md' && !isLanguageVariant(item)) {
       files.push(fullPath);
     }
   }
@@ -553,29 +572,69 @@ function saveCache(cache) {
 // --- Cached regular posts ---
 
 function processRegularPosts(cache, configHash, forceRebuild) {
-  const files = getAllMarkdownFiles(PAGES_DIR, true);
   const cacheValid = cache?.version === 1 && cache?.configHash === configHash && !forceRebuild;
   const cached = cacheValid ? (cache.posts || {}) : {};
   const newCache = {};
-  const results = [];
   let hits = 0, compiled = 0;
 
-  for (const filePath of files) {
+  const compile = files => files.map(filePath => {
     const key = path.relative(PAGES_DIR, filePath).replace(/\\/g, '/');
     const mtime = fs.statSync(filePath).mtimeMs;
     if (cached[key]?.mtime === mtime) {
       newCache[key] = cached[key];
-      results.push(cached[key].result);
       hits++;
-    } else {
-      const result = processMarkdownFile(filePath);
-      newCache[key] = { mtime, result };
-      results.push(result);
-      compiled++;
+      return { filePath, result: cached[key].result };
     }
+    const result = processMarkdownFile(filePath);
+    newCache[key] = { mtime, result };
+    compiled++;
+    return { filePath, result };
+  });
+
+  const bases = compile(getAllMarkdownFiles(PAGES_DIR, true));
+  const variants = compile(getLanguageVariantFiles(PAGES_DIR));
+  console.log(`  Posts: ${compiled} compiled, ${hits} cached${variants.length ? ` (${variants.length} translated)` : ''}`);
+  return { results: attachTranslations(bases, variants), cachePosts: newCache };
+}
+
+// Fold each translated sibling into its English twin. The sibling carries only textual
+// fields; everything structural is inherited. `sourceHash` (first twelve hex chars of the
+// SHA-256 of the English body) says which English text it was synced to: a mismatch is a
+// stale translation, reported as an [I18N] warning and flagged on the variant.
+const STRUCTURAL_FIELDS = ['thumbnail', 'thumbnailAspect', 'thumbnailShading', 'thumbnailFocus', 'thumbnailWidth', 'thumbnailZoom', 'date', 'tags', 'related', 'complexity', 'featured', 'hidden', 'theme', 'status', 'technologies', 'github', 'demo', 'caseStudy', 'duration', 'author'];
+const bodyHash = body => createHash('sha256').update(body.replace(/\r\n/g, '\n')).digest('hex').slice(0, 12);
+
+function attachTranslations(bases, variants) {
+  const out = bases.map(({ filePath, result }) => ({ filePath, post: { ...result, translations: null } }));
+  const byIdentity = new Map(out.map(entry => [`${entry.post.category}/${entry.post.id}`, entry]));
+  for (const { filePath, result } of variants) {
+    const rel = path.relative(PAGES_DIR, filePath).replace(/\\/g, '/');
+    const fail = msg => { console.error(`  \x1b[31mERROR: ${rel}: ${msg}\x1b[0m`); buildErrors.push(`${rel}: ${msg}`); };
+    const lang = variantLang(path.basename(filePath));
+    const { data } = matter(fs.readFileSync(filePath, 'utf-8'));
+    if (data.lang !== lang) { fail(`lang is "${data.lang}" but the filename says .${lang}.md`); continue; }
+    const base = byIdentity.get(`${data.category}/${data.id}`);
+    if (!base) { fail(`translated sibling without an English twin (category ${data.category}, id ${data.id})`); continue; }
+    if (path.basename(filePath).replace(/\.[a-z]{2}\.md$/, '') !== path.basename(base.filePath, '.md')) { fail(`filename must be the English filename plus .${lang}: ${path.basename(base.filePath, '.md')}.${lang}.md`); continue; }
+    const redefined = STRUCTURAL_FIELDS.filter(field => field in data);
+    if (redefined.length) console.warn(`  \x1b[33m[I18N] ${rel}: structural fields are inherited from the English file and ignored here: ${redefined.join(', ')}\x1b[0m`);
+    const sourceHash = bodyHash(matter(fs.readFileSync(base.filePath, 'utf-8')).content);
+    const stale = data.sourceHash !== sourceHash;
+    if (stale) console.warn(`  \x1b[33m[I18N] ${rel}: translation is behind the English source (sourceHash ${data.sourceHash || 'missing'}, English body is now ${sourceHash})\x1b[0m`);
+    base.post.translations = {
+      ...(base.post.translations || {}),
+      [lang]: {
+        lang,
+        displayTitle: result.displayTitle || base.post.displayTitle || null,
+        subtitle: result.subtitle ?? null,
+        description: result.description || '',
+        tldr: result.tldr ?? null,
+        content: result.content,
+        stale,
+      },
+    };
   }
-  console.log(`  Posts: ${compiled} compiled, ${hits} cached`);
-  return { results, cachePosts: newCache };
+  return out.map(entry => entry.post);
 }
 
 // --- Cached wikinotes ---
@@ -686,6 +745,7 @@ const linkedRegularPosts = regularPosts.map(post => ({
   thumbnail: stampMediaUrls(post.thumbnail, `${post.category}/${post.id}`),
   ogImage: ogImageFor(post.thumbnail),
   content: stampMediaUrls(processOutsideCode(post.content, processAllLinks), `${post.category}/${post.id}`),
+  translations: post.translations ? Object.fromEntries(Object.entries(post.translations).map(([lang, t]) => [lang, { ...t, content: stampMediaUrls(processOutsideCode(t.content, processAllLinks), `${post.category}/${post.id}`) }])) : null,
 }));
 for (const warning of mediaWarnings) console.warn(`  \x1b[33m[MEDIA] ${warning}\x1b[0m`);
 const linkedWikinotePosts = wikinotePosts.map(post => ({
@@ -717,17 +777,20 @@ const SYNTAX_GUARD = [
 ];
 let syntaxWarnings = 0;
 for (const post of allLinkedPosts) {
-  // strip code/pre regions, where these tokens can legitimately appear as examples
-  const scan = String(post.content || '')
-    .replace(/<pre[\s\S]*?<\/pre>/g, '')
-    .replace(/<code[\s\S]*?<\/code>/g, '');
-  for (const { re, label } of SYNTAX_GUARD) {
-    const m = scan.match(re);
-    if (!m) continue;
-    if (syntaxWarnings === 0) console.log('\n\x1b[1m[SYNTAX]\x1b[0m \x1b[90mscripts/build-content.js\x1b[0m');
-    const where = post.address || post.id || post.displayTitle || '?';
-    console.log(`  \x1b[33mWARN \x1b[0m  [LITERAL_TAG] ${label} in "${where}" → ${m[0].slice(0, 60)}`);
-    syntaxWarnings++;
+  const bodies = [['', post.content], ...Object.entries(post.translations || {}).map(([lang, t]) => [` (${lang})`, t.content])];
+  for (const [suffix, body] of bodies) {
+    // strip code/pre regions, where these tokens can legitimately appear as examples
+    const scan = String(body || '')
+      .replace(/<pre[\s\S]*?<\/pre>/g, '')
+      .replace(/<code[\s\S]*?<\/code>/g, '');
+    for (const { re, label } of SYNTAX_GUARD) {
+      const m = scan.match(re);
+      if (!m) continue;
+      if (syntaxWarnings === 0) console.log('\n\x1b[1m[SYNTAX]\x1b[0m \x1b[90mscripts/build-content.js\x1b[0m');
+      const where = (post.address || post.id || post.displayTitle || '?') + suffix;
+      console.log(`  \x1b[33mWARN \x1b[0m  [LITERAL_TAG] ${label} in "${where}" → ${m[0].slice(0, 60)}`);
+      syntaxWarnings++;
+    }
   }
 }
 for (const entry of bkqtLabelWarnings) {
@@ -758,7 +821,16 @@ if (interactive && validation.issues.some(i => i.promptable)) {
 }
 
 // Resolve article concepts before writing public outputs so invalid tags fail early.
-const postsIndex = publicRegularPosts.map(({ content, ...meta }) => meta);
+const postsIndex = publicRegularPosts.map(({ content, translations, ...meta }) => ({
+  ...meta,
+  translations: translations ? Object.fromEntries(Object.entries(translations).map(([lang, { content: _body, ...t }]) => [lang, t])) : null,
+}));
+// Route entries learn which languages each page has, so /es/<canonical> resolves in the SPA and at the edge.
+for (const entry of contentRouteEntries) {
+  const post = regularPosts.find(p => p.category === entry.category && String(p.id) === entry.id);
+  const langs = Object.keys(post?.translations || {});
+  if (langs.length) entry.langs = langs; else delete entry.langs;
+}
 const wikinotesIndex = linkedWikinotePosts.map(({ content, searchText, ...meta }) => ({ ...meta, searchText }));
 writeFieldOfView(publicRegularPosts, wikinotesIndex);
 
@@ -917,7 +989,7 @@ Second Brain — Knowledge graph of 300+ interconnected atomic concept notes cov
 Contact: contact@infraphysics.net | GitHub: github.com/yago-mendoza | LinkedIn: linkedin.com/in/yago-mendoza | X: x.com/ymdatweets`,
 };
 ogManifest['/about'] = {
-  t: 'About — Yago Mendoza',
+  t: 'About',
   d: agentProfile.positioning.summary[0],
   img: null,
   cat: null,
@@ -926,7 +998,7 @@ ogManifest['/about'] = {
   schema: aboutPageSchema,
 };
 ogManifest['/about/cv'] = {
-  t: `${agentProfile.identity.name} | Experience and CV`,
+  t: 'Experience',
   d: agentProfile.positioning.summary.join(' '),
   img: null,
   cat: null,
@@ -937,6 +1009,8 @@ ogManifest['/about/cv'] = {
 
 for (const post of publicRegularPosts) {
   const urlPath = contentRoutes.path(post.category, post.id);
+  const langs = Object.keys(post.translations || {});
+  const alternates = langs.length ? { en: urlPath, ...Object.fromEntries(langs.map(lang => [lang, `/${lang}${urlPath}`])) } : undefined;
   ogManifest[urlPath] = {
     t: post.displayTitle || post.title,
     d: post.description || '',
@@ -944,7 +1018,21 @@ for (const post of publicRegularPosts) {
     cat: post.category,
     date: post.date || null,
     text: htmlToText(post.content),
+    ...(alternates ? { lang: 'en', alternates } : {}),
   };
+  for (const lang of langs) {
+    const t = post.translations[lang];
+    ogManifest[`/${lang}${urlPath}`] = {
+      t: t.displayTitle || post.displayTitle || post.title,
+      d: t.description || t.subtitle || post.description || '',
+      img: post.ogImage || post.thumbnail || null,
+      cat: post.category,
+      date: post.date || null,
+      text: htmlToText(t.content),
+      lang,
+      alternates,
+    };
+  }
 }
 
 // Section listing pages — so crawlers see article directories
@@ -981,8 +1069,8 @@ for (const note of wikinotesIndex) {
 }
 
 // Pages and playgrounds that only exist for the share card: a title and a line, no body text.
-ogManifest['/about/stack'] = { t: `${agentProfile.identity.name} | Stack`, d: 'The tools I reach for, and the few I would defend.', img: null, cat: null, date: agentProfile.lastUpdated, text: profileText };
-ogManifest['/contact'] = { t: 'Get in touch — Yago Mendoza', d: 'Ideas, collaborations, corrections. Barcelona, ES / EN.', img: null, cat: null, date: null };
+ogManifest['/about/stack'] = { t: 'Stack', d: 'The tools I reach for, and the few I would defend.', img: null, cat: null, date: agentProfile.lastUpdated, text: profileText };
+ogManifest['/contact'] = { t: 'Get in touch', d: 'Ideas, collaborations, corrections. Barcelona, ES / EN.', img: null, cat: null, date: null };
 const playgroundsDir = path.join(__dirname, '../public/playgrounds');
 if (fs.existsSync(playgroundsDir)) {
   for (const articleId of fs.readdirSync(playgroundsDir)) {
@@ -1010,6 +1098,17 @@ if (fs.existsSync(OG_CARDS_FILE)) {
     applied++;
   }
   console.log(`[OG] ${applied} share cards applied`);
+}
+// A translated url shares its English twin's card, title and description: what a link shows on
+// X, LinkedIn or WhatsApp is always the English exhibition card. Only the crawler body text
+// (`text`) and `lang` stay in the page's language.
+for (const entry of Object.values(ogManifest)) {
+  if (!entry.lang || entry.lang === 'en' || !entry.alternates?.en) continue;
+  const english = ogManifest[entry.alternates.en];
+  if (!english) continue;
+  entry.t = english.t;
+  entry.d = english.d;
+  entry.img = english.img;
 }
 
 const OG_MANIFEST_FILE = path.join(__dirname, '../public/og-manifest.json');
@@ -1039,7 +1138,12 @@ for (const page of staticPages) {
 for (const post of publicRegularPosts) {
   const urlPath = contentRoutes.path(post.category, post.id);
   const lastmod = post.date ? `<lastmod>${post.date.slice(0, 10)}</lastmod>` : '';
-  sitemapEntries.push(`  <url><loc>${SITE_URL}${urlPath}</loc>${lastmod}<changefreq>monthly</changefreq><priority>0.7</priority></url>`);
+  const langs = Object.keys(post.translations || {});
+  const alternates = langs.length
+    ? [`<xhtml:link rel="alternate" hreflang="en" href="${SITE_URL}${urlPath}"/>`, `<xhtml:link rel="alternate" hreflang="x-default" href="${SITE_URL}${urlPath}"/>`, ...langs.map(lang => `<xhtml:link rel="alternate" hreflang="${lang}" href="${SITE_URL}/${lang}${urlPath}"/>`)].join('')
+    : '';
+  sitemapEntries.push(`  <url><loc>${SITE_URL}${urlPath}</loc>${lastmod}<changefreq>monthly</changefreq><priority>0.7</priority>${alternates}</url>`);
+  for (const lang of langs) sitemapEntries.push(`  <url><loc>${SITE_URL}/${lang}${urlPath}</loc>${lastmod}<changefreq>monthly</changefreq><priority>0.6</priority>${alternates}</url>`);
 }
 for (const note of wikinotesIndex) {
   const urlPath = contentRoutes.path('wikinotes', note.id);
@@ -1047,7 +1151,7 @@ for (const note of wikinotesIndex) {
   sitemapEntries.push(`  <url><loc>${SITE_URL}${urlPath}</loc>${lastmod}<changefreq>weekly</changefreq><priority>0.5</priority></url>`);
 }
 
-const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapEntries.join('\n')}\n</urlset>\n`;
+const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${sitemapEntries.join('\n')}\n</urlset>\n`;
 fs.writeFileSync(SITEMAP_FILE, sitemapXml);
 
 // Output 8: public/feed.xml (RSS feed for AI aggregators and readers)

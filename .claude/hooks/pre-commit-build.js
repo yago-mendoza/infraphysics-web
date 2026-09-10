@@ -6,7 +6,7 @@
  * Receives JSON on stdin with { tool_name, tool_input: { command } }
  * Exit 0 = allow, Exit 2 = block (stdout = reason shown to Claude)
  */
-const { execSync } = require('child_process');
+import { execSync } from 'node:child_process';
 
 let input = '';
 process.stdin.on('data', (d) => (input += d));
@@ -29,7 +29,7 @@ process.stdin.on('end', () => {
       });
       process.exit(0);
     } catch (e) {
-      const stderr = e.stderr?.toString().slice(0, 800) || 'Unknown error';
+      const stderr = [e.stdout?.toString(), e.stderr?.toString()].filter(Boolean).join('\n').slice(0, 1600) || e.message || 'Unknown error';
       process.stdout.write(
         'Type check failed — fix errors before committing:\n' + stderr
       );

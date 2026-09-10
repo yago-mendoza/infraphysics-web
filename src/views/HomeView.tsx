@@ -155,7 +155,7 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
             </Link>
             <div>
               <p className="text-xl tracking-tight text-th-heading">Yago Mendoza</p>
-              <p className="text-xs text-th-tertiary font-mono tracking-wide">industrial engineer · infraphysicist</p>
+              <p className="text-xs text-th-tertiary font-mono tracking-wide">AI &amp; Industrial Engineer</p>
               <Link to="/about" className="inline-flex items-center gap-1 text-xs text-th-secondary hover:text-th-heading transition-colors mt-1">
                 Who I am <ArrowRightIcon />
               </Link>

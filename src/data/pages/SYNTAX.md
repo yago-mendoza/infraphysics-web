@@ -112,7 +112,7 @@ Custom-display references also work inside tables; the compiler protects their i
 A statement^[A paragraph-scoped clarification.].
 ```
 
-Footnote numbering restarts per paragraph.
+Footnote numbering restarts per paragraph. The marker goes before the sentence's closing period, never after it, and the text inside is a complete sentence with its own period (`STYLE.md` rule 8). This is the only footnote form: `[^1]` reference footnotes are not supported.
 
 ## Chemical and mathematical forms
 

@@ -2,7 +2,7 @@
 
 Developer reference for managing the wikinotes knowledge graph. This covers the operational side — creating, renaming, deleting, and auditing notes. For the **content authoring format** (frontmatter, syntax, trailing refs, wiki-links), see the [Second Brain section in the pages README](../README.md#second-brain-wikinotes). For **build pipeline internals** (shared compilation, cache and Shiki config), see [scripts/README.md](../../../scripts/README.md).
 
-**How a note is written** (shape, tone, body versus Interactions, names, paths, size, allowed syntax) is a separate document: [STYLE.md](STYLE.md). Read it before writing or rewriting any note.
+**How a note is written** (shape, tone, body versus Interactions, names, paths, size, allowed syntax) is a separate document: [STYLE.md](STYLE.md). Read it before writing or rewriting any note. The wiki is English only and is never translated, whatever happens with the articles.
 
 ---
 

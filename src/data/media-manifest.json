@@ -2,7 +2,7 @@
   "version": 1,
   "publicBase": "https://cdn.infraphysics.net",
   "settings": "dd8519ee",
-  "updated": "2026-09-08",
+  "updated": "2026-09-10",
   "files": {
     "articles/1112121/cover.jpg": {
       "src": "articles/1112121/cover.png",
@@ -576,23 +576,43 @@
     },
     "articles/6820451/cover.jpg": {
       "src": "articles/6820451/cover.png",
-      "srcHash": "73373ec5ad02",
-      "v": "41b4cf32",
+      "srcHash": "263cfeac47fe",
+      "v": "8d33a405",
       "width": 1200,
-      "height": 800,
-      "bytes": 117642,
+      "height": 675,
+      "bytes": 137622,
       "type": "image/jpeg",
-      "updated": "2026-09-07"
+      "updated": "2026-09-10"
     },
     "articles/6820451/cover.webp": {
       "src": "articles/6820451/cover.png",
-      "srcHash": "73373ec5ad02",
-      "v": "9621b629",
-      "width": 1536,
-      "height": 1024,
-      "bytes": 178224,
+      "srcHash": "263cfeac47fe",
+      "v": "a1edcbc7",
+      "width": 1600,
+      "height": 900,
+      "bytes": 204664,
       "type": "image/webp",
-      "updated": "2026-09-07"
+      "updated": "2026-09-10"
+    },
+    "articles/6820451/figures/domain-context-value.webp": {
+      "src": "articles/6820451/figures/domain-context-value.png",
+      "srcHash": "3a984b55c246",
+      "v": "4b27bd18",
+      "width": 963,
+      "height": 761,
+      "bytes": 43844,
+      "type": "image/webp",
+      "updated": "2026-09-09"
+    },
+    "articles/6820451/figures/reconstruction-cost-map.webp": {
+      "src": "articles/6820451/figures/reconstruction-cost-map.png",
+      "srcHash": "954c0af09029",
+      "v": "1a92894a",
+      "width": 1400,
+      "height": 933,
+      "bytes": 27932,
+      "type": "image/webp",
+      "updated": "2026-09-10"
     },
     "articles/7270022/cover.jpg": {
       "src": "articles/7270022/cover.jpeg",
@@ -1092,9 +1112,19 @@
       "updated": "2026-09-07"
     },
     "articles/6820451/cover.png": {
-      "hash": "73373ec5ad02",
-      "bytes": 2518344,
-      "updated": "2026-09-07"
+      "hash": "263cfeac47fe",
+      "bytes": 2464767,
+      "updated": "2026-09-10"
+    },
+    "articles/6820451/figures/domain-context-value.png": {
+      "hash": "3a984b55c246",
+      "bytes": 867839,
+      "updated": "2026-09-09"
+    },
+    "articles/6820451/figures/reconstruction-cost-map.png": {
+      "hash": "954c0af09029",
+      "bytes": 1585807,
+      "updated": "2026-09-10"
     },
     "articles/7270022/cover.jpeg": {
       "hash": "07946dc59515",

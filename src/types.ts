@@ -31,6 +31,22 @@ interface BasePost {
   complexity?: number | null;   // 1–10, maps to audience labels
   /** Forces this theme when the article is opened (route-level, instant). Manual toggle still works afterwards. */
   theme?: 'light' | 'dark' | null;
+  /** Language of the text in `content` and the textual fields: `en` for the base file, `es` when a translated sibling is on screen. */
+  lang?: string | null;
+  /** Translated siblings (`<slug>.es.md`) folded into the English post by the build, keyed by language. Absent from the index payload's `content`. */
+  translations?: Record<string, PostTranslation> | null;
+}
+
+/** The textual layer of a translated sibling; everything structural is inherited from the English post. */
+export interface PostTranslation {
+  lang: string;
+  displayTitle?: string | null;
+  subtitle?: string | null;
+  description?: string;
+  tldr?: string[] | string | null;
+  content?: string;
+  /** True when the English body changed after the translation was synced (`sourceHash` mismatch). */
+  stale?: boolean;
 }
 
 /* ── Category-specific extensions ── */

@@ -3,23 +3,24 @@
 import React, { Suspense, useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
+import { LangProvider } from '../contexts/LangContext';
 import { CursorPreferenceProvider, useCursorPreference } from '../contexts/CursorPreferenceContext';
 import { ArticleContextProvider } from '../contexts/ArticleContext';
 import { SecondBrainHubProvider } from '../contexts/SecondBrainHubContext';
 import { isSecondBrainPath, secondBrainPath } from '../config/categories';
 import { postSummaries } from '../data/postSummaries';
-import { contentRoutes } from '../lib/contentRoutes';
+import { contentRoutes, stripLang } from '../lib/contentRoutes';
 import { Sidebar, MobileNav, Footer, AmbientRails } from './layout';
 import { ErrorBoundary } from './ErrorBoundary';
 import { RetentionHints } from './RetentionHints';
 import { ExperimentalCursor } from './ExperimentalCursor';
 import { HomeVisualLab } from './personal/HomeVisualLab';
 import { HomeView } from '../views/HomeView';
-
-const AdminStatsView = React.lazy(() => import('../views/AdminStatsView').then(m => ({ default: m.AdminStatsView })));
+import { startSiteAnalytics } from '../lib/siteAnalytics';
 
 // Lazy-loaded heavy views (code-split into separate chunks)
 const AboutView = React.lazy(() => import('../views/AboutView').then(m => ({ default: m.AboutView })));
+const AdminStatsView = React.lazy(() => import('../views/AdminStatsView').then(m => ({ default: m.AdminStatsView })));
 const CvView = React.lazy(() => import('../views/CvView').then(m => ({ default: m.CvView })));
 const StackView = React.lazy(() => import('../views/StackView').then(m => ({ default: m.StackView })));
 const ContactView = React.lazy(() => import('../views/ContactView').then(m => ({ default: m.ContactView })));
@@ -64,7 +65,7 @@ const ARTICLE_ROUTE = /^\/(?:blog|lab)\/[^/]+\/[^/]+/;
 const ARTICLE_RETURN_KEY = 'infraphysics:article-return-to';
 const SECTION_RETURN_KEY = 'infraphysics:section-return-to';
 const navigationSection = (path: string) => {
-  const pathname = path.split(/[?#]/)[0];
+  const pathname = stripLang(path.split(/[?#]/)[0]);
   if (isSecondBrainPath(pathname)) return '/wiki';
   if (/^\/(blog|lab)\//.test(pathname)) return pathname.split('/').slice(0, 3).join('/');
   return pathname.split('/')[1] || 'home';
@@ -72,6 +73,18 @@ const navigationSection = (path: string) => {
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
+  useEffect(() => {
+    let cancelled = false;
+    const path = location.pathname.replace(/\/$/, '') || '/home';
+    const fallback = path === '/home' ? 'Home' : path.startsWith('/wiki') ? 'Wiki' : 'InfraPhysics';
+    document.title = `InfraPhysics - ${fallback}`;
+    fetch('/og-manifest.json').then(response => response.ok ? response.json() : null).then(manifest => {
+      if (cancelled) return;
+      const title = path === '/home' ? 'Home' : manifest?.[path]?.t ?? fallback;
+      document.title = `InfraPhysics - ${title}`;
+    }).catch(() => { /* Keep the route fallback when offline. */ });
+    return () => { cancelled = true; };
+  }, [location.pathname]);
   const navigate = useNavigate();
   const previousLocationRef = useRef(location);
   const [sectionReturnTo, setSectionReturnTo] = useState<string | null>(() => {
@@ -102,35 +115,7 @@ const AppLayout: React.FC = () => {
     const route = contentRoutes.resolve(location.pathname);
     if (route && location.pathname !== route.canonical) return;
     if (import.meta.env.DEV || location.pathname.startsWith('/admin') || navigator.doNotTrack === '1' || (navigator as Navigator & {globalPrivacyControl?: boolean}).globalPrivacyControl) return;
-    let recorded = false;
-    const record = () => {
-    if (document.visibilityState !== 'visible' || recorded) return;
-    recorded = true;
-    const now = Date.now();
-    const sessionWindow = 30 * 60 * 1000;
-    try {
-      let visitorId = localStorage.getItem('infraphysics:visitor-id');
-      if (!visitorId) {
-        visitorId = crypto.randomUUID();
-        localStorage.setItem('infraphysics:visitor-id', visitorId);
-      }
-      const storedSession = JSON.parse(localStorage.getItem('infraphysics:session') || 'null') as { id?: string; lastActive?: number } | null;
-      const sessionId = storedSession?.id && storedSession.lastActive && now - storedSession.lastActive < sessionWindow
-        ? storedSession.id
-        : crypto.randomUUID();
-      localStorage.setItem('infraphysics:session', JSON.stringify({ id: sessionId, lastActive: now }));
-      fetch('/api/analytics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: contentRoutes.storagePath(location.pathname), visitorId, sessionId,
-          referrer: document.referrer ? new URL(document.referrer).origin : '', language: navigator.language.split('-')[0] }),
-        keepalive: true,
-      }).catch(() => {});
-    } catch { /* Analytics must never affect navigation. */ }
-    };
-    record();
-    document.addEventListener('visibilitychange', record);
-    return () => document.removeEventListener('visibilitychange', record);
+    return startSiteAnalytics(contentRoutes.storagePath(location.pathname));
   }, [location.pathname]);
 
   const openSearch = useCallback(() => {
@@ -180,7 +165,9 @@ const AppLayout: React.FC = () => {
     applyRoute(forced ?? undefined);
   }, [location.pathname, applyRoute]);
 
-  const isBlog = location.pathname.startsWith('/blog');
+  // The page's path without the language prefix: /es/blog/essays/x is the same page as /blog/essays/x.
+  const sitePath = stripLang(location.pathname);
+  const isBlog = sitePath.startsWith('/blog');
   const isHome = location.pathname === '/' || location.pathname === '/home';
   const isAbout = location.pathname === '/about' || location.pathname.startsWith('/about/');
   // A missing page (ErrorConceptView reports its path) drops the section chrome: no wiki sidebar, no article geometry, rails and footer back.
@@ -192,9 +179,9 @@ const AppLayout: React.FC = () => {
   const hasSystemField = isAbout
     || isHome
     || isSecondBrain
-    || location.pathname.startsWith('/blog/essays')
-    || location.pathname.startsWith('/blog/bits2bricks')
-    || location.pathname.startsWith('/lab/projects');
+    || sitePath.startsWith('/blog/essays')
+    || sitePath.startsWith('/blog/bits2bricks')
+    || sitePath.startsWith('/lab/projects');
   const clockHome = location.pathname === '/home';
   const hasPreviousSection = !!sectionReturnTo && sectionReturnTo.startsWith('/')
     && !sectionReturnTo.startsWith('//')
@@ -204,16 +191,16 @@ const AppLayout: React.FC = () => {
     onClick: () => navigate(hasPreviousSection ? sectionReturnTo! : '/home'),
   }), [navigate, hasPreviousSection, sectionReturnTo]);
   const isContextPreview = /^\/ctx[1-4]$/.test(location.pathname);
-  const isArticlePage = ((/^\/(blog|lab)\/[^/]+\/[^/]+/.test(location.pathname) && !isSecondBrain) || isContextPreview) && !notFound;
+  const isArticlePage = ((/^\/(blog|lab)\/[^/]+\/[^/]+/.test(sitePath) && !isSecondBrain) || isContextPreview) && !notFound;
   // Project detail pages drop the grid and paint the page in the box surface color
-  const isProjectArticle = isArticlePage && (location.pathname.startsWith('/lab/projects/') || isContextPreview);
+  const isProjectArticle = isArticlePage && (sitePath.startsWith('/lab/projects/') || isContextPreview);
 
 
   const content = (
     <ErrorBoundary resetKey={location.pathname}>
     {aestheticCursor && !isSecondBrain && <ExperimentalCursor />}
     <div
-      className={`min-h-screen overflow-x-clip flex relative ${hasSystemField ? 'about-active ' : ''}${location.pathname.startsWith('/lab/projects') ? 'projects-zone ' : ''}${clockHome ? 'home2-active ' : ''}${isHome ? 'home-light-zone bg-transparent' : isProjectArticle ? '' : isBlog ? 'bg-th-blog' : 'bg-transparent'}`}
+      className={`min-h-screen overflow-x-clip flex relative ${hasSystemField ? 'about-active ' : ''}${sitePath.startsWith('/lab/projects') ? 'projects-zone ' : ''}${clockHome ? 'home2-active ' : ''}${isHome ? 'home-light-zone bg-transparent' : isProjectArticle ? '' : isBlog ? 'bg-th-blog' : 'bg-transparent'}`}
       style={isProjectArticle ? { backgroundColor: 'var(--art-surface)' } : undefined}
     >
       {!isArticlePage && <AmbientRails />}
@@ -265,6 +252,7 @@ const AppLayout: React.FC = () => {
             <Routes>
               <Route path="/" element={<Navigate to="/home" replace />} />
               <Route path="/home" element={<HomeView visualVariant={1} fieldVariant={3} />} />
+              <Route path="/admin/stats" element={<AdminStatsView />} />
               <Route path="/writing" element={<Navigate to="/blog/essays" replace />} />
               <Route path="/blog" element={<Navigate to="/blog/essays" replace />} />
               <Route path="/about" element={<AboutView />} />
@@ -314,6 +302,9 @@ const AppLayout: React.FC = () => {
               {/* Post detail views */}
               <Route path="/lab/:category/:id" element={<PostView />} />
               <Route path="/blog/:category/:id" element={<PostView />} />
+              {/* Translated siblings: same slug under a language prefix (contentRoutes resolves the prefix). */}
+              <Route path="/es/lab/:category/:id" element={<PostView />} />
+              <Route path="/es/blog/:category/:id" element={<PostView />} />
 
               {/* Legacy: old flat /:category/:id → grouped path */}
               <Route path="/:category/:id" element={<LegacyPostRedirect />} />
@@ -338,11 +329,13 @@ const AppLayout: React.FC = () => {
 const App: React.FC = () => {
   return (
     <ThemeProvider>
+      <LangProvider>
       <CursorPreferenceProvider>
         <BrowserRouter>
           <AppRouter />
         </BrowserRouter>
       </CursorPreferenceProvider>
+      </LangProvider>
     </ThemeProvider>
   );
 };

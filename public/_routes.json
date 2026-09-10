@@ -6,6 +6,7 @@
     "/api/stats",
     "/api/analytics",
     "/api/presence",
+    "/api/admin/*",
     "/home",
     "/about",
     "/about/*",
@@ -21,12 +22,12 @@
     "/blog/essays/*",
     "/blog/bits2bricks",
     "/blog/bits2bricks/*",
+    "/es/*",
     "/projects/*",
     "/essays/*",
     "/bits2bricks/*",
     "/threads/*",
-    "/blog/threads/*",
-    "/api/admin/*"
+    "/blog/threads/*"
   ],
   "exclude": []
 }

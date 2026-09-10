@@ -433,6 +433,7 @@
 .article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-share-btn:hover {
   background: none;
   border: 0;
+  color: var(--art-accent);
 }
 .article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-essays-body { padding-top: 1.75rem !important; }
 

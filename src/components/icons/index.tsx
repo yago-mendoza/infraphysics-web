@@ -3,6 +3,8 @@
 import React from 'react';
 import { WIKI_REF_ICON_PATH } from '../../lib/icons';
 
+export const FilterOffIcon: React.FC = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 2h8l-5 6v5l-2 1V8L2 2M2 2l12 12" /></svg>;
+
 export const Logo: React.FC<{ className?: string; color?: string }> = ({ className, color }) => (
   <svg
     viewBox="0 0 992 1072"

@@ -29,8 +29,7 @@ infraphysics-web/
   .claude/
     hooks/                      # Claude Code hooks (pre-commit build, wikinote edit guards)
     skills/
-      commit/SKILL.md             # /commit — atomic commit proposal workflow
-      create-wikinote/SKILL.md   # /create-wikinote — process raw input into wikinotes
+      review-article/SKILL.md    # /review-article — review one article: hard rules, form, verified links, wiki links with sense check, missing concepts
   .github/
     workflows/
       validate.yml              # CI: build + type check + wikinote reference validation
@@ -89,7 +88,7 @@ infraphysics-web/
       article/                # ArticleBreadcrumbs, ArticleHashtags, BlogMetabar
       sections/               # SearchResultsList, ProjectsList, EssaysList, Bits2BricksGrid
       layout/                 # Sidebar, MobileNav, Footer, AmbientRails, SecondBrainSidebar
-      ui/                     # StatusBadge, Highlight, ComplexityBar
+      ui/                     # StatusBadge, Highlight, ComplexityBar, TranslationPendingModal (the apology on an untranslated page)
       icons/                  # SVG icon components
       graph/                  # Shared force-directed 2D/3D graph explorer (MiniGraph) and data hooks
     views/
@@ -115,7 +114,7 @@ infraphysics-web/
       pages/
         README.md               # Authoring hub (frontmatter, content types, editorial rules, pipeline)
         SYNTAX.md               # Syntax reference (19 custom features, edge cases, quick ref)
-        STYLE.md                # Hard writing rules for every category (quotes, arrows, em-dashes, box titles, paragraph density, literal titles); the mechanical ones are [STYLE] build warnings
+        STYLE.md                # Hard writing rules for every category (quotes, arrows, em-dashes, box titles, paragraph density, literal titles, footnote placement, no not-X-Y reframes); the mechanical ones are [STYLE] build warnings
         projects/             # .md posts + _category.yaml
           README.md             # Projects editorial voice
         essays/              # .md posts + _category.yaml
@@ -174,6 +173,7 @@ infraphysics-web/
       useArticleStats.ts      # Bulk view/heart stats fetch for section listings
       useViewCount.ts         # Per-article view counter (POST on mount, IP-deduped)
       useReaction.ts          # Heart toggle with optimistic update + revert
+      useRouteLanguage.ts     # Languages the current page exists in and the url of each version
       usePresence.ts          # Live presence counter
       useRevealOnScrollUp.ts  # Nav reveal on upward scroll or at page end (articles, touch wiki)
       useProximityReveal.ts   # Nav reveal when the pointer nears the bottom edge (wiki)
@@ -190,7 +190,7 @@ infraphysics-web/
       error-concepts.css      # Minimal 404 previews and theme-aware SVG cartoons
     config/                   # Categories config, analytics, content entities
     constants/                # Layout, theme constants
-    contexts/                 # Theme, article, Second Brain hub, cursor preference
+    contexts/                 # Theme, language preference, article, Second Brain hub, cursor preference
     types.ts                  # TypeScript interfaces (Post, Category, etc.)
   index.html                  # App shell, Tailwind CDN config, theme tokens
   package.json
@@ -220,7 +220,7 @@ The build pipeline compiles posts and wikinotes through one shared transformatio
 
 All article and wikinote Markdown lives in `src/data/pages/`. One entry point: **[src/data/pages/README.md](src/data/pages/README.md)**, the authoring hub, says where everything is and links down. From there:
 
-- **Hard rules, every category:** [STYLE.md](src/data/pages/STYLE.md). No double quotes, no arrows, no em-dashes, no box titles, dense paragraphs, literal titles. The mechanical ones come back as `[STYLE]` build warnings.
+- **Hard rules, every category:** [STYLE.md](src/data/pages/STYLE.md). No double quotes, no arrows, no em-dashes (parentheses instead), no box titles, dense paragraphs, literal titles, footnotes as `^[…]` before the period, no *not X, Y* reframes. The mechanical ones come back as `[STYLE]` build warnings.
 - **Syntax:** [SYNTAX.md](src/data/pages/SYNTAX.md), the single grammar reference. The grammar is shared by every category; what each category may actually use is a subset, listed in its *Where each feature applies* table.
 - **Voice per category:** [projects/README.md](src/data/pages/projects/README.md), [essays/README.md](src/data/pages/essays/README.md), [bits2bricks/README.md](src/data/pages/bits2bricks/README.md): schema, tone, structure, accumulated author feedback.
 - **Wikinotes:** [wikinotes/STYLE.md](src/data/pages/wikinotes/STYLE.md) for how a note is written, [wikinotes/README.md](src/data/pages/wikinotes/README.md) for scripts, renames and validation.
@@ -390,7 +390,6 @@ Future features under consideration:
 - [x] **Wiki Console graph explorer** — Shared mini/expanded force-directed map with 2D/3D views, semantic highlighting and centrality/root coloring at `/wiki`.
 
 Content uses readable filenames and URL slugs with stable internal IDs. See [URL conventions and renaming](scripts/CONTENT-URLS.md).
+# Counters migration and private stats
 
-### Private statistics and counters
-
-See [workers/counters/README.md](workers/counters/README.md) for the optional Durable Object backend, private admin panel, authentication, migration and recovery. KV remains the default until explicitly switched.
+The optional SQLite Durable Object backend and standalone `/admin/stats` panel are documented in [workers/counters/README.md](workers/counters/README.md), including local tests, authentication, cutover and recovery. KV remains the default until explicitly switched. There is no default admin password and no automatic expiry for daily aggregates.

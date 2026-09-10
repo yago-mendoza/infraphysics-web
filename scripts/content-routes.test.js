@@ -39,6 +39,23 @@ test('rename aliases, reserved paths and ambiguous routes', () => {
   assert.equal(slugify('C++ & C#'), 'c-plus-plus-and-c-sharp');
 });
 
+test('translated siblings resolve under a language prefix on the same slug', () => {
+  const essay = { category: 'essays', id: '1234567', slug: 'some-essay', aliases: ['old-essay'], langs: ['es'] };
+  const other = { category: 'essays', id: '7654321', slug: 'english-only', aliases: [] };
+  const routes = createContentRoutes([essay, other]);
+  assert.equal(routes.resolve('/es/blog/essays/some-essay').lang, 'es');
+  assert.equal(routes.resolve('/es/blog/essays/some-essay').canonical, '/es/blog/essays/some-essay');
+  assert.equal(routes.resolve('/es/blog/essays/old-essay').canonical, '/es/blog/essays/some-essay');
+  assert.equal(routes.resolve('/blog/essays/some-essay').lang, undefined);
+  // A prefixed url for a page without that language falls back to the English page (and so redirects to it).
+  assert.equal(routes.resolve('/es/blog/essays/english-only').canonical, '/blog/essays/english-only');
+  assert.equal(routes.path('essays', '1234567', 'es'), '/es/blog/essays/some-essay');
+  assert.equal(routes.path('essays', '7654321', 'es'), '/blog/essays/english-only');
+  assert.equal(routes.path('essays', '1234567', 'en'), '/blog/essays/some-essay');
+  assert.equal(routes.storagePath('/es/blog/essays/some-essay'), '/blog/essays/1234567');
+  assert.equal(routes.canonicalize('/es/blog/essays/old-essay#x'), '/es/blog/essays/some-essay#x');
+});
+
 test('cross-document references emit canonical URLs and report missing targets', () => {
   const routes = createContentRoutes(routeEntries());
   const errors = [];

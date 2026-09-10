@@ -37,7 +37,7 @@ Tagline: "From systems to atoms and back. Engineering is engineering. The substr
 ## Essays
 
 - [The years we thought we had](https://infraphysics.net/blog/essays/the-years-we-thought-we-had): On GPT Astra, some ducks, and the only advantage that doesn't scale
-- [Your context is the moat](https://infraphysics.net/blog/essays/your-context-is-the-moat): The base model is turning into a utility you rent by the token. The part that's actually yours is what you feed it, and feeding it is how it leaves.
+- [The falling cost of reproducing industrial know-how](https://infraphysics.net/blog/essays/the-cost-of-reproducing-industrial-know-how): AI is changing what a successor can learn from a company's mistakes, and what a competitor may be able to reconstruct.
 - [244 pages of Mythos](https://infraphysics.net/blog/essays/244-pages-of-mythos): The model that hacks too well, thinks too clearly, and covers its own tracks.
 - [15.4%](https://infraphysics.net/blog/essays/chain-of-thought-monitoring): Scheming benchmarks, chain-of-thought opacity, and a number going up.
 - [The Bitter Lesson](https://infraphysics.net/blog/essays/the-bitter-lesson): Brute computation, human design, and seventy years of ignored lessons.

@@ -123,3 +123,7 @@
 .sc-page .sc-monolith { left: 14%; }
 /* On the personal pages the mark carries the oxide. */
 .sc-page .sc-mark svg { color: var(--sc-accent); }
+
+/* The home: the emblem, solid, in the monolith tilt, where the portrait would be. */
+.sc-emblem { position: absolute; right: 130px; top: 50%; z-index: 2; width: 300px; height: 324px; transform: translateY(-50%) rotate(5deg); color: var(--sc-accent); }
+.sc-emblem svg { width: 100%; height: 100%; }

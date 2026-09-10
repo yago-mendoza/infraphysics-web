@@ -85,6 +85,7 @@
 .pj-index a.article-toc-link { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .5rem; align-items: baseline; padding: 0; color: var(--text-secondary); font: 400 .82rem/1.35 var(--font-sans); letter-spacing: 0; text-transform: none; transition: color .15s ease; }
 .pj-index a.article-toc-link b { color: var(--art-accent); font: 600 .72rem/1.4 var(--font-mono); }
 .pj-index a.article-toc-link:hover { color: var(--text-heading); }
+.pj-index a.article-toc-link:hover span { text-decoration: underline; text-decoration-color: var(--art-accent); text-underline-offset: .28em; }
 .pj-index a.article-toc-link--active { color: var(--text-heading); font-weight: 500; }
 .pj-index a.article-toc-link--active span { text-decoration: underline; text-decoration-color: var(--art-accent); text-underline-offset: .28em; }
 

@@ -47,7 +47,8 @@
 .glab-index a.article-toc-link--active { color: var(--text-heading); font-weight: 500; text-decoration: underline; text-decoration-color: var(--art-accent); text-underline-offset: .28em; }
 /* article.css uppercases and mono-styles .article-toc-link for the floating index; the side index keeps sentence case. */
 .article-geometry .glab-index a.article-toc-link { display: block; padding: 0; color: var(--text-secondary); font: 400 .82rem/1.35 var(--font-sans); letter-spacing: 0; text-transform: none; }
-.article-geometry .glab-index a.article-toc-link:hover { color: var(--text-heading); }
+/* Hover reads like the active entry: the accent underline appears under the pointer. */
+.article-geometry .glab-index a.article-toc-link:hover { color: var(--text-heading); text-decoration: underline; text-decoration-color: var(--art-accent); text-underline-offset: .28em; }
 
 .glab-body { min-width: 0; }
 /* The body column is the reading measure; category rules may cap it again at their own measure. */
@@ -82,7 +83,14 @@
 .article-geometry.article-page-wrapper .glab-meta-row .article-meta-views:hover,
 .article-geometry.article-page-wrapper .glab-meta-row .article-heart-btn:hover,
 .article-geometry.article-page-wrapper .glab-meta-row .article-heart-btn.hearted,
-.article-geometry.article-page-wrapper .glab-meta-row .article-share-btn:hover { background: none; border: 0; }
+.article-geometry.article-page-wrapper .glab-meta-row .article-share-btn:hover { background: none; border: 0; color: var(--art-accent); }
+/* Views and like sit a little apart; the share mark keeps the row gap. The row keeps one fixed
+   height whatever it shows (a count appearing after a like must never reflow the head). */
+.article-geometry.article-page-wrapper .glab-meta-row .article-engagement-left { gap: .9rem; }
+.article-geometry.article-page-wrapper .glab-meta-row .article-engagement-row,
+.article-geometry.article-page-wrapper .glab-meta-row .article-meta-views,
+.article-geometry.article-page-wrapper .glab-meta-row .article-heart-btn,
+.article-geometry.article-page-wrapper .glab-meta-row .article-share-btn { height: 18px; line-height: 18px; }
 
 /* Every figure in the blog geometry stays inside the reading column and is framed like a project
    figure: the image box is the column width, the drawing sits inside it (object-fit contain under
@@ -102,6 +110,7 @@
   .article-geometry.article-essays .glab-index li { display: inline; }
   .article-geometry.article-essays .glab-index li:not(:last-child)::after { content: "·"; margin: 0 .55rem; color: var(--text-muted); }
   .article-geometry.article-essays .glab-index a.article-toc-link { display: inline; font: italic 400 .98rem/1.6 var(--essay-body-font); color: var(--text-secondary); }
+  .article-geometry.article-essays .glab-index a.article-toc-link:hover,
   .article-geometry.article-essays .glab-index a.article-toc-link.is-active,
   .article-geometry.article-essays .glab-index a.article-toc-link.article-toc-link--active { font-weight: 400; text-decoration: underline; text-decoration-color: var(--art-accent); text-underline-offset: .22em; }
   .article-geometry.article-essays .glab-grid { gap: 2.4rem; }

@@ -11,6 +11,17 @@ export function slugify(value) {
     .replace(/['’]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
+// Translated siblings (`<slug>.es.md`) are served under a language prefix on the same slug:
+// /es/blog/essays/<slug>. English is the base and carries no prefix. An entry lists the
+// languages it has in `langs`; a prefixed url for a page without that language resolves to
+// the English page (so it redirects to the canonical English url instead of 404ing).
+export const CONTENT_LANGS = ['es'];
+const LANG_PREFIX = new RegExp(`^/(${CONTENT_LANGS.join('|')})(?=/|$)`);
+export const splitLang = pathname => {
+  const m = pathname.match(LANG_PREFIX);
+  return m ? { lang: m[1], rest: pathname.slice(m[0].length) || '/' } : { lang: null, rest: pathname };
+};
+
 export function createContentRoutes(entries) {
   const byIdentity = new Map();
   const byPath = new Map();
@@ -38,9 +49,21 @@ export function createContentRoutes(entries) {
       byPath.set(route, item);
     }
   }
-  const resolve = pathname => byPath.get(pathname.split(/[?#]/)[0].replace(/\/$/, ''));
-  const path = (category, id) => byIdentity.get(`${category}/${id}`)?.canonical
+  const resolve = pathname => {
+    const { lang, rest } = splitLang(pathname.split(/[?#]/)[0].replace(/\/$/, ''));
+    const item = byPath.get(rest);
+    if (!item) return undefined;
+    if (lang && (item.langs || []).includes(lang)) return { ...item, lang, canonical: `/${lang}${item.canonical}` };
+    return item;
+  };
+  const basePath = (category, id) => byIdentity.get(`${category}/${id}`)?.canonical
     || resolve(`${contentBase(category)}/${id}`)?.canonical || `${contentBase(category)}/${id}`;
+  // `lang` picks the translated url when that language exists for the page; otherwise the English one.
+  const path = (category, id, lang) => {
+    const base = basePath(category, id);
+    if (lang && lang !== 'en' && (byIdentity.get(`${category}/${id}`)?.langs || []).includes(lang)) return `/${lang}${base}`;
+    return base;
+  };
   const canonicalize = href => {
     const match = href.match(/^(https:\/\/infraphysics\.net)?(\/[^?#]*)(.*)$/);
     if (!match) return href;

@@ -2,7 +2,8 @@
 // Compact overview plus the expanded 2D/3D workspace. Topology and positions
 // stay stable while result, preview and selection layers change paint only.
 
-import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } from 'react';
+import React, { useState, useLayoutEffect, useEffect, useRef, useCallback, useMemo, Suspense } from 'react';
+import { createPortal } from 'react-dom';
 import * as THREE from 'three';
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation } from 'd3-force';
 import { initBrainIndex, type BrainIndex } from '../../lib/brainIndex';
@@ -11,8 +12,8 @@ import { buildGraphData, type GraphData, type GraphNode, type GraphLink, type Ed
 import { wikiRamp, wikiStepCss } from '../../lib/wikiAccent';
 import { estimateExport } from '../../lib/exportNotes';
 import { CopyConfirmModal } from '../wiki/CopyConfirmModal';
-import { RocketIcon } from '../icons';
-import { buildAdjacency, bfsDepths, shortestPath, componentOf, subtreeOf, edgeKey, dayIndex, isoFromDay } from './graphAnalysis';
+import { RocketIcon, FilterOffIcon } from '../icons';
+import { buildAdjacency, shortestPath, edgeKey, dayIndex, isoFromDay } from './graphAnalysis';
 import { TRAIL_SYNC_EVENT, type TrailItem } from '../../hooks/useNavigationTrail';
 import { useSharedPref, GRAPH_PINS_KEY, togglePinned } from '../../hooks/useGraphPrefs';
 
@@ -36,21 +37,20 @@ const POSITIONS_SYNC_EVENT = 'wiki-graph-positions-updated';
 const EDGE_VISIBILITY_STORAGE_KEY = 'wiki-graph-edge-visibility-v1';
 const EDGE_VISIBILITY_EVENT = 'wiki-graph-edge-visibility-change';
 
-// Reading aids. Shared preferences (radius, pins, freeze, node size) come from useGraphPrefs;
+// Reading aids. Shared preferences (pins, freeze, node size) come from useGraphPrefs;
 // expanded-only modes are local state cached across close and reopen (expandedCache).
 const TRAIL_STORAGE_KEY = 'wiki-navigation-trail-v1';
 type LensKind = 'orphans' | 'bridges' | 'cited' | 'trail';
 type SizeMode = 'centrality' | 'degree' | 'length';
-type Isolation = { kind: 'subtree' | 'component'; rootId: string } | null;
 const LENS_COLORS: Record<LensKind, string> = { orphans: '#f59e0b', bridges: '#fb7185', cited: '#22d3ee', trail: '#c4b5fd' };
 const LENS_LABELS: Record<LensKind, string> = { orphans: 'orphans', bridges: 'bridges', cited: 'cited by articles', trail: 'session trail' };
 const PATH_HEX = '#67e8f9';
-const PIN_HEX = '#f472b6';
+const PIN_HEX = '#ef4444';
 const MAX_PINS = 3;
 const AGE_OLD = [71, 85, 105];
 const AGE_NEW = [251, 191, 36];
 // The expanded workspace unmounts on close; its reading state and camera come back on the next open.
-type ExpandedCache = { lens: LensKind | null; pathMode: boolean; pathStart: string | null; pathEnd: string | null; isolation: Isolation; timelineOn: boolean; timelineDay: number | null; timelineAge: boolean; legendOpen: boolean; densityRadius: number; camera: CameraBookmark | null };
+type ExpandedCache = { lens: LensKind | null; pathMode: boolean; pathStart: string | null; pathEnd: string | null; timelineOn: boolean; timelineDay: number | null; timelineAge: boolean; legendOpen: boolean; densityRadius: number; camera: CameraBookmark | null };
 let expandedCache: ExpandedCache | null = null;
 const readTrail = (): TrailItem[] => { try { return JSON.parse(sessionStorage.getItem(TRAIL_STORAGE_KEY) ?? '[]'); } catch { return []; } };
 // Paints the panels open over the canvas into an image: a copy of the container's DOM with every computed
@@ -60,6 +60,14 @@ const rasterizeOverlay = (root: HTMLElement, width: number, height: number): Pro
     const clone = root.cloneNode(true) as HTMLElement;
     const sources = [root, ...Array.from(root.querySelectorAll<HTMLElement>('*'))];
     const targets = [clone, ...Array.from(clone.querySelectorAll<HTMLElement>('*'))];
+    // The timeline is viewport-aligned in a portal, but still belongs in image exports.
+    const timeline = root.querySelector('[aria-label="Graph tools"]') ? document.querySelector<HTMLElement>('[data-graph-timeline]') : null;
+    const timelineClone = timeline?.cloneNode(true) as HTMLElement | undefined;
+    if (timeline && timelineClone) {
+      clone.appendChild(timelineClone);
+      sources.push(timeline, ...Array.from(timeline.querySelectorAll<HTMLElement>('*')));
+      targets.push(timelineClone, ...Array.from(timelineClone.querySelectorAll<HTMLElement>('*')));
+    }
     sources.forEach((source, i) => {
       const target = targets[i];
       if (!target || !(source instanceof Element)) return;
@@ -68,6 +76,10 @@ const rasterizeOverlay = (root: HTMLElement, width: number, height: number): Pro
       for (let k = 0; k < computed.length; k += 1) { const property = computed[k]; css += `${property}:${computed.getPropertyValue(property)};`; }
       target.setAttribute('style', css);
     });
+    if (timeline && timelineClone) {
+      const bounds = timeline.getBoundingClientRect(), origin = root.getBoundingClientRect();
+      Object.assign(timelineClone.style, { position: 'absolute', left: `${bounds.left - origin.left}px`, top: `${bounds.top - origin.top}px`, bottom: 'auto', transform: 'none', width: `${bounds.width}px` });
+    }
     targets.forEach(target => { if (target instanceof HTMLCanvasElement) target.remove(); });
     clone.style.width = `${width}px`; clone.style.height = `${height}px`; clone.style.position = 'relative'; clone.style.margin = '0'; clone.style.background = 'transparent';
     const markup = new XMLSerializer().serializeToString(clone);
@@ -81,9 +93,28 @@ const rasterizeOverlay = (root: HTMLElement, width: number, height: number): Pro
 const darken = (css: string, factor: number) => {
   try { const color = new THREE.Color(css); color.multiplyScalar(Math.max(0, Math.min(1, factor))); return `#${color.getHexString()}`; } catch { return css; }
 };
-const PinIcon: React.FC = () => <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M6 11 2.5 4h7z" /></svg>;
+const ToolFlyout: React.FC<{ label: string; trigger: React.ReactNode; children: React.ReactNode }> = ({ label, trigger, children }) => {
+  const [anchor, setAnchor] = useState<{ left: number; top: number } | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const align = (event: React.SyntheticEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setAnchor({ left: rect.right, top: rect.top + rect.height / 2 });
+  };
+  useEffect(() => {
+    const close = () => setAnchor(null);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => { window.removeEventListener('scroll', close, true); window.removeEventListener('resize', close); };
+  }, []);
+  return <div className="mb-1 border-b border-th-hub-border pb-1" onMouseEnter={align} onMouseLeave={() => setAnchor(null)} onFocus={event => { if (!panelRef.current?.contains(event.target)) align(event); }} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget) && !panelRef.current?.contains(event.relatedTarget)) setAnchor(null); }}>
+    {trigger}
+    {anchor && createPortal(<div ref={panelRef} data-nav-quiet role="group" aria-label={label} className="fixed z-[70] -translate-y-1/2 pl-2" style={anchor}>
+      <div className="flex items-center gap-2 border border-th-hub-border bg-th-base px-2 py-1 font-mono shadow-xl">{children}</div>
+    </div>, document.body)}
+  </div>;
+};
+const PinIcon: React.FC = () => <svg width="15" height="15" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M6 11 2.5 4h7z" /></svg>;
 const PathIcon: React.FC = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="2.5" cy="11.5" r="1.5" /><circle cx="11.5" cy="2.5" r="1.5" /><path d="M4 11.5h3.5L10 2.5" /><circle cx="7.5" cy="11.5" r=".6" fill="currentColor" /></svg>;
-const IsolateIcon: React.FC<{ kind: 'subtree' | 'component' | null }> = ({ kind }) => <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5" strokeDasharray={kind ? undefined : '2 2'} /><circle cx="7" cy="7" r="2" fill={kind ? 'currentColor' : 'none'} />{kind === 'subtree' && <path d="M7 2.5V5M4 9.5l3-2.5 3 2.5" />}</svg>;
 const ClockIcon: React.FC = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5" /><path d="M7 4v3l2 1.5" /></svg>;
 const LensIcon: React.FC = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true"><circle cx="7" cy="7" r="5.5" /><path d="M7 1.5v11" /><path d="M7 1.5a5.5 5.5 0 0 1 0 11z" fill="currentColor" stroke="none" /></svg>;
 const MapIcon: React.FC = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" aria-hidden="true"><path d="M2.2 5.2c.4-1.6 1.9-2.6 3.6-2.5 1.2.1 1.8 1 3.1.9 1.6-.1 2.9.9 2.9 2.4 0 1.3-1 1.7-1.3 2.9-.3 1.3.6 2.5-.9 3.1-1.6.6-2.6-.9-4.2-.8-1.4.1-2.3.9-3.1-.2-.8-1.1.2-2.1.1-3.4-.1-.9-.5-1.5-.2-2.4z" fill="currentColor" fillOpacity=".18" /><circle cx="5.4" cy="6.3" r=".8" fill="currentColor" stroke="none" /><circle cx="8.8" cy="8.6" r=".8" fill="currentColor" stroke="none" /></svg>;
@@ -165,7 +196,15 @@ const seedConstellation = (graph: GraphData) => {
   graph.nodes.forEach(node => { const positioned = node as GraphNode & { x: number; y: number }; settledPositions.set(node.id, { x: positioned.x, y: positioned.y }); });
   return graph;
 };
-const prepareGraph = (graph: GraphData) => seedConstellation(graph);
+const prepareGraph = (graph: GraphData) => {
+  seedConstellation(graph);
+  graph.nodes.forEach(node => {
+    const positioned = node as GraphNode & { z?: number; vz?: number };
+    if (!Number.isFinite(positioned.z)) positioned.z = (hash01(node.id, 113) - .5) * 120;
+    positioned.vz = 0;
+  });
+  return graph;
+};
 
 const MiniGraph: React.FC<{
   /** Persistent result set produced by search/filter controls. */
@@ -210,6 +249,11 @@ const MiniGraph: React.FC<{
 }> = ({ resultIds, previewIds = null, searchQuery, cameraFocusIds = null, cameraAnchorIds = null, colorMode = 'centrality', expanded = false, activeRoot = '', onNodeOpen, activeNodeId, onNodeSelect, onAreaPreview, onMinimize, onExpand, onColorModeChange, onClearSelection, filtersActive = false, onResetFilters, onExpand3d, initialDimension = '2d', visitedIds = null, onClearVisited, articleUsage, previewNodeId = null }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
+  const [graphInstance, setGraphInstance] = useState<any>(null);
+  const attachGraph = useCallback((instance: any) => {
+    graphRef.current = instance;
+    setGraphInstance(() => instance);
+  }, []);
 
   // Data
   const [index, setIndex] = useState<BrainIndex | null>(cachedBrainIndex);
@@ -279,19 +323,16 @@ const MiniGraph: React.FC<{
   const [physicsSettling, setPhysicsSettling] = useState(false);
 
   // Reading aids. Shared preferences survive reloads and stay in step between the two canvases;
-  // modes that only make sense on one canvas (path, isolation, timeline, lenses) are local state.
-  const [hopRadius, setHopRadius] = useSharedPref<number>('wiki-graph-hop-radius', 0);
+  // modes that only make sense on one canvas (path, timeline, lenses) are local state.
   const [frozen, setFrozen] = useSharedPref<boolean>('wiki-graph-frozen', false);
   const [sizeMode, setSizeMode] = useSharedPref<SizeMode>('wiki-graph-size-mode', 'centrality');
   const [pins, setPins] = useSharedPref<string[]>(GRAPH_PINS_KEY, []);
-  const [showPins, setShowPins] = useSharedPref<boolean>('wiki-graph-show-pins', true);
   const restored = expanded ? expandedCache : null;
   const [lens, setLens] = useState<LensKind | null>(restored?.lens ?? null);
   const [lensOpen, setLensOpen] = useState(false);
   const [pathMode, setPathMode] = useState(restored?.pathMode ?? false);
   const [pathStart, setPathStart] = useState<string | null>(restored?.pathStart ?? null);
   const [pathEnd, setPathEnd] = useState<string | null>(restored?.pathEnd ?? null);
-  const [isolation, setIsolation] = useState<Isolation>(restored?.isolation ?? null);
   const [timelineOn, setTimelineOn] = useState(restored?.timelineOn ?? false);
   const [timelineDay, setTimelineDay] = useState<number | null>(restored?.timelineDay ?? null);
   const [timelineAge, setTimelineAge] = useState(restored?.timelineAge ?? false);
@@ -304,8 +345,8 @@ const MiniGraph: React.FC<{
   const toastTimerRef = useRef<number | null>(null);
   const restoreCameraRef = useRef<CameraBookmark | null>(restored?.camera ?? null);
   // Closing the workspace keeps everything: the next open starts where this one ended.
-  const cacheRef = useRef<Omit<ExpandedCache, 'camera'>>({ lens, pathMode, pathStart, pathEnd, isolation, timelineOn, timelineDay, timelineAge, legendOpen, densityRadius });
-  cacheRef.current = { lens, pathMode, pathStart, pathEnd, isolation, timelineOn, timelineDay, timelineAge, legendOpen, densityRadius };
+  const cacheRef = useRef<Omit<ExpandedCache, 'camera'>>({ lens, pathMode, pathStart, pathEnd, timelineOn, timelineDay, timelineAge, legendOpen, densityRadius });
+  cacheRef.current = { lens, pathMode, pathStart, pathEnd, timelineOn, timelineDay, timelineAge, legendOpen, densityRadius };
   const dimensionRef = useRef(dimension);
   dimensionRef.current = dimension;
   const widthRef = useRef(containerWidth), heightRef = useRef(containerHeight);
@@ -547,7 +588,7 @@ const MiniGraph: React.FC<{
       });
       setOffscreenIndicators([...buckets].map(([side, bucket]) => ({ side, count: bucket.count, position: bucket.sum / bucket.count })));
     });
-  }, [containerHeight, containerWidth, dimension, expanded, filtered]);
+  }, [containerHeight, containerWidth, dimension, expanded, filtered, graphInstance]);
 
   useEffect(() => {
     if (!expanded || dimension !== '2d') { setOffscreenIndicators([]); return; }
@@ -606,30 +647,21 @@ const MiniGraph: React.FC<{
   // ── Reading aids: derived sets ──────────────────────────────────────────
   const adjacency = useMemo(() => filtered ? buildAdjacency(filtered.links, visibility) : new Map<string, string[]>(), [filtered, visibility]);
   const focusId = expanded ? selectedId : (activeNodeId ?? selectedId);
-  // Neighbourhood radius (mini): depth of every node within `hopRadius` hops of the open note.
-  const hopDepths = useMemo(() => !expanded && hopRadius > 0 && focusId ? bfsDepths(adjacency, focusId, hopRadius) : null, [adjacency, expanded, focusId, hopRadius]);
   // Shortest path (expanded): to the pinned end, or live to the hovered node once a start is chosen.
   const pathTarget = pathEnd ?? (pathMode && pathStart ? hoveredId : null);
   const pathIds = useMemo(() => pathStart && pathTarget && pathTarget !== pathStart ? shortestPath(adjacency, pathStart, pathTarget) : null, [adjacency, pathStart, pathTarget]);
   const pathSet = useMemo(() => pathIds ? new Set(pathIds) : null, [pathIds]);
   const pathEdges = useMemo(() => { const keys = new Set<string>(); pathIds?.forEach((id, i) => { if (i) keys.add(edgeKey(pathIds[i - 1], id)); }); return keys; }, [pathIds]);
-  const pathUnreachable = Boolean(pathStart && pathEnd && pathEnd !== pathStart && !pathIds);
-  // Isolation (expanded): only the address subtree or the connected component of a node stays drawn.
-  const isolationIds = useMemo(() => {
-    if (!isolation || !filtered) return null;
-    return isolation.kind === 'subtree' ? subtreeOf(filtered.links, isolation.rootId) : componentOf(adjacency, isolation.rootId);
-  }, [adjacency, filtered, isolation]);
   // Timeline (expanded): notes dated after the cutoff are not drawn.
   const timelineCutoff = timelineOn && timelineDay !== null ? timelineDay : null;
   const hiddenIds = useMemo(() => {
     const hidden = new Set<string>();
-    if (!filtered || (!isolationIds && timelineCutoff === null)) return hidden;
+    if (!filtered || timelineCutoff === null) return hidden;
     filtered.nodes.forEach(node => {
-      if (isolationIds && !isolationIds.has(node.id)) { hidden.add(node.id); return; }
       if (timelineCutoff !== null) { const day = dayById.get(node.id); if (day !== undefined && day > timelineCutoff) hidden.add(node.id); }
     });
     return hidden;
-  }, [dayById, filtered, isolationIds, timelineCutoff]);
+  }, [dayById, filtered, timelineCutoff]);
   const visibleCount = (filtered?.nodes.length ?? 0) - hiddenIds.size;
   // Lenses single nodes out. Orphans and bridges come from the build's island analysis, cited from the
   // articles' body links, trail from this tab's visits. The mini map only knows the trail lens.
@@ -651,11 +683,10 @@ const MiniGraph: React.FC<{
   // Per-node alpha multiplier from the reading aids: unrelated nodes recede, they never vanish.
   const viewDim = useCallback((id: string) => {
     let factor = 1;
-    if (hopDepths && !hopDepths.has(id)) factor *= .2;
     if (pathSet && !pathSet.has(id)) factor *= .16;
     if (lensIds && !lensIds.has(id)) factor *= .3;
     return factor;
-  }, [hopDepths, lensIds, pathSet]);
+  }, [lensIds, pathSet]);
   const ageColor = useCallback((id: string) => {
     if (!dayRange) return null;
     const day = dayById.get(id);
@@ -870,14 +901,13 @@ const MiniGraph: React.FC<{
       if (imagePrompt) { event.preventDefault(); event.stopImmediatePropagation(); setImagePrompt(false); return; }
       if (lensOpen) { event.preventDefault(); event.stopImmediatePropagation(); setLensOpen(false); return; }
       if (pathMode) { event.preventDefault(); event.stopImmediatePropagation(); setPathMode(false); setPathStart(null); setPathEnd(null); return; }
-      if (isolation) { event.preventDefault(); event.stopImmediatePropagation(); setIsolation(null); return; }
       if (timelineOn) { event.preventDefault(); event.stopImmediatePropagation(); setTimelineOn(false); setTimelinePlaying(false); return; }
       if (lens) { event.preventDefault(); event.stopImmediatePropagation(); setLens(null); return; }
       if (legendOpen) { event.preventDefault(); event.stopImmediatePropagation(); setLegendOpen(false); }
     };
     window.addEventListener('keydown', onEscape, true);
     return () => window.removeEventListener('keydown', onEscape, true);
-  }, [dragSelect, expanded, imagePrompt, isolation, legendOpen, lens, lensOpen, multiSelected.size, pathMode, selectionMode, timelineOn]);
+  }, [dragSelect, expanded, imagePrompt, legendOpen, lens, lensOpen, multiSelected.size, pathMode, selectionMode, timelineOn]);
 
   const handlePointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     if (selectionMode && dimension === '2d') {
@@ -986,7 +1016,7 @@ const MiniGraph: React.FC<{
     instance.zoom?.(zoom, duration);
     instance.centerAt?.((minX + maxX) / 2, (minY + maxY) / 2, duration);
     return true;
-  }, [containerHeight, containerWidth, dimension, expanded, filtered]);
+  }, [containerHeight, containerWidth, dimension, expanded, filtered, graphInstance]);
   useEffect(() => {
     if (!filtered?.nodes.length) return;
     let innerFrame = 0;
@@ -1105,7 +1135,7 @@ const MiniGraph: React.FC<{
 
   // ── Reading aids: camera, links, images, pins ──────────────────────────
   const nodeById = useMemo(() => new Map((filtered?.nodes ?? []).map(node => [node.id, node as GraphNode & { x?: number; y?: number }])), [filtered]);
-  // Frame a set of nodes in either renderer. Used by the follow lock, isolation, paths and shared links.
+  // Frame a set of nodes in either renderer. Used by the follow lock, paths and shared links.
   const frameIds = useCallback((ids: Set<string>, duration: number) => {
     const graph = graphRef.current;
     if (!graph || !filtered || ids.size === 0) return;
@@ -1118,8 +1148,7 @@ const MiniGraph: React.FC<{
     const zoom = Math.min(expanded ? 2.6 : 1.9, Math.max(.12, Math.min((containerWidth * (expanded ? .7 : .66)) / spreadX, (containerHeight * (expanded ? .66 : .6)) / spreadY)));
     graph.centerAt?.((minX + maxX) / 2, (minY + maxY) / 2, duration);
     graph.zoom?.(zoom, duration);
-  }, [containerHeight, containerWidth, dimension, expanded, filtered]);
-  useEffect(() => { if (isolationIds) frameIds(isolationIds, 600); }, [frameIds, isolationIds]);
+  }, [containerHeight, containerWidth, dimension, expanded, filtered, graphInstance]);
   useEffect(() => { if (pathEnd && pathSet) frameIds(pathSet, 500); }, [frameIds, pathEnd, pathSet]);
   // Timeline playback: a short sweep from the first note to the last.
   useEffect(() => {
@@ -1134,10 +1163,6 @@ const MiniGraph: React.FC<{
     if (dayRange && timelineDay === null) setTimelineDay(dayRange.max);
     setTimelineOn(true);
   }, [dayRange, timelineDay, timelineOn]);
-  const cycleIsolation = useCallback(() => {
-    if (!selectedId) return;
-    setIsolation(current => !current || current.rootId !== selectedId ? { kind: 'subtree', rootId: selectedId } : current.kind === 'subtree' ? { kind: 'component', rootId: selectedId } : null);
-  }, [selectedId]);
   const togglePathMode = useCallback(() => {
     if (pathMode) { setPathMode(false); setPathStart(null); setPathEnd(null); return; }
     setPathMode(true);
@@ -1151,7 +1176,7 @@ const MiniGraph: React.FC<{
     if (!id) return;
     setPins(current => togglePinned(current, id));
   }, [focusId, setPins]);
-  // Snapshot of the 2D canvas: the whole view, or the box around the area selection or the isolated
+  // Snapshot of the 2D canvas: the whole view, or the box around the area selection or the selected
   // notes. With the interface, the open panels are painted on top from a styled copy of the DOM.
   const copyViewImage = useCallback(async (withInterface: boolean) => {
     const container = containerRef.current;
@@ -1160,7 +1185,7 @@ const MiniGraph: React.FC<{
     if (!container || !canvas || !graph || dimension !== '2d' || !filtered) return;
     const scale = canvas.width / Math.max(1, containerWidth);
     let left = 0, top = 0, right = containerWidth, bottom = containerHeight;
-    const focus = multiSelected.size ? multiSelected : isolationIds;
+    const focus = multiSelected.size ? multiSelected : null;
     if (focus?.size && !withInterface) {
       const points = filtered.nodes.flatMap(node => {
         if (!focus.has(node.id)) return [];
@@ -1201,7 +1226,7 @@ const MiniGraph: React.FC<{
       window.setTimeout(() => URL.revokeObjectURL(url), 2000);
       showToast('image downloaded');
     }
-  }, [containerHeight, containerWidth, dimension, filtered, isolationIds, multiSelected, showToast]);
+  }, [containerHeight, containerWidth, dimension, filtered, multiSelected, showToast]);
   // Session trail (2D): a dashed line through the notes of this tab's trail, in visiting order.
   const renderOverlay = useCallback((ctx: CanvasRenderingContext2D, globalScale: number) => {
     if (activeLens !== 'trail' || trailItems.length < 2) return;
@@ -1271,7 +1296,7 @@ const MiniGraph: React.FC<{
       connectedIds.add(typeof link.target === 'object' ? link.target.id : link.target);
     }
     instance.zoomToFit?.(420, occupiedLeft + 52, (object: any) => Boolean(object?.id && connectedIds.has(object.id)));
-  }, [containerHeight, containerWidth, dimension, expanded, filtered]);
+  }, [containerHeight, containerWidth, dimension, expanded, filtered, graphInstance]);
 
   const inspectNode = useCallback((node: GraphNode) => {
     if (expanded) { selectOrOpen(node); return; }
@@ -1337,7 +1362,7 @@ const MiniGraph: React.FC<{
         // old model, whose tick budget was already exhausted.
         if (physicsTouchedRef.current) {
           physicsTouchedRef.current = false;
-          if (!frozen) fg.d3ReheatSimulation?.();
+          if (!frozen) { setPhysicsSettling(true); requestAnimationFrame(() => fg.d3ReheatSimulation?.()); }
         }
         // On entry the restored layout was settled under whichever edge mode
         // was active when it was saved (or under the content-mode seed), and
@@ -1352,7 +1377,7 @@ const MiniGraph: React.FC<{
       });
     });
     return () => { cancelAnimationFrame(frame); cancelAnimationFrame(innerFrame); };
-  }, [dimension, expanded, filtered, frozen, physics, visibility.body, visibility.hierarchy, visibility.interaction]);
+  }, [dimension, expanded, filtered, graphInstance, frozen, physics, visibility.body, visibility.hierarchy, visibility.interaction]);
 
   const heatGraph = useCallback(() => {
     if (frozen) return;
@@ -1360,6 +1385,14 @@ const MiniGraph: React.FC<{
     // Let React commit the non-zero tick budget before restarting the engine.
     requestAnimationFrame(() => graphRef.current?.d3ReheatSimulation?.());
   }, [frozen, physicsSettling]);
+  useLayoutEffect(() => {
+    if (!frozen) return;
+    graphRef.current?.cooldownTicks?.(0);
+    filtered?.nodes.forEach(node => {
+      const moving = node as GraphNode & { vx?: number; vy?: number; vz?: number };
+      moving.vx = 0; moving.vy = 0; moving.vz = 0;
+    });
+  }, [frozen, filtered, dimension]);
   // Leaving the frozen state settles whatever was dragged while frozen.
   const frozenMountRef = useRef(true);
   useEffect(() => {
@@ -1391,7 +1424,7 @@ const MiniGraph: React.FC<{
       });
     });
     return () => { cancelAnimationFrame(frame); cancelAnimationFrame(innerFrame); };
-  }, [containerHeight, containerWidth, dimension, expanded]);
+  }, [containerHeight, containerWidth, dimension, expanded, graphInstance]);
 
   // Highlight set
   const highlightSet = useMemo(() => previewIds ?? resultIds ?? new Set<string>(), [previewIds, resultIds]);
@@ -1572,16 +1605,16 @@ const MiniGraph: React.FC<{
       ctx.beginPath(); ctx.arc(n.x, n.y, r + Math.max(1.2, 2 / globalScale), 0, 2 * Math.PI);
       ctx.strokeStyle = SELECT_HEX; ctx.globalAlpha = .95; ctx.lineWidth = Math.max(.9, 1.5 / globalScale); ctx.stroke();
     }
-    if (showPins && pinSet.has(n.id)) {
-      const size = Math.max(2.4, 4.2 / globalScale);
+    if (pinSet.has(n.id)) {
+      const size = Math.max(3.8, 6.8 / globalScale);
       ctx.beginPath(); ctx.moveTo(n.x, n.y - r - size * .35); ctx.lineTo(n.x - size * .55, n.y - r - size * 1.35); ctx.lineTo(n.x + size * .55, n.y - r - size * 1.35); ctx.closePath();
       ctx.fillStyle = PIN_HEX; ctx.globalAlpha = 1; ctx.fill();
-      ctx.font = `${Math.max(3, 5 / globalScale)}px ui-monospace, monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.font = `600 ${Math.max(4, 6.5 / globalScale)}px ui-monospace, monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
       ctx.fillText(String(pins.indexOf(n.id) + 1), n.x, n.y - r - size * 1.45);
     }
 
     ctx.globalAlpha = 1;
-  }, [activeLens, ageColor, articleUsage, backlinkDepthById, baseCssById, baseRgbById, expanded, hiddenIds, hoveredId, lensIds, multiSelected, nodeRadiusById, nodeVisualColor, pathSet, pathStart, pathTarget, pinSet, pins, previewIds, previewNodeId, resultIds, rootHexByName, selectedId, showPins, timelineAge, viewDim]);
+  }, [activeLens, ageColor, articleUsage, backlinkDepthById, baseCssById, baseRgbById, expanded, hiddenIds, hoveredId, lensIds, multiSelected, nodeRadiusById, nodeVisualColor, pathSet, pathStart, pathTarget, pinSet, pins, previewIds, previewNodeId, resultIds, rootHexByName, selectedId, timelineAge, viewDim]);
 
   const nodePointerAreaPaint = useCallback((node: any, color: string, ctx: CanvasRenderingContext2D) => {
     const n = node as GraphNode & { x: number; y: number };
@@ -1723,7 +1756,7 @@ const MiniGraph: React.FC<{
     let inner = 0;
     const outer = requestAnimationFrame(() => { inner = requestAnimationFrame(() => { syncEdgePositions(); window.setTimeout(syncEdgePositions, 400); }); });
     return () => { cancelAnimationFrame(outer); cancelAnimationFrame(inner); };
-  }, [dimension, expanded, filtered, syncEdgePositions]);
+  }, [dimension, expanded, filtered, graphInstance, syncEdgePositions]);
 
 
   if (!filtered) {
@@ -1757,7 +1790,7 @@ const MiniGraph: React.FC<{
       }>
         <div className="h-full">
           {dimension === '2d' || !expanded ? <ForceGraph2D
-            ref={graphRef}
+            ref={attachGraph}
             graphData={filtered}
             width={containerWidth}
             height={containerHeight}
@@ -1766,7 +1799,7 @@ const MiniGraph: React.FC<{
             nodeLabel={() => ''}
             linkCanvasObject={linkCanvasObject}
             onRenderFramePost={renderOverlay}
-            onEngineStop={() => { if (topologyChangedRef.current) { topologyChangedRef.current = false; if (expanded ? !topologyCameraCancelledRef.current : !miniCameraAutomationBlockedRef.current) { if (expanded) centerGraph(); else frameVisibleCore(graphRef.current, 650); } topologyCameraCancelledRef.current = false; } else frameGraph(); updateOffscreenIndicators(); saveSettledLayout(); setPhysicsSettling(false); }}
+            onEngineStop={() => { if (frozen) { setPhysicsSettling(false); return; } if (topologyChangedRef.current) { topologyChangedRef.current = false; if (expanded ? !topologyCameraCancelledRef.current : !miniCameraAutomationBlockedRef.current) { if (expanded) centerGraph(); else frameVisibleCore(graphRef.current, 650); } topologyCameraCancelledRef.current = false; } else frameGraph(); updateOffscreenIndicators(); saveSettledLayout(); setPhysicsSettling(false); }}
             onZoomEnd={updateOffscreenIndicators}
             onNodeClick={(node: any) => !expanded && miniAnalysisEnabled && inspectNode(node as GraphNode)}
             onBackgroundClick={clearSelection}
@@ -1776,15 +1809,18 @@ const MiniGraph: React.FC<{
             d3AlphaDecay={0.035}
             d3VelocityDecay={physics.damping}
             warmupTicks={0}
-            cooldownTicks={physicsSettling && !frozen ? Infinity : 0}
-            enableNodeDrag={expanded && !selectionMode}
+            cooldownTicks={!frozen && (expanded || physicsSettling) ? Infinity : 0}
+            cooldownTime={Infinity}
+            d3AlphaMin={expanded ? 0 : 0.001}
+            d3AlphaTarget={expanded && !frozen ? 0.08 : 0}
+            enableNodeDrag={expanded && !selectionMode && !frozen}
             onNodeDrag={heatGraph}
             onNodeDragEnd={() => { heatGraph(); saveSettledLayout(); }}
             enableZoomInteraction={true}
             enablePanInteraction={!selectionMode}
             backgroundColor="transparent"
           /> : <ForceGraph3D
-            ref={graphRef}
+            ref={attachGraph}
             graphData={filtered}
             width={containerWidth}
             height={containerHeight}
@@ -1798,7 +1834,7 @@ const MiniGraph: React.FC<{
             linkColor={linkColor3d}
             linkVisibility={false}
             onEngineTick={syncEdgePositions}
-            onEngineStop={() => { syncEdgePositions(); if (topologyChangedRef.current) { topologyChangedRef.current = false; if (!topologyCameraCancelledRef.current) centerGraph(); topologyCameraCancelledRef.current = false; } else frameGraph(); saveSettledLayout(); setPhysicsSettling(false); }}
+            onEngineStop={() => { if (frozen) { setPhysicsSettling(false); return; } syncEdgePositions(); if (topologyChangedRef.current) { topologyChangedRef.current = false; if (!topologyCameraCancelledRef.current) centerGraph(); topologyCameraCancelledRef.current = false; } else frameGraph(); saveSettledLayout(); setPhysicsSettling(false); }}
             onNodeClick={(node: any) => inspectNode(node as GraphNode)}
             onBackgroundClick={clearSelection}
             onNodeHover={(node: any) => setHoveredId(node ? (node as GraphNode).id : null)}
@@ -1806,8 +1842,11 @@ const MiniGraph: React.FC<{
             d3AlphaDecay={0.035}
             d3VelocityDecay={physics.damping}
             warmupTicks={0}
-            cooldownTicks={physicsSettling && !frozen ? Infinity : 0}
-            enableNodeDrag={!selectionMode}
+            cooldownTicks={!frozen && (expanded || physicsSettling) ? Infinity : 0}
+            cooldownTime={Infinity}
+            d3AlphaMin={expanded ? 0 : 0.001}
+            d3AlphaTarget={expanded && !frozen ? 0.08 : 0}
+            enableNodeDrag={!selectionMode && !frozen}
             onNodeDrag={heatGraph}
             onNodeDragEnd={() => { heatGraph(); saveSettledLayout(); }}
             enableNavigationControls={!selectionMode}
@@ -1817,9 +1856,8 @@ const MiniGraph: React.FC<{
           />}
         </div>
         {!expanded && <nav aria-label="Mini graph tools" className="absolute bottom-1 left-1 z-20 flex items-center gap-px border border-th-hub-border bg-th-base p-0.5 font-mono shadow-md">
-          {filtersActive && onResetFilters && <><button type="button" title="Reset filters" aria-label="Reset filters" onClick={onResetFilters} className="graph-reset graph-reset-mini">⟲ reset</button><i className="mx-0.5 h-3 w-px bg-th-hub-border" /></>}
-          {miniCameraDirty && <button type="button" title="Return to full graph" onClick={() => { miniCameraAutomationBlockedRef.current = false; frameVisibleCore(graphRef.current, 950); setMiniCameraDirty(false); }} className="grid h-5 w-5 place-items-center text-[12px] text-th-muted transition-colors hover:bg-th-surface hover:text-violet-300">⌖</button>}
-          <i className="mx-0.5 h-3 w-px bg-th-hub-border" />
+          {filtersActive && onResetFilters && <button type="button" title="Reset filters" aria-label="Reset filters" onClick={onResetFilters} className="graph-reset graph-reset-mini"><FilterOffIcon /></button>}
+          {miniCameraDirty && <><button type="button" title="Return to full graph" onClick={() => { miniCameraAutomationBlockedRef.current = false; frameVisibleCore(graphRef.current, 950); setMiniCameraDirty(false); }} className="grid h-5 w-5 place-items-center text-[12px] text-th-muted transition-colors hover:bg-th-surface hover:text-violet-300">⌖</button><i className="mx-0.5 h-3 w-px bg-th-hub-border" /></>}
           {(['content', 'hierarchy'] as const).map(mode => <button
             key={mode}
             type="button"
@@ -1829,11 +1867,6 @@ const MiniGraph: React.FC<{
             className={`relative grid h-5 w-5 place-items-center transition-[opacity,background-color] hover:bg-th-surface ${(mode === 'hierarchy' ? visibility.hierarchy : visibility.body || visibility.interaction) ? 'opacity-100' : 'opacity-25'}`}
           ><i className="block h-px w-3.5" style={{ backgroundColor: mode === 'hierarchy' ? EDGE_COLORS.hierarchy : EDGE_COLORS.body, transform: mode === 'hierarchy' ? 'rotate(35deg)' : undefined }} /><span className="sr-only">{mode}</span></button>)}
           {onExpand && <><i className="mx-0.5 h-3 w-px bg-th-hub-border" /><button type="button" onClick={onExpand3d} title="Expand in 3D" aria-label="Expand in 3D" className="grid h-5 min-w-5 place-items-center px-1 text-[8px] font-semibold tracking-[.08em] text-th-muted transition-colors hover:bg-th-surface hover:text-violet-300">3D</button>{onExpand3d && <button type="button" onClick={onExpand} title="Expand graph" aria-label="Expand graph" className="grid h-5 w-5 place-items-center text-th-muted transition-colors hover:bg-th-surface hover:text-violet-300"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 1h4v4M5 11H1V7M11 1L7 5M1 11l4-4" /></svg></button>}</>}
-        </nav>}
-        {/* Mini: neighbourhood radius around the open note, and whether pinned notes are shown. */}
-        {!expanded && <nav aria-label="Mini graph reading aids" className="absolute bottom-1 right-1 z-20 flex items-center gap-px border border-th-hub-border bg-th-base p-0.5 font-mono shadow-md">
-          <button type="button" aria-pressed={hopRadius > 0} disabled={!focusId} title={!focusId ? 'Open a note to use the neighbourhood radius' : hopRadius ? `Neighbourhood: ${hopRadius} hop${hopRadius > 1 ? 's' : ''} around the open note. Click to widen, r3 wraps to off` : 'Neighbourhood radius: off. Click for 1 hop around the open note'} onClick={() => setHopRadius((hopRadius + 1) % 4)} className={`grid h-5 min-w-5 place-items-center px-1 text-[8px] font-semibold tracking-[.06em] transition-colors disabled:opacity-30 ${hopRadius ? 'bg-violet-400/15 text-violet-300' : 'text-th-muted hover:bg-th-surface hover:text-violet-300'}`}>{hopRadius ? `r${hopRadius}` : 'r·'}</button>
-          <button type="button" aria-pressed={showPins} disabled={pins.length === 0} title={pins.length === 0 ? 'No pinned notes yet (pin from a note card or the expanded graph)' : showPins ? `Hide the ${pins.length} pinned note${pins.length > 1 ? 's' : ''}` : `Show the ${pins.length} pinned note${pins.length > 1 ? 's' : ''}`} onClick={() => setShowPins(!showPins)} className={`grid h-5 w-5 place-items-center transition-colors disabled:opacity-30 ${showPins && pins.length ? 'bg-pink-400/15 text-pink-300' : 'text-th-muted hover:bg-th-surface hover:text-pink-300'}`}><PinIcon /></button>
         </nav>}
         {expanded && <nav aria-label="Graph tools" className="absolute left-4 top-[3.6rem] z-50 flex max-h-[calc(100%-5rem)] w-11 flex-col overflow-y-auto border border-th-hub-border bg-th-base p-1 font-mono shadow-xl">
           <div className="mb-1 border-b border-th-hub-border pb-1">
@@ -1846,29 +1879,25 @@ const MiniGraph: React.FC<{
           </div>}
           <button type="button" title="Center graph" onClick={centerGraph} className="mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 text-base leading-none text-th-muted hover:bg-th-surface hover:text-violet-300">⌖</button>
           {dimension === '2d' && <button type="button" title="Select area and copy notes" onClick={() => { setSelectionMode(value => !value); setMiniAnalysisEnabled(false); setDensityAreaIds(null); onAreaPreview?.(null); setHoveredId(null); setDragSelect(null); selectionStartRef.current = null; selectionRectRef.current = null; }} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 ${selectionMode ? 'bg-cyan-400/15 text-cyan-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><CopyIcon /></button>}
-          {dimension === '2d' && <button type="button" aria-pressed={miniAnalysisEnabled} title="Inspect local density" onClick={() => { setMiniAnalysisEnabled(value => { const next = !value; if (!next) { setDensityAreaIds(null); onAreaPreview?.(null); } return next; }); setSelectionMode(false); setDragSelect(null); }} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 ${miniAnalysisEnabled ? 'bg-violet-400/15 text-violet-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><AreaInspectIcon /></button>}
-          {/* Reading aids: node size, path, isolation, timeline, lenses, legend, image, link, freeze. */}
+          {dimension === '2d' && <ToolFlyout label="Density area" trigger={<button type="button" aria-pressed={miniAnalysisEnabled} title="Inspect local density" onClick={() => { setMiniAnalysisEnabled(value => { const next = !value; if (!next) { setDensityAreaIds(null); onAreaPreview?.(null); } return next; }); setSelectionMode(false); setDragSelect(null); }} className={`grid h-8 w-full place-items-center ${miniAnalysisEnabled ? 'bg-violet-400/15 text-violet-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><AreaInspectIcon /></button>}>
+          <span className="text-[8px] uppercase tracking-[.1em] text-th-muted">area</span>
+          <input type="range" min={16} max={140} step={2} value={densityRadius} onChange={event => setDensityRadius(Number(event.target.value))} className="wiki-graph-range w-28" aria-label="Density study radius" />
+          <span className="w-8 text-right text-[9px] tabular-nums text-violet-300">{densityRadius}px</span>
+          </ToolFlyout>}
+          {/* Reading aids: node size, path, timeline, lenses, legend, image, link, freeze. */}
           <div className="mb-1 border-b border-th-hub-border pb-1">
             {(['centrality', 'degree', 'length'] as const).map(mode => <button key={mode} type="button" aria-pressed={sizeMode === mode} title={mode === 'centrality' ? 'Node size: centrality' : mode === 'degree' ? 'Node size: number of connections' : 'Node size: length of the note'} onClick={() => setSizeMode(mode)} className={`mb-0.5 grid h-8 w-full place-items-center ${sizeMode === mode ? 'bg-violet-400/15 text-violet-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><SizeIcon mode={mode} /><span className="sr-only">{mode}</span></button>)}
           </div>
           <button type="button" aria-pressed={pathMode} title={pathMode ? 'Leave path mode (Esc)' : 'Shortest path: click a start note, then an end note. Hovering previews the route'} onClick={togglePathMode} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 ${pathMode ? 'bg-cyan-400/15 text-cyan-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><PathIcon /></button>
-          <button type="button" aria-pressed={!!isolation} disabled={!selectedId} title={!selectedId ? 'Select a note to isolate its branch' : !isolation || isolation.rootId !== selectedId ? 'Isolate: keep only the address subtree of the selected note' : isolation.kind === 'subtree' ? 'Isolate: widen to the whole connected component' : 'Show the whole graph again'} onClick={cycleIsolation} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 disabled:opacity-30 ${isolation ? 'bg-amber-400/15 text-amber-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><IsolateIcon kind={isolation?.kind ?? null} /></button>
           <button type="button" aria-pressed={timelineOn} disabled={!dayRange} title={timelineOn ? 'Close the timeline (Esc)' : 'Timeline: see the graph as it was on a date, or colour notes by age'} onClick={toggleTimeline} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 disabled:opacity-30 ${timelineOn ? 'bg-amber-400/15 text-amber-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><ClockIcon /></button>
           <button type="button" aria-pressed={!!lens} aria-expanded={lensOpen} title="Lenses: orphans, bridges, notes cited by articles, this session's trail" onClick={() => setLensOpen(open => !open)} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 ${lens ? 'text-th-primary' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`} style={lens ? { color: LENS_COLORS[lens], backgroundColor: `color-mix(in srgb, ${LENS_COLORS[lens]} 15%, transparent)` } : undefined}><LensIcon /></button>
           <button type="button" aria-pressed={legendOpen} title={legendOpen ? 'Hide the legend' : 'Legend: what the colours and rings mean'} onClick={() => setLegendOpen(open => !open)} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 ${legendOpen ? 'bg-violet-400/15 text-violet-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><MapIcon /></button>
-          <div className="mb-1 border-b border-th-hub-border pb-1">
-            <button type="button" aria-pressed={!!selectedId && pinSet.has(selectedId)} disabled={!selectedId} title={!selectedId ? 'Select a note to pin it' : pinSet.has(selectedId) ? 'Unpin the selected note' : `Pin the selected note (up to ${MAX_PINS}, numbered)`} onClick={togglePin} className={`mb-0.5 grid h-8 w-full place-items-center disabled:opacity-30 ${selectedId && pinSet.has(selectedId) ? 'bg-pink-400/15 text-pink-300' : 'text-th-muted hover:bg-th-surface hover:text-pink-300'}`}><PinIcon /></button>
-            <button type="button" aria-pressed={showPins} disabled={pins.length === 0} title={pins.length === 0 ? 'No pinned notes yet' : showPins ? `Hide the ${pins.length} pinned note${pins.length > 1 ? 's' : ''}` : `Show the ${pins.length} pinned note${pins.length > 1 ? 's' : ''}`} onClick={() => setShowPins(!showPins)} className={`grid h-8 w-full place-items-center text-[8px] font-semibold uppercase tracking-[.08em] disabled:opacity-30 ${showPins && pins.length ? 'text-pink-300' : 'text-th-muted hover:bg-th-surface hover:text-pink-300'}`}>{showPins ? 'on' : 'off'}</button>
-          </div>
+          <ToolFlyout label="Pinned notes" trigger={<button type="button" aria-pressed={!!selectedId && pinSet.has(selectedId)} disabled={!selectedId} title={!selectedId ? 'Select a note to pin it' : pinSet.has(selectedId) ? 'Unpin the selected note' : `Pin the selected note (up to ${MAX_PINS}, numbered)`} onClick={togglePin} className={`grid h-8 w-full place-items-center disabled:opacity-30 ${selectedId && pinSet.has(selectedId) ? 'bg-red-400/15 text-red-400' : 'text-th-muted hover:bg-th-surface hover:text-red-400'}`}><PinIcon /></button>}>
+            <button type="button" disabled={pins.length === 0} onClick={() => setPins([])} aria-label="Clear all pins" title="Clear all pins" className="h-8 whitespace-nowrap px-2 text-[9px] text-red-400 hover:bg-th-surface disabled:opacity-30">Clear all</button>
+          </ToolFlyout>
           {dimension === '2d' && <button type="button" aria-expanded={imagePrompt} title="Copy as an image" onClick={() => setImagePrompt(open => !open)} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 ${imagePrompt ? 'bg-violet-400/15 text-violet-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><CameraIcon /></button>}
           <button type="button" aria-pressed={frozen} title={frozen ? 'Resume the layout physics' : 'Freeze the layout so nothing drifts'} onClick={() => setFrozen(!frozen)} className={`grid h-8 w-full place-items-center text-sm leading-none ${frozen ? 'bg-sky-400/15 text-sky-300' : 'text-th-muted hover:bg-th-surface hover:text-sky-300'}`}>❄</button>
         </nav>}
-        {/* Density radius: slides out beside the density tool while it is on. */}
-        {expanded && dimension === '2d' && <div data-nav-quiet className={`absolute left-16 z-50 flex items-center gap-2 border border-th-hub-border bg-th-base px-2 py-1 font-mono shadow-xl transition-[opacity,transform] duration-300 ease-out ${miniAnalysisEnabled ? 'translate-x-0 opacity-100' : 'pointer-events-none -translate-x-3 opacity-0'}`} style={{ top: `calc(3.6rem + ${(onColorModeChange ? 4 : 2) * 2.15}rem + 4.9rem)` }} aria-hidden={!miniAnalysisEnabled}>
-          <span className="text-[8px] uppercase tracking-[.1em] text-th-muted">area</span>
-          <input type="range" min={16} max={140} step={2} value={densityRadius} onChange={event => setDensityRadius(Number(event.target.value))} className="wiki-graph-range w-28" aria-label="Density study radius" />
-          <span className="w-8 text-right text-[9px] tabular-nums text-violet-300">{densityRadius}px</span>
-        </div>}
         {/* Image: the graph alone, or the graph with the panels that are open. */}
         {expanded && imagePrompt && <div role="group" aria-label="Copy as an image" className="absolute left-16 top-[3.6rem] z-50 w-52 border border-th-hub-border bg-th-base p-1 font-mono shadow-xl">
           <div className="mb-1 flex items-center justify-between border-b border-th-hub-border px-1.5 pb-1 text-[8px] uppercase tracking-[.12em] text-th-muted"><span>copy as image</span><button type="button" onClick={() => setImagePrompt(false)} className="text-[10px] hover:text-th-primary" aria-label="Cancel">×</button></div>
@@ -1884,28 +1913,22 @@ const MiniGraph: React.FC<{
         </div>}
         {/* Expanded: the two controls that must never be missed, top right. */}
         {expanded && <div className="graph-topright absolute right-4 top-4 z-50 flex items-center gap-2">
-          {filtersActive && onResetFilters && <button type="button" onClick={onResetFilters} className="graph-reset">⟲ Reset filters</button>}
+          {filtersActive && onResetFilters && <button type="button" onClick={onResetFilters} className="graph-reset"><FilterOffIcon /> Reset filters</button>}
           {onMinimize && <button type="button" onClick={onMinimize} title="Close the graph (Esc)" aria-label="Close the graph" className="graph-close"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M1.5 4.5h3v-3M10.5 7.5h-3v3M4.5 4.5l-3-3M7.5 7.5l3 3" /></svg> Close</button>}
         </div>}
         {/* Expanded: the edge switches, top left, above the tools column. */}
         {expanded && <div className="graph-edges" role="group" aria-label="Edges shown">
           {(['content', 'hierarchy'] as const).map(mode => { const active = mode === 'hierarchy' ? visibility.hierarchy : visibility.body || visibility.interaction; return <button key={mode} type="button" aria-pressed={active} title={mode === 'hierarchy' ? 'Path hierarchy' : 'Content references and interactions'} onClick={() => setEdgeMode(mode)} className={active ? 'is-on' : ''}><i style={{ backgroundColor: mode === 'hierarchy' ? EDGE_COLORS.hierarchy : EDGE_COLORS.body, transform: mode === 'hierarchy' ? 'rotate(35deg)' : undefined }} /><span>{mode === 'hierarchy' ? 'hierarchy' : 'references'}</span></button>; })}
         </div>}
-        {/* Path panel: the route itself; each stop opens its note. Sits above the timeline bar when both are open. */}
-        {expanded && pathMode && (pathStart || pathIds) && <div data-nav-quiet className={`absolute left-1/2 z-40 max-w-[min(40rem,calc(100%-10rem))] -translate-x-1/2 border border-cyan-400/30 bg-th-base/95 px-3 py-2 font-mono text-[9px] shadow-xl backdrop-blur-sm ${timelineOn ? 'bottom-[8.25rem]' : 'bottom-[4.5rem]'}`}>
-          {pathIds ? <div className="flex flex-wrap items-center gap-x-1 gap-y-1">{pathIds.map((id, i) => { const node = nodeById.get(id); return <React.Fragment key={id}>{i > 0 && <i className="h-px w-3 bg-cyan-400/50" />}<button type="button" onClick={() => node && onNodeOpen?.(node as GraphNode)} className={`max-w-[9rem] truncate border px-1.5 py-0.5 transition-colors hover:bg-cyan-400/15 ${i === 0 || i === pathIds.length - 1 ? 'border-cyan-400/60 text-cyan-200' : 'border-th-hub-border text-th-secondary'}`} title={node ? `Open ${node.name}` : id}>{node?.name ?? id}</button></React.Fragment>; })}<span className="ml-2 text-th-muted">{pathEnd ? 'click a note to start over' : 'click to pin this end'}</span></div>
-            : pathUnreachable ? <span className="text-th-muted">no route over the edges shown; try the other edge mode</span>
-              : <span className="text-th-muted">from <span className="text-cyan-200">{nodeById.get(pathStart!)?.name}</span>: hover a note to preview the route, click to pin it</span>}
-        </div>}
         {/* Timeline bar. */}
-        {expanded && timelineOn && dayRange && <div data-nav-quiet className="absolute bottom-[4.5rem] left-1/2 z-40 flex w-[min(38rem,calc(100%-11rem))] -translate-x-1/2 items-center gap-3 border border-amber-400/30 bg-th-base/95 px-3 py-2 font-mono text-[9px] shadow-xl backdrop-blur-sm">
+        {expanded && timelineOn && dayRange && createPortal(<div data-graph-timeline data-nav-quiet className="fixed bottom-[4.5rem] left-1/2 z-50 flex w-[min(38rem,calc(100vw-2rem))] -translate-x-1/2 items-center gap-3 border border-amber-400/30 bg-th-base/95 px-3 py-2 font-mono text-[9px] shadow-xl backdrop-blur-sm">
           <button type="button" onClick={() => { if (timelineDay !== null && timelineDay >= dayRange.max && !timelinePlaying) setTimelineDay(dayRange.min); setTimelinePlaying(playing => !playing); }} className="grid h-6 w-6 flex-none place-items-center border border-th-hub-border text-amber-300 hover:bg-th-surface" title={timelinePlaying ? 'Pause' : 'Play the graph growing from the first note'} aria-label={timelinePlaying ? 'Pause' : 'Play'}>{timelinePlaying ? '❚❚' : '▶'}</button>
           <input type="range" min={dayRange.min} max={dayRange.max} value={timelineDay ?? dayRange.max} onChange={event => { setTimelinePlaying(false); setTimelineDay(Number(event.target.value)); }} className="wiki-graph-range min-w-0 flex-1" aria-label="Timeline cutoff date" />
           <span className="w-[5.2rem] flex-none tabular-nums text-amber-200">{isoFromDay(timelineDay ?? dayRange.max)}</span>
           <span className="flex-none tabular-nums text-th-muted">{visibleCount} / {filtered.nodes.length}</span>
           <button type="button" aria-pressed={timelineAge} onClick={() => setTimelineAge(age => !age)} title="Colour notes by age: cool is old, warm is new" className={`flex-none border px-1.5 py-0.5 text-[8px] uppercase tracking-[.08em] ${timelineAge ? 'border-amber-400/60 text-amber-200' : 'border-th-hub-border text-th-muted hover:text-th-primary'}`}>age</button>
-          <button type="button" onClick={toggleTimeline} aria-label="Close the timeline" className="flex-none text-th-muted hover:text-th-primary">×</button>
-        </div>}
+          <button type="button" onClick={toggleTimeline} aria-label="Close the timeline" className="grid h-9 w-9 flex-none place-items-center text-2xl leading-none text-th-muted hover:bg-th-surface hover:text-th-primary">×</button>
+        </div>, document.body)}
         {/* Legend. */}
         {expanded && legendOpen && <aside data-nav-quiet className="absolute bottom-[4.5rem] right-4 z-40 w-60 border border-th-hub-border bg-th-base/95 p-2.5 font-mono text-[9px] shadow-xl backdrop-blur-sm">
           <div className="mb-1.5 flex items-center justify-between border-b border-th-hub-border pb-1 text-[8px] uppercase tracking-[.12em] text-th-muted"><span>legend</span><button type="button" onClick={() => setLegendOpen(false)} className="text-[10px] hover:text-th-primary" aria-label="Close legend">×</button></div>

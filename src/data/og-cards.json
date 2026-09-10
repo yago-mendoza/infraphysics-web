@@ -1,7 +1,7 @@
 {
   "version": 1,
   "publicBase": "https://cdn.infraphysics.net",
-  "updated": "2026-09-09",
+  "updated": "2026-09-10",
   "cards": {
     "/about": {
       "key": "og/page/about.jpg",
@@ -157,6 +157,13 @@
       "bytes": 102411,
       "updated": "2026-09-09"
     },
+    "/blog/essays/the-cost-of-reproducing-industrial-know-how": {
+      "key": "og/article/6820451.jpg",
+      "hash": "3c864e42ca6f",
+      "v": "2de8755b",
+      "bytes": 135233,
+      "updated": "2026-09-10"
+    },
     "/blog/essays/the-moving-ceiling-of-ai": {
       "key": "og/article/6616933.jpg",
       "hash": "eca6f995dccb",
@@ -190,13 +197,6 @@
       "hash": "46a85c652a77",
       "v": "d42fcb91",
       "bytes": 141933,
-      "updated": "2026-09-09"
-    },
-    "/blog/essays/your-context-is-the-moat": {
-      "key": "og/article/6820451.jpg",
-      "hash": "27a5cae567e6",
-      "v": "1e7f367d",
-      "bytes": 121356,
       "updated": "2026-09-09"
     },
     "/contact": {

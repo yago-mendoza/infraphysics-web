@@ -32,7 +32,7 @@ interface ArticlePostViewProps {
   post: Post;
 }
 
-const GiscusComments: React.FC<{ legacyPath: string }> = ({ legacyPath }) => {
+const GiscusComments: React.FC<{ legacyPath: string; lang: string }> = ({ legacyPath, lang }) => {
   const { theme } = useTheme();
   return (
     <div className="article-comments">
@@ -48,7 +48,7 @@ const GiscusComments: React.FC<{ legacyPath: string }> = ({ legacyPath }) => {
         emitMetadata="0"
         inputPosition="top"
         theme={theme === 'light' ? 'light' : 'transparent_dark'}
-        lang="es"
+        lang={lang === 'es' ? 'es' : 'en'}
         loading="lazy"
       />
     </div>
@@ -485,7 +485,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
   );
 
   return (
-    <div className={`article-page-wrapper article-${post.category}${isBlog ? ' article-blog article-geometry' : ' pj'} animate-fade-in`}>
+    <div className={`article-page-wrapper article-${post.category}${isBlog ? ' article-blog article-geometry' : ' pj'} animate-fade-in`} lang={post.lang === 'es' ? 'es' : undefined}>
       {createPortal(
         <div ref={progressRef} className="article-progress-bar" style={{ backgroundColor: `var(--cat-${post.category}-accent)` }} />,
         document.body
@@ -540,7 +540,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                 {/* The author, above the index: the portrait and the name, as the home presents the site. */}
                 <Link to={authorPath} className="glab-author">
                   {authorStack}
-                  <span><b>{authorName}</b>{authorPath === '/about' && <small>infraphysicist</small>}</span>
+                  <span><b>{authorName}</b>{authorPath === '/about' && <small>AI &amp; Industrial Engineer</small>}</span>
                 </Link>
                 <small>{isEssays ? 'In this article' : 'Sections'}</small>
                 <ol>
@@ -554,7 +554,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                 allWikiNotes={brainIndex?.allWikiNotes}
                 className="article-content"
               />
-              <GiscusComments legacyPath={legacyPath} />
+              <GiscusComments legacyPath={legacyPath} lang={post.lang || 'en'} />
             </div>
           </div>
         </article>
@@ -601,7 +601,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               allWikiNotes={brainIndex?.allWikiNotes}
               className="article-content"
             />
-            <GiscusComments legacyPath={legacyPath} />
+            <GiscusComments legacyPath={legacyPath} lang={post.lang || 'en'} />
           </div>
           <aside className="pj-rail" id="article-toc">
             {topHeadings.length > 1 && (

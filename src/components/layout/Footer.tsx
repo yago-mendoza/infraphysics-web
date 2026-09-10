@@ -2,9 +2,11 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { stripLang } from '../../lib/contentRoutes';
 
 export const Footer: React.FC = () => {
-  const { pathname } = useLocation();
+  // Without the language prefix: a translated article keeps the article colophon.
+  const pathname = stripLang(useLocation().pathname);
   const isBlog = pathname.startsWith('/blog');
   const isHome = pathname === '/home';
   const isContact = pathname === '/contact';

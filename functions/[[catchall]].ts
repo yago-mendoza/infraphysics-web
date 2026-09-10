@@ -12,6 +12,8 @@ interface OgEntry {
   date: string | null;
   text?: string; // plain text body (for AI crawlers)
   schema?: unknown; // optional page-specific JSON-LD generated from canonical data
+  lang?: string; // language of the text on this url (translated siblings live under /es/)
+  alternates?: Record<string, string>; // every language version of the page, for hreflang
 }
 
 type OgManifest = Record<string, OgEntry>;
@@ -81,7 +83,8 @@ export const onRequest: PagesFunction = async (context) => {
   const title = escapeHtml(entry.t);
   const description = escapeHtml(entry.d);
   const image = entry.img || FALLBACK_IMAGE;
-  const fullTitle = `${title} — InfraPhysics`;
+  // The site first, then the page: InfraPhysics - Wiki.
+  const fullTitle = `InfraPhysics - ${(pathname === '/home' || pathname === '/') ? 'Home' : title}`;
   const canonicalUrl = `${url.origin}${pathname}`;
 
   // For wikinotes without pre-built text, fetch content at runtime
@@ -180,7 +183,15 @@ export const onRequest: PagesFunction = async (context) => {
   }
 
   // Use HTMLRewriter to inject OG tags + readable body content
+  const alternateLinks = entry.alternates
+    ? [...Object.entries(entry.alternates).map(([lang, p]) => `<link rel="alternate" hreflang="${lang}" href="${url.origin}${p}" />`),
+       `<link rel="alternate" hreflang="x-default" href="${url.origin}${entry.alternates.en || pathname}" />`].join('\n    ')
+    : '';
   const rewriter = new HTMLRewriter()
+    // The text on a translated url is in that language.
+    .on('html', {
+      element(el) { el.setAttribute('lang', entry.lang || 'en'); },
+    })
     // Replace <title> text
     .on('title', {
       element(el) { el.setInnerContent(fullTitle); },
@@ -207,6 +218,8 @@ export const onRequest: PagesFunction = async (context) => {
         const ogType = entry.cat ? 'article' : 'website';
         el.append(`
     <link rel="canonical" href="${canonicalUrl}" />
+    ${alternateLinks}
+    <meta property="og:locale" content="${entry.lang === 'es' ? 'es_ES' : 'en_US'}" />
     <meta property="og:type" content="${ogType}" />
     <meta property="og:site_name" content="InfraPhysics" />
     <meta property="og:title" content="${fullTitle}" />

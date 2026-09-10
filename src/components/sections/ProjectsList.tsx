@@ -60,7 +60,7 @@ export const ProjectsList: React.FC<SectionRendererProps> = ({ posts, query, get
                 {post.thumbnail ? <img src={post.thumbnail} alt="" loading="lazy" /> : <i>{String(index + 1).padStart(2, '0')}</i>}
               </span>
               <span className="project-exhibition-copy">
-                <span className="project-exhibition-meta"><span><i>P{String(index + 1).padStart(2, '0')}</i><b>{status}</b></span><time>{formatDateTimeline(post.date)}</time></span>
+                <span className="project-exhibition-meta"><span><i>P{String(index + 1).padStart(2, '0')}</i><b>{status}</b></span><time>{formatDateTimeline(post.date)}</time><u>{[post.lang || 'en', ...Object.keys(post.translations || {})].join('/')}</u></span>
                 <strong><Highlight text={post.displayTitle || post.title} query={query} /></strong>
                 <small><Highlight text={post.description} query={query} /></small>
                 <span className="project-exhibition-tags">{technologies.map(technology => {

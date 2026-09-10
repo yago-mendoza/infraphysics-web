@@ -25,6 +25,8 @@ export interface CardData {
   image?: string;
   /** Vertical crop anchor of the cover, % from the top. */
   imageFocus?: number;
+  /** The home card shows the site emblem where the other personal pages show the portrait. */
+  emblem?: boolean;
 }
 
 /* ---------- shared pieces ---------- */
@@ -196,7 +198,7 @@ const PageCard: Design = ({ data }) => (
   <div className="sc-card sc-page">
     <Monolith />
     <Scope />
-    <span className="sc-portrait"><img src="/avatar.jpg" alt="" /></span>
+    {data.emblem ? <span className="sc-emblem" aria-hidden="true"><Logo /></span> : <span className="sc-portrait"><img src="/avatar.jpg" alt="" /></span>}
     {/* The mark reads as the next line of the text block, and the block sits centred. */}
     <Body data={data} className="is-left"><span className="sc-inline-mark"><Mark /></span></Body>
   </div>

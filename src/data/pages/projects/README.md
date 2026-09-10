@@ -31,7 +31,7 @@ Projects have the most category-specific fields: `status`, `technologies`, `gith
 | `thumbnailAspect` | no | string | Crop ratio: `full` (default), `wide` (16/7), `banner` (16/4), `strip` (16/2). |
 | `thumbnailShading` | no | string | Overlay: `heavy`, `light`, `none` (default). |
 | `thumbnailFocus` | no | number | Vertical crop anchor for the banner, % from top: `0` = top, `50` = center (default), `100` = bottom. Only bites on cover-cropped aspects (`wide`/`banner`/`strip`), not `full`. Use it to keep the important part of a tall image in frame. |
-| `subtitle` | no | string | Below the title in the article header. |
+| `subtitle` | no | string | Below the title in the article header. Technical and exact, one sentence: the object, the method, the result, in the words a specialist would file it under (STYLE.md rule 6). No hook, no *or: how...*, no question. |
 | `tags` | yes | string[] | Central concepts, each resolving to one Wiki note. Feed discovery and Home's Field of View; see [tagging policy](../README.md#tags-and-the-home-map). |
 | `complexity` | no | number | Difficulty rating (1–10). Used for sorting/filtering. |
 | `featured` | no | boolean | Shows in "Latest Work" on home page. |

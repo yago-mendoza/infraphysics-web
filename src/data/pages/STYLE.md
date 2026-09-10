@@ -24,7 +24,7 @@ Recommendation, every category: do not open a sentence with the italic term. *Fo
 
 ## 2. No arrows. Write the sequence out.
 
-Never chain concepts with arrow symbols (`→`, `⇒`, `->`, `↔` or any drawn arrow) in prose: not *input → model → output*, not *A → B → C*. Arrows are a slide habit; on a page they say *I did not want to write the sentence*.
+Never chain concepts with arrows in prose, whatever the spelling: the symbols (`→`, `⇒`, `↔`, `⟶`) and the typed ASCII forms (`->`, `=>`, `<-`, `-->`, `<->`, `==>`) are the same thing and equally banned. Not *input → model → output*, not *A -> B -> C*, not *cause => effect*. Arrows are a slide habit; on a page they say *I did not want to write the sentence*.
 
 Write the sequence as a sentence (*the input goes through the model and comes out as a prediction*), as a numbered or alphabetical list when the steps matter, or as a table when several sequences sit side by side. Inside a `{math}` block an arrow is mathematics and is fine.
 
@@ -32,7 +32,18 @@ This rule also applies to wikinotes: no arrows in explanations. Use a typed box 
 
 ## 3. No em-dashes as punctuation.
 
-The standing rule from `CLAUDE.md`, restated here so the list is complete: never use `—` as a break in body text. Use a parenthesis for an aside, a period for a new sentence, a comma for a light pause, and rebuild the sentence so the punctuation fits. The only routine exception is the separator in list-style constructs (definition lists, `tldr` bullets, trailing refs).
+The standing rule from `CLAUDE.md`, restated here so the list is complete: never use `—` as a break in body text. The same goes for its lookalikes: the en dash `–`, the double hyphen `--` and a spaced hyphen ` - ` used as a dash are the em-dash typed differently. A hyphen only joins words (*closed-loop*, *two-tank*).
+
+The preferred replacement is the parenthesis. An aside, a qualification, a reaction mid-thought, the thing a dash would have carried: put it between parentheses and keep the sentence going. A period when the aside is a sentence of its own. A comma only for a light pause that the sentence would survive without. Choose per phrase and rebuild the sentence so the punctuation fits its meaning; never swap the dash for another symbol mechanically.
+
+| Instead of | Write |
+|---|---|
+| *The pump — the old one — failed first.* | *The pump (the old one) failed first.* |
+| *We tried it again — nothing.* | *We tried it again. Nothing.* |
+| *Three sensors — all cheap — drift within a week.* | *Three sensors, all cheap, drift within a week.* |
+| *The residual is small — which is the point.* | *The residual is small (which is the point).* |
+
+The only routine exception is the separator in list-style constructs (definition lists, `tldr` bullets, trailing refs).
 
 ## 4. Typed boxes have no title.
 
@@ -55,7 +66,7 @@ The build flags a run of three or more consecutive paragraphs under fifteen word
 
 `displayTitle` and `subtitle` say exactly what the piece is, in the words a specialist would use to file it: the object, the method, the result. No hook, no pun, no *the thing nobody tells you*, no second person, no cliffhanger. A reader who sees only the title in a list must know what they will get and be right. Projects and Bits2Bricks follow this strictly. An essay may state its claim or its question as the title, but the claim is still literal and descriptive, never a tease.
 
-`description` (cards, meta tags, feeds) is the professional development of that title in two to four sentences: what system or material, what was done to it, what the piece establishes, and where it stops. It reads like the abstract of a technical report, not like a trailer. Same for `subtitle`, one sentence long.
+`description` (cards, meta tags, feeds) is the professional development of that title in two to four sentences: what system or material, what was done to it, what the piece establishes, and where it stops. It reads like the abstract of a technical report, not like a trailer. Same for `subtitle`, one sentence long, in projects and Bits2Bricks. Essays are the exception: their subtitle is two short sentences at most, a line the essay already contains and the question it chases, never a list of what the sections cover (`essays/README.md`, *Subtitles*).
 
 | Instead of | Write |
 |---|---|
@@ -83,9 +94,36 @@ What is never allowed, at any depth, is a heading immediately followed by anothe
 
 This rule is not checked mechanically. Read the outline back: if it looks like a table of contents for a manual, flatten it.
 
+## 8. Footnotes are `^[…]`, placed before the period.
+
+A footnote is written inline as `^[text]` (see `SYNTAX.md`, Footnotes) and attached to the end of the sentence it clarifies. The marker sits before the closing period of the sentence, and the period comes after it, even though it looks odd on the source line: `A statement^[The clarification.].` Never put the period first (`A statement.^[…]`), because then the footnote hangs between two sentences and belongs to neither. The text inside is a complete sentence with its own period.
+
+| Instead of | Write |
+|---|---|
+| `The filter converges.^[On healthy runs only.]` | `The filter converges^[On healthy runs only.].` |
+| `The filter converges^[on healthy runs only]` (no periods) | `The filter converges^[On healthy runs only.].` |
+| `The filter^[Kalman, not particle.] converges on every run.` | `The filter converges on every run^[Kalman, not particle.].` |
+
+Footnotes and parentheses do different jobs. A parenthesis is part of the sentence and the reader reads it in the flow; a footnote is a clarification the reader may skip. If the aside changes the meaning of the sentence, it is a parenthesis. If it only qualifies or sources it, it is a footnote. There is no other footnote form: no `[^1]` reference footnotes, no asterisks, no bracketed numbers.
+
+## 9. No negation-then-reframe. Say the thing.
+
+The formation *not X, Y* in every spelling: *not a bug, a feature*; *it is not the model that fails, it is the data*; *not because X, but because Y*; *not as a tool, but as a colleague*; *this isn't about accuracy. It's about trust.* Each one states what something is not before saying what it is, to borrow weight from the contrast. Once in an article it is a device; produced every third paragraph it is the most recognisable machine habit on the page, and the reader learns to skip the first half.
+
+Write the positive claim. If the negated half carries information (a misconception the reader actually holds), give it a sentence of its own with its own reason, instead of folding it into the reframe.
+
+| Instead of | Write |
+|---|---|
+| *This is not a performance problem, it is a memory problem.* | *The bottleneck is memory. The processor sits idle waiting for it.* |
+| *It works not because the model is large but because the data is clean.* | *It works because the data is clean. The size of the model has nothing to do with it.* |
+| *We treat the log not as a record but as a signal.* | *We treat the log as a signal.* |
+| *The goal isn't speed. It's predictability.* | *The goal is predictability. Speed comes second.* |
+
+The same rule covers the rest of that family: the rhetorical question answered by its own next sentence (*Why? Because…*), the colon reveal (*The answer: latency.*), the tricolon that escalates in three, the one-line mic drop after a long paragraph, the closing paragraph that summarises what the reader just read, and the sentence that announces its own posture (*Let me be direct*). The full kill list and the frequency limits for each tic live in `_generation/EDITORIAL-RUBRIC.md` (§A and §7); this rule is the short version that applies everywhere.
+
 ## How the rules are enforced
 
-`scripts/build-content.js` scans the markdown body of every article it compiles (`checkStyleRules`) and prints one `[STYLE]` line per rule per file with the first offending line numbers: double quotes (rule 1), arrows (rule 2), runs of short paragraphs (rule 5). Fenced code, inline code, inline and block math, link and image targets and raw HTML are excluded from the scan. A typed-box title (rule 4) is a build **error**, not a warning, because the syntax no longer exists. A file that comes from the build cache is not re-scanned; edit it, or run `npm run content` after clearing `.content-cache.json`, to see its warnings again.
+`scripts/build-content.js` scans the markdown body of every article it compiles (`checkStyleRules`) and prints one `[STYLE]` line per rule per file with the first offending line numbers: double quotes (rule 1), arrows (rule 2), runs of short paragraphs (rule 5). Fenced code, inline code, inline and block math, link and image targets and raw HTML are excluded from the scan. A typed-box title (rule 4) is a build **error**, not a warning, because the syntax no longer exists. Em-dashes (rule 3), footnote placement (rule 8) and the negation-then-reframe formations (rule 9) are not checked mechanically yet; read for them. A file that comes from the build cache is not re-scanned; edit it, or run `npm run content` after clearing `.content-cache.json`, to see its warnings again.
 
 ## Adding a rule
 

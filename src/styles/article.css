@@ -23,13 +23,13 @@
   --art-surface-alt:  #0d0d0d;
   --art-surface-code: #0a0a0a;
   --art-surface-bar:  #1a1a1a;
-  --art-surface-card: #0d0d0d;
+  --art-surface-card: var(--bg-surface-alt);
 
   /* Borders */
   --art-border:       #2a2a2a;
   --art-border-subtle:#222;
   --art-border-strong:#333;
-  --art-border-card:  #1a1a1a;
+  --art-border-card:  rgba(236,231,218,0.09);
 
   /* Accent base (lime — default / projects) */
   --art-accent:       var(--cat-projects-accent);
@@ -412,10 +412,17 @@
   position: relative;
   padding: 0;
 }
+/* Same feedback as the like button: the category accent and the icon growing under the pointer. */
 .article-share-btn:hover {
   color: var(--art-accent);
   border-color: var(--art-accent-hover-border);
   background: var(--art-accent-hover-bg);
+}
+.article-share-btn svg {
+  transition: transform 0.15s ease, color 0.2s;
+}
+.article-share-btn:hover svg {
+  transform: scale(1.15);
 }
 
 /* Share sheet: the page dims and one centred card lists the options side by side, each a tile with
@@ -569,16 +576,16 @@
 }
 
 .article-heart-btn:hover {
-  color: #ef4444;
-  border-color: rgba(239, 68, 68, 0.3);
-  background: rgba(239, 68, 68, 0.06);
+  color: var(--art-accent);
+  border-color: var(--art-accent-hover-border);
+  background: var(--art-accent-hover-bg);
 }
 
-/* Already-liked state — persistent red fill (the heart icon fills with currentColor) */
+/* Already-liked state: persistent fill in the category accent (the icon fills with currentColor) */
 .article-heart-btn.hearted {
-  color: #ef4444;
-  border-color: rgba(239, 68, 68, 0.35);
-  background: rgba(239, 68, 68, 0.06);
+  color: var(--art-accent);
+  border-color: var(--art-accent-dim);
+  background: var(--art-accent-bg);
 }
 
 .article-heart-btn svg {
@@ -587,7 +594,7 @@
 
 .article-heart-btn:hover svg {
   transform: scale(1.15);
-  color: #ef4444;
+  color: var(--art-accent);
 }
 
 .article-meta-author {
@@ -2697,7 +2704,7 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 }
 .article-blog .article-share-btn:hover {
   color: var(--art-accent);
-  border-color: var(--art-accent-dim);
+  border-color: var(--art-accent-hover-border);
 }
 
 .article-blog .article-meta-views,

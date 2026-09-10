@@ -73,7 +73,8 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, projectVaria
 
   const hasMultipleLangs = useMemo(() => {
     if (category !== 'essays') return false;
-    const langs = new Set(sectionPosts.map(p => p.lang || 'en'));
+    // A translated sibling counts as a second language of its post.
+    const langs = new Set(sectionPosts.flatMap(p => [p.lang || 'en', ...Object.keys(p.translations || {})]));
     return langs.size > 1;
   }, [sectionPosts, category]);
 
@@ -116,7 +117,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, projectVaria
     // Language filter — only when no other filters are active
     const hasFilters = query || selectedTopics.length > 0 || selectedTechs.length > 0 || selectedStatuses.length > 0 || selectedComplexity.length > 0;
     if (!hasFilters && selectedLang) {
-      result = result.filter(p => (p.lang || 'en') === selectedLang);
+      result = result.filter(p => (p.lang || 'en') === selectedLang || !!p.translations?.[selectedLang]);
     }
 
     result.sort((a, b) => {

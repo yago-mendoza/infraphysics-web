@@ -1,10 +1,12 @@
 import { DurableObject } from 'cloudflare:workers';
+import { addMetrics, createExploration, explore, type Dimensions, type ExplorationQuery } from './exploration';
 
 type Entry = { key: string; value: string; expires: number | null };
-type Input = { op: string; slug?: string; hash?: string; mutate?: boolean; slugs?: string[];
+type Input = ExplorationQuery & { op: string; slug?: string; hash?: string; mutate?: boolean; slugs?: string[];
   path?: string; visitorId?: string; sessionId?: string; country?: string;
   referrer?: string; device?: string; language?: string; cursor?: string;
-  snapshot?: string; entries?: Entry[]; expected?: number; from?: string; to?: string };
+  snapshot?: string; entries?: Entry[]; expected?: number; visitId?:string; previousPath?:string; activeMs?:number; scroll?:number };
+type Visit = {sessionId:string;path:string;bucket:string;dimensions:Dimensions;started:number;activeMs:number;scroll90:number;measured:boolean};
 const DAY = 86400;
 const json = (value: unknown, status = 200) => Response.json(value, { status });
 export const migratable = (key: string) => /^(views:|hearts:|seen:|hearted:|analytics:)/.test(key) || key === 'presence:last';
@@ -19,6 +21,8 @@ export class Counters extends DurableObject {
       CREATE INDEX IF NOT EXISTS entries_expiry ON entries(expires) WHERE expires IS NOT NULL;
       CREATE TABLE IF NOT EXISTS daily (day TEXT, key TEXT, value INTEGER NOT NULL, PRIMARY KEY(day,key));
       CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);`);
+    createExploration(this.sql);
+    if(!this.meta('exploration_since'))this.setMeta('exploration_since',new Date().toISOString());
   }
   private now() { return Math.floor(Date.now() / 1000); }
   private get(key: string) {
@@ -99,7 +103,9 @@ export class Counters extends DurableObject {
         SELECT paths.path,COALESCE(CAST(v.value AS INTEGER),0) AS views,COALESCE(CAST(h.value AS INTEGER),0) AS hearts FROM paths
         LEFT JOIN entries v ON v.key='views:'||paths.path LEFT JOIN entries h ON h.key='hearts:'||paths.path ORDER BY views DESC,paths.path LIMIT 100`).toArray(),
       engagement: this.sql.exec("SELECT COALESCE(SUM(CASE WHEN key LIKE 'views:%' THEN CAST(value AS INTEGER) ELSE 0 END),0) AS views,COALESCE(SUM(CASE WHEN key LIKE 'hearts:%' THEN CAST(value AS INTEGER) ELSE 0 END),0) AS hearts FROM entries WHERE key LIKE 'views:%' OR key LIKE 'hearts:%'").one(),
+      lastVisitor: this.get('presence:last') ? JSON.parse(this.get('presence:last')!) : null,
       limits: {dailyRows: 10000, topPages: 100, seriesDays: 366, breakdownRows: 100},
+      exploration: explore(this.sql,i,this.meta('exploration_since')),
     }; }
     if (i.op === 'stats') return Object.fromEntries((i.slugs || []).slice(0,50).map(slug => [slug, {views: this.count(`views:${slug}`)}]));
     if (i.op === 'presence') return {lastVisitor: this.get('presence:last') ? JSON.parse(this.get('presence:last')!) : null,
@@ -120,22 +126,46 @@ export class Counters extends DurableObject {
       }
       return {slug: i.slug, hearts, hearted};
     }
+    if (i.op === 'engagement') {
+      const saved=this.get(`analytics:visit:${i.visitId}`);
+      if(!saved)return {ok:true,tracked:false};
+      const visit=JSON.parse(saved) as Visit;
+      if(visit.sessionId!==i.sessionId||visit.path!==i.path)return {ok:true,tracked:false};
+      const activeMs=Math.max(visit.activeMs,Math.min(Math.floor(i.activeMs||0),Date.now()-visit.started,86400000));
+      const scroll90=Math.max(visit.scroll90,(i.scroll||0)>=90?1:0);
+      if(visit.measured&&activeMs===visit.activeMs&&scroll90===visit.scroll90)return {ok:true};
+      addMetrics(this.sql,visit.bucket,visit.dimensions,{active_ms:activeMs-visit.activeMs,scroll90:scroll90-visit.scroll90,samples:visit.measured?0:1});
+      this.put(`analytics:visit:${i.visitId}`,JSON.stringify({...visit,activeMs,scroll90,measured:true}),DAY);
+      return {ok:true};
+    }
     if (i.op === 'pageview') {
+      if(i.visitId&&this.get(`analytics:visit:${i.visitId}`))return {ok:true,tracked:true};
       const visitor = `analytics:visitor:${i.visitorId}`, session = `analytics:session:${i.sessionId}`;
       const seen = `analytics:seen:${i.sessionId}:${i.path}`;
+      const counted=!this.get(seen);
       if (!this.get(visitor)) { this.put(visitor, '1'); this.bump('analytics:visitors'); this.daily('visitors'); }
       if (!this.get(session)) {
         this.put(session, '1', DAY * 90); this.bump('analytics:sessions'); this.daily('sessions');
         this.daily(`entry:${i.path}`); this.daily(`referrer:${i.referrer || 'direct'}`);
         this.daily(`country:${i.country || 'unknown'}`); this.daily(`device:${i.device || 'unknown'}`); this.daily(`language:${i.language || 'unknown'}`);
       }
-      if (!this.get(seen)) {
+      if (counted) {
         this.put(seen, '1', 1800); this.bump('analytics:pageviews'); this.bump(`analytics:path:${i.path}`);
         this.daily('pageviews'); this.daily(`path:${i.path}`);
       }
+      if(i.visitId){
+        const attributionKey=`analytics:source:${i.sessionId}`;
+        const source=this.get(attributionKey)||i.referrer||'direct';
+        if(!this.get(attributionKey))this.put(attributionKey,source,DAY);
+        const dimensions:Dimensions={path:i.path!,country:i.country||'unknown',device:i.device||'unknown',language:i.language||'unknown',referrer:source};
+        const bucket=new Date().toISOString().slice(0,13);
+        addMetrics(this.sql,bucket,dimensions,{opens:1,pageviews:counted?1:0});
+        this.put(`analytics:visit:${i.visitId}`,JSON.stringify({sessionId:i.sessionId,path:i.path,bucket,dimensions,started:Date.now(),activeMs:0,scroll90:0,measured:false}),DAY);
+        if(i.previousPath&&i.previousPath!==i.path&&this.get(`analytics:seen:${i.sessionId}:${i.previousPath}`))this.sql.exec('INSERT INTO transitions VALUES(?,?,?,1) ON CONFLICT(day,source,target) DO UPDATE SET hits=hits+1',bucket.slice(0,10),i.previousPath,i.path!);
+      }
       // Public presence keeps its contract without revealing a last visitor's city.
       if (i.country && this.get('presence:last') !== JSON.stringify({city: '', country: i.country})) this.put('presence:last', JSON.stringify({city: '', country: i.country}));
-      return {ok: true};
+      return {ok: true, tracked:!!i.visitId};
     }
     throw new Error('Unknown operation');
   }

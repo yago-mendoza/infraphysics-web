@@ -1,8 +1,11 @@
 // Mobile navigation — same calm editorial shell as desktop.
 
-import React, { useEffect, useState } from 'react';
+import React, { startTransition, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useLang, type Lang } from '../../contexts/LangContext';
+import { useRouteLanguage } from '../../hooks/useRouteLanguage';
+import { TranslationPendingModal } from '../ui/TranslationPendingModal';
 import { CloseIcon, DiceIcon, ExternalLinkIcon, MenuIcon, MoonIcon, SunIcon, WikiBrainIcon } from '../icons';
 import { postPath, secondBrainPath, secondBrainGraphPath } from '../../config/categories';
 import { postSummaries } from '../../data/postSummaries';
@@ -16,6 +19,18 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?:
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  // Same language control as the desktop gear: live where a Spanish version exists, otherwise the apology.
+  const { setLang } = useLang();
+  const routeLang = useRouteLanguage();
+  const [translationPending, setTranslationPending] = useState(false);
+  const canSwitchLang = routeLang.available.includes('es');
+  const otherLang: Lang = routeLang.current === 'es' ? 'en' : 'es';
+  const switchLanguage = () => {
+    if (!canSwitchLang) { setTranslationPending(true); return; }
+    const target = routeLang.pathFor(otherLang);
+    setOpen(false);
+    startTransition(() => { setLang(otherLang); if (target) navigate(target); });
+  };
   // Two toys from the command palette, at the foot of the menu where the screen was empty.
   const randomArticle = () => {
     if (postSummaries.length === 0) return;
@@ -80,13 +95,18 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?:
             <button type="button" onClick={randomWikinote}><WikiBrainIcon size={17} /><span>Random wikinote</span></button>
           </div>
           <div className="flex items-center justify-between pt-4 text-xs text-th-tertiary">
-            <span>Barcelona · ES / EN</span>
+            <button onClick={switchLanguage} aria-disabled={!canSwitchLang || undefined} className={`flex items-center gap-2 font-mono uppercase tracking-wide ${canSwitchLang ? 'text-th-secondary' : 'opacity-50'}`}>
+              <span className={routeLang.current === 'en' ? 'text-th-heading' : ''}>EN</span>
+              <span>/</span>
+              <span className={routeLang.current === 'es' ? 'text-th-heading' : ''}>ES</span>
+            </button>
             <button onClick={toggleTheme} className="flex items-center gap-2 text-th-secondary">
               {theme === 'dark' ? <SunIcon /> : <MoonIcon />} Theme
             </button>
           </div>
         </div>
       )}
+      {translationPending && <TranslationPendingModal onClose={() => setTranslationPending(false)} />}
     </div>
   );
 };

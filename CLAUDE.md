@@ -12,14 +12,14 @@ Mandatory triggers — when X happens, do Y.
 
 ### On writing or editing ARTICLES content
 
-**⛔ Standing rule, high priority: no em-dashes in prose.** Never use the em-dash (`—`) as a punctuation break in any body text you write for this site. The author strongly dislikes it and it reads as an AI tell. Use a parenthesis (aside), a period (new sentence), or a comma (light pause) instead, and rebuild the sentence so the punctuation fits its meaning. Routine exception: list-style separators (definition lists, tldr bullets, trailing refs). Otherwise only rare, PUNCTUAL exceptions, never by habit. Full guidance in [EDITORIAL-RUBRIC.md](_generation/EDITORIAL-RUBRIC.md) ("Second absolute rule"). This also applies to anything else you write (commit messages, UI copy). The other two hard rules of the same rank, no double quotes in prose (use italics) and no arrows between concepts, live in [pages/STYLE.md](src/data/pages/STYLE.md).
+**⛔ Standing rule, high priority: no em-dashes in prose.** Never use the em-dash (`—`) as a punctuation break in any body text you write for this site. The author strongly dislikes it and it reads as an AI tell. Use a parenthesis (aside), a period (new sentence), or a comma (light pause) instead, and rebuild the sentence so the punctuation fits its meaning. Routine exception: list-style separators (definition lists, tldr bullets, trailing refs). Otherwise only rare, PUNCTUAL exceptions, never by habit. Full guidance in [EDITORIAL-RUBRIC.md](_generation/EDITORIAL-RUBRIC.md) ("Second absolute rule"). This also applies to anything else you write (commit messages, UI copy). The other hard rules of the same rank, no double quotes in prose (use italics), no arrows between concepts (symbols or ASCII `->`), footnotes as `^[…]` before the period, and no *not X, Y* reframes, live in [pages/STYLE.md](src/data/pages/STYLE.md).
 
 **1. Read the authoring docs first.** Never guess syntax, frontmatter, or editorial conventions from memory.
 
 | Doc | What to look up |
 |---|---|
 | [pages/README.md](src/data/pages/README.md) | Frontmatter schemas, content types, editorial rules, compilation pipeline |
-| [pages/STYLE.md](src/data/pages/STYLE.md) | **Hard writing rules, every category, non-negotiable:** no double quotes in prose (italics instead), no arrows between concepts, no em-dashes, typed boxes without title (build error), dense paragraphs over loose one-liners, literal descriptive titles with a description that develops them like an abstract, flat structure (few `#` sections with long bodies, no `##`/`###` unless length forces it, never a heading directly under a heading). Checked at build as `[STYLE]` warnings where mechanical. |
+| [pages/STYLE.md](src/data/pages/STYLE.md) | **Hard writing rules, every category, non-negotiable:** no double quotes in prose (italics instead), no arrows between concepts, no em-dashes, typed boxes without title (build error), dense paragraphs over loose one-liners, literal descriptive titles with a description that develops them like an abstract, flat structure (few `#` sections with long bodies, no `##`/`###` unless length forces it, never a heading directly under a heading), footnotes as `^[…]` before the period, no negation-then-reframe (*not X, Y*) and the other machine formations. Checked at build as `[STYLE]` warnings where mechanical. |
 | [pages/SYNTAX.md](src/data/pages/SYNTAX.md) | All 19 custom syntax features (typed notes, lifted paragraph, parameter sheets, lists, math, images…), edge cases |
 | [EDITORIAL-RUBRIC.md](_generation/EDITORIAL-RUBRIC.md) | **Always consult when writing or editing articles.** Kill list, voice direction, two-author problem, syntactic tics, narrative structure, cross-linking |
 | [VISUAL-RUBRIC.md](_generation/VISUAL-RUBRIC.md) | **Always consult before generating or choosing images.** Photographic language, three registers, kill list, prompt base |
@@ -31,6 +31,8 @@ Mandatory triggers — when X happens, do Y.
 **2. Verify factual claims.** When writing content that states dates, names, technical specs, historical events, or statistics — use web search to check accuracy. Do not assume recalled facts are correct.
 
 **3. Build after editing.** After editing any `.md` file in `src/data/pages/`, run `npm run build`. Markdown is compiled at build time — changes are invisible until the build runs.
+
+**4. Review with the skill.** To review an existing article (hard rules, form, verified external links, wiki links with a sense check, missing concepts), run `/review-article <slug>`; it reports by default and applies only the mechanical part with `--apply`. Its procedure is `.claude/skills/review-article/SKILL.md`, tracked in git like the hooks.
 
 ### On adding an HTML page to an article
 
@@ -120,6 +122,7 @@ Append relevant lessons to the **Gotchas** section below. Update or remove stale
 - Blog: `/blog/essays`, `/blog/bits2bricks` (light theme)
 - Wiki: `/wiki`, `/wiki/:uid`, and `/wiki/graph`, which opens the console with the graph workspace already expanded (the home wiki banner lands there; closing the workspace navigates to `/wiki`). On phones the expanded graph is a full-screen takeover (`phone` state in `SecondBrainSidebar`), not a strip beside the drawer. Legacy `/lab/second-brain/*` URLs redirect here. No top bar: the global nav is hidden and slides in when the pointer nears the bottom edge (`useProximityReveal`, scroll reveal on touch), with a leading Back arrow to the page the reader came from.
 - Post detail: `/lab/:category/:id` (dark), `/blog/:category/:id` (light). Blog articles share one geometry (`article-geometry.css`): essays stack the hero under the meta, Bits2Bricks put it beside the title and number the section index.
+- Language: English is the base; an article with a translated sibling (`<slug>.es.md`, see [pages/README.md](src/data/pages/README.md#file-names-and-public-urls)) is also served at `/es/<canonical>`, same slug. The url says which version is on screen. The reader preference (`infraphysics:lang`, `LangContext`, default English, never inferred from the browser) only redirects the English url of a translated page to the preferred version (`PostView`). The gear and the mobile menu carry the control: live on a page that exists in Spanish, dimmed elsewhere, where pressing it opens `TranslationPendingModal` (the apology) and changes nothing. `useRouteLanguage` says what the current page exists in. The wiki is never translated.
 - Theme: dark everywhere by default, one atmosphere. Light is a single global reader preference (`infraphysics:theme` in localStorage, gear or Shift+T), remembered for the whole site, never inferred from the OS and never tied to a route. A post may force a theme on entry with `theme:` in its frontmatter (applied, not saved). Light is maintained so it does not break, not designed as a second identity.
 - Backgrounds: Starfield (personal, dark only), DualGrid (lab/wiki), Clean (blog posts)
 
@@ -304,6 +307,9 @@ The toolbar copy (`SecondBrainView`), the graph area selection (`MiniGraph`) and
 ### Block fences (`{math}`, `{bkqt}`) need blank lines around them
 A `{math}` … `{/math}` or `{bkqt/…}` … `{/bkqt}` fence written directly between list items or paragraphs (no blank line before the opening tag or after the closing one) closes the block and the compiler emits everything after it as literal text: `**bold**`, `[links](url)` and the following bullets stay unrendered, and the build prints no error (only the `[SYNTAX]` guard notices when a markdown link survives). Always put a blank line before the opening tag and after the closing tag. Documented in `SYNTAX.md` (Typed notes, Chemical and mathematical forms).
 
+### Translated siblings are folded into the English post, never posts of their own
+`build-content.js` compiles `<slug>.es.md` like any post and then `attachTranslations` folds it into its English twin as `translations.es` (textual fields plus body, `stale` when `sourceHash` no longer matches the English body; `[I18N]` warning). The sibling never enters `posts.generated.json` as a separate entry, `content-files.js` skips it (route entries and the *filename must match slug* check are English only) and its route entry only gains `langs: ['es']`. Consumers that iterate posts (listings, search, related, feeds) therefore see one post per id; anything that must show Spanish text has to read `post.translations[lang]` explicitly, as `PostView` does. `og-manifest.json` and the sitemap get one entry per language with `alternates` for hreflang, and `_routes.json` includes `/es/*`. A `/es/` url shares its English twin's og title, description and exhibition card (the build copies them after the cards are applied): what a link shows on X or WhatsApp is always the English card, only the crawler body text is Spanish. Layout checks that read the pathname (`isArticlePage`, `isBlog`, the active nav pill, the footer) go through `stripLang()` from `src/lib/contentRoutes.ts`, otherwise a translated url loses the article chrome and shows the ambient rails.
+
 ### Content slug routing
 
 Public article and Wiki URLs and source filenames use explicit slugs. Keep IDs stable; never derive filenames from IDs. Use `scripts/rename-content-slug.js` for a URL rename and preserve `slugAliases`. Address renames do not change URLs. See [CONTENT-URLS.md](scripts/CONTENT-URLS.md). Engagement and Giscus retain numeric storage keys.
@@ -319,7 +325,6 @@ The shared About toolbar opens `/Yago-Mendoza-CV.pdf` in a new tab for printing 
 Help search results use a borderless text list, visually distinct from concept cards. Directory root/level selects must use `wiki-root-select`: it supplies opaque theme backgrounds and primary text for both the control and its native options. Translucent surface backgrounds can leave native menus unreadable.
 
 The Wiki guide owns keyboard events while open: stop propagation before the Wiki's window-level type-to-search and grid handlers receive them. Keep focus inside the dialog and restore it to the information button on close. Search results open a topic and scroll to the matching paragraph; help queries must never change the concept search or navigate the underlying page.
-
 ## Private admin credential
 
 - `/admin/stats` uses the Cloudflare Pages secret `COUNTERS_ADMIN_TOKEN`.

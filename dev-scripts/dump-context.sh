@@ -42,6 +42,7 @@ FILES=(
 
   # --- Contexts ---
   "src/contexts/ThemeContext.tsx"
+  "src/contexts/LangContext.tsx"
   "src/contexts/ArticleContext.tsx"
   "src/contexts/SecondBrainHubContext.tsx"
 
@@ -54,6 +55,7 @@ FILES=(
   "src/hooks/useViewCount.ts"
   "src/hooks/useReaction.ts"
   "src/hooks/useArticleStats.ts"
+  "src/hooks/useRouteLanguage.ts"
 
   # --- Lib / Utilities ---
   "src/lib/index.ts"

@@ -25,7 +25,7 @@ Essays have several category-specific fields: `lang`, `hidden`, and `complexity`
 | `thumbnailFocus` | no | number | Vertical crop anchor for the banner, % from top: `0` = top, `50` = center (default), `100` = bottom. Only bites on cover-cropped aspects (`wide`/`banner`/`strip`), not `full`. Use it to keep the important part of a tall image in frame. |
 | `thumbnailWidth` | no | string | Unset = the hero is as wide as the reading column, aligned with the text margins. `full` makes it wider, edge to edge with the page padding. With `thumbnailAspect: full` the image is always shown whole. |
 | `thumbnailZoom` | no | number | Scale factor for the card thumbnail in the essays grid (`1.15` = 15% zoom in). Use it when the card crop shows the image background. Unset = `1`. |
-| `subtitle` | no | string | Below the title in the article header. |
+| `subtitle` | no | string | Below the title in the article header, and the card and meta copy. Two short sentences at most, see *Subtitles* below. |
 | `tags` | yes | string[] | Central concepts resolving to Wiki notes; feed discovery and Home's Field of View. See [tagging policy](../README.md#tags-and-the-home-map). |
 | `complexity` | no | number | Difficulty rating (1–10). Used for sorting/filtering. |
 | `featured` | no | boolean | Shows in "Latest Work" on home page. |
@@ -33,6 +33,8 @@ Essays have several category-specific fields: `lang`, `hidden`, and `complexity`
 | `hidden` | no | boolean | If `true`, essay is excluded from listings. Defaults to `false`. |
 | `theme` | no | string | `light` or `dark`. Forces that theme when the essay is opened (for example a banner with a baked-in frame that only works on white). The reader can still toggle afterwards. Unset = the blog zone preference. |
 | `author` | no | string | Defaults to `Yago Mendoza`. |
+
+**Subtitles.** An essay subtitle is one or two short sentences, never a summary of the sections, and it has to tell a reader who sees only the card what the piece is about: *AI is changing what a successor can learn from a company's mistakes, and what a competitor may be able to reconstruct* names the actors and the tension in one line. A quoted line from the essay (*His competitors know what he knows.*) reads well under the title but says nothing to someone browsing, so it only works paired with a sentence that states the subject. What went wrong before that rule: *What a veteran's judgment leaves behind in the record, how much of it a competitor can now rebuild without a leak, and what a successor needs in order to inherit the rest* packed three sections into one sentence and read as a table of contents. If the subtitle needs a comma-separated list to be complete, it is describing the essay instead of opening it. Projects and Bits2Bricks do the opposite (technical and exact, one sentence, STYLE.md rule 6); the essay subtitle is the one place where a literal line from the text beats a catalogue entry.
 
 **No `lead`.** Essays carry a title and a subtitle, nothing else above the body. Anything a deck paragraph would say belongs in the first paragraphs of the essay itself, in its own voice.
 

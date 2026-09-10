@@ -24,7 +24,7 @@ Bits2Bricks use universal fields plus `complexity`. No other category-specific e
 | `thumbnailShading` | no | string | Overlay: `heavy`, `light`, `none` (default). |
 | `thumbnailFocus` | no | number | Vertical crop anchor for the banner, % from top: `0` = top, `50` = center (default), `100` = bottom. Only bites on cover-cropped aspects (`wide`/`banner`/`strip`), not `full`. Use it to keep the important part of a tall image in frame. |
 | `tags` | yes | string[] | Central concepts resolving to Wiki notes; feed discovery and Home's Field of View. See [tagging policy](../README.md#tags-and-the-home-map). |
-| `subtitle` | no | string | Below the title in the article header. |
+| `subtitle` | no | string | Below the title in the article header. Technical and exact, one sentence that says what the tutorial covers and where it stops (STYLE.md rule 6). Essays are the only category whose subtitle may quote a line of the text instead. |
 | `related` | no | string[] | Post IDs (quoted numerics) for the "Related" section. |
 | `featured` | no | boolean | Shows in "Latest Work" on home page. |
 | `tldr` | no | string/string[] | Key takeaway lines in the header area. |

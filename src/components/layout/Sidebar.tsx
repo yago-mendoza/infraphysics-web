@@ -1,9 +1,13 @@
 // Desktop navigation: a floating pill bar. The active page is a filled accent pill and a gear opens a small settings
 // popover (Commands, Theme, Language) instead of scattering icons along the bar. About and Writing open a hover menu.
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { startTransition, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
+import { stripLang } from '../../lib/contentRoutes';
+import { useLang, type Lang } from '../../contexts/LangContext';
+import { useRouteLanguage } from '../../hooks/useRouteLanguage';
+import { TranslationPendingModal } from '../ui/TranslationPendingModal';
 import { useCursorPreference } from '../../contexts/CursorPreferenceContext';
 import { BackChevronIcon, ExternalLinkIcon, GearIcon, Logo, MoonIcon, SearchIcon, SunIcon } from '../icons';
 import { secondBrainPath } from '../../config/categories';
@@ -53,6 +57,20 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
   const closeTimer = useRef<number | null>(null);
   const { theme, toggleTheme } = useTheme();
   const { aestheticCursor, toggleAestheticCursor } = useCursorPreference();
+  // Language: live on a page that exists in Spanish (switches version and saves the preference),
+  // dimmed everywhere else, where pressing it only explains that the page is still to be translated.
+  const navigate = useNavigate();
+  const { setLang } = useLang();
+  const routeLang = useRouteLanguage();
+  const [translationPending, setTranslationPending] = useState(false);
+  const canSwitchLang = routeLang.available.includes('es');
+  const otherLang: Lang = routeLang.current === 'es' ? 'en' : 'es';
+  const switchLanguage = () => {
+    setSettings(false);
+    if (!canSwitchLang) { setTranslationPending(true); return; }
+    const target = routeLang.pathFor(otherLang);
+    startTransition(() => { setLang(otherLang); if (target) navigate(target); });
+  };
   useEffect(() => { setOpen(false); setSettings(false); setMenu(null); }, [location.pathname]);
   useEffect(() => {
     if (!settings && !open && !menu) return;
@@ -70,11 +88,13 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
     ? (nearEdge || (revealOnScrollUp && scrollRevealed) || focusWithin || menu !== null || settings || open)
     : scrollRevealed;
 
+  // Active section, whatever the language prefix (/es/blog/... is still Writing).
+  const sitePath = stripLang(location.pathname);
   const isActive = (path: string, label: string) => label === 'Writing'
-    ? location.pathname.startsWith('/blog/')
+    ? sitePath.startsWith('/blog/')
     : label === 'Projects'
-      ? location.pathname === '/lab/projects' || location.pathname.startsWith('/lab/projects/')
-      : location.pathname === path || location.pathname.startsWith(path + '/');
+      ? sitePath === '/lab/projects' || sitePath.startsWith('/lab/projects/')
+      : sitePath === path || sitePath.startsWith(path + '/');
   const links = [
     { to: '/home', label: 'Home' },
     { to: '/about', label: 'About' },
@@ -84,7 +104,7 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
     { to: '/contact', label: 'Contact' },
   ];
   // Exact page for the About group; whole section (list + articles) for Writing.
-  const isItemActive = (to: string) => to.startsWith('/blog/') ? location.pathname.startsWith(to) : location.pathname === to;
+  const isItemActive = (to: string) => to.startsWith('/blog/') ? sitePath.startsWith(to) : sitePath === to;
   const currentLabel = links.find(link => isActive(link.activePath ?? link.to, link.label))?.label ?? 'Explore';
   // Inactive pills tint in the brand colour on hover (global.css, .nav-pill); menu triggers a touch lighter.
   const pill = (active: boolean) => `nav-pill px-3.5 py-2 rounded-xl text-[12px] font-medium tracking-wide transition-colors ${active ? 'bg-th-nav-accent text-th-on-accent' : 'text-th-tertiary hover:text-th-heading'}`;
@@ -162,14 +182,24 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
                 <span>CAD cursor</span>
                 <span className="text-[10px] font-mono uppercase tracking-wide text-th-tertiary">{aestheticCursor ? 'On' : 'Off'}</span>
               </button>
-              <div className="flex items-center justify-between px-4 py-3 border-t border-th-border text-th-secondary">
+              <button
+                onClick={switchLanguage}
+                aria-disabled={!canSwitchLang || undefined}
+                title={canSwitchLang ? `Read in ${otherLang === 'es' ? 'Castellano' : 'English'}` : 'This page is not translated yet'}
+                className={`w-full flex items-center justify-between px-4 py-3 border-t border-th-border transition-colors hover:bg-th-surface-alt ${canSwitchLang ? 'text-th-secondary hover:text-th-heading' : 'text-th-muted'}`}
+              >
                 <span>Language</span>
-                <span className="font-mono text-[10px] tracking-wide text-th-tertiary">ES / EN</span>
-              </div>
+                <span className={`flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wide ${canSwitchLang ? '' : 'opacity-50'}`}>
+                  <span className={routeLang.current === 'en' ? 'text-th-heading' : 'text-th-tertiary'}>EN</span>
+                  <span className="text-th-muted">/</span>
+                  <span className={routeLang.current === 'es' ? 'text-th-heading' : 'text-th-tertiary'}>ES</span>
+                </span>
+              </button>
             </div>
           )}
         </div>
       </header>
+      {translationPending && <TranslationPendingModal onClose={() => setTranslationPending(false)} />}
     </>
   );
 };

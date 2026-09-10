@@ -7,7 +7,7 @@ import { createContentRoutes, slugify, isReservedSlug } from '../src/lib/content
 export const pagesDir = fileURLToPath(new URL('../src/data/pages/', import.meta.url));
 export function readContentFiles() {
   return ['projects', 'essays', 'bits2bricks', 'wikinotes'].flatMap(category =>
-    fs.readdirSync(path.join(pagesDir, category)).filter(f => f.endsWith('.md') && !f.startsWith('_')).flatMap(filename => {
+    fs.readdirSync(path.join(pagesDir, category)).filter(f => f.endsWith('.md') && !f.startsWith('_') && !/\.[a-z]{2}\.md$/.test(f)).flatMap(filename => {
       const file = path.join(pagesDir, category, filename);
       const raw = fs.readFileSync(file, 'utf8');
       const { data, content } = matter(raw);

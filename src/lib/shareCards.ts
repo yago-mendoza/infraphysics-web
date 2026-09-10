@@ -25,7 +25,7 @@ export const SECTIONS = [
 
 export const PAGES = [
   { id: 'home', to: '/home', title: 'From systems to bits and back.', line: 'Engineering is engineering. The substrate does not matter.' },
-  { id: 'about', to: '/about', title: 'Yago Mendoza', line: 'Industrial engineer. Infraphysicist: the physics, the infrastructure and the failure modes of a system, whatever it runs on.' },
+  { id: 'about', to: '/about', title: 'Yago Mendoza', line: 'AI & Industrial Engineer. I work below the interface: the physics, the infrastructure and the failure modes of a system, whatever it runs on.' },
   { id: 'cv', to: '/about/cv', title: 'Experience', line: 'Where I have worked, what I built there and what it taught me.' },
   { id: 'stack', to: '/about/stack', title: 'Stack', line: 'The tools I reach for, and the few I would defend.' },
   { id: 'contact', to: '/contact', title: 'Get in touch', line: 'Ideas, collaborations, corrections. Barcelona, ES / EN.' },
@@ -75,6 +75,7 @@ export const fromPage = (page: typeof PAGES[number]): CardData => ({
   title: page.title,
   line: page.line,
   accent: OXIDE,
+  emblem: page.id === 'home',
 });
 
 export const fromPlayground = (pg: typeof PLAYGROUNDS[number]): CardData | null => {
