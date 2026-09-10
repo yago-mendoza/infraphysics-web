@@ -57,9 +57,17 @@
 /* No index (single section): one column, body centred at the reading measure. */
 .glab-grid-solo { grid-template-columns: minmax(0, 1fr); }
 .glab-grid-solo .glab-body { width: 100%; max-width: 42rem; margin-inline: auto; }
+/* After the grid: the comments, aligned with the body column. They live outside the grid so the
+   sticky index ends with the text instead of riding down over the discussion. */
+.glab-after { display: grid; grid-template-columns: 15.5rem minmax(0, 1fr); gap: 3rem; }
+.glab-after .article-comments { grid-column: 2; max-width: 42rem; }
+.glab-after-solo { grid-template-columns: minmax(0, 1fr); }
+.glab-after-solo .article-comments { grid-column: 1; width: 100%; margin-inline: auto; }
 
 @media (max-width: 900px) {
   .glab-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+  .glab-after { grid-template-columns: 1fr; }
+  .glab-after .article-comments { grid-column: 1; }
   .glab-index { position: static; padding-top: .8rem; }
   .glab-index ol { gap: .4rem; }
 }

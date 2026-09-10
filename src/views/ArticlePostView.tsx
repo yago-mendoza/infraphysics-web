@@ -554,8 +554,11 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                 allWikiNotes={brainIndex?.allWikiNotes}
                 className="article-content"
               />
-              <GiscusComments legacyPath={legacyPath} lang={post.lang || 'en'} />
             </div>
+          </div>
+          {/* Comments sit after the grid, under the body column, so the sticky index stops at the end of the text. */}
+          <div className={`glab-after${topHeadings.length > 1 ? '' : ' glab-after-solo'}`}>
+            <GiscusComments legacyPath={legacyPath} lang={post.lang || 'en'} />
           </div>
         </article>
         </>
@@ -601,7 +604,6 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               allWikiNotes={brainIndex?.allWikiNotes}
               className="article-content"
             />
-            <GiscusComments legacyPath={legacyPath} lang={post.lang || 'en'} />
           </div>
           <aside className="pj-rail" id="article-toc">
             {topHeadings.length > 1 && (
@@ -632,6 +634,10 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
               {shareDropdown}
             </div>
           </aside>
+        </div>
+        {/* Comments after the grid, in the body column, so the sticky rail stops at the end of the text. */}
+        <div className="pj-column pj-after">
+          <GiscusComments legacyPath={legacyPath} lang={post.lang || 'en'} />
         </div>
       </article>
       )}

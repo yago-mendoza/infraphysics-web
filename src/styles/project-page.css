@@ -71,6 +71,9 @@
 .pj-body { min-width: 0; }
 .pj-body .article-content { width: 100% !important; max-width: 42rem !important; margin-inline: auto !important; }
 .pj-body .article-comments { max-width: 42rem; margin-inline: auto; }
+/* Comments after the grid, in the body column's width, so the sticky rail stops with the text. */
+.pj-after { display: grid; grid-template-columns: minmax(0, 1fr) 15.5rem; gap: 3rem; }
+.pj-after .article-comments { grid-column: 1; width: 100%; max-width: 42rem; margin-inline: auto; }
 .pj-rail { position: sticky; top: 5.5rem; display: grid; gap: 1.6rem; padding-top: .9rem; border-top: 1px solid var(--border-default); }
 
 /* Summary: the lead paragraph with a name in the accent, a rule before the body. */
@@ -123,6 +126,7 @@
 
 @media (max-width: 900px) {
   .pj-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+  .pj-after { grid-template-columns: 1fr; }
   /* The rail comes first (the facts above the body); the index is reached from the floating button. */
   .pj-rail { position: static; order: -1; }
   .pj-index { display: none; }

@@ -77,3 +77,17 @@ Cloudflare's documented Free limits at implementation time: 100,000 DO requests/
 On Free, exceeding a limit causes operation failures until allowance resets; it is not an automatic paid upgrade. A single object also adds network latency for distant visitors and concentrates load. These counters load asynchronously; they should not block page rendering. Unlimited retention means storage grows: monitor it and export/archive deliberately if needed instead of silently deleting history.
 
 Official references: [pricing](https://developers.cloudflare.com/durable-objects/platform/pricing/), [Pages bindings](https://developers.cloudflare.com/pages/functions/bindings/), [SQLite storage](https://developers.cloudflare.com/durable-objects/api/sqlite-storage-api/).
+
+## Exploration and measurement definitions
+
+The admin dashboard separates public all-time totals (including documented historical offsets) from measured daily activity. Historical offsets never enter time-series charts. Localhost admin requests proxy production; local public navigation does not send analytics events.
+
+New visible page openings carry a random visit ID. Retries keep that ID, so a failed response cannot double-count the opening. Real reloads and returns produce new openings. Existing public article counters retain IP/article rolling-24-hour deduplication; site pageviews retain session/path rolling-30-minute deduplication. These are different metrics and are labeled separately.
+
+The SQLite exploration table aggregates opening cohorts by UTC hour, path, country, device, browser language and session referrer. The private report accepts one or two whitelisted `groupBy` dimensions and equality `filters`. All values are SQL parameters. Cross-tab totals and hourly charts use the same filters; daily site summaries and rankings remain global for the chosen dates. Transition pairs use dates only and are explicitly labeled global. Rankings/option lists are capped; totals include all matching groups.
+
+Active milliseconds accumulate only while the tab is visible and focused. The browser sends cumulative measurements every 30 seconds and on hide/exit; the server applies only positive deltas. Out-of-order or repeated samples cannot inflate the sum. Scroll reports maximum viewport progress through the article, not proof of reading. Average time and 90-percent scroll use openings with received measurements as denominator; the dashboard exposes sample coverage. Abrupt closes, blocked scripts and old cached clients reduce coverage. Time is attributed to the opening hour, even if reading crosses an hour/day boundary. Visit/dedup state expires; aggregate rows and totals do not.
+
+This adds requests and writes proportional to focused reading duration (roughly two updates per minute, plus visibility/exit updates), along with aggregation and transient state. Monitor Cloudflare usage; the free allowance is finite. Exploration begins at its recorded activation timestamp and cannot reconstruct past countries or reading times. Search, 404s and tool-click events are not yet collected. KV-compatible exports do not back up these new aggregate tables; retain the DO and export reports separately.
+
+Validation: `npm.cmd test` here tests real SQLite and Pages binding; `node scripts/site-analytics.test.mjs` from the repository root checks client focus, retry identity, navigation and BFCache timing without sending production events.
