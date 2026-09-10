@@ -3,7 +3,7 @@ slug: the-years-we-thought-we-had
 id: "3358174"
 category: essays
 lang: es
-sourceHash: 0aa760c90058
+sourceHash: 058e4dc4a84e
 displayTitle: "Los años que creíamos tener"
 subtitle: "Sobre GPT Astra, unos patos y la única ventaja que no escala"
 ---
@@ -68,7 +68,7 @@ Esta es la lectura alegre. La lista que sigue es lo que añadirían los preocupa
 
 El argumento de Tao y el calendario apuntan en la misma dirección. El siguiente modelo viene, la ruleta de los laboratorios gira cada pocos meses, y el próximo salto puede ser de Anthropic, o en matemáticas, o en algo que todavía no tiene nombre. Si el siguiente modelo puede llegar cualquier mes y una demostración de caja negra no le enseña nada a nadie, entonces aprender por ventaja competitiva ha perdido casi todo su sentido. Aprender lo que te interesa, despacio, porque sí, no. Ahí, más o menos, es donde la mano se afloja.
 
->> 26.09.10 [title: Tres días después] - El ejemplo que Tao usaba ahí arriba ha dejado de ser un ejemplo. El 8 de septiembre OpenAI anunció que un enjambre de diez mil agentes Astra había resuelto [[https://openai.com/index/navier-stokes-solution/|Navier–Stokes]]: el fluido sí se rompe, un vórtice que se aprieta y gira cada vez más deprisa hasta que las ecuaciones ceden, encontrado en 88 horas y comprobado en Lean en otras 17. Terminaron el sábado en que se publicó este artículo, y ya hay una disputa por el mérito con dos matemáticos que llevaban un año cerca. Hay algo de suerte pura en estar vivo para verlo: que un problema que llevaba generaciones sin resolverse ceda en una noche, que la explosión de inteligencia no dé señales de agotarse, que cada semana traiga una sorpresa que hace un año habría parecido ciencia ficción. Y sin embargo esa misma suerte trae su sombra: la sensación de que admirar y temer se han vuelto el mismo gesto, no dos reacciones distintas. No creo que haga falta elegir entre las dos. Lo que sí creo es que esa tensión merece más reflexión de la que le estamos dando, y que artículos como este solo sirven si de verdad despiertan algo en quien los lee, no si se quedan en otro texto más sobre el tema. Porque al final, si esto sigue a este ritmo, no bastará con que cada uno lo procese a solas: hará falta cierto acuerdo colectivo, una manera de estar unidos frente a esto, sin que eso tenga que sonar religioso, sin necesidad de una fe ni de una iglesia, solo la sobriedad de saber que algo nos atañe a todos por igual.
+>> 26.09.10 [title: Tres días después] - El ejemplo de Tao de ahí arriba ya no es hipotético: el 8 de septiembre OpenAI anunció que un enjambre de agentes Astra había [[https://openai.com/index/navier-stokes-solution/|resuelto Navier–Stokes]], con la demostración comprobada en Lean. Me sigue asombrando cada vez que pasa, y me siento afortunado de estar aquí para verlo. También me preocupa, y creo que debería preocupar a más gente. Por eso escribo esto. Si el ritmo se mantiene, no bastará con que cada uno lo digiera a solas; en algún momento habrá que ponerse de acuerdo, entre todos, sobre qué queremos de esto. Nada religioso. Solo la idea de que nos atañe a todos.
 
 ## Poco se ha metabolizado
 
