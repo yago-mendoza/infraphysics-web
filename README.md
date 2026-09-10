@@ -390,3 +390,7 @@ Future features under consideration:
 - [x] **Wiki Console graph explorer** — Shared mini/expanded force-directed map with 2D/3D views, semantic highlighting and centrality/root coloring at `/wiki`.
 
 Content uses readable filenames and URL slugs with stable internal IDs. See [URL conventions and renaming](scripts/CONTENT-URLS.md).
+
+### Private statistics and counters
+
+See [workers/counters/README.md](workers/counters/README.md) for the optional Durable Object backend, private admin panel, authentication, migration and recovery. KV remains the default until explicitly switched.

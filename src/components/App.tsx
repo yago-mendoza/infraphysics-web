@@ -16,6 +16,8 @@ import { ExperimentalCursor } from './ExperimentalCursor';
 import { HomeVisualLab } from './personal/HomeVisualLab';
 import { HomeView } from '../views/HomeView';
 
+const AdminStatsView = React.lazy(() => import('../views/AdminStatsView').then(m => ({ default: m.AdminStatsView })));
+
 // Lazy-loaded heavy views (code-split into separate chunks)
 const AboutView = React.lazy(() => import('../views/AboutView').then(m => ({ default: m.AboutView })));
 const CvView = React.lazy(() => import('../views/CvView').then(m => ({ default: m.CvView })));
@@ -99,6 +101,11 @@ const AppLayout: React.FC = () => {
   useEffect(() => {
     const route = contentRoutes.resolve(location.pathname);
     if (route && location.pathname !== route.canonical) return;
+    if (import.meta.env.DEV || location.pathname.startsWith('/admin') || navigator.doNotTrack === '1' || (navigator as Navigator & {globalPrivacyControl?: boolean}).globalPrivacyControl) return;
+    let recorded = false;
+    const record = () => {
+    if (document.visibilityState !== 'visible' || recorded) return;
+    recorded = true;
     const now = Date.now();
     const sessionWindow = 30 * 60 * 1000;
     try {
@@ -115,10 +122,15 @@ const AppLayout: React.FC = () => {
       fetch('/api/analytics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: contentRoutes.storagePath(location.pathname), visitorId, sessionId }),
+        body: JSON.stringify({ path: contentRoutes.storagePath(location.pathname), visitorId, sessionId,
+          referrer: document.referrer ? new URL(document.referrer).origin : '', language: navigator.language.split('-')[0] }),
         keepalive: true,
       }).catch(() => {});
     } catch { /* Analytics must never affect navigation. */ }
+    };
+    record();
+    document.addEventListener('visibilitychange', record);
+    return () => document.removeEventListener('visibilitychange', record);
   }, [location.pathname]);
 
   const openSearch = useCallback(() => {
@@ -328,7 +340,7 @@ const App: React.FC = () => {
     <ThemeProvider>
       <CursorPreferenceProvider>
         <BrowserRouter>
-          <AppLayout />
+          <AppRouter />
         </BrowserRouter>
       </CursorPreferenceProvider>
     </ThemeProvider>
@@ -336,3 +348,12 @@ const App: React.FC = () => {
 };
 
 export default App;
+
+// Admin never mounts the public shell, its navigation, tracking or shortcuts.
+const AppRouter: React.FC = () => {
+  const { pathname } = useLocation();
+  if (pathname.replace(/\/$/, '') === '/admin/stats') return <ErrorBoundary resetKey={pathname}>
+    <Suspense fallback={<div style={{padding:24, fontFamily:'monospace'}}>LOADING ADMIN...</div>}><AdminStatsView /></Suspense>
+  </ErrorBoundary>;
+  return <AppLayout />;
+};

@@ -2,9 +2,7 @@
 // POST /api/reactions/{slug} → toggle heart for this IP, return new count + status
 // GET  /api/reactions/{slug} → return heart count + whether this IP has hearted
 
-interface Env {
-  VIEWS: KVNamespace; // shared namespace for views + reactions
-}
+import { bot, callCounters, durable, mutationGuard, validPath, type CounterEnv as Env } from '../../_lib/counters';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -41,14 +39,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
 
-  if (!env.VIEWS) {
+  if (!env.VIEWS && !durable(env)) {
     return json({ error: 'KV not bound' }, 503);
   }
 
   const url = new URL(request.url);
   const slug = slugFromUrl(url);
 
-  if (!slug || slug === '/') {
+  if (!validPath(slug) || slug === '/') {
     return json({ error: 'Missing slug' }, 400);
   }
 
@@ -56,6 +54,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const hash = await ipHash(ip, slug);
   const heartedKey = `hearted:${hash}`;
   const heartsKey = `hearts:${slug}`;
+
+  if (!['GET', 'POST'].includes(request.method)) return json({error: 'Method not allowed'}, 405);
+  if (request.method === 'POST') {
+    const rejected = mutationGuard(request, env); if (rejected) return rejected;
+    if (bot(request)) return json({error: 'Automated reaction rejected'}, 403);
+  }
+  if (durable(env)) return callCounters(env, {op: 'heart', slug, hash, mutate: request.method === 'POST'});
 
   if (request.method === 'GET') {
     const [countVal, heartedVal] = await Promise.all([

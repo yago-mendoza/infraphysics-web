@@ -4,9 +4,7 @@ import {
   HISTORICAL_VISITOR_OFFSET,
 } from '../../src/config/analytics';
 
-interface Env {
-  VIEWS?: KVNamespace;
-}
+import { callCounters, durable, type CounterEnv as Env } from '../_lib/counters';
 
 type Visitor = { city: string; region?: string; country: string };
 
@@ -19,6 +17,13 @@ const json = (data: unknown) => new Response(JSON.stringify(data), {
 });
 
 export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
+  if (durable(env)) {
+    const response = await callCounters(env, {op: 'presence'});
+    if (!response.ok) return response;
+    const data = await response.json() as {lastVisitor: Visitor | null; pageViews: number; visits: number; visitors: number};
+    return json({...data, pageViews: data.pageViews + HISTORICAL_PAGEVIEW_OFFSET,
+      visits: data.visits + HISTORICAL_VISIT_OFFSET, visitors: data.visitors + HISTORICAL_VISITOR_OFFSET});
+  }
   if (!env.VIEWS) return json({ lastVisitor: null, pageViews: null, visits: null, visitors: null });
 
   const [stored, pageViews, visits, visitors] = await Promise.all([

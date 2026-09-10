@@ -1,0 +1,6 @@
+{
+  "extends": "../../tsconfig.functions.json",
+  "compilerOptions": { "strict": true },
+  "include": ["src/**/*.ts"],
+  "exclude": []
+}

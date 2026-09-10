@@ -2,9 +2,7 @@
 // POST /api/stats with { slugs: ["/lab/projects/foo", ...] }
 // Returns { [slug]: { views: number } }
 
-interface Env {
-  VIEWS: KVNamespace;
-}
+import { callCounters, durable, validPath, type CounterEnv as Env } from '../_lib/counters';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -30,7 +28,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return json({ error: 'Method not allowed' }, 405);
   }
 
-  if (!env.VIEWS) {
+  if (!env.VIEWS && !durable(env)) {
     return json({ error: 'KV not bound' }, 503);
   }
 
@@ -41,13 +39,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return json({ error: 'Invalid JSON' }, 400);
   }
 
-  const slugs = body.slugs;
-  if (!Array.isArray(slugs) || slugs.length === 0) {
+  const slugs = body?.slugs;
+  if (!Array.isArray(slugs) || slugs.length === 0 || !slugs.every(validPath)) {
     return json({ error: 'slugs array required' }, 400);
   }
 
   // Cap at 50 to avoid abuse
   const capped = slugs.slice(0, 50);
+  if (durable(env)) return callCounters(env, {op: 'stats', slugs: capped});
 
   // Listing pages deliberately expose views only. Reactions remain available
   // through their dedicated endpoint without doubling KV reads here.

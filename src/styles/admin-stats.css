@@ -1,0 +1,34 @@
+.admin-stats {
+  position: relative;
+  min-height: 100dvh;
+  padding: clamp(20px, 6vw, 70px) 16px;
+  color: #172323;
+  background-color: #b9bcb6;
+  background-image: linear-gradient(#6e7a7224 1px, transparent 1px), linear-gradient(90deg, #6e7a7224 1px, transparent 1px);
+  background-size: 20px 20px;
+  font: 13px/1.55 'Courier New', Courier, monospace;
+  color-scheme: light;
+}
+.admin-stats *, .admin-stats *::before, .admin-stats *::after { box-sizing: border-box; }
+.admin-stats__terminal { max-width: 1000px; margin: 0 auto; border: 2px solid; border-color: #f4f4ea #4a514b #4a514b #f4f4ea; background: #d1d2c9; box-shadow: 5px 5px 0 #283c354d; }
+.admin-stats__titlebar { display: flex; justify-content: space-between; gap: 12px; padding: 5px 9px; background: #273f36; color: #f4f4dc; font-weight: bold; letter-spacing: .06em; }
+.admin-stats__body { padding: clamp(14px, 3vw, 28px); }
+.admin-stats .admin-stats__path { margin: 0 0 22px; font-size: 11px; border-bottom: 1px dotted #6b736c; padding-bottom: 9px; }
+.admin-stats h1 { margin: 0 0 14px; font: bold 22px/1.2 'Courier New', monospace; letter-spacing: -.04em; }
+.admin-stats h2 { margin: 28px 0 10px; font: bold 14px/1.5 'Courier New', monospace; text-transform: uppercase; }
+.admin-stats p { margin: 12px 0; max-width: 85ch; }
+.admin-stats form { display: grid; grid-template-columns: 100px minmax(100px, 300px) auto; align-items: center; gap: 10px; margin: 26px 0 44px; width: fit-content; max-width: 100%; }
+.admin-stats input { width: 100%; min-width: 0; padding: 6px; border: 2px inset #91958b; border-radius: 0; background: #f2f3e8; color: #12221a; font: inherit; }
+.admin-stats button { padding: 5px 12px; color: #172323; background: #d4d5cc; border: 2px solid; border-color: #fffff4 #525a51 #525a51 #fffff4; border-radius: 0; font: bold 12px/1.5 'Courier New', monospace; cursor: pointer; }
+.admin-stats button:active { border-color: #525a51 #fffff4 #fffff4 #525a51; }
+.admin-stats button:disabled { color: #60665d; cursor: default; }
+.admin-stats :focus-visible { outline: 2px dotted #203f2e; outline-offset: 3px; }
+.admin-stats table { font: inherit; background: #e4e5d9; }
+.admin-stats th, .admin-stats td { padding: 5px 8px; border: 1px solid #979f91; text-align: left; }
+.admin-stats th { background: #babfb1; }
+.admin-stats [role='alert'] { color: #850d13; font-weight: bold; }
+.admin-stats__status { padding: 4px 8px; border-top: 2px groove #f1f1e2; font-size: 10px; letter-spacing: .02em; }
+@media (max-width: 540px) {
+  .admin-stats form { grid-template-columns: 1fr; width: 100%; }
+  .admin-stats__titlebar { font-size: 10px; }
+}

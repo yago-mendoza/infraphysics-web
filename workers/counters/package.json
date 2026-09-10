@@ -1,0 +1,14 @@
+{
+  "name": "infraphysics-counters",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "check": "tsc --noEmit -p tsconfig.json",
+    "test": "node test.mjs"
+  },
+  "overrides": { "sharp": "^0.35.4" },
+  "devDependencies": {
+    "wrangler": "4.130.0"
+  }
+}

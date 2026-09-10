@@ -2,9 +2,7 @@
 // POST /api/views/{slug} → increment + return count (IP-deduped per 24h)
 // GET  /api/views/{slug} → return count without incrementing
 
-interface Env {
-  VIEWS: KVNamespace;
-}
+import { bot, callCounters, durable, mutationGuard, validPath, type CounterEnv as Env } from '../../_lib/counters';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -45,18 +43,27 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
 
-  if (!env.VIEWS) {
+  if (!env.VIEWS && !durable(env)) {
     return json({ error: 'KV not bound' }, 503);
   }
 
   const url = new URL(request.url);
   const slug = slugFromUrl(url);
 
-  if (!slug || slug === '/') {
+  if (!validPath(slug) || slug === '/') {
     return json({ error: 'Missing slug' }, 400);
   }
 
   const kvKey = `views:${slug}`;
+
+  if (!['GET', 'POST'].includes(request.method)) return json({error: 'Method not allowed'}, 405);
+  if (request.method === 'POST') {
+    const rejected = mutationGuard(request, env); if (rejected) return rejected;
+  }
+  if (durable(env)) return callCounters(env, {op: 'view', slug,
+    hash: await hashKey(`${request.headers.get('CF-Connecting-IP') || 'unknown'}:${slug}`),
+    mutate: request.method === 'POST' && !bot(request)});
+  if (request.method === 'POST' && bot(request)) return json({slug, views: Number(await env.VIEWS!.get(kvKey)) || 0});
 
   if (request.method === 'GET') {
     const val = await env.VIEWS.get(kvKey);

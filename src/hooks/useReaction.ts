@@ -18,11 +18,15 @@ export function useReaction(slug: string): ReactionState {
   // made a like briefly read as a subtraction).
   const heartedRef = useRef(false);
   const interacted = useRef(false);
+  const pending = useRef(false);
+  const currentSlug = useRef(slug);
+  currentSlug.current = slug;
   useEffect(() => { heartedRef.current = hearted; }, [hearted]);
 
   useEffect(() => {
     if (!slug) return;
     interacted.current = false;
+    pending.current = false;
     let cancelled = false;
 
     fetch(engagementApiUrl(`/api/reactions${slug}`))
@@ -39,7 +43,8 @@ export function useReaction(slug: string): ReactionState {
   }, [slug]);
 
   const toggle = useCallback(() => {
-    if (!slug) return;
+    if (!slug || pending.current) return;
+    pending.current = true;
     interacted.current = true;
 
     // Optimistic update — direction comes from the ref, never a stale closure.
@@ -49,9 +54,9 @@ export function useReaction(slug: string): ReactionState {
     setHearts(prev => prev == null ? prev : (next ? prev + 1 : Math.max(0, prev - 1)));
 
     fetch(engagementApiUrl(`/api/reactions${slug}`), { method: 'POST' })
-      .then(r => r.ok ? r.json() : null)
+      .then(r => { if (!r.ok) throw new Error('Reaction unavailable'); return r.json(); })
       .then(data => {
-        if (data) {
+        if (data && currentSlug.current === slug) {
           // Reconcile with the server's authoritative count.
           setHearts(data.hearts);
           setHearted(!!data.hearted);
@@ -59,12 +64,14 @@ export function useReaction(slug: string): ReactionState {
         }
       })
       .catch(() => {
+        if (currentSlug.current !== slug) return;
         // Revert the optimistic change.
         const reverted = !heartedRef.current;
         heartedRef.current = reverted;
         setHearted(reverted);
         setHearts(prev => prev == null ? prev : (reverted ? prev + 1 : Math.max(0, prev - 1)));
-      });
+      })
+      .finally(() => { if (currentSlug.current === slug) pending.current = false; });
   }, [slug]);
 
   return { hearts, hearted, toggle };
