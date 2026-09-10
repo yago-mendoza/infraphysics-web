@@ -28,7 +28,35 @@
 .admin-stats th { background: #babfb1; }
 .admin-stats [role='alert'] { color: #850d13; font-weight: bold; }
 .admin-stats__status { padding: 4px 8px; border-top: 2px groove #f1f1e2; font-size: 10px; letter-spacing: .02em; }
+.admin-stats__toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0; }
+.admin-stats__totals { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); border: 1px solid #929a8b; background: #e3e5d9; }
+.admin-stats__totals > div { padding: 10px; border-right: 1px solid #929a8b; }
+.admin-stats__totals > div:last-child { border-right: 0; }
+.admin-stats__totals span { display: block; min-height: 40px; font-size: 11px; text-transform: uppercase; }
+.admin-stats__totals strong { display: block; font-size: clamp(18px,4vw,27px); line-height: 1.2; }
+.admin-stats__period { margin: 26px 0; border-top: 2px groove #f1f1e2; }
+.admin-stats form.admin-stats__filters { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; margin: 18px 0; }
+.admin-stats__filters input { width: 160px; }
+.admin-stats__grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; margin-top: 20px; }
+.admin-stats__panel { min-width: 0; border: 1px solid #929a8b; padding: 12px; margin: 14px 0; background: #d8dacd; }
+.admin-stats__grid .admin-stats__panel { margin: 0; }
+.admin-stats__panel h2 { margin-top: 0; }
+.admin-stats__panel p { font-size: 11px; }
+.admin-stats__table-scroll { max-width: 100%; overflow: auto; }
+.admin-stats table { width: 100%; border-collapse: collapse; }
+.admin-stats td { overflow-wrap: anywhere; }
+.admin-stats__panel > .admin-stats__table-scroll > table th { white-space: nowrap; }
+.admin-stats a { color: #173e37; text-decoration: underline; }
+.admin-stats__empty { padding: 16px 8px; border: 1px dashed #969e90; color: #4f5b4f; }
+.admin-stats__bar { display: inline-block; vertical-align: middle; width: 65px; height: 9px; margin-right: 7px; background: #bac1b0; }
+.admin-stats__bar i { display: block; height: 100%; background: repeating-linear-gradient(90deg,#304b3c 0 2px,#677b60 2px 3px); }
+.admin-stats details { margin: 14px 0; font-size: 12px; }
+.admin-stats summary { cursor: pointer; text-decoration: underline dotted; }
 @media (max-width: 540px) {
   .admin-stats form { grid-template-columns: 1fr; width: 100%; }
   .admin-stats__titlebar { font-size: 10px; }
+  .admin-stats__grid { grid-template-columns: 1fr; }
+  .admin-stats__totals { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .admin-stats__totals > div { border-bottom: 1px solid #929a8b; }
+  .admin-stats__totals span { min-height: 0; }
 }

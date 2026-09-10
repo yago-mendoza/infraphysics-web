@@ -64,5 +64,17 @@ try {
   check(data.totals,{pageviews:9,sessions:1,visitors:1});
   check(data.daily.find(row=>row.key==='pageviews').value,1);
   check(JSON.stringify(data).includes('private'),false);
+  check(data.period.pageviews,1);
+  check(data.series[0].pageviews,1);
+  check(data.breakdowns.referrer,[{label:'google.com',value:1}]);
+  check(data.breakdowns.language,[{label:'es',value:1}]);
+  check(data.breakdowns.entry,[{label:'/home',value:1}]);
+  check(data.engagement,{views:82,hearts:0});
+  check(data.articles,[{path:'/blog/essays/test',views:82,hearts:0}]);
+  const emptyReport=await (await admin({op:'report',from:'2000-01-01',to:'2000-12-31'})).json();
+  check(emptyReport.series,[]);
+  check(emptyReport.breakdowns.referrer,[]);
+  check(emptyReport.period,{});
+  check(emptyReport.totals,data.totals);
   console.log(`PASS ${checks} assertions: Pages binding, concurrency, dedup, migration retries, auth, bot filtering, contracts and privacy.`);
 } finally { await mf.dispose(); }

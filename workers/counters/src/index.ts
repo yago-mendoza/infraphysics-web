@@ -85,11 +85,21 @@ export class Counters extends DurableObject {
     if (i.op === 'report') {
       const from = i.from || '0000-01-01', to = i.to || '9999-12-31';
       if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to) || from > to) throw new Error('Invalid date range');
+      const breakdowns = Object.fromEntries(['entry', 'referrer', 'country', 'language', 'device'].map(group => [group,
+        this.sql.exec<{label:string; value:number}>('SELECT substr(key,?) AS label,SUM(value) AS value FROM daily WHERE day>=? AND day<=? AND key LIKE ? GROUP BY key ORDER BY value DESC,key LIMIT 100', group.length + 2, from, to, `${group}:%`).toArray(),
+      ]));
       return {
       started: this.meta('started'), totals: {pageviews: this.count('analytics:pageviews'), sessions: this.count('analytics:sessions'), visitors: this.count('analytics:visitors')},
       daily: this.sql.exec('SELECT day,key,value FROM daily WHERE day>=? AND day<=? ORDER BY day DESC,key LIMIT 10000', from, to).toArray(),
       pages: this.sql.exec("SELECT key,value FROM entries WHERE key LIKE 'analytics:path:%' ORDER BY CAST(value AS INTEGER) DESC LIMIT 100").toArray(),
-      limits: {dailyRows: 10000, topPages: 100},
+      period: Object.fromEntries(this.sql.exec<{key:string; value:number}>("SELECT key,SUM(value) AS value FROM daily WHERE day>=? AND day<=? AND key IN ('pageviews','sessions','visitors','hearts_added','hearts_removed') GROUP BY key", from, to).toArray().map(row => [row.key,row.value])),
+      series: this.sql.exec("SELECT day,SUM(CASE WHEN key='pageviews' THEN value ELSE 0 END) AS pageviews,SUM(CASE WHEN key='sessions' THEN value ELSE 0 END) AS sessions,SUM(CASE WHEN key='visitors' THEN value ELSE 0 END) AS visitors FROM daily WHERE day>=? AND day<=? AND key IN ('pageviews','sessions','visitors') GROUP BY day ORDER BY day DESC LIMIT 366", from, to).toArray(),
+      breakdowns,
+      articles: this.sql.exec(`WITH paths AS (SELECT substr(key,7) AS path FROM entries WHERE key LIKE 'views:%' UNION SELECT substr(key,8) AS path FROM entries WHERE key LIKE 'hearts:%')
+        SELECT paths.path,COALESCE(CAST(v.value AS INTEGER),0) AS views,COALESCE(CAST(h.value AS INTEGER),0) AS hearts FROM paths
+        LEFT JOIN entries v ON v.key='views:'||paths.path LEFT JOIN entries h ON h.key='hearts:'||paths.path ORDER BY views DESC,paths.path LIMIT 100`).toArray(),
+      engagement: this.sql.exec("SELECT COALESCE(SUM(CASE WHEN key LIKE 'views:%' THEN CAST(value AS INTEGER) ELSE 0 END),0) AS views,COALESCE(SUM(CASE WHEN key LIKE 'hearts:%' THEN CAST(value AS INTEGER) ELSE 0 END),0) AS hearts FROM entries WHERE key LIKE 'views:%' OR key LIKE 'hearts:%'").one(),
+      limits: {dailyRows: 10000, topPages: 100, seriesDays: 366, breakdownRows: 100},
     }; }
     if (i.op === 'stats') return Object.fromEntries((i.slugs || []).slice(0,50).map(slug => [slug, {views: this.count(`views:${slug}`)}]));
     if (i.op === 'presence') return {lastVisitor: this.get('presence:last') ? JSON.parse(this.get('presence:last')!) : null,

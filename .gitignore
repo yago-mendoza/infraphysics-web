@@ -50,3 +50,5 @@ media/
 
 .wrangler/
 room/counters-backups/
+
+.secrets/

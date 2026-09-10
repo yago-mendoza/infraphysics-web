@@ -319,3 +319,10 @@ The shared About toolbar opens `/Yago-Mendoza-CV.pdf` in a new tab for printing 
 Help search results use a borderless text list, visually distinct from concept cards. Directory root/level selects must use `wiki-root-select`: it supplies opaque theme backgrounds and primary text for both the control and its native options. Translucent surface backgrounds can leave native menus unreadable.
 
 The Wiki guide owns keyboard events while open: stop propagation before the Wiki's window-level type-to-search and grid handlers receive them. Keep focus inside the dialog and restore it to the information button on close. Search results open a topic and scroll to the matching paragraph; help queries must never change the concept search or navigate the underlying page.
+
+## Private admin credential
+
+- `/admin/stats` uses the Cloudflare Pages secret `COUNTERS_ADMIN_TOKEN`.
+- Its local copy is `.secrets/admin-stats-token.txt`, excluded from Git. `room/` is disposable scaffolding and must not hold permanent credentials.
+- Never print the token, commit it, put it in a URL, or copy its value into documentation. If rotating it, update Cloudflare and the local copy together.
+- Local admin requests are proxied by Vite to the authenticated production API; localhost shows real production statistics.

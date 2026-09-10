@@ -25,13 +25,14 @@ Not implemented: scroll/read completion, per-session paths, 404 reports, Wiki se
 
 `/admin/stats` is a standalone plain HTML-style React panel, outside the public navigation shell.
 `POST /api/admin/counters` requires `Authorization: Bearer <COUNTERS_ADMIN_TOKEN>`.
-There is **no default credential**. Create a random secret with at least 32 characters and store it as a Pages encrypted environment secret. The browser holds it only in component memory while requesting the report, then clears it. It is never included in a URL or localStorage.
+There is **no default credential**. Create a random secret with at least 32 characters and store it as a Pages encrypted environment secret. The browser clears the password field after login and holds the credential only in component memory until logout, navigation away or reload, allowing date filters without repeated login. It is never included in a URL or localStorage. The local admin page uses a dedicated Vite proxy to the same authenticated production API.
 Admin responses are no-store, have no cross-origin sharing headers, and reject query-string-only credentials.
+The local production credential is stored at `.secrets/admin-stats-token.txt` (ignored by Git), not in the disposable `room/` folder. The matching runtime secret is `COUNTERS_ADMIN_TOKEN` in Cloudflare Pages. Documentation must reference the location only, never contain the value.
 The static page itself is public; the data API is authenticated. An ugly page, noindex and an unlisted URL are not access controls.
 
 For email-based access, configure Cloudflare Access for both `/admin/*` and `/api/admin/*` on every reachable hostname. Access is **not configured by this code**. Keep the API bearer check until Access JWT validation or an equivalent origin restriction is implemented; a custom-domain-only policy may leave the pages.dev hostname reachable.
 
-Reports accept optional `from` and `to` ISO dates. Each response includes at most 10,000 daily rows and the top 100 all-time pages. Query smaller date ranges to access older data. This is a response limit, not a retention policy. Downloaded report JSON covers that query, not a complete database backup.
+Reports accept optional `from` and `to` ISO dates. The dashboard separates all-time page/session/visitor counts, article views/hearts, daily activity, session entry pages, referrers, countries, browser languages and device classes. Period summaries and breakdowns are aggregated in SQL independently of the raw-row response limit. Each response includes at most 366 active days, 100 rows per ranking and 10,000 raw daily rows. Query smaller date ranges to access older data. These are response limits, not retention policies. Downloaded report JSON covers that query, not a complete database backup.
 
 ## Local verification
 
