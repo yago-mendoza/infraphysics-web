@@ -3146,11 +3146,6 @@ html.theme-transitioning .article-content pre:not(.code-terminal pre) {
 .author-link { display: inline-flex; align-items: center; gap: .4rem; }
 .author-mini { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-default); }
 
-/* The thin black bar on the top edge of every article page: absolute against main (the positioned
-   ancestor), its box following the column and its paint spanning the viewport. Empty on purpose.
-   It keeps the dark ground of the home in both themes, so it stays the same object in light. */
-.article-topbar { position: absolute; top: 0; left: 0; right: 0; z-index: 5; height: 3.5rem; background: #151715; /* the dark ground of the home, in both themes */ }
-.article-topbar::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; z-index: -1; width: 100vw; transform: translateX(-50%); background: inherit; }
 
 /* Phones: the floating Sections button (bottom left, clear of the nav pill) and the index as a bottom
    sheet. The sheet is a portal, so the accent arrives as --art-accent on it. */

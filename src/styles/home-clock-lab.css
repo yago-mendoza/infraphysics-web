@@ -1,0 +1,34 @@
+/* Home clock lab (/home1 … /home10): the study switcher and the playground's parameter panel. Dev only. */
+.home-study-switcher { position: fixed; z-index: 40; top: .6rem; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: .2rem; padding: .3rem; border: 1px solid var(--border-default); border-radius: .6rem; background: var(--bg-base); box-shadow: 0 4px 20px color-mix(in srgb, var(--bg-base) 60%, transparent); }
+.home-study-switcher a { display: grid; place-items: center; min-width: 1.8rem; height: 1.8rem; color: var(--text-tertiary); font: 500 .8rem/1 var(--font-sans); border-radius: .3rem; }
+.home-study-switcher a:hover { color: var(--text-heading); background: var(--bg-surface-alt); }
+.home-study-switcher a[aria-current] { color: var(--text-on-accent); background: var(--brand-oxide); }
+.home-study-switcher span { padding-inline: .5rem; min-width: 8rem; color: var(--text-secondary); font: .8rem/1.2 var(--font-sans); }
+.home-study-switcher .home-study-original { width: auto; padding-inline: .5rem; border-left: 1px solid var(--border-default); }
+/* Study 3 (Deep) lets the lattice run down behind the text: the /home mask that fades the field out at 60% is relaxed there only. */
+[data-home-study="3"] .home-visual-1 { -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 62%, rgba(0,0,0,.35) 82%, transparent 100%); mask-image: linear-gradient(to bottom, #000 0%, #000 62%, rgba(0,0,0,.35) 82%, transparent 100%); }
+
+.clock-panel { position: fixed; z-index: 48; right: .75rem; top: 3.4rem; bottom: 4.5rem; width: 19rem; display: flex; flex-direction: column; border: 1px solid var(--border-default); border-radius: .6rem; background: color-mix(in srgb, var(--bg-base) 97%, transparent); backdrop-filter: blur(6px); box-shadow: 0 8px 30px color-mix(in srgb, var(--bg-base) 70%, transparent); color: var(--text-secondary); font: .75rem/1.4 var(--font-sans); }
+.clock-panel.is-closed { bottom: auto; }
+.clock-panel-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .55rem .7rem; border-bottom: 1px solid var(--border-default); }
+.clock-panel.is-closed .clock-panel-head { border-bottom: 0; }
+.clock-panel-toggle { color: var(--text-heading); font: 600 .78rem/1.2 var(--font-sans); }
+.clock-panel-actions { display: flex; gap: .25rem; }
+.clock-panel-actions button { padding: .2rem .5rem; border: 1px solid var(--border-default); border-radius: .3rem; color: var(--text-secondary); font: 500 .68rem/1.2 var(--font-mono); letter-spacing: .04em; text-transform: uppercase; }
+.clock-panel-actions button:hover { color: var(--text-heading); border-color: var(--border-hover); }
+.clock-panel-body { overflow-y: auto; padding: .4rem .7rem .8rem; overscroll-behavior: contain; }
+.clock-panel-body section + section { margin-top: .7rem; }
+.clock-panel-body h3 { margin: .4rem 0 .25rem; color: var(--text-muted); font: 500 9px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
+.clock-panel-body label { display: grid; grid-template-columns: 5.2rem minmax(0, 1fr) 2.6rem; align-items: center; gap: .5rem; padding: .18rem 0; }
+.clock-panel-body label span { color: var(--text-secondary); }
+.clock-panel-body label.is-changed span { color: var(--brand-oxide-strong); }
+.clock-panel-body output { text-align: right; color: var(--text-tertiary); font: .68rem/1 var(--font-mono); font-variant-numeric: tabular-nums; }
+.clock-panel-body input[type="range"] { width: 100%; height: 1rem; margin: 0; accent-color: var(--brand-oxide); background: transparent; cursor: pointer; }
+
+@media (max-width: 767px) {
+  .home-study-switcher { max-width: calc(100vw - 1rem); gap: .1rem; }
+  .home-study-switcher a { min-width: 1.65rem; }
+  .home-study-switcher span { display: none; }
+  .clock-panel { left: .5rem; right: .5rem; top: auto; bottom: 3.6rem; width: auto; max-height: 52vh; }
+  .clock-panel-body label { grid-template-columns: 4.4rem minmax(0, 1fr) 2.4rem; }
+}

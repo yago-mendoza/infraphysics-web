@@ -6,17 +6,20 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useLang, type Lang } from '../../contexts/LangContext';
 import { useRouteLanguage } from '../../hooks/useRouteLanguage';
 import { TranslationPendingModal } from '../ui/TranslationPendingModal';
+import { LangTags } from '../ui/LangTags';
 import { CloseIcon, DiceIcon, ExternalLinkIcon, MenuIcon, MoonIcon, SunIcon, WikiBrainIcon } from '../icons';
 import { postPath, secondBrainPath, secondBrainGraphPath } from '../../config/categories';
 import { postSummaries } from '../../data/postSummaries';
 import { initBrainIndex } from '../../lib/brainIndex';
 import { NAV_MENUS, type NavBackAction } from './Sidebar';
 import { useRevealOnScrollUp } from '../../hooks/useRevealOnScrollUp';
+import { stripLang } from '../../lib/contentRoutes';
 
 export const MobileNav: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: boolean; back?: NavBackAction }> = ({ onOpenSearch, revealOnScrollUp = false, back }) => {
   const [open, setOpen] = useState(false);
   const revealed = useRevealOnScrollUp(revealOnScrollUp);
   const location = useLocation();
+  const sitePath = stripLang(location.pathname);
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   // Same language control as the desktop gear: live where a Spanish version exists, otherwise the apology.
@@ -61,15 +64,15 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?:
   // The grouped rows: the desktop menus plus, on the phone only, a direct door to the graph.
   const menus: Record<string, { to: string; label: string }[]> = { ...NAV_MENUS, Wiki: [{ to: secondBrainGraphPath(), label: 'Graph' }] };
   const links = [
-    ['/home', 'Home'], ['/about', 'About'], ['/blog', 'Writing'],
-    ['/lab/projects', 'Projects'], [secondBrainPath(), 'Wiki'], ['/contact', 'Contact'],
+    ['/home', 'Home'], ['/about', 'About'], ['/blog/essays', 'Essays'],
+    ['/lab/projects', 'Projects'], ['/blog/bits2bricks', 'Bits2Bricks'], [secondBrainPath(), 'Wiki'], ['/contact', 'Contact'],
   ] as const;
 
   return (
     <div data-hidden={(!revealed && !open) || undefined} className="global-nav-shell nav-reveal nav-corner md:hidden fixed right-3 bottom-3 z-50">
       {/* A pill in the corner: the section we are in, then Menu. The phone's own browser bar carries back and the url. */}
       <div className="mobile-nav-bar h-11 pl-4 pr-3 inline-flex items-center gap-3 bg-th-base/95 backdrop-blur-md border border-th-border rounded-md">
-        <span className="text-xs text-th-tertiary whitespace-nowrap">{links.find(([to]) => location.pathname === to || location.pathname.startsWith(to + '/'))?.[1] ?? 'InfraPhysics'}</span>
+        <span className="text-xs text-th-tertiary whitespace-nowrap">{links.find(([to]) => sitePath === to || sitePath.startsWith(to + '/'))?.[1] ?? 'InfraPhysics'}</span>
         <button onClick={() => setOpen(true)} className="flex items-center gap-2 pl-3 border-l border-th-border text-xs text-th-heading" aria-label="Open navigation">Menu <MenuIcon /></button>
       </div>
 
@@ -95,11 +98,7 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?:
             <button type="button" onClick={randomWikinote}><WikiBrainIcon size={17} /><span>Random wikinote</span></button>
           </div>
           <div className="flex items-center justify-between pt-4 text-xs text-th-tertiary">
-            <button onClick={switchLanguage} aria-disabled={!canSwitchLang || undefined} className={`flex items-center gap-2 font-mono uppercase tracking-wide ${canSwitchLang ? 'text-th-secondary' : 'opacity-50'}`}>
-              <span className={routeLang.current === 'en' ? 'text-th-heading' : ''}>EN</span>
-              <span>/</span>
-              <span className={routeLang.current === 'es' ? 'text-th-heading' : ''}>ES</span>
-            </button>
+            <button onClick={switchLanguage} aria-disabled={!canSwitchLang || undefined} className="flex items-center gap-2 font-mono uppercase tracking-wide text-th-secondary"><LangTags routeLang={routeLang} /></button>
             <button onClick={toggleTheme} className="flex items-center gap-2 text-th-secondary">
               {theme === 'dark' ? <SunIcon /> : <MoonIcon />} Theme
             </button>

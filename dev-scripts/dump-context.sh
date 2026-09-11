@@ -116,6 +116,8 @@ FILES=(
   # --- Views ---
   "src/views/index.ts"
   "src/views/HomeView.tsx"
+  "src/components/personal/HomeClockLab.tsx"
+  "src/styles/home-clock-lab.css"
   "src/components/personal/WikiTerritories.tsx"
   "src/lib/partitionAreas.ts"
   "src/views/AboutView.tsx"

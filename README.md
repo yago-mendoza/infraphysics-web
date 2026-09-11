@@ -22,14 +22,49 @@ Personal website and knowledge system. Articles, projects, and a wiki of notes b
 
 ---
 
+### Where things are
+
+One line per area, each pointing at the document that explains it. A map for whoever comes back after months, not a changelog.
+
+- **Content and its rules:** [authoring hub](src/data/pages/README.md), [syntax](src/data/pages/SYNTAX.md), [hard rules](src/data/pages/STYLE.md), [voice guide](src/data/pages/VOICE.md), [visual guide](src/data/pages/VISUAL.md), [inbox](_studio/inbox/README.md) for article ideas, voice per category in [projects](src/data/pages/projects/README.md), [essays](src/data/pages/essays/README.md), [Bits2Bricks](src/data/pages/bits2bricks/README.md).
+- **Wiki and graph:** notes and scripts in [wikinotes/README.md](src/data/pages/wikinotes/README.md); the graph reading aids (lenses, shortest path, isolation, timeline, pins, legend) are explained to readers in the wiki guide (`src/components/wiki/SecondBrainGuide.tsx`) and to developers in [CLAUDE.md](CLAUDE.md#gotchas).
+- **Languages:** a Spanish sibling `<slug>.es.md` beside the English file, `sourceHash` to detect a stale translation, served at `/es/<url>`; see [Translated siblings](src/data/pages/README.md).
+- **Traffic and counters:** views, hearts, sessions and the private `/admin/stats` panel run on a Durable Object; [workers/counters/README.md](workers/counters/README.md) covers deploy, credential (`.secrets/`, never in git), migration and plan limits.
+- **Images and share cards:** masters in `media/` mirrored to R2 ([scripts/README.md](scripts/README.md#article-images)); share cards photographed by `npm run og`.
+- **Error pages:** one lost-robot view for the 404, missing articles, unknown wiki notes and runtime errors (`src/views/ErrorConceptView.tsx`, `/err5` to preview).
+- **Contact:** Formspree form, dashboard login and notification address in [Contact form](#contact-form-formspree).
+- **Deploy:** push to `main` publishes the site (Cloudflare Pages); the counters Worker deploys separately with `wrangler`; see [Platform and deployment](#platform-and-deployment).
+- **Reviewing an article:** the `/review-article` skill ([.claude/skills/review-article/SKILL.md](.claude/skills/review-article/SKILL.md)) checks one article against the hard rules, the voice guide, the syntax, external sources and the wiki, proposes wiki links with a sense check and missing concepts, and applies the result with `--apply`.
+- **Studio:** [_studio/](_studio/README.md) is the workshop next to the site, never compiled: ideas and saved material in `inbox/`, the generated prompt packs in `ai-ctx/` with the hand-written `_add-ctx/` folders beside them, Twitter bank, queue and history, and image references for articles.
+- **Design room and agent checks:** `room/` holds the numbered design-direction documents (editorial architecture, visual direction, roadmap, view system) plus the coding agent's check scripts, screenshots and backups; nothing in it ships.
+- **Home clock lab:** `/home1` through `/home9` in development are `/home` with other clock-field parameters (lattice, topology, faces, fields, ripples); `/home10` is a playground where all 24 parameters are sliders. A shared selector connects them; `/home` keeps its current design.
+
+---
+
 ### Project structure
 
 ```
 infraphysics-web/
+  AGENTS.md                   # Entry point for every coding agent: points to CLAUDE.md and says where the docs, the studio and the context packs live
+  CLAUDE.md                   # Automation rules, architecture, active gotchas (the one instruction file)
   .claude/
     hooks/                      # Claude Code hooks (pre-commit build, wikinote edit guards)
     skills/
       review-article/SKILL.md    # /review-article — review one article: hard rules, form, verified links, wiki links with sense check, missing concepts
+  _studio/                     # The workshop: never compiled or served (see _studio/README.md)
+    README.md                 # The flow, and how ideas are mined from the wiki and the articles
+    inbox/                    # One file per idea or saved item, for articles and for Twitter
+    facts/                    # Dated pieces of information (figures, claims, quotes) with source and verification status
+    ai-ctx/                   # Generated packs (prompt plus docs) named by input and output: articles/ and tweets/; tweets/_add-ctx/ is hand-written colour (expressions, moves) for tweets only
+    twitter/
+      examples/               # Tweets and threads by others kept for their shape
+      STRATEGY.md             # The phase the account is in, the daily shape, what to measure
+      TAGS.md                 # The tag vocabulary shared by twitter/ and inbox/ pieces
+      bank/                   # Reusable takes, prepared replies, one-liners, memes with captions: no date, no target yet
+      queue/                  # What is going out: dated, with the target url for replies and quotes, image beside the file
+      posted/                 # What went out, with the link: the account's history
+    visuals/
+      articles/               # Image styles wanted for article images (WebP references, one STYLE.md line each)
   .github/
     workflows/
       validate.yml              # CI: build + type check + wikinote reference validation
@@ -66,6 +101,8 @@ infraphysics-web/
     compute-graph-relevance.js # Build-time PageRank + proximity → graph-relevance.generated.json
     compute-graph-thumb.js    # Build-time static layout of the wiki graph → graph-thumb.generated.json (Home spotlight)
     og-cards.js               # Share cards: photographs every url's card from the dev server, uploads to R2, records src/data/og-cards.json (npm run og)
+    context-pack.js           # Concatenates the authoring docs into _studio/ai-ctx/<pack>.md, one pasteable document per writing job (npm run context, also in the build)
+    studio-find.js            # Finds studio pieces by frontmatter (tags, kind, status, format, language, text) and add-ctx lines (--tvb) so the folders never need reading (npm run find); a tool the agent may extend
     media.js                  # Images: optimize masters from media/ and sync them to Cloudflare R2 (push/pull/ls/status/rm/mv/url)
     README.md                 # Build pipeline docs, cache format
   dev-scripts/
@@ -82,7 +119,7 @@ infraphysics-web/
       ExperimentalCursor.tsx  # Optional custom cursor (user preference)
       wiki/                   # Second Brain: WikiContent, WikiLinkPreview, NeighborhoodGraph, RelevanceLeaderboard, BridgeScoreBadge, NavigationTrail, CopyExportModal, CopyConfirmModal, SecondBrainGuide
                               # Article presence sorting/filtering uses lib/wikiArticleUsage.ts
-      personal/               # Personal pages: AboutTopBar, ContactLogoSculpture, GraphThumb, HomeVisualLab,
+      personal/               # Personal pages: AboutTopBar, ContactLogoSculpture, GraphThumb, HomeVisualLab, HomeClockLab,
                               #   WikiTerritories (compact root treemap; lib/partitionAreas.ts), PresenceInfo (the "i" by the visit counters)
                               #   StartHere (four-door carousel under the intro) and WikiBanner (closing plate)
       article/                # ArticleBreadcrumbs, ArticleHashtags, BlogMetabar
@@ -111,7 +148,6 @@ infraphysics-web/
     legacy/
       home-visuals/           # Retired home visual engine, kept for reference (see its README)
     data/
-      inbox/                  # Article ideas and incoming material, one file per idea, never compiled (see its README)
       pages/
         README.md               # Authoring hub (frontmatter, content types, editorial rules, pipeline)
         SYNTAX.md               # Syntax reference (19 custom features, edge cases, quick ref)
@@ -187,6 +223,7 @@ infraphysics-web/
       editorial-primitives.css # Shared editorial typography primitives
       wiki-content.css        # Wiki/second-brain content delta overrides
       start-here.css          # Home four-door carousel under the intro
+      home-clock-lab.css      # Home clock lab: study switcher and the playground parameter panel
       article-geometry.css    # Blog article geometry (breadcrumb, sans title, rounded hero, sticky index; split header for Bits2Bricks)
       wiki-banner.css         # Home closing wiki plate
       project-page.css        # Project article page: full-bleed cover plate, brief strip, summary, numbered index rail
@@ -226,6 +263,7 @@ All article and wikinote Markdown lives in `src/data/pages/`. One entry point: *
 - **Hard rules, every category:** [STYLE.md](src/data/pages/STYLE.md). No double quotes, no arrows, no em-dashes (parentheses instead), no box titles, dense paragraphs, literal titles, footnotes as `^[…]` before the period, no *not X, Y* reframes. The mechanical ones come back as `[STYLE]` build warnings.
 - **Syntax:** [SYNTAX.md](src/data/pages/SYNTAX.md), the single grammar reference. The grammar is shared by every category; what each category may actually use is a subset, listed in its *Where each feature applies* table.
 - **Voice per category:** [projects/README.md](src/data/pages/projects/README.md), [essays/README.md](src/data/pages/essays/README.md), [bits2bricks/README.md](src/data/pages/bits2bricks/README.md): schema, tone, structure, accumulated author feedback.
+- **Voice and images:** [VOICE.md](src/data/pages/VOICE.md) (how a text sounds once it obeys the hard rules; always consulted when writing or reviewing an article) and [VISUAL.md](src/data/pages/VISUAL.md) (the one photographic language, before generating or choosing any image).
 - **Wikinotes:** [wikinotes/STYLE.md](src/data/pages/wikinotes/STYLE.md) for how a note is written, [wikinotes/README.md](src/data/pages/wikinotes/README.md) for scripts, renames and validation.
 - **Attachments:** images (masters in `media/`, served from the CDN) and standalone HTML pages (`public/playgrounds/<article-id>/`), in the hub's *Attachments* section.
 
@@ -292,6 +330,9 @@ Site-wide analytics include documented historical baselines from before the glob
 **Routing:** `public/_routes.json` controls which paths invoke the Pages Function vs serve static assets. API paths (`/api/*`) and article paths (for OG tags) route to the Function; everything else is served directly from the build output.
 
 **Deploy:** Push to `main` triggers automatic deployment via Cloudflare Pages GitHub integration. No manual deploy step.
+
+### Counters and private stats
+The optional SQLite Durable Object backend and standalone `/admin/stats` panel are documented in [workers/counters/README.md](workers/counters/README.md), including local tests, authentication, cutover and recovery. KV remains the default until explicitly switched. There is no default admin password and no automatic expiry for daily aggregates.
 
 ---
 
@@ -393,9 +434,4 @@ Future features under consideration:
 - [x] **Wiki Console graph explorer** — Shared mini/expanded force-directed map with 2D/3D views, semantic highlighting and centrality/root coloring at `/wiki`.
 
 Content uses readable filenames and URL slugs with stable internal IDs. See [URL conventions and renaming](scripts/CONTENT-URLS.md).
-# Counters migration and private stats
-
-The optional SQLite Durable Object backend and standalone `/admin/stats` panel are documented in [workers/counters/README.md](workers/counters/README.md), including local tests, authentication, cutover and recovery. KV remains the default until explicitly switched. There is no default admin password and no automatic expiry for daily aggregates.
-
-
 Security implementation: see [SECURITY.md](SECURITY.md). Request guards and response policies live in `functions/_middleware.ts`, bounded inputs and known routes in `functions/_lib/security.ts`, and HTML sanitation in `src/lib/safeHtml.ts`.

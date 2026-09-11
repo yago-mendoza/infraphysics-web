@@ -1,6 +1,6 @@
 // Wiki Console sidebar — data exploration dashboard for Second Brain routes
 
-import React, { useState, useRef, useEffect, useMemo, Suspense, startTransition } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback, Suspense, startTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { isSecondBrainPath, secondBrainGraphPath, secondBrainPath } from '../../config/categories';
@@ -738,28 +738,34 @@ export const SecondBrainSidebar: React.FC = () => {
     const rank = new Map<string, number>(areaRootBreakdown.map((item, index): [string, number] => [item.root, index]));
     return sampledTree.sort((a, b) => (rank.get(a.path.split('//')[0]) ?? 9999) - (rank.get(b.path.split('//')[0]) ?? 9999));
   }, [areaRootBreakdown, calendarPreviewIds, directoryPreviewIds, filteredTree, visibleTree]);
-  const previewExpansionDepth = useMemo(() => {
-    if (!calendarPreviewIds?.size && !miniAreaIds?.size) return 0;
-    // Spend the available vertical rows one complete generation at a time.
-    // This never exposes half of a level and scales to arbitrarily deep trees.
+  // Spend the available vertical rows one complete generation at a time. This never exposes half
+  // of a level and scales to arbitrarily deep trees. Infinity when the whole tree fits.
+  const fitDepth = useCallback((tree: TreeNode[]) => {
     const viewportHeight = typeof window === 'undefined' ? 800 : window.innerHeight;
     const availableRows = Math.max(4, Math.floor((viewportHeight - (graphExpanded ? 430 : 520)) / 25));
-    let visibleRows = areaOrderedTree.length;
+    let visibleRows = tree.length;
     let depth = 0;
-    let frontier = areaOrderedTree;
+    let frontier = tree;
     while (frontier.length) {
       const next = frontier.flatMap(node => node.children);
-      if (!next.length || visibleRows + next.length > availableRows) break;
+      if (!next.length) return Number.POSITIVE_INFINITY;
+      if (visibleRows + next.length > availableRows) break;
       visibleRows += next.length;
       frontier = next;
       depth += 1;
     }
     return depth;
-  }, [areaOrderedTree, calendarPreviewIds, graphExpanded, miniAreaIds]);
+  }, [graphExpanded]);
+  const previewExpansionDepth = useMemo(() => (!calendarPreviewIds?.size && !miniAreaIds?.size) ? 0 : fitDepth(areaOrderedTree), [areaOrderedTree, calendarPreviewIds, fitDepth, miniAreaIds]);
+  // A search prunes the directory to its results; when what is left fits on screen, open it so the
+  // matching notes are visible while the search is still being typed.
+  const searchExpansionDepth = useMemo(() => (searchActive && resultIdSet ? fitDepth(visibleTree) : 0), [fitDepth, resultIdSet, searchActive, visibleTree]);
   const forceDirectoryDepth = directoryQuery.length > 0
     ? Number.POSITIVE_INFINITY
     : calendarPreviewIds?.size || miniAreaIds?.size
       ? previewExpansionDepth
+      : searchActive && resultIdSet
+        ? searchExpansionDepth
       : filterState.dateFilter
         ? Number.POSITIVE_INFINITY
         : 0;
@@ -983,11 +989,13 @@ export const SecondBrainSidebar: React.FC = () => {
           </span>
         }
       >
-        {/* Tree search */}
+        {/* Tree search; the datalist gives both inputs the note names as suggestions. */}
+        <datalist id="wiki-note-names">{allWikiNotes.map(note => <option key={note.id} value={note.displayTitle || note.title} />)}</datalist>
         <div className="flex items-center border border-th-hub-border px-2 py-1 bg-th-surface focus-within:border-th-border-active transition-colors mb-2">
           <input
             type="text"
             placeholder="Filter tree..."
+            list="wiki-note-names"
             value={directoryQuery}
             onChange={(e) => setDirectoryQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Escape') { setDirectoryQuery(''); (e.target as HTMLInputElement).blur(); } }}
@@ -1031,7 +1039,7 @@ export const SecondBrainSidebar: React.FC = () => {
                       node={node}
                       onConceptClick={() => { signalDirectoryNav(); if (graphExpanded) minimizeGraph(false); }}
                       forceExpandDepth={Number.isFinite(directoryLevels) ? Math.max(forceDirectoryDepth, directoryLevels) : forceDirectoryDepth}
-                      maxVisibleDepth={directoryQuery ? Infinity : directoryLevels}
+                      maxVisibleDepth={directoryQuery || searchActive ? Infinity : directoryLevels}
                       activePath={directoryPreviewIds?.size ? null : activePost?.address ?? null}
                       getPercentile={getPercentile}
                       collapseSignal={dirCollapseGen}
@@ -1060,7 +1068,7 @@ export const SecondBrainSidebar: React.FC = () => {
                         node={node}
                         onConceptClick={() => { signalDirectoryNav(); if (graphExpanded) minimizeGraph(false); }}
                         forceExpandDepth={Number.isFinite(directoryLevels) ? Math.max(forceDirectoryDepth, directoryLevels) : forceDirectoryDepth}
-                        maxVisibleDepth={directoryQuery ? Infinity : directoryLevels}
+                        maxVisibleDepth={directoryQuery || searchActive ? Infinity : directoryLevels}
                         activePath={directoryPreviewIds?.size ? null : activePost?.address ?? null}
                         getPercentile={getPercentile}
                         collapseSignal={dirCollapseGen}
@@ -1218,7 +1226,7 @@ export const SecondBrainSidebar: React.FC = () => {
             />
           </Suspense>
           <div className={`group absolute ${phone ? 'left-3 right-3' : 'left-20 right-20'} top-3 z-[46] mx-auto max-w-2xl border border-th-hub-border bg-th-base/90 font-mono shadow-lg transition-opacity duration-500 focus-within:opacity-100 hover:opacity-100 ${graphInput || phone ? 'opacity-100' : 'opacity-[.14]'}`}>
-            <div className="flex h-9 items-center gap-2 px-3"><span className="text-violet-400">⌕</span><input ref={graphSearchInputRef} value={graphInput} onChange={event => { setGraphInput(event.target.value); setGraphSelectionCleared(true); setQuery(event.target.value); }} placeholder="search wiki…" autoComplete="off" spellCheck={false} className="min-w-0 flex-1 cursor-text bg-transparent text-[12px] text-th-primary outline-none placeholder:text-th-muted" />{graphStateReadout}{graphInput && <button type="button" onClick={() => { setGraphInput(''); setGraphSelectionCleared(true); setQuery(''); }} className="text-th-muted hover:text-th-primary">×</button>}</div>
+            <div className="flex h-9 items-center gap-2 px-3"><span className="text-violet-400">⌕</span><datalist id="wiki-note-names-graph">{allWikiNotes.map(note => <option key={note.id} value={note.displayTitle || note.title} />)}</datalist><input ref={graphSearchInputRef} list="wiki-note-names-graph" value={graphInput} onChange={event => { setGraphInput(event.target.value); setGraphSelectionCleared(true); setQuery(event.target.value); }} placeholder="search wiki…" autoComplete="off" spellCheck={false} className="min-w-0 flex-1 cursor-text bg-transparent text-[12px] text-th-primary outline-none placeholder:text-th-muted" />{graphStateReadout}{graphInput && <button type="button" onClick={() => { setGraphInput(''); setGraphSelectionCleared(true); setQuery(''); }} className="text-th-muted hover:text-th-primary">×</button>}</div>
             <div className="grid grid-cols-3 gap-px border-t border-th-hub-border bg-th-hub-border p-px" role="group" aria-label="Search fields">{([['name', 'name'], ['content', 'content'], ['backlinks', 'referenced by']] as Array<[SearchField, string]>).map(([field, label]) => { const on = searchFields.includes(field); return <button key={field} type="button" aria-pressed={on} onClick={() => toggleSearchField(field)} className={`bg-th-base px-2 py-1.5 text-[9px] transition-colors ${on ? 'bg-violet-400/10 text-violet-400' : 'text-th-muted hover:bg-th-surface hover:text-th-secondary'}`}>{label}</button>; })}</div>
           </div>
         </div>,

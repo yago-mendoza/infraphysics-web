@@ -3,6 +3,7 @@ slug: the-years-we-thought-we-had
 id: "3358174"
 category: essays
 lang: es
+ai: true
 sourceHash: 058e4dc4a84e
 displayTitle: "Los años que creíamos tener"
 subtitle: "Sobre GPT Astra, unos patos y la única ventaja que no escala"

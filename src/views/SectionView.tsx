@@ -7,7 +7,6 @@ import { Category } from '../types';
 import { stripHtml, accentChipStyle } from '../lib';
 import { getSearchExcerpt, countMatches } from '../lib/search';
 import { CATEGORY_CONFIG, STATUS_CONFIG, COMPLEXITY_LEVELS, getComplexityLevel, catAccentVar, type CategoryDisplayConfig } from '../config/categories';
-import { useTheme } from '../contexts/ThemeContext';
 import { useArticleStats } from '../hooks/useArticleStats';
 import {
   SearchIcon,
@@ -34,6 +33,13 @@ const SECTION_RENDERERS: Record<string, React.FC<SectionRendererProps>> = {
 const PAGE_SIZE = 12;
 
 
+/** One row of the filter sheet: a small label and its chips. A row with no visible chip renders nothing. */
+const FilterRow: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => {
+  const chips = React.Children.toArray(children).filter(Boolean);
+  if (chips.length === 0) return null;
+  return <div className="section-filter-row"><span className="section-filter-label">{label}</span><div className="section-filter-chips">{chips}</div></div>;
+};
+
 export const SectionView: React.FC<SectionViewProps> = ({ category, projectVariant }) => {
   const [query, setQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title'>('newest');
@@ -47,9 +53,10 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, projectVaria
   const toggleTopic = (t: string) => setSelectedTopics(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
   const toggleTech = (t: string) => setSelectedTechs(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
   const toggleStatus = (s: string) => setSelectedStatuses(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+  const clearFilters = () => { setSelectedTopics([]); setSelectedTechs([]); setSelectedStatuses([]); setSelectedComplexity([]); setSelectedLang(null); };
+  const activeFilterCount = selectedTopics.length + selectedTechs.length + selectedStatuses.length + selectedComplexity.length + (selectedLang ? 1 : 0);
   const toggleComplexity = (label: string) => setSelectedComplexity(prev => prev.includes(label) ? prev.filter(x => x !== label) : [...prev, label]);
 
-  const { theme } = useTheme();
 
   // Reset all filters when navigating between categories
   useEffect(() => {
@@ -114,9 +121,8 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, projectVaria
       });
     }
 
-    // Language filter — only when no other filters are active
-    const hasFilters = query || selectedTopics.length > 0 || selectedTechs.length > 0 || selectedStatuses.length > 0 || selectedComplexity.length > 0;
-    if (!hasFilters && selectedLang) {
+    // Language combines with every other filter, like any other row of the sheet.
+    if (selectedLang) {
       result = result.filter(p => (p.lang || 'en') === selectedLang || !!p.translations?.[selectedLang]);
     }
 
@@ -219,7 +225,7 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, projectVaria
         </p>
       </header>
 
-      {/* Toolbar — Search & Filters */}
+      {/* Toolbar: the search, and a filter sheet where every row is a label and a set of chips. Language sits in the sheet like the rest. */}
       <div className="mb-8 space-y-4">
         <div className="flex gap-3">
           <div className="flex-1 group flex items-center border border-th-border px-3 py-2.5 focus-within:border-th-border-active transition-colors bg-th-surface-alt">
@@ -238,153 +244,83 @@ export const SectionView: React.FC<SectionViewProps> = ({ category, projectVaria
 
           <button
             onClick={() => setShowFilters(!showFilters)}
+            aria-expanded={showFilters}
             className={`px-4 py-2.5 border flex items-center gap-2 text-xs transition-all ${showFilters ? 'bg-th-active text-th-heading border-th-border-hover' : 'border-th-border text-th-secondary hover:border-th-border-hover bg-th-surface-alt'}`}
           >
             <FilterIcon />
             Filters
+            {activeFilterCount > 0 && <span className="section-filter-count" style={{ color: accent, borderColor: `color-mix(in srgb, ${accent} 45%, transparent)` }}>{activeFilterCount}</span>}
           </button>
         </div>
 
         <div className={`grid transition-[grid-template-rows] duration-200 ease-out ${showFilters ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
           <div className="overflow-hidden">
-          <div className="p-4 bg-th-surface-alt border border-th-border rounded-sm space-y-4">
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-th-tertiary uppercase">Sort by:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest' | 'title')}
-                  className="text-xs border border-th-border rounded-sm px-2 py-1.5 bg-th-elevated text-th-secondary focus:outline-none focus:border-th-border-active"
-                  style={{ colorScheme: theme }}
-                >
-                  <option value="newest" className="bg-th-base text-th-secondary">Newest First</option>
-                  <option value="oldest" className="bg-th-base text-th-secondary">Oldest First</option>
-                  <option value="title" className="bg-th-base text-th-secondary">Alphabetical</option>
-                </select>
-              </div>
-              {allStatuses.length > 0 && (
-                <>
-                  <div className="w-px h-4 bg-th-border" />
-                  <span className="text-xs text-th-tertiary uppercase">Status:</span>
-                  {allStatuses.map(s => {
-                    const cfg = STATUS_CONFIG[s] || { label: s, accent: '#9ca3af', dotColor: '#9ca3af' };
-                    const active = selectedStatuses.includes(s);
-                    const count = statusCounts[s] || 0;
-                    if (!active && (count === 0 || count === filteredPosts.length)) return null;
-                    return (
-                      <button
-                        key={s}
-                        onClick={() => toggleStatus(s)}
-                        className="text-xs px-2.5 py-0.5 border rounded-sm transition-colors accent-chip"
-                        style={accentChipStyle(cfg.accent, active)}
-                      >
-                        {cfg.label} ({count})
-                      </button>
-                    );
-                  })}
-                </>
-              )}
-            </div>
-
+          <div className="section-filters bg-th-surface-alt border border-th-border rounded-sm">
+            <FilterRow label="Sort">
+              {([['newest', 'Newest'], ['oldest', 'Oldest'], ['title', 'A to Z']] as const).map(([value, label]) => (
+                <button key={value} type="button" aria-pressed={sortBy === value} onClick={() => setSortBy(value)} className="text-xs px-2.5 py-0.5 border rounded-sm transition-colors accent-chip" style={accentChipStyle(accent, sortBy === value)}>{label}</button>
+              ))}
+            </FilterRow>
+            {hasMultipleLangs && (
+              <FilterRow label="Language">
+                {(['en', 'es'] as const).map(lang => {
+                  const active = selectedLang === lang;
+                  const count = sectionPosts.filter(p => (p.lang || 'en') === lang || !!p.translations?.[lang]).length;
+                  return <button key={lang} type="button" aria-pressed={active} onClick={() => setSelectedLang(active ? null : lang)} className="text-xs px-2.5 py-0.5 border rounded-sm transition-colors accent-chip uppercase tracking-wider" style={accentChipStyle(accent, active)}>{lang}<span className="section-chip-count">{count}</span></button>;
+                })}
+              </FilterRow>
+            )}
+            {allStatuses.length > 0 && (
+              <FilterRow label="Status">
+                {allStatuses.map(s => {
+                  const cfg = STATUS_CONFIG[s] || { label: s, accent: '#9ca3af', dotColor: '#9ca3af' };
+                  const active = selectedStatuses.includes(s);
+                  const count = statusCounts[s] || 0;
+                  if (!active && (count === 0 || count === filteredPosts.length)) return null;
+                  return <button key={s} type="button" aria-pressed={active} onClick={() => toggleStatus(s)} className="text-xs px-2.5 py-0.5 border rounded-sm transition-colors accent-chip" style={accentChipStyle(cfg.accent, active)}>{cfg.label}<span className="section-chip-count">{count}</span></button>;
+                })}
+              </FilterRow>
+            )}
             {allTopics.length > 0 && (
-              <div>
-                <span className="text-xs text-th-tertiary uppercase block mb-2">Tags</span>
-                <div className="flex flex-wrap gap-2">
-                  {allTopics.map(t => {
-                    const active = selectedTopics.includes(t);
-                    const count = topicCounts[t] || 0;
-                    if (!active && (count === 0 || count === filteredPosts.length)) return null;
-                    return (
-                      <button
-                        key={t}
-                        onClick={() => toggleTopic(t)}
-                        className={`text-xs px-2.5 py-0.5 border rounded-sm transition-colors ${
-                          active
-                            ? 'bg-slate-400/20 border-slate-400/50 text-slate-400'
-                            : 'border-slate-400/40 text-slate-400/80 hover:border-slate-400/60'
-                        }`}
-                      >
-                        {t} ({count})
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <FilterRow label="Tags">
+                {allTopics.map(t => {
+                  const active = selectedTopics.includes(t);
+                  const count = topicCounts[t] || 0;
+                  if (!active && (count === 0 || count === filteredPosts.length)) return null;
+                  return <button key={t} type="button" aria-pressed={active} onClick={() => toggleTopic(t)} className="text-xs px-2.5 py-0.5 border rounded-sm transition-colors accent-chip" style={accentChipStyle(accent, active)}>{t}<span className="section-chip-count">{count}</span></button>;
+                })}
+              </FilterRow>
             )}
-
             {hasAnyComplexity && (
-              <div>
-                <span className="text-xs text-th-tertiary uppercase block mb-2">Complexity</span>
-                <div className="flex flex-wrap gap-2">
-                  {COMPLEXITY_LEVELS.map(level => {
-                    const active = selectedComplexity.includes(level.label);
-                    const count = complexityCounts[level.label] || 0;
-                    if (!active && (count === 0 || count === filteredPosts.length)) return null;
-                    return (
-                      <button
-                        key={level.label}
-                        onClick={() => toggleComplexity(level.label)}
-                        className="text-xs px-2.5 py-0.5 border rounded-sm transition-colors accent-chip"
-                        style={accentChipStyle(accent, active)}
-                      >
-                        {level.label} ({count})
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <FilterRow label="Complexity">
+                {COMPLEXITY_LEVELS.map(level => {
+                  const active = selectedComplexity.includes(level.label);
+                  const count = complexityCounts[level.label] || 0;
+                  if (!active && (count === 0 || count === filteredPosts.length)) return null;
+                  return <button key={level.label} type="button" aria-pressed={active} onClick={() => toggleComplexity(level.label)} className="text-xs px-2.5 py-0.5 border rounded-sm transition-colors accent-chip" style={accentChipStyle(accent, active)}>{level.label}<span className="section-chip-count">{count}</span></button>;
+                })}
+              </FilterRow>
             )}
-
             {allTechs.length > 0 && (
-              <div>
-                <span className="text-xs text-th-tertiary uppercase block mb-2">Technologies</span>
-                <div className="flex flex-wrap gap-2">
-                  {allTechs.map(t => {
-                    const isActive = selectedTechs.includes(t);
-                    const count = techCounts[t] || 0;
-                    if (!isActive && (count === 0 || count === filteredPosts.length)) return null;
-                    return (
-                      <button
-                        key={t}
-                        onClick={() => toggleTech(t)}
-                        className="text-xs px-2.5 py-0.5 border rounded-sm transition-colors accent-chip"
-                        style={accentChipStyle(accent, isActive)}
-                      >
-                        {t} ({count})
-                      </button>
-                    );
-                  })}
-                </div>
+              <FilterRow label="Technologies">
+                {allTechs.map(t => {
+                  const isActive = selectedTechs.includes(t);
+                  const count = techCounts[t] || 0;
+                  if (!isActive && (count === 0 || count === filteredPosts.length)) return null;
+                  return <button key={t} type="button" aria-pressed={isActive} onClick={() => toggleTech(t)} className="text-xs px-2.5 py-0.5 border rounded-sm transition-colors accent-chip" style={accentChipStyle(accent, isActive)}>{t}<span className="section-chip-count">{count}</span></button>;
+                })}
+              </FilterRow>
+            )}
+            {activeFilterCount > 0 && (
+              <div className="section-filters-foot">
+                <span>{filteredPosts.length} of {sectionPosts.length} {sectionPosts.length === 1 ? 'entry' : 'entries'}</span>
+                <button type="button" onClick={clearFilters}>Clear all</button>
               </div>
             )}
           </div>
           </div>
         </div>
       </div>
-
-      {/* Language toggle — essays only, hidden when filters active */}
-      {hasMultipleLangs && !query && selectedTopics.length === 0 && selectedTechs.length === 0 && selectedStatuses.length === 0 && (
-        <div className="flex justify-center gap-2 mb-6">
-          {['en', 'es'].map(lang => {
-            const active = selectedLang === lang;
-            return (
-              <button
-                key={lang}
-                onClick={() => setSelectedLang(active ? null : lang)}
-                className="text-[11px] font-semibold tracking-widest uppercase px-3 py-1 border rounded-sm transition-colors"
-                style={{
-                  fontFamily: "'Roboto Slab', Georgia, serif",
-                  borderColor: active ? `var(--cat-essays-accent)` : 'var(--border)',
-                  color: active ? `var(--cat-essays-accent)` : 'var(--text-tertiary)',
-                  backgroundColor: active ? 'color-mix(in srgb, var(--cat-essays-accent) 10%, transparent)' : 'transparent',
-                }}
-              >
-                {lang}
-              </button>
-            );
-          })}
-        </div>
-      )}
 
       {/* Delegated renderer */}
       <Renderer posts={visiblePosts} query={query} getExcerpt={getExcerpt} getMatchCount={getMatchCount} accent={accent} stats={stats} projectVariant={projectVariant} />

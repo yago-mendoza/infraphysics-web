@@ -498,7 +498,6 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
            above the title, the hero beside it and number the index. */
         <>
         {/* The thin black bar on the top edge of every article page. */}
-        <div className="article-topbar" aria-hidden="true" />
         {mobileIndex}
         <article className={`glab${isEssays ? '' : ' glab-split'}`}>
           <div className="glab-head">
@@ -567,7 +566,6 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
          scrim, the brief strip, a labelled summary, the body beside a numbered index and a facts
          sheet (project-page.css). */
       <article className="pj-page">
-        <div className="article-topbar" aria-hidden="true" />
         {mobileIndex}
         <header>
           <div className="pj-plate">{post.thumbnail && <img src={post.thumbnail} alt="" loading="eager" style={thumbFocusStyle} />}</div>

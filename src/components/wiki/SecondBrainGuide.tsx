@@ -29,6 +29,7 @@ const TOPICS: Topic[] = [
     'Referenced by finds concepts that are linked from matching notes. The query is matched against the referring notes’ names, paths, text, and descriptions. For example, if a note about CPU links to ARM, searching CPU in referenced by can return ARM. It does not mean finding every note that mentions ARM.',
     'The name, content, and referenced by buttons can be combined. Turn on one, two, or all three fields; a concept appears if any selected field matches. At least one field stays enabled. Search is case-insensitive and matches the text you enter; it is not a conversational or semantic search.',
     'Search works together with the current scope and filters. If something seems missing, check the active chips below the controls. Clear the search and remove constraints to return to all concepts.',
+    'The search field of the expanded graph and the Filter tree field of the directory suggest note names as you type. While a search is active the directory shows only the matching branches and, when they fit on screen, opens them so the matching notes are visible without clicking.',
   ] },
   { id: 'sorting', section: 'Search & results', title: 'Sorting', keywords: 'sort order ordenar ordenacion ordenación alphabetical random', paragraphs: [
     'Open filter & sort below the search field to change the card order. Desktop shows the available choices inline; phones use the Sort menu. Sorting changes the order of your current results and keeps the search and filters in place.',

@@ -75,8 +75,7 @@ related: ["1112121"]
 
 ### Voice & rhythm
 
-- **Irregular paragraph length.** Some one-liners. Some expansive. Predictable structure kills authenticity.
-- **15-paragraph rule.** In any long article, ~15 paragraphs should be in a calmer, more measured register. The rest can be casual/excited. Variation = human.
+- **Register varies.** In a long write-up, a dozen or so paragraphs sit in a calmer register than the rest; rhythm rules in [VOICE.md](../VOICE.md).
 - **Storytelling over reporting.** Commits are story beats, not changelog entries. "Fixed fixes fixing fixes" needs a sentence explaining *why* that moment mattered — then the technical part comes after, connected to something else so it doesn't feel heavy.
 - **Cross-reference constantly.** Wiki-links (`[[concept]]`) aren't decoration — they show how the author's mind connects ideas. Use them mid-sentence, naturally. But verify the target wikinote exists before adding a wiki-link — broken links fail the build.
 - **Plant forward references.** If a concept appears late in the article (e.g. the Second Brain in section 6), mention it casually 2–3 times earlier so it feels like it was always part of the story. Concepts shouldn't appear out of nowhere.
@@ -90,12 +89,12 @@ related: ["1112121"]
 
 ### Flow tools
 
-- **Footnotes `^[explanation]`** — for parenthetical material that would break the sentence rhythm. Better than actual parentheses.
+- **Footnotes `^[explanation]`** for material that would break the sentence rhythm (placement and form: [STYLE.md](../STYLE.md) rule 8).
 - **Context annotations `>> date - text`** — story beats, not documentation. Keep them short and human. See dedicated section below.
 
 ### Context annotations in projects
 
-Whatever the thought behind it, a ctx is written short and plain, in the words you would use to a friend, never as a speech (STYLE.md rule 8).
+Whatever the thought behind it, a ctx is written short and plain, in the words you would use to a friend, never as a speech (STYLE.md rule 10).
 
 In projects, the article `date` is when the project is finished (or published). Context annotations (`>>`) serve as a **project diary** — they document how the project evolved, both during and after.
 
@@ -115,9 +114,7 @@ intro text explaining the project...
 
 ### Heading hierarchy
 
-- **Start at `#`.** The article's grand title is already rendered by HTML from frontmatter (`displayTitle`). Inside the article body, `#` is the first level — use it for thematic groups.
-- **Nest by theme, not by order.** Group related sections under a shared `#` heading. Don't leave everything flat at the same level — disparate topics (storytelling, technical, tooling) should be visually separated from the index itself.
-- **`#` → `##` → `###`** is the full range. `#` for thematic blocks, `##` for sections within them, `###` for sub-sections. Each `#` block gets a brief transitional sentence before its first `##`.
+Depth and count follow [STYLE.md](../STYLE.md) rule 7: flat by default, one level down when the length of a write-up gives a reason, never a heading directly under a heading. What projects add: `#` blocks are thematic (storytelling, technical, tooling), not chronological, and each opens with a transitional sentence before its first `##`.
 
 ### Structural patterns
 
@@ -140,6 +137,6 @@ intro text explaining the project...
 ### What not to do
 
 - Don't use `bloat`, `footprint`, or jargon the author wouldn't naturally use.
-- Don't make every section the same length or the same structure. At least one section should be 2–3 lines max (e.g. deployment) to break the rhythm.
+- Don't make every section the same length; at least one (deployment, say) is two or three lines.
 - Don't add code blocks to bug stories inside tips — describe the pattern in words.
 - Don't use danger/warning for things that only affected you during development.

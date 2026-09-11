@@ -18,15 +18,15 @@ Read these before judging anything. Sections only, never cover to cover, except 
 
 | File | Read |
 |---|---|
-| `src/data/pages/STYLE.md` | All ten rules and their tables, the kill list included. This is the law. |
+| `src/data/pages/STYLE.md` | All eleven rules. This is the law. |
 | `src/data/pages/SYNTAX.md` | *Where each feature applies* (what this category may use), then only the sections of features you intend to propose (Typed notes, Lifted paragraph, Parameter sheets, Footnotes, Tables, Structured references, Context annotations). |
-| `src/data/pages/VOICE.md` | The whole file (it is short): the structural checks (concrete up, the two-author seam, failure first), rhythm, numbers, certainty, headings and the log of decided ones, the tics table, coining and referencing, the final pass. STYLE.md rule 10 is the kill list. |
+| `src/data/pages/VOICE.md` | The whole file (it is short): the structural checks (concrete up, the two-author seam, failure first), rhythm, numbers, certainty, headings and the log of decided ones, the tics table, coining and referencing, the final pass. STYLE.md rule 11 is the kill list. |
 | Category README | `src/data/pages/<category>/README.md`: the voice and the storytelling patterns of that category. |
 | `src/data/pages/README.md` | Only the wiki-link paragraph (when a `[[uid\|text]]` label is warranted) and the frontmatter schema of the category, if you touch frontmatter. |
 
 If you propose an image, also read `src/data/pages/VISUAL.md`. Otherwise do not.
 
-## Pass 1: hard rules (STYLE.md, one to ten)
+## Pass 1: hard rules (STYLE.md, one to eleven)
 
 Go through the body line by line and record every violation with its line number, the offending text and a proposed rewrite that fits the meaning of the sentence. Grep helps, judgment decides. Patterns worth running on the source (outside fenced code, inline code and math):
 
@@ -37,7 +37,7 @@ Go through the body line by line and record every violation with its line number
 - Footnotes: `.^[` (period before the marker) and `^[…]` whose text does not end in a period.
 - Headings: a heading directly under a heading, `##` or `###` in an article short enough to be flat, a body that starts at `##`.
 - Runs of three or more paragraphs under fifteen words.
-- The kill-list phrases of rule 10 (*let's dive in*, *it's worth noting*, *furthermore*, *let me be direct*, *in summary*, *only time will tell*, and the rest).
+- The kill-list phrases of rule 11 (*let's dive in*, *it's worth noting*, *furthermore*, *let me be direct*, *in summary*, *only time will tell*, and the rest).
 
 Also collect the `[STYLE]` warnings the build prints for this file. The build skips files that come from `.content-cache.json`; if the file is cached, remove its entry from the cache (or touch the file) and run `npm run build` once.
 
@@ -45,7 +45,7 @@ Also collect the `[STYLE]` warnings the build prints for this file. The build sk
 
 Read the article again for shape, not for rules. For each finding give the line range and the concrete change.
 
-- **One article or two.** Say whether the draft moves in one direction with enough pull, or whether a theme takes the spotlight for a few paragraphs and never returns (the sign of a second article hiding inside). Name the theme, the paragraphs, and whether it should shrink to a sentence, leave for `src/data/inbox/`, or stay. Guidance in `essays/README.md`, *One article or two*.
+- **One article or two.** Say whether the draft moves in one direction with enough pull, or whether a theme takes the spotlight for a few paragraphs and never returns (the sign of a second article hiding inside). Name the theme, the paragraphs, and whether it should shrink to a sentence, leave for `_studio/inbox/`, or stay. Guidance in `essays/README.md`, *One article or two*.
 - **Tables.** A paragraph that carries three or more figures, a comparison of several things along the same axes, a list of parameters: propose a table (SYNTAX *Tables*) or, in projects, a parameter sheet.
 - **Footnotes versus parentheses.** A parenthesis that only sources or qualifies a claim (a number's provenance, a caveat the sentence survives without) becomes `^[…]`; a footnote that changes the meaning of its sentence comes back into it as a parenthesis (STYLE rule 8).
 - **Paragraph distribution.** Where the text runs in one-line fragments, name the paragraphs that should merge and the sentence that should carry the join. Where one paragraph carries two movements of thought, name the split. Rhythm rules in VOICE.md (*Rhythm and register*); density in STYLE rule 5.

@@ -168,7 +168,8 @@ const AppLayout: React.FC = () => {
   // The page's path without the language prefix: /es/blog/essays/x is the same page as /blog/essays/x.
   const sitePath = stripLang(location.pathname);
   const isBlog = sitePath.startsWith('/blog');
-  const isHome = location.pathname === '/' || location.pathname === '/home';
+  const isHomeStudy = import.meta.env.DEV && /^\/home(?:[1-9]|10)$/.test(location.pathname);
+  const isHome = location.pathname === '/' || location.pathname === '/home' || isHomeStudy;
   const isAbout = location.pathname === '/about' || location.pathname.startsWith('/about/');
   // A missing page (ErrorConceptView reports its path) drops the section chrome: no wiki sidebar, no article geometry, rails and footer back.
   const [notFoundPath, setNotFoundPath] = useState<string | null>(null);
@@ -182,7 +183,7 @@ const AppLayout: React.FC = () => {
     || sitePath.startsWith('/blog/essays')
     || sitePath.startsWith('/blog/bits2bricks')
     || sitePath.startsWith('/lab/projects');
-  const clockHome = location.pathname === '/home';
+  const clockHome = location.pathname === '/home' || isHomeStudy;
   const hasPreviousSection = !!sectionReturnTo && sectionReturnTo.startsWith('/')
     && !sectionReturnTo.startsWith('//')
     && navigationSection(sectionReturnTo) !== navigationSection(location.pathname);
@@ -252,6 +253,18 @@ const AppLayout: React.FC = () => {
             <Routes>
               <Route path="/" element={<Navigate to="/home" replace />} />
               <Route path="/home" element={<HomeView visualVariant={1} fieldVariant={3} />} />
+              {import.meta.env.DEV && <>
+                <Route path="/home1" element={<HomeView visualVariant={1} fieldVariant={3} clockStudy={1} />} />
+                <Route path="/home2" element={<HomeView visualVariant={1} fieldVariant={3} clockStudy={2} />} />
+                <Route path="/home3" element={<HomeView visualVariant={1} fieldVariant={3} clockStudy={3} />} />
+                <Route path="/home4" element={<HomeView visualVariant={1} fieldVariant={3} clockStudy={4} />} />
+                <Route path="/home5" element={<HomeView visualVariant={1} fieldVariant={3} clockStudy={5} />} />
+                <Route path="/home6" element={<HomeView visualVariant={1} fieldVariant={3} clockStudy={6} />} />
+                <Route path="/home7" element={<HomeView visualVariant={1} fieldVariant={3} clockStudy={7} />} />
+                <Route path="/home8" element={<HomeView visualVariant={1} fieldVariant={3} clockStudy={8} />} />
+                <Route path="/home9" element={<HomeView visualVariant={1} fieldVariant={3} clockStudy={9} />} />
+                <Route path="/home10" element={<HomeView visualVariant={1} fieldVariant={3} clockStudy={10} />} />
+              </>}
               <Route path="/admin/stats" element={<AdminStatsView />} />
               <Route path="/writing" element={<Navigate to="/blog/essays" replace />} />
               <Route path="/blog" element={<Navigate to="/blog/essays" replace />} />
@@ -269,6 +282,10 @@ const AppLayout: React.FC = () => {
                 <Route path="/og/:kind" element={<ShareCardsView />} />
                 <Route path="/og/:kind/:variant" element={<ShareCardsView />} />
                 <Route path="/og/card/:kind/:id" element={<OgCardView />} />
+                {/* Readable alias of the gallery. */}
+                <Route path="/share-cards" element={<ShareCardsView />} />
+                <Route path="/share-cards/:kind" element={<ShareCardsView />} />
+                <Route path="/share-cards/:kind/:variant" element={<ShareCardsView />} />
               </>}
               <Route path="/ctx1" element={<ContextPreviewView variant={1} />} />
               <Route path="/ctx2" element={<ContextPreviewView variant={2} />} />

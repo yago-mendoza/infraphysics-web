@@ -16,6 +16,11 @@ export const Logo: React.FC<{ className?: string; color?: string }> = ({ classNa
   </svg>
 );
 
+/** Two four-point stars: the mark of a version written with AI, shown after its language in the language control. */
+export const SparkleIcon: React.FC<{ size?: number; className?: string }> = ({ size = 15, className }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="currentColor" className={className} aria-hidden="true"><path d="M6.5 3.5q.6 4.4 5 5-4.4.6-5 5-.6-4.4-5-5 4.4-.6 5-5Z" /><path d="M12.5 1q.3 1.9 2.5 2.2-2.2.3-2.5 2.3-.3-2-2.5-2.3 2.2-.3 2.5-2.2Z" /></svg>
+);
+
 export const SearchIcon: React.FC = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="11" cy="11" r="8"></circle>

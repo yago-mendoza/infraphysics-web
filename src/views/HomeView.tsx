@@ -1,6 +1,6 @@
 // Home page view — minimalist cosmic landing
 
-import React, { useState, useMemo, useRef, useLayoutEffect } from 'react';
+import React, { useState, useMemo, useRef, useLayoutEffect, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { postSummaries as posts } from '../data/postSummaries';
 import type { PostSummary } from '../types';
@@ -9,6 +9,7 @@ import { CATEGORY_CONFIG, catAccentVar, postPath, sectionPath } from '../config/
 import { getSearchExcerpt, countMatches } from '../lib';
 import { Highlight } from '../components/ui';
 import { HomeVisualLab, type HomeVisualVariant } from '../components/personal/HomeVisualLab';
+import { ClockPanel, ClockStudySwitcher, presetFor } from '../components/personal/HomeClockLab';
 import { StartHere } from '../components/personal/StartHere';
 import { WikiBanner } from '../components/personal/WikiBanner';
 import { points as fieldCoordinates } from '../data/field-of-view.generated.json';
@@ -90,7 +91,10 @@ const FieldOfView: React.FC<{ variant: FieldVariant }> = ({ variant }) => {
   return <section className="home-field-index field-plot-study field-plot-blueprint field-plot-interactive"><div className="field-plot-caption"><span>Operational coordinates</span><small>YM / FOV / 05</small></div><div className="field-plot"><i className="field-axis-x" /><i className="field-axis-y" /><AxisLabels /><FieldPoints active={active?.label} onActivate={setActive} /><p>coverage rank</p></div><div className="field-evidence-console">{evidence}</div></section>;
 };
 
-export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVariant?: FieldVariant }> = ({ visualVariant, fieldVariant = 1 }) => {
+export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVariant?: FieldVariant; clockStudy?: number }> = ({ visualVariant, fieldVariant = 1, clockStudy }) => {
+  // Clock lab (/home1 … /home10): the field's parameters for this study; study 10 edits them live.
+  const [clockParams, setClockParams] = useState(() => presetFor(clockStudy ?? 0));
+  useEffect(() => { setClockParams(presetFor(clockStudy ?? 0)); }, [clockStudy]);
   const presence = usePresence();
   const selectedWorkPosts = useMemo(() => selectedWorkIds
     .map(id => posts.find(post => post.id === id))
@@ -130,23 +134,32 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
     return { matches, counts };
   }, [searchQuery]);
 
+  // Phones: the counters the desktop rails show, as one line above everything.
+  const presenceStrip = (
+    <p className="md:hidden home-presence-strip">
+      <span>{presence.visits == null ? '—' : presence.visits.toLocaleString()} visits</span>
+      <i aria-hidden="true">·</i>
+      <span>{presence.visitors == null ? '—' : presence.visitors.toLocaleString()} visitors</span>
+      <i aria-hidden="true">·</i>
+      <span>{presence.pageViews == null ? '—' : presence.pageViews.toLocaleString()} page views</span>
+      <PresenceInfo />
+    </p>
+  );
+
   return (
     <>
-    <div className={`flex flex-col animate-fade-in font-sans home-editorial-shell ${visualVariant ? `home-experiment home-experiment-${visualVariant}` : ''}`}>
+    <div data-home-study={clockStudy} className={`flex flex-col animate-fade-in font-sans home-editorial-shell ${visualVariant ? `home-experiment home-experiment-${visualVariant}` : ''}`}>
+      {clockStudy && <ClockStudySwitcher study={clockStudy} />}
+      {clockStudy === 10 && <ClockPanel params={clockParams} onChange={setClockParams} />}
       {/* Hero */}
       <section className="relative pt-4 md:pt-12 pb-14 md:pb-20 min-h-[62vh] flex items-end home-hero" {...(visualVariant === 1 ? { 'data-clickable-above': '[data-home-pattern-boundary]', 'data-clickable-offset': '48' } : {})}>
-        {visualVariant && <div className={`home-visual-experiment home-visual-${visualVariant}`} aria-hidden="true"><HomeVisualLab variant={visualVariant} interactivePointer showTachograph={false} /></div>}
+        {/* The stage is sticky with no height: the field and its ground stay in the viewport while the intro and the carousel scroll over them, and leave with the section. */}
+        {visualVariant && <div className="home-visual-stage" aria-hidden="true"><div className={`home-visual-experiment home-visual-${visualVariant}`}><HomeVisualLab variant={visualVariant} interactivePointer showTachograph={false} clockParams={clockStudy ? clockParams : undefined} dissolveWith=".home-intro-carousel" /></div></div>}
         <div className="relative z-10 w-full">
           <div>
-          {/* Phones: the counters the desktop rails show, as one line above everything. */}
-          <p className="md:hidden home-presence-strip">
-            <span>{presence.visits == null ? '—' : presence.visits.toLocaleString()} visits</span>
-            <i aria-hidden="true">·</i>
-            <span>{presence.visitors == null ? '—' : presence.visitors.toLocaleString()} visitors</span>
-            <i aria-hidden="true">·</i>
-            <span>{presence.pageViews == null ? '—' : presence.pageViews.toLocaleString()} page views</span>
-            <PresenceInfo />
-          </p>
+          {presenceStrip}
+          {/* The datum: one hairline in the left margin, ticked at the portrait, the title and the tagline (global.css, .home-datum). */}
+          <div className="home-datum">
           {/* Identity anchor */}
           <div className="flex items-end gap-5 mb-10 home-identity-anchor">
             <Link to="/about" aria-label="Who I am" className="relative block w-20 h-24 shrink-0 home-identity-portrait">
@@ -155,7 +168,7 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
             </Link>
             <div>
               <p className="text-xl tracking-tight text-th-heading">Yago Mendoza</p>
-              <p className="text-xs text-th-tertiary font-mono tracking-wide">AI &amp; Industrial Engineer</p>
+              <p className="text-sm text-th-tertiary font-sans">AI &amp; Industrial Engineer</p>
               <Link to="/about" className="inline-flex items-center gap-1 text-xs text-th-secondary hover:text-th-heading transition-colors mt-1">
                 Who I am <ArrowRightIcon />
               </Link>
@@ -168,7 +181,7 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
             <span className="text-th-secondary">and back.</span>
           </h1>
 
-          <p className="text-sm text-th-tertiary tracking-wide mb-7 max-w-xl">
+          <p className="text-sm text-th-tertiary tracking-wide mb-7 max-w-xl home-tagline">
             Engineering is engineering. The substrate doesn&rsquo;t matter.
           </p>
 
@@ -180,13 +193,14 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
             For the things that refuse to stay in one discipline.{' '}
             I build, study and explain systems: robotics, control, infrastructure, intelligence, networks, brains and whatever else becomes too interesting to leave alone.
           </p>
+          </div>
           {/* Four doors, rotating: the wiki, an essay, a project, a lesson. */}
           <div className="mt-10 home-intro-carousel home-field-wide"><StartHere /></div>
           </div>
           <aside className="hidden">
             <p className="text-[10px] uppercase tracking-[0.2em] text-th-tertiary mb-4">A personal laboratory</p>
             <p className="text-sm leading-relaxed text-th-secondary">For ideas that survive curiosity long enough to become public.</p>
-            <div className="mt-8 space-y-2 text-[10px] font-mono text-th-tertiary">
+            <div className="mt-8 space-y-2 text-[10px] font-sans text-th-tertiary">
               <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500" /> Barcelona, Spain</div>
               <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-blue-500" /> Systems / robotics / intelligence</div>
               <Link to="/contact" className="inline-block pt-3 text-th-heading hover:text-red-500 transition-colors">Open a conversation →</Link>
@@ -288,13 +302,13 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
                     className="home-directory-row group flex items-center gap-5 py-5 border-b last:border-b-0 border-th-border transition-colors"
                     style={{ '--ac-color': catAccentVar(key) } as React.CSSProperties}
                   >
-                    <span className="text-[10px] font-mono text-th-muted w-7">0{index + 1}</span>
+                    <span className="text-[10px] font-sans text-th-muted w-7">0{index + 1}</span>
                     <span className="home-directory-icon transition-colors">{config.icon}</span>
                     <span className="flex-1 min-w-0">
                       <span className="home-directory-title block text-th-heading transition-colors">{config.title}</span>
                       <span className="block text-th-tertiary text-sm leading-relaxed line-clamp-1 font-sans mt-1">{config.description}</span>
                     </span>
-                    <span className="hidden sm:block text-[10px] font-mono text-th-muted">{categoryCounts[key]} pieces</span>
+                    <span className="hidden sm:block text-[10px] font-sans text-th-muted">{categoryCounts[key]} pieces</span>
                     <ArrowRightIcon />
                   </Link>
                 );
@@ -306,6 +320,8 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
 
       {/* Field of view: titled like the other shelves, then a plain note on what the map means, then the map itself, slightly wider than the column. */}
       <section className="home-field-section pb-10 md:pb-16 border-t border-th-border pt-8 md:pt-12">
+      {/* The datum (as in the intro) runs from the title to the note; the map below breaks out of the column. Only this section carries it. */}
+      <div className="home-section-datum">
       <div className="home-editorial-heading">
         <div>
           <h2>Field of view</h2>
@@ -313,6 +329,7 @@ export const HomeView: React.FC<{ visualVariant?: HomeVisualVariant; fieldVarian
         </div>
       </div>
       <p className="home-field-note">A map of the published work. Further right means a higher coverage rank; higher means a greater share of projects and technical walkthroughs. Tags and Wiki links connect the domains. Select a label to see its (coverage, practical emphasis) and supporting articles.</p>
+      </div>
       <div className="home-field-wide">
         <FieldOfView variant={fieldVariant} />
       </div>

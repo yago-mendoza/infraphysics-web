@@ -7,7 +7,7 @@
 @property --page-grid-ink { syntax:'<color>'; inherits:true; initial-value:rgba(241,237,228,.025); }
 @property --page-glow { syntax:'<color>'; inherits:true; initial-value:rgba(180,61,35,0); }
 @property --bg-base { syntax:'<color>'; inherits:true; initial-value:#151715; }
-@property --bg-blog { syntax:'<color>'; inherits:true; initial-value:#1a1916; }
+@property --bg-blog { syntax:'<color>'; inherits:true; initial-value:#151715; }
 @property --bg-surface { syntax:'<color>'; inherits:true; initial-value:rgba(236,231,218,.035); }
 @property --bg-surface-alt { syntax:'<color>'; inherits:true; initial-value:rgba(236,231,218,.06); }
 @property --bg-elevated { syntax:'<color>'; inherits:true; initial-value:rgba(236,231,218,.08); }
@@ -173,18 +173,18 @@ body {
 .field-aperture-disc b { width:var(--aperture); height:var(--aperture); border-radius:50%; background:var(--bg-base); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--brand-oxide) 50%,transparent); }
 .field-apertures span { color:var(--text-secondary); font-size:.7rem; }.field-apertures small { color:var(--text-muted); font:7px/1 var(--font-mono); }
 @media (max-width:620px) { .field-coordinate-map { height:23rem; }.field-spectrum > div { grid-template-columns:1.5rem 6.5rem 1fr; gap:.55rem; }.field-spectrum small { display:none; }.field-apertures { grid-template-columns:repeat(2,1fr); }.field-constellation span { font-size:.55rem; } }
-.field-plot-caption { display:flex; align-items:center; gap:1rem; margin-bottom:1rem; color:var(--text-tertiary); font:8px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; }
+.field-plot-caption { display:flex; align-items:center; gap:1rem; margin-bottom:1rem; color:var(--text-tertiary); font:.75rem/1 var(--font-sans); letter-spacing: 0; text-transform: none; }
 .home-field-wide { width:min(calc(100% + 7rem),calc(100vw - 3rem)); margin-left:50%; transform:translateX(-50%); padding-top:clamp(.5rem,2vw,1.4rem); }
 .field-plot-caption::after { content:''; height:1px; flex:1; background:var(--border-default); }.field-plot-caption small { order:2; color:var(--text-muted); font:inherit; }
 .field-plot { position:relative; height:20rem; overflow:hidden; border-block:1px solid var(--border-default); }
 .field-plot .field-plot-point::before { display:none !important; }
 .field-detail { width:100%; min-width:0; grid-column:1 / -1; display:flex; flex-direction:column; gap:.7rem; }
-.field-detail > small { color:var(--text-muted); font:7px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; }
+.field-detail > small { color:var(--text-muted); font:.75rem/1 var(--font-sans); letter-spacing: 0; text-transform: none; }
 .field-detail-heading { display:flex; align-items:center; justify-content:space-between; gap:.8rem; }
 .field-detail .field-detail-title { color:inherit; text-decoration:none; transition:color .15s ease; }
 .field-detail .field-detail-title strong { transition:color .15s ease; }
 .field-detail .field-detail-title:hover strong,.field-detail .field-detail-title:focus-visible strong { color:var(--brand-oxide); }
-.field-detail-summary { position:relative; display:flex; align-items:center; gap:.45rem; color:var(--text-muted); font:9px/1.4 var(--font-mono); }
+.field-detail-summary { position:relative; display:flex; align-items:center; gap:.45rem; color:var(--text-muted); font:.75rem/1.4 var(--font-sans); }
 .field-source-links { display:flex; flex-direction:column; gap:.65rem; font-size:.72rem; line-height:1.45; padding-top:.65rem; border-top:1px solid var(--border-default); }
 .field-source-links a { display:grid; grid-template-columns:.8rem 1fr; gap:.45rem; color:var(--text-secondary); text-decoration:none; }
 .field-source-links a:hover { color:var(--text-heading); }
@@ -202,7 +202,7 @@ body {
 .field-plot .field-plot-point.is-active { transform:translate(-50%,-50%); }
 .field-plot > .field-axis-x,.field-plot > .field-axis-y { position:absolute; z-index:1; background:var(--border-active); }
 .field-plot > .field-axis-x { left:0; right:0; top:52%; height:1px; }.field-plot > .field-axis-y { top:0; bottom:0; left:50%; width:1px; }
-.field-plot .field-axis-label { position:absolute; z-index:4; padding:.2rem .38rem; pointer-events:none; background:color-mix(in srgb,var(--bg-base) 90%,transparent); color:var(--text-muted); font:6.5px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; }
+.field-plot .field-axis-label { position:absolute; z-index:4; padding:.2rem .38rem; pointer-events:none; background:color-mix(in srgb,var(--bg-base) 90%,transparent); color:var(--text-muted); font:.75rem/1 var(--font-sans); letter-spacing: 0; text-transform: none; }
 /* width:max-content: an absolutely positioned box otherwise shrinks to the space left of its anchor, clipping pills near the right edge. */
 .field-plot-point { position:absolute; z-index:3; left:var(--fx); top:var(--fy); display:grid; width:max-content; transform:translate(-50%,-50%); }
 .field-plot-point::before { content:''; position:absolute; width:.48rem; height:.48rem; left:-.82rem; top:.2rem; border:1px solid var(--brand-oxide); border-radius:50%; background:var(--bg-base); }
@@ -925,17 +925,17 @@ html:has(main.article-main-viewport)::-webkit-scrollbar-thumb:active {
 @media (min-width: 1280px) {
   .ambient-rails { display: block; }
   .ambient-rail { position: fixed; z-index: 20; top: clamp(7rem, 30vh, 15rem); width: clamp(8rem, 11vw, 10.5rem); color: var(--text-tertiary); font: .72rem/1.5 var(--font-sans); }
-  .ambient-rail-left { left: max(1.35rem, calc((100vw - 78rem) / 2)); display: grid; gap: 2rem; }
-  .ambient-rail-right { right: max(1.35rem, calc((100vw - 78rem) / 2)); display: grid; gap: 1.8rem; text-align: right; }
-  .ambient-label { margin: 0 0 .35rem; font: 500 .58rem/1.3 var(--font-mono); letter-spacing: .13em; text-transform: uppercase; color: var(--text-muted); }
-  .ambient-value { margin: 0; color: var(--text-secondary); }
-  .ambient-coordinate { margin: .25rem 0 0; font: .56rem/1.4 var(--font-mono); color: var(--text-muted); }
+  .ambient-rail-left { left: max(1.35rem, calc((100vw - 84rem) / 2)); display: grid; gap: 2rem; }
+  .ambient-rail-right { right: max(1.35rem, calc((100vw - 84rem) / 2)); display: grid; gap: 1.8rem; text-align: right; }
+  .ambient-label { margin: 0 0 .45rem; font: 500 1rem/1.4 var(--font-sans); letter-spacing: 0; text-transform: none; color: var(--text-tertiary); }
+  .ambient-value { margin: 0; color: var(--text-secondary); font-size: 1rem; font-weight: 500; }
+  .ambient-coordinate { margin: .25rem 0 0; font: .75rem/1.4 var(--font-sans); color: var(--text-muted); }
   .ambient-visit-number { margin: 0 0 .42rem; font: 400 clamp(1.5rem, 1.7vw, 1.9rem)/1 var(--font-serif); color: var(--text-heading); letter-spacing: .025em; }
   .ambient-visit-meta { display:flex; align-items:baseline; justify-content:flex-end; gap:.3rem; margin:0; white-space:nowrap; }
-  .ambient-visit-label { color:var(--text-muted); font:500 .56rem/1.4 var(--font-mono); letter-spacing:.11em; text-transform:uppercase; }
+  .ambient-visit-label { color:var(--text-muted); font:500 .75rem/1.4 var(--font-sans); letter-spacing: 0; text-transform: none; }
   .ambient-visit-separator { color:var(--text-muted); }
   .ambient-visit-value { color:var(--text-secondary); font:.7rem/1.45 var(--font-sans); letter-spacing:0; }
-  .ambient-rail-right > div:first-child .ambient-coordinate { margin-top:.3rem; color:color-mix(in srgb,var(--text-tertiary) 72%,var(--text-secondary)); font-size:.59rem; font-weight:500; letter-spacing:.025em; white-space:nowrap; }
+  .ambient-rail-right > div:first-child .ambient-coordinate { margin-top:.3rem; color:color-mix(in srgb,var(--text-tertiary) 72%,var(--text-secondary)); font-size: .75rem; font-weight:500; letter-spacing: 0; white-space:nowrap; }
   .ambient-link { display: flex; align-items: center; justify-content: flex-end; gap: .18rem; width: 100%; margin-top: .38rem; color: var(--text-secondary); transition: color .15s ease; }
   .ambient-link svg { width:.62rem; height:.62rem; flex:none; stroke-width:1.15; }
   .footer-external-links { display:none; }
@@ -983,10 +983,14 @@ html:has(main.article-main-viewport)::-webkit-scrollbar-thumb:active {
   pointer-events: none;
 }
 
+/* Never clip the hero: the field stage below is fixed, and a clip edge that scrolls with the section would cut it off abruptly. */
 .home-hero { isolation: isolate; }
-/* The hero band, where the clock field lives, sits on a plain ground: a full-width plate behind the hero hides the
-   page-wide dot field there and fades out at the bottom, so the dots only begin below the intro. */
-.home-hero::before { content: ""; position: absolute; z-index: -1; left: 50%; top: -8rem; bottom: 0; width: 100vw; transform: translateX(-50%); background: linear-gradient(to bottom, var(--bg-base) 0%, var(--bg-base) 80%, transparent 100%); pointer-events: none; }
+/* Reveal the page texture as the clocks fade, before the body of the intro. Bound to the hero (it scrolls away with it); the field itself is fixed and only dissolves. */
+.home-hero::before { content: ""; position: absolute; z-index: -1; left: 50%; top: -8rem; bottom: 0; width: 100vw; transform: translateX(-50%); background: linear-gradient(to bottom, var(--bg-base) 0%, var(--bg-base) 34%, transparent 62%); pointer-events: none; }
+/* The visual stage: a fixed, zero-height strip across the viewport at the hero's resting offset (hero top plus its padding). The field and its
+   ground hang from it, one viewport tall, and never move: the scroll does not push them, it only dissolves them (see the engine's dissolve).
+   Fixed works here because the shell's entrance animation is opacity only; a transform on any ancestor would break it. */
+.home-visual-stage { position: fixed; top: 6.9375rem; left: 0; right: 0; z-index: 0; height: 0; }
 /* The carousel is a wide plate like the Field of view map (home-field-wide): text stays at the column, pictures break out. */
 .home-intro-carousel { position: relative; z-index: 2; }
 .home-field-note { margin-block: 0 .25rem; color: var(--text-secondary); font: .95rem/1.65 var(--font-sans); }
@@ -994,6 +998,28 @@ html:has(main.article-main-viewport)::-webkit-scrollbar-thumb:active {
 .home-identity-portrait { isolation: isolate; overflow: visible; }
 .home-identity-portrait > img { z-index: 2; }
 .home-identity-portrait > div { z-index: 1; }
+/* Language control readout (LangTags): current version bright, missing version dimmed and struck diagonally, AI-written version with the two-star mark after it. */
+.lang-tag { position: relative; display: inline-flex; align-items: center; gap: .2rem; color: var(--text-tertiary); }
+.lang-tag.is-current { color: var(--text-heading); }
+.lang-tag.is-off { color: var(--text-muted); opacity: .6; }
+.lang-tag.is-off::after { content: ""; position: absolute; left: -.15em; right: -.15em; top: 50%; height: 1px; background: currentColor; transform: rotate(-28deg); pointer-events: none; }
+.lang-tag svg { flex: none; margin-left: .05rem; color: var(--brand-oxide-strong); }
+.lang-tag-sep { color: var(--text-muted); }
+/* The datum (from header study 1): a hairline in the left margin of the intro, ticked at the portrait base, the title (oxide) and the tagline. Nothing else moves. */
+.home-datum { position: relative; }
+.home-datum::before { content: ""; position: absolute; left: -1.75rem; top: -2.75rem; bottom: -.5rem; width: 1px; background: color-mix(in srgb, var(--text-secondary) 22%, transparent); pointer-events: none; }
+.home-datum .home-identity-anchor, .home-datum h1, .home-datum .home-tagline { position: relative; }
+.home-datum .home-identity-anchor::after, .home-datum h1::after, .home-datum .home-tagline::before { content: ""; position: absolute; left: -1.75rem; width: .8rem; height: 1px; background: color-mix(in srgb, var(--text-secondary) 60%, transparent); pointer-events: none; }
+.home-datum .home-identity-anchor::after { bottom: 0; }
+.home-datum h1::after { top: .47em; width: 1.1rem; background: var(--brand-oxide-strong); }
+.home-datum .home-tagline::before { top: .55em; }
+/* The same datum for Field of view: a wrapper from the title to the note under it. The rail starts under the section rule; ticks at the title (oxide) and the note. */
+.home-section-datum { position: relative; }
+.home-section-datum::before { content: ""; position: absolute; left: -1.75rem; top: -2.4rem; bottom: 0; width: 1px; background: color-mix(in srgb, var(--text-secondary) 22%, transparent); pointer-events: none; }
+.home-section-datum .home-editorial-heading h2, .home-section-datum .home-field-note { position: relative; }
+.home-section-datum .home-editorial-heading h2::before, .home-section-datum .home-field-note::before { content: ""; position: absolute; left: -1.75rem; width: .8rem; height: 1px; background: color-mix(in srgb, var(--text-secondary) 60%, transparent); pointer-events: none; }
+.home-section-datum .home-editorial-heading h2::before { top: .5em; width: 1.1rem; background: var(--brand-oxide-strong); }
+.home-section-datum .home-field-note::before { top: .8em; }
 .sketch-gear { width: 2.4rem; height: 2.4rem; overflow: visible; color: var(--brand-oxide); opacity: .9; }
 .sketch-gear * { vector-effect: non-scaling-stroke; }
 .about-sketch-gear { position: absolute !important; z-index: 0 !important; top: -1.05rem; left: -1.05rem; width: 2.8rem; height: 2.8rem; opacity: 1; pointer-events: auto; }
@@ -1039,7 +1065,7 @@ body:has(.about-active) { background-color:var(--bg-base); background-image:none
    Kept a notch softer than pure black, with a half-pixel blur, so it stays behind the text. Dark is untouched. */
 [data-theme="light"] .about-system-visual { opacity:.68; filter:grayscale(1) contrast(1.2) brightness(.55) blur(.5px); }
 [data-theme="light"] .projects-zone .about-system-visual { opacity:.74; filter:grayscale(1) contrast(1.25) brightness(.5) blur(.5px); }
-.home-visual-experiment { position: absolute; z-index: 0; left: 50%; top: -8%; bottom: 8%; width: min(92rem, calc(100vw - 1rem)); transform: translateX(-50%); opacity: .58; pointer-events: auto; mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent); }
+.home-visual-experiment { position: absolute; z-index: 0; left: 50%; top: -6.9375rem; height: 100vh; width: min(92rem, calc(100vw - 1rem)); transform: translateX(-50%); opacity: .58; pointer-events: auto; mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent); }
 .home-visual-1 {
   width: 100vw;
   opacity: .79;
@@ -1051,9 +1077,7 @@ body:has(.about-active) { background-color:var(--bg-base); background-image:none
 .home-visual-2 { opacity: .68; }
 .home-experiment .home-hero::after { content: ''; position: absolute; z-index: 1; inset: 0; pointer-events: none; background: radial-gradient(ellipse 58% 72% at 50% 68%, rgba(244,242,236,.93) 0%, rgba(244,242,236,.78) 38%, rgba(244,242,236,.24) 66%, transparent 82%); }
 .home-experiment-1 .home-hero::after {
-  background:color-mix(in srgb,var(--bg-base) 76%,transparent);
-  -webkit-mask-image:radial-gradient(ellipse 53% 66% at 50% 69%,#000 0%,rgba(0,0,0,.68) 38%,rgba(0,0,0,.16) 66%,transparent 81%);
-  mask-image:radial-gradient(ellipse 53% 66% at 50% 69%,#000 0%,rgba(0,0,0,.68) 38%,rgba(0,0,0,.16) 66%,transparent 81%);
+  content: none;
 }
 
 /* Home 1 — compact editorial portfolio study. */
@@ -1205,7 +1229,14 @@ a.stack-row:hover .stack-arrow { color:var(--brand-oxide); transition-delay:75ms
 
 @media (max-width: 767px) {
   .home-tachograph-line { bottom: 1.625rem; }
-  .home-visual-experiment { left: 50%; right: auto; top: -5.5rem; bottom: 28%; width: 100vw; opacity: .45; }
+  .home-datum::before { left: -1.2rem; top: -.5rem; }
+  .home-datum .home-identity-anchor::after, .home-datum h1::after, .home-datum .home-tagline::before { left: -1.2rem; width: .55rem; }
+  .home-datum h1::after { width: .8rem; }
+  .home-section-datum::before { left: -1.2rem; top: -1.6rem; }
+  .home-section-datum .home-editorial-heading h2::before, .home-section-datum .home-field-note::before { left: -1.2rem; width: .55rem; }
+  .home-section-datum .home-editorial-heading h2::before { width: .8rem; }
+  .home-visual-stage { top: 6rem; }
+  .home-visual-experiment { left: 50%; right: auto; top: -6rem; height: 100vh; width: 100vw; opacity: .45; }
   .home-visual-1 {
     opacity: .6;
     -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 22%, rgba(0,0,0,.55) 34%, rgba(0,0,0,.14) 46%, rgba(0,0,0,.05) 54%, transparent 62%), linear-gradient(to right, #000 0%, #000 100%);
@@ -1306,9 +1337,9 @@ a.stack-row:hover .stack-arrow { color:var(--brand-oxide); transition-delay:75ms
 }
 
 .contact-logo-stage {
-  position: absolute;
+  position: fixed;
   z-index: 0;
-  top: -20rem;
+  top: -16rem;
   left: 50%;
   width: 108rem;
   height: 96rem;
@@ -1336,12 +1367,12 @@ a.stack-row:hover .stack-arrow { color:var(--brand-oxide); transition-delay:75ms
 }
 
 @media (max-width: 1100px) {
-  .contact-logo-stage { top: -12rem; width: 88rem; height: 84rem; opacity: .075; }
+  .contact-logo-stage { top: -8rem; width: 88rem; height: 84rem; opacity: .075; }
 }
 
 @media (max-width: 767px) {
   .contact-logo-stage {
-    top: clamp(-6rem, calc(4rem - 18vw), 2rem);
+    top: clamp(-1rem, calc(9rem - 18vw), 7rem);
     width: 66rem;
     height: 78rem;
     opacity: .065;
@@ -1357,7 +1388,7 @@ a.stack-row:hover .stack-arrow { color:var(--brand-oxide); transition-delay:75ms
 .home-editorial-heading { display:flex; align-items:baseline; justify-content:space-between; gap:2rem; margin-bottom:1.5rem; }
 .home-editorial-heading h2 { color:var(--text-heading); font:400 clamp(1.9rem,4vw,2.5rem)/1 var(--font-serif); letter-spacing:-.03em; }
 .home-editorial-heading p { margin-top:.45rem; color:var(--text-tertiary); font-size:.78rem; }
-.home-editorial-heading > a,.home-editorial-heading > span { color:var(--text-tertiary); font:9px/1.2 var(--font-mono); text-transform:uppercase; letter-spacing:.1em; }
+.home-editorial-heading > a,.home-editorial-heading > span { color:var(--text-tertiary); font:.75rem/1.2 var(--font-sans); text-transform: none; letter-spacing: 0; }
 .home-editorial-heading > a:hover { color:var(--brand-oxide); }
 /* Explore rows carry their category colour on the icon, and on the title when hovered. */
 .home-directory-row { position:relative; }
@@ -1387,11 +1418,11 @@ a.stack-row:hover .stack-arrow { color:var(--brand-oxide); transition-delay:75ms
 .graph-thumb-nodes circle { opacity:.96; }
 .home-spotlight-wiki .home-spotlight-visual { background:#0a0a10; }
 .home-spotlight-copy { display:grid; gap:.45rem; align-content:start; padding:1rem 1.1rem 1.15rem; }
-.home-spotlight-copy small { color:var(--text-muted); font:8px/1 var(--font-mono); letter-spacing:.06em; text-transform:uppercase; }
+.home-spotlight-copy small { color:var(--text-muted); font:.75rem/1 var(--font-sans); letter-spacing: 0; text-transform: none; }
 .home-spotlight-copy strong { color:var(--text-heading); font:400 1.45rem/1.06 var(--font-serif); letter-spacing:-.02em; }
 .home-spotlight-wiki .home-spotlight-copy strong { font-size:1.15rem; }
 .home-spotlight-copy > span { display:-webkit-box; overflow:hidden; color:var(--text-tertiary); font:.8rem/1.5 var(--font-sans); -webkit-line-clamp:2; -webkit-box-orient:vertical; }
-.home-spotlight-copy em { margin-top:.3rem; color:var(--text-muted); font:normal 9px/1 var(--font-mono); letter-spacing:.08em; text-transform:uppercase; }
+.home-spotlight-copy em { margin-top:.3rem; color:var(--text-muted); font:normal .75rem/1 var(--font-sans); letter-spacing: 0; text-transform: none; }
 .home-spotlight-card:hover strong { color:var(--brand-oxide); }
 .home-spotlight-pinned:hover strong { color:var(--cat-essays-accent); }
 .home-spotlight-card:hover em { color:var(--text-heading); }
@@ -1511,6 +1542,13 @@ header.global-nav-shell, .mobile-nav-bar { box-shadow: inset 0 1px 0 color-mix(i
 .global-nav-shell .nav-pill:hover { background: color-mix(in srgb, var(--nav-accent) 14%, transparent); }
 .global-nav-shell .nav-pill-menu:hover { background: color-mix(in srgb, var(--nav-accent) 9%, transparent); }
 .global-nav-shell .nav-pill.is-open { background: color-mix(in srgb, var(--nav-accent) 16%, transparent); }
+.nav-sliding-track { position: relative; isolation: isolate; }
+.nav-active-indicator { position: absolute; z-index: -1; left: 0; top: 0; border-radius: .75rem; background: var(--nav-accent); pointer-events: none; transition: transform .44s cubic-bezier(.22,.75,.25,1) .12s, width .44s cubic-bezier(.22,.75,.25,1) .12s; }
+.nav-sliding-track .nav-pill { position: relative; white-space: nowrap; font-family: var(--font-sans); letter-spacing: 0; transition: color .2s ease .12s, background-color .15s ease; }
+.global-nav-shell .nav-sliding-track .nav-pill[data-active]:hover { background: transparent; }
+@media (prefers-reduced-motion: reduce) {
+  .nav-active-indicator, .nav-sliding-track .nav-pill { transition: none; }
+}
 .nav-edge-hint { background: var(--nav-accent); }
 
 /* Wiki floating buttons on phones sit above the nav bar whenever it is shown (MobileNav flags html). */
@@ -1538,7 +1576,7 @@ html[data-mobile-nav="shown"] .wiki-fab { transform: none; }
 
 /* Home on a phone: the visit counters above everything, where the desktop rails put them. */
 /* Pulled up through the 5rem main padding and the hero's 1rem so it sits 1.5rem from the top edge, the same as the side margin. */
-.home-presence-strip { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; margin:-4.5rem 0 3.6rem; color:var(--text-muted); font:9px/1.4 var(--font-mono); letter-spacing:.12em; text-transform:uppercase; }
+.home-presence-strip { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; margin:-4.5rem 0 3.6rem; color:var(--text-tertiary); font:.8rem/1.4 var(--font-sans); letter-spacing:0; text-transform:none; }
 .home-presence-strip span:first-child { color:var(--text-secondary); }
 .home-presence-strip i { font-style:normal; color:var(--nav-accent); }
 
@@ -1661,3 +1699,16 @@ nav[aria-label="Graph tools"] > :last-child { border-bottom-width: 0; margin-bot
 
 /* About: the coined title and its definition under the intro. */
 .about-definition b { display: inline-block; margin-right: .7rem; padding: .3rem .5rem; border: 1px solid var(--border-default); color: var(--text-heading); font: 600 9px/1 var(--font-mono); letter-spacing: .16em; text-transform: uppercase; vertical-align: .1em; }
+
+/* Section filter sheet: one row per criterion, label at the left, chips at the right; language is one row like the rest. */
+.section-filters { display: grid; padding: .35rem .9rem .5rem; }
+.section-filter-row { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); align-items: start; gap: .75rem; padding: .55rem 0; border-top: 1px solid color-mix(in srgb, var(--border-default) 60%, transparent); }
+.section-filter-row:first-child { border-top: 0; }
+.section-filter-label { padding-top: .25rem; color: var(--text-muted); font: 500 9px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
+.section-filter-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.section-chip-count { margin-left: .4rem; opacity: .55; font-variant-numeric: tabular-nums; }
+.section-filters-foot { display: flex; align-items: center; justify-content: space-between; padding: .6rem 0 .15rem; border-top: 1px solid color-mix(in srgb, var(--border-default) 60%, transparent); color: var(--text-tertiary); font: 400 11px/1 var(--font-mono); }
+.section-filters-foot button { color: var(--text-secondary); text-decoration: underline; text-underline-offset: .2em; }
+.section-filters-foot button:hover { color: var(--text-heading); }
+.section-filter-count { margin-left: .1rem; padding: 0 .4rem; border: 1px solid; border-radius: 999px; font: 600 10px/1.5 var(--font-mono); }
+@media (max-width: 640px) { .section-filter-row { grid-template-columns: 1fr; gap: .35rem; } }

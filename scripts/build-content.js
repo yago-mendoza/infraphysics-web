@@ -359,6 +359,7 @@ function processMarkdownFile(filePath) {
     tldr: frontmatter.tldr || null,
     related: frontmatter.related || null,
     lang: frontmatter.lang || null,
+    ai: frontmatter.ai === true,
     theme: frontmatter.theme || null,
     complexity: frontmatter.complexity || null,
     hidden: frontmatter.hidden || false,
@@ -631,6 +632,7 @@ function attachTranslations(bases, variants) {
         tldr: result.tldr ?? null,
         content: result.content,
         stale,
+        ai: data.ai === true,
       },
     };
   }
@@ -830,6 +832,9 @@ for (const entry of contentRouteEntries) {
   const post = regularPosts.find(p => p.category === entry.category && String(p.id) === entry.id);
   const langs = Object.keys(post?.translations || {});
   if (langs.length) entry.langs = langs; else delete entry.langs;
+  // Versions written with AI (the `ai: true` frontmatter flag), so the language control can mark them without loading the post.
+  const aiLangs = [...(post?.ai ? ['en'] : []), ...langs.filter(lang => post.translations[lang].ai)];
+  if (aiLangs.length) entry.aiLangs = aiLangs; else delete entry.aiLangs;
 }
 const wikinotesIndex = linkedWikinotePosts.map(({ content, searchText, ...meta }) => ({ ...meta, searchText }));
 writeFieldOfView(publicRegularPosts, wikinotesIndex);

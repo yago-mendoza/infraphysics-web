@@ -1,0 +1,22 @@
+# Article image styles: references
+
+> Styles the author wants for the site's images, kept as candidates next to the rule that governs what is published ([pages/VISUAL.md](../../../src/data/pages/VISUAL.md): premium cinematic industrial, dark, warm key against cool shadows, no CGI look). Several references here sit outside that language on purpose; that is what makes them worth keeping. When one becomes a register of the site, VISUAL.md gets the prompt block and this file keeps the example.
+
+## References
+
+- `painted-impressionist-city.webp`: a city on a hill seen down a street, painted in thick visible strokes with no outlines. Bright, saturated pastel palette (pink, lilac, orange, blues), flat daylight, cheerful. The trait is colour blocks that read as paint at any distance.
+- `cyberpunk-megacity-night.webp`: a dark megacity at night, cold blue and steel, rain-wet surfaces, giant screens on the towers, a lone figure on a terrace for scale, haze between the layers. The closest of these to the site's dark editorial register, with neon added.
+- `surreal-inverted-city.webp`: a night city hanging upside down over a starry sky, a man in a suit floating in the space between, warm lights on deep blue, visible film grain. A photographic composite that reads as a still from a film; the trait is one impossible relation drawn with realistic materials.
+- `byzantine-mosaic-earth.webp`: Earth from orbit and a starry sky as a tesserae mosaic, lapis and cobalt blues, gold stars, a spiral galaxy in the corner. An ancient technique on a modern subject; the trait is the grid of tiles turning a photograph into a wall.
+- `retrofuturism-habitat-painting.webp`: the inside of a space habitat seen from a window, a family looking out, hills and lakes curving up the cylinder, the Sun and Earth outside. Flat gouache in the manner of the 1970s space-colony paintings; optimistic light, no texture, clean edges.
+- `luminous-figure-holding-earth.webp`: a glowing digital woman in profile holding a tiny Earth between two fingers, monochrome violet and pink, bloom on every edge. This is exactly the look VISUAL.md's kill list rejects (obvious CGI, glowing edges); kept because the author likes it, and as the boundary case.
+- `illustrated-hands-soldering-pcb.webp`: two hands soldering a small blue board on a green cutting mat, drawn as a flat-colour illustration with clean lines and warm skin against teal. The trait is a technical act shown as a comic panel, close and human.
+- `bar-field-render-glowing-centre.webp`: a landscape of thousands of pink and peach vertical bars, a glowing orange cluster at the centre, shallow depth of field. A 3D render that reads as data become terrain; abstract, one accent.
+- `engraving-astronaut-falling-into-void.webp`: an astronaut falling toward a black vortex, black and white, dense hatching in the manner of a nineteenth-century engraving. A technique that declares itself completely; the figure again gives scale to something enormous.
+- `orange-swirl-lone-figure.webp`: a dark figure walking through swirling orange and white flames or waves, portrait format, painted in thick ink strokes. Two colours and a silhouette; the movement of the medium carries the whole image.
+- `indigo-grain-temple-figure.webp`: a Greek temple on low hills in one indigo, heavy risograph grain, a tiny walking figure and a deer in the grass. Monochrome, flat planes, grain as texture; quiet and archival.
+- `paper-collage-halftone-orange.webp`: a research paper's title, abstract and figures pasted as fragments on cream paper with a faint grid, halftone dots, one burnt orange and one grey as the only colours, an orange marker stroke under a phrase. The trait is print-shop collage: real documents treated as material, texture over polish. (The paper in it, LeWorldModel by Maes, Le Lidec, Scieur, LeCun and Balestriero, is incidental to the reference.)
+
+## What they have in common
+
+Written by the author once the set has grown; the first reading of these twelve: a fondness for a single human figure giving scale to something enormous (the terrace, the floating man, the family at the window, the fingers around the Earth); for techniques that declare themselves (brush strokes, tesserae, gouache, film grain) instead of hiding behind photorealism; and for deep blues with one warm accent. The site's current language shares the last trait and rejects the first two, which is the tension this folder exists to keep visible.

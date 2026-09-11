@@ -116,3 +116,11 @@ Names are lowercase slugs. `scripts/media.js` encodes and uploads to the R2 buck
 | `npm run media -- url <id>[/<name>]` | Print public URLs. |
 
 Bucket keys: `articles/<id>/cover.webp`, `articles/<id>/cover.jpg`, `articles/<id>/figures/<slug>.webp|.svg`, `site/<path>/<slug>.webp`, and `originals/<same path as media/>` for the masters. Objects are uploaded with `Cache-Control: public, max-age=31536000, immutable`; the build appends `?v=<content hash>` to every CDN url in a post (and uses the JPEG twin for `og:image`), so replacing an image under the same name still refreshes everywhere on the next deploy. A CDN url whose key is not in the manifest prints a `[MEDIA]` warning at build time. Encoding rules live in `RULES` at the top of the script; bump `VERSION` there to re-encode everything. Credentials: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` in `.env` (Object Read & Write token scoped to the bucket).
+
+## Context packs
+
+`npm run context` (also a step of `npm run build`) runs `scripts/context-pack.js`, which writes `_studio/ai-ctx/<articles|tweets>/<input>-<output>.md`, one pasteable document per job: the prompt for that job, the no-tics paragraph from `_studio/NO-TICS.md`, then the relevant docs concatenated verbatim, for an AI outside the repo. The sources are the docs in `src/data/pages/`, the review skill and `_studio/twitter/STRATEGY.md`; `_studio/ai-ctx/tweets/_add-ctx/` is hand-written and never regenerated; the packs are generated output, tracked in git so they can be copied from anywhere, and never edited by hand. Adding a doc to a pack is one line in the `PACKS` table of the script.
+
+## Finding studio pieces
+
+`npm run find -- <filters>` runs `scripts/studio-find.js`: it reads the frontmatter of every piece under `_studio/twitter/` and `_studio/inbox/` and prints the matches (`--tag`, repeatable; `--kind`, `--status`, `--mood`, `--format`, `--lang`, `--signal`, `--source`, `--text`; `--tags` lists the vocabulary with counts and flags tags missing from `_studio/twitter/TAGS.md`; `--tvb <text>` searches the lines of `_studio/ai-ctx/tweets/_add-ctx/`). The schema is in `_studio/twitter/README.md`. The script is a tool for whoever searches, the agent included: extend it when a question needs a filter it lacks.

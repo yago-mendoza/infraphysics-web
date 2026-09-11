@@ -5,8 +5,9 @@
 // black ground with the control traces and the dashed fault line, the portrait to its right. Variant B
 // adds the contour map as a watermark on every article. Preview: /test/share-cards/<kind>/<a|b>.
 
-import React from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import { Logo, WikiBrainIcon } from '../components/icons';
+import { cdn } from '../lib/cdn';
 
 export type CardKind = 'article' | 'playground' | 'wiki' | 'section' | 'page';
 export type Variant = 'a' | 'b';
@@ -21,6 +22,8 @@ export interface CardData {
   line: string;
   /** Theme-constant accent for the card (category, wiki violet, oxide). */
   accent: string;
+  /** Article category, for the per-category looks (project cover further back, no frame on essays). */
+  category?: string;
   /** The article's cover, shown dimmed behind the paper. */
   image?: string;
   /** Vertical crop anchor of the cover, % from the top. */
@@ -33,14 +36,47 @@ export interface CardData {
 
 const Mark: React.FC = () => <span className="sc-mark"><Logo /><b>InfraPhysics</b><span>infraphysics.net</span></span>;
 const Author: React.FC = () => <span className="sc-author"><img src="/avatar.jpg" alt="" /><span>Yago Mendoza</span></span>;
-const Body: React.FC<{ data: CardData; className?: string; children?: React.ReactNode }> = ({ data, className, children }) => (
-  <div className={`sc-body ${className ?? ''}`}>
-    <small className="sc-kicker">{data.kicker}</small>
+const Body: React.FC<{ data: CardData; className?: string; children?: React.ReactNode }> = ({ data, className, children }) => {
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    let cancelled = false;
+    const fit = () => {
+      const body = bodyRef.current;
+      if (cancelled || !body) return;
+      const title = body.querySelector<HTMLElement>('.sc-title');
+      const line = body.querySelector<HTMLElement>('.sc-line');
+      if (!title) return;
+      title.style.removeProperty('font-size');
+      line?.style.removeProperty('font-size');
+      let titleSize = parseFloat(getComputedStyle(title).fontSize);
+      let lineSize = line ? parseFloat(getComputedStyle(line).fontSize) : 0;
+      const children = Array.from<HTMLElement>(body.children);
+      const gap = parseFloat(getComputedStyle(body).rowGap) || 0;
+      // flex-end overflow can extend above the box without increasing scrollHeight.
+      const occupiedHeight = () => children.reduce((sum, child) => {
+        const css = getComputedStyle(child);
+        return sum + child.offsetHeight + (parseFloat(css.marginTop) || 0) + (parseFloat(css.marginBottom) || 0);
+      }, gap * (children.length - 1));
+      for (let i = 0; i < 80 && (occupiedHeight() > body.clientHeight + 1 || body.scrollHeight > body.clientHeight + 1); i++) {
+        titleSize *= .96; lineSize *= .96;
+        title.style.fontSize = `${titleSize}px`;
+        if (line) line.style.fontSize = `${lineSize}px`;
+      }
+    };
+    fit();
+    void document.fonts.ready.then(fit);
+    document.fonts.addEventListener('loadingdone', fit);
+    const observer = new ResizeObserver(fit);
+    if (bodyRef.current) observer.observe(bodyRef.current);
+    return () => { cancelled = true; observer.disconnect(); document.fonts.removeEventListener('loadingdone', fit); };
+  }, [data.title, data.line, data.kicker, className]);
+  return <div ref={bodyRef} className={`sc-body ${className ?? ''}`}>
+    {data.kicker && <small className="sc-kicker">{data.kicker}</small>}
     <h1 className={`sc-title${data.title.length > 56 ? ' is-long' : ''}`}>{data.title}</h1>
     {data.line && <p className="sc-line">{data.line}</p>}
     {children}
-  </div>
-);
+  </div>;
+};
 
 /* ---------- ingredients ---------- */
 
@@ -59,9 +95,10 @@ const FrameLine: React.FC = () => <i className="sc-frame-line" aria-hidden="true
 
 /** The home's clock maze: a dial with two hands on every cell of the grid, no gaps, and between them
     the edges that vary: each cell joins its right or lower neighbour with a fixed pseudo-random draw,
-    so paths and islands appear as they do on the home. The fade towards the left is a CSS mask. */
+    so paths and islands appear as they do on the home. The fade towards the left is a CSS mask.
+    Density follows the home lattice (75 columns over a 1.1-viewport width, 2.8px faces): about 21px cells here. */
 const CLOCKS = (() => {
-  const cols = 18, rows = 9, cellW = 1200 / cols, cellH = 630 / rows;
+  const cols = 57, rows = 30, cellW = 1200 / cols, cellH = 630 / rows;
   let seed = 19;
   const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
   const pos = (c: number, r: number) => [cellW * (c + .5), cellH * (r + .5)] as const;
@@ -73,7 +110,7 @@ const CLOCKS = (() => {
     if (c + 1 < cols && rnd() < .42) edges.push([pos(c, r), pos(c + 1, r)]);
     if (r + 1 < rows && rnd() < .3) edges.push([pos(c, r), pos(c, r + 1)]);
   }
-  return { dials, edges, radius: 14 };
+  return { dials, edges, radius: 3.4 };
 })();
 const ClockField: React.FC = () => (
   <svg className="sc-ground sc-clocks" viewBox="0 0 1200 630" aria-hidden="true">
@@ -143,16 +180,34 @@ const Scope: React.FC = () => (
 
 type Design = React.FC<{ data: CardData; variant: Variant }>;
 
-/** Article: the cover dimmed, the paper and the frame, a big title. Variant B adds the contour watermark. */
-const ArticleCard: Design = ({ data, variant }) => (
-  <div className="sc-card sc-article">
+/** Essay: white type centred on a quiet ground, the emblem alone under it, then the portrait, the name and the site.
+    No cover, no paper, no frame: an essay is words. */
+const EssayCard: Design = ({ data }) => (
+  <div className="sc-card sc-essay">
+    <img className="sc-essay-ground" src={cdn('site/share/essay-ground.webp')} alt="" />
+    <Paper />
+    <i className="sc-essay-scrim" aria-hidden="true" />
+    <div className="sc-essay-body">
+      <h1 className={`sc-essay-title${data.title.length > 56 ? ' is-long' : ''}`}>{data.title}</h1>
+      {/* The signature: the emblem and the site, nothing else. */}
+      <span className="sc-essay-author"><Logo />infraphysics.net</span>
+    </div>
+  </div>
+);
+
+/** Article: the cover dimmed, the paper and the frame, a big title. Variant B adds the contour watermark. Essays use their own card. */
+const ArticleCard: Design = (props) => props.data.category === 'essays' ? <EssayCard {...props} /> : <FramedArticleCard {...props} />;
+const FramedArticleCard: Design = ({ data, variant }) => (
+  <div className={`sc-card sc-article${data.category ? ` sc-article-${data.category}` : ''}`}>
     {data.image && <img className="sc-cover" src={data.image} alt="" style={{ objectPosition: `50% ${data.imageFocus ?? 50}%` }} />}
     <i className="sc-cover-shade" />
     {variant === 'b' && <Contours />}
     <Paper />
-    <FrameLine />
+    {data.category !== 'projects' && data.category !== 'bits2bricks' && <FrameLine />}
+    {/* Projects: the mark (emblem and name) at the top left; in the foot the author on the left and only the site on the right. */}
+    {data.category === 'projects' && <span className="sc-mark-top"><span className="sc-mark"><Logo /><b>InfraPhysics</b></span></span>}
     <Body data={data} />
-    <div className="sc-foot"><Mark /><Author /></div>
+    <div className="sc-foot">{data.category === 'projects' ? <><Author /><span className="sc-site">infraphysics.net</span></> : <><Mark /><Author /></>}</div>
   </div>
 );
 
@@ -171,7 +226,7 @@ const PlaygroundCard: Design = ({ data }) => (
 /** Article shelf: the monolith peeking from the left, the clock maze in the shelf's colour, the paper
     and the frame. */
 const SectionCard: Design = ({ data }) => (
-  <div className="sc-card sc-section">
+  <div className={`sc-card sc-section sc-section-${data.category}`}>
     <Monolith className="is-left" />
     <ClockField />
     <Paper />

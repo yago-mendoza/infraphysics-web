@@ -42,7 +42,9 @@ export const playgroundPath = (pg: { article: string; file: string }) => `/playg
 
 export const fromPost = (post: PostSummary): CardData => ({
   kind: 'article',
-  kicker: CATEGORY_LABEL[post.category] ?? post.category,
+  category: post.category,
+  // No category label on the card: the design says what it is.
+  kicker: '',
   title: post.displayTitle || post.title,
   line: post.subtitle ?? '',
   accent: catAccentVar(post.category),
@@ -63,6 +65,7 @@ export const fromNote = (note: WikiNoteMeta): CardData => {
 
 export const fromSection = (section: typeof SECTIONS[number]): CardData => ({
   kind: 'section',
+  category: section.id,
   kicker: `infraphysics.net${section.to}`,
   title: section.title,
   line: section.line,
@@ -83,7 +86,7 @@ export const fromPlayground = (pg: typeof PLAYGROUNDS[number]): CardData | null 
   if (!parent) return null;
   return {
     kind: 'playground',
-    kicker: `Playground · ${CATEGORY_LABEL[parent.category] ?? parent.category}`,
+    kicker: '',
     title: pg.title,
     line: `An interactive page from the article ${parent.displayTitle || parent.title}.`,
     accent: PLAYGROUND_GREY,

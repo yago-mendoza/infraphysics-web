@@ -7,8 +7,7 @@ import { stripLang } from '../../lib/contentRoutes';
 export const Footer: React.FC = () => {
   // Without the language prefix: a translated article keeps the article colophon.
   const pathname = stripLang(useLocation().pathname);
-  const isBlog = pathname.startsWith('/blog');
-  const isHome = pathname === '/home';
+  const isHome = /^\/home(?:[1-9]|10)?$/.test(pathname);
   const isContact = pathname === '/contact';
   const isProjectDetail = /^\/lab\/projects\/[^/]+$/.test(pathname);
   const isArticle = /^\/blog\/[^/]+\/[^/]+$/.test(pathname);
@@ -23,7 +22,7 @@ export const Footer: React.FC = () => {
             : 'Get in touch →';
 
   return (
-    <footer className={`w-full relative z-20 ${isBlog ? 'bg-th-blog' : 'bg-transparent'}`}>
+    <footer className="w-full relative z-20 bg-transparent">
       <div className="max-w-[42rem] mx-auto px-6 pt-10 pb-28 md:pb-32">
         <div className="border-t border-th-border pt-7 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-8 md:items-end">
           <div>
@@ -42,7 +41,7 @@ export const Footer: React.FC = () => {
               </span>}
             </div>
             {/* Phones: place left, year right; desktop keeps one line. */}
-            <p className="flex justify-between md:block text-[9px] font-mono uppercase tracking-[0.14em] text-th-muted"><span>Barcelona · ES / EN</span><span className="hidden md:inline"> · </span><span>© {new Date().getFullYear()}</span></p>
+            <p className="flex justify-between md:block text-xs font-sans text-th-muted"><span>Barcelona · ES / EN</span><span className="hidden md:inline"> · </span><span>© {new Date().getFullYear()}</span></p>
           </div>
         </div>
       </div>

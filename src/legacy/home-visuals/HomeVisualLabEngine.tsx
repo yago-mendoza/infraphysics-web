@@ -6,6 +6,32 @@ export type HomeVisualVariant = 1 | 2;
 const RED = '155,63,36';
 const COLORS = [RED, '29,101,152', '55,118,87'];
 
+/** Every adjustable of the clock field (variant 1). The defaults are the /home look; the home lab (/home1 … /home10) overrides them. */
+export type ClockParams = {
+  cols: number; rows: number; gridWidth: number; gridHeight: number; gridTop: number; jitter: number;
+  islands: number; linkDensity: number; reach: number; seed: number;
+  faceRadius: number; handLength: number; strokeWidth: number; tint: number; edgeAlpha: number; faceAlpha: number;
+  foci: number; fociSpeed: number; fociRadius: number; baseRed: number; lumpiness: number;
+  rippleSpeed: number; rippleGain: number; rippleWidth: number; handKick: number;
+};
+export const CLOCK_DEFAULTS: ClockParams = {
+  cols: 75, rows: 20, gridWidth: 1.1, gridHeight: .53, gridTop: .012, jitter: 0,
+  islands: 8, linkDensity: .308, reach: .035, seed: 0,
+  faceRadius: 2.8, handLength: 1, strokeWidth: 1.25, tint: 0, edgeAlpha: .8, faceAlpha: .85,
+  foci: 7, fociSpeed: 1, fociRadius: 1.4, baseRed: .4, lumpiness: .6,
+  rippleSpeed: .24, rippleGain: .6, rippleWidth: 90, handKick: 2.15,
+};
+/** Moving fields: up to ten; the five original shapes and headings repeat for the extra ones. */
+export const MAX_FOCI = 10;
+const FOCUS_SHAPES = [[.13, .14, 62, 48], [.105, .11, 54, 42], [.09, .095, 48, 38], [.085, .09, 46, 36], [.095, .1, 50, 39]];
+const FOCUS_ANGLES = [-.61, 2.18, .83, -2.42, 2.72];
+const STRUCTURAL: (keyof ClockParams)[] = ['cols', 'rows', 'gridWidth', 'gridHeight', 'gridTop', 'jitter', 'islands', 'linkDensity', 'reach', 'seed'];
+const hash01 = (n: number) => { const x = Math.sin(n * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+const mixInk = (tint: number) => {
+  const a = RED.split(',').map(Number), b = COLORS[1].split(',').map(Number);
+  return a.map((v, i) => Math.round(v + (b[i] - v) * tint)).join(',');
+};
+
 const field = (x: number, y: number, t = 0) => {
   const well = -1.7 * Math.exp(-(.72 * x * x + 1.05 * y * y));
   const saddle = .58 * Math.exp(-((x + 1.25) ** 2 * 1.1 + (y - .42) ** 2 * .42));
@@ -28,8 +54,17 @@ export const HomeVisualLab: React.FC<{
   compactClockField?: boolean;
   interactivePointer?: boolean;
   staticMicroField?: boolean;
-}> = ({ variant, showTachograph = true, compactClockField = false, interactivePointer = false, staticMicroField = false }) => {
+  clockParams?: Partial<ClockParams>;
+  /** Selector of the element that measures the scroll: the field is fully dissolved once its top reaches the viewport top (see `dissolve` in drawClocks). */
+  dissolveWith?: string;
+}> = ({ variant, showTachograph = true, compactClockField = false, interactivePointer = false, staticMicroField = false, clockParams, dissolveWith }) => {
   const ref = useRef<HTMLCanvasElement>(null);
+  // Per-frame values read the ref; a change in a structural value rebuilds the lattice and its topology.
+  const params: ClockParams = { ...CLOCK_DEFAULTS, ...clockParams };
+  const paramsRef = useRef(params); paramsRef.current = params;
+  const rebuildRef = useRef<(() => void) | null>(null);
+  const structuralKey = STRUCTURAL.map(key => params[key]).join('|');
+  useEffect(() => { rebuildRef.current?.(); }, [structuralKey]);
   const traceRef = useRef<HTMLCanvasElement>(null);
   const [traceHost, setTraceHost] = useState<HTMLElement | null>(null);
 
@@ -45,21 +80,35 @@ export const HomeVisualLab: React.FC<{
     let cols = 0, rows = 0, dx = 0, dy = 0;
     const COLOR_BUCKETS = 12;
     let xs = new Float32Array(0), ys = new Float32Array(0), buckets = new Uint8Array(0), handShift = new Float32Array(0);
+    // Dissolve: the scroll sets a target (the carousel crossing the clock band), the field follows it with a time constant,
+    // and each face goes at its own deterministic threshold (lower rows first, noise on top), its hands turning as it fades.
+    // Time-bound, not scroll-bound: the field seeks the equilibrium the scroll position asks for at one constant rate
+    // (DISSOLVE_RATE per second, so a full disintegration or recomposition always takes the same few seconds), however
+    // hard the scrollbar was yanked.
+    const VIS_LEVELS = 6, DISSOLVE_RATE = .38;
+    let dissolve = 0, dissolveTarget = 0, dissolveSpan = 0, dissolveDrawn = -1, dissolveEl: Element | null = null;
+    let dissolveAt = new Float32Array(0), visLevel = new Uint8Array(0);
     let hourX = new Float32Array(0), hourY = new Float32Array(0), minuteX = new Float32Array(0), minuteY = new Float32Array(0);
     let edgeA = new Int32Array(0), edgeB = new Int32Array(0);
     const RIPPLE_NUMERIC_LIFE = 8000;
     const MAX_RIPPLES = 20;
     const waves: Array<Ripple | null> = Array(MAX_RIPPLES).fill(null);
     const waveX = new Float32Array(MAX_RIPPLES), waveY = new Float32Array(MAX_RIPPLES), waveFront = new Float32Array(MAX_RIPPLES), waveAmplitude = new Float32Array(MAX_RIPPLES);
-    const focusX = new Float32Array(5), focusY = new Float32Array(5);
-    const focusVX = new Float32Array(5), focusVY = new Float32Array(5);
-    const focusRX = new Float32Array(5), focusRY = new Float32Array(5);
+    const focusX = new Float32Array(MAX_FOCI), focusY = new Float32Array(MAX_FOCI);
+    const focusVX = new Float32Array(MAX_FOCI), focusVY = new Float32Array(MAX_FOCI);
+    const focusRX = new Float32Array(MAX_FOCI), focusRY = new Float32Array(MAX_FOCI);
+    // Reciprocal radii, and the lobes that make each field an irregular blob instead of an ellipse:
+    // its outline is r(θ) = 1 + lump · (.3 sin(k1 θ + φ1) + .15 sin(k2 θ + φ2)), with the phases drifting in time.
+    const irx = new Float32Array(MAX_FOCI), iry = new Float32Array(MAX_FOCI);
+    const lobeK1 = new Float32Array(MAX_FOCI), lobeK2 = new Float32Array(MAX_FOCI), lobePhi1 = new Float32Array(MAX_FOCI), lobePhi2 = new Float32Array(MAX_FOCI);
+    let fociCount = 0;
     let focusReady = false, lastFocusTime = 0;
     let pointerX = 0, pointerY = 0, pointerTargetX = 0, pointerTargetY = 0, pointerAt = -Infinity;
 
     // Recreates the old deterministic, interlocking eight-island topology. This
     // runs only when the canvas changes size; none of it belongs to the frame loop.
     const buildTopology = (nextCols: number, nextRows: number) => {
+      const P = paramsRef.current, islands = Math.max(1, Math.min(16, Math.round(P.islands)));
       const count = nextCols * nextRows, owner = new Int16Array(count).fill(-1);
       const parent = new Int32Array(count).fill(-1), neighbours = new Int32Array(4);
       const a: number[] = [], b: number[] = [], keys = new Set<number>();
@@ -71,10 +120,13 @@ export const HomeVisualLab: React.FC<{
         for (let x = 0; x < nextCols - 1; x++) { add(x, x + 1); add(nextCols + x, nextCols + x + 1); }
         for (let x = 0; x < nextCols; x += 2) add(x, nextCols + x);
       } else {
-        const seeds = [0, nextCols - 1, (nextRows - 1) * nextCols, count - 1,
+        const fixed = [0, nextCols - 1, (nextRows - 1) * nextCols, count - 1,
           Math.floor(nextCols * .28) + nextCols * Math.floor(nextRows * .42),
           Math.floor(nextCols * .72) + nextCols * Math.floor(nextRows * .42),
           Math.floor(nextCols * .4) + nextCols * (nextRows - 2), Math.floor(nextCols * .61) + nextCols];
+        // Eight fixed seeds reproduce the /home topology exactly; fewer take the first ones, more add hashed positions.
+        const seeds = fixed.slice(0, islands);
+        for (let i = 8; seeds.length < islands && i < 200; i++) { const id = Math.floor(hash01(i * 7 + P.seed * 13) * count); if (!seeds.includes(id)) seeds.push(id); }
         seeds.forEach((id, island) => { owner[id] = island; });
         const findNeighbours = (id: number) => {
           let n = 0, x = id % nextCols, y = Math.floor(id / nextCols);
@@ -84,14 +136,14 @@ export const HomeVisualLab: React.FC<{
         };
         let remaining = count - seeds.length, turn = 0;
         while (remaining > 0 && turn < count * 12) {
-          const island = turn % 8; let bestScore = -Infinity, best = -1, from = -1;
+          const island = turn % islands; let bestScore = -Infinity, best = -1, from = -1;
           for (let id = 0; id < count; id++) if (owner[id] === island) {
             const n = findNeighbours(id);
             for (let j = 0; j < n; j++) {
               const next = neighbours[j]; if (owner[next] !== -1) continue;
-              const noise = ((next * 73 + id * 37 + island * 53) % 997) / 997;
+              const noise = ((next * 73 + id * 37 + island * 53 + P.seed * 131) % 997) / 997;
               const reach = Math.abs(next % nextCols - nextCols / 2) + Math.abs(Math.floor(next / nextCols) - nextRows / 2);
-              const score = noise * 3 + reach * .035;
+              const score = noise * 3 + reach * P.reach;
               if (score > bestScore) { bestScore = score; best = next; from = id; }
             }
           }
@@ -111,8 +163,10 @@ export const HomeVisualLab: React.FC<{
         for (let id = 0; id < count; id++) {
           if (parent[id] >= 0) add(id, parent[id]);
           const x = id % nextCols, y = Math.floor(id / nextCols);
-          if (x < nextCols - 1) { const other = id + 1; if (owner[other] === owner[id] && (id * 29 + other * 17) % 13 > 8) add(id, other); }
-          if (y < nextRows - 1) { const other = id + nextCols; if (owner[other] === owner[id] && (id * 29 + other * 17) % 13 > 8) add(id, other); }
+          // (h % 13) > 8 on /home; expressed as a density so the lab can open or close the mesh.
+          const linked = (other: number) => owner[other] === owner[id] && ((id * 29 + other * 17) % 13 + .5) / 13 > 1 - P.linkDensity;
+          if (x < nextCols - 1 && linked(id + 1)) add(id, id + 1);
+          if (y < nextRows - 1 && linked(id + nextCols)) add(id, id + nextCols);
         }
       }
       edgeA = Int32Array.from(a); edgeB = Int32Array.from(b);
@@ -126,15 +180,27 @@ export const HomeVisualLab: React.FC<{
       interactionBottom = boundary ? boundary.getBoundingClientRect().top - box.top + boundaryOffset : h;
       dpr = Math.min(devicePixelRatio || 1, 1.5);
       canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
-      cols = w < 680 ? 20 : 29; rows = compactClockField ? 2 : 11;
-      const gridW = w * 1.1, left = (w - gridW) / 2;
-      dx = gridW / (cols - 1); dy = compactClockField ? 48 : Math.min(34, h * .53 / (rows - 1));
-      const top = compactClockField ? h - (w < 768 ? 12 : 20) - (rows - 1) * dy : h * .012;
+      const P = paramsRef.current;
+      const denseClocks = variant === 1 && !compactClockField;
+      cols = denseClocks ? Math.max(2, Math.round(w < 680 ? P.cols * 28 / 41 : P.cols)) : (w < 680 ? 20 : 29);
+      rows = compactClockField ? 2 : denseClocks ? Math.max(2, Math.round(P.rows)) : 11;
+      const gridW = w * P.gridWidth, left = (w - gridW) / 2;
+      // Twice the clocks in the same footprint, keeping face size and stroke weight.
+      dx = gridW / (cols - 1); dy = compactClockField ? 48 : Math.min(340 * (P.gridHeight / .53), h * P.gridHeight) / (rows - 1);
+      const top = compactClockField ? h - (w < 768 ? 12 : 20) - (rows - 1) * dy : h * P.gridTop;
       const count = cols * rows;
       xs = new Float32Array(count); ys = new Float32Array(count); buckets = new Uint8Array(count); handShift = new Float32Array(count);
+      dissolveAt = new Float32Array(count); visLevel = new Uint8Array(count).fill(VIS_LEVELS - 1);
+      dissolveEl = dissolveWith ? document.querySelector(dissolveWith) : null;
+      // The scroll distance that means "fully dissolved": the element's document top, measured here (on size changes), never per frame:
+      // the carousel rotates and re-lays out, and a target that jitters makes the front flicker.
+      dissolveSpan = dissolveEl ? dissolveEl.getBoundingClientRect().top + window.scrollY : 0;
+      dissolveDrawn = -1;
+      for (let id = 0; id < count; id++) dissolveAt[id] = .5 * hash01(id * 5 + 7) + .5 * (1 - Math.floor(id / cols) / Math.max(1, rows - 1));
       hourX = new Float32Array(count); hourY = new Float32Array(count); minuteX = new Float32Array(count); minuteY = new Float32Array(count);
       for (let id = 0; id < count; id++) {
-        xs[id] = left + (id % cols) * dx; ys[id] = top + Math.floor(id / cols) * dy;
+        xs[id] = left + (id % cols) * dx + (hash01(id * 3 + 1 + P.seed) - .5) * dx * P.jitter;
+        ys[id] = top + Math.floor(id / cols) * dy + (hash01(id * 3 + 2 + P.seed) - .5) * dy * P.jitter;
         const minute = (id * 37 + 11) % 60, hour = (id * 7 + 3) % 12;
         const minuteAngle = minute / 60 * Math.PI * 2 - Math.PI / 2;
         const hourAngle = (hour + minute / 60) / 12 * Math.PI * 2 - Math.PI / 2;
@@ -154,7 +220,7 @@ export const HomeVisualLab: React.FC<{
         return smoothstep(.08, .82, proximity);
       };
       let remainder = 1;
-      for (let i = 0; i < 5; i++) remainder *= 1 - contribution(focusX[i], focusY[i], focusRX[i], focusRY[i]);
+      for (let i = 0; i < fociCount; i++) remainder *= 1 - contribution(focusX[i], focusY[i], focusRX[i], focusRY[i]);
       return .07 + (1 - remainder) * .91;
     };
     const emit = (wave: Ripple) => {
@@ -177,7 +243,7 @@ export const HomeVisualLab: React.FC<{
       if (event.clientY - box.top >= interactionBottom) return;
       const now = performance.now(), x = event.clientX - box.left, y = event.clientY - box.top;
       emit({
-        x, y, started: now, gain: .96, speed: .24,
+        x, y, started: now, gain: paramsRef.current.rippleGain, speed: paramsRef.current.rippleSpeed,
         polarity: baseRedAt(x, y, now) < .48 ? 1 : -1,
       });
     };
@@ -191,31 +257,50 @@ export const HomeVisualLab: React.FC<{
     };
 
     const drawClocks = (time: number) => {
-      const rx1 = Math.max(62, w * .13), ry1 = Math.max(48, h * .14);
-      const rx2 = Math.max(54, w * .105), ry2 = Math.max(42, h * .11);
-      const rx3 = Math.max(48, w * .09), ry3 = Math.max(38, h * .095);
-      const rx4 = Math.max(46, w * .085), ry4 = Math.max(36, h * .09);
-      const rx5 = Math.max(50, w * .095), ry5 = Math.max(39, h * .1);
-      focusRX[0] = rx1; focusRY[0] = ry1; focusRX[1] = rx2; focusRY[1] = ry2;
-      focusRX[2] = rx3; focusRY[2] = ry3; focusRX[3] = rx4; focusRY[3] = ry4;
-      focusRX[4] = rx5; focusRY[4] = ry5;
+      const P = paramsRef.current, ink = P.tint ? mixInk(P.tint) : RED, fr = P.fociRadius;
+      fociCount = Math.max(0, Math.min(MAX_FOCI, Math.round(P.foci)));
+      for (let i = 0; i < MAX_FOCI; i++) {
+        const [kx, ky, minX, minY] = FOCUS_SHAPES[i % FOCUS_SHAPES.length];
+        focusRX[i] = Math.max(minX, w * kx) * fr; focusRY[i] = Math.max(minY, h * ky) * fr;
+        irx[i] = 1 / focusRX[i]; iry[i] = 1 / focusRY[i];
+        lobeK1[i] = 3 + i % 3; lobeK2[i] = 5 + (i % 2) * 2;
+        lobePhi1[i] = time * .00025 * (1 + (i % 4) * .15) + i * 1.7; lobePhi2[i] = -time * .0004 + i * 2.3;
+      }
+      const lump = P.lumpiness, outer2 = (1 + lump * .45) ** 2;
       const fieldBottom = Math.min(interactionBottom, h * .62);
       if (!focusReady) {
-        const angles = [-.61, 2.18, .83, -2.42, 2.72];
-        for (let i = 0; i < 5; i++) {
-          focusX[i] = w * (.12 + i * .19);
+        for (let i = 0; i < MAX_FOCI; i++) {
+          focusX[i] = w * ((.12 + i * .19) % 1);
           focusY[i] = fieldBottom * (.22 + (i * 37 % 61) / 100);
-          const speed = 48 + i * 5;
-          focusVX[i] = Math.cos(angles[i]) * speed; focusVY[i] = Math.sin(angles[i]) * speed;
+          const speed = (48 + (i % 5) * 5) * P.fociSpeed, angle = FOCUS_ANGLES[i % 5] + (i >= 5 ? 1.3 : 0);
+          focusVX[i] = Math.cos(angle) * speed; focusVY[i] = Math.sin(angle) * speed;
         }
         focusReady = true; lastFocusTime = time;
       }
       const dt = Math.min(.1, Math.max(0, (time - lastFocusTime) / 1000));
       lastFocusTime = time;
+      // A pure function of the scroll, from the first pixel: the fraction of the way to the element's top reaching the viewport top.
+      if (dissolveSpan > 0) dissolveTarget = Math.max(0, Math.min(1, window.scrollY / dissolveSpan));
+      if (dissolveTarget !== dissolve) {
+        const cap = DISSOLVE_RATE * dt;
+        dissolve += Math.max(-cap, Math.min(cap, dissolveTarget - dissolve));
+      }
+      // Levels are recomputed only when the dissolve value moved: a settled field is drawn identically frame after frame.
+      if (dissolve !== dissolveDrawn) {
+        // The front is .3 wide around each threshold (thresholds span 0..1), so the value is stretched by 1.3: at dissolve 1 the
+        // last face is past its own front and nothing at all remains, whatever the row.
+        const front = dissolve * 1.3;
+        if (dissolve > 0) for (let id = 0; id < xs.length; id++) {
+          const at = dissolveAt[id];
+          visLevel[id] = Math.round((1 - smoothstep(at - .3, at + .3, front)) * (VIS_LEVELS - 1));
+        } else visLevel.fill(VIS_LEVELS - 1);
+        dissolveDrawn = dissolve;
+      }
+      const levelsInUse = dissolve > 0 ? VIS_LEVELS - 1 : 1;
       if (dt) {
-        // Ten pair checks for five particles: a small short-range repulsion is
+        // Pair checks between the active particles: a small short-range repulsion is
         // enough to break repeated paths while preserving their inertia.
-        for (let i = 0; i < 4; i++) for (let j = i + 1; j < 5; j++) {
+        for (let i = 0; i < fociCount - 1; i++) for (let j = i + 1; j < fociCount; j++) {
           const sx = focusX[i] - focusX[j], sy = focusY[i] - focusY[j];
           const distance = Math.hypot(sx, sy) || 1;
           const range = (focusRX[i] + focusRX[j]) * .72;
@@ -224,8 +309,8 @@ export const HomeVisualLab: React.FC<{
           const ax = sx / distance * acceleration, ay = sy / distance * acceleration;
           focusVX[i] += ax; focusVY[i] += ay; focusVX[j] -= ax; focusVY[j] -= ay;
         }
-        for (let i = 0; i < 5; i++) {
-          const targetSpeed = 48 + i * 5;
+        for (let i = 0; i < fociCount; i++) {
+          const targetSpeed = (48 + (i % 5) * 5) * Math.max(.02, P.fociSpeed);
           const speed = Math.hypot(focusVX[i], focusVY[i]) || targetSpeed;
           const correction = 1 + (targetSpeed / speed - 1) * .035;
           focusVX[i] *= correction; focusVY[i] *= correction;
@@ -242,14 +327,7 @@ export const HomeVisualLab: React.FC<{
           else if (focusY[i] > maxY) { focusY[i] = maxY; focusVY[i] = -Math.abs(focusVY[i]); }
         }
       }
-      const x1 = focusX[0], y1 = focusY[0], x2 = focusX[1], y2 = focusY[1];
-      const x3 = focusX[2], y3 = focusY[2], x4 = focusX[3], y4 = focusY[3];
-      const x5 = focusX[4], y5 = focusY[4];
-      const irx1 = 1 / (rx1 * rx1), iry1 = 1 / (ry1 * ry1);
-      const irx2 = 1 / (rx2 * rx2), iry2 = 1 / (ry2 * ry2);
-      const irx3 = 1 / (rx3 * rx3), iry3 = 1 / (ry3 * ry3);
-      const irx4 = 1 / (rx4 * rx4), iry4 = 1 / (ry4 * ry4);
-      const irx5 = 1 / (rx5 * rx5), iry5 = 1 / (ry5 * ry5);
+      const rippleWidth = Math.max(1, P.rippleWidth), handKick = P.handKick, baseRed = P.baseRed;
       let activeWaves = 0;
       for (let i = 0; i < waves.length; i++) {
         const wave = waves[i]; if (!wave) continue;
@@ -266,40 +344,43 @@ export const HomeVisualLab: React.FC<{
 
       for (let id = 0; id < xs.length; id++) {
         const x = xs[id], y = ys[id];
-        const p1 = Math.max(0, 1 - (x - x1) ** 2 * irx1 - (y - y1) ** 2 * iry1);
-        const p2 = Math.max(0, 1 - (x - x2) ** 2 * irx2 - (y - y2) ** 2 * iry2);
-        const p3 = Math.max(0, 1 - (x - x3) ** 2 * irx3 - (y - y3) ** 2 * iry3);
-        const p4 = Math.max(0, 1 - (x - x4) ** 2 * irx4 - (y - y4) ** 2 * iry4);
-        const p5 = Math.max(0, 1 - (x - x5) ** 2 * irx5 - (y - y5) ** 2 * iry5);
-        const a = smoothstep(.08, .82, p1), b = smoothstep(.08, .82, p2), c = smoothstep(.08, .82, p3);
-        const d = smoothstep(.08, .82, p4), e = smoothstep(.08, .82, p5);
-        let red = .18 + (1 - (1 - a) * (1 - b) * (1 - c) * (1 - d) * (1 - e)) * .8;
+        let remainder = 1;
+        for (let i = 0; i < fociCount; i++) {
+          const ex = (x - focusX[i]) * irx[i], ey = (y - focusY[i]) * iry[i], d2 = ex * ex + ey * ey;
+          if (d2 >= outer2) continue;
+          const theta = Math.atan2(ey, ex);
+          const shape = 1 + lump * (.3 * Math.sin(lobeK1[i] * theta + lobePhi1[i]) + .15 * Math.sin(lobeK2[i] * theta + lobePhi2[i]));
+          const proximity = Math.max(0, 1 - d2 / (shape * shape));
+          remainder *= 1 - smoothstep(.08, .82, proximity);
+        }
+        let red = baseRed + (1 - remainder) * (.98 - baseRed);
         // Linear superposition first, one smooth bounded colour response second:
         // order-independent reinforcement and cancellation, like a wave field.
         let waveField = 0;
         for (let wave = 0; wave < activeWaves; wave++) {
           const distance = Math.hypot(x - waveX[wave], y - waveY[wave]);
-          waveField += (1 - smoothstep(0, 54, Math.abs(distance - waveFront[wave]))) * waveAmplitude[wave];
+          waveField += (1 - smoothstep(0, rippleWidth, Math.abs(distance - waveFront[wave]))) * waveAmplitude[wave];
         }
         const response = Math.tanh(waveField * 1.15);
-        red += response >= 0 ? (.98 - red) * response : (red - .025) * response;
+        // The dark side of a wave is shallow on purpose: on a fine lattice a full trough read as a black ring.
+        red += response >= 0 ? (.98 - red) * response : (red - .14) * response * .55;
         buckets[id] = Math.min(COLOR_BUCKETS - 1, Math.floor(Math.min(1, red) * COLOR_BUCKETS));
-        handShift[id] = response * 2.15;
+        handShift[id] = response * handKick;
       }
 
-      for (let bucket = 0; bucket < COLOR_BUCKETS; bucket++) {
-        const red = (bucket + .5) / COLOR_BUCKETS;
+      for (let level = VIS_LEVELS - 1; level > VIS_LEVELS - 1 - levelsInUse; level--) for (let bucket = 0; bucket < COLOR_BUCKETS; bucket++) {
+        const red = (bucket + .5) / COLOR_BUCKETS, fade = level / (VIS_LEVELS - 1);
         ctx.beginPath();
         for (let edge = 0; edge < edgeA.length; edge++) {
           const a = edgeA[edge], b = edgeB[edge];
-          if (Math.max(buckets[a], buckets[b]) !== bucket) continue;
+          if (Math.max(buckets[a], buckets[b]) !== bucket || Math.min(visLevel[a], visLevel[b]) !== level) continue;
           const ux = Math.sign(xs[b] - xs[a]), uy = Math.sign(ys[b] - ys[a]);
-          const ar = 5.1 + (buckets[a] + .5) / COLOR_BUCKETS * .68;
-          const br = 5.1 + (buckets[b] + .5) / COLOR_BUCKETS * .68;
+          const ar = P.faceRadius + .4 + (buckets[a] + .5) / COLOR_BUCKETS * .68;
+          const br = P.faceRadius + .4 + (buckets[b] + .5) / COLOR_BUCKETS * .68;
           ctx.moveTo(xs[a] + ux * ar, ys[a] + uy * ar);
           ctx.lineTo(xs[b] - ux * br, ys[b] - uy * br);
         }
-        ctx.strokeStyle = `rgba(${RED},${.08 + red * .52})`; ctx.lineWidth = .48 + red * .42; ctx.stroke();
+        ctx.strokeStyle = `rgba(${ink},${(.08 + red * .52) * P.edgeAlpha * fade})`; ctx.lineWidth = (.48 + red * .42) * P.strokeWidth; ctx.stroke();
       }
 
       // Punch the clock faces out of the edge layer. The holes reveal the real
@@ -308,8 +389,9 @@ export const HomeVisualLab: React.FC<{
       ctx.globalCompositeOperation = 'destination-out';
       ctx.beginPath();
       for (let id = 0; id < xs.length; id++) {
+        if (!visLevel[id]) continue;
         const red = (buckets[id] + .5) / COLOR_BUCKETS;
-        const r = 4.7 + red * .68;
+        const r = P.faceRadius + red * .68;
         ctx.moveTo(xs[id] + r + .7, ys[id]);
         ctx.arc(xs[id], ys[id], r + .7, 0, Math.PI * 2);
       }
@@ -318,24 +400,24 @@ export const HomeVisualLab: React.FC<{
       ctx.restore();
 
       // Draw the clock outlines and fixed hands over those transparent faces.
-      for (let bucket = 0; bucket < COLOR_BUCKETS; bucket++) {
-        const red = (bucket + .5) / COLOR_BUCKETS;
+      for (let level = VIS_LEVELS - 1; level > VIS_LEVELS - 1 - levelsInUse; level--) for (let bucket = 0; bucket < COLOR_BUCKETS; bucket++) {
+        const red = (bucket + .5) / COLOR_BUCKETS, fade = level / (VIS_LEVELS - 1);
         ctx.beginPath();
         for (let id = 0; id < xs.length; id++) {
-          if (buckets[id] !== bucket) continue;
-          const x = xs[id], y = ys[id], r = 4.7 + red * .68;
+          if (buckets[id] !== bucket || visLevel[id] !== level) continue;
+          const x = xs[id], y = ys[id], r = P.faceRadius + red * .68, minute = r * .72 * P.handLength, hour = r * .48 * P.handLength;
           ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, Math.PI * 2);
-          const shift = handShift[id];
+          const shift = handShift[id] + (1 - fade) * 2.6;
           if (Math.abs(shift) > .002) {
             const mc = Math.cos(shift), ms = Math.sin(shift), hc = Math.cos(shift * .42), hs = Math.sin(shift * .42);
-            ctx.moveTo(x, y); ctx.lineTo(x + (minuteX[id] * mc - minuteY[id] * ms) * r * .72, y + (minuteX[id] * ms + minuteY[id] * mc) * r * .72);
-            ctx.moveTo(x, y); ctx.lineTo(x + (hourX[id] * hc - hourY[id] * hs) * r * .48, y + (hourX[id] * hs + hourY[id] * hc) * r * .48);
+            ctx.moveTo(x, y); ctx.lineTo(x + (minuteX[id] * mc - minuteY[id] * ms) * minute, y + (minuteX[id] * ms + minuteY[id] * mc) * minute);
+            ctx.moveTo(x, y); ctx.lineTo(x + (hourX[id] * hc - hourY[id] * hs) * hour, y + (hourX[id] * hs + hourY[id] * hc) * hour);
           } else {
-            ctx.moveTo(x, y); ctx.lineTo(x + minuteX[id] * r * .72, y + minuteY[id] * r * .72);
-            ctx.moveTo(x, y); ctx.lineTo(x + hourX[id] * r * .48, y + hourY[id] * r * .48);
+            ctx.moveTo(x, y); ctx.lineTo(x + minuteX[id] * minute, y + minuteY[id] * minute);
+            ctx.moveTo(x, y); ctx.lineTo(x + hourX[id] * hour, y + hourY[id] * hour);
           }
         }
-        ctx.strokeStyle = `rgba(${RED},${.16 + red * .7})`; ctx.lineWidth = .52; ctx.stroke();
+        ctx.strokeStyle = `rgba(${ink},${(.16 + red * .7) * P.faceAlpha * fade})`; ctx.lineWidth = .52 * P.strokeWidth; ctx.stroke();
       }
 
     };
@@ -406,15 +488,17 @@ export const HomeVisualLab: React.FC<{
       window.addEventListener('pointerdown', press, { passive: true, capture: true });
       window.addEventListener('pointermove', point, { passive: true, capture: true });
     }
+    rebuildRef.current = () => { resize(); if (!raf) raf = requestAnimationFrame(frame); };
     resize(); raf = requestAnimationFrame(frame);
     return () => {
+      rebuildRef.current = null;
       resizeObserver.disconnect(); visibilityObserver.disconnect(); if (raf) cancelAnimationFrame(raf);
       if (interactivePointer) {
         window.removeEventListener('pointerdown', press, { capture: true });
         window.removeEventListener('pointermove', point, { capture: true });
       }
     };
-  }, [variant, compactClockField, interactivePointer, staticMicroField]);
+  }, [variant, compactClockField, interactivePointer, staticMicroField, dissolveWith]);
 
   // Lightweight control-system trace: a damped oscillator, pointer velocity and
   // slow deterministic forcing. One scalar history, no particles or field solve.

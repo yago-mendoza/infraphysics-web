@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Logo } from '../icons';
 
 const VIEWBOX_WIDTH = 992;
@@ -117,10 +118,10 @@ export const ContactLogoSculpture: React.FC = () => {
     };
   }, [render]);
 
-  return (
+  return createPortal(
     <div className="contact-logo-stage" aria-hidden="true">
       <canvas ref={canvasRef} className="contact-logo-monolith" />
       <div ref={sourceRef} className="contact-logo-source"><Logo /></div>
-    </div>
+    </div>, document.body
   );
 };

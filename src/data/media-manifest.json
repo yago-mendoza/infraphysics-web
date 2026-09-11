@@ -2,7 +2,7 @@
   "version": 1,
   "publicBase": "https://cdn.infraphysics.net",
   "settings": "dd8519ee",
-  "updated": "2026-09-10",
+  "updated": "2026-09-11",
   "files": {
     "articles/1112121/cover.jpg": {
       "src": "articles/1112121/cover.png",
@@ -893,6 +893,16 @@
       "bytes": 117984,
       "type": "image/webp",
       "updated": "2026-09-07"
+    },
+    "site/share/essay-ground.webp": {
+      "src": "site/share/essay-ground.jpg",
+      "srcHash": "b29dfefc2f7d",
+      "v": "8821c90b",
+      "width": 1308,
+      "height": 736,
+      "bytes": 186562,
+      "type": "image/webp",
+      "updated": "2026-09-11"
     }
   },
   "originals": {
@@ -1220,6 +1230,11 @@
       "hash": "7c0515f9841d",
       "bytes": 914566,
       "updated": "2026-09-07"
+    },
+    "site/share/essay-ground.jpg": {
+      "hash": "b29dfefc2f7d",
+      "bytes": 315133,
+      "updated": "2026-09-11"
     }
   }
 }

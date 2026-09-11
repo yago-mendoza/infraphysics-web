@@ -41,7 +41,8 @@
 /* ---- The card. All sizes in px on purpose: a 1200 x 630 canvas. ---- */
 .sc-card { position: absolute; inset: 0; overflow: hidden; background: #0d0e0d; color: #ece7da; font-family: var(--font-sans); }
 .sc-ground { position: absolute; inset: 0; width: 100%; height: 100%; }
-.sc-body { position: absolute; left: 100px; right: 100px; bottom: 160px; z-index: 2; display: grid; gap: 24px; }
+/* Body fits its text between the top band and the signature; Body measures all children after fonts load. */
+.sc-body { position: absolute; left: 100px; right: 100px; top: 120px; bottom: 160px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; gap: 24px; overflow: hidden; }
 /* Framed cards: more air between the frame and the foot line, the text a little higher. */
 .sc-article .sc-body, .sc-section .sc-body, .sc-wiki .sc-body { bottom: 204px; }
 .sc-article .sc-foot, .sc-section .sc-foot, .sc-wiki .sc-foot { bottom: 98px; }
@@ -62,6 +63,7 @@
 .sc-mark > span { margin-left: 6px; padding-left: 20px; border-left: 2px solid rgba(236,231,218,.25); color: rgba(236,231,218,.6); font: 400 21px/1 var(--font-mono); letter-spacing: .08em; }
 .sc-author { display: inline-flex; align-items: center; gap: 16px; color: rgba(236,231,218,.88); font: 500 25px/1 var(--font-sans); white-space: nowrap; }
 .sc-author img { width: 58px; height: 58px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(236,231,218,.35); }
+.sc-author img, .sc-portrait img { filter: grayscale(1); }
 
 /* Engineering paper and the drawing frame: articles, shelves and wiki. */
 /* The paper is grey, not the accent, and quiet: the accent belongs to the frame and the chip. */
@@ -74,9 +76,9 @@
 
 /* The clock maze in the card's colour. */
 .sc-clocks { fill: none; stroke: var(--sc-accent); stroke-linecap: round; opacity: .7; }
-.sc-clocks circle { stroke-width: 1.6; stroke-opacity: .7; }
-.sc-clocks path { stroke-width: 2.2; stroke-opacity: .9; }
-.sc-clocks line { stroke-width: 1.4; stroke-opacity: .45; }
+.sc-clocks circle { stroke-width: 1; stroke-opacity: .75; }
+.sc-clocks path { stroke-width: 1.1; stroke-opacity: .9; }
+.sc-clocks line { stroke-width: .9; stroke-opacity: .5; }
 
 /* The monolith: the mark extruded by offset copies, faint, behind everything. */
 /* As on Contact: the whole stack sits at a low opacity; the layers inside are relative to it. */
@@ -125,5 +127,55 @@
 .sc-page .sc-mark svg { color: var(--sc-accent); }
 
 /* The home: the emblem, solid, in the monolith tilt, where the portrait would be. */
-.sc-emblem { position: absolute; right: 130px; top: 50%; z-index: 2; width: 300px; height: 324px; transform: translateY(-50%) rotate(5deg); color: var(--sc-accent); }
+/* Upright, and centred between the dashed fault line (x = 760) and the right edge. */
+.sc-emblem { position: absolute; right: 50px; top: 50%; z-index: 2; width: 340px; height: 367px; transform: translateY(-50%); color: var(--sc-accent); }
 .sc-emblem svg { width: 100%; height: 100%; }
+
+/* Projects: no drawing frame, the cover more present and the paper quieter, the whole title on the card even if smaller. */
+.sc-article-projects .sc-cover { filter: brightness(.55) saturate(.9); }
+.sc-article-projects .sc-cover-shade { background: linear-gradient(to top, rgba(13,14,13,.88) 0%, rgba(13,14,13,.5) 45%, rgba(13,14,13,.12) 100%); }
+.sc-article-projects .sc-paper path { stroke: rgba(236,231,218,.035); }
+.sc-article-projects .sc-paper #sc-coarse path { stroke: rgba(236,231,218,.06); }
+.sc-article-projects .sc-title { font-size: 72px; -webkit-line-clamp: 4; }
+.sc-article-projects .sc-title.is-long { font-size: 56px; -webkit-line-clamp: 5; }
+
+/* Essay: a quiet ground with a faint wash of the essay accent, white serif type centred, the emblem alone, then the portrait, the name and the site. */
+.sc-essay { background: #0d0e0d; }
+/* The ground is the grainy warm gradient (media/site/share), turned landscape; a scrim keeps the white type readable over its light side. */
+.sc-essay-ground { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.sc-essay-scrim { position: absolute; inset: 0; z-index: 1; background: linear-gradient(to bottom, rgba(13,14,13,.2) 0%, rgba(13,14,13,.3) 50%, rgba(13,14,13,.5) 100%); }
+.sc-essay-body { position: absolute; inset: 0; z-index: 2; display: grid; place-content: center; justify-items: center; gap: 26px; padding: 0 120px; text-align: center; }
+.sc-essay-title { margin: 0; max-width: 960px; color: #fbf8f1; font: 500 66px/1.08 var(--font-sans); letter-spacing: -.03em; text-wrap: balance; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.sc-essay-title.is-long { font-size: 52px; }
+/* A very faint grid between the image and the scrim; the emblem sits beside the site name. */
+.sc-essay .sc-paper { z-index: 1; }
+.sc-essay .sc-paper path { stroke: rgba(236,231,218,.06); }
+.sc-essay .sc-paper #sc-coarse path { stroke: rgba(236,231,218,.1); }
+.sc-essay-author svg { flex: none; display: block; width: 40px; height: 40px; color: rgba(236,231,218,.72); }
+.sc-essay-author { display: inline-flex; align-items: center; gap: 14px; color: rgba(236,231,218,.72); font: 400 24px/1 var(--font-mono); letter-spacing: .08em; white-space: nowrap; }
+
+
+/* Every framed card (articles, wiki, playgrounds, shelves): the drawing frame almost on the edge. */
+.sc-frame-line { inset: 10px; }
+
+/* Never past the edges: every text block is clipped by its box, whatever it contains. */
+.sc-body.is-left { bottom: auto; max-height: 470px; overflow: hidden; }
+.sc-essay-body { padding-top: 60px; padding-bottom: 60px; overflow: hidden; }
+.sc-title, .sc-line, .sc-essay-title { overflow-wrap: anywhere; }
+.sc-foot { max-width: 1000px; overflow: hidden; }
+.sc-author span, .sc-mark b { overflow: hidden; text-overflow: ellipsis; }
+
+/* Projects: the mark at the top left; the foot ends with the site alone. */
+.sc-mark-top { position: absolute; left: 100px; top: 60px; z-index: 2; }
+.sc-site { color: rgba(236,231,218,.6); font: 400 21px/1 var(--font-mono); letter-spacing: .08em; white-space: nowrap; }
+
+/* Text fits its available height after fonts load; line clamps would hide overflow from that measurement. */
+.sc-body > * { flex-shrink: 0; }
+.sc-kicker { align-self: flex-start; }
+.sc-body .sc-title, .sc-body .sc-line { display: block; -webkit-line-clamp: unset; overflow: visible; }
+.sc-article-projects .sc-body, .sc-article-bits2bricks .sc-body,
+.sc-article-projects .sc-foot, .sc-article-bits2bricks .sc-foot { left: 72px; right: 72px; }
+.sc-section-projects .sc-body, .sc-section-bits2bricks .sc-body,
+.sc-section-projects .sc-foot, .sc-section-bits2bricks .sc-foot { left: 100px; right: 100px; }
+.sc-article-projects .sc-mark-top { left: 72px; }
+.sc-section-bits2bricks .sc-mark svg { color: #fbf8f1; }

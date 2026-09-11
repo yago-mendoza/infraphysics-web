@@ -14,22 +14,25 @@ export interface RouteLanguage {
   available: Lang[];
   /** Url of the page in a language, or null when it does not exist in it. */
   pathFor: (lang: Lang) => string | null;
+  /** Languages whose version of this page was written with AI (`ai: true` in that file's frontmatter). */
+  aiWritten: Lang[];
 }
 
 export function useRouteLanguage(): RouteLanguage {
   const location = useLocation();
   return useMemo(() => {
-    const route = contentRoutes.resolve(location.pathname) as (ReturnType<typeof contentRoutes.resolve> & { lang?: string; langs?: string[] }) | undefined;
+    const route = contentRoutes.resolve(location.pathname) as (ReturnType<typeof contentRoutes.resolve> & { lang?: string; langs?: string[]; aiLangs?: string[] }) | undefined;
     const isArticle = !!route && route.category !== 'wikinotes';
     const langs = isArticle ? (route.langs || []) : [];
     const available = ['en', ...langs] as Lang[];
     const current = (isArticle && route.lang === 'es') ? 'es' : 'en';
+    const aiWritten = (isArticle ? (route.aiLangs || []) : []) as Lang[];
     const base = isArticle ? route.canonical.replace(/^\/es(?=\/)/, '') : null;
     const pathFor = (lang: Lang) => {
       if (!base) return null;
       if (lang === 'en') return base + location.search + location.hash;
       return langs.includes(lang) ? `/${lang}${base}${location.search}${location.hash}` : null;
     };
-    return { current, available, pathFor };
+    return { current, available, pathFor, aiWritten };
   }, [location.pathname, location.search, location.hash]);
 }

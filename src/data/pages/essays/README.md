@@ -76,17 +76,13 @@ Body font size is `0.95rem` with `line-height: 1.55` on mobile, scaling to `1rem
 
 ### Voice & tone
 
-**Preserve worked drafts.** When the author supplies a complete article whose style has already been worked, treat requested changes as a bounded edit. Keep its wording, order, rhythm, and oddities unless a change is necessary for the explicit request, factual accuracy, or site syntax. Do not turn targeted polishing into a rewrite.
-
 **Think like George Hotz, write like a person.** The author's voice is someone who thinks in systems, is blunt, and doesn't perform coolness. The text should read like a smart person thinking out loud — messy, abrupt, with the emphasis landing because the observation is true, not because the sentence was engineered to sound good. Hotz doesn't workshop punchlines. He states things and moves on.
 
 **Transitions are original thoughts, not bridges.** When moving between topics, the transition should be whatever thought the author's brain would actually produce in that moment — a question that occurs to them, an implication they can't ignore, a "wait, so if X then what about Y." Never use empty rhetorical bridges ("Here's where it gets interesting", "And that brings us to", "Result?"). If you can't think of a genuine thought that connects two ideas, just start the next idea. Abrupt is better than fake smooth.
 
 **Personal rawness is good, performed vulnerability is not.** One or two real details (too many screens, 3am, no sunlight) land because they're specific. Four stacked self-deprecating details in a row ("alone, too many monitors, vitamin D deficient, dopamine loops from a terminal") become a comedy routine — a writer constructing a relatable self-portrait for effect. Keep the rawness, lose the performance.
 
-**Let facts land on their own.** A strong number or a concrete finding doesn't need an abstract restatement after it. "27 years. Nobody found it." moves forward. "27 years, hiding in plain sight while humans walked past it for three decades" is a writer admiring their own sentence. If the reader already felt it land, move on or add a *new* detail.
-
-**Endings should stop, not land.** Paragraphs end when the thought is done. Not with a mic-drop, not with an engineered kicker, not with a bumper sticker. Real writing doesn't resolve neatly. Hotz's real endings tend to be either abrupt (he just stops) or trail into the next idea.
+**Endings stop.** Hotz's real endings are abrupt or trail into the next idea; the general rule (no summary, no engineered kicker) is [VOICE.md](../VOICE.md), *The seam*.
 
 ---
 
@@ -100,11 +96,11 @@ Typed boxes have no title, in essays or anywhere else ([STYLE.md](../STYLE.md) r
 
 **Dense monologue over sectioned cliffhangers.** Essays work best as a continuous flow of thought, not as sections with dramatic reveals. Avoid headings that function as cliffhangers ("the canary", "it knows you're watching"). If the piece is dense enough, the reader follows the thought without needing signposts. Headings are optional — use them only when the topic genuinely shifts and the reader needs a breath, not for dramatic pacing.
 
-**When a heading does earn its place, name the mechanism, not the topic.** "Dead reckoning" over "The map problem": the reader should finish the section understanding why it was called that, and leave with a word they can keep using. Borrowed trade terms (navigation, medicine, law, cooking) do this best when they are rare but inferable. Full test and the log of headings already decided in [VOICE.md](../VOICE.md) (*Headings*).
+**Headings name the mechanism** ([VOICE.md](../VOICE.md), *Headings*), and essays use them only when the topic genuinely shifts.
 
 **Technical depth goes to wikinotes.** When an essay touches a technical concept that needs more than a sentence of explanation (activation steering procedures, SAE architecture, vector arithmetic), extract the definition into a wikinote and link it from the thread. The thread keeps the narrative and the "so what." The wikinote keeps the "how it works."
 
-**One article or two.** Before polishing, ask whether the draft is one piece that moves in one direction with enough pull to carry a reader, or two or three pieces forced into one. The symptom is a theme that belongs to the argument but suddenly takes the spotlight for a few paragraphs and then vanishes: it is there to add information or to look clever, and in its own article it would plant a seed that could grow branches. When a theme surfaces and does not come back, either cut it down to the sentence the argument needs or take it out and give it its own file in `src/data/inbox/`. The same audit asks whether one or two themes should shrink rather than leave.
+**One article or two.** Before polishing, ask whether the draft is one piece that moves in one direction with enough pull to carry a reader, or two or three pieces forced into one. The symptom is a theme that belongs to the argument but suddenly takes the spotlight for a few paragraphs and then vanishes: it is there to add information or to look clever, and in its own article it would plant a seed that could grow branches. When a theme surfaces and does not come back, either cut it down to the sentence the argument needs or take it out and give it its own file in `_studio/inbox/`. The same audit asks whether one or two themes should shrink rather than leave.
 
 **Insight after insight.** Write to make the reader understand, at the length each thought needs, with no constraint of equal section lengths and no *First:*, *Third:* scaffolding or stack of headings that breaks the read. The failure mode is a text that only exposes facts and sounds like journalism; the target is logic that advances, one insight leading to the next, readable in one sitting and feeling shorter than it is. Nothing already said gets lost in the process; it gets carried.
 
@@ -124,7 +120,7 @@ In essays, the article `date` is the publication date. Context annotations (`>>`
 - As decoration or commentary on the article's own content.
 - For anything that could be said in the body text instead.
 
-**How to write one:** short and plain, whatever the thought behind it (STYLE.md rule 8). The body of the essay may be elaborate; the note in the margin never is.
+**How to write one:** short and plain, whatever the thought behind it (STYLE.md rule 10). The body of the essay may be elaborate; the note in the margin never is.
 
 ---
 
@@ -141,15 +137,10 @@ Essays lean heavily on:
 
 ### What not to do
 
-**Kill list (essay-specific, in addition to the global kill list in [STYLE.md](../STYLE.md) rule 10):**
+**Kill list, essay-specific.** The global one is [STYLE.md](../STYLE.md) rule 11; reframes are rule 9; tricolons, mic drops and bumper stickers are VOICE.md, *Tics that survive once*. What essays add:
 
-- **"Not X. Y." inversions.** "That's not alignment. That's alignment faking." / "Not because it's broken — because it's too good." This is the single most overused rhetorical structure in tech blog posts. One per article absolute max, and only if the reframe adds real information. Prefer stating the conclusion directly.
-- **Tricolons and stacked parallel clauses.** "Not touching the weights. Not touching the attention heads. Just intercepting the bus." Three beats for dramatic escalation is speechwriting, not thinking. Compress into one sentence or vary the structure.
-- **Aphorisms and bumper stickers.** "Same muscle, different jersey." / "The model broke the scoreboard." If a sentence sounds like it was designed to be screenshotted and shared, it's too polished. State the point plainly.
 - **Anadiplosis (echo transitions).** "Because they need time. Time to let the partners..." Repeating a word across a sentence boundary for rhetorical effect. Just say it once.
 - **Staccato noun lists for gravitas.** "Operating systems. Middleware. Servers." as standalone dramatic fragments. List them inline or use a single phrase ("the infrastructure stack").
-- **Empty intensifiers and hollow closers.** "Result?" / "Here's where it gets under your skin." / "tells you everything about what they're bracing for." These announce that something important is coming instead of just saying the important thing.
 - **Words that signal performed casualness.** "vibes", "rent-free", "lives in my head", "changed everything", "let that sink in." Internet-speak that sounds casual but is actually a rhetorical device.
-- **Em dash parentheticals that add nothing.** Long dashes used to insert asides that don't contain new information or interesting observations. If the aside isn't worth its own sentence, cut it.
 
 **The core anti-pattern:** rhetorical scaffolding. The ideas are good but packaged in structures that reveal a writer constructing effect rather than a person thinking. Hotz's real power comes from not caring whether it sounds powerful. If a sentence feels engineered, it probably is.

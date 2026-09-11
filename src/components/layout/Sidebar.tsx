@@ -1,13 +1,14 @@
 // Desktop navigation: a floating pill bar. The active page is a filled accent pill and a gear opens a small settings
-// popover (Commands, Theme, Language) instead of scattering icons along the bar. About and Writing open a hover menu.
+// popover (Commands, Theme, Language). About opens a hover menu.
 
-import React, { startTransition, useEffect, useMemo, useRef, useState } from 'react';
+import React, { startTransition, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import { stripLang } from '../../lib/contentRoutes';
 import { useLang, type Lang } from '../../contexts/LangContext';
 import { useRouteLanguage } from '../../hooks/useRouteLanguage';
 import { TranslationPendingModal } from '../ui/TranslationPendingModal';
+import { LangTags } from '../ui/LangTags';
 import { useCursorPreference } from '../../contexts/CursorPreferenceContext';
 import { BackChevronIcon, ExternalLinkIcon, GearIcon, Logo, MoonIcon, SearchIcon, SunIcon } from '../icons';
 import { secondBrainPath } from '../../config/categories';
@@ -23,19 +24,16 @@ const WikiContextIcon: React.FC = () => (
   <ExternalLinkIcon className="wiki-context-icon" />
 );
 
-type MenuName = 'About' | 'Writing';
+type MenuName = 'About';
 export const NAV_MENUS: Record<MenuName, { to: string; label: string }[]> = {
   About: [
     { to: '/about', label: 'Profile' },
     { to: '/about/cv', label: 'Experience / CV' },
     { to: '/about/stack', label: 'Stack' },
   ],
-  Writing: [
-    { to: '/blog/essays', label: 'Essays' },
-    { to: '/blog/bits2bricks', label: 'Bits2Bricks' },
-  ],
 };
-const isMenu = (label: string): label is MenuName => label === 'About' || label === 'Writing';
+const isMenu = (label: string): label is MenuName => label === 'About';
+let lastNavLabel: string | undefined;
 
 export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: boolean; proximityReveal?: boolean; back?: NavBackAction }> = ({ onOpenSearch, revealOnScrollUp = false, proximityReveal = false, back }) => {
   const location = useLocation();
@@ -50,7 +48,7 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
   const [focusWithin, setFocusWithin] = useState(false);
   const [open, setOpen] = useState(false);          // compact page menu (md..xl)
   const [settings, setSettings] = useState(false);  // gear popover
-  const [menu, setMenu] = useState<MenuName | null>(null); // hover menu (About / Writing)
+  const [menu, setMenu] = useState<MenuName | null>(null);
   // With a real pointer the menus are hover-only: a click on the trigger does nothing, so the open menu
   // does not blink away. Without hover (touch) the click is the only way in, so it toggles.
   const canHover = () => window.matchMedia('(hover: hover)').matches;
@@ -88,27 +86,62 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
     ? (nearEdge || (revealOnScrollUp && scrollRevealed) || focusWithin || menu !== null || settings || open)
     : scrollRevealed;
 
-  // Active section, whatever the language prefix (/es/blog/... is still Writing).
+  // Section matching also covers translated articles.
   const sitePath = stripLang(location.pathname);
-  const isActive = (path: string, label: string) => label === 'Writing'
-    ? sitePath.startsWith('/blog/')
-    : label === 'Projects'
+  const isActive = (path: string, label: string) => label === 'Home' && /^\/home(?:[1-9]|10)$/.test(sitePath) ? true : label === 'Projects'
       ? sitePath === '/lab/projects' || sitePath.startsWith('/lab/projects/')
       : sitePath === path || sitePath.startsWith(path + '/');
   const links = [
     { to: '/home', label: 'Home' },
     { to: '/about', label: 'About' },
-    { to: '/blog/essays', label: 'Writing', activePath: '/blog' },
+    { to: '/blog/essays', label: 'Essays', activePath: '/blog/essays' },
     { to: '/lab/projects', label: 'Projects', activePath: '/lab/projects' },
+    { to: '/blog/bits2bricks', label: 'Bits2Bricks', activePath: '/blog/bits2bricks' },
     { to: secondBrainPath(), label: 'Wiki', activePath: secondBrainPath() },
     { to: '/contact', label: 'Contact' },
   ];
-  // Exact page for the About group; whole section (list + articles) for Writing.
+  // Exact page for the About submenu.
   const isItemActive = (to: string) => to.startsWith('/blog/') ? sitePath.startsWith(to) : sitePath === to;
   const currentLabel = links.find(link => isActive(link.activePath ?? link.to, link.label))?.label ?? 'Explore';
+  const navRef = useRef<HTMLElement>(null);
+  const indicatorRef = useRef<HTMLSpanElement>(null);
+  const previousLabel = useRef(lastNavLabel);
+  useLayoutEffect(() => {
+    const nav = navRef.current, indicator = indicatorRef.current;
+    if (!nav || !indicator) return;
+    const place = (label: string | undefined, animate: boolean) => {
+      const target = Array.from<HTMLElement>(nav.querySelectorAll('[data-nav-label]')).find(el => el.dataset.navLabel === label);
+      if (!target || !nav.offsetWidth) { indicator.style.opacity = '0'; return; }
+      const bounds = target.getBoundingClientRect(), parent = nav.getBoundingClientRect();
+      indicator.style.transition = animate ? '' : 'none';
+      indicator.style.transform = `translateX(${bounds.left - parent.left}px)`;
+      indicator.style.width = `${bounds.width}px`;
+      indicator.style.height = `${bounds.height}px`;
+      indicator.style.opacity = '1';
+    };
+    if (!indicator.style.width) {
+      place(previousLabel.current ?? currentLabel, false);
+      // Establish the origin on mount; later clicks retarget the running slide.
+      void indicator.offsetWidth;
+    }
+    place(currentLabel, true);
+    previousLabel.current = currentLabel;
+    lastNavLabel = currentLabel;
+    let navWidth = nav.clientWidth, navHeight = nav.clientHeight;
+    const resizeObserver = new ResizeObserver(() => {
+      const active = nav.querySelector<HTMLElement>('[data-nav-label][data-active]');
+      if (nav.clientWidth !== navWidth || nav.clientHeight !== navHeight
+        || (active && Math.abs(active.getBoundingClientRect().width - parseFloat(indicator.style.width)) > .5)) {
+        place(currentLabel, false);
+        navWidth = nav.clientWidth; navHeight = nav.clientHeight;
+      }
+    });
+    resizeObserver.observe(nav);
+    return () => resizeObserver.disconnect();
+  }, [currentLabel]);
   // Inactive pills tint in the brand colour on hover (global.css, .nav-pill); menu triggers a touch lighter.
-  const pill = (active: boolean) => `nav-pill px-3.5 py-2 rounded-xl text-[12px] font-medium tracking-wide transition-colors ${active ? 'bg-th-nav-accent text-th-on-accent' : 'text-th-tertiary hover:text-th-heading'}`;
-  const menuPill = (active: boolean) => `nav-pill nav-pill-menu px-3.5 py-2 rounded-xl text-[12px] font-medium tracking-wide transition-colors ${active ? 'bg-th-nav-accent text-th-on-accent' : 'text-th-tertiary hover:text-th-heading'}`;
+  const pill = (active: boolean) => `nav-pill px-3.5 py-2 rounded-xl text-[12px] font-medium transition-colors ${active ? 'text-th-on-accent' : 'text-th-tertiary hover:text-th-heading'}`;
+  const menuPill = (active: boolean) => `${pill(active)} nav-pill-menu`;
   const closeAll = () => { setOpen(false); setSettings(false); setMenu(null); };
   return (
     <>
@@ -140,10 +173,11 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
           <Logo className="w-5 h-5 transition-transform group-hover:rotate-6" color="var(--nav-accent)" />
           <span className="hidden xl:inline font-mono text-[10px] tracking-[0.18em] uppercase text-th-heading">InfraPhysics</span>
         </Link>
-        <nav className="hidden xl:flex items-center gap-0.5" aria-label="Primary navigation">
+        <nav ref={navRef} className="nav-sliding-track hidden xl:flex items-center gap-0.5" aria-label="Primary navigation">
+          <span ref={indicatorRef} className="nav-active-indicator" aria-hidden="true" />
           {links.map(link => isMenu(link.label) ? (
             <div className="relative" key={link.label} onMouseEnter={() => showMenu(link.label as MenuName)} onMouseLeave={hideMenu}>
-              <button type="button" onClick={() => { if (canHover()) return; setOpen(false); setSettings(false); setMenu(menu === link.label ? null : link.label as MenuName); }} aria-expanded={menu === link.label} className={`inline-flex items-center gap-1 ${menuPill(isActive(link.activePath ?? link.to, link.label))}`}>{link.label} <span className="text-[8px] opacity-60">{menu === link.label ? '▴' : '▾'}</span></button>
+              <button type="button" data-nav-label={link.label} data-active={isActive(link.to, link.label) || undefined} onClick={() => { if (canHover()) return; setOpen(false); setSettings(false); setMenu(menu === link.label ? null : link.label as MenuName); }} aria-expanded={menu === link.label} className={`inline-flex items-center gap-1 ${menuPill(isActive(link.activePath ?? link.to, link.label))}`}>{link.label} <span className="text-[8px] opacity-60">{menu === link.label ? '▴' : '▾'}</span></button>
               {menu === link.label && (
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 pb-3">
                   <div className="w-56 rounded-2xl border border-th-border bg-th-base shadow-2xl overflow-hidden p-1.5">
@@ -152,7 +186,7 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
                 </div>
               )}
             </div>
-          ) : <Link key={link.label} to={link.to} data-nav-category={link.label === 'Projects' ? 'projects' : link.label === 'Wiki' ? 'wikinotes' : undefined} data-active={isActive(link.activePath ?? link.to, link.label) || undefined} className={`group inline-flex items-center gap-1 ${pill(isActive(link.activePath ?? link.to, link.label))}`}>{link.label}{link.label === 'Wiki' && <WikiContextIcon />}</Link>)}
+          ) : <Link key={link.label} to={link.to} data-nav-label={link.label} aria-current={isActive(link.activePath ?? link.to, link.label) ? 'page' : undefined} data-active={isActive(link.activePath ?? link.to, link.label) || undefined} className={`group inline-flex items-center gap-1 ${pill(isActive(link.activePath ?? link.to, link.label))}`}>{link.label}{link.label === 'Wiki' && <WikiContextIcon />}</Link>)}
         </nav>
         <button onClick={() => { setSettings(false); setMenu(null); setOpen(v => !v); }} className="xl:hidden flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm text-th-heading hover:bg-th-surface-alt transition-colors">
           <span>{currentLabel}</span>
@@ -189,11 +223,7 @@ export const Sidebar: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?: b
                 className={`w-full flex items-center justify-between px-4 py-3 border-t border-th-border transition-colors hover:bg-th-surface-alt ${canSwitchLang ? 'text-th-secondary hover:text-th-heading' : 'text-th-muted'}`}
               >
                 <span>Language</span>
-                <span className={`flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wide ${canSwitchLang ? '' : 'opacity-50'}`}>
-                  <span className={routeLang.current === 'en' ? 'text-th-heading' : 'text-th-tertiary'}>EN</span>
-                  <span className="text-th-muted">/</span>
-                  <span className={routeLang.current === 'es' ? 'text-th-heading' : 'text-th-tertiary'}>ES</span>
-                </span>
+                <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wide"><LangTags routeLang={routeLang} /></span>
               </button>
             </div>
           )}

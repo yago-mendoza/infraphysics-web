@@ -3,6 +3,7 @@ slug: the-cost-of-reproducing-industrial-know-how
 id: "6820451"
 category: essays
 lang: es
+ai: true
 sourceHash: dac80ed967cd
 displayTitle: "El coste decreciente de reproducir el know-how industrial"
 subtitle: "La IA está cambiando lo que un sucesor puede aprender de los errores de una empresa, y lo que un competidor puede llegar a reconstruir."
