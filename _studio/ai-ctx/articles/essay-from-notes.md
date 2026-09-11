@@ -490,6 +490,7 @@ Essays have several category-specific fields: `lang`, `hidden`, and `complexity`
 | `thumbnailAspect` | no | string | Crop ratio: `full` (default), `wide` (16/7), `banner` (16/4), `strip` (16/2). |
 | `thumbnailShading` | no | string | Overlay: `heavy`, `light`, `none` (default). |
 | `thumbnailFocus` | no | number | Vertical crop anchor for the banner, % from top: `0` = top, `50` = center (default), `100` = bottom. Only bites on cover-cropped aspects (`wide`/`banner`/`strip`), not `full`. Use it to keep the important part of a tall image in frame. |
+| `shareCard` | no | string | Unset = the share card (og:image) is the generic essay card on the paper ground. `cover` puts the article's own cover under it, shaded, with the same faint grid on top. The card is photographed at commit time (pre-commit hook) or with `npm run og`. |
 | `thumbnailWidth` | no | string | Unset = the hero is as wide as the reading column, aligned with the text margins. `full` makes it wider, edge to edge with the page padding. With `thumbnailAspect: full` the image is always shown whole. |
 | `thumbnailZoom` | no | number | Scale factor for the card thumbnail in the essays grid (`1.15` = 15% zoom in). Use it when the card crop shows the image background. Unset = `1`. |
 | `subtitle` | no | string | Below the title in the article header, and the card and meta copy. Two short sentences at most, see *Subtitles* below. |

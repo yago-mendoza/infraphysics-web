@@ -520,11 +520,10 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                     {shownViews != null && (
                       <span className="article-meta-views"><EyeIcon size={15} /> {shownViews}</span>
                     )}
-                    {hearts != null && (
-                      <button onClick={toggleHeart} className={`article-heart-btn${hearted ? ' hearted' : ''}`} title={hearted ? 'Unlike' : 'Like'}>
-                        <HeartIcon size={15} filled={hearted} />{shownHearts != null && <> {shownHearts}</>}
-                      </button>
-                    )}
+                    {/* Always offered, count or no count: a like the reader cannot give is no like. */}
+                    <button onClick={toggleHeart} className={`article-heart-btn${hearted ? ' hearted' : ''}`} title={hearted ? 'Unlike' : 'Like'}>
+                      <HeartIcon size={15} filled={hearted} />{shownHearts != null && <> {shownHearts}</>}
+                    </button>
                   </div>
                   {shareDropdown}
                 </div>
@@ -552,11 +551,9 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                 {isEssays && (
                   <div className="article-engagement-row glab-engagement">
                     {shownViews != null && <span className="article-meta-views"><EyeIcon size={15} /> {shownViews}</span>}
-                    {hearts != null && (
-                      <button onClick={toggleHeart} className={`article-heart-btn${hearted ? ' hearted' : ''}`} title={hearted ? 'Unlike' : 'Like'}>
-                        <HeartIcon size={15} filled={hearted} />{shownHearts != null && <> {shownHearts}</>}
-                      </button>
-                    )}
+                    <button onClick={toggleHeart} className={`article-heart-btn${hearted ? ' hearted' : ''}`} title={hearted ? 'Unlike' : 'Like'}>
+                      <HeartIcon size={15} filled={hearted} />{shownHearts != null && <> {shownHearts}</>}
+                    </button>
                     {shareDropdown}
                   </div>
                 )}
@@ -639,11 +636,9 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
             </dl>
             <div className="article-engagement-row pj-engagement">
               {shownViews != null && <span className="article-meta-views"><EyeIcon size={15} /> {shownViews}</span>}
-              {hearts != null && (
-                <button onClick={toggleHeart} className={`article-heart-btn${hearted ? ' hearted' : ''}`} title={hearted ? 'Unlike' : 'Like'}>
-                  <HeartIcon size={15} filled={hearted} />{shownHearts != null && <> {shownHearts}</>}
-                </button>
-              )}
+              <button onClick={toggleHeart} className={`article-heart-btn${hearted ? ' hearted' : ''}`} title={hearted ? 'Unlike' : 'Like'}>
+                <HeartIcon size={15} filled={hearted} />{shownHearts != null && <> {shownHearts}</>}
+              </button>
               {shareDropdown}
             </div>
           </aside>

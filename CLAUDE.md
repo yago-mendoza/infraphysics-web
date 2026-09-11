@@ -199,6 +199,10 @@ Use `th-on-accent`, not `th-heading`. `th-heading` flips to near-black in light 
 
 ## Gotchas
 
+### Essay engagement stays available without counts
+
+Keep the like button visible while counts load or are unavailable. In essays with an index, it sits immediately left of share below the index, with views at the left edge; essays without an index keep these controls in the header. Verify both desktop and phone layouts with unavailable and populated counts.
+
 ### Project articles are one geometry, in `project-page.css`
 The projects branch of `ArticlePostView` renders the cover as a full-bleed plate (`.pj-plate`, meeting the thin black `.article-topbar` that every article page carries on its top edge, fading into the surface) with the title over a blurred scrim, the `ProjectBrief` strip, a labelled summary, the body beside a sticky numbered index (`#article-toc`, the same DOM-toggled `article-toc-link--active` as the blog) and a facts sheet. The old `article-container` / `article-hero` / `article-notes` markup is gone for projects, so those rules in `article.css` are inert there. Body prose is pinned to 1.02rem/1.76 in the sans face on desktop; on phones the site-wide 1.08rem rule applies. Because the plate crops the cover, `thumbnailFocus` in the frontmatter should sit on the subject (the auras cover uses 40, not 0). In every geometry the Giscus comments render after the column grid (`.glab-after`, `.pj-after`, both repeating the grid template so they line up with the body column), never inside the body cell: the sticky index is bounded by its grid row, so comments inside the cell would let it ride down over the discussion.
 ### Every error page is the lost robot (`ErrorConceptView`)
