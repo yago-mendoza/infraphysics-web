@@ -26,7 +26,7 @@ type Slider = { key: keyof ClockParams; label: string; min: number; max: number;
 type Group = { title: string; sliders: Slider[] };
 export const CLOCK_SLIDERS: Group[] = [
   { title: 'Lattice', sliders: [
-    { key: 'cols', label: 'Columns', min: 6, max: 120, step: 1, hint: 'faces per row on desktop (phones scale by 28/41)' },
+    { key: 'cols', label: 'Columns', min: 6, max: 120, step: 1, hint: 'faces per row on a 1440px desktop; other widths keep the cell size' },
     { key: 'rows', label: 'Rows', min: 2, max: 40, step: 1, hint: 'rows of faces' },
     { key: 'gridWidth', label: 'Width', min: .5, max: 1.6, step: .01, hint: 'lattice width as a fraction of the canvas' },
     { key: 'gridHeight', label: 'Height', min: .08, max: 1, step: .01, hint: 'lattice height as a fraction of the canvas' },

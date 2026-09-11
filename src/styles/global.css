@@ -1232,12 +1232,9 @@ a.stack-row:hover .stack-arrow { color:var(--brand-oxide); transition-delay:75ms
 
 @media (max-width: 767px) {
   .home-tachograph-line { bottom: 1.625rem; }
-  .home-datum::before { left: -1.2rem; top: -.5rem; }
-  .home-datum .home-identity-anchor::after, .home-datum h1::after, .home-datum .home-tagline::before { left: -1.2rem; width: .55rem; }
-  .home-datum h1::after { width: .8rem; }
-  .home-section-datum::before { left: -1.2rem; top: -1.6rem; }
-  .home-section-datum .home-editorial-heading h2::before, .home-section-datum .home-field-note::before { left: -1.2rem; width: .55rem; }
-  .home-section-datum .home-editorial-heading h2::before { width: .8rem; }
+  /* The datum lines (intro, Field of view) are desktop punctuation: on a phone they only steal the margin. */
+  .home-datum::before, .home-datum .home-identity-anchor::after, .home-datum h1::after, .home-datum .home-tagline::before,
+  .home-section-datum::before, .home-section-datum .home-editorial-heading h2::before, .home-section-datum .home-field-note::before { display: none; }
   .home-visual-stage { top: 6rem; }
   .home-visual-experiment { left: 50%; right: auto; top: -6rem; height: 100vh; width: 100vw; opacity: .45; }
   .home-visual-1 {
@@ -1374,11 +1371,12 @@ a.stack-row:hover .stack-arrow { color:var(--brand-oxide); transition-delay:75ms
 }
 
 @media (max-width: 767px) {
+  /* Phones: the mark sits behind the lower half of the page (the routes and the form), smaller and quieter, instead of cutting through the title. */
   .contact-logo-stage {
-    top: clamp(-1rem, calc(9rem - 18vw), 7rem);
-    width: 66rem;
-    height: 78rem;
-    opacity: .065;
+    top: 22rem;
+    width: 48rem;
+    height: 56rem;
+    opacity: .06;
   }
 }
 

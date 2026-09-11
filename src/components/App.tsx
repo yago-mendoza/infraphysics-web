@@ -218,7 +218,8 @@ const AppLayout: React.FC = () => {
         </>
       ) : isArticlePage ? (
         <>
-          <MobileNav onOpenSearch={openSearch} revealOnScrollUp back={sectionBack} />
+          {/* The phone pill stays put while reading: it is small and in the corner, hiding it only cost a scroll to get it back. */}
+          <MobileNav onOpenSearch={openSearch} back={sectionBack} />
           <Sidebar onOpenSearch={openSearch} revealOnScrollUp proximityReveal back={sectionBack} />
         </>
       ) : (

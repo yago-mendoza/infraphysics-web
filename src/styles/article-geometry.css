@@ -46,7 +46,7 @@
 .glab-index { position: sticky; top: 5.5rem; padding-top: 0; }
 .glab-index a.glab-author, .glab-author { display: flex; align-items: center; gap: .6rem; margin-bottom: 1rem; padding: .35rem 0 .9rem; border-bottom: 1px solid var(--border-default); color: var(--text-heading); }
 .glab-author-stack { position: relative; display: inline-block; flex: none; margin-left: 1rem; }
-.glab-author-logo { position: absolute; top: 0; left: -1.15rem; z-index: 0; display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%; border: 1px solid var(--border-default); background: var(--bg-surface-alt, var(--bg-surface)); color: var(--text-heading); }
+.glab-author-logo { position: absolute; top: 0; left: -1.15rem; z-index: 0; display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%; border: 1px solid var(--border-default); background: var(--bg-surface-alt, var(--bg-surface)); color: var(--brand-oxide-strong); }
 .glab-author-logo svg { width: 2.25rem; height: 2.25rem; }
 .glab-author-photo { position: relative; z-index: 1; display: block; width: 2.6rem; height: 2.6rem; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-default); box-shadow: 0 0 0 2px var(--bg-base); }
 .glab-author > span { display: grid; gap: .2rem; }
@@ -136,4 +136,12 @@
   .article-geometry.article-essays .glab-index a.article-toc-link.is-active,
   .article-geometry.article-essays .glab-index a.article-toc-link.article-toc-link--active { font-weight: 400; text-decoration: underline; text-decoration-color: var(--art-accent); text-underline-offset: .22em; }
   .article-geometry.article-essays .glab-grid { gap: 2.4rem; }
+}
+
+/* Phones: the Sections button (article.css, .article-index-fab) carries the index, so the rail becomes one compact strip: author at the left, views, like and share at the right. */
+@media (max-width: 767px) {
+  .article-geometry .glab-index small, .article-geometry .glab-index ol, .article-geometry.article-essays .glab-index ol { display: none !important; }
+  .article-geometry .glab-index, .article-geometry.article-essays .glab-index { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .6rem 0; border-top: 1px solid var(--border-default); border-bottom: 1px solid var(--border-default); }
+  .article-geometry .glab-index a.glab-author, .article-geometry .glab-author { margin: 0; padding: 0; border: 0; }
+  .article-geometry .glab-engagement { flex: none; margin: 0; padding: 0; border: 0; }
 }

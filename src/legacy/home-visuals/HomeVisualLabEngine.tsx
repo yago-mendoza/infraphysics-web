@@ -25,6 +25,8 @@ export const CLOCK_DEFAULTS: ClockParams = {
 export const MAX_FOCI = 10;
 const FOCUS_SHAPES = [[.13, .14, 62, 48], [.105, .11, 54, 42], [.09, .095, 48, 38], [.085, .09, 46, 36], [.095, .1, 50, 39]];
 const FOCUS_ANGLES = [-.61, 2.18, .83, -2.42, 2.72];
+/** `cols` is stated for a desktop canvas (a 1440px viewport); other widths keep the cell size and take proportionally fewer or more columns. */
+export const CLOCK_REF_WIDTH = 1424;
 const STRUCTURAL: (keyof ClockParams)[] = ['cols', 'rows', 'gridWidth', 'gridHeight', 'gridTop', 'jitter', 'islands', 'linkDensity', 'reach', 'seed'];
 const hash01 = (n: number) => { const x = Math.sin(n * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
 const mixInk = (tint: number) => {
@@ -182,7 +184,7 @@ export const HomeVisualLab: React.FC<{
       canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
       const P = paramsRef.current;
       const denseClocks = variant === 1 && !compactClockField;
-      cols = denseClocks ? Math.max(2, Math.round(w < 680 ? P.cols * 28 / 41 : P.cols)) : (w < 680 ? 20 : 29);
+      cols = denseClocks ? Math.max(6, Math.round(P.cols * w / CLOCK_REF_WIDTH)) : (w < 680 ? 20 : 29);
       rows = compactClockField ? 2 : denseClocks ? Math.max(2, Math.round(P.rows)) : 11;
       const gridW = w * P.gridWidth, left = (w - gridW) / 2;
       // Twice the clocks in the same footprint, keeping face size and stroke weight.
