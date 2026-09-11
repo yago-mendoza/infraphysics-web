@@ -1,6 +1,6 @@
 # Hard writing rules
 
-> These apply to every article on the site (projects, essays, Bits2Bricks) and, where stated, to wikinotes. They are not a menu. A category README says how a project or an essay *sounds*; this file says what is never allowed anywhere, regardless of voice. When a rule here conflicts with a category guide or with `_generation/EDITORIAL-RUBRIC.md`, this file wins.
+> These apply to every article on the site (projects, essays, Bits2Bricks) and, where stated, to wikinotes. They are not a menu. A category README says how a project or an essay *sounds*; this file says what is never allowed anywhere, regardless of voice. When a rule here conflicts with a category guide or with [VOICE.md](VOICE.md), this file wins.
 >
 > The build reports violations on the source markdown as `[STYLE]` warnings (see the last section). They are warnings and not errors only because the rules arrived after most of the archive was written; a new or edited article should leave the build with zero `[STYLE]` lines for its file.
 
@@ -66,7 +66,7 @@ The build flags a run of three or more consecutive paragraphs under fifteen word
 
 `displayTitle` and `subtitle` say exactly what the piece is, in the words a specialist would use to file it: the object, the method, the result. No hook, no pun, no *the thing nobody tells you*, no second person, no cliffhanger. A reader who sees only the title in a list must know what they will get and be right. Projects and Bits2Bricks follow this strictly. An essay may state its claim or its question as the title, but the claim is still literal and descriptive, never a tease.
 
-`description` (cards, meta tags, feeds) is the professional development of that title in two to four sentences: what system or material, what was done to it, what the piece establishes, and where it stops. It reads like the abstract of a technical report, not like a trailer. Same for `subtitle`, one sentence long, in projects and Bits2Bricks. Essays are the exception: their subtitle is two short sentences at most, a line the essay already contains and the question it chases, never a list of what the sections cover (`essays/README.md`, *Subtitles*).
+`description` (cards, meta tags, feeds) is the professional development of that title in two to four sentences: what system or material, what was done to it, what the piece establishes, and where it stops. It reads like the abstract of a technical report, not like a trailer. Same for `subtitle`, one sentence long, in projects and Bits2Bricks. Essays are the exception: their subtitle is one or two short sentences that tell a reader who sees only the card what the piece is about (the actors and the tension), never a list of what the sections cover (`essays/README.md`, *Subtitles*).
 
 | Instead of | Write |
 |---|---|
@@ -119,7 +119,7 @@ Write the positive claim. If the negated half carries information (a misconcepti
 | *We treat the log not as a record but as a signal.* | *We treat the log as a signal.* |
 | *The goal isn't speed. It's predictability.* | *The goal is predictability. Speed comes second.* |
 
-The same rule covers the rest of that family: the rhetorical question answered by its own next sentence (*Why? Because…*), the colon reveal (*The answer: latency.*), the tricolon that escalates in three, the one-line mic drop after a long paragraph, the closing paragraph that summarises what the reader just read, and the sentence that announces its own posture (*Let me be direct*). The full kill list and the frequency limits for each tic live in `_generation/EDITORIAL-RUBRIC.md` (§A and §7); this rule is the short version that applies everywhere.
+The same rule covers the rest of that family: the rhetorical question answered by its own next sentence (*Why? Because…*), the colon reveal (*The answer: latency.*), the tricolon that escalates in three, the one-line mic drop after a long paragraph, the closing paragraph that summarises what the reader just read, and the sentence that announces its own posture (*Let me be direct*). The kill list is rule 10 and the frequency limit for each tic is the table in [VOICE.md](VOICE.md); this rule is the short version that applies everywhere.
 
 ## 8. Context notes are short and plain.
 
@@ -132,9 +132,22 @@ A context annotation (`>>`) is a note in the margin, not a second essay. Think t
 
 This rule is not checked mechanically. Read the note aloud: if it sounds like a speech, cut it.
 
+## 10. The kill list. Delete on sight.
+
+Phrases that never survive an edit, whatever the category. No judgment: if it is here, it dies, and the sentence around it is rebuilt or removed.
+
+- Openers and bridges: *Let's dive in*, *Let's explore*, *Let's break it down*, *In this article, we will*, *Now here's where it gets interesting*, *Let's now consider*, *Another important aspect*, *This brings us to*, *This reveals an interesting tension between*.
+- Throat-clearing: *It's worth noting that*, *It's important to note*, *One could argue that*, *While there are nuances*.
+- Transitions as words: *Furthermore*, *Moreover*.
+- Intensifiers, one per article at most, two is a pattern: *genuinely*, *fundamentally*, *arguably*. Cut the word, or commit to the claim.
+- Announcing a posture instead of adopting it: *Here's where I stop hedging*, *Here's where I get honest*, *Let me be direct*, *Now for the part that actually matters*, *Here's the real point*, *I'll say it plainly*, *To put it bluntly*.
+- Closings: *Only time will tell*, a last paragraph that opens with *In summary* or *Ultimately*, and hedged endings (*Probably both. Right?*) that undercut the whole piece.
+
+The one exception on record: *This is not a metaphor. This is literally what happens.* works once across the whole site (the transformers article) and nowhere else.
+
 ## How the rules are enforced
 
-`scripts/build-content.js` scans the markdown body of every article it compiles (`checkStyleRules`) and prints one `[STYLE]` line per rule per file with the first offending line numbers: double quotes (rule 1), arrows (rule 2), runs of short paragraphs (rule 5). Fenced code, inline code, inline and block math, link and image targets and raw HTML are excluded from the scan. A typed-box title (rule 4) is a build **error**, not a warning, because the syntax no longer exists. Em-dashes (rule 3), footnote placement (rule 8) and the negation-then-reframe formations (rule 9) are not checked mechanically yet; read for them. A file that comes from the build cache is not re-scanned; edit it, or run `npm run content` after clearing `.content-cache.json`, to see its warnings again.
+`scripts/build-content.js` scans the markdown body of every article it compiles (`checkStyleRules`) and prints one `[STYLE]` line per rule per file with the first offending line numbers: double quotes (rule 1), arrows (rule 2), runs of short paragraphs (rule 5). Fenced code, inline code, inline and block math, link and image targets and raw HTML are excluded from the scan. A typed-box title (rule 4) is a build **error**, not a warning, because the syntax no longer exists. Em-dashes (rule 3), footnote placement (rule 8), the negation-then-reframe formations (rule 9) and the kill list (rule 10) are not checked mechanically yet; read for them. How an article sounds once it obeys these rules is [VOICE.md](VOICE.md). A file that comes from the build cache is not re-scanned; edit it, or run `npm run content` after clearing `.content-cache.json`, to see its warnings again.
 
 ## Adding a rule
 

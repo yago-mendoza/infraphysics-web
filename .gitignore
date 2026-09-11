@@ -30,7 +30,6 @@ public/wikinotes-index.json
 public/sitemap.xml
 
 # Private generation tools
-_generation/
 
 # Editor directories and files
 .vscode/*

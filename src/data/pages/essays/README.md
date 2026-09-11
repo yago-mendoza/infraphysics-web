@@ -100,9 +100,13 @@ Typed boxes have no title, in essays or anywhere else ([STYLE.md](../STYLE.md) r
 
 **Dense monologue over sectioned cliffhangers.** Essays work best as a continuous flow of thought, not as sections with dramatic reveals. Avoid headings that function as cliffhangers ("the canary", "it knows you're watching"). If the piece is dense enough, the reader follows the thought without needing signposts. Headings are optional — use them only when the topic genuinely shifts and the reader needs a breath, not for dramatic pacing.
 
-**When a heading does earn its place, name the mechanism, not the topic.** "Dead reckoning" over "The map problem": the reader should finish the section understanding why it was called that, and leave with a word they can keep using. Borrowed trade terms (navigation, medicine, law, cooking) do this best when they are rare but inferable. Full test and examples in [EDITORIAL-RUBRIC.md](../../../../_generation/EDITORIAL-RUBRIC.md) (§7, "Mechanism over topic").
+**When a heading does earn its place, name the mechanism, not the topic.** "Dead reckoning" over "The map problem": the reader should finish the section understanding why it was called that, and leave with a word they can keep using. Borrowed trade terms (navigation, medicine, law, cooking) do this best when they are rare but inferable. Full test and the log of headings already decided in [VOICE.md](../VOICE.md) (*Headings*).
 
 **Technical depth goes to wikinotes.** When an essay touches a technical concept that needs more than a sentence of explanation (activation steering procedures, SAE architecture, vector arithmetic), extract the definition into a wikinote and link it from the thread. The thread keeps the narrative and the "so what." The wikinote keeps the "how it works."
+
+**One article or two.** Before polishing, ask whether the draft is one piece that moves in one direction with enough pull to carry a reader, or two or three pieces forced into one. The symptom is a theme that belongs to the argument but suddenly takes the spotlight for a few paragraphs and then vanishes: it is there to add information or to look clever, and in its own article it would plant a seed that could grow branches. When a theme surfaces and does not come back, either cut it down to the sentence the argument needs or take it out and give it its own file in `src/data/inbox/`. The same audit asks whether one or two themes should shrink rather than leave.
+
+**Insight after insight.** Write to make the reader understand, at the length each thought needs, with no constraint of equal section lengths and no *First:*, *Third:* scaffolding or stack of headings that breaks the read. The failure mode is a text that only exposes facts and sounds like journalism; the target is logic that advances, one insight leading to the next, readable in one sitting and feeling shorter than it is. Nothing already said gets lost in the process; it gets carried.
 
 ---
 
@@ -137,7 +141,7 @@ Essays lean heavily on:
 
 ### What not to do
 
-**Kill list (essay-specific, in addition to the global kill list in EDITORIAL-RUBRIC.md):**
+**Kill list (essay-specific, in addition to the global kill list in [STYLE.md](../STYLE.md) rule 10):**
 
 - **"Not X. Y." inversions.** "That's not alignment. That's alignment faking." / "Not because it's broken — because it's too good." This is the single most overused rhetorical structure in tech blog posts. One per article absolute max, and only if the reframe adds real information. Prefer stating the conclusion directly.
 - **Tricolons and stacked parallel clauses.** "Not touching the weights. Not touching the attention heads. Just intercepting the bus." Three beats for dramatic escalation is speechwriting, not thinking. Compress into one sentence or vary the structure.

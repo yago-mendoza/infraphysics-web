@@ -1,6 +1,6 @@
 ---
 name: review-article
-description: Review one article against the hard rules, the editorial rubric, the syntax toolbox, external sources and the wiki, and report (or apply with --apply)
+description: Review one article against the hard rules, the voice guide, the syntax toolbox, external sources and the wiki, and report (or apply with --apply)
 argument-hint: "<slug | path | url> [--apply]"
 ---
 
@@ -18,15 +18,15 @@ Read these before judging anything. Sections only, never cover to cover, except 
 
 | File | Read |
 |---|---|
-| `src/data/pages/STYLE.md` | All nine rules and their tables. This is the law. |
+| `src/data/pages/STYLE.md` | All ten rules and their tables, the kill list included. This is the law. |
 | `src/data/pages/SYNTAX.md` | *Where each feature applies* (what this category may use), then only the sections of features you intend to propose (Typed notes, Lifted paragraph, Parameter sheets, Footnotes, Tables, Structured references, Context annotations). |
-| `_generation/EDITORIAL-RUBRIC.md` | §A kill list, §4 rhythm, §7 headings and syntactic tics, §B cross-linking, §C factual verification. Skim §1 to §3 only for essays and projects. |
+| `src/data/pages/VOICE.md` | The whole file (it is short): the structural checks (concrete up, the two-author seam, failure first), rhythm, numbers, certainty, headings and the log of decided ones, the tics table, coining and referencing, the final pass. STYLE.md rule 10 is the kill list. |
 | Category README | `src/data/pages/<category>/README.md`: the voice and the storytelling patterns of that category. |
 | `src/data/pages/README.md` | Only the wiki-link paragraph (when a `[[uid\|text]]` label is warranted) and the frontmatter schema of the category, if you touch frontmatter. |
 
-If you propose an image, also read `_generation/VISUAL-RUBRIC.md`. Otherwise do not.
+If you propose an image, also read `src/data/pages/VISUAL.md`. Otherwise do not.
 
-## Pass 1: hard rules (STYLE.md, one to nine)
+## Pass 1: hard rules (STYLE.md, one to ten)
 
 Go through the body line by line and record every violation with its line number, the offending text and a proposed rewrite that fits the meaning of the sentence. Grep helps, judgment decides. Patterns worth running on the source (outside fenced code, inline code and math):
 
@@ -37,6 +37,7 @@ Go through the body line by line and record every violation with its line number
 - Footnotes: `.^[` (period before the marker) and `^[…]` whose text does not end in a period.
 - Headings: a heading directly under a heading, `##` or `###` in an article short enough to be flat, a body that starts at `##`.
 - Runs of three or more paragraphs under fifteen words.
+- The kill-list phrases of rule 10 (*let's dive in*, *it's worth noting*, *furthermore*, *let me be direct*, *in summary*, *only time will tell*, and the rest).
 
 Also collect the `[STYLE]` warnings the build prints for this file. The build skips files that come from `.content-cache.json`; if the file is cached, remove its entry from the cache (or touch the file) and run `npm run build` once.
 
@@ -44,10 +45,11 @@ Also collect the `[STYLE]` warnings the build prints for this file. The build sk
 
 Read the article again for shape, not for rules. For each finding give the line range and the concrete change.
 
+- **One article or two.** Say whether the draft moves in one direction with enough pull, or whether a theme takes the spotlight for a few paragraphs and never returns (the sign of a second article hiding inside). Name the theme, the paragraphs, and whether it should shrink to a sentence, leave for `src/data/inbox/`, or stay. Guidance in `essays/README.md`, *One article or two*.
 - **Tables.** A paragraph that carries three or more figures, a comparison of several things along the same axes, a list of parameters: propose a table (SYNTAX *Tables*) or, in projects, a parameter sheet.
 - **Footnotes versus parentheses.** A parenthesis that only sources or qualifies a claim (a number's provenance, a caveat the sentence survives without) becomes `^[…]`; a footnote that changes the meaning of its sentence comes back into it as a parenthesis (STYLE rule 8).
-- **Paragraph distribution.** Where the text runs in one-line fragments, name the paragraphs that should merge and the sentence that should carry the join. Where one paragraph carries two movements of thought, name the split. Rhythm rules in rubric §4; density in STYLE rule 5.
-- **Headings.** For every section heading, say whether it names the topic or the mechanism (rubric §7) and propose the word some craft already uses for that movement when the current heading is generic. Check the ladder (`#`, then `##`, never a skipped level) and the depth (flat by default, STYLE rule 7).
+- **Paragraph distribution.** Where the text runs in one-line fragments, name the paragraphs that should merge and the sentence that should carry the join. Where one paragraph carries two movements of thought, name the split. Rhythm rules in VOICE.md (*Rhythm and register*); density in STYLE rule 5.
+- **Headings.** For every section heading, say whether it names the topic or the mechanism (VOICE.md, *Headings*) and propose the word some craft already uses for that movement when the current heading is generic. Check the ladder (`#`, then `##`, never a skipped level) and the depth (flat by default, STYLE rule 7).
 - **Typed boxes and the lifted paragraph.** A warning that hides in prose, a key concept the reader must keep, a sentence that would serve as the section's lead: propose the box or the lift, within what the category allows (SYNTAX *Where each feature applies*). Boxes have no title.
 - **Accent, keyboard keys, math.** A label the text refers back to may take `{accent:…}`; a key combination takes `{kbd:…}`; an inline formula written in prose takes `\(…\)`.
 - **Context annotations.** For a published piece, a place where a later finding or a correction belongs as a `>> YY.MM.DD` annotation instead of a silent edit.
@@ -57,10 +59,10 @@ Read the article again for shape, not for rules. For each finding give the line 
 Every named paper, book, standard, tool, dataset, benchmark, talk, person's work and specific statistic in the article is a candidate for a link on the name that is already there (`[*Attention Is All You Need*](url)`, the title in italics per STYLE rule 1, the link on the italic). For each candidate:
 
 1. Search the web for the primary source (the paper's own page, the project's repository, the standard's publisher, the original report), not an aggregator.
-2. Open it and confirm it says what the article says it says. A number that has drifted, a title slightly wrong, a claim the source does not make: report it as a fact finding (rubric §C) with the corrected value and the url.
+2. Open it and confirm it says what the article says it says. A number that has drifted, a title slightly wrong, a claim the source does not make: report it as a fact finding (VOICE.md, *Final pass*) with the corrected value and the url.
 3. Propose the link with the exact url you verified. Never write a url you did not open. If nothing reliable turns up, say so and propose nothing.
 
-Do not link a name used in passing, and do not add a *see also* sentence: the link sits on the existing words. Links to other articles of the site come as a person would write them (rubric §B, *Reference other articles as a person*), with a reason, and use the identity form `[[essays/<id>|text]]` so they survive renames.
+Do not link a name used in passing, and do not add a *see also* sentence: the link sits on the existing words. Links to other articles of the site come as a person would write them (VOICE.md, *Coining and referencing*), with a reason, and use the identity form `[[essays/<id>|text]]` so they survive renames.
 
 ## Pass 4: wiki links, with a sense check
 
@@ -70,7 +72,7 @@ For every technical term, named principle, method, component or concept in the a
 
 1. Search `name`, `aliases` and the last segments of `address`, case-insensitive, partial matches included.
 2. **Check the sense before proposing.** A string match is not a concept match. Read the note's `description` (and `searchText` if the description is not enough) and confirm the article uses the word in the same sense as the note. *Failure* used poetically in an essay is not the algebraic *failure* note; *bank* in a river is not the financial one; *attention* as a human faculty is not the transformer mechanism; *channel* in a story is not channel capacity. When the senses differ, do not propose the link, and if such a link already exists in the article, report it for removal.
-3. Apply the rubric §B test: link when the concept matters to the argument and the note adds what the article does not cover; skip casual uses and stubs (a note whose `searchText` is a couple of sentences). Fewer good links beat dense annotation.
+3. Apply the VOICE.md test (*Connections*): link when the concept matters to the argument and the note adds what the article does not cover; skip casual uses and stubs (a note whose `searchText` is a couple of sentences). Fewer good links beat dense annotation.
 4. Propose `[[uid]]` when the note's name reads naturally in the sentence, or `[[uid|text]]` when grammar needs another form (plural, verb, a Spanish label in a translated article). Never use a label that changes the meaning. Never capitalise the label to fix a sentence start: the compiler does that.
 
 Report each proposal as: line, the words in the article, uid, address, one clause on why the click rewards the reader. Report the existing links that fail the sense test or the §B test in a separate list.

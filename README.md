@@ -111,10 +111,13 @@ infraphysics-web/
     legacy/
       home-visuals/           # Retired home visual engine, kept for reference (see its README)
     data/
+      inbox/                  # Article ideas and incoming material, one file per idea, never compiled (see its README)
       pages/
         README.md               # Authoring hub (frontmatter, content types, editorial rules, pipeline)
         SYNTAX.md               # Syntax reference (19 custom features, edge cases, quick ref)
-        STYLE.md                # Hard writing rules for every category (quotes, arrows, em-dashes, box titles, paragraph density, literal titles, footnote placement, no not-X-Y reframes); the mechanical ones are [STYLE] build warnings
+        STYLE.md                # Hard writing rules for every category (quotes, arrows, em-dashes, box titles, paragraph density, literal titles, footnote placement, no not-X-Y reframes, the kill list); the mechanical ones are [STYLE] build warnings
+        VOICE.md                # How an article sounds once it obeys the hard rules (concrete up, the two-author seam, rhythm, numbers, headings by mechanism, tics, final pass)
+        VISUAL.md               # Photographic language for every image (three registers, kill list, prompt base)
         projects/             # .md posts + _category.yaml
           README.md             # Projects editorial voice
         essays/              # .md posts + _category.yaml
@@ -284,7 +287,7 @@ The `VIEWS` KV namespace stores all engagement data: view counts (`views:{slug}`
 
 Site-wide analytics include documented historical baselines from before the global endpoint existed. On 2026-09-01, the 27 published article counters summed to 249 verified views. A conservative allowance of 51 untracked views across Home, About, Writing, Wiki, index and Contact routes produces a 300-page-view baseline. Because sessions and unique visitors cannot be reconstructed from article counters, their 130-visit and 100-visitor baselines are explicitly estimates, based on roughly three pages per historical visitor and a modest return-visit rate. Live analytics accumulate on top of these frozen values.
 
-**Images:** the look is defined in [_generation/VISUAL-RUBRIC.md](_generation/VISUAL-RUBRIC.md) (premium cinematic industrial, three registers, kill list, prompt base); read it before generating or choosing one. Masters live in `media/` (gitignored), sorted by what they are: `articles/<id>/cover.<ext>` for a hero, `articles/<id>/figures/<slug>.<ext>` for body illustrations, `site/<path>/<slug>.<ext>` for page art. `npm run media -- push <id|site>` encodes them to WebP and uploads them to R2 under the same path, and `npm run build` syncs quietly. Components get urls through `cdn(key)` in `src/lib/cdn.ts`. The tracked `src/data/media-manifest.json` is what the build uses to stamp `?v=` on CDN urls and to flag references to files that were never pushed. Full workflow: **[scripts/README.md](scripts/README.md#article-images)**.
+**Images:** the look is defined in [pages/VISUAL.md](src/data/pages/VISUAL.md) (premium cinematic industrial, three registers, kill list, prompt base); read it before generating or choosing one. Masters live in `media/` (gitignored), sorted by what they are: `articles/<id>/cover.<ext>` for a hero, `articles/<id>/figures/<slug>.<ext>` for body illustrations, `site/<path>/<slug>.<ext>` for page art. `npm run media -- push <id|site>` encodes them to WebP and uploads them to R2 under the same path, and `npm run build` syncs quietly. Components get urls through `cdn(key)` in `src/lib/cdn.ts`. The tracked `src/data/media-manifest.json` is what the build uses to stamp `?v=` on CDN urls and to flag references to files that were never pushed. Full workflow: **[scripts/README.md](scripts/README.md#article-images)**.
 
 **Routing:** `public/_routes.json` controls which paths invoke the Pages Function vs serve static assets. API paths (`/api/*`) and article paths (for OG tags) route to the Function; everything else is served directly from the build output.
 
