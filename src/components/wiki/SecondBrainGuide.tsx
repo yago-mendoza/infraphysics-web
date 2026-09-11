@@ -96,7 +96,7 @@ const TOPICS: Topic[] = [
   { id: 'graph', section: 'Graph workspace', title: 'Open & navigate the graph', keywords: 'expand zoom pan 2d 3d grafo mapa', paragraphs: [
     'The console mini graph gives a compact overview. Open the expanded graph for more space, or choose 3D. The /wiki/graph address opens this workspace directly. On phones it fills the screen; Close the graph returns to the console.',
     'In the mini graph, select a node to open its note. In the expanded graph, one click selects a node and its descendants; a second click on that node opens it. Right-click opens it directly. Click empty space to clear the selection.',
-    'Use the expanded toolbar to switch 2D / 3D and Center graph to recover the overall view after moving around. Hover a node for its name and details.',
+    'Use the expanded toolbar to switch 2D / 3D and Center graph to recover the overall view after moving around. Hover a node for its name and details. On a touch screen the 3D view orbits, zooms and taps, but nodes cannot be dragged.',
     'The hierarchy and references controls switch which relationships are displayed: parent-child address structure, or content references and interactions. Changing the view does not edit the notes.',
     'The mini graph’s Reset filters control clears the active search, filters, and scope. In the expanded graph the same Reset filters button sits beside Close, top right.',
   ] },

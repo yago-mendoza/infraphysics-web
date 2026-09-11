@@ -78,9 +78,12 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?:
 
       {open && (
         <div className="fixed inset-0 bg-th-base z-50 px-5 pt-4 pb-24 animate-fade-in overflow-y-auto">
-          <div className="flex items-center justify-between pb-5 border-b border-th-border">
-            <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-th-tertiary">Navigate</span>
-            <button onClick={() => setOpen(false)} className="p-2 text-th-secondary" aria-label="Close navigation"><CloseIcon /></button>
+          {/* Language and theme on top; the close sits at the bottom, where the Menu pill that opened this was, so a stray tap is undone without moving the thumb. */}
+          <div className="flex items-center justify-between pb-5 border-b border-th-border text-xs text-th-tertiary">
+            <button onClick={switchLanguage} aria-disabled={!canSwitchLang || undefined} className="flex items-center gap-2 font-mono uppercase tracking-wide text-th-secondary"><LangTags routeLang={routeLang} /></button>
+            <button onClick={toggleTheme} className="flex items-center gap-2 text-th-secondary">
+              {theme === 'dark' ? <SunIcon /> : <MoonIcon />} Theme
+            </button>
           </div>
           <nav className="py-8">
             {links.map(([to, label], index) => menus[label] ? (
@@ -97,11 +100,9 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?:
             <button type="button" onClick={randomArticle}><DiceIcon size={18} /><span>Random article</span></button>
             <button type="button" onClick={randomWikinote}><WikiBrainIcon size={17} /><span>Random wikinote</span></button>
           </div>
-          <div className="flex items-center justify-between pt-4 text-xs text-th-tertiary">
-            <button onClick={switchLanguage} aria-disabled={!canSwitchLang || undefined} className="flex items-center gap-2 font-mono uppercase tracking-wide text-th-secondary"><LangTags routeLang={routeLang} /></button>
-            <button onClick={toggleTheme} className="flex items-center gap-2 text-th-secondary">
-              {theme === 'dark' ? <SunIcon /> : <MoonIcon />} Theme
-            </button>
+          <div className="mobile-menu-foot fixed bottom-3 left-5 right-3 z-10 flex items-center justify-between">
+            <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-th-tertiary">Navigate</span>
+            <button onClick={() => setOpen(false)} className="mobile-menu-close h-11 inline-flex items-center gap-2 px-4 rounded-md border text-xs" aria-label="Close navigation">Close <CloseIcon /></button>
           </div>
         </div>
       )}

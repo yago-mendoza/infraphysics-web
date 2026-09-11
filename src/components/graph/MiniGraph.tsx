@@ -273,6 +273,8 @@ const MiniGraph: React.FC<{
   // allocation and a misleading first camera fit before ResizeObserver fires.
   const [containerWidth, setContainerWidth] = useState(() => expanded && typeof window !== 'undefined' ? Math.max(320, window.innerWidth - 260) : 220);
   // On a phone the mini map lives in the full-screen console and takes near half the viewport.
+  // A finger cannot drag a node with any precision in 3D: on coarse pointers the 3D view only orbits, zooms and taps.
+  const coarsePointer = useMemo(() => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches, []);
   const miniHeight = useMemo(() => !expanded && typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches ? Math.round(window.innerHeight * 0.42) : MINI_HEIGHT, [expanded]);
   const [containerHeight, setContainerHeight] = useState(() => expanded && typeof window !== 'undefined' ? Math.max(240, window.innerHeight - 48) : miniHeight);
   const [isFramed, setIsFramed] = useState(false);
@@ -1846,7 +1848,7 @@ const MiniGraph: React.FC<{
             cooldownTime={Infinity}
             d3AlphaMin={expanded ? 0 : 0.001}
             d3AlphaTarget={expanded && !frozen ? 0.08 : 0}
-            enableNodeDrag={!selectionMode && !frozen}
+            enableNodeDrag={!selectionMode && !frozen && !coarsePointer}
             onNodeDrag={heatGraph}
             onNodeDragEnd={() => { heatGraph(); saveSettledLayout(); }}
             enableNavigationControls={!selectionMode}
@@ -1869,6 +1871,8 @@ const MiniGraph: React.FC<{
           {onExpand && <><i className="mx-0.5 h-3 w-px bg-th-hub-border" /><button type="button" onClick={onExpand3d} title="Expand in 3D" aria-label="Expand in 3D" className="grid h-5 min-w-5 place-items-center px-1 text-[8px] font-semibold tracking-[.08em] text-th-muted transition-colors hover:bg-th-surface hover:text-violet-300">3D</button>{onExpand3d && <button type="button" onClick={onExpand} title="Expand graph" aria-label="Expand graph" className="grid h-5 w-5 place-items-center text-th-muted transition-colors hover:bg-th-surface hover:text-violet-300"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 1h4v4M5 11H1V7M11 1L7 5M1 11l4-4" /></svg></button>}</>}
         </nav>}
         {expanded && <nav aria-label="Graph tools" className="absolute left-4 top-[3.6rem] z-50 flex max-h-[calc(100%-5rem)] w-11 flex-col overflow-y-auto border border-th-hub-border bg-th-base p-1 font-mono shadow-xl">
+          {/* Phones only (global.css): minimize at the top of the rail, where nothing else can sit on it; the top-right button is hidden there. */}
+          {onMinimize && <button type="button" onClick={onMinimize} title="Back to the console" aria-label="Minimize the graph" className="graph-minimize-rail mb-1 h-8 w-full place-items-center border-b border-th-hub-border pb-1 text-violet-300"><svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M1.5 4.5h3v-3M10.5 7.5h-3v3M4.5 4.5l-3-3M7.5 7.5l3 3" /></svg></button>}
           <div className="mb-1 border-b border-th-hub-border pb-1">
             {(['2d', '3d'] as const).map(mode => <button key={mode} type="button" title={`${mode.toUpperCase()} view`} onPointerEnter={() => { if (mode === '3d') void import('react-force-graph-3d'); }} onFocus={() => { if (mode === '3d') void import('react-force-graph-3d'); }} onClick={() => { if (mode === dimension) return; physicsTouchedRef.current = true; topologyChangedRef.current = true; topologyCameraCancelledRef.current = false; setPhysicsSettling(true); setDimension(mode); if (mode === '3d') setSelectionMode(false); }} className={`mb-0.5 grid h-8 w-full place-items-center text-[9px] font-semibold uppercase ${dimension === mode ? 'bg-violet-400/15 text-violet-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}>{mode}</button>)}
           </div>
@@ -1899,13 +1903,13 @@ const MiniGraph: React.FC<{
           <button type="button" aria-pressed={frozen} title={frozen ? 'Resume the layout physics' : 'Freeze the layout so nothing drifts'} onClick={() => setFrozen(!frozen)} className={`grid h-8 w-full place-items-center text-sm leading-none ${frozen ? 'bg-sky-400/15 text-sky-300' : 'text-th-muted hover:bg-th-surface hover:text-sky-300'}`}>❄</button>
         </nav>}
         {/* Image: the graph alone, or the graph with the panels that are open. */}
-        {expanded && imagePrompt && <div role="group" aria-label="Copy as an image" className="absolute left-16 top-[3.6rem] z-50 w-52 border border-th-hub-border bg-th-base p-1 font-mono shadow-xl">
+        {expanded && imagePrompt && <div role="group" aria-label="Copy as an image" className="graph-flyout absolute left-16 top-[3.6rem] z-[51] w-52 border border-th-hub-border bg-th-base p-1 font-mono shadow-xl">
           <div className="mb-1 flex items-center justify-between border-b border-th-hub-border px-1.5 pb-1 text-[8px] uppercase tracking-[.12em] text-th-muted"><span>copy as image</span><button type="button" onClick={() => setImagePrompt(false)} className="text-[10px] hover:text-th-primary" aria-label="Cancel">×</button></div>
           <button type="button" onClick={() => { setImagePrompt(false); window.setTimeout(() => void copyViewImage(false), 80); }} className="flex w-full flex-col items-start px-1.5 py-1.5 text-left transition-colors hover:bg-th-surface"><span className="text-[9px] text-th-primary">{multiSelected.size ? 'Selected area, graph only' : 'Graph only'}</span><span className="text-[8px] text-th-muted">Nodes and edges, nothing else.</span></button>
           <button type="button" onClick={() => { setImagePrompt(false); window.setTimeout(() => void copyViewImage(true), 80); }} className="flex w-full flex-col items-start px-1.5 py-1.5 text-left transition-colors hover:bg-th-surface"><span className="text-[9px] text-th-primary">With the interface</span><span className="text-[8px] text-th-muted">Also the panels that are open: legend, path, timeline, tools.</span></button>
         </div>}
         {/* Lens picker, beside the tool rail. */}
-        {expanded && lensOpen && <div role="group" aria-label="Lenses" className="absolute left-16 top-[3.6rem] z-50 w-56 border border-th-hub-border bg-th-base p-1 font-mono shadow-xl">
+        {expanded && lensOpen && <div role="group" aria-label="Lenses" className="graph-flyout absolute left-16 top-[3.6rem] z-[51] w-56 border border-th-hub-border bg-th-base p-1 font-mono shadow-xl">
           <div className="mb-1 flex items-center justify-between border-b border-th-hub-border px-1.5 pb-1 text-[8px] uppercase tracking-[.12em] text-th-muted"><span>lens</span><button type="button" onClick={() => setLensOpen(false)} className="text-[10px] hover:text-th-primary" aria-label="Close lenses">×</button></div>
           {(['orphans', 'bridges', 'cited', 'trail'] as LensKind[]).map(kind => { const on = lens === kind; const unavailable = kind === 'cited' ? !articleUsage : kind === 'trail' ? !visitedIds : false; return <button key={kind} type="button" aria-pressed={on} disabled={unavailable} onClick={() => setLens(on ? null : kind)} className={`flex w-full items-center gap-2 px-1.5 py-1.5 text-left text-[9px] transition-colors disabled:opacity-30 ${on ? 'bg-th-surface text-th-primary' : 'text-th-secondary hover:bg-th-surface hover:text-th-primary'}`}><i className="h-2 w-2 flex-none rounded-full border" style={{ borderColor: LENS_COLORS[kind], backgroundColor: on ? LENS_COLORS[kind] : 'transparent' }} /><span className="flex-1">{LENS_LABELS[kind]}</span><span className="tabular-nums text-th-muted">{lensCounts[kind]}</span></button>; })}
           <p className="px-1.5 pt-1 text-[8px] leading-snug text-th-muted">{lens === 'orphans' ? 'Notes with no link in or out.' : lens === 'bridges' ? 'Notes whose removal would split their component.' : lens === 'cited' ? 'Thicker ring, more articles link the note.' : lens === 'trail' ? 'The notes opened in this tab.' : 'Members keep their colour; the rest recede.'}</p>
@@ -1914,7 +1918,7 @@ const MiniGraph: React.FC<{
         {/* Expanded: the two controls that must never be missed, top right. */}
         {expanded && <div className="graph-topright absolute right-4 top-4 z-50 flex items-center gap-2">
           {filtersActive && onResetFilters && <button type="button" onClick={onResetFilters} className="graph-reset"><FilterOffIcon /> Reset filters</button>}
-          {onMinimize && <button type="button" onClick={onMinimize} title="Close the graph (Esc)" aria-label="Close the graph" className="graph-close"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M1.5 4.5h3v-3M10.5 7.5h-3v3M4.5 4.5l-3-3M7.5 7.5l3 3" /></svg> Close</button>}
+          {onMinimize && <button type="button" onClick={onMinimize} title="Back to the console (Esc)" aria-label="Minimize the graph" className="graph-close"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M1.5 4.5h3v-3M10.5 7.5h-3v3M4.5 4.5l-3-3M7.5 7.5l3 3" /></svg> Minimize</button>}
         </div>}
         {/* Expanded: the edge switches, top left, above the tools column. */}
         {expanded && <div className="graph-edges" role="group" aria-label="Edges shown">
