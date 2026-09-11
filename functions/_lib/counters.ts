@@ -16,12 +16,14 @@ export function mutationGuard(request: Request, env: CounterEnv): Response | nul
   if (origin && origin !== new URL(request.url).origin) return json({error: 'Cross-origin write rejected'}, 403);
   return null;
 }
-export async function callCounters(env: CounterEnv, data: unknown): Promise<Response> {
+export async function callCounters(env: CounterEnv, request:Request, data: unknown): Promise<Response> {
   if (!env.COUNTERS) return json({error: 'COUNTERS not bound'}, 503);
   try {
+    const clientKey=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(new Date().toISOString().slice(0,10)+':'+(request.headers.get('CF-Connecting-IP')||'unknown'))))).map(v=>v.toString(16).padStart(2,'0')).join('');
     const response = await env.COUNTERS.get(env.COUNTERS.idFromName('site')).fetch('https://counters.internal/', {
-      method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data),
+      method: 'POST', headers: {'Content-Type': 'application/json','X-Counter-Client':clientKey}, body: JSON.stringify(data),
     });
-    return new Response(response.body, {status: response.ok ? 200 : 503, headers: {'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*'}});
+    if(!response.ok){const rejected=json({error:response.status===429?'Too many requests':'Counters unavailable'},response.status===429?429:503);if(response.status===429)rejected.headers.set('Retry-After','60');return rejected;}
+    return new Response(response.body, {status:200, headers: {'Content-Type': 'application/json', 'Cache-Control': 'no-store'}});
   } catch { return json({error: 'Counters unavailable'}, 503); }
 }

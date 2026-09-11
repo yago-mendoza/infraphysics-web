@@ -1,3 +1,4 @@
+import {readJson, InputError} from '../_lib/security';
 // Cloudflare Pages Function — bulk stats endpoint.
 // POST /api/stats with { slugs: ["/lab/projects/foo", ...] }
 // Returns { [slug]: { views: number } }
@@ -34,19 +35,19 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   let body: { slugs?: string[] };
   try {
-    body = await request.json();
+    body = await readJson(request,16384);
   } catch {
     return json({ error: 'Invalid JSON' }, 400);
   }
 
   const slugs = body?.slugs;
-  if (!Array.isArray(slugs) || slugs.length === 0 || !slugs.every(validPath)) {
+  if (!Array.isArray(slugs) || slugs.length === 0 || slugs.length > 50 || !slugs.every(validPath)) {
     return json({ error: 'slugs array required' }, 400);
   }
 
   // Cap at 50 to avoid abuse
   const capped = slugs.slice(0, 50);
-  if (durable(env)) return callCounters(env, {op: 'stats', slugs: capped});
+  if (durable(env)) return callCounters(env, request, {op: 'stats', slugs: capped});
 
   // Listing pages deliberately expose views only. Reactions remain available
   // through their dedicated endpoint without doubling KV reads here.

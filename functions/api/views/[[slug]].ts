@@ -1,3 +1,4 @@
+import {knownPath} from '../../_lib/security';
 // Cloudflare Pages Function — article view counter backed by KV.
 // POST /api/views/{slug} → increment + return count (IP-deduped per 24h)
 // GET  /api/views/{slug} → return count without incrementing
@@ -58,9 +59,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   if (!['GET', 'POST'].includes(request.method)) return json({error: 'Method not allowed'}, 405);
   if (request.method === 'POST') {
+    if(!knownPath(slug,true))return json({error:'Unknown article'},404);
     const rejected = mutationGuard(request, env); if (rejected) return rejected;
   }
-  if (durable(env)) return callCounters(env, {op: 'view', slug,
+  if (durable(env)) return callCounters(env, request, {op: 'view', slug,
     hash: await hashKey(`${request.headers.get('CF-Connecting-IP') || 'unknown'}:${slug}`),
     mutate: request.method === 'POST' && !bot(request)});
   if (request.method === 'POST' && bot(request)) return json({slug, views: Number(await env.VIEWS!.get(kvKey)) || 0});

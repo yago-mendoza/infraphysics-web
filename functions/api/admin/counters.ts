@@ -1,3 +1,4 @@
+import {readJson, InputError} from '../../_lib/security';
 import { callCounters, durable, json, type CounterEnv } from '../../_lib/counters';
 
 const scopedKey = (key: string) => /^(views:|hearts:|seen:|hearted:|analytics:)/.test(key) || key === 'presence:last';
@@ -18,10 +19,10 @@ export const onRequest: PagesFunction<CounterEnv> = async ({request, env}) => {
   if (origin && origin !== new URL(request.url).origin) return json({error: 'Forbidden'}, 403);
   if (Number(request.headers.get('Content-Length') || 0) > 600000) return json({error: 'Request too large'}, 413);
   let body: Record<string, unknown>;
-  try { const text = await request.text(); if (text.length > 600000) return json({error:'Request too large'},413); body = JSON.parse(text); } catch { return json({error:'Invalid JSON'},400); }
+  try {body=await readJson(request,600000);} catch(error) {return json({error:'Invalid request'},error instanceof InputError?error.status:400);}
   if (!body || typeof body !== 'object') return json({error:'Invalid request'},400);
   const op = body.op;
-  if (!['status','report','export','kv-export','begin','import','activate'].includes(String(op))) return json({error:'Unknown operation'},400);
+  if (typeof op!=='string'||!['status','report','export','kv-export','begin','import','activate'].includes(op)) return json({error:'Unknown operation'},400);
   if (['kv-export','begin','import','activate'].includes(String(op)) && (env.COUNTERS_MIGRATION_ENABLED !== '1' || env.COUNTERS_PAUSED !== '1' || durable(env))) return json({error:'Migration requires paused KV backend and migration flag'},409);
   if (op === 'kv-export') {
     if (!env.VIEWS) return json({error:'KV not bound'},503);
@@ -29,7 +30,7 @@ export const onRequest: PagesFunction<CounterEnv> = async ({request, env}) => {
     const entries = await Promise.all(page.keys.filter(k => scopedKey(k.name)).map(async key => ({key:key.name, value:await env.VIEWS!.get(key.name), expires:key.expiration ?? null})));
     return json({entries: entries.filter(row => row.value !== null), cursor:'cursor' in page ? page.cursor : null});
   }
-  const response = await callCounters(env, body);
+  const response = await callCounters(env, request, body);
   response.headers.delete('Access-Control-Allow-Origin');
   return response;
 };

@@ -334,3 +334,8 @@ The Wiki guide owns keyboard events while open: stop propagation before the Wiki
 - Local admin requests are proxied by Vite to the authenticated production API; localhost shows real production statistics.
 
 Analytics exploration: `/admin/stats` now separates public totals plus historical offsets, measured daily series and a filtered opening cohort. See `workers/counters/README.md` for deduplication, sample coverage, retention, query limits and measurement costs. The client is `src/lib/siteAnalytics.ts`; verify with `node scripts/site-analytics.test.mjs` plus Worker tests when changing event semantics.
+
+
+### API and admin security
+
+Read [SECURITY.md](SECURITY.md) before changing API/authentication behavior. `_headers` does not protect Function responses: the middleware sets those headers, including the enforced admin CSP. Keep DOMPurify sanitation after HTML transformations, and do not remove the native limiter binding during Worker deployment. Access and WAF are separate account configuration; do not claim them enabled from repository code. New visible site routes must be recognized by `functions/_lib/security.ts` before analytics can accept them.

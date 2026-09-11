@@ -16,9 +16,9 @@ const json = (data: unknown) => new Response(JSON.stringify(data), {
   },
 });
 
-export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
+export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (durable(env)) {
-    const response = await callCounters(env, {op: 'presence'});
+    const response = await callCounters(env, request, {op: 'presence'});
     if (!response.ok) return response;
     const data = await response.json() as {lastVisitor: Visitor | null; pageViews: number; visits: number; visitors: number};
     return json({...data, pageViews: data.pageViews + HISTORICAL_PAGEVIEW_OFFSET,

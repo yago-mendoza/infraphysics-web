@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useMemo, useState, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import { WikiNoteMeta } from '../../types';
 import { resolveWikiLinks } from '../../lib/wikilinks';
+import {safeHtml} from '../../lib/safeHtml';
 import { secondBrainUidFromPath } from '../../config/categories';
 import { WikiLinkPreview } from './WikiLinkPreview';
 import '../../styles/editorial-primitives.css';
@@ -65,9 +66,9 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allWikiNotes, cl
   //   1. Article context: allWikiNotes provided → resolves wiki-links client-side
   //   2. Second Brain context: allWikiNotes omitted → html already pre-resolved by fetchNoteContent()
   const resolvedHtml = useMemo(() => {
-    if (!allWikiNotes) return withHeadingLinks(html);
+      if (!allWikiNotes) return safeHtml(withHeadingLinks(html));
     const { html: processed } = resolveWikiLinks(html, allWikiNotes);
-    return withHeadingLinks(processed);
+      return safeHtml(withHeadingLinks(processed));
   }, [html, allWikiNotes]);
 
   // Kill preview on route change or content change

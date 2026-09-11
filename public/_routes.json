@@ -27,7 +27,8 @@
     "/essays/*",
     "/bits2bricks/*",
     "/threads/*",
-    "/blog/threads/*"
+    "/blog/threads/*",
+    "/admin/*"
   ],
   "exclude": []
 }

@@ -12,18 +12,19 @@ import {onRequest as stats} from './functions/api/stats.ts';
 import {onRequestPost as analytics} from './functions/api/analytics.ts';
 import {onRequestGet as presence} from './functions/api/presence.ts';
 import {onRequest as admin} from './functions/api/admin/counters.ts';
+import {onRequest as middleware} from './functions/_middleware.ts';
 export default {fetch(request, env) {
  const path=new URL(request.url).pathname;
  const handler=path.startsWith('/api/views/')?views:path.startsWith('/api/reactions/')?hearts:path==='/api/stats'?stats:path==='/api/analytics'?analytics:path==='/api/presence'?presence:admin;
  const testEnv={...env}; if(request.headers.has('X-Test-Paused')) testEnv.COUNTERS_PAUSED='1';
  if(request.headers.has('X-Test-KV')) testEnv.COUNTERS_BACKEND='kv';
- return handler({request,env:testEnv});
+ return middleware({request,env:testEnv,next:()=>path==='/admin/stats'?new Response('<html><script>alert(1)</script><script src="/assets/app.js"></script></html>',{headers:{'Content-Type':'text/html'}}):handler({request,env:testEnv})});
 }};`}});
 const mf = new Miniflare(convertV4MiniflareOptions({workers:[
   {name:'pages',modules:true,script:pages,compatibilityDate:'2026-09-01',kvNamespaces:['VIEWS'],
     bindings:{COUNTERS_BACKEND:'durable',COUNTERS_ADMIN_TOKEN:'test-only-secret-'.repeat(3),COUNTERS_MIGRATION_ENABLED:'1'},
     durableObjects:{COUNTERS:{className:'Counters',scriptName:'counters',useSQLite:true}}},
-  {name:'counters',modules:true,script:worker,compatibilityDate:'2026-09-01',durableObjects:{COUNTERS:{className:'Counters',useSQLite:true}}},
+  {name:'counters',modules:true,script:worker,compatibilityDate:'2026-09-01',ratelimits:{COUNTER_RATE_LIMITER:{namespace_id:'2026091101',simple:{limit:240,period:60}}},durableObjects:{COUNTERS:{className:'Counters',useSQLite:true}}},
 ]}));
 let checks=0;
 const check=(a,b)=>{assert.deepEqual(a,b); checks++;};
@@ -33,31 +34,31 @@ const migrationHeaders={'X-Test-Paused':'1','X-Test-KV':'1'};
 try {
   check((await request('/api/admin/counters',{op:'report'})).status,401);
   check((await request('/api/admin/counters?token=anything',{op:'report'})).status,401);
-  check((await request('/api/views/blog/essays/test')).status,503);
+  check((await request('/api/views/lab/projects/6184744')).status,503);
   check((await admin({op:'begin',snapshot:'test'})).status,409);
   check((await admin({op:'begin',snapshot:'test'},migrationHeaders)).status,200);
-  const entries=[{key:'views:/blog/essays/test',value:'42',expires:null},{key:'analytics:pageviews',value:'8',expires:null}];
+  const entries=[{key:'views:/lab/projects/6184744',value:'42',expires:null},{key:'analytics:pageviews',value:'8',expires:null}];
   for(let n=0;n<2;n++) check((await admin({op:'import',snapshot:'test',entries},migrationHeaders)).status,200);
   check((await admin({op:'import',snapshot:'test',entries:[{...entries[0],value:'99'}]},migrationHeaders)).status,503);
   check((await admin({op:'activate',snapshot:'test',expected:3},migrationHeaders)).status,503);
   check((await admin({op:'activate',snapshot:'test',expected:2},migrationHeaders)).status,200);
   check((await admin({op:'begin',snapshot:'test'},migrationHeaders)).status,503);
-  const concurrent=await Promise.all(Array.from({length:40},(_,n)=>request('/api/views/blog/essays/test',{}, {'CF-Connecting-IP':`192.0.2.${n}`})));
+  const concurrent=await Promise.all(Array.from({length:40},(_,n)=>request('/api/views/lab/projects/6184744',{}, {'CF-Connecting-IP':`192.0.2.${n}`})));
   check(concurrent.every(r=>r.ok),true);
-  check(await (await request('/api/views/blog/essays/test')).json(),{slug:'/blog/essays/test',views:82});
-  await Promise.all(Array.from({length:20},()=>request('/api/views/blog/essays/test',{})));
-  check((await (await request('/api/views/blog/essays/test')).json()).views,82);
-  await request('/api/views/blog/essays/test',{}, {'User-Agent':'Googlebot','CF-Connecting-IP':'192.0.2.250'});
-  check((await (await request('/api/views/blog/essays/test')).json()).views,82);
-  check((await request('/api/views/blog/essays/test',{}, {'Origin':'https://evil.example'})).status,403);
-  check((await request('/api/views/blog/essays/test',{}, {'X-Test-Paused':'1'})).status,503);
-  check(await (await request('/api/reactions/blog/essays/test',{})).json(),{slug:'/blog/essays/test',hearts:1,hearted:true});
-  check(await (await request('/api/reactions/blog/essays/test',{})).json(),{slug:'/blog/essays/test',hearts:0,hearted:false});
+  check(await (await request('/api/views/lab/projects/6184744')).json(),{slug:'/lab/projects/6184744',views:82});
+  await Promise.all(Array.from({length:20},()=>request('/api/views/lab/projects/6184744',{})));
+  check((await (await request('/api/views/lab/projects/6184744')).json()).views,82);
+  await request('/api/views/lab/projects/6184744',{}, {'User-Agent':'Googlebot','CF-Connecting-IP':'192.0.2.250'});
+  check((await (await request('/api/views/lab/projects/6184744')).json()).views,82);
+  check((await request('/api/views/lab/projects/6184744',{}, {'Origin':'https://evil.example'})).status,403);
+  check((await request('/api/views/lab/projects/6184744',{}, {'X-Test-Paused':'1'})).status,503);
+  check(await (await request('/api/reactions/lab/projects/6184744',{})).json(),{slug:'/lab/projects/6184744',hearts:1,hearted:true});
+  check(await (await request('/api/reactions/lab/projects/6184744',{})).json(),{slug:'/lab/projects/6184744',hearts:0,hearted:false});
   const event={path:'/home',visitorId:'visitor',sessionId:'session',referrer:'https://google.com/search?q=private',language:'es'};
   await Promise.all(Array.from({length:20},()=>request('/api/analytics',event)));
   check((await request('/api/analytics',{...event,path:'/home?private=1'})).status,400);
   check((await (await request('/api/presence')).json()).pageViews,309);
-  check(await (await request('/api/stats',{slugs:['/blog/essays/test']})).json(),{'/blog/essays/test':{views:82}});
+  check(await (await request('/api/stats',{slugs:['/lab/projects/6184744']})).json(),{'/lab/projects/6184744':{views:82}});
   const report=await admin({op:'report'});
   check(report.headers.get('Access-Control-Allow-Origin'),null);
   const data=await report.json();
@@ -70,7 +71,7 @@ try {
   check(data.breakdowns.language,[{label:'es',value:1}]);
   check(data.breakdowns.entry,[{label:'/home',value:1}]);
   check(data.engagement,{views:82,hearts:0});
-  check(data.articles,[{path:'/blog/essays/test',views:82,hearts:0}]);
+  check(data.articles,[{path:'/lab/projects/6184744',views:82,hearts:0}]);
   const emptyReport=await (await admin({op:'report',from:'2000-01-01',to:'2000-12-31'})).json();
   check(emptyReport.series,[]);
   check(emptyReport.breakdowns.referrer,[]);
@@ -102,5 +103,20 @@ try {
   check((await request('/api/analytics',{...sample,scroll:101})).status,400);
   check((await request('/api/analytics',{...opening,visitId:'bot-open'},{'User-Agent':'Googlebot'})).status,200);
   check((await (await admin({op:'report'})).json()).exploration.totals.opens,3);
+  check((await request('/api/analytics',{...event,path:'/invented-page'})).status,400);
+  check((await request('/api/analytics',{...event,language:['es']})).status,400);
+  check((await request('/api/analytics',{...event,visitorId:['visitor']})).status,400);
+  check((await request('/api/stats',{slugs:Array(51).fill('/home')})).status,400);
+  check((await request('/api/views/invented',{})).status,404);
+  check((await request('/api/reactions/invented',{})).status,404);
+  check((await request('/api/analytics',{...event,referrer:'x'.repeat(2200)})).status,413);
+  check((await request('/api/analytics',event,{'Sec-Fetch-Site':'cross-site'})).status,403);
+  const protectedPage=await request('/admin/stats');
+  check(protectedPage.headers.get('X-Frame-Options'),'DENY');
+  check(protectedPage.headers.get('Content-Security-Policy').includes("script-src 'self'"),true);
+  check((await protectedPage.text()).includes('alert(1)'),false);
+  const failures=await Promise.all(Array.from({length:61},()=>request('/api/admin/counters',{op:'report'},{'CF-Connecting-IP':'192.0.2.240'})));
+  check(failures.some(r=>r.status===429),true);
+  check((await admin({op:'report',groupBy:['invalid']})).headers.get('X-Content-Type-Options'),'nosniff');
   console.log(`PASS ${checks} assertions: binding, concurrency, dedup, migration, auth, privacy, cumulative engagement, retry identity and filtered exploration.`);
 } finally { await mf.dispose(); }

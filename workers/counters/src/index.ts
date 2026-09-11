@@ -14,8 +14,10 @@ export const migratable = (key: string) => /^(views:|hearts:|seen:|hearted:|anal
 // Only a bound Worker can reach this object. The Worker itself has no public API.
 export class Counters extends DurableObject {
   private sql: SqlStorage;
+  private limiter?:RateLimit;
   constructor(ctx: DurableObjectState, env: Record<string, unknown>) {
     super(ctx, env);
+    this.limiter=env.COUNTER_RATE_LIMITER as RateLimit|undefined;
     this.sql = ctx.storage.sql;
     this.sql.exec(`CREATE TABLE IF NOT EXISTS entries (key TEXT PRIMARY KEY, value TEXT NOT NULL, expires INTEGER);
       CREATE INDEX IF NOT EXISTS entries_expiry ON entries(expires) WHERE expires IS NOT NULL;
@@ -40,6 +42,8 @@ export class Counters extends DurableObject {
   private setMeta(key: string, value: string) { this.sql.exec('INSERT INTO meta VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value', key, value); }
 
   async fetch(request: Request) {
+    const key=request.headers.get('X-Counter-Client');
+    if(key&&this.limiter&&!(await this.limiter.limit({key})).success)return json({error:'Too many requests'},429);
     let input: Input;
     try { input = await request.json(); } catch { return json({error: 'Invalid JSON'}, 400); }
     // Every read-modify-write operation below is synchronous within one SQL transaction.
@@ -51,7 +55,7 @@ export class Counters extends DurableObject {
       }
       return json(result);
     } catch (error) {
-      return json({error: error instanceof Error ? error.message : 'Counter operation failed'}, 409);
+      return json({error:'Counter operation failed'},409);
     }
   }
   private handle(i: Input): unknown {

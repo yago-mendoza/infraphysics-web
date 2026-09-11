@@ -396,3 +396,6 @@ Content uses readable filenames and URL slugs with stable internal IDs. See [URL
 # Counters migration and private stats
 
 The optional SQLite Durable Object backend and standalone `/admin/stats` panel are documented in [workers/counters/README.md](workers/counters/README.md), including local tests, authentication, cutover and recovery. KV remains the default until explicitly switched. There is no default admin password and no automatic expiry for daily aggregates.
+
+
+Security implementation: see [SECURITY.md](SECURITY.md). Request guards and response policies live in `functions/_middleware.ts`, bounded inputs and known routes in `functions/_lib/security.ts`, and HTML sanitation in `src/lib/safeHtml.ts`.

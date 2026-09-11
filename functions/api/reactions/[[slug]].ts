@@ -1,3 +1,4 @@
+import {knownPath} from '../../_lib/security';
 // Cloudflare Pages Function — heart reactions backed by KV.
 // POST /api/reactions/{slug} → toggle heart for this IP, return new count + status
 // GET  /api/reactions/{slug} → return heart count + whether this IP has hearted
@@ -57,10 +58,11 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   if (!['GET', 'POST'].includes(request.method)) return json({error: 'Method not allowed'}, 405);
   if (request.method === 'POST') {
+    if(!knownPath(slug,true))return json({error:'Unknown article'},404);
     const rejected = mutationGuard(request, env); if (rejected) return rejected;
     if (bot(request)) return json({error: 'Automated reaction rejected'}, 403);
   }
-  if (durable(env)) return callCounters(env, {op: 'heart', slug, hash, mutate: request.method === 'POST'});
+  if (durable(env)) return callCounters(env, request, {op: 'heart', slug, hash, mutate: request.method === 'POST'});
 
   if (request.method === 'GET') {
     const [countVal, heartedVal] = await Promise.all([

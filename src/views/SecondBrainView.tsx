@@ -24,6 +24,7 @@ import { exportNotesAsMarkdown, estimateExport } from '../lib/exportNotes';
 import { CopyConfirmModal } from '../components/wiki/CopyConfirmModal';
 import { CopyExportModal } from '../components/wiki/CopyExportModal';
 import { resolveWikiLinks } from '../lib/wikilinks';
+import {safeHtml} from '../lib/safeHtml';
 import { WikiLinkPreview } from '../components/wiki/WikiLinkPreview';
 import { assignRootColors, hexToRgb, ROOT_NEUTRAL } from '../components/graph/useGraphData';
 
@@ -1812,7 +1813,7 @@ export const SecondBrainView: React.FC = () => {
                             )}
                             {annotationText && (
                               <div className="text-sm text-th-secondary mt-0.5 font-sans" onClick={handleInlineWikiClick}>
-                                <span dangerouslySetInnerHTML={{ __html: resolveWikiLinks(annotationText, [], noteById).html }} />
+                                <span dangerouslySetInnerHTML={{ __html: safeHtml(resolveWikiLinks(annotationText, [], noteById).html) }} />
                               </div>
                             )}
                           </div>
