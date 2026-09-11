@@ -72,7 +72,7 @@ function listCards() {
   const cards = [];
 
   for (const post of posts) {
-    cards.push({ kind: 'article', id: post.id, path: routes.path(post.category, post.id), facts: [post.displayTitle || post.title, post.subtitle || '', post.category, post.thumbnail || '', post.thumbnailFocus ?? ''] });
+    cards.push({ kind: 'article', id: post.id, path: routes.path(post.category, post.id), facts: [post.displayTitle || post.title, post.subtitle || '', post.category, post.thumbnail || '', post.thumbnailFocus ?? '', post.shareCard || ''] });
   }
   const playgroundsDir = path.join(ROOT, 'public', 'playgrounds');
   if (fs.existsSync(playgroundsDir)) {

@@ -7,6 +7,7 @@ date: "2026-03-05"
 lang: en
 thumbnail: https://cdn.infraphysics.net/articles/6616933/cover.webp
 thumbnailAspect: banner
+shareCard: cover
 thumbnailShading: heavy
 subtitle: "Prediction, acceleration, and a ceiling that keeps leaving."
 tags: ["ML","scaling laws","RL"]

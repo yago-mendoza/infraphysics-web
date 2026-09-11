@@ -50,6 +50,7 @@ export const fromPost = (post: PostSummary): CardData => ({
   accent: catAccentVar(post.category),
   image: post.thumbnail,
   imageFocus: post.thumbnailFocus ?? undefined,
+  coverArt: post.shareCard === 'cover',
 });
 
 export const fromNote = (note: WikiNoteMeta): CardData => {

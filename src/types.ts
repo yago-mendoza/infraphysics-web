@@ -24,6 +24,8 @@ interface BasePost {
   thumbnailWidth?: 'full' | null;
   /** Scale factor for the card thumbnail in the essays grid (1.15 = 15% zoom in). Unset = 1. */
   thumbnailZoom?: number | null;
+  /** Essays: `cover` puts the article's cover, shaded, under the share card instead of the generic paper. Unset = paper. */
+  shareCard?: 'cover' | null;
   subtitle?: string | null;
   tldr?: string[] | string | null;
   related?: string[] | null;

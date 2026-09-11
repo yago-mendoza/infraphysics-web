@@ -144,6 +144,9 @@
 /* The ground is the grainy warm gradient (media/site/share), turned landscape; a scrim keeps the white type readable over its light side. */
 .sc-essay-ground { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .sc-essay-scrim { position: absolute; inset: 0; z-index: 1; background: linear-gradient(to bottom, rgba(13,14,13,.2) 0%, rgba(13,14,13,.3) 50%, rgba(13,14,13,.5) 100%); }
+/* Essay with its own cover as ground: dimmed and desaturated a step further than the paper, a heavier scrim, the grid kept on top so it reads as the same family. */
+.sc-essay-cover .sc-essay-ground { filter: brightness(.5) saturate(.75); }
+.sc-essay-cover .sc-essay-scrim { background: linear-gradient(to bottom, rgba(13,14,13,.35) 0%, rgba(13,14,13,.45) 50%, rgba(13,14,13,.65) 100%); }
 .sc-essay-body { position: absolute; inset: 0; z-index: 2; display: grid; place-content: center; justify-items: center; gap: 26px; padding: 0 120px; text-align: center; }
 .sc-essay-title { margin: 0; max-width: 960px; color: #fbf8f1; font: 500 66px/1.08 var(--font-sans); letter-spacing: -.03em; text-wrap: balance; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .sc-essay-title.is-long { font-size: 52px; }

@@ -28,6 +28,8 @@ export interface CardData {
   image?: string;
   /** Vertical crop anchor of the cover, % from the top. */
   imageFocus?: number;
+  /** Essays: the article's cover, shaded, instead of the generic paper ground (`shareCard: cover` in the frontmatter). */
+  coverArt?: boolean;
   /** The home card shows the site emblem where the other personal pages show the portrait. */
   emblem?: boolean;
 }
@@ -183,8 +185,11 @@ type Design = React.FC<{ data: CardData; variant: Variant }>;
 /** Essay: white type centred on a quiet ground, the emblem alone under it, then the portrait, the name and the site.
     No cover, no paper, no frame: an essay is words. */
 const EssayCard: Design = ({ data }) => (
-  <div className="sc-card sc-essay">
-    <img className="sc-essay-ground" src={cdn('site/share/essay-ground.webp')} alt="" />
+  <div className={`sc-card sc-essay${data.coverArt && data.image ? ' sc-essay-cover' : ''}`}>
+    {/* The ground: the generic paper, or (shareCard: cover) the article's own cover, shaded, with the same faint grid over it. */}
+    {data.coverArt && data.image
+      ? <img className="sc-essay-ground" src={data.image} alt="" style={{ objectPosition: `50% ${data.imageFocus ?? 50}%` }} />
+      : <img className="sc-essay-ground" src={cdn('site/share/essay-ground.webp')} alt="" />}
     <Paper />
     <i className="sc-essay-scrim" aria-hidden="true" />
     <div className="sc-essay-body">

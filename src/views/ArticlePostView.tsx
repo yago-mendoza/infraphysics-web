@@ -504,11 +504,15 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
             <div className="glab-head-text">
               {!isEssays && <ArticleHashtags tags={post.tags} technologies={post.technologies} />}
               <h1 className="glab-title">{post.displayTitle || post.title}</h1>
-              {post.subtitle && <p className="glab-subtitle">{post.subtitle}</p>}
-              <div className="glab-meta-row">
+              {/* Essays: the date at the left of the subtitle, in the subtitle's own type. Bits2Bricks keep the meta row. */}
+              {isEssays
+                ? <p className="glab-subtitle glab-subtitle-dated"><time dateTime={post.date}>{formattedDate}</time>{post.subtitle && <span>{post.subtitle}</span>}</p>
+                : post.subtitle && <p className="glab-subtitle">{post.subtitle}</p>}
+              {/* Essays with an index carry views, likes and share under it (as projects do); without one they keep this row. */}
+              {(!isEssays || topHeadings.length <= 1) && <div className="glab-meta-row">
                 <p className="glab-meta">
-                  {topHeadings.length <= 1 && <>{authorLink}<span>·</span></>}
-                  <time dateTime={post.date}>{formattedDate}</time>
+                  {topHeadings.length <= 1 && <>{authorLink}{!isEssays && <span>·</span>}</>}
+                  {!isEssays && <time dateTime={post.date}>{formattedDate}</time>}
                   {!isEssays && post.complexity != null && <><span>·</span><span>complexity {post.complexity}/10</span></>}
                 </p>
                 <div className="article-engagement-row article-essays-engagement">
@@ -524,7 +528,7 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                   </div>
                   {shareDropdown}
                 </div>
-              </div>
+              </div>}
             </div>
             {post.thumbnail && (
               <figure className={`glab-hero thumb-${post.thumbnailAspect || 'full'}`}>
@@ -545,6 +549,17 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                 <ol>
                   {topHeadings.map((h, i) => <li key={h.id}><a href={`#${h.id}`} className="article-toc-link" onClick={event => { event.preventDefault(); document.getElementById(h.id)?.scrollIntoView({ behavior: 'instant', block: 'start' }); }}>{!isEssays && <b>{String(i + 1).padStart(2, '0')}</b>}<span>{h.text}</span></a></li>)}
                 </ol>
+                {isEssays && (
+                  <div className="article-engagement-row glab-engagement">
+                    {shownViews != null && <span className="article-meta-views"><EyeIcon size={15} /> {shownViews}</span>}
+                    {hearts != null && (
+                      <button onClick={toggleHeart} className={`article-heart-btn${hearted ? ' hearted' : ''}`} title={hearted ? 'Unlike' : 'Like'}>
+                        <HeartIcon size={15} filled={hearted} />{shownHearts != null && <> {shownHearts}</>}
+                      </button>
+                    )}
+                    {shareDropdown}
+                  </div>
+                )}
               </aside>
             )}
             <div className="glab-body">

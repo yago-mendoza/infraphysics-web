@@ -344,6 +344,7 @@ function processMarkdownFile(filePath) {
     thumbnailFocus: frontmatter.thumbnailFocus ?? null,
     thumbnailWidth: frontmatter.thumbnailWidth || null,
     thumbnailZoom: frontmatter.thumbnailZoom ?? null,
+    shareCard: frontmatter.shareCard === 'cover' ? 'cover' : null,
     description: frontmatter.description || frontmatter.subtitle || '',
     content: htmlContent,
     status: frontmatter.status || null,
@@ -602,7 +603,7 @@ function processRegularPosts(cache, configHash, forceRebuild) {
 // fields; everything structural is inherited. `sourceHash` (first twelve hex chars of the
 // SHA-256 of the English body) says which English text it was synced to: a mismatch is a
 // stale translation, reported as an [I18N] warning and flagged on the variant.
-const STRUCTURAL_FIELDS = ['thumbnail', 'thumbnailAspect', 'thumbnailShading', 'thumbnailFocus', 'thumbnailWidth', 'thumbnailZoom', 'date', 'tags', 'related', 'complexity', 'featured', 'hidden', 'theme', 'status', 'technologies', 'github', 'demo', 'caseStudy', 'duration', 'author'];
+const STRUCTURAL_FIELDS = ['thumbnail', 'thumbnailAspect', 'thumbnailShading', 'thumbnailFocus', 'thumbnailWidth', 'thumbnailZoom', 'shareCard', 'date', 'tags', 'related', 'complexity', 'featured', 'hidden', 'theme', 'status', 'technologies', 'github', 'demo', 'caseStudy', 'duration', 'author'];
 const bodyHash = body => createHash('sha256').update(body.replace(/\r\n/g, '\n')).digest('hex').slice(0, 12);
 
 function attachTranslations(bases, variants) {

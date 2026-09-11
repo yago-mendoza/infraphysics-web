@@ -7,6 +7,7 @@ date: "2026-04-08"
 lang: en
 thumbnail: https://cdn.infraphysics.net/articles/8266901/cover.webp
 thumbnailAspect: banner
+shareCard: cover
 thumbnailFocus: 65
 subtitle: "The model that hacks too well, thinks too clearly, and covers its own tracks."
 tags: ["ML","AI safety","security","cybersecurity evaluation"]
