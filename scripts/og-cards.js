@@ -167,6 +167,7 @@ async function browser() {
       const shot = await send('Page.captureScreenshot', { format: 'png', clip: { x: 0, y: 0, width: WIDTH, height: HEIGHT, scale: 1 } });
       return Buffer.from(shot.result.data, 'base64');
     },
+    async reset() { await send('Page.navigate', { url: 'about:blank' }); await sleep(300); },
     close() { ws.close(); proc.kill(); },
   };
 }
@@ -211,10 +212,17 @@ async function main() {
   try { await getJson(`${base}/wikinotes-index.json`.replace(/^https?:\/\/([^/]+)/, 'http://$1')); } catch { fail(`og-cards: no dev server at ${base} (start it with npm run dev, or pass --base)`); }
   const store = dry ? null : await r2();
   const chrome = await browser();
-  let done = 0, bytes = 0;
+  let done = 0, bytes = 0; const failed = [];
   try {
     for (const card of jobs) {
-      const png = await chrome.shoot(`${base}/og/card/${card.kind}/${card.id}`);
+      // A long run occasionally leaves one card never ready in the reused tab (a stalled fetch, not the card):
+      // retry it once from a blank page, then move on and report it at the end instead of dropping the whole run.
+      let png;
+      try { png = await chrome.shoot(`${base}/og/card/${card.kind}/${card.id}`); }
+      catch (first) {
+        try { await chrome.reset(); png = await chrome.shoot(`${base}/og/card/${card.kind}/${card.id}`); }
+        catch { console.warn(`  skipped   ${card.kind.padEnd(10)} ${card.path}: ${first.message}`); failed.push(card.path); continue; }
+      }
       const jpeg = await encode(png);
       const v = sha1(jpeg).slice(0, 8);
       if (!dry) {
@@ -239,6 +247,7 @@ async function main() {
   }
   console.log(`og-cards: ${done} rendered, ${(bytes / 1e6).toFixed(1)} MB${dry ? ', nothing written' : `, manifest → ${path.relative(ROOT, MANIFEST_FILE)}`}`);
   if (!dry && done) console.log('og-cards: run npm run content (or the build) so og-manifest.json points at the new cards');
+  if (failed.length) { console.error(`og-cards: ${failed.length} card(s) could not be rendered, run again for them: ${failed.join(', ')}`); process.exitCode = 1; }
 }
 
 main().catch(error => { console.error(error); process.exit(1); });
