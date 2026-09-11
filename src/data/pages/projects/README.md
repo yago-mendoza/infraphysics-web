@@ -95,6 +95,8 @@ related: ["1112121"]
 
 ### Context annotations in projects
 
+Whatever the thought behind it, a ctx is written short and plain, in the words you would use to a friend, never as a speech (STYLE.md rule 8).
+
 In projects, the article `date` is when the project is finished (or published). Context annotations (`>>`) serve as a **project diary** — they document how the project evolved, both during and after.
 
 **Opening annotation.** Right after the intro text (before the first `#` heading), include a ctx with the date the project actually started. This is the first diary entry: a brief lateral comment, a mood, or a compressed version of what the intro says. The `notes` frontmatter handles factual notices ("WIP", "requires X"); the opening ctx is personal and timestamped.

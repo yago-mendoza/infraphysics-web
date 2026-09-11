@@ -121,6 +121,17 @@ Write the positive claim. If the negated half carries information (a misconcepti
 
 The same rule covers the rest of that family: the rhetorical question answered by its own next sentence (*Why? Because…*), the colon reveal (*The answer: latency.*), the tricolon that escalates in three, the one-line mic drop after a long paragraph, the closing paragraph that summarises what the reader just read, and the sentence that announces its own posture (*Let me be direct*). The full kill list and the frequency limits for each tic live in `_generation/EDITORIAL-RUBRIC.md` (§A and §7); this rule is the short version that applies everywhere.
 
+## 8. Context notes are short and plain.
+
+A context annotation (`>>`) is a note in the margin, not a second essay. Think the content through as carefully as you like, then write it down short and plain: what happened, what you make of it, in the words you would use to a friend. No pomp, no closing flourish, no sentence that exists to sound intelligent. Around a hundred words is the ceiling; less is usually better.
+
+| Instead of | Write |
+|---|---|
+| *There is something like pure luck in being alive to see it: a problem that had resisted generations giving way in a night, an explosion of intelligence that shows no sign of tiring...* | *I'm still amazed every time this happens, and I feel lucky to be here for it.* |
+| *It is the oldest coordination problem, at a new speed.* | *At some point we'll need to agree, together, on what we want from this.* |
+
+This rule is not checked mechanically. Read the note aloud: if it sounds like a speech, cut it.
+
 ## How the rules are enforced
 
 `scripts/build-content.js` scans the markdown body of every article it compiles (`checkStyleRules`) and prints one `[STYLE]` line per rule per file with the first offending line numbers: double quotes (rule 1), arrows (rule 2), runs of short paragraphs (rule 5). Fenced code, inline code, inline and block math, link and image targets and raw HTML are excluded from the scan. A typed-box title (rule 4) is a build **error**, not a warning, because the syntax no longer exists. Em-dashes (rule 3), footnote placement (rule 8) and the negation-then-reframe formations (rule 9) are not checked mechanically yet; read for them. A file that comes from the build cache is not re-scanned; edit it, or run `npm run content` after clearing `.content-cache.json`, to see its warnings again.

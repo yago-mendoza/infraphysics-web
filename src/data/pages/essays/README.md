@@ -120,6 +120,8 @@ In essays, the article `date` is the publication date. Context annotations (`>>`
 - As decoration or commentary on the article's own content.
 - For anything that could be said in the body text instead.
 
+**How to write one:** short and plain, whatever the thought behind it (STYLE.md rule 8). The body of the essay may be elaborate; the note in the margin never is.
+
 ---
 
 ### Emphasis patterns
