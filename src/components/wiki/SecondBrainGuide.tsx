@@ -94,7 +94,7 @@ const TOPICS: Topic[] = [
     'The compact console’s word-count histogram shows note lengths. Select a bar to constrain results to that word-count range; remove its chip above the cards to clear it. Other active searches and filters narrow the notes represented in the histogram.',
   ] },
   { id: 'graph', section: 'Graph workspace', title: 'Open & navigate the graph', keywords: 'expand zoom pan 2d 3d grafo mapa', paragraphs: [
-    'The console mini graph gives a compact overview. Open the expanded graph for more space, or choose 3D. The /wiki/graph address opens this workspace directly. On phones it fills the screen; Close the graph returns to the console.',
+    'The console mini graph gives a compact overview. Open the expanded graph for more space, or choose 3D. The /wiki/graph address opens this workspace directly. On phones it fills the screen; Minimize (top right on desktop, the first button of the tool rail on phones, or Esc) returns to the console.',
     'In the mini graph, select a node to open its note. In the expanded graph, one click selects a node and its descendants; a second click on that node opens it. Right-click opens it directly. Click empty space to clear the selection.',
     'Use the expanded toolbar to switch 2D / 3D and Center graph to recover the overall view after moving around. Hover a node for its name and details. On a touch screen the 3D view orbits, zooms and taps, but nodes cannot be dragged.',
     'The hierarchy and references controls switch which relationships are displayed: parent-child address structure, or content references and interactions. Changing the view does not edit the notes.',
