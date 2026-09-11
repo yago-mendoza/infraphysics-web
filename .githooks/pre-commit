@@ -1,0 +1,4 @@
+#!/bin/sh
+# Share cards travel with the commit that changes them (scripts/og-precommit.js).
+# Activated per clone by `npm install` (package.json "prepare": git config core.hooksPath .githooks).
+exec node "$(git rev-parse --show-toplevel)/scripts/og-precommit.js"

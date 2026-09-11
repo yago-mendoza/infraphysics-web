@@ -14,6 +14,7 @@
  *
  *   scope    article | playground | wiki | section | page, or one id (a post id, a note uid, a page id)
  *   --base   where the dev server runs (default http://localhost:3000, or OG_BASE in the environment)
+ *   --base   url of a running dev server; without it the script starts its own Vite server (port 5197) and stops it at the end
  *   --force  regenerate every card in scope even if nothing changed
  *   --dry    render and encode, write nothing to R2 or to the manifest
  *   --limit  stop after N cards (a quick check of the pipeline)
@@ -128,6 +129,20 @@ async function r2() {
 }
 
 // ---------------------------------------------------------------------------
+// A server of our own when none is given: Vite in dev mode, on a port of its own, gone when the run ends.
+
+const OWN_PORT = 5197;
+async function ownServer() {
+  const vite = path.join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js');
+  if (!fs.existsSync(vite)) fail('og-cards: vite not installed (npm install)');
+  // Bound to 127.0.0.1 explicitly: left to itself Vite listens on ::1 only, which http.get to 127.0.0.1 never reaches.
+  const proc = spawn(process.execPath, [vite, '--host', '127.0.0.1', '--port', String(OWN_PORT), '--strictPort'], { cwd: ROOT, stdio: 'ignore' });
+  const base = `http://127.0.0.1:${OWN_PORT}`;
+  for (let i = 0; i < 240; i++) { try { await getJson(`${base}/wikinotes-index.json`); return { base, stop: () => proc.kill() }; } catch { await sleep(250); } }
+  proc.kill(); fail(`og-cards: the server did not answer on port ${OWN_PORT} within a minute`);
+}
+
+// ---------------------------------------------------------------------------
 // Chrome over CDP
 
 function chromePath() {
@@ -196,7 +211,7 @@ function parseArgs(argv) {
 
 async function main() {
   const { flags, positional } = parseArgs(process.argv.slice(2));
-  const base = (flags.base || process.env.OG_BASE || 'http://localhost:3000').replace(/\/+$/, '');
+  let base = (flags.base || process.env.OG_BASE || '').replace(/\/+$/, '');
   const dry = Boolean(flags.dry);
   const limit = flags.limit ? Number(flags.limit) : Infinity;
 
@@ -209,7 +224,9 @@ async function main() {
   console.log(`og-cards: ${all.length} cards, ${inScope.length} in scope, ${jobs.length} to render${stale.length ? `, ${stale.length} stale` : ''}${dry ? ' (dry run)' : ''}`);
   if (!jobs.length && !stale.length) return;
 
-  try { await getJson(`${base}/wikinotes-index.json`.replace(/^https?:\/\/([^/]+)/, 'http://$1')); } catch { fail(`og-cards: no dev server at ${base} (start it with npm run dev, or pass --base)`); }
+  let server = null;
+  if (base) { try { await getJson(`${base}/wikinotes-index.json`.replace(/^https?:\/\/([^/]+)/, 'http://$1')); } catch { fail(`og-cards: no dev server at ${base} (start it with npm run dev, pass --base, or leave it out to let the script start one)`); } }
+  else { server = await ownServer(); base = server.base; console.log(`og-cards: serving the site myself at ${base}`); }
   const store = dry ? null : await r2();
   const chrome = await browser();
   let done = 0, bytes = 0; const failed = [];
@@ -244,6 +261,7 @@ async function main() {
     }
   } finally {
     chrome.close();
+    server?.stop();
   }
   console.log(`og-cards: ${done} rendered, ${(bytes / 1e6).toFixed(1)} MB${dry ? ', nothing written' : `, manifest → ${path.relative(ROOT, MANIFEST_FILE)}`}`);
   if (!dry && done) console.log('og-cards: run npm run content (or the build) so og-manifest.json points at the new cards');

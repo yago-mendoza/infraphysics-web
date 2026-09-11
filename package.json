@@ -13,6 +13,7 @@
     "build": "node scripts/media.js sync --soft && npm run content && npm run context && vite build",
     "media": "node scripts/media.js",
     "og": "node scripts/og-cards.js",
+    "prepare": "git config core.hooksPath .githooks || exit 0",
     "preview": "vite preview",
     "obsidian:export": "node scripts/obsidian-export.js",
     "obsidian:import": "node scripts/obsidian-import.js"

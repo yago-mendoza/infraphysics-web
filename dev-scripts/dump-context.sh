@@ -130,6 +130,7 @@ FILES=(
   "src/views/OgCardView.tsx"
   "src/lib/shareCards.ts"
   "scripts/og-cards.js"
+  "scripts/og-precommit.js"
   "src/styles/error-concepts.css"
   "src/views/SectionView.tsx"
   "src/views/PostView.tsx"

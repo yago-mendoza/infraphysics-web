@@ -49,6 +49,7 @@ infraphysics-web/
   CLAUDE.md                   # Automation rules, architecture, active gotchas (the one instruction file)
   .claude/
     hooks/                      # Claude Code hooks (pre-commit build, wikinote edit guards)
+.githooks/                      # Git hooks (pre-commit: share cards travel with the commit), activated per clone by npm install
     skills/
       review-article/SKILL.md    # /review-article — review one article: hard rules, form, verified links, wiki links with sense check, missing concepts
   _studio/                     # The workshop: never compiled or served (see _studio/README.md)
@@ -100,6 +101,7 @@ infraphysics-web/
     obsidian-import.js        # Import Obsidian vault back to wikinotes
     compute-graph-relevance.js # Build-time PageRank + proximity → graph-relevance.generated.json
     compute-graph-thumb.js    # Build-time static layout of the wiki graph → graph-thumb.generated.json (Home spotlight)
+    og-precommit.js           # Git pre-commit hook body: refreshes the share cards a commit touches and stages their manifests (wired by .githooks)
     og-cards.js               # Share cards: photographs every url's card from the dev server, uploads to R2, records src/data/og-cards.json (npm run og)
     context-pack.js           # Concatenates the authoring docs into _studio/ai-ctx/<pack>.md, one pasteable document per writing job (npm run context, also in the build)
     studio-find.js            # Finds studio pieces by frontmatter (tags, kind, status, format, language, text) and add-ctx lines (--tvb) so the folders never need reading (npm run find); a tool the agent may extend
