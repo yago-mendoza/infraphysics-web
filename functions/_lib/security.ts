@@ -1,6 +1,6 @@
 import {contentRoutes, stripLang} from '../../src/lib/contentRoutes';
 
-const staticPaths=new Set(['/', '/home','/about','/about/cv','/contact','/wiki','/wiki/graph','/lab/second-brain','/lab/projects','/blog/essays','/blog/bits2bricks','/thanks']);
+const staticPaths=new Set(['/', '/home','/about','/about/cv','/about/stack','/contact','/wiki','/wiki/graph','/lab/second-brain','/lab/projects','/blog/essays','/blog/bits2bricks','/thanks']);
 export function knownPath(path:string,article=false){
   const route=contentRoutes.resolve(path);
   return article?!!route&&route.category!=='wikinotes':!!route||staticPaths.has(stripLang(path));

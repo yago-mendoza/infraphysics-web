@@ -118,5 +118,7 @@ try {
   const failures=await Promise.all(Array.from({length:61},()=>request('/api/admin/counters',{op:'report'},{'CF-Connecting-IP':'192.0.2.240'})));
   check(failures.some(r=>r.status===429),true);
   check((await admin({op:'report',groupBy:['invalid']})).headers.get('X-Content-Type-Options'),'nosniff');
+  check((await request('/api/analytics',{...event,path:'/about/stack'})).status,200);
+  check((await request('/api/views/wiki/artificial-intelligence',{})).status,404);
   console.log(`PASS ${checks} assertions: binding, concurrency, dedup, migration, auth, privacy, cumulative engagement, retry identity and filtered exploration.`);
 } finally { await mf.dispose(); }
