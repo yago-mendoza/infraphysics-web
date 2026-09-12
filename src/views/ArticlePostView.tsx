@@ -597,6 +597,14 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
                   {projectTags.map(tag => <span key={tag}>{tag}</span>)}
                 </div>
               )}
+              {/* Phones only (project-page.css): the actions live here, the rail with the facts is gone. */}
+              <div className="article-engagement-row pj-engagement pj-engagement-top">
+                {shownViews != null && <span className="article-meta-views"><EyeIcon size={15} /> {shownViews}</span>}
+                <button onClick={toggleHeart} className={`article-heart-btn${hearted ? ' hearted' : ''}`} title={hearted ? 'Unlike' : 'Like'}>
+                  <HeartIcon size={15} filled={hearted} />{shownHearts != null && <> {shownHearts}</>}
+                </button>
+                {shareDropdown}
+              </div>
             </div>
           </div>
         </header>

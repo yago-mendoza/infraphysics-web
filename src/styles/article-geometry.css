@@ -144,4 +144,7 @@
   .article-geometry .glab-index, .article-geometry.article-essays .glab-index { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .6rem 0; border-top: 1px solid var(--border-default); border-bottom: 1px solid var(--border-default); }
   .article-geometry .glab-index a.glab-author, .article-geometry .glab-author { margin: 0; padding: 0; border: 0; }
   .article-geometry .glab-engagement { flex: none; margin: 0; padding: 0; border: 0; }
+  /* Essays: the date opens the subtitle inline, so the subtitle wraps after it instead of dropping to its own line. */
+  .article-geometry.article-essays .glab-subtitle-dated { display: block; }
+  .article-geometry.article-essays .glab-subtitle-dated time { margin-right: .6rem; }
 }

@@ -41,7 +41,7 @@
 .pj-title { max-width: 18ch; margin: 0 0 .6rem; color: var(--text-heading); font: 500 clamp(2.2rem, 4.8vw, 3.9rem)/1.04 var(--font-sans); letter-spacing: -.035em; text-wrap: balance; }
 .pj-subtitle { margin: 0 0 1.1rem; max-width: 40rem; color: var(--text-secondary); font: 400 1.1rem/1.5 var(--font-sans); }
 .pj-chips { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .2rem; }
-.pj-chips span { padding: .22rem .45rem; border: 1px solid var(--border-default); color: var(--text-tertiary); font: 8px/1.2 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; }
+.pj-chips span { padding: .3rem .55rem; border: 1px solid var(--border-default); color: var(--text-tertiary); font: 10px/1.2 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; }
 .pj-chips span.is-tech { color: var(--text-secondary); border-color: color-mix(in srgb, var(--art-accent) 35%, var(--border-default)); }
 
 /* ── Plate ──────────────────────────────────────────────────────────────── */
@@ -112,6 +112,7 @@
 
 /* Views, heart and share: quiet text in the rail, no pills. */
 .pj-engagement { display: flex; flex-wrap: wrap; align-items: center; gap: 1.1rem; margin: 0; padding-top: .9rem; border-top: 1px solid var(--border-default); }
+.pj-engagement-top { display: none; }
 /* Share sits apart from the counters, on the far side of the rail. */
 .pj-engagement > :last-child { margin-left: auto; }
 .pj.article-page-wrapper .pj-engagement .article-meta-views,
@@ -128,7 +129,8 @@
   .pj-grid { grid-template-columns: 1fr; gap: 1.5rem; }
   .pj-after { grid-template-columns: 1fr; }
   /* The rail comes first (the facts above the body); the index is reached from the floating button. */
-  .pj-rail { position: static; order: -1; }
+  /* No rule of its own: the facts sheet under it carries one, and two rules with a gap read as a double line. */
+  .pj-rail { position: static; order: -1; padding-top: 0; border-top: 0; }
   .pj-index { display: none; }
   .pj-brief dl { grid-template-columns: 1fr 1fr; }
   .pj-plate { height: clamp(20rem, 58vh, 30rem); margin-top: -1rem; }
@@ -139,8 +141,11 @@
   .pj-lead { font-size: 1.08rem; line-height: 1.66; }
   .pj-brief dd { font-size: 1rem; }
   .pj-meta { font-size: 10px; }
-  .pj-chips span { font-size: 9px; }
+  .pj-chips span { font-size: 11px; }
   .pj-index a.article-toc-link { font-size: .9rem; }
+  /* Phones: the facts sheet repeats the plate (author, status, date, complexity, stack, topics), so the rail goes; views, like and share sit in the plate under the chips. */
+  .pj-rail { display: none; }
+  .pj-engagement-top { display: flex; margin-top: 1rem; padding-top: 0; border-top: 0; }
 }
 @media (max-width: 600px) {
   .pj-brief dl { grid-template-columns: 1fr; }
