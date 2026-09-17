@@ -1068,7 +1068,10 @@ body:has(.about-active) { background-color:var(--bg-base); background-image:none
    Kept a notch softer than pure black, with a half-pixel blur, so it stays behind the text. Dark is untouched. */
 [data-theme="light"] .about-system-visual { opacity:.68; filter:grayscale(1) contrast(1.2) brightness(.55) blur(.5px); }
 [data-theme="light"] .projects-zone .about-system-visual { opacity:.74; filter:grayscale(1) contrast(1.25) brightness(.5) blur(.5px); }
-.home-visual-experiment { position: absolute; z-index: 0; left: 50%; top: -6.9375rem; height: 100vh; width: min(92rem, calc(100vw - 1rem)); transform: translateX(-50%); opacity: .58; pointer-events: auto; mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent); }
+/* The field hangs from the fixed stage, so it covers the viewport at every scroll position: it must never
+   take the pointer, or it swallows the clicks of every section below the hero (Ideas in public, the wiki
+   block). The engine listens on window with capture, so the field still reacts to the pointer. */
+.home-visual-experiment { position: absolute; z-index: 0; left: 50%; top: -6.9375rem; height: 100vh; width: min(92rem, calc(100vw - 1rem)); transform: translateX(-50%); opacity: .58; pointer-events: none; mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent); }
 .home-visual-1 {
   width: 100vw;
   opacity: .79;
