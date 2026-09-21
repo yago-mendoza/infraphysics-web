@@ -13,7 +13,6 @@
  *   node scripts/og-cards.js [scope …] [--base http://localhost:3000] [--force] [--dry] [--limit N]
  *
  *   scope    article | playground | wiki | section | page, or one id (a post id, a note uid, a page id)
- *   --base   where the dev server runs (default http://localhost:3000, or OG_BASE in the environment)
  *   --base   url of a running dev server; without it the script starts its own Vite server (port 5197) and stops it at the end
  *   --force  regenerate every card in scope even if nothing changed
  *   --dry    render and encode, write nothing to R2 or to the manifest
@@ -27,6 +26,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import http from 'node:http';
+import https from 'node:https';
+import { SECTIONS, PAGES, PLAYGROUNDS } from '../src/lib/share-card-catalog.js';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
@@ -45,23 +46,19 @@ const CDP_PORT = 9342;
 const sha1 = input => crypto.createHash('sha1').update(input).digest('hex');
 const today = () => new Date().toISOString().slice(0, 10);
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
-const fail = message => { console.error(`\x1b[31m${message}\x1b[0m`); process.exit(1); };
+const fail = message => { throw new Error(message); };
 
 // ---------------------------------------------------------------------------
-// Which cards exist. Mirrors src/lib/shareCards.ts: keep both lists in step.
+// Which cards exist. Shared inventory with src/lib/shareCards.ts.
 
-const SECTIONS = [
-  { id: 'projects', path: '/lab/projects' }, { id: 'essays', path: '/blog/essays' }, { id: 'bits2bricks', path: '/blog/bits2bricks' }, { id: 'wikinotes', path: '/wiki' },
-];
-const PAGES = [
-  { id: 'home', path: '/home' }, { id: 'about', path: '/about' }, { id: 'cv', path: '/about/cv' }, { id: 'stack', path: '/about/stack' }, { id: 'contact', path: '/contact' },
-];
+
 
 /** Everything a card shows is hashed, together with the design sources, so any change regenerates it. */
 const DESIGN_HASH = sha1([
   fs.readFileSync(path.join(ROOT, 'src', 'views', 'shareCardDesigns.tsx'), 'utf8'),
   fs.readFileSync(path.join(ROOT, 'src', 'styles', 'share-cards.css'), 'utf8'),
-  fs.readFileSync(path.join(ROOT, 'src', 'lib', 'shareCards.ts'), 'utf8'),
+  ...['src/lib/shareCards.ts', 'src/lib/share-card-catalog.js', 'src/views/OgCardView.tsx', 'src/components/icons/index.tsx', 'src/config/categories.tsx', 'src/lib/cdn.ts', 'index.html', 'public/avatar.jpg', 'scripts/og-cards.js'].map(file => fs.readFileSync(path.join(ROOT, file))),
+  JSON.stringify(readJson(path.join(ROOT, 'src/data/media-manifest.json')).files['site/share/essay-ground.webp']),
 ].join('\n')).slice(0, 12);
 
 function listCards() {
@@ -74,21 +71,16 @@ function listCards() {
   for (const post of posts) {
     cards.push({ kind: 'article', id: post.id, path: routes.path(post.category, post.id), facts: [post.displayTitle || post.title, post.subtitle || '', post.category, post.thumbnail || '', post.thumbnailFocus ?? '', post.shareCard || ''] });
   }
-  const playgroundsDir = path.join(ROOT, 'public', 'playgrounds');
-  if (fs.existsSync(playgroundsDir)) {
-    for (const article of fs.readdirSync(playgroundsDir)) {
-      const dir = path.join(playgroundsDir, article);
-      if (!fs.statSync(dir).isDirectory()) continue;
-      for (const file of fs.readdirSync(dir).filter(f => f.endsWith('.html'))) {
-        const name = file.replace(/\.html$/, '');
-        const parent = posts.find(p => p.id === article);
-        cards.push({ kind: 'playground', id: `${article}--${name}`, path: `/playgrounds/${article}/${file}`, facts: [name, parent?.displayTitle || parent?.title || '', parent?.category || ''] });
-      }
-    }
+  for (const pg of PLAYGROUNDS) {
+    const parent = posts.find(p => p.id === pg.article);
+    if (!parent) continue;
+    const url = '/playgrounds/' + pg.article + '/' + pg.file + '.html';
+    if (!fs.existsSync(path.join(ROOT, 'public', url))) throw new Error('Missing playground: ' + url);
+    cards.push({ kind: 'playground', id: pg.article + '--' + pg.file, path: url, facts: [pg.title, parent.displayTitle || parent.title] });
   }
   for (const note of noteList) cards.push({ kind: 'wiki', id: note.id, path: routes.path('wikinotes', note.id), facts: [note.displayTitle || note.title, note.address, note.description || ''] });
-  for (const s of SECTIONS) cards.push({ kind: 'section', id: s.id, path: s.path, facts: [s.id] });
-  for (const p of PAGES) cards.push({ kind: 'page', id: p.id, path: p.path, facts: [p.id] });
+  for (const s of SECTIONS) cards.push({ kind: 'section', id: s.id, path: s.to, facts: [s.id] });
+  for (const p of PAGES) cards.push({ kind: 'page', id: p.id, path: p.to, facts: [p.id] });
   for (const card of cards) {
     card.key = `og/${card.kind}/${card.id}.jpg`;
     card.hash = sha1(JSON.stringify([DESIGN_HASH, card.kind, card.id, card.facts])).slice(0, 12);
@@ -106,6 +98,16 @@ function loadManifest() {
 function saveManifest(manifest) {
   const sorted = Object.fromEntries(Object.entries(manifest.cards).sort(([a], [b]) => a.localeCompare(b)));
   fs.writeFileSync(MANIFEST_FILE, JSON.stringify({ version: 1, publicBase: PUBLIC_BASE, updated: today(), cards: sorted }, null, 2) + '\n');
+}
+
+export async function pruneCards(manifest, all, stale, store) {
+  const activeKeys = new Set(all.map(card => card.key));
+  for (const p of stale) {
+    const key = manifest.cards[p].key;
+    // Keys use stable IDs: a renamed route may still use this exact object.
+    if (!activeKeys.has(key)) await store.remove(key);
+    delete manifest.cards[p];
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -136,7 +138,7 @@ async function ownServer() {
   const vite = path.join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js');
   if (!fs.existsSync(vite)) fail('og-cards: vite not installed (npm install)');
   // Bound to 127.0.0.1 explicitly: left to itself Vite listens on ::1 only, which http.get to 127.0.0.1 never reaches.
-  const proc = spawn(process.execPath, [vite, '--host', '127.0.0.1', '--port', String(OWN_PORT), '--strictPort'], { cwd: ROOT, stdio: 'ignore' });
+  const proc = spawn(process.execPath, [vite, '--host', '127.0.0.1', '--port', String(OWN_PORT), '--strictPort'], { cwd: ROOT, stdio: 'ignore', env: { ...process.env, MEDIA_SYNC: '0' } });
   const base = `http://127.0.0.1:${OWN_PORT}`;
   for (let i = 0; i < 240; i++) { try { await getJson(`${base}/wikinotes-index.json`); return { base, stop: () => proc.kill() }; } catch { await sleep(250); } }
   proc.kill(); fail(`og-cards: the server did not answer on port ${OWN_PORT} within a minute`);
@@ -152,30 +154,58 @@ function chromePath() {
   return found;
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const getJson = url => new Promise((resolve, reject) => http.get(url, res => { let body = ''; res.on('data', d => body += d); res.on('end', () => resolve(JSON.parse(body))); }).on('error', reject));
+const getJson = url => new Promise((resolve, reject) => {
+  const request = (url.startsWith('https:') ? https : http).get(url, res => {
+    let body = '';
+    res.on('error', reject);
+    res.on('data', d => body += d);
+    res.on('end', () => {
+      try {
+        if (res.statusCode !== 200) throw new Error(`HTTP ${res.statusCode}: ${url}`);
+        resolve(JSON.parse(body));
+      } catch (error) { reject(error); }
+    });
+  }).on('error', reject);
+  request.setTimeout(5000, () => request.destroy(new Error(`Timed out: ${url}`)));
+});
 
 async function browser() {
   const profile = path.join(ROOT, 'media', '.cache', 'og-chrome');
   fs.mkdirSync(profile, { recursive: true });
   const proc = spawn(chromePath(), ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run', `--remote-debugging-port=${CDP_PORT}`, `--window-size=${WIDTH},${HEIGHT}`, `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' });
   let targets = null;
-  for (let i = 0; i < 60 && !targets; i++) { try { targets = await getJson(`http://127.0.0.1:${CDP_PORT}/json`); } catch { await sleep(250); } }
+  const deadline = Date.now() + 15000;
+  while (Date.now() < deadline && !targets) { try { targets = await getJson(`http://127.0.0.1:${CDP_PORT}/json`); } catch { await sleep(250); } }
   if (!targets) { proc.kill(); fail('og-cards: Chrome did not answer on the debugging port'); }
   const page = targets.find(t => t.type === 'page');
   const ws = new WebSocket(page.webSocketDebuggerUrl);
-  await new Promise((resolve, reject) => { ws.onopen = resolve; ws.onerror = reject; });
+  try {
+    await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('Chrome WebSocket timed out')), 10000);
+      ws.onopen = () => { clearTimeout(timer); resolve(); };
+      ws.onerror = error => { clearTimeout(timer); reject(error); };
+    });
+  } catch (error) { ws.close(); proc.kill(); throw error; }
   let seq = 0; const pending = new Map();
   ws.onmessage = event => { const m = JSON.parse(event.data); if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); } };
-  const send = (method, params = {}) => new Promise(resolve => { const id = ++seq; pending.set(id, resolve); ws.send(JSON.stringify({ id, method, params })); });
-  await send('Page.enable'); await send('Runtime.enable');
-  await send('Emulation.setDeviceMetricsOverride', { width: WIDTH, height: HEIGHT, deviceScaleFactor: 1, mobile: false });
+  const send = (method, params = {}) => new Promise((resolve, reject) => {
+    const id = ++seq;
+    const timer = setTimeout(() => { pending.delete(id); reject(new Error(`Chrome timed out: ${method}`)); }, 15000);
+    pending.set(id, message => { clearTimeout(timer); message.error ? reject(new Error(message.error.message)) : resolve(message); });
+    ws.send(JSON.stringify({ id, method, params }));
+  });
+  try {
+    await send('Page.enable'); await send('Runtime.enable');
+    await send('Emulation.setDeviceMetricsOverride', { width: WIDTH, height: HEIGHT, deviceScaleFactor: 1, mobile: false });
+  } catch (error) { ws.close(); proc.kill(); throw error; }
   const evaluate = async expression => (await send('Runtime.evaluate', { expression, returnByValue: true })).result?.result?.value;
   return {
     async shoot(url) {
+      await evaluate('window.__ogReady = false');
       await send('Page.navigate', { url });
       const started = Date.now();
       while (Date.now() - started < 20_000) {
-        if (await evaluate('window.__ogReady === true')) break;
+        if (await evaluate(`location.href === ${JSON.stringify(url)} && window.__ogReady === true`)) break;
         await sleep(120);
       }
       if (!(await evaluate('window.__ogReady === true'))) throw new Error(`card never became ready: ${url}`);
@@ -192,7 +222,9 @@ async function encode(png) {
     const jpeg = await sharp(png).jpeg({ quality, mozjpeg: true, chromaSubsampling: '4:4:4' }).toBuffer();
     if (jpeg.length <= MAX_BYTES) return jpeg;
   }
-  return sharp(png).jpeg({ quality: 60, mozjpeg: true }).toBuffer();
+  const jpeg = await sharp(png).jpeg({ quality: 60, mozjpeg: true }).toBuffer();
+  if (jpeg.length > MAX_BYTES) throw new Error('Card exceeds the 550 KB upload limit');
+  return jpeg;
 }
 
 // ---------------------------------------------------------------------------
@@ -214,23 +246,25 @@ async function main() {
   let base = (flags.base || process.env.OG_BASE || '').replace(/\/+$/, '');
   const dry = Boolean(flags.dry);
   const limit = flags.limit ? Number(flags.limit) : Infinity;
+  if (flags.limit !== undefined && (!Number.isInteger(limit) || limit < 1)) fail('--limit must be a positive integer');
 
   const all = listCards();
   const inScope = positional.length ? all.filter(c => positional.includes(c.kind) || positional.includes(c.id)) : all;
   if (!inScope.length) fail('og-cards: nothing matches that scope');
   const manifest = loadManifest();
   const jobs = inScope.filter(c => flags.force || manifest.cards[c.path]?.hash !== c.hash).slice(0, limit);
-  const stale = Object.keys(manifest.cards).filter(p => !all.some(c => c.path === p));
+  const paths = new Set(all.map(c => c.path));
+  const stale = positional.length ? [] : Object.keys(manifest.cards).filter(p => !paths.has(p));
   console.log(`og-cards: ${all.length} cards, ${inScope.length} in scope, ${jobs.length} to render${stale.length ? `, ${stale.length} stale` : ''}${dry ? ' (dry run)' : ''}`);
   if (!jobs.length && !stale.length) return;
 
-  let server = null;
-  if (base) { try { await getJson(`${base}/wikinotes-index.json`.replace(/^https?:\/\/([^/]+)/, 'http://$1')); } catch { fail(`og-cards: no dev server at ${base} (start it with npm run dev, pass --base, or leave it out to let the script start one)`); } }
-  else { server = await ownServer(); base = server.base; console.log(`og-cards: serving the site myself at ${base}`); }
-  const store = dry ? null : await r2();
-  const chrome = await browser();
-  let done = 0, bytes = 0; const failed = [];
+  let server = null, chrome = null;
   try {
+  const store = dry ? null : await r2();
+  if (base) { try { await getJson(`${base}/wikinotes-index.json`); } catch { fail(`og-cards: no dev server at ${base} (start it with npm run dev, pass --base, or leave it out to let the script start one)`); } }
+  else { server = await ownServer(); base = server.base; console.log(`og-cards: serving the site myself at ${base}`); }
+  chrome = await browser();
+  let done = 0, bytes = 0; const failed = [];
     for (const card of jobs) {
       // A long run occasionally leaves one card never ready in the reused tab (a stalled fetch, not the card):
       // retry it once from a blank page, then move on and report it at the end instead of dropping the whole run.
@@ -251,21 +285,16 @@ async function main() {
       console.log(`  ${String(done).padStart(4)}/${jobs.length}  ${card.kind.padEnd(10)} ${card.path.padEnd(52)} ${Math.round(jpeg.length / 1024)} KB`);
     }
     if (!dry) {
-      for (const p of stale) {
-        const key = manifest.cards[p].key;
-        try { await store.remove(key); } catch { /* already gone */ }
-        delete manifest.cards[p];
-        console.log(`  removed ${key}`);
-      }
+      await pruneCards(manifest, all, stale, store);
       saveManifest(manifest);
     }
-  } finally {
-    chrome.close();
-    server?.stop();
-  }
+
   console.log(`og-cards: ${done} rendered, ${(bytes / 1e6).toFixed(1)} MB${dry ? ', nothing written' : `, manifest → ${path.relative(ROOT, MANIFEST_FILE)}`}`);
   if (!dry && done) console.log('og-cards: run npm run content (or the build) so og-manifest.json points at the new cards');
   if (failed.length) { console.error(`og-cards: ${failed.length} card(s) could not be rendered, run again for them: ${failed.join(', ')}`); process.exitCode = 1; }
+  } finally { chrome?.close(); server?.stop(); }
 }
 
-main().catch(error => { console.error(error); process.exit(1); });
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch(error => { console.error(error); process.exitCode = 1; });
+}

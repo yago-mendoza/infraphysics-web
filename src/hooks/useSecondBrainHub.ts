@@ -1,7 +1,8 @@
 // Second Brain Hub hook — tree building, multi-mode search, filters, sorts, stats
 
 import { useState, useMemo, useCallback, useRef, useEffect, useLayoutEffect, useDeferredValue } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useNavigationType } from 'react-router-dom';
+import { matchesWikiName, type WikiLens } from '../lib/wikiExplorer';
 import { WikiNoteMeta } from '../types';
 import { isSecondBrainPath, secondBrainPath, secondBrainUidFromPath } from '../config/categories';
 import { initBrainIndex, fetchNoteContent, getCachedNoteContent, prefetchNoteContent, type BrainIndex, type Connection, type Neighborhood } from '../lib/brainIndex';
@@ -11,10 +12,10 @@ import { computeWikiArticleUsage } from '../lib/wikiArticleUsage';
 
 const articleUsage = computeWikiArticleUsage(fieldEvidence.candidates);
 
-export type SearchField = 'name' | 'content' | 'backlinks';
+export type SearchField = 'name' | 'path' | 'content' | 'backlinks';
 /** Which fields the query is matched against: one field, two joined with '+', or 'all'. */
 export type SearchMode = SearchField | 'all' | `${SearchField}+${SearchField}`;
-export const SEARCH_FIELDS: SearchField[] = ['name', 'content', 'backlinks'];
+export const SEARCH_FIELDS: SearchField[] = ['name', 'path', 'content', 'backlinks'];
 export const fieldsOfMode = (mode: SearchMode): SearchField[] =>
   mode === 'all' ? [...SEARCH_FIELDS] : (mode.split('+') as SearchField[]).filter(f => SEARCH_FIELDS.includes(f));
 export const modeOfFields = (fields: SearchField[]): SearchMode => {
@@ -81,6 +82,7 @@ function seededShuffle<T>(arr: T[], seed: number): T[] {
 export const useSecondBrainHub = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const navigationType = useNavigationType();
   const { getIslands, getCentrality } = useGraphRelevance();
   const [query, setQuery] = useState('');
   // Deferred query — React keeps the input responsive while the filter
@@ -152,6 +154,13 @@ export const useSecondBrainHub = () => {
   const [sortMode, setSortMode] = useState<SortMode>('a-z');
   const [filterState, setFilterState] = useState<FilterState>(DEFAULT_FILTER_STATE);
   const [directoryScope, setDirectoryScope] = useState<string | null>(null); // tree path
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [directoryDisclosure, setDirectoryDisclosure] = useState<Record<string, boolean>>({});
+  const [directoryLevels, setDirectoryLevels] = useState(Infinity);
+  const [directoryOpen, setDirectoryOpen] = useState(false);
+  const directoryScroll = useRef(0);
+  const [lens, setLens] = useState<WikiLens | null>(null);
+  const [citedMinimum, setCitedMinimum] = useState(1);
 
   // A scope or a query in the url (the home mosaic links to /wiki/graph?scope=ML) is applied once the
   // index is loaded, matching the root case-insensitively, and then removed from the url so a manual
@@ -176,6 +185,56 @@ export const useSecondBrainHub = () => {
   const [directorySortMode, setDirectorySortMode] = useState<DirectorySortMode>('alpha');
   const [shuffleSeed, setShuffleSeed] = useState(() => Math.floor(Math.random() * 0xffffffff));
 
+  // Each browser history entry owns its console state. A fresh search never overwrites an older entry.
+  type ConsoleSnapshot = { query: string; searchMode: SearchMode; sortMode: SortMode; filterState: FilterState;
+    directoryScope: string | null; directoryQuery: string; directorySortMode: DirectorySortMode;
+    selectedNodeId: string | null; directoryDisclosure: Record<string, boolean>; directoryLevels: number;
+    lens: WikiLens | null; citedMinimum: number; directoryOpen: boolean; directoryScroll: number; scrollY: number };
+  const consoleEntries = useRef(new Map<string, ConsoleSnapshot>());
+  const lastConsole = useRef<ConsoleSnapshot | null>(null);
+  const consoleKey = useRef(location.key);
+  useLayoutEffect(() => {
+    if (consoleKey.current !== location.key) {
+      consoleKey.current = location.key;
+      const saved = navigationType === 'POP' ? consoleEntries.current.get(location.key) : location.state?.wikiConsole as ConsoleSnapshot | undefined;
+      if (!id && (saved || location.state?.wikiFresh)) {
+        setQuery(saved?.query ?? ''); setSearchMode(saved?.searchMode ?? 'name'); setSortMode(saved?.sortMode ?? 'a-z');
+        setFilterState(saved?.filterState ?? DEFAULT_FILTER_STATE); setDirectoryScope(saved?.directoryScope ?? null);
+        setDirectoryQuery(saved?.directoryQuery ?? ''); setDirectorySortMode(saved?.directorySortMode ?? 'alpha');
+        setSelectedNodeId(saved?.selectedNodeId ?? null); setDirectoryDisclosure(saved?.directoryDisclosure ?? {});
+        setDirectoryLevels(saved?.directoryLevels ?? Infinity); setLens(saved?.lens ?? null); setCitedMinimum(saved?.citedMinimum ?? 1);
+        setDirectoryOpen(saved?.directoryOpen ?? false);
+        directoryScroll.current = saved?.directoryScroll ?? 0;
+        requestAnimationFrame(() => window.scrollTo(0, saved?.scrollY ?? 0));
+        return;
+      }
+    }
+    if (!id && isSecondBrainPath(location.pathname)) {
+      const snapshot = { query, searchMode, sortMode, filterState, directoryScope, directoryQuery, directorySortMode,
+        selectedNodeId, directoryDisclosure, directoryLevels, lens, citedMinimum, directoryOpen, directoryScroll: directoryScroll.current, scrollY: window.scrollY };
+      consoleEntries.current.set(location.key, snapshot); lastConsole.current = snapshot;
+    }
+  }, [location.key, id, query, searchMode, sortMode, filterState, directoryScope, directoryQuery, directorySortMode, selectedNodeId, directoryDisclosure, directoryLevels, lens, citedMinimum, directoryOpen]);
+  useEffect(() => {
+    if (id || !isSecondBrainPath(location.pathname)) return;
+    const saveScroll = () => {
+      const entry = consoleEntries.current.get(location.key);
+      if (entry) entry.scrollY = window.scrollY;
+    };
+    window.addEventListener('scroll', saveScroll, { passive: true });
+    return () => window.removeEventListener('scroll', saveScroll);
+  }, [location.key, id]);
+  const openConsole = useCallback((fresh = false, showDirectory?: boolean) => {
+    const saved = lastConsole.current;
+    navigate(secondBrainPath(), { state: fresh ? { wikiFresh: true } : { wikiConsole: saved && showDirectory !== undefined ? { ...saved, directoryOpen: showDirectory } : saved } });
+    if (!saved && showDirectory !== undefined) setDirectoryOpen(showDirectory);
+  }, [navigate]);
+  const saveDirectoryScroll = useCallback((top: number) => {
+    directoryScroll.current = top;
+    const entry = consoleEntries.current.get(location.key);
+    if (!id && entry) entry.directoryScroll = top;
+  }, [location.key, id]);
+
   // The Console panels now provide progressive disclosure, so there is one
   // canonical full Wiki view. Keep this compatibility field until consumers no
   // longer branch on it, but never restore the retired simplified mode.
@@ -196,10 +255,10 @@ export const useSecondBrainHub = () => {
   if (typeof visitedRef.current === 'function') {
     visitedRef.current = (visitedRef.current as unknown as () => Set<string>)();
   }
-  const [, forceVisitedUpdate] = useState(0);
+  const [visitedVersion, forceVisitedUpdate] = useState(0);
   // forceVisitedUpdate in deps forces a new function reference when the visited set
   // changes, triggering re-renders in consumers despite the ref-based closure.
-  const isVisited = useCallback((noteId: string) => visitedRef.current.has(noteId), [forceVisitedUpdate]);
+  const isVisited = useCallback((noteId: string) => visitedRef.current.has(noteId), [visitedVersion]);
   // The graph's session-trail lens offers to forget the visits of this tab.
   const clearVisited = useCallback(() => {
     visitedRef.current = new Set();
@@ -284,19 +343,10 @@ export const useSecondBrainHub = () => {
   const savedIdRef = useRef<string | undefined>(undefined);
 
   const handleSetQuery = useCallback((q: string) => {
-    if (q && !query && id) {
-      savedIdRef.current = id;
-    }
-    if (!q && query && savedIdRef.current) {
-      const restoreId = savedIdRef.current;
-      savedIdRef.current = undefined;
-      navigate(secondBrainPath(restoreId));
-    }
-    if (!q) {
-      savedIdRef.current = undefined;
-    }
     setQuery(q);
-  }, [query, id, navigate]);
+    setSelectedNodeId(null);
+    if (id) navigate(secondBrainPath());
+  }, [id, navigate]);
 
   // Backlinks for active post — O(1) lookup
   const backlinks = useMemo(() => {
@@ -441,12 +491,7 @@ export const useSecondBrainHub = () => {
     if (!effectiveQuery) return allWikiNotes;
     const q = effectiveQuery.toLowerCase();
 
-    const matchesName = (note: WikiNoteMeta) => {
-        const address = (note.address || note.title).toLowerCase();
-        const displayTitle = (note.displayTitle || note.title).toLowerCase();
-        if (address.includes(q) || displayTitle.includes(q)) return true;
-        return note.aliases?.some(alias => alias.toLowerCase().includes(q)) ?? false;
-    };
+    const matchesName = (note: WikiNoteMeta) => matchesWikiName(note, q);
     const matchesContent = (note: WikiNoteMeta) => (note.searchText || '').includes(q) || note.description.toLowerCase().includes(q);
     const matchesBacklinks = (note: WikiNoteMeta) => (backlinksMap.get(note.id) || []).some(linker => {
       const address = (linker.address || linker.title).toLowerCase();
@@ -455,9 +500,19 @@ export const useSecondBrainHub = () => {
     });
 
     // A note matches when any of the selected fields matches (content uses the pre-built searchText).
-    const byName = searchFields.includes('name'), byContent = searchFields.includes('content'), byLinks = searchFields.includes('backlinks');
-    return allWikiNotes.filter(note => (byName && matchesName(note)) || (byContent && matchesContent(note)) || (byLinks && matchesBacklinks(note)));
+    const byName = searchFields.includes('name'), byPath = searchFields.includes('path'), byContent = searchFields.includes('content'), byLinks = searchFields.includes('backlinks');
+    return allWikiNotes.filter(note => (byName && matchesName(note)) || (byPath && note.address.toLowerCase().includes(q)) || (byContent && matchesContent(note)) || (byLinks && matchesBacklinks(note)));
   }, [deferredQuery, debouncedContentQuery, searchFields, allWikiNotes, backlinksMap]);
+
+  const nameMatchIds = useMemo(() => query.trim() && searchFields.includes('name')
+    ? new Set(allWikiNotes.filter(note => matchesWikiName(note, query)).map(note => note.id)) : null, [allWikiNotes, query, searchFields]);
+  const lensIds = useMemo(() => {
+    if (lens === 'bridges') return new Set((getIslands()?.cuts ?? []).map(cut => cut.uid));
+    if (lens === 'orphans') return new Set(getIslands()?.isolatedUids ?? []);
+    if (lens === 'cited') return new Set([...articleUsage].filter(([, articles]) => articles.length >= citedMinimum).map(([id]) => id));
+    if (lens === 'trail') return new Set(visitedRef.current);
+    return null;
+  }, [lens, citedMinimum, getIslands, visitedVersion]);
 
   // --- Directory scope filter ---
   const scopedResults = useMemo(() => {
@@ -475,12 +530,13 @@ export const useSecondBrainHub = () => {
   const coreFilteredNotes = useMemo(() => {
     const { isolated, leaf, hubThreshold, depthMin, depthMax, islandId, bridgesOnly, dateFilter } = filterState;
     const hasAnyFilter = filterState.articleCountBelow !== null || isolated || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || islandId != null || bridgesOnly || dateFilter != null;
-    if (!hasAnyFilter) return scopedResults;
+    if (!hasAnyFilter && !lensIds) return scopedResults;
 
     const islands = getIslands();
     const bridgeUids = bridgesOnly && islands ? new Set(islands.cuts.map(c => c.uid)) : null;
 
     return scopedResults.filter(note => {
+      if (lensIds && !lensIds.has(note.id)) return false;
       if (filterState.articleCountBelow !== null && (articleUsage.get(note.id)?.length || 0) >= filterState.articleCountBelow) return false;
       const depth = (note.addressParts || [note.title]).length;
       const outgoing = note.references?.length || 0;
@@ -508,7 +564,7 @@ export const useSecondBrainHub = () => {
 
       return true;
     });
-  }, [scopedResults, filterState, backlinksMap, parentIds, getIslands]);
+  }, [scopedResults, filterState, backlinksMap, parentIds, getIslands, lensIds]);
 
   // filteredNotes: apply word count filter on top of core filters
   const filteredNotes = useMemo(() => {
@@ -589,6 +645,7 @@ export const useSecondBrainHub = () => {
   // --- Reset filters ---
   const resetFilters = useCallback(() => {
     setFilterState(DEFAULT_FILTER_STATE);
+    setLens(null); setSelectedNodeId(null);
   }, []);
 
   // Leaving the wiki forgets every filter, root and search; the next visit starts clean.
@@ -602,8 +659,8 @@ export const useSecondBrainHub = () => {
   // Check if any filter is active
   const hasActiveFilters = useMemo(() => {
     const { isolated, leaf, hubThreshold, depthMin, depthMax, islandId, bridgesOnly, dateFilter, wordCountMin, wordCountMax } = filterState;
-    return filterState.articleCountBelow !== null || isolated || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || islandId != null || bridgesOnly || dateFilter != null || wordCountMin > 0 || wordCountMax < Infinity;
-  }, [filterState]);
+    return !!lens || filterState.articleCountBelow !== null || isolated || leaf || hubThreshold > 0 || depthMin > 1 || depthMax < Infinity || islandId != null || bridgesOnly || dateFilter != null || wordCountMin > 0 || wordCountMax < Infinity;
+  }, [filterState, lens]);
 
   // Signal from sidebar directory: "this click should reset the trail"
   const directoryNavRef = useRef(false);
@@ -630,6 +687,8 @@ export const useSecondBrainHub = () => {
   }, []);
 
   return {
+    openConsole, selectedNodeId, setSelectedNodeId, directoryDisclosure, setDirectoryDisclosure, directoryLevels, setDirectoryLevels, directoryOpen, setDirectoryOpen, directoryScroll, saveDirectoryScroll,
+    lens, setLens, citedMinimum, setCitedMinimum, lensIds, nameMatchIds,
     // Loading state
     indexLoading: !index,
     contentLoading,

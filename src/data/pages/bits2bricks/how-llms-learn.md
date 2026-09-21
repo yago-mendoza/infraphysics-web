@@ -19,7 +19,7 @@ tldr:
 related: ["5917362"]
 ---
 
->> 26.03.11 - banner image is a loss landscape visualization by **Javier Ideami** ([[https://losslandscape.com|losslandscape.com]]). I saw him present at an executive AI master's program and his conviction about where language modeling was heading stuck with me more than most of the curriculum did. his work on visualizing optimization surfaces is worth a deep dive if you want to *see* what gradient descent actually looks like.
+>> 26.03.11 - banner image is a loss landscape visualization by Javier Ideami ([[https://losslandscape.com|losslandscape.com]]). I saw him present at an executive AI master's program and his conviction about where language modeling was heading stuck with me more than most of the curriculum did. his work on visualizing optimization surfaces is worth a deep dive if you want to *see* what gradient descent actually looks like.
 
 This is a companion piece to [[bits2bricks/5917362|Transformers from scratch]]. That article covers the architecture: what a transformer *is*, how data flows through it, where the 175 billion parameters live. This one covers what happens *after* that architecture exists: how you take a model that can predict the next token and turn it into something that follows instructions, reasons about problems, and refuses to help you build a bomb.
 
@@ -32,27 +32,26 @@ That last sentence is the bridge to this article. Because *all* training ([[2oNd
 
 A few concepts that underpin everything in this article. If you are comfortable with them, skip ahead. If not, these are worth anchoring before we go further.
 
-## Backpropagation
-
+{tabs}
+{tab|Backpropagation}
 In the [[bits2bricks/5917362|transformer article]], we described the forward pass (data flowing through the network, producing a prediction). Backpropagation is the reverse trip.
 
-After the model makes a prediction, you compare it to the correct answer and compute a **loss**, a single number measuring how wrong the model was. Then you work backwards through the entire network, computing for every one of the billions of parameters: "if I nudge this number up slightly, does the loss go up or down, and by how much?" This is the **gradient**, the direction of steepest descent.
+After the model makes a prediction, you compare it to the correct answer and compute a *loss*, a single number measuring how wrong the model was. Then you work backwards through the entire network, computing for every one of the billions of parameters: "if I nudge this number up slightly, does the loss go up or down, and by how much?" This is the *gradient*, the direction of steepest descent.
 
 Then you nudge every parameter a tiny step in the direction that reduces the loss. One step barely changes anything. But billions of steps, across trillions of tokens, sculpt the model into something that predicts well. It is evolution by gradient descent: no intelligence directing the process, just a relentless pressure to be slightly less wrong than before.
 
 This is the same for SFT, DPO, and RL. The mechanics are identical. What changes is how you compute that loss.
-
-## The loss function
-
+{/tab}
+{tab|The loss function}
 The loss function is literally "what number is the model trying to minimize." It is the single most important design choice in training, because it defines what "better" means.
 
-- In **pretraining**, the loss is: "how surprised was the model by the actual next token?" More technically, it is the negative log probability the model assigned to the correct token ^[This is called [[q3MjogvW|cross-entropy]] loss. If the model assigned 90% probability to the right answer, \(-\log(0.9) \approx 0.1\) (small loss). If it assigned 1%, \(-\log(0.01) \approx 4.6\) (large loss). The model learns to be less surprised.]. Low loss means the model predicted well. The model sees trillions of tokens and minimizes this number.
+- In pretraining, the loss is: "how surprised was the model by the actual next token?" More technically, it is the negative log probability the model assigned to the correct token ^[This is called [[q3MjogvW|cross-entropy]] loss. If the model assigned 90% probability to the right answer, \(-\log(0.9) \approx 0.1\) (small loss). If it assigned 1%, \(-\log(0.01) \approx 4.6\) (large loss). The model learns to be less surprised.]. Low loss means the model predicted well. The model sees trillions of tokens and minimizes this number.
 
-- In **SFT**, the loss is the same formula, but on curated examples instead of raw internet text.
+- In SFT, the loss is the same formula, but on curated examples instead of raw internet text.
 
-- In **DPO**, the loss is: "did the model assign higher probability to the preferred response than the rejected one?"
+- In DPO, the loss is: "did the model assign higher probability to the preferred response than the rejected one?"
 
-- In **RL**, the loss involves a reward signal: "how good was the response the model just generated?"
+- In RL, the loss involves a reward signal: "how good was the response the model just generated?"
 
 Same mechanism, different objective. The loss function is what separates these techniques. For pretraining and SFT, that loss is [[q3MjogvW|cross-entropy]] (a single number measuring how surprised the model was, averaged over all tokens in the sequence):
 
@@ -61,13 +60,13 @@ Same mechanism, different objective. The loss function is what separates these t
 {/math}
 
 Each term asks: "what probability did the model assign to the token that actually came next?" If it was confident and right, \(-\log(0.9) \approx 0.1\). If it was clueless, \(-\log(0.01) \approx 4.6\). Summed across the whole sequence and averaged, that is the number that gradient descent minimizes.
+{/tab}
+{tab|Policy}
+In reinforcement learning, the word "[[4vDsUzfM|policy]]" appears constantly. [[rxVjxTLA|PPO]] stands for Proximal *Policy* Optimization. In the context of LLMs, the policy *is* the model (the function that, given a context, produces a probability distribution over next tokens). When we say "update the policy", we mean "adjust the model's weights so it produces different probabilities."
 
-## Policy
-
-In reinforcement learning, the word "[[4vDsUzfM|policy]]" appears constantly. [[rxVjxTLA|PPO]] stands for Proximal **Policy** Optimization. In the context of LLMs, the policy *is* the model (the function that, given a context, produces a probability distribution over next tokens). When we say "update the policy", we mean "adjust the model's weights so it produces different probabilities."
-
-## Inference vs training
-
+Every technique in this article updates the policy. What differs is the signal that says in which direction.
+{/tab}
+{tab|Inference vs training}
 These are two completely different moments in the life of a model, and we will move between them throughout this article.
 
 [[bNGmRCsR|Training]] is when the model learns. Weights change. Backpropagation runs. Gradients flow. This happens on clusters of thousands of GPUs over weeks or months.
@@ -75,20 +74,13 @@ These are two completely different moments in the life of a model, and we will m
 [[Rx5QMqad|Inference]] is when the model is used. Weights are frozen. The model takes input, produces output. The [[89ceVDr1|KV cache]] we discussed in the [[bits2bricks/5917362|transformer article]] is an inference optimization. It has nothing to do with training. When you chat with ChatGPT, that is inference. When OpenAI spends $100M training a new model, that is training.
 
 Every technique in this article is about training.
+{/tab}
+{/tabs}
 
 
 # The taxonomy
 
-Here is the map. Every technique for training an LLM after pretraining falls into one of two families:
-
-```
-Supervised learning (you have labeled data)
-├── SFT    → "imitate this example exactly"
-└── DPO    → "prefer response A over response B"
-
-Reinforcement learning (discover what's good by exploring)
-└── RL (PPO, GRPO...)  → "maximize this reward"
-```
+Here is the map. Every technique for training an LLM after pretraining falls into one of two families. The first is supervised learning, where you have labeled data: SFT says *imitate this example exactly*, DPO says *prefer response A over response B*. The second is reinforcement learning, where the model discovers what is good by exploring: RL (PPO, GRPO and their relatives) says *maximize this reward*.
 
 SFT and DPO are family. Both are supervised. Both learn from static datasets that were created before training began. Both are, fundamentally, pattern matching on human-provided examples.
 
@@ -99,9 +91,9 @@ The most common confusion in the field is thinking DPO is a type of RL. It is no
 Let's look at each one.
 
 
-# SFT
+## SFT
 
-**Supervised Fine-Tuning** is the simplest technique and usually the first step after pretraining.
+Supervised Fine-Tuning is the simplest technique and usually the first step after pretraining.
 
 The idea: you have a dataset of (input, desired output) pairs. You show them to the model and say "imitate this." The loss function is the same cross-entropy from pretraining ("how well did you predict each token of the desired output?"), but now the data is curated, not scraped from the internet.
 
@@ -109,20 +101,22 @@ After pretraining, a model is good at predicting next tokens but terrible at bei
 
 SFT fixes this. You create thousands of examples:
 
-```
-Input:  "What is the capital of France?"
-Output: "The capital of France is Paris."
+{example}
+Input: What is the capital of France?
+Output: The capital of France is Paris.
 
-Input:  "Write a haiku about rain."
-Output: "Silver drops descend\nDancing on the quiet earth\nPetals bow in thanks"
+Input: Write a haiku about rain.
+Output: Silver drops descend
+Dancing on the quiet earth
+Petals bow in thanks
 
-Input:  "Explain photosynthesis to a five-year-old."
-Output: "Plants eat sunlight! They use it to turn air and water into food..."
-```
+Input: Explain photosynthesis to a five-year-old.
+Output: Plants eat sunlight! They use it to turn air and water into food...
+{/example}
 
 The model learns the pattern: when someone asks a question, answer it. When someone asks for a poem, write one. It is not learning new facts (those are already in the [[Pr8dt3wz|MLP]] weights from [[2oNdlB5L|pretraining]], as we discussed in the [[bits2bricks/5917362|transformer article]]). It is learning a new *format*: how to respond to instructions instead of just predicting plausible continuations.
 
-## What SFT changes in the model
+### What SFT changes in the model
 
 Remember the architecture: attention blocks route context, MLP blocks store facts. SFT primarily adjusts the [[ml8njOQc|attention]] weights: how the model structures its responses, what patterns it follows, how it parses the format of a conversation. The MLP weights shift too, but less dramatically. The facts are already there from pretraining.
 
@@ -130,47 +124,43 @@ This is why [[3kgsj4Y4|LoRA]], the most popular efficient fine-tuning technique,
 
 The tokenizer is never touched during fine-tuning. Changing it would mean changing the embedding matrix, which would essentially mean starting over.
 
-## SFT and thinking
+![A transformer from input tokens to next token probabilities, with a band underneath sorting its weight matrices into those LoRA updates during SFT and those that stay frozen|The whole model, and the small part of it that SFT with LoRA rewrites: the four attention matrices. The MLP weights usually stay frozen, and the token embeddings and positional encodings always do.](https://cdn.infraphysics.net/articles/4028591/figures/sft-lora-updates.webp "full")
+
+### SFT and thinking
 
 This is where it gets interesting. When you want a model to reason (to show its work, to think step by step), SFT is how you teach it the *format*.
 
 You create training examples like:
 
-```
-Input: "What is 47 × 83?"
-
-Output:
-<thinking>
+{example}
+Input: What is 47 × 83?
+Output: `<thinking>`
 I need to multiply 47 by 83.
 47 × 80 = 3,760
 47 × 3 = 141
 3,760 + 141 = 3,901
-</thinking>
+`</thinking>`
 The answer is 3,901.
-```
+{/example}
 
 The model learns that after `<thinking>`, it should generate reasoning steps. It learns this the same way it learns everything else, by predicting tokens. After seeing thousands of examples, the pattern is clear: `<thinking>` is followed by intermediate reasoning, which is followed by `</thinking>` and a final answer.
 
 But here is the critical limitation: **SFT only teaches the model what thinking *looks like*, not what thinking *is useful for***. The model fills the `<thinking>` block because statistically that is what follows (it is [[Cl2rB6nL|causal language modeling]]), not because it "understands" that reasoning improves its answer ^[There is a deeper reason why thinking helps, and it has nothing to do with "understanding." Each thinking token is a [[Wkwgtznl|composed function]]: the transformer applies the same layers again, but to a different input: the context *including* the previous thinking tokens. The full chain is \(f = f_n \circ f_{n-1} \circ \cdots \circ f_1\), where each \(f_i\) is one [[Ds4pJ8kF|decoding step]]. This is why [[Et5mN8wJ|extended thinking]] scales with compute: more steps means more compositions, which means the model can express more complex transformations, the same reason Gaussian elimination needs \(n\) steps to solve \(n\) equations. The context window acts as polynomial scratch space, giving the model access to [[QGrQxZe0|PSPACE]]-like computation. SFT can teach the format of these steps, but only RL can teach the model *which compositions are worth computing*.]. It imitates the format of good reasoning, but it cannot discover new reasoning strategies that were not in the training examples.
 
-SFT answers the question: *what goes here?*
-
-It does not answer: *what is worth putting here?*
-
-That second question needs RL.
+SFT answers the question *what goes here?* and leaves the other one open, *what is worth putting here?* That second question needs RL.
 
 
-# DPO
+## DPO (Direct Preference Optimization)
 
-**Direct Preference Optimization** is a step beyond SFT. Instead of saying "imitate this exact response", you say "this response is better than that one. Learn from the contrast."
+Direct Preference Optimization is a step beyond SFT. Instead of saying "imitate this exact response", you say "this response is better than that one. Learn from the contrast."
 
 The training data looks like this:
 
-```
-Prompt:   "Explain quantum computing."
-Chosen:   "Quantum computing uses qubits that can be in superposition..."
-Rejected: "Well, quantum computing is very complicated and hard to explain..."
-```
+{example/split}
+Prompt: Explain quantum computing.
+Chosen: Quantum computing uses qubits that can be in superposition...
+Rejected [faded]: Well, quantum computing is very complicated and hard to explain...
+{/example}
 
 The model is trained to assign higher probability to the chosen response and lower probability to the rejected one. The loss function directly encodes this preference (no intermediate reward model needed):
 
@@ -182,7 +172,7 @@ Here \(y_w\) is the preferred response, \(y_l\) the rejected one, \(\pi_\theta\)
 
 DPO was introduced as a simplification of RLHF (which we will get to). The insight was: instead of training a separate reward model and then doing RL against it, you can collapse those two steps into a single supervised objective. Same preference data, simpler pipeline, more stable training.
 
-## DPO is not RL
+### DPO is not RL
 
 This is the point that trips everyone up.
 
@@ -190,48 +180,36 @@ DPO *feels* like RL because it refines behavior after SFT. It makes the model "b
 
 But it is not. The difference is like the difference between studying flash cards and playing a sport. Flash cards show you (right answer, wrong answer) and you memorize. A sport puts you in a game where you have to *perform*, get real-time feedback, and adapt. Both make you better. Only one lets you develop strategies that were never on any flash card.
 
-```
-DPO:  here are 10,000 pairs of (good, bad) responses. Learn from them.
-      → static dataset, processed once, no generation during training.
-
-RL:   generate a response. Here's your reward. Now generate again, better.
-      → live loop, model generates and updates repeatedly.
-```
+DPO says *here are 10,000 pairs of good and bad responses, learn from them*: a static dataset, processed once, with no generation during training. RL says *generate a response, here is your reward, now generate again, better*: a live loop, where the model generates and updates repeatedly.
 
 DPO never generates anything during training. The data exists before training starts. The model learns from fixed comparisons, exactly like SFT learns from fixed examples. It is supervised learning with a different loss function.
 
 This matters because DPO **cannot discover behaviors that are not already in the training data**. It can learn to prefer one existing behavior over another. But it cannot explore, try something new, fail, and learn from the failure. That requires RL.
 
-## DPO's real limitations
+### DPO's real limitations
 
 DPO has a measured 3-7% performance drop on out-of-domain tasks compared to RLHF. It generalizes worse because it only learns from the specific comparisons it was given. RLHF, with its reward model and RL loop, develops a more general sense of "what is good" that transfers better to new situations.
 
-For **subjective** quality (tone, style, safety, helpfulness), DPO works well. Humans compare responses, their preferences are captured in the pairs, and the model learns to match those preferences.
+For *subjective* quality (tone, style, safety, helpfulness), DPO works well. Humans compare responses, their preferences are captured in the pairs, and the model learns to match those preferences.
 
-For **reasoning** (math, code, logic), DPO is limited. You can compare two chain-of-thought responses and say which one is better, but the model cannot discover a *new* reasoning strategy. It can only learn to prefer the strategies that already exist in the comparison data.
+For *reasoning* (math, code, logic), DPO is limited. You can compare two chain-of-thought responses and say which one is better, but the model cannot discover a *new* reasoning strategy. It can only learn to prefer the strategies that already exist in the comparison data.
 
 
-# RL
+## RL
 
 Reinforcement learning is categorically different from both SFT and DPO. It has a loop.
 
-```
-Model generates response
-    → receives reward score
-        → backprop adjusts weights
-            → model generates again (better this time)
-                → receives reward score
-                    → backprop adjusts weights
-                        → ...
-```
+{sequence/loop}
+The model answers a prompt, sampling a response from the weights it has right now > A reward function scores that response with a single number: a verdict, never a corrected answer > Backpropagation shifts the weights towards whatever earned the higher score > The updated model answers again, a little better each time, and those new responses are the next round of training data
+{/sequence}
 
-The model's weights change *during* the process. It does not generate a bunch of data and then learn from it in a separate phase. It generates, learns, generates better, learns more. It is **online**: the training data is produced by the model itself, in real time.
+The model's weights change *during* the process. It does not generate a bunch of data and then learn from it in a separate phase. It generates, learns, generates better, learns more. It is *online*: the training data is produced by the model itself, in real time.
 
 This has a profound consequence: **the model can discover behaviors that were never in any dataset**.
 
-## The DeepSeek-R1-Zero experiment
+### The DeepSeek-R1-Zero experiment
 
-The most vivid demonstration of this is [[nUKlfmSO|DeepSeek]]'s **R1-Zero** experiment. The researchers took a pretrained model (no SFT, no human examples of reasoning) and just did RL with a simple rule: if your final answer to a math problem is correct, you get a reward. If not, you get nothing.
+The most vivid demonstration of this is [[nUKlfmSO|DeepSeek]]'s R1-Zero experiment. The researchers took a pretrained model (no SFT, no human examples of reasoning) and just did RL with a simple rule: if your final answer to a math problem is correct, you get a reward. If not, you get nothing.
 
 No one showed the model examples of step-by-step reasoning. No one told it to "think" before answering. No one gave it a `<thinking>` tag. They just said: "here is a math problem, here is a reward if you get it right."
 
@@ -241,34 +219,25 @@ But it was messy. The model sometimes mixed languages mid-reasoning (switching b
 
 This is why the real pipeline uses SFT *first*, then RL *on top*. SFT teaches the format. RL teaches what is useful.
 
-## The real DeepSeek-R1 pipeline
+### The real DeepSeek-R1 pipeline
 
 The published DeepSeek-R1 training pipeline is the clearest example of how these techniques combine:
 
-a. **RL from scratch** ([[HRgl17gQ|GRPO]]): the model explores freely with only a correctness reward. It discovers that long reasoning helps, but with messy formatting and language mixing.
-
-b. **Rejection sampling**: generate thousands of responses from the RL-trained model. Keep the ones that are correct *and* well-formatted. Discard the rest. This produces a clean dataset distilled from the RL model's discoveries.
-
-c. **SFT on the filtered dataset**: train a fresh model on this clean data. The model learns the format and the reasoning strategies simultaneously, without the messy behaviors.
-
-d. **RL again on top**: now with a clean base, push further with RL. The model explores from a better starting point and discovers even more.
+- RL from scratch ([[HRgl17gQ|GRPO]]):: The model explores freely with only a correctness reward. It discovers that long reasoning helps, but with messy formatting and language mixing.
+- Rejection sampling:: Generate thousands of responses from the RL-trained model. Keep the ones that are correct *and* well-formatted. Discard the rest. This produces a clean dataset distilled from the RL model's discoveries.
+- SFT on the filtered dataset:: Train a fresh model on this clean data. The model learns the format and the reasoning strategies simultaneously, without the messy behaviors.
+- RL again on top:: Now with a clean base, push further with RL. The model explores from a better starting point and discovers even more.
 
 The pattern is: **RL expands the space of possible behaviors. Rejection sampling contracts it toward what is useful. SFT stabilizes the result. RL pushes again from the higher ground**.
 
-{bkqt/keyconcept}
-*RL vs rejection sampling.* These two are commonly confused, and the distinction is critical.
+RL and rejection sampling are commonly confused, and the distinction is critical. *RL is online.* The model generates, gets feedback, and updates its weights in a continuous loop. The weights change *during* generation. The model can discover genuinely new behaviors because it is exploring and adapting in real time. *Rejection sampling is offline.* You generate a large batch of responses, score them, keep the best, discard the rest. Then you train (via SFT or DPO) on the filtered data. The generation and training are two separate phases. The model's weights do not change while it is generating.
 
-**RL is online.** The model generates, gets feedback, and updates its weights in a continuous loop. The weights change *during* generation. The model can discover genuinely new behaviors because it is exploring and adapting in real time.
-
-**Rejection sampling is offline.** You generate a large batch of responses, score them, keep the best, discard the rest. Then you train (via SFT or DPO) on the filtered data. The generation and training are two separate phases. The model's weights do not change while it is generating.
-
-The consequence: RL can explore behaviors that never existed in any dataset. Rejection sampling can only select among behaviors the model *already knows how to produce*. DeepSeek-R1-Zero discovered long reasoning via RL. Rejection sampling alone could never have produced this, because the base model did not do long reasoning to begin with: there was nothing to "select."
-{/bkqt}
+The consequence: RL can explore behaviors that never existed in any dataset. Rejection sampling can only select among behaviors the model *already knows how to produce*. DeepSeek-R1-Zero discovered long reasoning via RL. Rejection sampling alone could never have produced this, because the base model did not do long reasoning to begin with: there was nothing to *select*.
 
 {bkqt/note}
 *Why RL is necessary: Ashby's Law.* There is a [[rttI47hN|systems-theory]] lens on this distinction. [[JdSKWaAz|Ashby's Law of Requisite Variety]] (1956), the first law of [[h9K0How0|cybernetics]], states that a controller must have at least as many possible responses as the environment has possible disturbances. Ashby's exact formulation: "only variety can absorb variety."
 
-SFT and DPO are **reactive** systems: they map fixed inputs to fixed outputs, with variety limited to whatever the training data contained. RL is a **feedback loop**: the model acts, observes a reward, and adapts. Its variety grows with training because the loop generates new behaviors and tests them. This is why only RL discovered [[ct4swTMy|chain-of-thought]] reasoning in DeepSeek-R1-Zero: the pretrained model's variety was insufficient for hard math problems, and SFT could not increase it (it can only redistribute existing variety). The RL loop could, because its variety is bounded by compute, not by dataset.
+SFT and DPO are *reactive* systems: they map fixed inputs to fixed outputs, with variety limited to whatever the training data contained. RL is a *feedback loop*: the model acts, observes a reward, and adapts. Its variety grows with training because the loop generates new behaviors and tests them. This is why only RL discovered [[ct4swTMy|chain-of-thought]] reasoning in DeepSeek-R1-Zero: the pretrained model's variety was insufficient for hard math problems, and SFT could not increase it (it can only redistribute existing variety). The RL loop could, because its variety is bounded by compute, not by dataset.
 {/bkqt}
 
 
@@ -290,14 +259,9 @@ A separate [[YrmsQuhU|neural network]], the [[83orykQl|reward model]], is traine
 
 Then you do RL (typically [[rxVjxTLA|PPO]], Proximal Policy Optimization) using this reward model as the judge. The language model generates a response, the reward model scores it, and the language model's weights are updated to produce responses that score higher.
 
-```
-RLHF pipeline:
+![The RLHF pipeline in two phases. Phase 1, offline: a prompt, two responses, human evaluators and the preference data that trains the reward model. Phase 2, online: the policy model answers a prompt, the reward model scores the response and PPO updates the policy, in a loop|The two phases of RLHF. On the left, the part that happens once: humans compare responses, and their choices train the reward model. On the right, the part that repeats for many iterations: the policy answers, the reward model scores, PPO updates the policy. No human appears in the loop.](https://cdn.infraphysics.net/articles/4028591/figures/rlhf-two-phases.webp "full")
 
-Human preferences → Reward Model training → RL loop (PPO)
-    (one time)          (one time)           (many iterations)
-```
-
-The human feedback is **historical and frozen**. It is baked into the reward model. During the actual RL training, no human is looking at anything. The reward model is a proxy, an automated judge that approximates human preferences.
+The human feedback is *historical and frozen*. It is baked into the reward model. During the actual RL training, no human is looking at anything. The reward model is a proxy, an automated judge that approximates human preferences.
 
 {bkqt/note}
 *RLHF is not "human in the loop".* This is the key misconception. "Human Feedback" means the feedback *came from* humans, not that humans are *in the loop* during training. The feedback is captured once, compressed into a reward model, and then the RL loop runs autonomously, often for days on thousands of GPUs. Having a human evaluate every response in real time would be impossibly slow. A single RL run might generate millions of responses. Even if you hired every person in a mid-sized city, they could not keep up.
@@ -313,10 +277,10 @@ The reward model is a product, not just a training step.
 
 Now the relationship between DPO and RLHF is clear:
 
-```
-RLHF:  human preferences → Reward Model → PPO (RL loop)
-DPO:   human preferences → direct optimization (no reward model, no RL)
-```
+{sequence}
+RLHF:: Human preferences > Reward model > PPO # an RL loop
+DPO:: Human preferences > Direct optimization # no reward model, no RL
+{/sequence}
 
 Same input data: (prompt, chosen, rejected) triplets. Different algorithms. DPO is cheaper, simpler, more stable. RLHF is more powerful because of the RL loop and the reusable reward model.
 
@@ -327,12 +291,12 @@ The data format is **agnostic to the algorithm**. The same preference pairs can 
 
 Humans are expensive and slow. Labeling preference data requires thousands of hours of careful comparison by trained annotators. The obvious question: can you use another LLM as the judge instead?
 
-```
-RLHF:   humans compare responses → Reward Model → PPO
-RLAIF:  LLM compares responses   → Reward Model → PPO
-```
+{sequence}
+RLHF:: Humans compare responses > Reward model > PPO
+RLAIF:: An LLM compares responses > Reward model > PPO
+{/sequence}
 
-**RLAIF** (RL from AI Feedback) does exactly this. An LLM evaluates responses based on a set of principles, and its judgments are used to train the reward model.
+RLAIF (RL from AI Feedback) does exactly this. An LLM evaluates responses based on a set of principles, and its judgments are used to train the reward model.
 
 [[mCK28lZ6|Constitutional AI]], developed by Anthropic, is the most well-known version of this approach. The model critiques its own responses using a written "constitution": a set of principles like "be helpful", "be harmless", "be honest." The self-critique generates the preference data that drives the training.
 
@@ -347,13 +311,15 @@ When you optimize a model against a reward signal (whether it is a reward model,
 
 A model trained to maximize a helpfulness reward might learn to be excessively verbose and agreeable, like that coworker who responds to every question with a three-paragraph email and ends every sentence with an exclamation mark. Longer, more affirming responses tend to score higher with reward models, even when a short honest answer would be better. A model trained to maximize code test pass rates might learn to output code that games the test structure rather than solving the underlying problem. You asked it to pass the tests. It passed the tests. You just forgot to ask it to *actually solve the problem*.
 
-The defense against this is **KL divergence**, a mathematical measure of how much two probability distributions differ. During RL training, you add a penalty: "do not deviate too far from the base model."
+The defense against this is *KL divergence*, a mathematical measure of how much two probability distributions differ. During RL training, you add a penalty: "do not deviate too far from the base model."
 
 {math}
 \text{Loss} = -\text{Reward} + \beta \cdot D_{KL}(\pi_\theta \| \pi_{\text{ref}})
 {/math}
 
 Here \(\pi_\theta\) is the model being trained and \(\pi_{\text{ref}}\) is the reference model (usually the SFT checkpoint). The KL term says: "you are allowed to change, but not too much." The hyperparameter \(\beta\) controls the tradeoff: higher \(\beta\) means the model stays closer to the reference, lower means more freedom to change.
+
+![The KL constraint drawn in model behavior space: the reference policy, the trained policy inside a dashed circle around it, the point on the circle set by beta, and the reward hacking region far outside|The reference policy (blue) anchors the trained policy (violet). Optimization pulls it towards the region where the reward is hacked, and the KL penalty is the dashed circle it is not allowed to leave; β decides how wide that circle is.](https://cdn.infraphysics.net/articles/4028591/figures/kl-constraint.webp "center")
 
 Without KL divergence, RL training almost always diverges into reward hacking. The model finds degenerate behaviors that score high on the reward metric but are completely useless to humans. KL divergence acts as an anchor, keeping the model in the neighborhood of sensible behavior while it explores improvements.
 
@@ -364,9 +330,9 @@ DPO has a KL term baked into its loss function: it is mathematically derived fro
 
 The distinction between [[Op3pJ7mS|on-policy and off-policy]] data matters for understanding why some training methods are better than others.
 
-**On-policy** means you train on data generated by the current version of the model. The model generates, you evaluate, you update the model, and then the old data is stale. You need to generate again with the updated model.
+*On-policy* means you train on data generated by the current version of the model. The model generates, you evaluate, you update the model, and then the old data is stale. You need to generate again with the updated model.
 
-**Off-policy** means you train on data generated by a different model or an older version of the same model. The data does not need to come from the current model.
+*Off-policy* means you train on data generated by a different model or an older version of the same model. The data does not need to come from the current model.
 
 SFT is off-policy: the training data was generated by humans or another model, not by the model being trained. DPO is off-policy. Standard rejection sampling is off-policy (you generate data, then train on it).
 
@@ -379,10 +345,7 @@ Cursor's Tab model is a vivid real-world example. They deploy new model checkpoi
 
 # Safe RLHF
 
-Standard RLHF trains one reward model that scores "overall quality." But "quality" conflates at least two things that can conflict:
-
-- **Helpfulness**: does the response actually help the user?
-- **Harmlessness**: does the response avoid causing harm?
+Standard RLHF trains one reward model that scores "overall quality." But "quality" conflates at least two things that can conflict: helpfulness (does the response actually help the user?) and harmlessness (does the response avoid causing harm?).
 
 A highly helpful response to "how do I pick a lock?" would be a detailed tutorial. A harmless response would refuse. You are literally asking the model to be maximally helpful *and* maximally cautious, and these goals run straight into each other like two trains on the same track.
 
@@ -399,11 +362,13 @@ When you train a model on [[avBp6NIF|synthetic data]] generated by another model
 
 After several rounds of this, the model converges on a narrow set of "safe" outputs. It is like making a photocopy of a photocopy of a photocopy: each generation looks a little more washed out, a little more generic, until you are left with a gray smear that vaguely resembles the original. The tails of the distribution are the first thing to die. And those tails are often the most interesting, most creative, most diverse behaviors.
 
+![Model collapse across generations: a teacher model and three student models, each trained on the synthetic outputs of the one before, with the output distribution of each drawn underneath, losing its side peaks and its tails until a single narrow peak is left|Each student learns from the outputs of the model before it. The secondary peaks go first, then the tails, and what is left after enough generations is one narrow mode.](https://cdn.infraphysics.net/articles/4028591/figures/model-collapse.webp "full")
+
 This matters because:
 
-- **RLAIF** generates training data from a model (risk of collapse if the judge and student are too similar)
-- **Rejection sampling** filters model output. By definition, it keeps the common good responses and discards the unusual ones
-- **Distillation** (training a smaller model on a larger model's output): the small model inherits the large model's modes but not its diversity
+- RLAIF:: Generates training data from a model (risk of collapse if the judge and student are too similar).
+- Rejection sampling:: Filters model output. By definition, it keeps the common good responses and discards the unusual ones.
+- Distillation:: Training a smaller model on a larger model's output. The small model inherits the large model's modes but not its diversity.
 
 The antidote is fresh human data and real-world feedback, which is why companies continue to invest in human annotation even as AI-generated data becomes cheaper. The tail distribution (the rare events, the unusual phrasings, the edge cases) is **the most critical and the hardest to capture** ^[Each training stage is a [[Ds3fR7kX|distributional shift]]. Pretraining establishes the full distribution. SFT narrows it toward instruction-following. RL reshapes it toward reward-maximizing behavior. Each shift trades breadth for alignment: the distribution gets more useful but less diverse. Model collapse is what happens when the narrowing compounds across generations: the distribution contracts until only the mode remains, and the tails (where creativity and edge-case handling live) vanish entirely.].
 
@@ -416,16 +381,16 @@ This is not an abstract concern. A model that thinks for 2,000 tokens before pro
 
 The tradeoff is real:
 
-- More thinking tokens → better answers on hard problems, higher cost
-- Fewer thinking tokens → faster responses, lower cost, sometimes worse on complex tasks
-- Zero thinking → cheapest, fastest, fine for simple factual queries
+- More thinking tokens:: Better answers on hard problems, higher cost.
+- Fewer thinking tokens:: Faster responses, lower cost, sometimes worse on complex tasks.
+- Zero thinking:: Cheapest, fastest, fine for simple factual queries.
 
 The SFT + RL pipeline determines how the model *uses* its thinking budget. SFT teaches it the format of reasoning. RL teaches it *when* thinking is worth the cost and *what kind* of thinking is actually useful for a given problem. A well-trained model does not always think at maximum depth: it allocates thinking proportionally to problem difficulty.
 
 {bkqt/note}
 *Why thinking reduces errors: the information-theoretic view.* There is a precise way to describe what thinking tokens do. Before the model answers, it faces a probability distribution over possible continuations, some right, most wrong. That distribution has an [[JsSUul6f|entropy]]: a measure of uncertainty. High entropy means many plausible tokens; low entropy means the model is confident.
 
-Thinking reduces entropy in two stages. First, the reasoning tokens narrow the distribution: each one triggers a [[Ds3fR7kX|distributional shift]] that moves the model toward a [[Ba6mR3kL|basin of attraction]] where correct conclusions are more likely. The thinking does not add new knowledge; it **repositions the model** in [[RnKMoC3a|latent space]] where it already knows the answer. Second, the final answer is sampled from this narrower distribution, so it is more likely to be correct.
+Thinking reduces entropy in two stages. First, the reasoning tokens narrow the distribution: each one triggers a [[Ds3fR7kX|distributional shift]] that moves the model toward a [[Ba6mR3kL|basin of attraction]] where correct conclusions are more likely. The thinking does not add new knowledge; it *repositions the model* in [[RnKMoC3a|latent space]] where it already knows the answer. Second, the final answer is sampled from this narrower distribution, so it is more likely to be correct.
 
 But there is a ceiling. The model's capacity to reduce uncertainty is bounded by what it learned during [[2oNdlB5L|pretraining]], the same way a communication channel has a maximum rate (Shannon's [[2oN0bPZY|channel capacity]]). No amount of thinking tokens can push accuracy past what the pretrained weights can support. This is why [[iTljPiGW|scaling]] the base model matters more than scaling the thinking budget: a larger model has a higher capacity ceiling.
 
@@ -464,22 +429,13 @@ This is what RL can do that SFT and DPO cannot. SFT could teach the model "searc
 
 The modern LLM training pipeline is not one technique: it is a sequence, where each step addresses a different need.
 
-a. [[2oNdlB5L|Pretraining]]: the model sees trillions of tokens of internet text. It learns language, facts, patterns, code, math. The loss is next-token prediction. This produces a powerful but uncontrolled text predictor. The architecture ([[ml8njOQc|attention]] routing context, [[Pr8dt3wz|MLPs]] storing facts) is fixed here. Everything afterwards is refinement.
-
-b. **SFT**: the model learns to follow instructions, to respond in conversation format, to reason in `<thinking>` blocks. The loss is still next-token prediction, but on curated data. This produces a helpful assistant that can imitate good behavior but cannot improve beyond its examples.
-
-c. **RL (or RLHF/RLAIF)**: the model generates, gets scored, and improves in a live loop. It discovers new strategies, learns when and how to think, optimizes for actual usefulness rather than format imitation. The loss involves a reward signal with KL regularization. This produces a model that can reason, explore, and improve beyond what any human wrote in the training data.
-
-d. **DPO or additional SFT**: final refinement on specific preferences: tone, safety, style. Cleans up rough edges from the RL phase. Static, supervised, stable.
+- [[2oNdlB5L|Pretraining]]:: The model sees trillions of tokens of internet text. It learns language, facts, patterns, code, math. The loss is next-token prediction. This produces a powerful but uncontrolled text predictor. The architecture ([[ml8njOQc|attention]] routing context, [[Pr8dt3wz|MLPs]] storing facts) is fixed here. Everything afterwards is refinement.
+- SFT:: The model learns to follow instructions, to respond in conversation format, to reason in `<thinking>` blocks. The loss is still next-token prediction, but on curated data. This produces a helpful assistant that can imitate good behavior but cannot improve beyond its examples.
+- RL, RLHF or RLAIF:: The model generates, gets scored, and improves in a live loop. It discovers new strategies, learns when and how to think, optimizes for actual usefulness rather than format imitation. The loss involves a reward signal with KL regularization. This produces a model that can reason, explore, and improve beyond what any human wrote in the training data.
+- DPO or additional SFT:: Final refinement on specific preferences: tone, safety, style. Cleans up rough edges from the RL phase. Static, supervised, stable.
 
 
-The intuition to carry away is this:
-
-SFT answers: *what does a good response look like?*
-
-DPO answers: *which of these responses is better?*
-
-RL answers: *what is worth doing, even if no one has shown you?*
+The intuition to carry away is the question each one answers. SFT answers *what does a good response look like?* DPO answers *which of these responses is better?* RL answers *what is worth doing, even if no one has shown you?*
 
 They are not competitors. They are stages. SFT builds the foundation. RL pushes the frontier. DPO polishes the edges. The most capable models use all three, in sequence, because each one does something the others cannot.
 
@@ -496,7 +452,7 @@ Each step up the ladder gives the model more freedom. More freedom to discover g
 
 ## SFT: you get what you showed it
 
-The signal is examples. The model imitates. The failure mode is **ceiling**: the model cannot exceed the quality of its training examples. If your annotators wrote mediocre reasoning chains, the model produces mediocre reasoning chains, confidently, in perfect format. If they had blind spots, the model inherits the same blind spots.
+The signal is examples. The model imitates. The failure mode is *ceiling*: the model cannot exceed the quality of its training examples. If your annotators wrote mediocre reasoning chains, the model produces mediocre reasoning chains, confidently, in perfect format. If they had blind spots, the model inherits the same blind spots.
 
 But it is predictable. The model stays within the distribution you showed it. It will not surprise you. The worst case is well-bounded: an SFT model is as bad as its worst examples, and you control the examples.
 
@@ -504,7 +460,7 @@ The risk you accept: being stuck at the level of your data, with no way to excee
 
 ## DPO: it can rank, but it cannot invent
 
-The signal is preferences. The model learns to distinguish better from worse. The failure mode is **coverage**: the model can only prefer among behaviors it already produces. If neither response in a comparison pair uses a good reasoning strategy, the model learns to prefer the less-bad option, but never discovers the good one.
+The signal is preferences. The model learns to distinguish better from worse. The failure mode is *coverage*: the model can only prefer among behaviors it already produces. If neither response in a comparison pair uses a good reasoning strategy, the model learns to prefer the less-bad option, but never discovers the good one.
 
 This is the 3–7% out-of-domain performance gap we noted [above](#dpo's-real-limitations). DPO generalizes worse than RLHF because the comparisons are specific: the model learns "A is better than B in this context" rather than developing a general sense of quality. It is SFT with a sharper gradient, but it still cannot leave the training distribution.
 
@@ -520,17 +476,16 @@ The risk you accept: the model finding shortcuts you did not imagine. You pay fo
 
 ## So which one do you use?
 
-```
-          freedom    failure mode       ceiling
-SFT       low        imitation          data quality
-DPO       medium     coverage gap       comparison diversity
-RL        high       reward hacking     reward quality
-```
+| Technique | Freedom | Failure mode | Ceiling |
+|---|---|---|---|
+| SFT | low | imitation | data quality |
+| DPO | medium | coverage gap | comparison diversity |
+| RL | high | reward hacking | reward quality |
 
 The choice is not "which technique is most powerful." It is "which failure mode can I afford."
 
-- You need instruction following → SFT. The failure mode (can't exceed data quality) is fine because you *control* the data.
-- You need style or safety alignment → DPO. The failure mode (can't invent new behaviors) is fine because you *don't want* new behaviors: you want the model to stay close to demonstrated human preferences.
-- You need reasoning, tool use, self-correction → RL. The failure mode (reward hacking) is the price. There is no alternative: [only RL has the requisite variety](#rl) to expand what the model can do.
+- You need instruction following:: SFT. The failure mode (can't exceed data quality) is fine because you *control* the data.
+- You need style or safety alignment:: DPO. The failure mode (can't invent new behaviors) is fine because you *don't want* new behaviors: you want the model to stay close to demonstrated human preferences.
+- You need reasoning, tool use, self-correction:: RL. The failure mode (reward hacking) is the price. There is no alternative: [only RL has the requisite variety](#rl) to expand what the model can do.
 
 Most production pipelines use all three, not because more is better, but because each step addresses a failure mode the others cannot. SFT builds a controlled base. RL expands the frontier. DPO smooths the edges. At each step, the question is not "is this powerful enough?" It is "can I handle what goes wrong when I use it?"

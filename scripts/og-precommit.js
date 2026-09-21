@@ -20,13 +20,24 @@ const say = message => console.log(`og-precommit: ${message}`);
 if (process.env.SKIP_OG) { say('skipped (SKIP_OG)'); process.exit(0); }
 
 const staged = execSync('git diff --cached --name-only --diff-filter=ACMRD', { cwd: ROOT, encoding: 'utf8' }).split(/\r?\n/).filter(Boolean).map(f => f.replace(/\\/g, '/'));
-const guides = /\/(README|STYLE|VOICE|VISUAL|SYNTAX)\.md$/;
+const guides = /\/(README|STYLE|VOICE|VISUAL|SYNTAX|AGENTS|NO-TICS)\.md$/;
 const touchesCards = f =>
   (f.startsWith('src/data/pages/') && f.endsWith('.md') && !guides.test(f)) ||
   f === 'src/views/shareCardDesigns.tsx' || f === 'src/styles/share-cards.css' || f === 'src/lib/shareCards.ts' ||
-  f === 'src/views/OgCardView.tsx' || f === 'src/data/media-manifest.json';
+  f === 'src/views/OgCardView.tsx' || f === 'src/data/media-manifest.json' ||
+  f === 'src/lib/share-card-catalog.js' || f === 'src/components/icons/index.tsx' ||
+  f === 'src/config/categories.tsx' || f === 'src/lib/cdn.ts' || f === 'index.html' ||
+  f === 'public/avatar.jpg' || f === 'scripts/og-cards.js' ||
+  (f.startsWith('public/playgrounds/') && f.endsWith('.html'));
 const triggers = staged.filter(touchesCards);
 if (!triggers.length && !process.env.OG_PRECOMMIT_ALWAYS) process.exit(0);
+
+// Rendering the worktree must never publish or stage another unfinished edit.
+const unstaged = execSync('git diff --name-only', { cwd: ROOT, encoding: 'utf8' }).split(/\r?\n/).filter(Boolean);
+if (unstaged.some(touchesCards) || unstaged.some(f => ['src/data/og-cards.json', 'public/og-manifest.json'].includes(f))) {
+  say('unstaged card inputs or manifests: refresh skipped to preserve partial staging; run npm run og when ready');
+  process.exit(0);
+}
 
 // Tooling present? Otherwise warn and let the commit through; the cards can be redone later with npm run og.
 const env = {}; try { for (const line of fs.readFileSync(path.join(ROOT, '.env'), 'utf8').split(/\r?\n/)) { const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)$/); if (m) env[m[1]] = m[2]; } } catch { /* no .env */ }

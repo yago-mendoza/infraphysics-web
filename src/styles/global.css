@@ -1647,9 +1647,13 @@ html[data-mobile-nav="shown"] .wiki-fab { transform: none; }
 .graph-reset { display: inline-flex; align-items: center; gap: .4rem; box-sizing: border-box; height: 2.25rem; padding: 0 .8rem; border: 1px solid var(--wiki-400); background: color-mix(in srgb, var(--wiki-500) 28%, var(--bg-base)); color: var(--wiki-200, #ddd6fe); font: 600 10px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; box-shadow: 0 10px 30px -14px color-mix(in srgb, var(--wiki-500) 80%, transparent); transition: background-color .15s ease, color .15s ease; }
 .graph-reset:hover { background: color-mix(in srgb, var(--wiki-500) 45%, var(--bg-base)); color: #fff; }
 .graph-reset-mini { height: 1.25rem; padding: 0 .45rem; font-size: 8px; letter-spacing: .08em; box-shadow: none; }
+/* The mini graph's reset is a quiet utility, not a call to action: no fill, a hairline, muted
+   until hovered. It is declared after the accent rule below wins, hence the doubled class. */
+.graph-reset.graph-reset-mini { border-color: var(--border-default); background: transparent; color: var(--text-muted); }
+.graph-reset.graph-reset-mini:hover { border-color: var(--wiki-400); background: transparent; color: var(--wiki-300); }
 .graph-reset { border-color: #a78bfa; background: color-mix(in srgb, #8b5cf6 20%, var(--bg-base)); color: #a78bfa; }
 .graph-reset:hover { background: color-mix(in srgb, #8b5cf6 35%, var(--bg-base)); }
-.graph-close { display: inline-flex; align-items: center; gap: .45rem; box-sizing: border-box; height: 2.25rem; padding: 0 .8rem; border: 1px solid var(--wiki-400); background: color-mix(in srgb, var(--wiki-500) 16%, var(--bg-base)); color: var(--wiki-300, #c4b5fd); font: 600 10px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; transition: color .15s ease, border-color .15s ease; }
+.graph-close { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; box-sizing: border-box; height: 2.25rem; width: 2.25rem; padding: 0; border: 1px solid var(--wiki-400); background: color-mix(in srgb, var(--wiki-500) 16%, var(--bg-base)); color: var(--wiki-300, #c4b5fd); font: 600 10px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; transition: color .15s ease, border-color .15s ease; }
 .graph-minimize-rail { display: none; }
 .graph-close:hover { color: #fff; background: color-mix(in srgb, var(--wiki-500) 32%, var(--bg-base)); }
 .graph-edges { position: absolute; left: 1rem; top: 1rem; z-index: 50; display: flex; align-items: center; box-sizing: border-box; height: 2.25rem; gap: .25rem; padding: .2rem; border: 1px solid var(--hub-sidebar-border); background: var(--bg-base); font-family: var(--font-mono); box-shadow: 0 18px 40px -20px rgba(0,0,0,.7); }

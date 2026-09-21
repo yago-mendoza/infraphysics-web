@@ -2,7 +2,7 @@
 # dump-context.sh — Compacta todos los archivos relevantes del proyecto
 # en un solo archivo de texto plano para pasar a un LLM.
 #
-# Uso: bash scripts/dump-context.sh [archivo_salida]
+# Uso: bash dev-scripts/dump-context.sh [archivo_salida]
 # Default: context-dump.txt en la raíz del proyecto
 
 set -euo pipefail
@@ -108,6 +108,10 @@ FILES=(
   "src/components/wiki/NeighborhoodGraph.tsx"
   "src/components/wiki/RelevanceLeaderboard.tsx"
   "src/components/wiki/WikiContent.tsx"
+  "src/components/wiki/WikiSearchInput.tsx"
+  "src/components/wiki/WikiLenses.tsx"
+  "src/lib/wikiExplorer.ts"
+  "src/styles/wiki-explorer.css"
   "src/components/wiki/WikiLinkPreview.tsx"
   "src/components/wiki/CopyExportModal.tsx"
   "src/components/wiki/CopyConfirmModal.tsx"

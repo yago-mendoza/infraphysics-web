@@ -16,7 +16,7 @@ import '../../styles/start-here.css';
 
 const ESSAY_ID = '3358174';   // The years we thought we had (pinned)
 const PROJECT_ID = '7654321'; // Forecasting visual auras from event streams
-const B2B_ID = '3142718';     // Model-based fault detection in a two-tank system
+const B2B_ID = '4028591';     // How LLMs learn
 const ROTATE_MS = 7000;
 
 interface Door {
@@ -40,7 +40,7 @@ function buildDoors(): Door[] {
   ];
   if (essay) doors.push({ key: 'essay', ref: 'B', kicker: 'Read an argument', title: essay.displayTitle || essay.title, line: 'Astra arrives early. What it changes, and the one advantage that does not scale.', to: postPath(essay.category, essay.id), accent: catAccentVar('essays'), post: essay });
   if (project) doors.push({ key: 'project', ref: 'C', kicker: 'Explore an experiment', title: project.displayTitle || project.title, line: 'Two models forecast simulated auras. The real result is what they may claim.', to: postPath(project.category, project.id), accent: catAccentVar('projects'), post: project });
-  if (b2b) doors.push({ key: 'b2b', ref: 'D', kicker: 'Understand a mechanism', title: b2b.displayTitle || b2b.title, line: 'Structural analysis yields four residuals that detect and isolate leak, valve, pump and sensor faults.', to: postPath(b2b.category, b2b.id), accent: catAccentVar('bits2bricks'), post: b2b });
+  if (b2b) doors.push({ key: 'b2b', ref: 'D', kicker: 'Understand a mechanism', title: b2b.displayTitle || b2b.title, line: 'SFT, DPO and RL move the same weights. What differs is where the signal comes from.', to: postPath(b2b.category, b2b.id), accent: catAccentVar('bits2bricks'), post: b2b });
   return doors;
 }
 

@@ -1,0 +1,1 @@
+https://www.holystone.com/en/blog/LearnFly/DroneSystemsPowerSystem.html?srsltid=AfmBOooLc5JEk2_jBaWqkJZHzdvfImxnqEV3AMDbnejGZDOC1MkW5TTI

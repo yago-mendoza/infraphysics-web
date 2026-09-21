@@ -142,10 +142,13 @@ export const ArticlePostView: React.FC<ArticlePostViewProps> = ({ post }) => {
       /<(h[1-4])(\s[^>]*)?>(.+?)<\/\1>/gi,
       (_match, tag, attrs, inner) => {
         const level = parseInt(tag[1]);
+        // The index shows the title alone: a parenthesis closing the heading
+        // (the gloss the compiler wraps in .heading-paren) is dropped here.
         const text = inner.replace(/<[^>]*>/g, '').trim()
           .replace(/&#39;/g, "'").replace(/&quot;/g, '"')
           .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-          .replace(/^\d+\.\s+/, '');
+          .replace(/^\d+\.\s+/, '')
+          .replace(/\s*\([^()]+\)\s*$/, '');
         let slug = text
           .toLowerCase()
           .replace(/[^a-z0-9\s-]/g, '')

@@ -1,6 +1,6 @@
 # Wikinotes Management Guide
 
-Developer reference for managing the wikinotes knowledge graph. This covers the operational side — creating, renaming, deleting, and auditing notes. For the **content authoring format** (frontmatter, syntax, trailing refs, wiki-links), see the [Second Brain section in the pages README](../README.md#second-brain-wikinotes). For **build pipeline internals** (shared compilation, cache and Shiki config), see [scripts/README.md](../../../scripts/README.md).
+Developer reference for managing the wikinotes knowledge graph. This covers the operational side — creating, renaming, deleting, and auditing notes. For the **content authoring format** (frontmatter, syntax, trailing refs, wiki-links), see the [Second Brain section in the pages README](../README.md#front-matter). For **build pipeline internals** (shared compilation, cache and Shiki config), see [scripts/README.md](../../../../scripts/README.md).
 
 **How a note is written** (shape, tone, body versus Interactions, names, paths, size, allowed syntax) is a separate document: [STYLE.md](STYLE.md). Read it before writing or rewriting any note. The wiki is English only and is never translated, whatever happens with the articles.
 
@@ -31,7 +31,7 @@ The build pipeline validates the graph on every run. If you break a reference, t
 
 ## Available Scripts
 
-All scripts live in `scripts/`. For full parameter docs, output formats, and implementation details, see **[scripts/README.md](../../../scripts/README.md)**. This section covers only the workflow essentials.
+All scripts live in `scripts/`. For full parameter docs, output formats, and implementation details, see **[scripts/README.md](../../../../scripts/README.md)**. This section covers only the workflow essentials.
 
 - **`rename-address.js`** — Renames a single wikinote address. Does NOT cascade to children. **Always dry-run first** (`node scripts/rename-address.js "old" "new"`), then `--apply`.
 - **`move-hierarchy.js`** — Cascading rename: moves a note and all its descendants to a new address prefix. **Always dry-run first**, then `--apply`. Use this instead of `rename-address.js` when the note has children.
@@ -178,7 +178,7 @@ The workflow is always: **build → read errors → fix → build again**.
 
 ### Validation configuration
 
-All flags live in `scripts/compiler.config.js` under `validation`. See **[scripts/README.md — Configuration](../../../scripts/README.md#configuration)** for the full flag table.
+All flags live in `scripts/compiler.config.js` under `validation`. See **[scripts/README.md — Configuration](../../../../scripts/README.md#validation)** for the validation overview; the configuration file contains the flags.
 
 ### Error codes
 

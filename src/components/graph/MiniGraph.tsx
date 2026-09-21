@@ -15,7 +15,10 @@ import { CopyConfirmModal } from '../wiki/CopyConfirmModal';
 import { RocketIcon, FilterOffIcon } from '../icons';
 import { buildAdjacency, shortestPath, edgeKey, dayIndex, isoFromDay } from './graphAnalysis';
 import { TRAIL_SYNC_EVENT, type TrailItem } from '../../hooks/useNavigationTrail';
-import { useSharedPref, GRAPH_PINS_KEY, togglePinned } from '../../hooks/useGraphPrefs';
+import { useSharedPref } from '../../hooks/useGraphPrefs';
+import { useHub } from '../../contexts/SecondBrainHubContext';
+import { WikiLenses } from '../wiki/WikiLenses';
+import { branchDepths } from '../../lib/wikiExplorer';
 
 export type GraphColorMode = 'centrality' | 'roots';
 type SelectionRect = { x0: number; y0: number; x1: number; y1: number };
@@ -37,7 +40,7 @@ const POSITIONS_SYNC_EVENT = 'wiki-graph-positions-updated';
 const EDGE_VISIBILITY_STORAGE_KEY = 'wiki-graph-edge-visibility-v1';
 const EDGE_VISIBILITY_EVENT = 'wiki-graph-edge-visibility-change';
 
-// Reading aids. Shared preferences (pins, freeze, node size) come from useGraphPrefs;
+// Reading aids. Shared preferences (freeze and node size) come from useGraphPrefs;
 // expanded-only modes are local state cached across close and reopen (expandedCache).
 const TRAIL_STORAGE_KEY = 'wiki-navigation-trail-v1';
 type LensKind = 'orphans' | 'bridges' | 'cited' | 'trail';
@@ -45,12 +48,10 @@ type SizeMode = 'centrality' | 'degree' | 'length';
 const LENS_COLORS: Record<LensKind, string> = { orphans: '#f59e0b', bridges: '#fb7185', cited: '#22d3ee', trail: '#c4b5fd' };
 const LENS_LABELS: Record<LensKind, string> = { orphans: 'orphans', bridges: 'bridges', cited: 'cited by articles', trail: 'session trail' };
 const PATH_HEX = '#67e8f9';
-const PIN_HEX = '#ef4444';
-const MAX_PINS = 3;
 const AGE_OLD = [71, 85, 105];
 const AGE_NEW = [251, 191, 36];
 // The expanded workspace unmounts on close; its reading state and camera come back on the next open.
-type ExpandedCache = { lens: LensKind | null; pathMode: boolean; pathStart: string | null; pathEnd: string | null; timelineOn: boolean; timelineDay: number | null; timelineAge: boolean; legendOpen: boolean; densityRadius: number; camera: CameraBookmark | null };
+type ExpandedCache = { lens: LensKind | null; pathMode: boolean; pathStart: string | null; pathEnd: string | null; timelineOn: boolean; timelineRank: number | null; timelineAge: boolean; legendOpen: boolean; densityRadius: number; camera: CameraBookmark | null };
 let expandedCache: ExpandedCache | null = null;
 const readTrail = (): TrailItem[] => { try { return JSON.parse(sessionStorage.getItem(TRAIL_STORAGE_KEY) ?? '[]'); } catch { return []; } };
 // Paints the panels open over the canvas into an image: a copy of the container's DOM with every computed
@@ -113,7 +114,6 @@ const ToolFlyout: React.FC<{ label: string; trigger: React.ReactNode; children: 
     </div>, document.body)}
   </div>;
 };
-const PinIcon: React.FC = () => <svg width="15" height="15" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M6 11 2.5 4h7z" /></svg>;
 const PathIcon: React.FC = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="2.5" cy="11.5" r="1.5" /><circle cx="11.5" cy="2.5" r="1.5" /><path d="M4 11.5h3.5L10 2.5" /><circle cx="7.5" cy="11.5" r=".6" fill="currentColor" /></svg>;
 const ClockIcon: React.FC = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" aria-hidden="true"><circle cx="7" cy="7" r="5.5" /><path d="M7 4v3l2 1.5" /></svg>;
 const LensIcon: React.FC = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true"><circle cx="7" cy="7" r="5.5" /><path d="M7 1.5v11" /><path d="M7 1.5a5.5 5.5 0 0 1 0 11z" fill="currentColor" stroke="none" /></svg>;
@@ -246,7 +246,10 @@ const MiniGraph: React.FC<{
   articleUsage?: Map<string, Array<{ id: string; title: string; category: string }>>;
   /** Concept hovered in the directory: its own node is marked on the canvas. */
   previewNodeId?: string | null;
-}> = ({ resultIds, previewIds = null, searchQuery, cameraFocusIds = null, cameraAnchorIds = null, colorMode = 'centrality', expanded = false, activeRoot = '', onNodeOpen, activeNodeId, onNodeSelect, onAreaPreview, onMinimize, onExpand, onColorModeChange, onClearSelection, filtersActive = false, onResetFilters, onExpand3d, initialDimension = '2d', visitedIds = null, onClearVisited, articleUsage, previewNodeId = null }) => {
+  /** Graph to directory: reports the node under the pointer (null when none), so the directory can follow it. */
+  onHoverNode?: (id: string | null) => void;
+}> = ({ resultIds, previewIds = null, searchQuery, cameraFocusIds = null, cameraAnchorIds = null, colorMode = 'centrality', expanded = false, activeRoot = '', onNodeOpen, activeNodeId, onNodeSelect, onAreaPreview, onMinimize, onExpand, onColorModeChange, onClearSelection, filtersActive = false, onResetFilters, onExpand3d, initialDimension = '2d', visitedIds = null, onClearVisited, articleUsage, previewNodeId = null, onHoverNode }) => {
+  const hub = useHub();
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
   const [graphInstance, setGraphInstance] = useState<any>(null);
@@ -308,7 +311,8 @@ const MiniGraph: React.FC<{
   const [miniAnalysisEnabled, setMiniAnalysisEnabled] = useState(false);
   const [densityAreaIds, setDensityAreaIds] = useState<Set<string> | null>(null);
   const [miniCameraDirty, setMiniCameraDirty] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedId = activeNodeId ?? null;
+  const setSelectedId = hub.setSelectedNodeId;
   const [dimension, setDimension] = useState<'2d' | '3d'>(initialDimension);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
@@ -328,15 +332,15 @@ const MiniGraph: React.FC<{
   // modes that only make sense on one canvas (path, timeline, lenses) are local state.
   const [frozen, setFrozen] = useSharedPref<boolean>('wiki-graph-frozen', false);
   const [sizeMode, setSizeMode] = useSharedPref<SizeMode>('wiki-graph-size-mode', 'centrality');
-  const [pins, setPins] = useSharedPref<string[]>(GRAPH_PINS_KEY, []);
   const restored = expanded ? expandedCache : null;
-  const [lens, setLens] = useState<LensKind | null>(restored?.lens ?? null);
+  const lens = hub.lens;
+  const setLens = hub.setLens;
   const [lensOpen, setLensOpen] = useState(false);
   const [pathMode, setPathMode] = useState(restored?.pathMode ?? false);
   const [pathStart, setPathStart] = useState<string | null>(restored?.pathStart ?? null);
   const [pathEnd, setPathEnd] = useState<string | null>(restored?.pathEnd ?? null);
   const [timelineOn, setTimelineOn] = useState(restored?.timelineOn ?? false);
-  const [timelineDay, setTimelineDay] = useState<number | null>(restored?.timelineDay ?? null);
+  const [timelineRank, setTimelineRank] = useState<number | null>(restored?.timelineRank ?? null);
   const [timelineAge, setTimelineAge] = useState(restored?.timelineAge ?? false);
   const [timelinePlaying, setTimelinePlaying] = useState(false);
   const [legendOpen, setLegendOpen] = useState(restored?.legendOpen ?? true);
@@ -347,8 +351,8 @@ const MiniGraph: React.FC<{
   const toastTimerRef = useRef<number | null>(null);
   const restoreCameraRef = useRef<CameraBookmark | null>(restored?.camera ?? null);
   // Closing the workspace keeps everything: the next open starts where this one ended.
-  const cacheRef = useRef<Omit<ExpandedCache, 'camera'>>({ lens, pathMode, pathStart, pathEnd, timelineOn, timelineDay, timelineAge, legendOpen, densityRadius });
-  cacheRef.current = { lens, pathMode, pathStart, pathEnd, timelineOn, timelineDay, timelineAge, legendOpen, densityRadius };
+  const cacheRef = useRef<Omit<ExpandedCache, 'camera'>>({ lens, pathMode, pathStart, pathEnd, timelineOn, timelineRank, timelineAge, legendOpen, densityRadius });
+  cacheRef.current = { lens, pathMode, pathStart, pathEnd, timelineOn, timelineRank, timelineAge, legendOpen, densityRadius };
   const dimensionRef = useRef(dimension);
   dimensionRef.current = dimension;
   const widthRef = useRef(containerWidth), heightRef = useRef(containerHeight);
@@ -389,11 +393,13 @@ const MiniGraph: React.FC<{
     dayById.forEach(day => { if (day < min) min = day; if (day > max) max = day; });
     return Number.isFinite(min) ? { min, max } : null;
   }, [dayById]);
-
-  // Console route and graph inspection are two views of the same selection.
-  useEffect(() => {
-    setSelectedId(activeNodeId ?? null);
-  }, [activeNodeId]);
+  // The timeline moves by note, not by date: every dated note gets a rank in date order (ties
+  // broken by id, so the order is stable) and the slider walks the ranks, evenly spaced. A burst
+  // of notes written in one week takes as much of the slider as its share of the wiki, and a
+  // quiet month takes none.
+  const timelineOrder = useMemo(() => [...dayById.entries()].sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0])), [dayById]);
+  const rankById = useMemo(() => new Map(timelineOrder.map(([id], index) => [id, index + 1] as [string, number])), [timelineOrder]);
+  const rankCount = timelineOrder.length;
 
   // Load index
   useEffect(() => {
@@ -598,90 +604,32 @@ const MiniGraph: React.FC<{
     return () => cancelAnimationFrame(offscreenFrameRef.current);
   }, [expanded, dimension, updateOffscreenIndicators]);
 
-  // Selection neighbourhood: incoming references plus the complete hierarchy
-  // below the selected concept. Both traversals are linear and only rerun when
+  // Selection neighbourhood: only the address hierarchy
+  // below the selected concept. The traversal is linear and only rerun when
   // the persistent selection changes.
-  const backlinkDepthById = useMemo(() => {
-    const depths = new Map<string, number>();
-    if (!selectedId || !fullGraph) return depths;
-    const selectedRoot = fullGraph.nodes.find(node => node.id === selectedId)?.address.split('//')[0];
-    const rootById = new Map(fullGraph.nodes.map(node => [node.id, node.address.split('//')[0]]));
-    const incoming = new Map<string, string[]>();
-    fullGraph.links.forEach(link => {
-      if (link.type === 'hierarchy') return;
-      const source = typeof link.source === 'object' ? (link.source as GraphNode).id : link.source;
-      const target = typeof link.target === 'object' ? (link.target as GraphNode).id : link.target;
-      const children = incoming.get(target) ?? [];
-      children.push(source); incoming.set(target, children);
-    });
-    const queue: Array<[string, number]> = [[selectedId, 0]];
-    const visited = new Set([selectedId]);
-    for (let cursor = 0; cursor < queue.length; cursor += 1) {
-      const [parent, depth] = queue[cursor];
-      (incoming.get(parent) ?? []).forEach(child => {
-        if (rootById.get(child) !== selectedRoot) return;
-        if (visited.has(child)) return;
-        visited.add(child); depths.set(child, depth + 1); queue.push([child, depth + 1]);
-      });
-    }
-    const hierarchyChildren = new Map<string, string[]>();
-    fullGraph.links.forEach(link => {
-      if (link.type !== 'hierarchy') return;
-      const source = typeof link.source === 'object' ? (link.source as GraphNode).id : link.source;
-      const target = typeof link.target === 'object' ? (link.target as GraphNode).id : link.target;
-      const children = hierarchyChildren.get(source) ?? [];
-      children.push(target); hierarchyChildren.set(source, children);
-    });
-    const hierarchyQueue: Array<[string, number]> = [[selectedId, 0]];
-    const hierarchyVisited = new Set([selectedId]);
-    for (let cursor = 0; cursor < hierarchyQueue.length; cursor += 1) {
-      const [parent, depth] = hierarchyQueue[cursor];
-      (hierarchyChildren.get(parent) ?? []).forEach(child => {
-        if (hierarchyVisited.has(child)) return;
-        hierarchyVisited.add(child);
-        const nextDepth = depth + 1;
-        depths.set(child, Math.min(depths.get(child) ?? Infinity, nextDepth));
-        hierarchyQueue.push([child, nextDepth]);
-      });
-    }
-    return depths;
-  }, [fullGraph, selectedId]);
+  const backlinkDepthById = useMemo(() => branchDepths(fullGraph?.nodes ?? [], selectedId), [fullGraph, selectedId]);
   // ── Reading aids: derived sets ──────────────────────────────────────────
   const adjacency = useMemo(() => filtered ? buildAdjacency(filtered.links, visibility) : new Map<string, string[]>(), [filtered, visibility]);
-  const focusId = expanded ? selectedId : (activeNodeId ?? selectedId);
-  // Shortest path (expanded): to the pinned end, or live to the hovered node once a start is chosen.
+  // Shortest path (expanded): to the chosen endpoint, or live to the hovered node once a start is chosen.
   const pathTarget = pathEnd ?? (pathMode && pathStart ? hoveredId : null);
   const pathIds = useMemo(() => pathStart && pathTarget && pathTarget !== pathStart ? shortestPath(adjacency, pathStart, pathTarget) : null, [adjacency, pathStart, pathTarget]);
   const pathSet = useMemo(() => pathIds ? new Set(pathIds) : null, [pathIds]);
   const pathEdges = useMemo(() => { const keys = new Set<string>(); pathIds?.forEach((id, i) => { if (i) keys.add(edgeKey(pathIds[i - 1], id)); }); return keys; }, [pathIds]);
-  // Timeline (expanded): notes dated after the cutoff are not drawn.
-  const timelineCutoff = timelineOn && timelineDay !== null ? timelineDay : null;
+  // Timeline (expanded): notes ranked after the cutoff (later in date order) are not drawn.
+  const timelineCutoff = timelineOn && timelineRank !== null ? timelineRank : null;
   const hiddenIds = useMemo(() => {
     const hidden = new Set<string>();
     if (!filtered || timelineCutoff === null) return hidden;
     filtered.nodes.forEach(node => {
-      if (timelineCutoff !== null) { const day = dayById.get(node.id); if (day !== undefined && day > timelineCutoff) hidden.add(node.id); }
+      if (timelineCutoff !== null) { const rank = rankById.get(node.id); if (rank !== undefined && rank > timelineCutoff) hidden.add(node.id); }
     });
     return hidden;
-  }, [dayById, filtered, timelineCutoff]);
+  }, [rankById, filtered, timelineCutoff]);
   const visibleCount = (filtered?.nodes.length ?? 0) - hiddenIds.size;
   // Lenses single nodes out. Orphans and bridges come from the build's island analysis, cited from the
   // articles' body links, trail from this tab's visits. The mini map only knows the trail lens.
-  const activeLens: LensKind | null = expanded ? lens : null;
-  const lensIds = useMemo(() => {
-    if (!activeLens) return null;
-    if (activeLens === 'orphans') return new Set(getIslands()?.isolatedUids ?? []);
-    if (activeLens === 'bridges') return new Set((getIslands()?.cuts ?? []).map(cut => cut.uid));
-    if (activeLens === 'cited') return new Set(articleUsage ? [...articleUsage.keys()] : []);
-    return new Set(visitedIds ?? []);
-  }, [activeLens, articleUsage, getIslands, visitedIds]);
-  const lensCounts = useMemo(() => ({
-    orphans: getIslands()?.isolatedUids.length ?? 0,
-    bridges: getIslands()?.cuts.length ?? 0,
-    cited: articleUsage?.size ?? 0,
-    trail: visitedIds?.size ?? 0,
-  }), [articleUsage, getIslands, visitedIds]);
-  const pinSet = useMemo(() => new Set(pins), [pins]);
+  const activeLens: LensKind | null = lens;
+  const lensIds = hub.lensIds;
   // Per-node alpha multiplier from the reading aids: unrelated nodes recede, they never vanish.
   const viewDim = useCallback((id: string) => {
     let factor = 1;
@@ -697,11 +645,13 @@ const MiniGraph: React.FC<{
     return `rgb(${AGE_OLD.map((channel, i) => Math.round(channel + (AGE_NEW[i] - channel) * t)).join(',')})`;
   }, [dayById, dayRange]);
   const hoveredNode = useMemo(() => fullGraph?.nodes.find(node => node.id === hoveredId) ?? null, [fullGraph, hoveredId]);
-  const generationPalette = ['#d9f99d', '#a3e635', '#4ade80', '#22d3ee', '#60a5fa', '#a78bfa', '#f472b6', '#fb923c'];
+  const onHoverNodeRef = useRef(onHoverNode);
+  onHoverNodeRef.current = onHoverNode;
+  useEffect(() => { onHoverNodeRef.current?.(hoveredId); }, [hoveredId]);
   const nodeVisualColor = useCallback((node: GraphNode) => {
     if (node.id === selectedId) return SELECT_HEX;
     const depth = backlinkDepthById.get(node.id);
-    if (selectedId && depth !== undefined) return generationPalette[(depth - 1) % generationPalette.length];
+    if (selectedId && depth !== undefined) return '#789d45';
     if (activeRoot && node.address.split('//')[0] !== activeRoot) return '#374151';
     return baseCssById.get(node.id) ?? `rgb(${SCALE_LOW.join(',')})`;
   }, [activeRoot, backlinkDepthById, baseCssById, selectedId]);
@@ -957,7 +907,9 @@ const MiniGraph: React.FC<{
     if (pathMode) { pickPathNode(node.id); return; }
     if (selectedId === node.id) { onNodeOpen?.(node); return; }
     setSelectedId(node.id);
-  }, [onNodeOpen, pathMode, pickPathNode, selectedId]);
+    onNodeSelect?.(node);
+    setHoveredId(null);
+  }, [onNodeOpen, onNodeSelect, pathMode, pickPathNode, selectedId]);
   const handlePointerUp = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     const selection = selectionRectRef.current;
     if (selectionStartRef.current && selection) {
@@ -969,16 +921,14 @@ const MiniGraph: React.FC<{
     const start = proximityClickRef.current; proximityClickRef.current = null;
     if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) >= 5) return;
     // Touch has no hover before the tap: resolve the node under the finger now.
-    let targetId = hoveredId;
-    if (!targetId && !expanded) {
+    let targetId: string | null = null;
+    {
       const rect = containerRef.current?.getBoundingClientRect();
       if (rect) targetId = findNearestNodeId(event.clientX - rect.left, event.clientY - rect.top);
     }
-    if (!targetId) return;
+    if (!targetId) { setSelectedId(null); onClearSelection?.(); return; }
     const node = filtered?.nodes.find(candidate => candidate.id === targetId);
-    if (expanded) { if (node) selectOrOpen(node); return; }
-    setSelectedId(targetId);
-    if (node) onNodeSelect?.(node);
+    if (node) selectOrOpen(node);
   }, [expanded, filtered, findNearestNodeId, hoveredId, onNodeSelect, selectOrOpen]);
 
   // Refit only when the structural node set changes. Query highlighting never
@@ -1135,7 +1085,7 @@ const MiniGraph: React.FC<{
     return () => { if (cameraTimerRef.current !== null) window.clearTimeout(cameraTimerRef.current); };
   }, [cameraAnchorIds, cameraFocusIds, containerHeight, containerWidth, dimension, expanded, filtered, frameVisibleCore, miniAnalysisEnabled, resultIds, searchQuery]);
 
-  // ── Reading aids: camera, links, images, pins ──────────────────────────
+  // ── Reading aids: camera, links and images ──────────────────────────
   const nodeById = useMemo(() => new Map((filtered?.nodes ?? []).map(node => [node.id, node as GraphNode & { x?: number; y?: number }])), [filtered]);
   // Frame a set of nodes in either renderer. Used by the follow lock, paths and shared links.
   const frameIds = useCallback((ids: Set<string>, duration: number) => {
@@ -1154,17 +1104,17 @@ const MiniGraph: React.FC<{
   useEffect(() => { if (pathEnd && pathSet) frameIds(pathSet, 500); }, [frameIds, pathEnd, pathSet]);
   // Timeline playback: a short sweep from the first note to the last.
   useEffect(() => {
-    if (!timelinePlaying || !dayRange) return;
-    const step = Math.max(1, Math.round((dayRange.max - dayRange.min) / 110));
-    const timer = window.setInterval(() => setTimelineDay(current => Math.min(dayRange.max, (current ?? dayRange.min) + step)), 80);
+    if (!timelinePlaying || !rankCount) return;
+    const step = Math.max(1, Math.round(rankCount / 110));
+    const timer = window.setInterval(() => setTimelineRank(current => Math.min(rankCount, (current ?? 0) + step)), 80);
     return () => window.clearInterval(timer);
-  }, [dayRange, timelinePlaying]);
-  useEffect(() => { if (timelinePlaying && dayRange && timelineDay !== null && timelineDay >= dayRange.max) setTimelinePlaying(false); }, [dayRange, timelineDay, timelinePlaying]);
+  }, [rankCount, timelinePlaying]);
+  useEffect(() => { if (timelinePlaying && rankCount && timelineRank !== null && timelineRank >= rankCount) setTimelinePlaying(false); }, [rankCount, timelineRank, timelinePlaying]);
   const toggleTimeline = useCallback(() => {
     if (timelineOn) { setTimelineOn(false); setTimelinePlaying(false); return; }
-    if (dayRange && timelineDay === null) setTimelineDay(dayRange.max);
+    if (rankCount && timelineRank === null) setTimelineRank(rankCount);
     setTimelineOn(true);
-  }, [dayRange, timelineDay, timelineOn]);
+  }, [rankCount, timelineRank, timelineOn]);
   const togglePathMode = useCallback(() => {
     if (pathMode) { setPathMode(false); setPathStart(null); setPathEnd(null); return; }
     setPathMode(true);
@@ -1173,11 +1123,7 @@ const MiniGraph: React.FC<{
     setPathStart(selectedId);
     setPathEnd(null);
   }, [pathMode, selectedId]);
-  const togglePin = useCallback(() => {
-    const id = focusId;
-    if (!id) return;
-    setPins(current => togglePinned(current, id));
-  }, [focusId, setPins]);
+
   // Snapshot of the 2D canvas: the whole view, or the box around the area selection or the selected
   // notes. With the interface, the open panels are painted on top from a styled copy of the DOM.
   const copyViewImage = useCallback(async (withInterface: boolean) => {
@@ -1315,7 +1261,7 @@ const MiniGraph: React.FC<{
     onAreaPreview?.(null);
   }, [dimension, onAreaPreview]);
   const clearSelection = useCallback(() => {
-    if (!expanded || !selectedId) return;
+    if (!selectedId) return;
     setSelectedId(null);
     onClearSelection?.();
   }, [expanded, onClearSelection, selectedId]);
@@ -1461,7 +1407,8 @@ const MiniGraph: React.FC<{
     setHighlightAnimating(true);
 
     const animate = (now: number) => {
-      const raw = Math.min(1, (now - startedAt) / duration);
+      // A frame timestamp can precede an effect started later in that same busy frame.
+      const raw = Math.max(0, Math.min(1, (now - startedAt) / duration));
       const eased = 1 - Math.pow(1 - raw, 3);
       nodes.forEach(node => {
         const start = starts.get(node.id) ?? 0;
@@ -1482,6 +1429,7 @@ const MiniGraph: React.FC<{
 
   // Node rendering — compact, no labels
   const nodeCanvasObject = useCallback((node: any, ctx: CanvasRenderingContext2D, globalScale = 1) => {
+    if (!Number.isFinite(globalScale) || globalScale <= 0) return;
     const n = node as GraphNode & { x: number; y: number };
     if (hiddenIds.has(n.id)) return;
     const r = nodeRadiusById.get(n.id) ?? NODE_SCALE;
@@ -1502,8 +1450,9 @@ const MiniGraph: React.FC<{
     // about which interaction produced each highlight.
     const isPreviewing = previewIds !== null;
     const ownBright = brighten(baseRgbById.get(n.id) ?? SCALE_LOW);
-    const emphasisColor = isPreviewing ? ownBright : RESULT_RGB;
-    const emphasisHex = isPreviewing ? rgbCss(ownBright) : RESULT_HEX;
+    const directName = hub.nameMatchIds?.has(n.id);
+    const emphasisColor = isPreviewing ? ownBright : directName ? [249,168,212] : RESULT_RGB;
+    const emphasisHex = isPreviewing ? rgbCss(ownBright) : directName ? '#f9a8d4' : RESULT_HEX;
     // Transient hover must remain visible even while another node owns the
     // persistent branch selection. Previously selectedId bypassed this blend.
     const rawBase = baseRgbById.get(n.id) ?? SCALE_LOW;
@@ -1517,7 +1466,7 @@ const MiniGraph: React.FC<{
       ? `rgb(${transientBase.map((channel, index) => Math.round(channel + (emphasisColor[index] - channel) * emphasis)).join(', ')})`
       : base && branchEmphasis > .001
         ? `rgb(${base.map((channel, index) => Math.round(channel + (emphasisColor[index] - channel) * branchEmphasis)).join(', ')})`
-        : baseCssById.get(n.id) ?? baseHex;
+        : baseHex;
     // Timeline colour-by-age replaces the base colour only where no other layer already speaks.
     const paintColor = timelineAge && !selected && emphasis <= .02 && branchEmphasis <= .001 ? (ageColor(n.id) ?? fillColor) : fillColor;
     // Screen-space light energy follows zoom. At a distant overview the halo
@@ -1593,7 +1542,7 @@ const MiniGraph: React.FC<{
       ctx.shadowBlur = 0;
     }
 
-    // Reading aids: path members, lens members, pins.
+    // Reading aids: path members and lens members.
     if (pathSet?.has(n.id)) {
       ctx.beginPath(); ctx.arc(n.x, n.y, r + Math.max(1.3, 2.2 / globalScale), 0, 2 * Math.PI);
       ctx.strokeStyle = PATH_HEX; ctx.globalAlpha = n.id === pathStart || n.id === pathTarget ? 1 : .85; ctx.lineWidth = Math.max(.9, 1.6 / globalScale); ctx.stroke();
@@ -1607,16 +1556,30 @@ const MiniGraph: React.FC<{
       ctx.beginPath(); ctx.arc(n.x, n.y, r + Math.max(1.2, 2 / globalScale), 0, 2 * Math.PI);
       ctx.strokeStyle = SELECT_HEX; ctx.globalAlpha = .95; ctx.lineWidth = Math.max(.9, 1.5 / globalScale); ctx.stroke();
     }
-    if (pinSet.has(n.id)) {
-      const size = Math.max(3.8, 6.8 / globalScale);
-      ctx.beginPath(); ctx.moveTo(n.x, n.y - r - size * .35); ctx.lineTo(n.x - size * .55, n.y - r - size * 1.35); ctx.lineTo(n.x + size * .55, n.y - r - size * 1.35); ctx.closePath();
-      ctx.fillStyle = PIN_HEX; ctx.globalAlpha = 1; ctx.fill();
-      ctx.font = `600 ${Math.max(4, 6.5 / globalScale)}px ui-monospace, monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-      ctx.fillText(String(pins.indexOf(n.id) + 1), n.x, n.y - r - size * 1.45);
-    }
 
+
+    // In the mini graph a selected node is marked by its ring alone: its name is
+    // already in the directory and on the page, and a label over a thumbnail-sized
+    // canvas only covers its neighbours. The expanded workspace keeps the label.
+    if (pathSet?.has(n.id) || (selected && expanded) || hub.nameMatchIds?.has(n.id)) {
+      ctx.globalAlpha = 1;
+      ctx.font = (11 / globalScale) + 'px ui-sans-serif, system-ui';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      // The label is a light word with a dark halo on the dark canvas. On the
+      // light theme that pair (lime on a near-black outline over paper) is
+      // unreadable, so it flips: ink text with a paper halo, the meaning of the
+      // node staying in its ring colour.
+      const lightTheme = document.documentElement.getAttribute('data-theme') === 'light';
+      ctx.lineWidth = 3 / globalScale;
+      ctx.strokeStyle = lightTheme ? 'rgba(241,238,231,.95)' : 'rgba(12,12,18,.92)';
+      ctx.strokeText(n.name, n.x + r + 4 / globalScale, n.y);
+      ctx.fillStyle = lightTheme
+        ? '#20231f'
+        : pathSet?.has(n.id) ? PATH_HEX : selected ? SELECT_RING : '#f9a8d4';
+      ctx.fillText(n.name, n.x + r + 4 / globalScale, n.y);
+    }
     ctx.globalAlpha = 1;
-  }, [activeLens, ageColor, articleUsage, backlinkDepthById, baseCssById, baseRgbById, expanded, hiddenIds, hoveredId, lensIds, multiSelected, nodeRadiusById, nodeVisualColor, pathSet, pathStart, pathTarget, pinSet, pins, previewIds, previewNodeId, resultIds, rootHexByName, selectedId, timelineAge, viewDim]);
+  }, [hub.nameMatchIds, activeLens, ageColor, articleUsage, backlinkDepthById, baseCssById, baseRgbById, expanded, hiddenIds, hoveredId, lensIds, multiSelected, nodeRadiusById, nodeVisualColor, pathSet, pathStart, pathTarget, previewIds, previewNodeId, resultIds, rootHexByName, selectedId, timelineAge, viewDim]);
 
   const nodePointerAreaPaint = useCallback((node: any, color: string, ctx: CanvasRenderingContext2D) => {
     const n = node as GraphNode & { x: number; y: number };
@@ -1641,9 +1604,7 @@ const MiniGraph: React.FC<{
     if (hiddenIds.has(sourceId) || hiddenIds.has(targetId)) return;
     const onPath = pathEdges.size > 0 && pathEdges.has(edgeKey(sourceId, targetId));
     const sourceDepth = sourceId === selectedId ? 0 : backlinkDepthById.get(sourceId), targetDepth = targetId === selectedId ? 0 : backlinkDepthById.get(targetId);
-    const backlinkBranch = l.type === 'hierarchy'
-      ? sourceDepth !== undefined && targetDepth !== undefined && targetDepth === sourceDepth + 1
-      : sourceDepth !== undefined && targetDepth !== undefined && sourceDepth === targetDepth + 1;
+    const backlinkBranch = sourceDepth !== undefined && targetDepth !== undefined;
     ctx.beginPath();
     ctx.moveTo(l.source.x, l.source.y);
     ctx.lineTo(l.target.x, l.target.y);
@@ -1659,7 +1620,9 @@ const MiniGraph: React.FC<{
   const nodeColor3d = useCallback((node: any) => {
     const id = (node as GraphNode).id;
     if (pathSet?.has(id)) return PATH_HEX;
-    if (id === previewNodeId) return SELECT_HEX;
+    if (id === selectedId) return SELECT_HEX;
+    if (hub.nameMatchIds?.has(id)) return '#f9a8d4';
+    if (id === previewNodeId) return SELECT_RING;
     if (activeLens && lensIds?.has(id)) return LENS_COLORS[activeLens];
     if ((highlightVisualRef.current.matches.get(id) ?? 0) > .08) return previewIds ? rgbCss(brighten(baseRgbById.get(id) ?? SCALE_LOW)) : RESULT_HEX;
     if (previewIds && resultIds?.has(id)) return '#818cf8';
@@ -1667,7 +1630,7 @@ const MiniGraph: React.FC<{
     // Meshes cannot fade per node; recede by darkening instead.
     const dim = viewDim(id);
     return dim < 1 ? darken(base, .25 + dim * .75) : base;
-  }, [activeLens, ageColor, baseRgbById, lensIds, nodeVisualColor, pathSet, previewIds, previewNodeId, resultIds, timelineAge, viewDim]);
+  }, [hub.nameMatchIds, selectedId, activeLens, ageColor, baseRgbById, lensIds, nodeVisualColor, pathSet, previewIds, previewNodeId, resultIds, timelineAge, viewDim]);
   const nodeVal3d = useCallback((node: any) => (nodeRadiusById.get((node as GraphNode).id) ?? NODE_SCALE) * 1.4 * ((node as GraphNode).id === selectedId ? 1.55 : 1), [nodeRadiusById, selectedId]);
   const nodeVisibility3d = useCallback((node: any) => !hiddenIds.has((node as GraphNode).id), [hiddenIds]);
   const nodeLabel3d = useCallback(() => '', []);
@@ -1676,9 +1639,7 @@ const MiniGraph: React.FC<{
     const source = typeof link.source === 'object' ? link.source.id : link.source;
     const target = typeof link.target === 'object' ? link.target.id : link.target;
     const sourceDepth = source === selectedId ? 0 : backlinkDepthById.get(source), targetDepth = target === selectedId ? 0 : backlinkDepthById.get(target);
-    const branch = link.type === 'hierarchy'
-      ? sourceDepth !== undefined && targetDepth !== undefined && targetDepth === sourceDepth + 1
-      : sourceDepth !== undefined && targetDepth !== undefined && sourceDepth === targetDepth + 1;
+    const branch = sourceDepth !== undefined && targetDepth !== undefined;
     if (hiddenIds.has(source) || hiddenIds.has(target)) return 'rgba(0,0,0,0)';
     if (pathEdges.size > 0 && pathEdges.has(edgeKey(source, target))) return PATH_HEX;
     const previewBranch = Math.min(highlightVisualRef.current.matches.get(source) ?? 0, highlightVisualRef.current.matches.get(target) ?? 0) > .15;
@@ -1777,8 +1738,10 @@ const MiniGraph: React.FC<{
     <div
       ref={containerRef}
       className={`relative ${selectionMode ? 'cursor-crosshair' : ''}`}
+      data-graph-surface={expanded ? 'expanded' : 'mini'}
+      data-selected-node={selectedId ?? ''}
       style={{ height: expanded ? '100%' : miniHeight }}
-      onMouseMove={!miniAnalysisEnabled ? handleNearestHover : handleMiniAreaHover}
+      onMouseMove={coarsePointer ? undefined : !miniAnalysisEnabled ? handleNearestHover : handleMiniAreaHover}
       onMouseLeave={() => { setHoveredId(null); lastAreaSignatureRef.current = ''; if (miniAnalysisEnabled) { setDensityAreaIds(null); onAreaPreview?.(null); } }}
       onWheelCapture={holdMiniCamera}
       onPointerDownCapture={holdMiniCamera}
@@ -1804,7 +1767,7 @@ const MiniGraph: React.FC<{
             onEngineStop={() => { if (frozen) { setPhysicsSettling(false); return; } if (topologyChangedRef.current) { topologyChangedRef.current = false; if (expanded ? !topologyCameraCancelledRef.current : !miniCameraAutomationBlockedRef.current) { if (expanded) centerGraph(); else frameVisibleCore(graphRef.current, 650); } topologyCameraCancelledRef.current = false; } else frameGraph(); updateOffscreenIndicators(); saveSettledLayout(); setPhysicsSettling(false); }}
             onZoomEnd={updateOffscreenIndicators}
             onNodeClick={(node: any) => !expanded && miniAnalysisEnabled && inspectNode(node as GraphNode)}
-            onBackgroundClick={clearSelection}
+            onBackgroundClick={dimension === '3d' ? clearSelection : undefined}
             onNodeRightClick={(node: any) => expanded && onNodeOpen?.(node as GraphNode)}
             onNodeHover={() => undefined}
             autoPauseRedraw={!highlightAnimating}
@@ -1815,7 +1778,7 @@ const MiniGraph: React.FC<{
             cooldownTime={Infinity}
             d3AlphaMin={expanded ? 0 : 0.001}
             d3AlphaTarget={expanded && !frozen ? 0.08 : 0}
-            enableNodeDrag={expanded && !selectionMode && !frozen}
+            enableNodeDrag={expanded && !selectionMode && !frozen && !coarsePointer}
             onNodeDrag={heatGraph}
             onNodeDragEnd={() => { heatGraph(); saveSettledLayout(); }}
             enableZoomInteraction={true}
@@ -1839,7 +1802,7 @@ const MiniGraph: React.FC<{
             onEngineStop={() => { if (frozen) { setPhysicsSettling(false); return; } syncEdgePositions(); if (topologyChangedRef.current) { topologyChangedRef.current = false; if (!topologyCameraCancelledRef.current) centerGraph(); topologyCameraCancelledRef.current = false; } else frameGraph(); saveSettledLayout(); setPhysicsSettling(false); }}
             onNodeClick={(node: any) => inspectNode(node as GraphNode)}
             onBackgroundClick={clearSelection}
-            onNodeHover={(node: any) => setHoveredId(node ? (node as GraphNode).id : null)}
+            onNodeHover={(node: any) => { if (!coarsePointer) setHoveredId(node ? (node as GraphNode).id : null); }}
             onNodeRightClick={(node: any) => onNodeOpen?.(node as GraphNode)}
             d3AlphaDecay={0.035}
             d3VelocityDecay={physics.damping}
@@ -1896,9 +1859,7 @@ const MiniGraph: React.FC<{
           <button type="button" aria-pressed={timelineOn} disabled={!dayRange} title={timelineOn ? 'Close the timeline (Esc)' : 'Timeline: see the graph as it was on a date, or colour notes by age'} onClick={toggleTimeline} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 disabled:opacity-30 ${timelineOn ? 'bg-amber-400/15 text-amber-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><ClockIcon /></button>
           <button type="button" aria-pressed={!!lens} aria-expanded={lensOpen} title="Lenses: orphans, bridges, notes cited by articles, this session's trail" onClick={() => setLensOpen(open => !open)} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 ${lens ? 'text-th-primary' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`} style={lens ? { color: LENS_COLORS[lens], backgroundColor: `color-mix(in srgb, ${LENS_COLORS[lens]} 15%, transparent)` } : undefined}><LensIcon /></button>
           <button type="button" aria-pressed={legendOpen} title={legendOpen ? 'Hide the legend' : 'Legend: what the colours and rings mean'} onClick={() => setLegendOpen(open => !open)} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 ${legendOpen ? 'bg-violet-400/15 text-violet-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><MapIcon /></button>
-          <ToolFlyout label="Pinned notes" trigger={<button type="button" aria-pressed={!!selectedId && pinSet.has(selectedId)} disabled={!selectedId} title={!selectedId ? 'Select a note to pin it' : pinSet.has(selectedId) ? 'Unpin the selected note' : `Pin the selected note (up to ${MAX_PINS}, numbered)`} onClick={togglePin} className={`grid h-8 w-full place-items-center disabled:opacity-30 ${selectedId && pinSet.has(selectedId) ? 'bg-red-400/15 text-red-400' : 'text-th-muted hover:bg-th-surface hover:text-red-400'}`}><PinIcon /></button>}>
-            <button type="button" disabled={pins.length === 0} onClick={() => setPins([])} aria-label="Clear all pins" title="Clear all pins" className="h-8 whitespace-nowrap px-2 text-[9px] text-red-400 hover:bg-th-surface disabled:opacity-30">Clear all</button>
-          </ToolFlyout>
+
           {dimension === '2d' && <button type="button" aria-expanded={imagePrompt} title="Copy as an image" onClick={() => setImagePrompt(open => !open)} className={`mb-1 grid h-8 w-full place-items-center border-b border-th-hub-border pb-1 ${imagePrompt ? 'bg-violet-400/15 text-violet-300' : 'text-th-muted hover:bg-th-surface hover:text-th-primary'}`}><CameraIcon /></button>}
           <button type="button" aria-pressed={frozen} title={frozen ? 'Resume the layout physics' : 'Freeze the layout so nothing drifts'} onClick={() => setFrozen(!frozen)} className={`grid h-8 w-full place-items-center text-sm leading-none ${frozen ? 'bg-sky-400/15 text-sky-300' : 'text-th-muted hover:bg-th-surface hover:text-sky-300'}`}>❄</button>
         </nav>}
@@ -1910,15 +1871,16 @@ const MiniGraph: React.FC<{
         </div>}
         {/* Lens picker, beside the tool rail. */}
         {expanded && lensOpen && <div role="group" aria-label="Lenses" className="graph-flyout absolute left-16 top-[3.6rem] z-[51] w-56 border border-th-hub-border bg-th-base p-1 font-mono shadow-xl">
-          <div className="mb-1 flex items-center justify-between border-b border-th-hub-border px-1.5 pb-1 text-[8px] uppercase tracking-[.12em] text-th-muted"><span>lens</span><button type="button" onClick={() => setLensOpen(false)} className="text-[10px] hover:text-th-primary" aria-label="Close lenses">×</button></div>
-          {(['orphans', 'bridges', 'cited', 'trail'] as LensKind[]).map(kind => { const on = lens === kind; const unavailable = kind === 'cited' ? !articleUsage : kind === 'trail' ? !visitedIds : false; return <button key={kind} type="button" aria-pressed={on} disabled={unavailable} onClick={() => setLens(on ? null : kind)} className={`flex w-full items-center gap-2 px-1.5 py-1.5 text-left text-[9px] transition-colors disabled:opacity-30 ${on ? 'bg-th-surface text-th-primary' : 'text-th-secondary hover:bg-th-surface hover:text-th-primary'}`}><i className="h-2 w-2 flex-none rounded-full border" style={{ borderColor: LENS_COLORS[kind], backgroundColor: on ? LENS_COLORS[kind] : 'transparent' }} /><span className="flex-1">{LENS_LABELS[kind]}</span><span className="tabular-nums text-th-muted">{lensCounts[kind]}</span></button>; })}
-          <p className="px-1.5 pt-1 text-[8px] leading-snug text-th-muted">{lens === 'orphans' ? 'Notes with no link in or out.' : lens === 'bridges' ? 'Notes whose removal would split their component.' : lens === 'cited' ? 'Thicker ring, more articles link the note.' : lens === 'trail' ? 'The notes opened in this tab.' : 'Members keep their colour; the rest recede.'}</p>
-          {lens === 'trail' && onClearVisited && (visitedIds?.size ?? 0) > 0 && <button type="button" onClick={onClearVisited} className="mt-1 w-full border-t border-th-hub-border px-1.5 pt-1.5 text-left text-[8px] uppercase tracking-[.08em] text-th-muted hover:text-th-primary">forget this session's visits</button>}
+          <div className="mb-1 flex items-center justify-between border-b border-th-hub-border px-1.5 pb-1 text-[8px] uppercase tracking-[.12em] text-th-muted"><span>lens</span><button type="button" onClick={() => setLensOpen(false)} className="wiki-clear-control wiki-clear-control--compact" aria-label="Close lenses">×</button></div>
+          <WikiLenses />
         </div>}
         {/* Expanded: the two controls that must never be missed, top right. */}
+        {expanded && pathIds && <ol aria-label="Shortest path nodes" className="absolute bottom-3 left-16 right-3 z-40 flex max-h-20 flex-wrap gap-x-3 gap-y-1 overflow-y-auto border border-th-hub-border bg-th-base p-2 font-mono text-[10px] text-cyan-300">
+          {pathIds.map((id, index) => <li key={id}>{index + 1}. {hub.noteById.get(id)?.displayTitle || hub.noteById.get(id)?.name || id}</li>)}
+        </ol>}
         {expanded && <div className="graph-topright absolute right-4 top-4 z-50 flex items-center gap-2">
           {filtersActive && onResetFilters && <button type="button" onClick={onResetFilters} className="graph-reset"><FilterOffIcon /> Reset filters</button>}
-          {onMinimize && <button type="button" onClick={onMinimize} title="Back to the console (Esc)" aria-label="Minimize the graph" className="graph-close"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M1.5 4.5h3v-3M10.5 7.5h-3v3M4.5 4.5l-3-3M7.5 7.5l3 3" /></svg> Minimize</button>}
+          {onMinimize && <button type="button" onClick={onMinimize} title="Back to the console (Esc)" aria-label="Minimize the graph" className="graph-close"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M1.5 4.5h3v-3M10.5 7.5h-3v3M4.5 4.5l-3-3M7.5 7.5l3 3" /></svg></button>}
         </div>}
         {/* Expanded: the edge switches, top left, above the tools column. */}
         {expanded && <div className="graph-edges" role="group" aria-label="Edges shown">
@@ -1926,16 +1888,16 @@ const MiniGraph: React.FC<{
         </div>}
         {/* Timeline bar. */}
         {expanded && timelineOn && dayRange && createPortal(<div data-graph-timeline data-nav-quiet className="fixed bottom-[4.5rem] left-1/2 z-50 flex w-[min(38rem,calc(100vw-2rem))] -translate-x-1/2 items-center gap-3 border border-amber-400/30 bg-th-base/95 px-3 py-2 font-mono text-[9px] shadow-xl backdrop-blur-sm">
-          <button type="button" onClick={() => { if (timelineDay !== null && timelineDay >= dayRange.max && !timelinePlaying) setTimelineDay(dayRange.min); setTimelinePlaying(playing => !playing); }} className="grid h-6 w-6 flex-none place-items-center border border-th-hub-border text-amber-300 hover:bg-th-surface" title={timelinePlaying ? 'Pause' : 'Play the graph growing from the first note'} aria-label={timelinePlaying ? 'Pause' : 'Play'}>{timelinePlaying ? '❚❚' : '▶'}</button>
-          <input type="range" min={dayRange.min} max={dayRange.max} value={timelineDay ?? dayRange.max} onChange={event => { setTimelinePlaying(false); setTimelineDay(Number(event.target.value)); }} className="wiki-graph-range min-w-0 flex-1" aria-label="Timeline cutoff date" />
-          <span className="w-[5.2rem] flex-none tabular-nums text-amber-200">{isoFromDay(timelineDay ?? dayRange.max)}</span>
+          <button type="button" onClick={() => { if (timelineRank !== null && timelineRank >= rankCount && !timelinePlaying) setTimelineRank(1); setTimelinePlaying(playing => !playing); }} className="grid h-6 w-6 flex-none place-items-center border border-th-hub-border text-amber-300 hover:bg-th-surface" title={timelinePlaying ? 'Pause' : 'Play the graph growing from the first note'} aria-label={timelinePlaying ? 'Pause' : 'Play'}>{timelinePlaying ? '❚❚' : '▶'}</button>
+          <input type="range" min={1} max={Math.max(1, rankCount)} step={1} value={timelineRank ?? rankCount} onChange={event => { setTimelinePlaying(false); setTimelineRank(Number(event.target.value)); }} className="wiki-graph-range min-w-0 flex-1" aria-label="Timeline cutoff, by note in date order" />
+          <span className="w-[5.2rem] flex-none tabular-nums text-amber-200">{isoFromDay(timelineOrder[Math.min(rankCount, Math.max(1, timelineRank ?? rankCount)) - 1]?.[1] ?? dayRange.max)}</span>
           <span className="flex-none tabular-nums text-th-muted">{visibleCount} / {filtered.nodes.length}</span>
           <button type="button" aria-pressed={timelineAge} onClick={() => setTimelineAge(age => !age)} title="Colour notes by age: cool is old, warm is new" className={`flex-none border px-1.5 py-0.5 text-[8px] uppercase tracking-[.08em] ${timelineAge ? 'border-amber-400/60 text-amber-200' : 'border-th-hub-border text-th-muted hover:text-th-primary'}`}>age</button>
           <button type="button" onClick={toggleTimeline} aria-label="Close the timeline" className="grid h-9 w-9 flex-none place-items-center text-2xl leading-none text-th-muted hover:bg-th-surface hover:text-th-primary">×</button>
         </div>, document.body)}
         {/* Legend. */}
         {expanded && legendOpen && <aside data-nav-quiet className="absolute bottom-[4.5rem] right-4 z-40 w-60 border border-th-hub-border bg-th-base/95 p-2.5 font-mono text-[9px] shadow-xl backdrop-blur-sm">
-          <div className="mb-1.5 flex items-center justify-between border-b border-th-hub-border pb-1 text-[8px] uppercase tracking-[.12em] text-th-muted"><span>legend</span><button type="button" onClick={() => setLegendOpen(false)} className="text-[10px] hover:text-th-primary" aria-label="Close legend">×</button></div>
+          <div className="mb-1.5 flex items-center justify-between border-b border-th-hub-border pb-1 text-[8px] uppercase tracking-[.12em] text-th-muted"><span>legend</span><button type="button" onClick={() => setLegendOpen(false)} className="wiki-clear-control wiki-clear-control--compact" aria-label="Close legend">×</button></div>
           <p className="mb-1 text-[8px] uppercase tracking-[.1em] text-th-muted">nodes · {colorMode === 'roots' ? 'root family' : 'centrality'} · size by {sizeMode}</p>
           {colorMode === 'roots'
             ? <div className="mb-2 grid grid-cols-2 gap-x-2 gap-y-0.5">{[...rootHexByName].slice(0, 8).map(([root, hex]) => <span key={root} className="flex min-w-0 items-center gap-1.5 text-th-secondary"><i className="h-2 w-2 flex-none rounded-full" style={{ backgroundColor: hex }} /><span className="truncate">{root}</span></span>)}{rootHexByName.size > 8 && <span className="flex items-center gap-1.5 text-th-muted"><i className="h-2 w-2 flex-none rounded-full" style={{ backgroundColor: ROOT_NEUTRAL }} />other roots</span>}</div>
@@ -1945,7 +1907,7 @@ const MiniGraph: React.FC<{
           <div className="mb-2 space-y-0.5 text-th-secondary">{([['body', 'reference in the text'], ['interaction', 'interaction'], ['hierarchy', 'address hierarchy']] as const).map(([type, label]) => <span key={type} className="flex items-center gap-1.5"><i className="h-px w-4 flex-none" style={{ backgroundColor: EDGE_COLORS[type] }} />{label}</span>)}</div>
           <p className="mb-1 text-[8px] uppercase tracking-[.1em] text-th-muted">rings</p>
           <div className="space-y-0.5 text-th-secondary">
-            {([[SELECT_HEX, 'selected note and its branch'], [RESULT_HEX, 'search or filter results'], ['#67e8f9', 'area selection'], [PATH_HEX, 'shortest path'], [PIN_HEX, 'pinned note']] as const).map(([hex, label]) => <span key={label} className="flex items-center gap-1.5"><i className="h-2 w-2 flex-none rounded-full border" style={{ borderColor: hex }} />{label}</span>)}
+            {([[SELECT_HEX, 'selected note and its branch'], ['#f9a8d4', 'matching names'], [RESULT_HEX, 'path context or filter results'], ['#67e8f9', 'area selection'], [PATH_HEX, 'shortest path']] as const).map(([hex, label]) => <span key={label} className="flex items-center gap-1.5"><i className="h-2 w-2 flex-none rounded-full border" style={{ borderColor: hex }} />{label}</span>)}
             {lens && <span className="flex items-center gap-1.5"><i className="h-2 w-2 flex-none rounded-full border" style={{ borderColor: LENS_COLORS[lens] }} />lens: {LENS_LABELS[lens]}</span>}
           </div>
         </aside>}

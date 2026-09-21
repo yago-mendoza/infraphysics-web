@@ -20,16 +20,16 @@ const TOPICS: Topic[] = [
     'To reveal the site navigation, move your pointer near the bottom edge or scroll up on touch. The Back arrow returns to your previous section. Shift+T switches the site theme when you are outside a text field.',
   ] },
   { id: 'keyboard', section: 'Getting started', title: 'Keyboard shortcuts', keywords: 'teclado atajos enter escape arrows', paragraphs: [
-    'Outside an input, type to focus the Wiki search. On the card grid, arrow keys move the highlighted card and Enter opens it. Arrow keys from the search field transfer navigation to the grid; Enter opens the highlighted result, or the first result if none is highlighted.',
+    'Outside an input, type to focus the Wiki search. On the card grid, arrow keys move the highlighted card and Enter opens it. Inside the console or graph search, Enter finishes typing and dismisses the keyboard while keeping the query and results. Tap a card to open it.',
     'Escape clears the Wiki search and card focus. When reading a note, the neighborhood list also supports arrow-key navigation: left and right change zones, up and down move within a zone.',
     'Inside this guide, typing searches only the help. Enter in the search opens the first result; Arrow Down moves to the result buttons. Tab moves between controls. Escape clears a help search first, then closes the guide. These keys do not navigate the Wiki behind it.',
   ] },
   { id: 'search', section: 'Search & results', title: 'Search fields', keywords: 'search modes buscar busqueda aliases backlinks referenced by all', paragraphs: [
-    'Name searches concept names, address paths, and aliases. Use it when you know roughly what the concept is called. Content searches the note text and description, which helps when you remember a phrase rather than a title.',
+    'Name searches concept names and aliases. Path searches the full address, including ancestors: industrial in Path also finds concepts under industrial. Content searches the note text and description, which helps when you remember a phrase rather than a title.',
     'Referenced by finds concepts that are linked from matching notes. The query is matched against the referring notes’ names, paths, text, and descriptions. For example, if a note about CPU links to ARM, searching CPU in referenced by can return ARM. It does not mean finding every note that mentions ARM.',
-    'The name, content, and referenced by buttons can be combined. Turn on one, two, or all three fields; a concept appears if any selected field matches. At least one field stays enabled. Search is case-insensitive and matches the text you enter; it is not a conversational or semantic search.',
+    'Name, Path, Content, and Referenced by can be combined. A concept appears if any selected field matches. At least one field stays enabled. Search is case-insensitive and matches the text you enter; it is not a conversational or semantic search.',
     'Search works together with the current scope and filters. If something seems missing, check the active chips below the controls. Clear the search and remove constraints to return to all concepts.',
-    'The search field of the expanded graph and the Filter tree field of the directory suggest note names as you type. While a search is active the directory shows only the matching branches and, when they fit on screen, opens them so the matching notes are visible without clicking.',
+    'Console and graph search suggest concept names as you type. While a search is active the directory shows the matching branches and, when they fit on screen, opens them so the matching notes are visible without clicking.',
   ] },
   { id: 'sorting', section: 'Search & results', title: 'Sorting', keywords: 'sort order ordenar ordenacion ordenación alphabetical random', paragraphs: [
     'Open filter & sort below the search field to change the card order. Desktop shows the available choices inline; phones use the Sort menu. Sorting changes the order of your current results and keeps the search and filters in place.',
@@ -42,12 +42,11 @@ const TOPICS: Topic[] = [
     'Shuffle: randomize the current results. Choose shuffle again to get a fresh order.',
   ] },
   { id: 'filters', section: 'Search & results', title: 'Filters & scope', keywords: 'filtros hubs leaf isolated bridges depth roots reset', paragraphs: [
-    'Open filter & sort to reveal the controls. Closing this panel keeps its filters active. Constraints combine, so each result must satisfy every active filter. Remove individual chips below the controls, or use clear beside the collapsed panel to reset filters and scope while keeping the search.',
+    'Open filter & sort to reveal the controls. Closing this panel keeps its filters active. Constraints combine, so each result must satisfy every active filter. Remove individual chips below the controls, or press the crossed-funnel icon at the right of the filter & sort bar, which appears whenever a filter is active (panel open or closed), to reset filters and scope while keeping the search.',
     'Scope limits results to one address branch, including the branch concept itself and its descendants. Type a path in the scope field or choose a directory root. Clear the scope to search all branches again.',
     'Articles < N keeps concepts linked by fewer than N distinct public articles. Set it to 1 to find concepts that no article links yet. Leave it empty for no article limit.',
     'Depth min / max restrict the levels in the naming hierarchy. Roots have depth 1. The infinity symbol means there is no upper limit. Hubs ≥ N keeps concepts with at least N incoming plus outgoing Wiki references.',
-    'Isolated keeps concepts with no incoming or outgoing references. Leaf keeps concepts with no children in the naming hierarchy. A leaf can still have many references.',
-    'Bridges keeps concepts whose removal would disconnect part of their graph component. Use this to explore structural connectors between groups of notes.',
+    'Leaf keeps concepts with no children in the naming hierarchy. A leaf can still have many references. Structural filters such as Bridges and Orphans live under Lenses.',
     'The date calendar filters by a note’s date: select a day, then another day for a range. A word-count range can also be selected from the console histogram. Active date and word-count constraints appear as removable chips.',
   ] },
   { id: 'articles', section: 'Search & results', title: 'Article links & unvisited notes', keywords: 'articulos artículos visited blue purple unread', paragraphs: [
@@ -62,6 +61,7 @@ const TOPICS: Topic[] = [
     'On a note page, Copy for context opens a selection dialog. Choose the current note and related groups such as parent, siblings, children, interactions, and backlinks, then copy the selected context.',
   ] },
   { id: 'navigation', section: 'Reading a note', title: 'Navigation & addresses', keywords: 'breadcrumb trail URL enlace ruta history', paragraphs: [
+    'Browser Back and All concepts restore the console search, filters, selected node and directory state. The magnifying glass starts a fresh console search; previous browser entries retain their own state.',
     'The breadcrumb trail records the concepts you followed. Select an earlier crumb to return to it, or all concepts to go back to the cards. Following links extends the trail; opening a grid card starts a new trail. Older steps collapse when space is limited.',
     'The address below the title shows the naming hierarchy. Available ancestors are clickable. The address describes where the idea sits in the tree, while the breadcrumb describes your reading path.',
     'Each concept has a readable URL that you can copy from the browser address bar. Old concept-ID links still resolve to the current address.',
@@ -83,9 +83,11 @@ const TOPICS: Topic[] = [
   ] },
   { id: 'directory', section: 'Wiki Console', title: 'Directory', keywords: 'tree arbol árbol folders levels centrality', paragraphs: [
     'The directory follows the address hierarchy. For example, chip//MCU//ARM places ARM inside MCU inside chip. This describes how concepts are organized; reference links can connect notes across different branches.',
-    'Click a concept name to open its note. Use the chevron to expand or collapse its children. Opening a note reveals its branch. Collapse all folds the tree again.',
+    'Click a concept name once to select and focus it in the graph; click the selected name again to open its note. Use the chevron to expand or collapse its children. Selecting a node in either graph selects the same directory entry and reveals its ancestors. Collapse all folds the tree again.',
     'Filter tree searches the directory. The root selector limits the current scope. The levels selector changes how much of the tree is displayed, without filtering the cards or graph.',
     'The directory’s own sort buttons order branches alphabetically, by descendant count, or by depth. They are separate from the card sorting controls.',
+    'Follow the graph is the crosshair button beside the sort buttons. While it is on, moving the pointer over a node in the mini graph replaces the tree with that concept’s own path at the top of the directory: its root, each ancestor and the concept, one row per level, with an ellipsis wherever siblings or children are left out. Moving away brings the full tree back. The switch is remembered in this browser.',
+    'Selecting a node marks it in the mini graph with its ring only, without a name label; the expanded graph shows the name.',
     'Small bars beside concepts show their centrality percentile. A longer bar means a higher structural rank within the Wiki, not a longer note or a larger article count. Active searches and filters can hide branches with no matching concepts.',
   ] },
   { id: 'statistics', section: 'Wiki Console', title: 'Graph statistics & word counts', keywords: 'stats density histogram estadisticas palabras', paragraphs: [
@@ -95,14 +97,14 @@ const TOPICS: Topic[] = [
   ] },
   { id: 'graph', section: 'Graph workspace', title: 'Open & navigate the graph', keywords: 'expand zoom pan 2d 3d grafo mapa', paragraphs: [
     'The console mini graph gives a compact overview. Open the expanded graph for more space, or choose 3D. The /wiki/graph address opens this workspace directly. On phones it fills the screen; Minimize (top right on desktop, the first button of the tool rail on phones, or Esc) returns to the console.',
-    'In the mini graph, select a node to open its note. In the expanded graph, one click selects a node and its descendants; a second click on that node opens it. Right-click opens it directly. Click empty space to clear the selection.',
-    'Use the expanded toolbar to switch 2D / 3D and Center graph to recover the overall view after moving around. Hover a node for its name and details. On a touch screen the 3D view orbits, zooms and taps, but nodes cannot be dragged.',
+    'In both graphs, one click selects a node and highlights its descendants; a second click on that node opens it. Right-click opens it directly. Click empty space to clear the selection.',
+    'Use the expanded toolbar to switch 2D / 3D and Center graph to recover the overall view after moving around. Hover a node for its name and details. Touch supports panning, orbiting, zooming and tapping, but cannot drag individual nodes in either dimension. Physics can still move nodes until Freeze is enabled.',
     'The hierarchy and references controls switch which relationships are displayed: parent-child address structure, or content references and interactions. Changing the view does not edit the notes.',
     'The mini graph’s Reset filters control clears the active search, filters, and scope. In the expanded graph the same Reset filters button sits beside Close, top right.',
   ] },
   { id: 'colors', section: 'Graph workspace', title: 'Graph colors & selection', keywords: 'colores centrality roots highlights purple lime', paragraphs: [
     'By default, graph nodes are colored by root family: the first part of their address. The expanded toolbar can switch to centrality colors, where lighter Wiki-accent tones mean higher centrality. Your color choice is remembered.',
-    'Current search and filter results use periwinkle, a temporary preview (hovering a node or a directory entry) lights each node up brighter in its own colour, and a committed selection uses lime. The surrounding graph stays visible for context.',
+    'Direct Name matches use pink and display their names. Other results and descendant context use periwinkle. A committed selection uses lime, with its descendants in a softer green; highlighted branch edges join two members of that branch. Hover previews are temporary and apply only with a mouse. The surrounding graph stays visible for context.',
     'Graph colors communicate family, structural rank, and selection. The blue visited-link convention belongs to note links and is a separate cue.',
   ] },
   { id: 'graph-tools', section: 'Graph workspace', title: 'Area selection & graph dynamics', keywords: 'physics simulation repulsion gravity damping density copiar area', paragraphs: [
@@ -110,13 +112,14 @@ const TOPICS: Topic[] = [
     'Graph dynamics adjusts the layout: repulsion spreads nodes apart, edge length sets their preferred separation, edge attraction pulls linked nodes together, and clearance reduces overlap. Damping controls how quickly movement settles; center gravity pulls the layout toward the middle.',
     'These controls change the visual arrangement, not the notes, their links, or their centrality scores. Use reset defaults in graph dynamics to restore the initial layout settings.',
   ] },
-  { id: 'mini-aids', section: 'Graph workspace', title: 'Mini graph: pins', keywords: 'pin pinned miniatura', paragraphs: [
-    'Pins flag up to three notes with a numbered marker on both graphs. Pin a note from its card (the marker beside Copy for context) or from the expanded graph; the pin control on the mini graph shows or hides the markers. Pins, freeze and the node size are remembered in this browser.',
+  { id: 'lenses', section: 'Search & results', title: 'Lenses', keywords: 'bridges orphans cited articles session trail filters', paragraphs: [
+    'Lenses are shared filters for the cards, directory and graph. Bridges selects concepts whose removal would split a connected component. Orphans selects concepts without references and is unavailable when there are none. Cited by articles has an adjustable minimum number of distinct articles. Session trail selects concepts visited in this browser tab.',
+    'Choose one lens, combine it with search and other filters, or click it again to clear it. In the console the lenses are a line of small chips at the far right of the filter & sort row, each with its graph colour and its count; the graph toolbar opens the same lenses as a list with a line on what each one selects. Clear trail forgets visits for this tab.',
   ] },
   { id: 'expanded-aids', section: 'Graph workspace', title: 'Expanded graph: path, timeline, lenses, legend, image', keywords: 'shortest path route camino timeline date age lens orphans bridges cited articles legend map image png size degree length density radius freeze', paragraphs: [
-    'Shortest path: click the route control, then a start note and an end note. While the end is not pinned, hovering any note previews the route from the start. The route is drawn in cyan over the edges currently shown, without opening a separate route panel. If there is no route, try the other edge mode.',
-    'Node size can follow centrality, the number of connections, or the length of the note. Hover over % to set the density study radius in the slider on its right. Hover over the pin to show or hide the red markers, or clear all pins. Freeze stops layout movement; click it again to resume.',
-    'The timeline shows the graph as it was on a date: drag the slider or play the sweep from the first note to the last. Age colours notes from cool (oldest) to warm (newest). Lenses single out orphans (no links), bridges (notes whose removal would split their component), notes cited by published articles (a thicker ring means more articles), or this session’s trail. Everything else recedes without disappearing.',
+    'Shortest path: click the route control, then a start note and an end note. Before choosing the end, hovering a note previews the route from the start. The route is drawn in cyan and its nodes are named. If there is no route, try the other edge mode.',
+    'Node size can follow centrality, the number of connections, or the length of the note. Hover over % to set the density study radius in the slider on its right. Freeze stops layout movement; click it again to resume. Freeze and node size are remembered in this browser.',
+    'The timeline shows the graph as it grew: drag the slider or play the sweep from the first note to the last. The slider moves by note, in date order and evenly spaced, so each step adds the next notes whatever the gap between their dates; the date beside it is the date of the last note shown. Age colours notes from cool (oldest) to warm (newest). Each lens row carries the colour it paints on the graph, what it selects and how many concepts it matches; lenses apply the shared console filters while retaining the surrounding graph for context. The button at the top right with the inward arrows minimizes the graph back to the console.',
     'The legend (the map control) is open by default and explains node colours, edge types and every ring. The camera control asks whether to copy the graph alone or the graph with the open panels, as a PNG image. Hovering a directory entry marks its node in lime; clicking one selects the node without opening the note. Closing the graph keeps every mode and the camera for the next time it opens. Escape closes the most recent aid first.',
   ] },
 ];

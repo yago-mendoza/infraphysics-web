@@ -14,8 +14,9 @@ import { BridgeScoreBadge } from '../components/wiki/BridgeScoreBadge';
 
 import { useGraphRelevance } from '../hooks/useGraphRelevance';
 import type { SortMode, SearchMode, SearchField, FilterState, ViewMode } from '../hooks/useSecondBrainHub';
-import { SearchIcon, RocketIcon, CheckIcon, WikiBrainIcon, FileTextIcon } from '../components/icons';
-import { useSharedPref, GRAPH_PINS_KEY, MAX_PINS, togglePinned } from '../hooks/useGraphPrefs';
+import { SearchIcon, RocketIcon, CheckIcon, WikiBrainIcon, FileTextIcon, FilterOffIcon } from '../components/icons';
+import { WikiSearchInput } from '../components/wiki/WikiSearchInput';
+import { WikiLenses } from '../components/wiki/WikiLenses';
 import { postPath, catAccentVar } from '../config/categories';
 import { noteLabel, type WikiNoteMeta } from '../types';
 import { type Connection } from '../lib/brainIndex';
@@ -56,7 +57,8 @@ const SIMPLIFIED_SORT_OPTIONS: { value: SortMode; label: string }[] = [
 // --- Search Mode Chips ---
 // The fields a query is matched against. They stack: any combination, at least one.
 const SEARCH_MODES: { value: SearchField; label: string; hint: string }[] = [
-  { value: 'name', label: 'name', hint: 'Match node names, paths and aliases' },
+  { value: 'name', label: 'name', hint: 'Match node names and aliases' },
+  { value: 'path', label: 'path', hint: 'Match the complete address, including ancestors' },
   { value: 'content', label: 'content', hint: 'Match text inside notes' },
   { value: 'backlinks', label: 'referenced by', hint: 'Find nodes referenced by matching notes' },
 ];
@@ -682,28 +684,7 @@ const DockedToolbar: React.FC<{
         <div className="flex flex-wrap items-center gap-2 border-b border-th-hub-border min-w-0">
         <div className="flex flex-1 basis-[14rem] items-center gap-2 px-3 py-2 min-w-0">
           <span className="text-th-tertiary flex-shrink-0"><SearchIcon /></span>
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder={
-              directoryScope ? `Search in ${directoryScope.replace(/\/\//g, ' / ')}...` : 'Search...'
-            }
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                e.preventDefault();
-                setQuery('');
-                (e.target as HTMLElement).blur();
-              }
-            }}
-            autoComplete="off"
-            spellCheck={false}
-            className="flex-1 min-w-0 font-mono text-[12px] md:text-[11px] focus:outline-none placeholder-th-muted bg-transparent text-th-primary"
-          />
-          {query && (
-            <button onClick={() => setQuery('')} className="text-th-tertiary hover:text-th-secondary text-[14px] md:text-[13px] leading-none flex-shrink-0 px-0.5">&times;</button>
-          )}
+          <WikiSearchInput inputRef={inputRef} placeholder={directoryScope ? `Search in ${directoryScope.replaceAll('//', ' / ')}…` : 'Search…'} />
         </div>
         {/* The tally on desktop; on phones it lives in the identity strip above the search. */}
         <span className="wiki-tally hidden md:inline-flex">{tallyInner}</span>
@@ -717,7 +698,7 @@ const DockedToolbar: React.FC<{
           />
         )}
 
-        {!isSimplified && <div className="grid grid-cols-3 gap-px border-b border-th-hub-border bg-th-hub-border p-px" role="group" aria-label="Search fields (stack as many as you need)">
+        {!isSimplified && <div className="grid grid-cols-4 gap-px border-b border-th-hub-border bg-th-hub-border p-px" role="group" aria-label="Search fields (stack as many as you need)">
           {SEARCH_MODES.map(mode => { const on = searchFields.includes(mode.value); return <button
             key={mode.value}
             type="button"
@@ -757,14 +738,15 @@ const DockedToolbar: React.FC<{
                 </span>
               )}
             </button>
-            {!isFiltersVisible && (hasActiveFilters || !!directoryScope) && (
+            {(hasActiveFilters || !!directoryScope) && (
               <button
                 type="button"
                 onClick={() => { resetFilters(); setDirectoryScope(null); }}
-                className="mr-2 border-l border-th-hub-border pl-2 font-mono text-[8px] uppercase tracking-[.08em] text-violet-400/80 transition-colors hover:text-violet-300"
+                className="mr-2 grid h-6 w-6 flex-none place-items-center text-violet-400/80 transition-colors hover:bg-th-surface hover:text-violet-300"
                 title="Clear active filters"
+                aria-label="Clear active filters"
               >
-                clear
+                <FilterOffIcon />
               </button>
             )}
           </div>
@@ -850,13 +832,7 @@ const DockedToolbar: React.FC<{
                   />
                 </div>
                 <span className="text-th-hub-border select-none">|</span>
-                <button
-                  onClick={() => updateFilter('isolated', !filterState.isolated)}
-                  className={`text-[10px] px-1 py-0.5 transition-colors ${filterState.isolated
-                    ? 'bg-violet-400/20 text-violet-400 border border-violet-400/30'
-                    : 'text-th-tertiary border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
-                    }`}
-                >isolated</button>
+
                 <button
                   onClick={() => updateFilter('leaf', !filterState.leaf)}
                   className={`text-[10px] px-1 py-0.5 transition-colors ${filterState.leaf
@@ -864,13 +840,9 @@ const DockedToolbar: React.FC<{
                     : 'text-th-tertiary border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
                     }`}
                 >leaf</button>
-                <button
-                  onClick={() => updateFilter('bridgesOnly', !filterState.bridgesOnly)}
-                  className={`text-[10px] px-1 py-0.5 transition-colors ${filterState.bridgesOnly
-                    ? 'bg-amber-400/20 text-amber-400 border border-amber-400/30'
-                    : 'text-th-tertiary border border-th-hub-border hover:text-th-secondary hover:border-th-border-hover'
-                    }`}
-                >bridges</button>
+
+                {/* Lenses: quiet, at the far right of the row. */}
+                <WikiLenses compact />
               </div>
               {/* Heatmap */}
               <div className="mt-2 px-3">
@@ -897,14 +869,6 @@ const DockedToolbar: React.FC<{
           {/* Reset + active chips — technical only */}
           {!isSimplified && (
           <div className="flex items-center gap-1 flex-wrap">
-            {(hasActiveFilters || !!directoryScope) && (
-              <button
-                className="text-[9px] px-1.5 py-0.5 border border-th-hub-border text-th-tertiary hover:text-violet-400 hover:border-violet-400/30 active:bg-violet-400/10 transition-colors"
-                onClick={() => { resetFilters(); setDirectoryScope(null); }}
-              >
-                reset
-              </button>
-            )}
             {directoryScope && (
               <Chip label={`scope: ${directoryScope.replace(/\/\//g, ' / ')}`} onDismiss={() => setDirectoryScope(null)} />
             )}
@@ -1078,8 +1042,6 @@ export const SecondBrainView: React.FC = () => {
   const { trail, scheduleReset, scheduleExtend, truncateTrail, clearTrail } =
     useNavigationTrail({ activePost, directoryNavRef });
   const { id: urlId } = useParams<{ id: string }>();
-  // Pinned notes: flagged with a number on both graphs; the card can pin or unpin the note it shows.
-  const [graphPins, setGraphPins] = useSharedPref<string[]>(GRAPH_PINS_KEY, []);
 
   useEffect(() => {
     if (activePost && urlId && window.location.pathname !== secondBrainPath(activePost.id)) {
@@ -1105,7 +1067,7 @@ export const SecondBrainView: React.FC = () => {
 
   // Auto-focus toolbar input when search becomes active (e.g. typed from detail view)
   useEffect(() => {
-    if (searchActive && toolbarInputRef.current) {
+    if (searchActive && !activePost && !document.querySelector('[aria-label="Expanded Wiki graph"]') && toolbarInputRef.current) {
       toolbarInputRef.current.focus();
     }
   }, [searchActive]);
@@ -1119,6 +1081,7 @@ export const SecondBrainView: React.FC = () => {
   // Disabled while focused in inputs or editable elements
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || document.querySelector('[aria-label="Expanded Wiki graph"]')) return;
       const el = e.target as HTMLElement;
       const tag = el.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
@@ -1159,7 +1122,6 @@ export const SecondBrainView: React.FC = () => {
 
   const handleGridCardClick = useCallback((post: WikiNoteMeta) => {
     if (activePostRef.current?.id !== post.id) invalidateContent();
-    clearSearch();
     scheduleReset(post);
   }, [invalidateContent, clearSearch, scheduleReset]);
 
@@ -1184,7 +1146,7 @@ export const SecondBrainView: React.FC = () => {
   }, [handleWikiLinkClick, navigate]);
 
   // When search is active, force list view
-  const showDetail = activePost && !searchActive;
+  const showDetail = !!activePost;
   const activeFilterMembership = useMemo(() => {
     if (!activePost || (!hasActiveFilters && !directoryScope && !query.trim())) return null;
     return sortedResults.some(note => note.id === activePost.id);
@@ -1449,16 +1411,7 @@ export const SecondBrainView: React.FC = () => {
       if (isInput && (isArrow || e.key === 'Enter')) {
         e.preventDefault();
         (e.target as HTMLElement).blur();
-        if (e.key === 'Enter') {
-          const total = visibleResults.length;
-          const idx = focusedIdx >= 0 ? focusedIdx : 0;
-          if (idx < total) {
-            const note = visibleResults[idx];
-            handleGridCardClick(note);
-            navigate(secondBrainPath(note.id));
-          }
-          return;
-        }
+        if (e.key === 'Enter') return;
       } else if (isInput) {
         return;
       }
@@ -1607,7 +1560,7 @@ export const SecondBrainView: React.FC = () => {
   if (missingNote) return <ErrorConceptView accent="wiki" />;
 
   return (
-    <div className={`animate-fade-in${showDetail ? '' : ' pt-4 md:pt-5'}`}>
+    <div className={`wiki-surface animate-fade-in${showDetail ? '' : ' pt-4 md:pt-5'}`}>
       {/* Toolbar — always mounted so type-to-search input exists in DOM.
           Hidden in detail view to avoid layout shift, but input stays focusable. */}
       <div style={showDetail ? { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0, pointerEvents: 'none' } : undefined}>
@@ -1646,7 +1599,7 @@ export const SecondBrainView: React.FC = () => {
           trail={trail}
           // React Router runs navigate as a transition; the trail update must ride the same transition or the bar vanishes a frame before the page changes.
           onItemClick={index => { const item = trail[index]; startTransition(() => { truncateTrail(index); navigate(secondBrainPath(item.id)); }); }}
-          onAllConceptsClick={() => startTransition(() => { clearTrail(); navigate(secondBrainPath()); })}
+          onAllConceptsClick={() => startTransition(() => { clearTrail(); hub.openConsole(); })}
         />
       </div>}
 
@@ -1710,15 +1663,7 @@ export const SecondBrainView: React.FC = () => {
               >
                 <RocketIcon size={14} />
               </button>
-              <button
-                onClick={() => setGraphPins(pins => togglePinned(pins, activePost!.id))}
-                aria-pressed={graphPins.includes(activePost!.id)}
-                className={`ml-2 shrink-0 transition-colors ${graphPins.includes(activePost!.id) ? 'text-pink-300 hover:text-pink-200' : 'text-th-tertiary hover:text-pink-300'}`}
-                title={graphPins.includes(activePost!.id) ? 'Unpin from the graph' : `Pin on the graph (up to ${MAX_PINS} notes, numbered)`}
-                aria-label={graphPins.includes(activePost!.id) ? 'Unpin from the graph' : 'Pin on the graph'}
-              >
-                <svg width="13" height="13" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M6 11 2.5 4h7z" />{graphPins.includes(activePost!.id) && <text x="6" y="7.2" textAnchor="middle" fontSize="4.6" fontFamily="ui-monospace, monospace" fill="var(--bg-base)">{graphPins.indexOf(activePost!.id) + 1}</text>}</svg>
-              </button>
+
             </div>
             <div className="text-[11px] text-th-tertiary mb-2">
               {activePost!.addressParts && activePost!.addressParts.length > 1
@@ -1952,7 +1897,7 @@ export const SecondBrainView: React.FC = () => {
           {showDetail && createPortal(
             <button
               onClick={() => {
-                navigate(secondBrainPath());
+                hub.openConsole(true);
                 setTimeout(() => {
                   toolbarInputRef.current?.scrollIntoView({ block: 'nearest' });
                   toolbarInputRef.current?.focus();

@@ -1,5 +1,6 @@
 import { DurableObject } from 'cloudflare:workers';
-import { addMetrics, createExploration, explore, type Dimensions, type ExplorationQuery } from './exploration';
+import {analyticsRange} from '../../../src/config/analytics';
+import { addMetrics, compactExploration, createExploration, explore, hourlyCutoff, HOURLY_RETENTION_DAYS, COMPACTION_BATCH, type Dimensions, type ExplorationQuery } from './exploration';
 
 type Entry = { key: string; value: string; expires: number | null };
 type Input = ExplorationQuery & { op: string; slug?: string; hash?: string; mutate?: boolean; slugs?: string[];
@@ -15,9 +16,11 @@ export const migratable = (key: string) => /^(views:|hearts:|seen:|hearted:|anal
 export class Counters extends DurableObject {
   private sql: SqlStorage;
   private limiter?:RateLimit;
+  private compactHourly: boolean;
   constructor(ctx: DurableObjectState, env: Record<string, unknown>) {
     super(ctx, env);
     this.limiter=env.COUNTER_RATE_LIMITER as RateLimit|undefined;
+    this.compactHourly=env.ANALYTICS_COMPACT_HOURLY === '1';
     this.sql = ctx.storage.sql;
     this.sql.exec(`CREATE TABLE IF NOT EXISTS entries (key TEXT PRIMARY KEY, value TEXT NOT NULL, expires INTEGER);
       CREATE INDEX IF NOT EXISTS entries_expiry ON entries(expires) WHERE expires IS NOT NULL;
@@ -91,25 +94,28 @@ export class Counters extends DurableObject {
     }
     if (state !== 'ready') throw new Error('Counters not activated');
     if (i.op === 'report') {
-      const from = i.from || '0000-01-01', to = i.to || '9999-12-31';
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to) || from > to) throw new Error('Invalid date range');
+      const range = analyticsRange(i.from,i.to);
+      const {from,to} = range;
       const breakdowns = Object.fromEntries(['entry', 'referrer', 'country', 'language', 'device'].map(group => [group,
         this.sql.exec<{label:string; value:number}>('SELECT substr(key,?) AS label,SUM(value) AS value FROM daily WHERE day>=? AND day<=? AND key LIKE ? GROUP BY key ORDER BY value DESC,key LIMIT 100', group.length + 2, from, to, `${group}:%`).toArray(),
       ]));
       return {
+      range, storage: {bytes: this.sql.databaseSize, hourlyRetentionDays: this.compactHourly ? HOURLY_RETENTION_DAYS : null,
+        compactionPending: this.sql.exec('SELECT 1 FROM exploration WHERE length(bucket)=13 AND bucket<? LIMIT 1',hourlyCutoff()).toArray().length>0,
+        lastCompaction: this.meta('last_compaction') || null, compactionBatch: COMPACTION_BATCH},
       started: this.meta('started'), totals: {pageviews: this.count('analytics:pageviews'), sessions: this.count('analytics:sessions'), visitors: this.count('analytics:visitors')},
       daily: this.sql.exec('SELECT day,key,value FROM daily WHERE day>=? AND day<=? ORDER BY day DESC,key LIMIT 10000', from, to).toArray(),
-      pages: this.sql.exec("SELECT key,value FROM entries WHERE key LIKE 'analytics:path:%' ORDER BY CAST(value AS INTEGER) DESC LIMIT 100").toArray(),
+      pages: this.sql.exec("SELECT key,value FROM entries WHERE key >= 'analytics:path:' AND key < 'analytics:path;' ORDER BY CAST(value AS INTEGER) DESC LIMIT 100").toArray(),
       period: Object.fromEntries(this.sql.exec<{key:string; value:number}>("SELECT key,SUM(value) AS value FROM daily WHERE day>=? AND day<=? AND key IN ('pageviews','sessions','visitors','hearts_added','hearts_removed') GROUP BY key", from, to).toArray().map(row => [row.key,row.value])),
       series: this.sql.exec("SELECT day,SUM(CASE WHEN key='pageviews' THEN value ELSE 0 END) AS pageviews,SUM(CASE WHEN key='sessions' THEN value ELSE 0 END) AS sessions,SUM(CASE WHEN key='visitors' THEN value ELSE 0 END) AS visitors FROM daily WHERE day>=? AND day<=? AND key IN ('pageviews','sessions','visitors') GROUP BY day ORDER BY day DESC LIMIT 366", from, to).toArray(),
       breakdowns,
-      articles: this.sql.exec(`WITH paths AS (SELECT substr(key,7) AS path FROM entries WHERE key LIKE 'views:%' UNION SELECT substr(key,8) AS path FROM entries WHERE key LIKE 'hearts:%')
+      articles: this.sql.exec(`WITH paths AS (SELECT substr(key,7) AS path FROM entries WHERE key >= 'views:' AND key < 'views;' UNION SELECT substr(key,8) AS path FROM entries WHERE key >= 'hearts:' AND key < 'hearts;')
         SELECT paths.path,COALESCE(CAST(v.value AS INTEGER),0) AS views,COALESCE(CAST(h.value AS INTEGER),0) AS hearts FROM paths
         LEFT JOIN entries v ON v.key='views:'||paths.path LEFT JOIN entries h ON h.key='hearts:'||paths.path ORDER BY views DESC,paths.path LIMIT 100`).toArray(),
-      engagement: this.sql.exec("SELECT COALESCE(SUM(CASE WHEN key LIKE 'views:%' THEN CAST(value AS INTEGER) ELSE 0 END),0) AS views,COALESCE(SUM(CASE WHEN key LIKE 'hearts:%' THEN CAST(value AS INTEGER) ELSE 0 END),0) AS hearts FROM entries WHERE key LIKE 'views:%' OR key LIKE 'hearts:%'").one(),
+      engagement: this.sql.exec("SELECT COALESCE(SUM(CASE WHEN key LIKE 'views:%' THEN CAST(value AS INTEGER) ELSE 0 END),0) AS views,COALESCE(SUM(CASE WHEN key LIKE 'hearts:%' THEN CAST(value AS INTEGER) ELSE 0 END),0) AS hearts FROM entries WHERE (key >= 'views:' AND key < 'views;') OR (key >= 'hearts:' AND key < 'hearts;')").one(),
       lastVisitor: this.get('presence:last') ? JSON.parse(this.get('presence:last')!) : null,
       limits: {dailyRows: 10000, topPages: 100, seriesDays: 366, breakdownRows: 100},
-      exploration: explore(this.sql,i,this.meta('exploration_since')),
+      exploration: explore(this.sql,{...i,from,to},this.meta('exploration_since')),
     }; }
     if (i.op === 'stats') return Object.fromEntries((i.slugs || []).slice(0,50).map(slug => [slug, {views: this.count(`views:${slug}`)}]));
     if (i.op === 'presence') return {lastVisitor: this.get('presence:last') ? JSON.parse(this.get('presence:last')!) : null,
@@ -174,7 +180,13 @@ export class Counters extends DurableObject {
     throw new Error('Unknown operation');
   }
   async alarm() {
-    this.sql.exec('DELETE FROM entries WHERE expires IS NOT NULL AND expires<=?', this.now());
+    this.ctx.storage.transactionSync(() => {
+      this.sql.exec('DELETE FROM entries WHERE expires IS NOT NULL AND expires<=?', this.now());
+      if(this.compactHourly){
+        compactExploration(this.sql);
+        this.setMeta('last_compaction',new Date().toISOString());
+      }
+    });
     // Daily aggregates and all-time totals have no automatic expiry.
     await this.ctx.storage.setAlarm(Date.now() + DAY * 1000);
   }

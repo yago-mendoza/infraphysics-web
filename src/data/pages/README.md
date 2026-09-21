@@ -17,12 +17,19 @@ Markdown in this directory is compiled at build time with marked, Shiki and a de
 | Which syntax feature applies in which category | [SYNTAX.md, *Where each feature applies*](SYNTAX.md#where-each-feature-applies) |
 | Images and standalone HTML pages | [Attachments](#attachments), below |
 | Voice (how an article sounds once it obeys the hard rules) | [VOICE.md](VOICE.md) |
+| Unwanted LLM phrasing across channels and languages | [NO-TICS.md](NO-TICS.md) |
 | Photographic language for every image | [VISUAL.md](VISUAL.md) |
-| Article ideas and incoming material, never compiled | [_studio/inbox/README.md](../../../_studio/inbox/README.md) |
+| Article ideas and incoming material, never compiled | [_studio/_inbox/bank/README.md](../../../_studio/_inbox/bank/README.md) |
 
 Do not document grammar in category guides. `SYNTAX.md` is the single syntax reference.
 
 Read in this order: this file, then `STYLE.md`, then `SYNTAX.md` (grammar and the per-category table), then the guide of the category you are writing in. For a wikinote, `wikinotes/STYLE.md` replaces the category guide.
+
+## Where editorial feedback belongs
+
+When the author dislikes how an LLM speaks or writes, capture the reusable lesson in [NO-TICS.md](NO-TICS.md) unless it is specific to a content type. A general tic belongs there even if it was noticed in an essay, a tweet or an agent response. Update the canonical paragraph so future prompts inherit it; do not add a separate ban to every category guide.
+
+Place other feedback in the document that owns its scope: category-specific voice, structure or storytelling in that category's README (Wiki writing in [wikinotes/STYLE.md](wikinotes/STYLE.md)); article-wide writing rules in [STYLE.md](STYLE.md), article voice in [VOICE.md](VOICE.md), image choices in [VISUAL.md](VISUAL.md), and Markdown grammar in [SYNTAX.md](SYNTAX.md). Keep the author's intended scope and exceptions. A correction to one passage is not automatically a universal prohibition. Amend an existing rule before adding another, and link to it wherever needed instead of duplicating it.
 
 ## Content boundaries
 
@@ -104,5 +111,7 @@ npm run content
 npm run content:fix
 npm run build
 ```
+
+The production build reads the published sources and tracked image/card manifests; it does not upload images or write `_studio`. Run `npm run context` explicitly after changing authoring docs, or `npm run context:check` to inspect drift without writing.
 
 Generated JSON and HTML are outputs, not authoring sources. Compilation details belong in `scripts/README.md`; wikinote validation and migration workflows belong in `wikinotes/README.md`.

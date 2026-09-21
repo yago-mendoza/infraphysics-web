@@ -1,4 +1,5 @@
 import {readJson, InputError} from '../../_lib/security';
+import {analyticsRange} from '../../../src/config/analytics';
 import { callCounters, durable, json, type CounterEnv } from '../../_lib/counters';
 
 const scopedKey = (key: string) => /^(views:|hearts:|seen:|hearted:|analytics:)/.test(key) || key === 'presence:last';
@@ -22,6 +23,10 @@ export const onRequest: PagesFunction<CounterEnv> = async ({request, env}) => {
   try {body=await readJson(request,600000);} catch(error) {return json({error:'Invalid request'},error instanceof InputError?error.status:400);}
   if (!body || typeof body !== 'object') return json({error:'Invalid request'},400);
   const op = body.op;
+  if (op === 'report') {
+    try { Object.assign(body, analyticsRange(body.from, body.to)); }
+    catch { return json({error:'Choose valid dates spanning at most 366 days'},400); }
+  }
   if (typeof op!=='string'||!['status','report','export','kv-export','begin','import','activate'].includes(op)) return json({error:'Unknown operation'},400);
   if (['kv-export','begin','import','activate'].includes(String(op)) && (env.COUNTERS_MIGRATION_ENABLED !== '1' || env.COUNTERS_PAUSED !== '1' || durable(env))) return json({error:'Migration requires paused KV backend and migration flag'},409);
   if (op === 'kv-export') {

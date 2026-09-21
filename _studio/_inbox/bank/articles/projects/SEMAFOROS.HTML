@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enseñar a una ciudad a coordinarse — Semáforos inteligentes para Barcelona</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=STIX+Two+Text:ital,wght@0,400;0,600;0,700;1,400&family=Spectral:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']], displayMath: [['$$','$$']] },
+  chtml: { scale: 1.02 },
+  options: { renderActions: { addMenu: [] } }
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" async></script>
+<style>
+:root{
+  --bg:#0C0F16; --bg2:#11151F; --panel:#131826; --panel2:#0f1420;
+  --ink:#E9E7E0; --dim:#98A1B3; --faint:#5d6577;
+  --blue:#58C4DD; --blue-dim:#2b6f80;
+  --yellow:#F0C419; --brown:#D49A6A; --green:#7FD483; --red:#E4655F;
+  --violet:#B58CE0;
+  --line:#232A3A; --line2:#2e3750;
+  --maxw: 780px;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:'Spectral', Georgia, serif;
+  font-weight:300; font-size:19px; line-height:1.72;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:rgba(88,196,221,.28)}
+h1,h2,h3{font-family:'STIX Two Text', 'Spectral', serif; font-weight:600; line-height:1.2}
+a{color:var(--blue); text-decoration:none; border-bottom:1px solid var(--blue-dim)}
+strong{font-weight:600; color:#fff}
+em{color:var(--ink)}
+code, .mono{font-family:'JetBrains Mono', monospace; font-size:.82em; color:var(--blue); background:rgba(88,196,221,.08); padding:.08em .35em; border-radius:4px}
+
+/* ---------- HERO ---------- */
+.hero{position:relative; height:92vh; min-height:560px; overflow:hidden;
+  display:flex; align-items:flex-end; justify-content:center;
+  border-bottom:1px solid var(--line)}
+#heroCanvas{position:absolute; inset:0; width:100%; height:100%; display:block}
+.hero-veil{position:absolute; inset:0;
+  background:radial-gradient(ellipse at 50% 30%, rgba(12,15,22,0) 0%, rgba(12,15,22,.55) 60%, rgba(12,15,22,.96) 100%)}
+.hero-inner{position:relative; z-index:2; text-align:center; padding:0 24px 9vh; max-width:900px}
+.hero-eyebrow{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.28em;
+  text-transform:uppercase; color:var(--blue); margin-bottom:22px}
+.hero h1{font-size:clamp(34px, 5.4vw, 62px); font-weight:700; color:#fff; margin-bottom:20px}
+.hero h1 .q{color:var(--blue)}
+.hero-sub{font-size:clamp(16px,2vw,20px); color:var(--dim); font-style:italic; max-width:640px; margin:0 auto}
+.hero-scroll{margin-top:36px; font-family:'JetBrains Mono',monospace; font-size:11px;
+  letter-spacing:.2em; color:var(--dim); text-transform:uppercase; animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
+
+/* ---------- LAYOUT ---------- */
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px}
+section.ch{padding:84px 0 40px}
+.eyebrow{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.26em;
+  text-transform:uppercase; color:var(--brown); margin-bottom:14px; display:flex; align-items:center; gap:14px}
+.eyebrow::after{content:""; flex:1; height:1px; background:var(--line)}
+section.ch h2{font-size:clamp(26px,3.6vw,38px); color:#fff; margin-bottom:26px}
+section.ch h3{font-size:22px; color:var(--blue); margin:40px 0 14px; font-weight:600}
+p{margin-bottom:1.15em}
+p.lead{font-size:1.12em; color:#fff}
+.divider{max-width:var(--maxw); margin:0 auto; padding:0 24px}
+.divider hr{border:none; height:1px; background:var(--line)}
+
+/* ---------- COMPONENTES DE TEXTO ---------- */
+.note{border-left:3px solid var(--brown); background:linear-gradient(90deg, rgba(212,154,106,.07), transparent 70%);
+  padding:18px 22px; margin:28px 0; border-radius:0 8px 8px 0}
+.note .tag{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--brown); display:block; margin-bottom:8px}
+.note p:last-child{margin-bottom:0}
+.note.blue{border-color:var(--blue); background:linear-gradient(90deg, rgba(88,196,221,.07), transparent 70%)}
+.note.blue .tag{color:var(--blue)}
+.note.warn{border-color:var(--red); background:linear-gradient(90deg, rgba(228,101,95,.07), transparent 70%)}
+.note.warn .tag{color:var(--red)}
+
+.defbox{background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  padding:20px 24px; margin:26px 0}
+.defbox .term{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--yellow); margin-bottom:8px}
+.defbox p:last-child{margin-bottom:0}
+.defbox .py{margin-top:12px; padding-top:12px; border-top:1px dashed var(--line2); font-size:.92em; color:var(--dim)}
+.defbox .py b{color:var(--green); font-weight:600; font-family:'JetBrains Mono',monospace; font-size:.85em; letter-spacing:.08em}
+
+blockquote{margin:30px 0; padding:6px 0 6px 26px; border-left:2px solid var(--blue);
+  font-family:'STIX Two Text',serif; font-style:italic; font-size:1.15em; color:#fff}
+
+/* ---------- FIGURAS INTERACTIVAS ---------- */
+.fig{background:var(--panel); border:1px solid var(--line); border-radius:14px;
+  margin:36px 0; overflow:hidden}
+.fig-head{display:flex; justify-content:space-between; align-items:baseline; gap:12px;
+  padding:14px 20px; border-bottom:1px solid var(--line); flex-wrap:wrap}
+.fig-title{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--blue)}
+.fig-hint{font-size:14px; color:var(--dim); font-style:italic}
+.fig-body{padding:20px}
+.fig-cap{padding:14px 20px 18px; border-top:1px solid var(--line); font-size:15px; color:var(--dim)}
+.fig canvas{display:block; width:100%; border-radius:8px; background:var(--panel2)}
+.fig svg{display:block; width:100%; height:auto}
+.controls{display:flex; gap:22px; flex-wrap:wrap; margin-top:16px; align-items:center}
+.ctl{display:flex; flex-direction:column; gap:5px; min-width:150px; flex:1}
+.ctl label{font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:.06em; color:var(--dim);
+  display:flex; justify-content:space-between}
+.ctl label .val{color:var(--yellow)}
+input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:2px;
+  background:var(--line2); outline:none; cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:15px; height:15px;
+  border-radius:50%; background:var(--blue); border:2px solid #0c0f16; box-shadow:0 0 0 1px var(--blue)}
+input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--blue);border:2px solid #0c0f16}
+button.btn{font-family:'JetBrains Mono',monospace; font-size:12.5px; letter-spacing:.08em;
+  background:transparent; color:var(--blue); border:1px solid var(--blue-dim); border-radius:8px;
+  padding:9px 16px; cursor:pointer; transition:all .18s}
+button.btn:hover{background:rgba(88,196,221,.12)}
+button.btn.on{background:var(--blue); color:#0c0f16; font-weight:600}
+button.btn:focus-visible{outline:2px solid var(--yellow); outline-offset:2px}
+.readout{font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--ink);
+  background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:12px 16px; margin-top:14px; line-height:1.9}
+.readout b{color:var(--yellow); font-weight:600}
+.readout .win{color:var(--green)}
+.readout .lose{color:var(--red)}
+
+/* matrices */
+.mats{display:flex; gap:18px; flex-wrap:wrap; justify-content:center; margin-top:16px}
+.mat{text-align:center}
+.mat .mname{font-family:'STIX Two Text',serif; font-style:italic; font-size:17px; color:var(--yellow); margin-bottom:6px}
+table.mtx{border-collapse:collapse; font-family:'JetBrains Mono',monospace; font-size:12.5px; margin:0 auto;
+  border-left:2px solid var(--dim); border-right:2px solid var(--dim); border-radius:2px}
+table.mtx td{padding:3px 8px; text-align:center; color:var(--dim); min-width:30px}
+table.mtx td.nz{color:var(--blue); font-weight:600}
+table.mtx td.dg{color:var(--yellow); font-weight:600}
+table.mtx td.neg{color:var(--red)}
+
+/* leyendas de color */
+.legend{display:flex; gap:18px; flex-wrap:wrap; margin-top:12px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--dim)}
+.legend span{display:flex; align-items:center; gap:7px}
+.dot{width:10px; height:10px; border-radius:50%; display:inline-block}
+
+/* diagrama loop final */
+.loopwrap{display:flex; justify-content:center}
+
+/* pipeline / roadmap */
+.steps{counter-reset:st; margin:26px 0}
+.step{display:flex; gap:18px; padding:16px 0; border-bottom:1px dashed var(--line)}
+.step:last-child{border-bottom:none}
+.step::before{counter-increment:st; content:counter(st,decimal-leading-zero);
+  font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--brown); padding-top:4px; min-width:30px}
+.step h4{font-family:'STIX Two Text',serif; font-size:18px; color:#fff; font-weight:600; margin-bottom:4px}
+.step p{margin:0; font-size:16.5px; color:var(--dim)}
+
+footer{padding:70px 24px 90px; text-align:center; color:var(--dim); font-size:15px; border-top:1px solid var(--line); margin-top:70px}
+footer .sig{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--brown); margin-top:14px}
+
+@media (max-width:640px){
+  body{font-size:17px}
+  .fig-body{padding:14px}
+  section.ch{padding:64px 0 30px}
+}
+@media (prefers-reduced-motion:reduce){
+  .hero-scroll{animation:none}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<header class="hero">
+  <canvas id="heroCanvas" aria-hidden="true"></canvas>
+  <div class="hero-veil"></div>
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Un ensayo visual · percepción → predicción → control</div>
+    <h1>¿Cómo harías inteligentes todos los semáforos de Barcelona<span class="q">?</span></h1>
+    <p class="hero-sub">Un viaje desde una pregunta ingenua hasta una arquitectura completa: grafos, Laplacianos, filtros de Kalman, MCMC, redes neuronales de grafos y control multiagente — cada concepto explicado desde cero, justo cuando hace falta.</p>
+    <div class="hero-scroll">↓ desplázate</div>
+  </div>
+</header>
+
+<!-- ═══════════════ CAP 0 ═══════════════ -->
+<section class="ch" id="c0">
+  <div class="wrap">
+    <div class="eyebrow">Capítulo 0 · La pregunta</div>
+    <h2>Mirar Barcelona desde arriba</h2>
+    <p class="lead">Imagina que estamos mirando Barcelona desde arriba. No vemos edificios. No vemos parques. No vemos personas. Solo vemos miles de líneas que se cruzan, y sobre ellas, pequeños puntos moviéndose.</p>
+    <p>Coches. Algunos avanzan. Otros frenan. Otros esperan. Y en cada intersección hay una pequeña máquina que toma, cada pocos segundos, una decisión extraordinariamente importante: <strong>¿quién puede pasar ahora?</strong></p>
+    <p>La pregunta que queremos responder parece sencilla:</p>
+    <blockquote>Si pudiéramos controlar todos los semáforos de Barcelona con inteligencia artificial, ¿podríamos hacer que toda la ciudad circulase mejor?</blockquote>
+    <p>Pero antes de hablar de redes neuronales, transformers o <em>reinforcement learning</em>, tenemos un problema mucho más básico, y mucho más incómodo: <strong>¿qué significa exactamente "circular mejor"?</strong></p>
+    <p>Este ensayo recorre el proyecto completo, en el orden en el que un ingeniero tendría que resolverlo de verdad. Cada pieza matemática aparecerá <em>solo cuando el problema la exija</em>. Ese es el juego.</p>
+  </div>
+</section>
+<div class="divider"><hr></div>
+
+<!-- ═══════════════ CAP 1 ═══════════════ -->
+<section class="ch" id="c1">
+  <div class="wrap">
+    <div class="eyebrow">Capítulo 1 · Modelización</div>
+    <h2>¿Qué estamos intentando optimizar?</h2>
+    <p>Supón que tienes dos programas para controlar una intersección.</p>
+    <p>El <strong>programa A</strong> consigue que los coches vuelen por la avenida principal… a costa de que las calles laterales esperen siete minutos. El <strong>programa B</strong> reparte el tiempo con perfecta equidad… y genera una cola gigantesca en una arteria principal.</p>
+    <p>¿Cuál es mejor? <strong>No existe respuesta</strong> hasta que definimos una función objetivo.</p>
+
+    <div class="defbox">
+      <div class="term">Función objetivo (o función de coste)</div>
+      <p>Un número único, \(J\), que resume "cómo de mal lo estamos haciendo". Toda optimización —y todo aprendizaje automático— consiste en mover parámetros para hacer que ese número baje. Si eliges mal \(J\), obtendrás un sistema perfectamente optimizado… para el problema equivocado.</p>
+      <div class="py"><b>ANALOGÍA PYTHON</b> — Es la <code>loss function</code> que pasarías a un optimizador: sin ella, <code>scipy.optimize.minimize()</code> no tiene nada que minimizar.</div>
+    </div>
+
+    <p>Podríamos empezar minimizando el tiempo total de espera, \(J=\sum_i T_i\). Pero quizá nos preocupen también las colas largas, las paradas y arranques (consumo y emisiones), los autobuses, los peatones… Y acabamos con algo así:</p>
+    <p style="text-align:center; font-size:1.1em">$$J \;=\; \alpha\,W \;+\; \beta\,Q \;+\; \gamma\,S$$</p>
+    <p>donde \(W\) es espera media, \(Q\) es longitud de colas y \(S\) es número de paradas. Las letras griegas \(\alpha,\beta,\gamma\) son <strong>pesos</strong>: dicen cuánto nos importa cada cosa. Y aquí viene lo interesante: <strong>los pesos no son matemáticas, son política</strong>. Cambiarlos cambia qué controlador "gana".</p>
+
+    <div class="fig">
+      <div class="fig-head">
+        <span class="fig-title">Fig. 1 — Tú eliges qué significa "mejor"</span>
+        <span class="fig-hint">mueve los pesos y observa qué política gana</span>
+      </div>
+      <div class="fig-body">
+        <div class="controls">
+          <div class="ctl"><label>α — peso de la espera <span class="val" id="aVal">1.0</span></label>
+            <input type="range" id="aSlider" min="0" max="3" step="0.1" value="1"></div>
+          <div class="ctl"><label>β — peso de las colas <span class="val" id="bVal">1.0</span></label>
+            <input type="range" id="bSlider" min="0" max="3" step="0.1" value="1"></div>
+          <div class="ctl"><label>γ — peso de las paradas <span class="val" id="gVal">1.0</span></label>
+            <input type="range" id="gSlider" min="0" max="3" step="0.1" value="1"></div>
+        </div>
+        <canvas id="objCanvas" height="300"></canvas>
+        <div class="readout" id="objReadout"></div>
+      </div>
+      <div class="fig-cap">Tres políticas ficticias con perfiles distintos: A prioriza la avenida (poca espera media, colas laterales enormes), B es equitativa (colas moderadas, muchas paradas), C es un compromiso. Ninguna es "la mejor" en abstracto: <em>la mejor depende de los pesos que tú acabas de elegir</em>. Antes de construir una IA, hay que decirle qué significa hacerlo bien.</div>
+    </div>
+
+    <div class="note">
+      <span class="tag">Observación añadida</span>
+      <p>Hay un peligro clásico aquí llamado <strong>ley de Goodhart</strong>: "cuando una métrica se convierte en objetivo, deja de ser buena métrica". Si \(J\) solo mide la espera <em>media</em>, el sistema aprenderá a sacrificar sistemáticamente a una minoría (esa calle lateral que siempre pierde). Por eso más adelante mediremos <em>distribuciones</em> —percentiles 50, 90 y 99— y no solo medias. La equidad hay que ponerla en la función, no esperarla como regalo.</p>
+    </div>
+  </div>
+</section>
+<div class="divider"><hr></div>
+
+<!-- ═══════════════ CAP 2 ═══════════════ -->
+<section class="ch" id="c2">
+  <div class="wrap">
+    <div class="eyebrow">Capítulo 2 · Representación</div>
+    <h2>La ciudad no es una imagen</h2>
+    <p>Ya sabemos qué queremos minimizar. Siguiente decisión: <strong>¿cómo representamos Barcelona matemáticamente?</strong></p>
+    <p>Una primera tentación: convertirla en una imagen. Una cuadrícula donde cada píxel contiene cuánto tráfico hay. Eso nos recordaría inmediatamente a una <strong>CNN</strong>.</p>
+
+    <div class="defbox">
+      <div class="term">CNN — Convolutional Neural Network</div>
+      <p>Una red neuronal que procesa una imagen deslizando pequeños filtros sobre ella. Funciona maravillosamente porque en una imagen <em>cada píxel tiene vecinos perfectamente definidos</em> —arriba, abajo, izquierda, derecha— y esa geometría es idéntica en todas partes. La CNN explota esa regularidad para reutilizar los mismos filtros en toda la imagen.</p>
+    </div>
+
+    <p>Pero piensa en una intersección real. Una puede tener tres calles; otra, cinco. Una calle puede conectarte directamente con un punto a 200 metros, y no tener <em>ninguna</em> relación vial con la calle que físicamente está a 30 metros (sentido único, mediana, túnel…).</p>
+    <blockquote>La proximidad geométrica no es la proximidad del sistema de tráfico.</blockquote>
+    <p>En una imagen, <em>vecino = píxel cercano</em>. En tráfico, <em>vecino = carretera conectada</em>. Son conceptos diferentes. Si forzamos la ciudad dentro de una cuadrícula, obligamos al modelo a aprender —con datos y parámetros— algo que ya sabíamos de antemano: la topología. Es un desperdicio, y una fuente de errores.</p>
+    <p>Barcelona no es una cuadrícula (ni siquiera el Eixample, con su Diagonal atravesándolo todo). Es algo mucho más natural: <strong>un grafo</strong>.</p>
+  </div>
+</section>
+<div class="divider"><hr></div>
+
+<!-- ═══════════════ CAP 3 ═══════════════ -->
+<section class="ch" id="c3">
+  <div class="wrap">
+    <div class="eyebrow">Capítulo 3 · El grafo</div>
+    <h2>Barcelona como grafo</h2>
+
+    <div class="defbox">
+      <div class="term">Grafo</div>
+      <p>Una colección de <strong>nodos</strong> (puntos) y <strong>aristas</strong> (conexiones entre pares de puntos). Se escribe \(G=(V,E)\): \(V\) es el conjunto de nodos, \(E\) el de aristas. Es la estructura matemática natural para cualquier cosa que sea "elementos + relaciones": redes sociales, moléculas, internet… y calles.</p>
+      <div class="py"><b>ANALOGÍA PYTHON</b> — Un <code>dict</code> de listas de adyacencia: <code>{'PlEspanya': ['GranVia_1', 'ParalLel_3'], ...}</code>. La librería estándar del sector es <code>networkx</code>; para deep learning, <code>PyTorch Geometric</code>.</div>
+    </div>
+
+    <p>Cada <strong>intersección → nodo</strong>. Cada <strong>tramo de calle → arista</strong>. Y como las calles tienen sentido, usamos un <strong>grafo dirigido</strong>: la arista \(A\to B\) puede existir sin que exista \(B\to A\).</p>
+    <p>Cada arista lleva, además, un pequeño vector de información:</p>
+    <p style="text-align:center">$$x_e = [\,\text{velocidad},\ \text{flujo},\ \text{ocupación},\ \text{cola}\,]$$</p>
+    <p>De repente tenemos una representación honesta de la ciudad: respeta quién está conectado con quién, admite intersecciones de 3, 4 o 5 calles sin despeinarse, y no inventa vecindades que no existen.</p>
+
+    <div class="fig">
+      <div class="fig-head">
+        <span class="fig-title">Fig. 2 — La misma zona, dos representaciones</span>
+        <span class="fig-hint">pulsa para alternar</span>
+      </div>
+      <div class="fig-body">
+        <div class="controls" style="margin-top:0; margin-bottom:14px">
+          <button class="btn on" id="btnGridView">Cuadrícula (píxeles)</button>
+          <button class="btn" id="btnGraphView">Grafo (nodos + aristas)</button>
+        </div>
+        <canvas id="reprCanvas" height="340"></canvas>
+      </div>
+      <div class="fig-cap"><strong>Cuadrícula:</strong> la Diagonal se rompe en escalones de píxeles y dos calles paralelas sin conexión parecen "vecinas". <strong>Grafo:</strong> cada flecha es una relación vial real; la geometría deja de importar y la <em>conectividad</em> pasa a ser lo único que cuenta. Esta decisión de representación condicionará todo lo que viene después.</div>
+    </div>
+
+    <p>Y ahora que la ciudad es un grafo, podemos hacer algo precioso: <strong>convertir el grafo en una matriz</strong>. Porque las matrices se pueden multiplicar, derivar, diagonalizar… y ahí es donde empieza la magia.</p>
+  </div>
+</section>
+<div class="divider"><hr></div>
+
+<!-- ═══════════════ CAP 4 ═══════════════ -->
+<section class="ch" id="c4">
+  <div class="wrap">
+    <div class="eyebrow">Capítulo 4 · El Laplaciano</div>
+    <h2>La matriz que sabe cómo se propaga todo</h2>
+    <p class="lead">Este capítulo no estaba en la versión ingenua del proyecto. Pero es, probablemente, la pieza matemática más elegante de todo el sistema — y la que conecta silenciosamente casi todas las demás.</p>
+
+    <p>Empecemos con dos matrices sencillas que describen un grafo:</p>
+
+    <div class="defbox">
+      <div class="term">Matriz de adyacencia — A</div>
+      <p>Una tabla \(n\times n\) (un número por cada par de nodos) donde \(A_{ij}=1\) si el nodo \(i\) está conectado con el \(j\), y \(0\) si no. Es, literalmente, el grafo escrito como números.</p>
+    </div>
+    <div class="defbox">
+      <div class="term">Matriz de grados — D</div>
+      <p>Una matriz diagonal donde \(D_{ii}\) cuenta cuántas conexiones tiene el nodo \(i\). Todo lo demás es cero. Es el "cuántos vecinos tengo" de cada intersección.</p>
+    </div>
+
+    <p>Y ahora, la estrella:</p>
+    <p style="text-align:center; font-size:1.15em">$$L = D - A$$</p>
+
+    <div class="defbox">
+      <div class="term">Laplaciano del grafo — L</div>
+      <p>La resta de las dos anteriores. Parece una definición arbitraria, pero esconde una idea física profunda: si \(x\) es un vector con un valor por nodo (por ejemplo, congestión), entonces la fila \(i\) de \(Lx\) calcula:</p>
+      <p style="text-align:center">$$(Lx)_i = \sum_{j \in N(i)} (x_i - x_j)$$</p>
+      <p>Es decir: <strong>cuánto se diferencia cada nodo de sus vecinos</strong>. El Laplaciano es un detector de desequilibrios locales. Es la versión para grafos de la segunda derivada — el mismo operador \(\nabla^2\) que gobierna cómo se difunde el calor en una barra de metal.</p>
+    </div>
+
+    <p>¿Y por qué nos importa esto en una ciudad? Porque la congestión <em>se difunde</em>. Un atasco no se queda quieto: empuja colas hacia las calles que desembocan en él, exactamente igual que el calor fluye de lo caliente a lo frío. La ecuación más simple de esa difusión es:</p>
+    <p style="text-align:center">$$x_{t+1} = x_t - \varepsilon\, L\, x_t$$</p>
+    <p>"El nuevo estado de cada nodo se acerca un poco al promedio de sus vecinos." Pruébalo:</p>
+
+    <div class="fig">
+      <div class="fig-head">
+        <span class="fig-title">Fig. 3 — El Laplaciano en acción</span>
+        <span class="fig-hint">pulsa un nodo para inyectar congestión, luego difunde</span>
+      </div>
+      <div class="fig-body">
+        <canvas id="lapCanvas" height="320"></canvas>
+        <div class="controls">
+          <button class="btn" id="lapStep">Difundir 1 paso &nbsp;x ← x − εLx</button>
+          <button class="btn" id="lapRun">▶ Difundir en bucle</button>
+          <button class="btn" id="lapReset">Reiniciar</button>
+        </div>
+        <div class="readout" id="lapReadout"></div>
+        <div class="mats" id="lapMats"></div>
+      </div>
+      <div class="fig-cap">Cada clic pone congestión (naranja) en un nodo. Al difundir, el desequilibrio fluye por las aristas hasta que todos los nodos convergen al mismo valor — fíjate en que la <b>suma total se conserva</b>: el Laplaciano mueve congestión, no la crea ni la destruye. Debajo, las matrices \(A\), \(D\) y \(L=D-A\) de este grafo exacto: diagonal amarilla (grados), fuera de diagonal en rojo (−1 por cada conexión).</div>
+    </div>
+
+    <h3>El regalo escondido: los valores propios</h3>
+    <p>Aquí viene la parte que justifica el capítulo entero. El Laplaciano tiene <strong>vectores propios</strong> (eigenvectors): direcciones especiales \(v\) en las que multiplicar por \(L\) solo estira, \(Lv=\lambda v\). Y esos vectores propios son, literalmente, <strong>los modos de vibración del grafo</strong> — igual que los armónicos de una cuerda de guitarra, pero sobre la red de calles.</p>
+    <p>Dos consecuencias prácticas enormes:</p>
+    <p><strong>1 — Zonificar la ciudad automáticamente.</strong> El segundo vector propio más pequeño (llamado <em>vector de Fiedler</em>) parte el grafo en las dos mitades <em>menos conectadas entre sí</em>. Aplicado recursivamente, descompone Barcelona en zonas de tráfico casi independientes — perfectas para repartir el control entre subsistemas sin que se pisen. Nadie dibuja las zonas a mano: <em>emergen de la topología</em>.</p>
+
+    <div class="fig">
+      <div class="fig-head">
+        <span class="fig-title">Fig. 4 — Partición espectral (vector de Fiedler)</span>
+        <span class="fig-hint">calculado en vivo sobre el mismo grafo</span>
+      </div>
+      <div class="fig-body">
+        <canvas id="fiedlerCanvas" height="300"></canvas>
+      </div>
+      <div class="fig-cap">Cada nodo se colorea según el signo de su componente en el vector de Fiedler. La frontera cae exactamente en el "cuello de botella" del grafo: la zona con menos aristas cruzando. En Barcelona real, esto descubre solo cosas como "la Ronda separa dos regímenes de tráfico" — sin que nadie se lo diga.</div>
+    </div>
+
+    <p><strong>2 — La base matemática de las GNN.</strong> Cuando en el capítulo 8 construyamos una red neuronal de grafos, sus operaciones serán —bajo el capó— <em>funciones del Laplaciano</em>. Las convoluciones sobre grafos se definieron originalmente en el espacio espectral de \(L\). Así que este capítulo no era un desvío: era cimentación.</p>
+
+    <div class="note">
+      <span class="tag">Observación añadida</span>
+      <p>Bonus elegante: la clásica <strong>onda verde</strong> (semáforos sincronizados con un desfase para que un pelotón de coches encadene verdes) es, en este lenguaje, excitar un modo propio del sistema a lo largo de un camino del grafo. Lo que los ingenieros de tráfico llevan décadas ajustando a mano tiene una lectura espectral limpia — y un buen controlador debería redescubrirla solo.</p>
+    </div>
+  </div>
+</section>
+<div class="divider"><hr></div>
+
+<!-- ═══════════════ CAP 5 ═══════════════ -->
+<section class="ch" id="c5">
+  <div class="wrap">
+    <div class="eyebrow">Capítulo 5 · Percepción</div>
+    <h2>Darle ojos al sistema (sin arruinarse)</h2>
+    <p>Ya tenemos un objetivo y una representación. Pero el grafo está vacío: no sabemos <em>cuánto tráfico hay</em> en cada arista. Necesitamos sensores que transformen algo físico —vehículos moviéndose— en números:</p>
+    <p style="text-align:center">$$f=\frac{\text{vehículos}}{\text{minuto}} \qquad v = \text{velocidad media} \qquad o = \text{ocupación} \qquad q = \text{longitud de cola}$$</p>
+    <p>Lazos inductivos enterrados en el asfalto, cámaras, radar, magnetómetros, datos agregados de flotas… cada tecnología con sus virtudes y sus miserias. Pero la pregunta cara no es <em>qué</em> sensor usar. Es: <strong>¿cuántos necesitamos?</strong></p>
+    <p>Barcelona tiene miles de tramos. ¿Sensorizamos todos? Probablemente no, porque el tráfico tiene <strong>estructura</strong>: si sé cuántos coches entran a una zona y cuántos salen, puedo inferir bastante bien lo que pasa dentro. Aquí aparece un concepto de teoría de control:</p>
+
+    <div class="defbox">
+      <div class="term">Observabilidad</div>
+      <p>Un sistema es <em>observable</em> si, midiendo suficientes partes de él durante suficiente tiempo, puedes reconstruir su estado interno completo. La pregunta correcta deja de ser "¿cuántos sensores puedo pagar?" y pasa a ser: <strong>"¿cuál es el conjunto mínimo de sensores que hace el sistema observable con la precisión que necesito?"</strong> La diferencia puede ser literalmente de miles de sensores.</p>
+      <div class="py"><b>ANALOGÍA PYTHON</b> — Es como el <em>sampling</em> en profiling: no traceas cada línea de código; muestreas estratégicamente y reconstruyes el perfil completo. Medir menos, inferir más.</div>
+    </div>
+
+    <div class="fig">
+      <div class="fig-head">
+        <span class="fig-title">Fig. 5 — ¿Cuántos sensores bastan?</span>
+        <span class="fig-hint">pulsa sobre el corredor para colocar / quitar sensores</span>
+      </div>
+      <div class="fig-body">
+        <canvas id="sensCanvas" height="300"></canvas>
+        <div class="controls">
+          <button class="btn" id="sensNew">Nuevo patrón de tráfico oculto</button>
+          <button class="btn" id="sensClear">Quitar sensores</button>
+        </div>
+        <div class="readout" id="sensReadout"></div>
+      </div>
+      <div class="fig-cap">La curva azul punteada es la congestión <em>real</em> a lo largo de un corredor de 12 tramos — que el sistema no puede ver. Tus sensores (amarillo) miden puntos concretos; la curva naranja es la reconstrucción por interpolación. Observa cómo el error cae en picado con los primeros 3–4 sensores <em>bien colocados</em>… y casi nada después. Ese codo de la curva es donde vive el presupuesto óptimo.</div>
+    </div>
+  </div>
+</section>
+<div class="divider"><hr></div>
+
+<!-- ═══════════════ CAP 6 ═══════════════ -->
+<section class="ch" id="c6">
+  <div class="wrap">
+    <div class="eyebrow">Capítulo 6 · Estimación</div>
+    <h2>Kalman: el arte de creer a medias</h2>
+    <p>Los sensores son imperfectos. Una cámara falla con lluvia, un radar mete ruido, un tramo entero puede no tener sensor. Supón que un sensor dice <strong>23 coches</strong>, pero tu modelo físico —sabiendo cómo estaba el tráfico hace diez segundos— esperaba <strong>20</strong>. ¿A quién crees?</p>
+    <p>Probablemente a algo intermedio. Y "algo intermedio, ponderado por cuánto confío en cada fuente" tiene nombre propio:</p>
+
+    <div class="defbox">
+      <div class="term">Filtro de Kalman</div>
+      <p>Un algoritmo que mantiene una estimación del estado y la actualiza en un ciclo eterno de dos pasos: <strong>predicción</strong> ("según la física, ahora debería haber ~20") y <strong>corrección</strong> ("el sensor dice 23; mezclo ambas"). La mezcla no es un promedio fijo: la controla la <em>ganancia de Kalman</em> \(K\),</p>
+      <p style="text-align:center">$$\hat{x} = \hat{x}_{pred} + K\,(z - \hat{x}_{pred}), \qquad K \approx \frac{\text{incertidumbre del modelo}}{\text{incertidumbre del modelo} + \text{ruido del sensor}}$$</p>
+      <p>Sensor ruidoso → \(K\) pequeña → confía en el modelo. Modelo malo → \(K\) grande → confía en el sensor. Y \(K\) se recalcula sola en cada paso. Es inferencia bayesiana disfrazada de álgebra lineal.</p>
+      <div class="py"><b>ANALOGÍA PYTHON</b> — Una media móvil exponencial (<code>EMA</code>) es un Kalman de juguete con ganancia fija. Kalman es la EMA que además <em>sabe cuánto dudar</em> y ajusta su propio coeficiente en tiempo real.</div>
+    </div>
+
+    <div class="fig">
+      <div class="fig-head">
+        <span class="fig-title">Fig. 6 — Predicción · medición · corrección</span>
+        <span class="fig-hint">sube el ruido del sensor y mira qué hace la estimación</span>
+      </div>
+      <div class="fig-body">
+        <canvas id="kalCanvas" height="300"></canvas>
+        <div class="controls">
+          <div class="ctl"><label>Ruido del sensor <span class="val" id="kalNoiseVal">2.0</span></label>
+            <input type="range" id="kalNoise" min="0.3" max="8" step="0.1" value="2"></div>
+          <button class="btn on" id="kalPause">⏸ Pausar</button>
+        </div>
+        <div class="legend">
+          <span><i class="dot" style="background:#58C4DD"></i> cola real (invisible en la práctica)</span>
+          <span><i class="dot" style="background:#E4655F"></i> mediciones ruidosas</span>
+          <span><i class="dot" style="background:#F0C419"></i> estimación de Kalman</span>
+        </div>
+        <div class="readout" id="kalReadout"></div>
+      </div>
+      <div class="fig-cap">Con poco ruido, la estimación amarilla se pega a las mediciones (ganancia alta). Con mucho ruido, las ignora casi por completo y se apoya en el modelo — y aun así sigue la curva real. Ese ajuste automático de la confianza es todo el truco. Este ciclo <em>predicción → medición → corrección</em> corre constantemente entre los sensores y el resto del sistema.</div>
+    </div>
+
+    <p>Con esto, el sistema tiene una estimación decente del <strong>ahora</strong>. Pero controlar reaccionando al presente es llegar tarde por diseño: cuando ves la cola, el atasco ya existe. Queremos conocer <strong>el tráfico del futuro</strong>. Y para predecir el futuro de una simulación creíble… primero necesitamos saber de dónde salen los coches.</p>
+  </div>
+</section>
+<div class="divider"><hr></div>
+
+<!-- ═══════════════ CAP 7 ═══════════════ -->
+<section class="ch" id="c7">
+  <div class="wrap">
+    <div class="eyebrow">Capítulo 7 · Demanda</div>
+    <h2>¿De dónde salen los coches? La matriz OD y MCMC</h2>
+    <p class="lead">Este es otro capítulo que la versión ingenua del proyecto se salta — y es el agujero por el que se hunden los gemelos digitales mediocres.</p>
+    <p>Para simular Barcelona no basta el mapa. Necesitas la <strong>demanda</strong>: cuánta gente quiere ir de dónde a dónde, a qué hora. Eso se guarda en una <em>matriz Origen–Destino</em>:</p>
+
+    <div class="defbox">
+      <div class="term">Matriz OD (Origen–Destino)</div>
+      <p>Una tabla donde la celda \((i,j)\) dice cuántos viajes por hora empiezan en la zona \(i\) y terminan en la zona \(j\). Es el "quién quiere ir adónde" de la ciudad. Problema brutal: <strong>nadie la observa directamente</strong>. Los sensores miden coches <em>pasando por un punto</em>, no sus orígenes ni destinos. Muchas matrices OD distintas producen los mismos conteos en los sensores.</p>
+    </div>
+
+    <p>Es un problema inverso con incertidumbre genuina: los datos no determinan una única respuesta, sino una <strong>distribución de respuestas plausibles</strong>. Y cuando tienes una distribución complicada de la que quieres extraer ejemplos representativos, la herramienta canónica es:</p>
+
+    <div class="defbox">
+      <div class="term">MCMC — Markov Chain Monte Carlo (algoritmo de Metropolis)</div>
+      <p>Un método para <strong>muestrear</strong> de una distribución que no sabes integrar. La receta es casi ofensivamente simple:</p>
+      <p>1. Estás en una hipótesis de demanda \(\theta\).<br>
+      2. Propón un pequeño cambio aleatorio, \(\theta'\).<br>
+      3. Si \(\theta'\) explica <em>mejor</em> los datos de los sensores → acéptalo siempre.<br>
+      4. Si los explica <em>peor</em> → acéptalo a veces, con probabilidad \(\;p = \frac{P(\theta')}{P(\theta)}\).</p>
+      <p>Ese paso 4 es el genio del asunto: aceptar de vez en cuando movimientos "malos" evita quedarte atascado en un pico local, y —esto es lo mágico, demostrable— hace que <strong>el tiempo que la cadena pasa en cada región sea proporcional a su probabilidad</strong>. Caminas al azar, y la caminata dibuja la distribución.</p>
+      <div class="py"><b>ANALOGÍA PYTHON</b> — Es <code>random.choice()</code> con esteroides bayesianos: en vez de muestrear de una lista, muestreas de una densidad arbitraria. Librerías reales: <code>PyMC</code>, <code>emcee</code>, <code>NumPyro</code>.</div>
+    </div>
+
+    <div class="fig">
+      <div class="fig-head">
+        <span class="fig-title">Fig. 7 — Metropolis explorando demandas plausibles</span>
+        <span class="fig-hint">dos hipótesis compatibles con los mismos sensores</span>
+      </div>
+      <div class="fig-body">
+        <canvas id="mcmcCanvas" height="360"></canvas>
+        <div class="controls">
+          <button class="btn" id="mcmcStep">+1 paso</button>
+          <button class="btn" id="mcmcRun">▶ Muestrear</button>
+          <button class="btn" id="mcmcReset">Reiniciar</button>
+        </div>
+        <div class="readout" id="mcmcReadout"></div>
+      </div>
+      <div class="fig-cap">Cada eje es un parámetro de demanda (p. ej. viajes Eixample→Port y viajes Diagonal→Centro). El fondo azul es la probabilidad a posteriori dado lo que miden los sensores — con <b>dos modos</b>: dos historias distintas que explican los mismos conteos. La cadena (línea tenue) camina; los puntos amarillos son las muestras aceptadas. Dale a ▶ y observa cómo la nube de puntos acaba <em>calcando</em> la distribución, visitando ambos modos. Ninguna optimización clásica te habría dado los dos.</div>
+    </div>
+
+    <div class="note">
+      <span class="tag">Observación añadida</span>
+      <p>La consecuencia práctica es importante: <strong>no calibres el gemelo digital con una sola matriz OD "óptima"</strong>. Muestrea decenas de matrices plausibles con MCMC y entrena/evalúa el controlador contra <em>todas</em>. Un controlador que solo funciona bajo una hipótesis de demanda es un controlador frágil; uno que funciona bajo toda la distribución posterior es robusto por construcción. Esto conecta directamente con la <em>domain randomization</em> del capítulo 11.</p>
+    </div>
+  </div>
+</section>
+<div class="divider"><hr></div>
+
+<!-- ═══════════════ CAP 8 ═══════════════ -->
+<section class="ch" id="c8">
+  <div class="wrap">
+    <div class="eyebrow">Capítulo 8 · Predicción</div>
+    <h2>Redes que entienden grafos (y películas)</h2>
+    <p>Queremos aprender la función \(x_t \to [x_{t+1}, x_{t+5\text{min}}, \dots]\): dado el estado de la ciudad ahora, ¿qué pasará? Antes de sacar la artillería, una regla de oro:</p>
+    <blockquote>Nunca construyas primero el modelo más sofisticado. Construye primero una regresión.</blockquote>
+    <p>Una regresión lineal \(y = w_1x_1+\dots+w_nx_n\) con hora, día y tráfico reciente es tu <strong>baseline</strong>. Si tu futuro Transformer de 200 millones de parámetros solo la mejora un 1%… el Transformer era mala idea. Sin baseline, nunca lo sabrás. (En Python: empieza con <code>sklearn</code>, no con <code>torch</code>.)</p>
+    <p>Una <strong>MLP</strong> (perceptrón multicapa: capas de neuronas que aprenden relaciones no lineales) mejora las cosas — puede aprender "si son las 8:15 de un lunes y Gran Via está así, en diez minutos pasará esto". Pero sigue tratando cada calle como una columna aislada de un DataFrame. Y las calles <em>están conectadas</em>. Ya sabemos qué estructura respeta esas conexiones: el grafo. Necesitamos una red neuronal nativa de grafos.</p>
+
+    <div class="defbox">
+      <div class="term">GNN — Graph Neural Network (paso de mensajes)</div>
+      <p>Una red donde cada nodo actualiza su representación combinando la suya con la de sus vecinos:</p>
+      <p style="text-align:center">$$h_i^{(k+1)} = f\Big(h_i^{(k)},\ \textstyle\sum_{j\in N(i)} h_j^{(k)}\Big)$$</p>
+      <p>Léelo en voz alta: "mi nueva descripción depende de lo que me pasa a mí, más lo que pasa en las intersecciones conectadas a mí". Cada capa es una ronda de mensajes entre vecinos. Con \(k\) capas, la información viaja \(k\) saltos: tu <strong>campo receptivo</strong> crece capa a capa. Y aquí cierra el círculo del capítulo 4: estas operaciones de "promediar vecinos" son, en el fondo, polinomios del Laplaciano \(L\). La GNN es el Laplaciano hecho aprendible.</p>
+    </div>
+
+    <div class="fig">
+      <div class="fig-head">
+        <span class="fig-title">Fig. 8 — Campo receptivo de una GNN</span>
+        <span class="fig-hint">pulsa una intersección; ajusta el número de capas</span>
+      </div>
+      <div class="fig-body">
+        <canvas id="gnnCanvas" height="330"></canvas>
+        <div class="controls">
+          <div class="ctl"><label>Capas de la GNN <span class="val" id="gnnKVal">2</span></label>
+            <input type="range" id="gnnK" min="1" max="4" step="1" value="2"></div>
+          <button class="btn" id="gnnReplay">↻ Repetir animación</button>
+        </div>
+      </div>
+      <div class="fig-cap">El nodo elegido "escucha" a sus vecinos (capa 1), luego a los vecinos de sus vecinos (capa 2), y así sucesivamente. Con 3 capas, una congestión que nace a tres cruces de distancia ya influye en su representación — que es exactamente lo que un semáforo necesita para anticiparse. Nota la diferencia con una CNN: los "vecinos" aquí son conexiones viales reales, no píxeles adyacentes.</div>
+    </div>
+
+    <h3>Pero la ciudad es una película, no una foto</h3>
+    <p>La GNN resuelve el <em>dónde</em>. Falta el <em>cuándo</em>: lo que ocurre ahora depende de lo ocurrido antes. Dos maneras estándar de darle memoria al modelo:</p>
+    <p><strong>GNN + GRU.</strong> Una GRU (<em>Gated Recurrent Unit</em>) es una red recurrente que procesa la secuencia paso a paso manteniendo un estado interno — una memoria comprimida de lo visto. Barata, sólida, y suficiente para dinámicas de minutos.</p>
+    <p><strong>GNN + Transformer temporal.</strong> Un Transformer no procesa en orden: mira <em>toda</em> la ventana temporal a la vez y aprende, mediante <strong>atención</strong>, qué instantes del pasado importan para cada predicción. Puede capturar cosas como "este patrón sutil suele aparecer 25 minutos antes de que colapse la Meridiana". Ojo al matiz: el Transformer <strong>no sustituye al grafo</strong> — resuelve el eje temporal, no el espacial. La arquitectura razonable es:</p>
+    <p style="text-align:center; font-size:1.1em">$$\boxed{\ \text{GNN espacial} \;+\; \text{Transformer temporal}\ }$$</p>
+    <p>A este combo se le llama <em>Spatio-Temporal Graph Neural Network</em>. La GNN responde "¿cómo se relacionan las calles?"; el Transformer, "¿cómo evoluciona esta situación?". Problemas distintos, herramientas distintas.</p>
+
+    <div class="note warn">
+      <span class="tag">Distinción crucial</span>
+      <p><strong>Predicción no es control.</strong> El mejor modelo del mundo puede decirte "en diez minutos habrá 40 coches de cola" — y no haber cambiado ni un solo semáforo. Saber el futuro y decidir qué hacer con él son problemas matemáticamente distintos. Todo lo anterior era construir los ojos y la bola de cristal; ahora hay que construir las manos.</p>
+    </div>
+  </div>
+</section>
+<div class="divider"><hr></div>
+
+<!-- ═══════════════ CAP 9 ═══════════════ -->
+<section class="ch" id="c9">
+  <div class="wrap">
+    <div class="eyebrow">Capítulo 9 · Control I</div>
+    <h2>MPC: jugar al ajedrez con el tráfico</h2>
+    <p>Formalicemos. Hay un estado \(x_t\), elegimos una acción \(a_t\) (mantener el verde 8 s más, cambiar de fase…), y el mundo evoluciona: \(x_{t+1}=F(x_t,a_t)\). Queremos elegir acciones que hagan el futuro barato según nuestra \(J\) del capítulo 1. Primera gran familia de soluciones:</p>
+
+    <div class="defbox">
+      <div class="term">MPC — Model Predictive Control</div>
+      <p>En cada instante: (1) simula hacia delante varias secuencias de acciones candidatas usando tu modelo predictivo, (2) calcula el coste \(J\) de cada una, (3) elige la mejor secuencia… <strong>pero ejecuta solo su primera acción</strong>, (4) espera unos segundos, vuelve a mirar el mundo real, y replanifica desde cero. Es jugar al ajedrez mirando varias jugadas por delante — recalculando después de cada movimiento del rival. A ese "solo la primera acción" se le llama <em>horizonte deslizante</em>, y es lo que hace al MPC robusto: los errores del modelo no se acumulan, porque cada pocos segundos la realidad te corrige.</p>
+    </div>
+
+    <div class="fig">
+      <div class="fig-head">
+        <span class="fig-title">Fig. 9 — Horizonte deslizante</span>
+        <span class="fig-hint">compara planes, ejecuta un paso, replanifica</span>
+      </div>
+      <div class="fig-body">
+        <canvas id="mpcCanvas" height="320"></canvas>
+        <div class="controls">
+          <button class="btn" id="mpcPlan">1 · Simular 3 planes</button>
+          <button class="btn" id="mpcExec" disabled>2 · Ejecutar 1er paso y replanificar</button>
+          <button class="btn" id="mpcReset">Reiniciar</button>
+        </div>
+        <div class="readout" id="mpcReadout"></div>
+      </div>
+      <div class="fig-cap">Tres secuencias candidatas de fases semafóricas, simuladas 10 pasos hacia el futuro; cada curva es la cola acumulada prevista. El plan ganador (verde) se ejecuta <em>solo un paso</em> — la línea vertical avanza — y todo se recalcula con el estado nuevo, que nunca coincide exactamente con lo previsto. Ese bucle humilde de "planificar mucho, comprometerse poco" es MPC.</div>
+    </div>
+
+    <p>La gran virtud del MPC en infraestructura real: admite <strong>restricciones duras y explícitas</strong>. Verde mínimo de 10 s (seguridad peatonal), verde máximo de 90 s, prioridad garantizada a ambulancias. No son sugerencias que el modelo "suele" respetar: son desigualdades que el optimizador <em>no puede</em> violar. Con vidas de por medio, esa palabra —<em>no puede</em>— vale oro.</p>
+  </div>
+</section>
+<div class="divider"><hr></div>
+
+<!-- ═══════════════ CAP 10 ═══════════════ -->
+<section class="ch" id="c10">
+  <div class="wrap">
+    <div class="eyebrow">Capítulo 10 · Control II</div>
+    <h2>Reinforcement learning y la ciudad de pequeños agentes</h2>
+    <p>Segunda familia: en vez de programar cómo decidir, <strong>dejar que el sistema aprenda por experiencia</strong>.</p>
+
+    <div class="defbox">
+      <div class="term">Reinforcement Learning (RL)</div>
+      <p>Un <strong>agente</strong> observa un estado \(s_t\) (colas, fase actual, semáforos vecinos), elige una acción \(a_t\), y recibe una <strong>recompensa</strong> \(r_t\) — positiva si reduce colas, negativa si congestiona: \(r_t = -(\alpha W + \beta Q + \gamma S)\). Maximizar recompensa ≡ minimizar nuestra \(J\). Tras millones de experiencias, el agente destila una <strong>política</strong> \(\pi(a\,|\,s)\): "dado este estado, esta acción". Lo fascinante: puede descubrir estrategias que ningún humano habría diseñado. Lo aterrador: nadie le dijo cómo llegar ahí.</p>
+      <div class="py"><b>ANALOGÍA PYTHON</b> — Si el aprendizaje supervisado es <code>model.fit(X, y)</code> con respuestas correctas conocidas, RL es aprender a base de <code>reward = env.step(action)</code> sin que nadie te enseñe jamás la respuesta correcta — solo si el resultado fue bueno. Ecosistema: <code>Gymnasium</code>, <code>Stable-Baselines3</code>, <code>RLlib</code>.</div>
+    </div>
+
+    <h3>¿Un cerebro o mil?</h3>
+    <p>¿Una única IA para toda Barcelona? El espacio de acciones explota: 1.000 intersecciones × 4 decisiones cada una son \(4^{1000}\) combinaciones — un número sin sentido físico. La alternativa: <strong>Multi-Agent RL (MARL)</strong>. Cada semáforo es un pequeño agente que ve su entorno local y habla con sus vecinos ("en 20 segundos te mando un pelotón de coches"). Encaja con la física del problema: el tráfico es intrínsecamente local.</p>
+    <p>Pero surge un peligro precioso: <strong>el egoísmo</strong>. Si cada agente solo optimiza su propia cola, el agente A puede vaciarse constantemente… inundando a B. A queda perfecto en sus métricas; B colapsa. La solución es meter la coordinación <em>en la recompensa</em>:</p>
+    <p style="text-align:center; font-size:1.05em">$$r_i = -\,\text{cola}_i \;-\; \lambda \sum_{j\in N(i)} \text{cola}_j$$</p>
+    <p>Ese \(\lambda\) es el dial del altruismo. Juégalo:</p>
+
+    <div class="fig">
+      <div class="fig-head">
+        <span class="fig-title">Fig. 10 — El dial del egoísmo</span>
+        <span class="fig-hint">λ = cuánto le importa a A la cola de su vecino B</span>
+      </div>
+      <div class="fig-body">
+        <canvas id="marlCanvas" height="300"></canvas>
+        <div class="controls">
+          <div class="ctl"><label>λ — peso de las colas vecinas <span class="val" id="marlLVal">0.0</span></label>
+            <input type="range" id="marlL" min="0" max="1" step="0.05" value="0"></div>
+        </div>
+        <div class="readout" id="marlReadout"></div>
+      </div>
+      <div class="fig-cap">A recibe tráfico de fuera y descarga hacia B, que tiene salida limitada. Con λ=0, A abre su verde a tope: su cola (azul) es mínima y la de B (rojo) se dispara — óptimo local, desastre global. Al subir λ, A aprende a <em>dosificar</em> lo que envía, y la suma de colas (la que de verdad importa) baja. La coordinación no emerge gratis: hay que pagarla en la función de recompensa.</div>
+    </div>
+
+    <div class="note blue">
+      <span class="tag">Y aquí vuelve la GNN</span>
+      <p>Elegancia de cierre: la misma maquinaria de paso de mensajes del capítulo 8 sirve como sistema nervioso de los agentes. Cada semáforo procesa la información de su vecindario con una GNN, la condensa en una representación local, y su política de RL decide sobre ella: <code>GNN → representación → π(a|s) → acción</code>. Una sola idea matemática —operar sobre el grafo— aparece en predicción, en coordinación y (vía Laplaciano) en la teoría que las sostiene.</p>
+    </div>
+  </div>
+</section>
+<div class="divider"><hr></div>
+
+<!-- ═══════════════ CAP 11 ═══════════════ -->
+<section class="ch" id="c11">
+  <div class="wrap">
+    <div class="eyebrow">Capítulo 11 · El gemelo digital</div>
+    <h2>Mil Barcelonas que podemos destruir</h2>
+    <p>Un agente de RL aprende equivocándose millones de veces. Y no queremos esto:</p>
+    <blockquote>Episodio 3: «Ups, he bloqueado la Diagonal 40 minutos.»<br>Episodio 17: «Interesante. Ahora he colapsado cinco barrios.»</blockquote>
+    <p>Necesitamos otra Barcelona. Una que podamos romper impunemente:</p>
+
+    <div class="defbox">
+      <div class="term">Gemelo digital (digital twin)</div>
+      <p>Una simulación calibrada de la red vial: geometría, carriles, semáforos, giros, transporte público, y —crucialmente— la demanda del capítulo 7. Motores especializados: <code>SUMO</code> (open source, scriptable desde Python vía <code>traci</code>), <code>Aimsun</code>, <code>Vissim</code>. Tener el mapa no basta: hay que iterar contra datos reales hasta que el gemelo <em>se comporte</em> como la ciudad — si el lunes a las 8:30 la realidad muestra 1.200 veh/h y colas de 35 coches en cierta avenida, la simulación debe producir algo parecido.</p>
+    </div>
+
+    <p>Y aquí las simulaciones tienen dos superpoderes que la realidad no ofrece: corren <strong>más rápido que el tiempo</strong> y corren <strong>en paralelo</strong>. El agente puede vivir el equivalente a décadas de tráfico —lunes normales, viernes de lluvia, un carril cortado, un Barça–Madrid, una manifestación en Gran Via— sin tocar un semáforo real.</p>
+
+    <div class="note warn">
+      <span class="tag">Observación añadida · el hueco sim-to-real</span>
+      <p>El peligro silencioso: un agente entrenado en simulación aprende también los <em>defectos</em> del simulador, y puede explotarlos ("en SUMO los conductores nunca se saltan un ámbar…"). Antídoto: <strong>domain randomization</strong> — perturbar en cada episodio los parámetros del gemelo (agresividad de conductores, demanda muestreada del posterior MCMC del cap. 7, sensores caídos, lluvia). Si la política sobrevive a mil Barcelonas ligeramente distintas, ninguna de las cuales es exacta, tiene muchas más papeletas de sobrevivir a la única que importa.</p>
+    </div>
+
+    <h3>MPC o RL: ¿cuál desplegar?</h3>
+    <p>Si hubiera que desplegar mañana: <strong>MPC primero</strong>. El tráfico urbano tiene restricciones duras, y "funciona el 99,8% del tiempo" no es aceptable cuando el 0,2% restante cruza un paso de peatones. MPC garantiza; RL promete. La estrategia adulta es hacerlos <strong>competir</strong>, cada uno contra el anterior, midiendo exactamente cuánto aporta cada escalón de complejidad:</p>
+
+    <div class="steps">
+      <div class="step"><div><h4>Semáforos actuales</h4><p>El baseline absoluto. Sin esto, cualquier cifra de mejora es marketing.</p></div></div>
+      <div class="step"><div><h4>Control adaptativo clásico</h4><p>Reglas reactivas tipo SCOOT/SCATS: lo que muchas ciudades ya usan. El listón honesto.</p></div></div>
+      <div class="step"><div><h4>MPC</h4><p>Con el predictor GNN+Transformer dentro. Restricciones duras, interpretable, auditable.</p></div></div>
+      <div class="step"><div><h4>MARL</h4><p>Solo si demuestra en el gemelo que gana al MPC de forma consistente y explicable.</p></div></div>
+    </div>
+
+    <h3>Cómo medir sin engañarse</h3>
+    <p>Simulación con 10.000 vehículos: sistema antiguo \(T_{medio}=18{,}4\) min, nuevo \(15{,}7\) min → una mejora del \(\approx 14{,}7\%\). ¿Éxito? Todavía no lo sabes. Quizá el sistema mejora a casi todos… haciendo esperar 25 minutos a un grupo pequeño. Mira las <strong>distribuciones</strong>: percentiles 50, 90 y 99 del tiempo de viaje, colas máximas, paradas, tiempo de autobús, tiempo peatonal, emisiones. Un buen controlador urbano no optimiza una cifra: optimiza una ciudad.</p>
+
+    <h3>Y no empezaríamos con toda Barcelona</h3>
+    <p>La decisión de ingeniería más importante del proyecto es de humildad: elegir <strong>un corredor de ~20 intersecciones</strong>, bien instrumentado, construir su gemelo, y ejecutar primero en <strong>shadow mode</strong> — la IA observa el tráfico real y declara "yo ahora habría hecho esto", <em>sin controlar nada</em>, mientras comparamos sus decisiones contra la realidad durante semanas. Solo cuando gana sistemáticamente sobre el papel se le ceden decisiones reales, con límites estrictos. Y solo entonces se escala.</p>
+    <div class="note">
+      <span class="tag">Analogía para desarrolladores</span>
+      <p>Shadow mode es exactamente un <em>canary deployment</em> con <code>feature flags</code>: el código nuevo corre en producción recibiendo tráfico real, pero sus salidas no afectan al usuario hasta que las métricas lo avalan. La misma disciplina de despliegue que usarías con un microservicio, aplicada a una ciudad.</p>
+    </div>
+  </div>
+</section>
+<div class="divider"><hr></div>
+
+<!-- ═══════════════ CAP 12 ═══════════════ -->
+<section class="ch" id="c12">
+  <div class="wrap">
+    <div class="eyebrow">Capítulo 12 · Síntesis</div>
+    <h2>La arquitectura completa</h2>
+    <p>Alejémonos de nuevo. Barcelona vuelve a ser líneas y puntos — pero ahora podemos ver las capas invisibles que la envuelven, y el círculo que las recorre cada pocos segundos:</p>
+
+    <div class="fig">
+      <div class="fig-head">
+        <span class="fig-title">Fig. 11 — El bucle de control, cada ~5 segundos</span>
+        <span class="fig-hint">el pulso recorre el ciclo completo</span>
+      </div>
+      <div class="fig-body loopwrap">
+        <svg id="loopSvg" viewBox="0 0 720 480" role="img" aria-label="Diagrama circular: medir, estimar, predecir, decidir, actuar"></svg>
+      </div>
+      <div class="fig-cap">Medir → estimar (Kalman) → predecir (GNN + Transformer, alimentados por la demanda MCMC) → decidir (MPC / MARL) → actuar (semáforos) → y la ciudad cambia, así que volvemos a medir. Tres cerebros distintos —percepción, predicción, control— y ninguna obligación de resolverlos con la misma tecnología. <em>Machine learning no significa usar una red neuronal gigante para absolutamente todo.</em></div>
+    </div>
+
+    <p>Fíjate en lo que le pasó a la pregunta inicial. Empezamos preguntando "¿qué red neuronal deberíamos usar: CNN, Transformer, GNN?" — y resultó ser una pregunta demasiado pequeña. El problema real era entender <strong>qué tipo de objeto estamos controlando</strong>:</p>
+    <p>Una ciudad es un <strong>sistema dinámico</strong>. Su estructura espacial es un <strong>grafo</strong> (y su Laplaciano codifica cómo se propaga todo por él). Su evolución ocurre en el <strong>tiempo</strong>. Solo podemos observarla <strong>parcialmente</strong>, así que reconstruimos su estado por <strong>estimación</strong>, anticipamos su futuro por <strong>predicción</strong>, y la modificamos por <strong>control</strong>. Las redes neuronales son solo algunas de las herramientas que aparecen dentro de esa cadena.</p>
+    <blockquote>Hacer inteligentes los semáforos no consiste en poner IA dentro de cada semáforo. Consiste en construir un sistema que pueda observar una ciudad, comprender cómo una decisión local se propaga por toda la red, y actuar antes de que el problema exista.<br><br>No estamos enseñando a un semáforo cuándo ponerse verde.<br><strong>Estamos enseñando a una ciudad a coordinarse consigo misma.</strong></blockquote>
+  </div>
+</section>
+
+<footer>
+  <div>Percepción · Predicción · Control — un ensayo visual sobre el tráfico de Barcelona</div>
+  <div class="sig">grafos · laplacianos · kalman · mcmc · gnn · mpc · marl</div>
+</footer>
+
+<script>
+(function(){
+"use strict";
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const BLUE='#58C4DD', YEL='#F0C419', BROWN='#D49A6A', GREEN='#7FD483', RED='#E4655F', DIM='#98A1B3', LINE='#232A3A', VIOLET='#B58CE0';
+
+function fit(c){
+  const dpr = window.devicePixelRatio||1;
+  // Guardamos la altura ORIGINAL una sola vez: asignar c.height más abajo
+  // reescribe el atributo "height", y si volviéramos a leerlo con dpr>1
+  // la altura se duplicaría en cada frame (crecimiento exponencial).
+  if(!c.dataset.h) c.dataset.h = c.getAttribute('height');
+  const w = c.clientWidth, h = +c.dataset.h;
+  c.width = Math.round(w*dpr); c.height = Math.round(h*dpr);
+  c.style.height = h+'px';
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx,w,h};
+}
+
+/* ════════ HERO: Barcelona desde arriba ════════ */
+(function(){
+  const c = document.getElementById('heroCanvas');
+  let ctx,W,H, vx=[], hy=[], lights=[], cars=[];
+  function setup(){
+    const dpr=devicePixelRatio||1;
+    W=c.clientWidth; H=c.clientHeight;
+    c.width=W*dpr; c.height=H*dpr;
+    ctx=c.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+    vx=[]; hy=[]; lights=[]; cars=[];
+    const gap=96;
+    for(let x=gap*0.7; x<W; x+=gap) vx.push(x);
+    for(let y=gap*0.7; y<H*0.92; y+=gap) hy.push(y);
+    vx.forEach((x,i)=>hy.forEach((y,j)=>lights.push({x,y,off:(i+j)*0.9})));
+    const N = Math.min(150, Math.round(W*H/6500));
+    for(let n=0;n<N;n++){
+      const horiz = Math.random()<0.5;
+      cars.push({
+        horiz,
+        lane: horiz? hy[(Math.random()*hy.length)|0] : vx[(Math.random()*vx.length)|0],
+        p: Math.random()*(horiz?W:H),
+        dir: Math.random()<0.5?1:-1,
+        v: 0.6+Math.random()*0.9, cur:0
+      });
+    }
+  }
+  function nsGreen(l,t){ return Math.sin(t*0.35 + l.off) > 0; }
+  function draw(t){
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='#1a2130'; ctx.lineWidth=1.4;
+    ctx.beginPath();
+    vx.forEach(x=>{ctx.moveTo(x,0);ctx.lineTo(x,H);});
+    hy.forEach(y=>{ctx.moveTo(0,y);ctx.lineTo(W,y);});
+    ctx.stroke();
+    // diagonal
+    ctx.strokeStyle='#212a3d'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(-40,H*0.85); ctx.lineTo(W+40,H*0.1); ctx.stroke();
+    // lights
+    lights.forEach(l=>{
+      const g = nsGreen(l,t);
+      ctx.fillStyle = g? 'rgba(127,212,131,0.85)':'rgba(228,101,95,0.85)';
+      ctx.beginPath(); ctx.arc(l.x,l.y,2.2,0,7); ctx.fill();
+    });
+    // cars
+    cars.forEach(cr=>{
+      const max=cr.horiz?W:H;
+      // find next intersection ahead
+      const cross = cr.horiz? vx : hy;
+      let stop=false;
+      for(const cxy of cross){
+        const d = (cxy - cr.p)*cr.dir;
+        if(d>2 && d<16){
+          const l = lights.find(L=> cr.horiz? (L.x===cxy&&L.y===cr.lane):(L.x===cr.lane&&L.y===cxy));
+          if(l){ const g=nsGreen(l,t); if(cr.horiz? g : !g) stop=true; }
+        }
+      }
+      cr.cur += ((stop?0:cr.v)-cr.cur)*0.15;
+      cr.p += cr.cur*cr.dir*1.6;
+      if(cr.p<-10) cr.p=max+10; if(cr.p>max+10) cr.p=-10;
+      const x = cr.horiz? cr.p : cr.lane, y = cr.horiz? cr.lane : cr.p;
+      ctx.fillStyle = cr.horiz? 'rgba(88,196,221,0.95)' : 'rgba(233,231,224,0.75)';
+      ctx.beginPath(); ctx.arc(x,y,2.4,0,7); ctx.fill();
+    });
+  }
+  let t0=null;
+  function loop(ts){
+    if(t0===null)t0=ts;
+    draw((ts-t0)/1000);
+    if(!REDUCED) requestAnimationFrame(loop);
+  }
+  setup(); requestAnimationFrame(loop);
+  addEventListener('resize', ()=>{setup(); if(REDUCED) draw(3);});
+})();
+
+/* ════════ FIG 1: función objetivo ════════ */
+(function(){
+  const c=document.getElementById('objCanvas');
+  const pol=[
+    {n:'A · prioriza la avenida', W:1.6, Q:8.5, S:2.8},
+    {n:'B · reparto equitativo',  W:4.2, Q:3.0, S:5.5},
+    {n:'C · compromiso',          W:3.0, Q:4.2, S:3.8}
+  ];
+  const sl={a:document.getElementById('aSlider'),b:document.getElementById('bSlider'),g:document.getElementById('gSlider')};
+  const lv={a:document.getElementById('aVal'),b:document.getElementById('bVal'),g:document.getElementById('gVal')};
+  function draw(){
+    const {ctx,w,h}=fit(c);
+    const a=+sl.a.value,b=+sl.b.value,g=+sl.g.value;
+    lv.a.textContent=a.toFixed(1); lv.b.textContent=b.toFixed(1); lv.g.textContent=g.toFixed(1);
+    const Js=pol.map(p=>({p, terms:[a*p.W,b*p.Q,g*p.S]}));
+    Js.forEach(x=>x.J=x.terms.reduce((s,v)=>s+v,0));
+    const maxJ=Math.max(...Js.map(x=>x.J),1);
+    const best=Js.reduce((m,x)=>x.J<m.J?x:m,Js[0]);
+    const rowH=h/3, barMax=w-250;
+    ctx.font='13px JetBrains Mono'; 
+    Js.forEach((x,i)=>{
+      const y=rowH*i+rowH/2;
+      ctx.fillStyle= x===best? '#fff':DIM;
+      ctx.fillText(x.p.n, 16, y-16);
+      let bx=16; const cols=[BLUE,RED,VIOLET];
+      x.terms.forEach((t,k)=>{
+        const bw=t/maxJ*barMax;
+        ctx.fillStyle=cols[k]; ctx.globalAlpha=x===best?1:0.45;
+        ctx.fillRect(bx,y-6,bw,16); bx+=bw;
+      });
+      ctx.globalAlpha=1;
+      ctx.fillStyle= x===best? GREEN : DIM;
+      ctx.fillText('J = '+x.J.toFixed(1)+(x===best?'  ← gana':''), bx+12, y+6);
+    });
+    // legend
+    ctx.font='11.5px JetBrains Mono';
+    const leg=[['αW espera',BLUE],['βQ colas',RED],['γS paradas',VIOLET]];
+    let lx=16;
+    leg.forEach(([txt,col])=>{ctx.fillStyle=col;ctx.fillRect(lx,h-18,10,10);ctx.fillStyle=DIM;ctx.fillText(txt,lx+15,h-8);lx+=130;});
+    document.getElementById('objReadout').innerHTML =
+      'J = <b>'+a.toFixed(1)+'</b>·W + <b>'+b.toFixed(1)+'</b>·Q + <b>'+g.toFixed(1)+'</b>·S &nbsp;→&nbsp; gana la política <span class="win">'+best.p.n.charAt(0)+'</span>. '+
+      'Sube α y ganará A (mínima espera); sube β y ganará B (mínimas colas). <b>Mismos datos, distinto "mejor".</b>';
+  }
+  ['a','b','g'].forEach(k=>sl[k].addEventListener('input',draw));
+  addEventListener('resize',draw); draw();
+})();
+
+/* ════════ FIG 2: cuadrícula vs grafo ════════ */
+(function(){
+  const c=document.getElementById('reprCanvas');
+  const bG=document.getElementById('btnGridView'), bR=document.getElementById('btnGraphView');
+  let mode='grid';
+  // street skeleton in unit coords: 4 vertical, 3 horizontal, 1 anti-diagonal
+  const VX=[0.14,0.38,0.62,0.86], HY=[0.2,0.5,0.8];
+  const nodes=[]; VX.forEach(x=>HY.forEach(y=>nodes.push({x,y})));
+  const idx=(i,j)=>i*3+j;
+  const edges=[];
+  for(let i=0;i<4;i++)for(let j=0;j<3;j++){
+    if(i<3)edges.push([idx(i,j),idx(i+1,j)]);
+    if(j<2)edges.push([idx(i,j),idx(i,j+1)]);
+  }
+  const diag=[idx(0,2),idx(1,1),idx(2,0)]; // la Diagonal
+  edges.push([diag[0],diag[1]],[diag[1],diag[2]]);
+  function draw(){
+    const {ctx,w,h}=fit(c);
+    const X=x=>40+x*(w-80), Y=y=>26+y*(h-70);
+    if(mode==='grid'){
+      const cols=26, rows=13, cw=(w-80)/cols, chh=(h-70)/rows;
+      // rasterize streets
+      const cells=new Set();
+      function mark(x,y){const ci=Math.floor((x)*cols), cj=Math.floor((y)*rows); if(ci>=0&&ci<cols&&cj>=0&&cj<rows)cells.add(ci+','+cj);}
+      VX.forEach(x=>{for(let t=0;t<=1;t+=0.01)mark(x,t*0.96);});
+      HY.forEach(y=>{for(let t=0;t<=1;t+=0.01)mark(0.02+t*0.96,y);});
+      for(let t=0;t<=1;t+=0.005){const p=diag.map(d=>nodes[d]); // lerp along the two diag segments
+        const seg=t<0.5?[p[0],p[1]]:[p[1],p[2]]; const u=t<0.5?t*2:(t-0.5)*2;
+        mark(seg[0].x+(seg[1].x-seg[0].x)*u, seg[0].y+(seg[1].y-seg[0].y)*u);}
+      for(let i=0;i<cols;i++)for(let j=0;j<rows;j++){
+        const on=cells.has(i+','+j);
+        ctx.fillStyle= on? 'rgba(88,196,221,'+(0.25+0.5*Math.abs(Math.sin(i*0.7+j)))+')' : 'rgba(35,42,58,0.35)';
+        ctx.fillRect(40+i*cw+1, 26+j*chh+1, cw-2, chh-2);
+      }
+      ctx.fillStyle=DIM; ctx.font='12.5px JetBrains Mono';
+      ctx.fillText('vecino = píxel adyacente · la Diagonal se convierte en una escalera', 40, h-14);
+    } else {
+      ctx.strokeStyle='#31405c'; ctx.lineWidth=1.6;
+      edges.forEach(([a,b])=>{
+        const A=nodes[a],B=nodes[b];
+        ctx.beginPath();ctx.moveTo(X(A.x),Y(A.y));ctx.lineTo(X(B.x),Y(B.y));ctx.stroke();
+        // arrowhead midway
+        const mx=(X(A.x)+X(B.x))/2, my=(Y(A.y)+Y(B.y))/2;
+        const ang=Math.atan2(Y(B.y)-Y(A.y),X(B.x)-X(A.x));
+        ctx.fillStyle='#31405c';
+        ctx.beginPath();
+        ctx.moveTo(mx+6*Math.cos(ang),my+6*Math.sin(ang));
+        ctx.lineTo(mx+6*Math.cos(ang+2.6),my+6*Math.sin(ang+2.6));
+        ctx.lineTo(mx+6*Math.cos(ang-2.6),my+6*Math.sin(ang-2.6));
+        ctx.fill();
+      });
+      // diagonal highlight
+      ctx.strokeStyle=BROWN; ctx.lineWidth=2.2;
+      ctx.beginPath();
+      diag.forEach((d,i)=>{const n=nodes[d]; i? ctx.lineTo(X(n.x),Y(n.y)):ctx.moveTo(X(n.x),Y(n.y));});
+      ctx.stroke();
+      nodes.forEach(n=>{
+        ctx.fillStyle=BLUE; ctx.beginPath();ctx.arc(X(n.x),Y(n.y),7,0,7);ctx.fill();
+        ctx.strokeStyle='#0c0f16'; ctx.lineWidth=2; ctx.stroke();
+      });
+      ctx.fillStyle=DIM; ctx.font='12.5px JetBrains Mono';
+      ctx.fillText('vecino = carretera conectada · G=(V,E) — la Diagonal (marrón) es solo dos aristas más', 40, h-14);
+    }
+  }
+  bG.onclick=()=>{mode='grid';bG.classList.add('on');bR.classList.remove('on');draw();};
+  bR.onclick=()=>{mode='graph';bR.classList.add('on');bG.classList.remove('on');draw();};
+  addEventListener('resize',draw); draw();
+})();
+
+/* ════════ Grafo compartido caps 4 (Laplaciano + Fiedler) ════════ */
+const Lp = (function(){
+  const nodes=[
+    {x:0.10,y:0.32},{x:0.26,y:0.10},{x:0.28,y:0.58},{x:0.44,y:0.33},
+    {x:0.63,y:0.62},{x:0.80,y:0.40},{x:0.86,y:0.74}
+  ];
+  const edges=[[0,1],[0,2],[1,2],[1,3],[2,3],[3,4],[4,5],[4,6],[5,6]];
+  const n=nodes.length;
+  const A=Array.from({length:n},()=>Array(n).fill(0));
+  edges.forEach(([a,b])=>{A[a][b]=1;A[b][a]=1;});
+  const D=A.map((row,i)=>row.reduce((s,v)=>s+v,0));
+  const L=A.map((row,i)=>row.map((v,j)=> i===j? D[i] : -v));
+  return {nodes,edges,n,A,D,L};
+})();
+
+function drawGraphBase(ctx,w,h,vals,colFn,labelFn,bridgeHi){
+  const X=x=>50+x*(w-100), Y=y=>30+y*(h-80);
+  Lp.edges.forEach(([a,b])=>{
+    const isBridge=(a===3&&b===4);
+    ctx.strokeStyle= (bridgeHi&&isBridge)? RED : '#31405c';
+    ctx.lineWidth= (bridgeHi&&isBridge)? 2.4 : 1.6;
+    ctx.setLineDash((bridgeHi&&isBridge)?[6,5]:[]);
+    const A=Lp.nodes[a],B=Lp.nodes[b];
+    ctx.beginPath();ctx.moveTo(X(A.x),Y(A.y));ctx.lineTo(X(B.x),Y(B.y));ctx.stroke();
+    ctx.setLineDash([]);
+  });
+  Lp.nodes.forEach((nd,i)=>{
+    ctx.fillStyle=colFn(i);
+    ctx.beginPath();ctx.arc(X(nd.x),Y(nd.y),17,0,7);ctx.fill();
+    ctx.strokeStyle='#0c0f16';ctx.lineWidth=2.5;ctx.stroke();
+    ctx.fillStyle='#0c0f16'; ctx.font='600 11px JetBrains Mono'; ctx.textAlign='center';
+    ctx.fillText(labelFn? labelFn(i): i, X(nd.x), Y(nd.y)+4);
+    ctx.textAlign='left';
+  });
+  return {X,Y};
+}
+
+/* ---- FIG 3: difusión Laplaciana ---- */
+(function(){
+  const c=document.getElementById('lapCanvas');
+  let x=Array(Lp.n).fill(0), running=false, timer=null;
+  const eps=0.15;
+  function heat(v){
+    const t=Math.min(1,v/1.2);
+    // panel2 -> naranja/rojo
+    const r=Math.round(19+t*(228-19)), g=Math.round(24+t*(140-24)), b=Math.round(38+t*(70-38));
+    return 'rgb('+r+','+g+','+b+')';
+  }
+  function draw(){
+    const {ctx,w,h}=fit(c);
+    drawGraphBase(ctx,w,h,x, i=> x[i]>0.02? heat(x[i]) : '#1c2434', i=> x[i]>0.005? x[i].toFixed(2):'0');
+    ctx.fillStyle=DIM; ctx.font='12.5px JetBrains Mono';
+    ctx.fillText('pulsa un nodo → inyecta congestión (+1)', 16, h-12);
+    const sum=x.reduce((s,v)=>s+v,0);
+    const spread = Math.sqrt(x.reduce((s,v)=>s+(v-sum/Lp.n)**2,0)/Lp.n);
+    document.getElementById('lapReadout').innerHTML=
+      'Σx (congestión total) = <b>'+sum.toFixed(3)+'</b> — se conserva &nbsp;·&nbsp; desequilibrio (desv. típica) = <b>'+spread.toFixed(3)+'</b> — solo puede bajar';
+  }
+  function step(){ 
+    const Lx=Lp.L.map((row)=>row.reduce((s,lij,j)=>s+lij*x[j],0));
+    x=x.map((v,i)=>v-eps*Lx[i]); draw();
+  }
+  c.addEventListener('click',ev=>{
+    const r=c.getBoundingClientRect(), mx=ev.clientX-r.left, my=ev.clientY-r.top;
+    const w=c.clientWidth,h=+c.getAttribute('height');
+    const X=xx=>50+xx*(w-100), Y=yy=>30+yy*(h-80);
+    Lp.nodes.forEach((nd,i)=>{ if(Math.hypot(mx-X(nd.x),my-Y(nd.y))<22){x[i]+=1;draw();} });
+  });
+  document.getElementById('lapStep').onclick=step;
+  document.getElementById('lapReset').onclick=()=>{x=Array(Lp.n).fill(0);stop();draw();};
+  const runBtn=document.getElementById('lapRun');
+  function stop(){running=false;clearInterval(timer);runBtn.textContent='▶ Difundir en bucle';runBtn.classList.remove('on');}
+  runBtn.onclick=()=>{
+    if(running){stop();return;}
+    running=true;runBtn.textContent='⏸ Parar';runBtn.classList.add('on');
+    timer=setInterval(step,300);
+  };
+  // matrices
+  function mtx(name,fill){
+    let html='<div class="mat"><div class="mname">'+name+'</div><table class="mtx">';
+    for(let i=0;i<Lp.n;i++){html+='<tr>';for(let j=0;j<Lp.n;j++){const[v,cls]=fill(i,j);html+='<td class="'+cls+'">'+v+'</td>';}html+='</tr>';}
+    return html+'</table></div>';
+  }
+  document.getElementById('lapMats').innerHTML=
+    mtx('A', (i,j)=> [Lp.A[i][j]||'·', Lp.A[i][j]?'nz':''])+
+    mtx('D', (i,j)=> i===j? [Lp.D[i],'dg'] : ['·',''])+
+    mtx('L = D − A', (i,j)=> i===j? [Lp.L[i][j],'dg'] : (Lp.L[i][j]? [Lp.L[i][j],'neg']:['·','']));
+  addEventListener('resize',draw); draw();
+})();
+
+/* ---- FIG 4: Fiedler ---- */
+(function(){
+  const c=document.getElementById('fiedlerCanvas');
+  // power iteration on M = cI - L, deflating the constant vector
+  const n=Lp.n, cshift=8;
+  let v=Array.from({length:n},()=>Math.random()-0.5);
+  function deflate(u){const m=u.reduce((s,x)=>s+x,0)/n;return u.map(x=>x-m);}
+  for(let it=0;it<600;it++){
+    v=deflate(v);
+    const w=v.map((_,i)=> cshift*v[i] - Lp.L[i].reduce((s,l,j)=>s+l*v[j],0));
+    const nm=Math.hypot(...w); v=w.map(x=>x/nm);
+  }
+  v=deflate(v);
+  function draw(){
+    const {ctx,w,h}=fit(c);
+    drawGraphBase(ctx,w,h,v, i=> v[i]>=0? BLUE : BROWN, i=> (v[i]>=0?'+':'−'), true);
+    ctx.fillStyle=DIM; ctx.font='12.5px JetBrains Mono';
+    ctx.fillText('signo del vector de Fiedler → dos zonas · arista roja = el cuello de botella que las une', 16, h-12);
+  }
+  addEventListener('resize',draw); draw();
+})();
+
+/* ════════ FIG 5: sensores / observabilidad ════════ */
+(function(){
+  const c=document.getElementById('sensCanvas');
+  const N=12; let truth=[], sensors=new Set();
+  function newTruth(){
+    const a=1+((Math.random()*2)|0), b=2+((Math.random()*2)|0), p1=Math.random()*6, p2=Math.random()*6;
+    truth=Array.from({length:N},(_,i)=> Math.max(0.5, 5+3*Math.sin(2*Math.PI*i/N*a+p1)+2*Math.sin(2*Math.PI*i/N*b+p2)));
+  }
+  function recon(){
+    const S=[...sensors].sort((x,y)=>x-y);
+    if(S.length===0) return Array(N).fill(5);
+    return Array.from({length:N},(_,i)=>{
+      if(i<=S[0]) return truth[S[0]];
+      if(i>=S[S.length-1]) return truth[S[S.length-1]];
+      let k=0; while(S[k+1]<i)k++;
+      const t=(i-S[k])/(S[k+1]-S[k]);
+      return truth[S[k]]*(1-t)+truth[S[k+1]]*t;
+    });
+  }
+  function draw(){
+    const {ctx,w,h}=fit(c);
+    const X=i=>50+i*(w-100)/(N-1), Y=v=>h-46-(v/11)*(h-90);
+    // ejes
+    ctx.strokeStyle=LINE;ctx.beginPath();ctx.moveTo(40,h-46);ctx.lineTo(w-40,h-46);ctx.stroke();
+    ctx.fillStyle=DIM;ctx.font='11.5px JetBrains Mono';
+    for(let i=0;i<N;i++) ctx.fillText('t'+i, X(i)-7, h-28);
+    // truth
+    ctx.strokeStyle=BLUE; ctx.setLineDash([5,5]); ctx.lineWidth=1.8;
+    ctx.beginPath(); truth.forEach((v,i)=> i?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v))); ctx.stroke();
+    ctx.setLineDash([]);
+    // recon
+    const R=recon();
+    ctx.strokeStyle=BROWN; ctx.lineWidth=2.4;
+    ctx.beginPath(); R.forEach((v,i)=> i?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v))); ctx.stroke();
+    // sensors
+    sensors.forEach(i=>{
+      ctx.fillStyle=YEL; ctx.beginPath();ctx.arc(X(i),Y(truth[i]),7,0,7);ctx.fill();
+      ctx.strokeStyle='#0c0f16';ctx.lineWidth=2;ctx.stroke();
+    });
+    const rmse=Math.sqrt(truth.reduce((s,v,i)=>s+(v-R[i])**2,0)/N);
+    const msg = sensors.size===0? 'Sin sensores: el sistema está ciego (adivina la media histórica).':
+      sensors.size<=2? 'Pocos sensores: la reconstrucción se pierde los picos — el sistema no es observable.':
+      rmse<1.1? '¡Suficiente! El estado interno se reconstruye bien: el sistema es observable con '+sensors.size+' sensores.':
+      'Vas mejorando. Prueba a mover un sensor hacia donde la curva azul hace cosas raras.';
+    document.getElementById('sensReadout').innerHTML=
+      'Sensores: <b>'+sensors.size+'</b>/12 tramos &nbsp;·&nbsp; error de reconstrucción (RMSE): <b>'+rmse.toFixed(2)+'</b> coches &nbsp;—&nbsp; '+msg;
+  }
+  c.addEventListener('click',ev=>{
+    const r=c.getBoundingClientRect(), w=c.clientWidth;
+    const mx=ev.clientX-r.left;
+    const i=Math.round((mx-50)/((w-100)/(N-1)));
+    if(i>=0&&i<N){ sensors.has(i)? sensors.delete(i): sensors.add(i); draw(); }
+  });
+  document.getElementById('sensNew').onclick=()=>{newTruth();draw();};
+  document.getElementById('sensClear').onclick=()=>{sensors.clear();draw();};
+  newTruth(); addEventListener('resize',draw); draw();
+})();
+
+/* ════════ FIG 6: Kalman ════════ */
+(function(){
+  const c=document.getElementById('kalCanvas');
+  const W=180; // window samples
+  let t=0, drift=0, truth=[], meas=[], est=[], Ks=[];
+  let xhat=12, P=4, paused=false;
+  const noiseSl=document.getElementById('kalNoise');
+  function stepSim(){
+    t++;
+    drift += (Math.random()-0.5)*0.25; drift*=0.98;
+    const tr = 13 + 7*Math.sin(t*0.045) + drift*4;
+    const R = (+noiseSl.value)**2;
+    const z = tr + (Math.random()*2-1)*(+noiseSl.value)*1.2;
+    // Kalman escalar, modelo de paseo aleatorio
+    P = P + 0.35;                 // predicción: la incertidumbre crece
+    const K = P/(P+R);            // ganancia
+    xhat = xhat + K*(z - xhat);   // corrección
+    P = (1-K)*P;
+    truth.push(tr); meas.push(z); est.push(xhat); Ks.push(K);
+    if(truth.length>W){truth.shift();meas.shift();est.shift();Ks.shift();}
+    document.getElementById('kalNoiseVal').textContent=(+noiseSl.value).toFixed(1);
+    document.getElementById('kalReadout').innerHTML=
+      'Ganancia de Kalman K = <b>'+K.toFixed(2)+'</b> &nbsp;→&nbsp; la estimación cree un <b>'+(K*100).toFixed(0)+'%</b> al sensor y un <b>'+((1-K)*100).toFixed(0)+'%</b> al modelo. Mueve el ruido y mira cómo K se reajusta sola.';
+  }
+  function draw(){
+    const {ctx,w,h}=fit(c);
+    const X=i=>16+i*(w-32)/(W-1), Y=v=>h-20-((v+2)/30)*(h-40);
+    ctx.strokeStyle=LINE;ctx.beginPath();ctx.moveTo(16,h-20);ctx.lineTo(w-16,h-20);ctx.stroke();
+    // measurements dots
+    ctx.fillStyle='rgba(228,101,95,0.7)';
+    meas.forEach((v,i)=>{ctx.beginPath();ctx.arc(X(i),Y(v),1.8,0,7);ctx.fill();});
+    // truth
+    ctx.strokeStyle=BLUE;ctx.lineWidth=1.6;ctx.beginPath();
+    truth.forEach((v,i)=>i?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v)));ctx.stroke();
+    // estimate
+    ctx.strokeStyle=YEL;ctx.lineWidth=2.4;ctx.beginPath();
+    est.forEach((v,i)=>i?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v)));ctx.stroke();
+    ctx.fillStyle=DIM;ctx.font='12px JetBrains Mono';
+    ctx.fillText('longitud de cola (coches) →', 16, 18);
+  }
+  function loop(){
+    if(!paused){stepSim();draw();}
+    if(!REDUCED) requestAnimationFrame(loop); 
+  }
+  if(REDUCED){for(let i=0;i<W;i++)stepSim();draw();}
+  document.getElementById('kalPause').onclick=function(){
+    paused=!paused; this.textContent=paused?'▶ Reanudar':'⏸ Pausar'; this.classList.toggle('on',!paused);
+    if(paused===false&&REDUCED){stepSim();draw();}
+  };
+  addEventListener('resize',draw);
+  requestAnimationFrame(loop);
+})();
+
+/* ════════ FIG 7: MCMC / Metropolis ════════ */
+(function(){
+  const c=document.getElementById('mcmcCanvas');
+  const modes=[{x:0.32,y:0.62,w:0.55},{x:0.68,y:0.30,w:0.45}], sig=0.09;
+  function dens(x,y){
+    return modes.reduce((s,m)=> s + m.w*Math.exp(-((x-m.x)**2+(y-m.y)**2)/(2*sig*sig)), 0);
+  }
+  let pos={x:0.12,y:0.15}, path=[{...pos}], samples=[], steps=0, acc=0, running=false, timer=null;
+  let bg=null;
+  function makeBG(w,h){
+    bg=document.createElement('canvas'); bg.width=w; bg.height=h;
+    const bctx=bg.getContext('2d'), img=bctx.createImageData(w,h);
+    for(let py=0;py<h;py++)for(let px=0;px<w;px++){
+      const d=Math.min(1, dens(px/w, py/h)/0.55);
+      const i=(py*w+px)*4;
+      img.data[i]=15+d*60; img.data[i+1]=20+d*150; img.data[i+2]=32+d*190; img.data[i+3]=255;
+    }
+    bctx.putImageData(img,0,0);
+  }
+  function metropolisStep(){
+    steps++;
+    const prop={x:pos.x+(Math.random()*2-1)*0.07, y:pos.y+(Math.random()*2-1)*0.07};
+    if(prop.x<0.02||prop.x>0.98||prop.y<0.02||prop.y>0.98){path.push({...pos});samples.push({...pos});return;}
+    const ratio = dens(prop.x,prop.y)/(dens(pos.x,pos.y)+1e-12);
+    if(Math.random() < ratio){ pos=prop; acc++; }
+    path.push({...pos}); samples.push({...pos});
+    if(path.length>400)path.shift();
+  }
+  function draw(){
+    const {ctx,w,h}=fit(c);
+    const pw=w-140, ph=h-40, ox=20, oy=20;
+    if(!bg||bg.width!==Math.round(pw)) makeBG(Math.max(2,Math.round(pw)),Math.max(2,Math.round(ph)));
+    ctx.drawImage(bg,ox,oy,pw,ph);
+    ctx.strokeStyle=LINE;ctx.strokeRect(ox,oy,pw,ph);
+    const X=x=>ox+x*pw, Y=y=>oy+y*ph;
+    // path
+    ctx.strokeStyle='rgba(233,231,224,0.25)';ctx.lineWidth=1;
+    ctx.beginPath(); path.forEach((p,i)=>i?ctx.lineTo(X(p.x),Y(p.y)):ctx.moveTo(X(p.x),Y(p.y))); ctx.stroke();
+    // samples
+    ctx.fillStyle='rgba(240,196,25,0.5)';
+    samples.forEach(p=>{ctx.beginPath();ctx.arc(X(p.x),Y(p.y),1.6,0,7);ctx.fill();});
+    // current
+    ctx.fillStyle=RED;ctx.beginPath();ctx.arc(X(pos.x),Y(pos.y),5,0,7);ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
+    // labels ejes
+    ctx.fillStyle=DIM;ctx.font='11.5px JetBrains Mono';
+    ctx.fillText('demanda Eixample→Port →', ox, h-4);
+    ctx.save();ctx.translate(12,oy+ph);ctx.rotate(-Math.PI/2);ctx.fillText('demanda Diagonal→Centro →',0,0);ctx.restore();
+    // marginal hist (derecha): proyección en y
+    const bins=24, Hst=Array(bins).fill(0);
+    samples.forEach(p=>{Hst[Math.min(bins-1,Math.floor(p.y*bins))]++;});
+    const mx=Math.max(...Hst,1);
+    ctx.fillStyle='rgba(240,196,25,0.75)';
+    Hst.forEach((v,i)=>{
+      const bh=ph/bins;
+      ctx.fillRect(ox+pw+10, oy+i*bh+1, (v/mx)*95, bh-2);
+    });
+    ctx.fillStyle=DIM; ctx.fillText('marginal', ox+pw+10, oy-6);
+    const accPct = steps? (acc/steps*100).toFixed(0):'—';
+    const m1 = samples.filter(p=>Math.hypot(p.x-modes[0].x,p.y-modes[0].y)<0.18).length;
+    const m2 = samples.filter(p=>Math.hypot(p.x-modes[1].x,p.y-modes[1].y)<0.18).length;
+    document.getElementById('mcmcReadout').innerHTML=
+      'pasos: <b>'+steps+'</b> · aceptación: <b>'+accPct+'%</b> · muestras en modo 1: <b>'+m1+'</b> · en modo 2: <b>'+m2+'</b>'+
+      (steps>800? ' — la proporción entre modos converge a la proporción de sus probabilidades (≈55/45). Eso es el teorema en acción.':'');
+  }
+  document.getElementById('mcmcStep').onclick=()=>{metropolisStep();draw();};
+  document.getElementById('mcmcReset').onclick=()=>{pos={x:0.12,y:0.15};path=[{...pos}];samples=[];steps=0;acc=0;stop();draw();};
+  const runBtn=document.getElementById('mcmcRun');
+  function stop(){running=false;clearInterval(timer);runBtn.textContent='▶ Muestrear';runBtn.classList.remove('on');}
+  runBtn.onclick=()=>{
+    if(running){stop();return;}
+    running=true;runBtn.textContent='⏸ Parar';runBtn.classList.add('on');
+    timer=setInterval(()=>{for(let i=0;i<15;i++)metropolisStep();draw();},60);
+  };
+  addEventListener('resize',()=>{bg=null;draw();}); draw();
+})();
+
+/* ════════ FIG 8: GNN campo receptivo ════════ */
+(function(){
+  const c=document.getElementById('gnnCanvas');
+  const nodes=[
+    {x:.06,y:.45},{x:.17,y:.18},{x:.19,y:.72},{x:.30,y:.42},{x:.42,y:.15},
+    {x:.44,y:.68},{x:.55,y:.40},{x:.66,y:.12},{x:.68,y:.70},{x:.79,y:.42},
+    {x:.90,y:.20},{x:.92,y:.68}
+  ];
+  const edges=[[0,1],[0,2],[1,3],[2,3],[3,4],[3,5],[4,6],[5,6],[6,7],[6,8],[7,9],[8,9],[9,10],[9,11],[10,11],[4,7],[5,8]];
+  const adj=nodes.map(()=>[]); edges.forEach(([a,b])=>{adj[a].push(b);adj[b].push(a);});
+  let sel=6, animStart=performance.now();
+  const kSl=document.getElementById('gnnK');
+  function bfs(s){
+    const d=nodes.map(()=>Infinity); d[s]=0; const q=[s];
+    while(q.length){const u=q.shift(); adj[u].forEach(v=>{if(d[v]===Infinity){d[v]=d[u]+1;q.push(v);}});}
+    return d;
+  }
+  const hopCols=[YEL, BLUE, GREEN, VIOLET, BROWN];
+  function draw(now){
+    const {ctx,w,h}=fit(c);
+    const K=+kSl.value; document.getElementById('gnnKVal').textContent=K;
+    const d=bfs(sel);
+    const elapsed=(now-animStart)/700; // 1 hop per 0.7 s
+    const X=x=>30+x*(w-60), Y=y=>26+y*(h-72);
+    edges.forEach(([a,b])=>{
+      const hop=Math.max(d[a],d[b]);
+      const active = hop<=K && hop<=elapsed;
+      ctx.strokeStyle= active? 'rgba(88,196,221,0.8)':'#2a3245';
+      ctx.lineWidth= active? 2.2:1.3;
+      ctx.beginPath();ctx.moveTo(X(nodes[a].x),Y(nodes[a].y));ctx.lineTo(X(nodes[b].x),Y(nodes[b].y));ctx.stroke();
+    });
+    nodes.forEach((nd,i)=>{
+      const inField = d[i]<=K && d[i]<=elapsed;
+      ctx.fillStyle = i===sel? YEL : inField? hopCols[Math.min(d[i],hopCols.length-1)] : '#1c2434';
+      ctx.globalAlpha = i===sel?1: inField? 0.9:1;
+      ctx.beginPath();ctx.arc(X(nd.x),Y(nd.y), i===sel?14:11,0,7);ctx.fill();
+      ctx.globalAlpha=1;
+      ctx.strokeStyle='#0c0f16';ctx.lineWidth=2;ctx.stroke();
+      if(inField&&i!==sel){ctx.fillStyle='#0c0f16';ctx.font='600 10px JetBrains Mono';ctx.textAlign='center';ctx.fillText(d[i],X(nd.x),Y(nd.y)+3.5);ctx.textAlign='left';}
+    });
+    ctx.fillStyle=DIM;ctx.font='12.5px JetBrains Mono';
+    const seen=nodes.filter((_,i)=>d[i]<=K).length;
+    ctx.fillText('capa '+Math.min(K,Math.floor(elapsed))+'/'+K+' · el nodo amarillo "ve" '+seen+' de '+nodes.length+' intersecciones', 16, h-12);
+    if(elapsed<K+0.5 && !REDUCED) requestAnimationFrame(draw); 
+  }
+  function replay(){animStart=performance.now();requestAnimationFrame(draw);}
+  c.addEventListener('click',ev=>{
+    const r=c.getBoundingClientRect(), w=c.clientWidth, h=+c.getAttribute('height');
+    const mx=ev.clientX-r.left,my=ev.clientY-r.top;
+    const X=x=>30+x*(w-60), Y=y=>26+y*(h-72);
+    nodes.forEach((nd,i)=>{if(Math.hypot(mx-X(nd.x),my-Y(nd.y))<18){sel=i;replay();}});
+  });
+  kSl.addEventListener('input',replay);
+  document.getElementById('gnnReplay').onclick=replay;
+  addEventListener('resize',replay);
+  replay();
+})();
+
+/* ════════ FIG 9: MPC ════════ */
+(function(){
+  const c=document.getElementById('mpcCanvas');
+  const H=10; // horizonte
+  let t=0, q=6, hist=[6], plans=[], best=-1, costReal=0;
+  const arrHat = tt=> 2.2 + 1.6*Math.sin(tt*0.45);
+  const cols=[VIOLET, BROWN, GREEN];
+  function makePlans(){
+    plans=[];
+    for(let p=0;p<3;p++){
+      const seq=[]; let s=Math.random()<0.5?0:4;
+      for(let k=0;k<H;k++){ if(Math.random()<0.3) s = s===4?0:4; seq.push(s); }
+      // simulate
+      let qq=q, traj=[qq], cost=0;
+      for(let k=0;k<H;k++){ qq=Math.max(0, qq+arrHat(t+k)-seq[k]); traj.push(qq); cost+=qq; }
+      plans.push({seq,traj,cost});
+    }
+    best=plans.reduce((bi,p,i)=> p.cost<plans[bi].cost? i:bi, 0);
+  }
+  function draw(){
+    const {ctx,w,h}=fit(c);
+    const total=hist.length+H;
+    const X=i=>30+(i)*(w-60)/Math.max(24,total-1);
+    const Y=v=>h-40-(v/22)*(h-80);
+    ctx.strokeStyle=LINE;ctx.beginPath();ctx.moveTo(20,h-40);ctx.lineTo(w-20,h-40);ctx.stroke();
+    // pasado real
+    ctx.strokeStyle='#E9E7E0';ctx.lineWidth=2.2;ctx.beginPath();
+    hist.forEach((v,i)=>i?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v)));ctx.stroke();
+    // línea "ahora"
+    const nx=X(hist.length-1);
+    ctx.strokeStyle=YEL;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(nx,20);ctx.lineTo(nx,h-40);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle=YEL;ctx.font='11.5px JetBrains Mono';ctx.fillText('ahora (t='+t+')',nx+6,30);
+    // planes
+    plans.forEach((p,pi)=>{
+      ctx.strokeStyle=cols[pi]; ctx.lineWidth= pi===best? 3:1.4;
+      ctx.globalAlpha= pi===best?1:0.55;
+      ctx.beginPath();
+      p.traj.forEach((v,k)=>{const xx=X(hist.length-1+k); k?ctx.lineTo(xx,Y(v)):ctx.moveTo(xx,Y(v));});
+      ctx.stroke(); ctx.globalAlpha=1;
+      ctx.fillStyle=cols[pi];
+      ctx.fillText('J='+p.cost.toFixed(0)+(pi===best?' ✓':''), X(hist.length-1+H)-46, Y(p.traj[H])- (pi*14) - 6);
+    });
+    ctx.fillStyle=DIM;ctx.font='12px JetBrains Mono';
+    ctx.fillText('cola (coches) →',20,18);
+    document.getElementById('mpcReadout').innerHTML = plans.length?
+      't = <b>'+t+'</b> · cola actual: <b>'+q.toFixed(1)+'</b> · mejor plan: <span class="win">J='+plans[best].cost.toFixed(0)+'</span> · coste real acumulado: <b>'+costReal.toFixed(0)+'</b> — se ejecuta solo la 1.ª acción del plan ✓, y se replanifica.':
+      'Pulsa «Simular 3 planes» para mirar 10 pasos hacia el futuro.';
+  }
+  document.getElementById('mpcPlan').onclick=()=>{makePlans();document.getElementById('mpcExec').disabled=false;draw();};
+  document.getElementById('mpcExec').onclick=()=>{
+    if(!plans.length)return;
+    const s0=plans[best].seq[0];
+    const arrReal = arrHat(t) + (Math.random()*2-1)*0.9; // la realidad nunca coincide
+    q=Math.max(0,q+arrReal-s0); t++; hist.push(q); costReal+=q;
+    makePlans(); draw();
+  };
+  document.getElementById('mpcReset').onclick=()=>{t=0;q=6;hist=[6];plans=[];best=-1;costReal=0;document.getElementById('mpcExec').disabled=true;draw();};
+  addEventListener('resize',draw); draw();
+})();
+
+/* ════════ FIG 10: MARL egoísmo ════════ */
+(function(){
+  const c=document.getElementById('marlCanvas');
+  let qA=2,qB=2,t=0, histA=[],histB=[],histT=[];
+  const lSl=document.getElementById('marlL');
+  function step(){
+    t++;
+    const lam=+lSl.value;
+    const platoon = (t%90)<16? 3.2:0;
+    const inflow = 1.5 + platoon + Math.random()*0.4;
+    const sA = 4*(1-lam*Math.min(1,qB/12));       // política de A: dosifica según λ y la cola de B
+    const outA = Math.min(sA, qA+inflow);
+    qA = Math.max(0, qA+inflow-outA);
+    const capB = 3.2/(1+qB/8);                     // la congestión hunde el rendimiento de B
+    const outB = Math.min(capB, qB+outA+0.3);
+    qB = Math.max(0, qB+outA+0.3-outB);
+    histA.push(qA);histB.push(qB);histT.push(qA+qB);
+    const W=260; if(histA.length>W){histA.shift();histB.shift();histT.shift();}
+  }
+  function draw(){
+    const {ctx,w,h}=fit(c);
+    const lam=+lSl.value;
+    document.getElementById('marlLVal').textContent=lam.toFixed(2);
+    const n=histA.length, X=i=>16+i*(w-32)/259, Y=v=>h-24-(Math.min(v,40)/40)*(h-52);
+    ctx.strokeStyle=LINE;ctx.beginPath();ctx.moveTo(16,h-24);ctx.lineTo(w-16,h-24);ctx.stroke();
+    function line(arr,col,lw){
+      ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.beginPath();
+      arr.forEach((v,i)=>i?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v)));ctx.stroke();
+    }
+    line(histA,BLUE,1.8); line(histB,RED,1.8); line(histT,'rgba(233,231,224,0.5)',1.2);
+    ctx.font='11.5px JetBrains Mono';
+    ctx.fillStyle=BLUE;ctx.fillText('cola de A',16,16);
+    ctx.fillStyle=RED;ctx.fillText('cola de B',110,16);
+    ctx.fillStyle=DIM;ctx.fillText('total A+B',204,16);
+    const avg = histT.length>40? histT.slice(-120).reduce((s,v)=>s+v,0)/Math.min(120,histT.length):0;
+    document.getElementById('marlReadout').innerHTML=
+      'λ = <b>'+lam.toFixed(2)+'</b> · media reciente de cola total: <b>'+avg.toFixed(1)+'</b> coches — '+
+      (lam<0.2? '<span class="lose">A es egoísta:</span> cada pelotón que llega lo escupe entero hacia B, cuya capacidad se hunde con la congestión.':
+       lam<0.6? 'A empieza a dosificar. B respira, el total baja.':
+       '<span class="win">Coordinación:</span> A absorbe los pelotones en su propia cola para proteger la capacidad de B. Sacrificio local, óptimo global.');
+  }
+  function loop(){ if(!REDUCED){step();draw();requestAnimationFrame(loop);} }
+  if(REDUCED){for(let i=0;i<260;i++)step();draw(); lSl.addEventListener('input',()=>{for(let i=0;i<260;i++)step();draw();});}
+  else requestAnimationFrame(loop);
+  addEventListener('resize',draw);
+})();
+
+/* ════════ FIG 11: bucle final ════════ */
+(function(){
+  const svg=document.getElementById('loopSvg');
+  const NS='http://www.w3.org/2000/svg';
+  const cx=360, cy=240, R=165;
+  const stages=[
+    {t:'MEDIR', s:'sensores', col:BLUE},
+    {t:'ESTIMAR', s:'Kalman', col:YEL},
+    {t:'PREDECIR', s:'GNN + Transformer', col:VIOLET},
+    {t:'DECIDIR', s:'MPC / MARL', col:GREEN},
+    {t:'ACTUAR', s:'semáforos', col:RED}
+  ];
+  function el(n,attrs,parent){const e=document.createElementNS(NS,n);for(const k in attrs)e.setAttribute(k,attrs[k]);(parent||svg).appendChild(e);return e;}
+  // anillo
+  el('circle',{cx,cy,r:R,fill:'none',stroke:'#2a3245','stroke-width':1.5,'stroke-dasharray':'3 6'});
+  // centro
+  el('circle',{cx,cy,r:56,fill:'#131826',stroke:'#31405c','stroke-width':1.5});
+  const tc=el('text',{x:cx,y:cy-4,'text-anchor':'middle',fill:'#E9E7E0','font-family':'STIX Two Text, serif','font-size':17,'font-style':'italic'});tc.textContent='la ciudad';
+  const tc2=el('text',{x:cx,y:cy+16,'text-anchor':'middle',fill:'#98A1B3','font-family':'JetBrains Mono, monospace','font-size':10});tc2.textContent='~5 s / ciclo';
+  const pts=[];
+  stages.forEach((st,i)=>{
+    const a=-Math.PI/2 + i*2*Math.PI/stages.length;
+    const x=cx+R*Math.cos(a), y=cy+R*Math.sin(a);
+    pts.push({x,y,a});
+    el('circle',{cx:x,cy:y,r:34,fill:'#0f1420',stroke:st.col,'stroke-width':2});
+    const t1=el('text',{x,y:y-1,'text-anchor':'middle',fill:st.col,'font-family':'JetBrains Mono, monospace','font-size':11.5,'font-weight':600,'letter-spacing':'1'});t1.textContent=st.t;
+    const t2=el('text',{x,y:y+15,'text-anchor':'middle',fill:'#98A1B3','font-family':'JetBrains Mono, monospace','font-size':8.5});t2.textContent=st.s;
+  });
+  // flechas entre etapas
+  stages.forEach((_,i)=>{
+    const a1=pts[i].a, a2=pts[(i+1)%5].a;
+    const g1=a1+0.24, g2=(a2<a1? a2+2*Math.PI:a2)-0.24;
+    const x1=cx+R*Math.cos(g1), y1=cy+R*Math.sin(g1);
+    const x2=cx+R*Math.cos(g2), y2=cy+R*Math.sin(g2);
+    el('path',{d:'M '+x1+' '+y1+' A '+R+' '+R+' 0 0 1 '+x2+' '+y2, fill:'none',stroke:'#4a5878','stroke-width':2});
+    const ang=g2+Math.PI/2;
+    el('path',{d:'M '+(x2+7*Math.cos(ang))+' '+(y2+7*Math.sin(ang))+' L '+(x2+7*Math.cos(ang+2.5))+' '+(y2+7*Math.sin(ang+2.5))+' L '+(x2+7*Math.cos(ang-2.5))+' '+(y2+7*Math.sin(ang-2.5))+' Z', fill:'#4a5878'});
+  });
+  // pulso
+  const pulse=el('circle',{r:6,fill:'#F0C419'});
+  const glow=el('circle',{r:11,fill:'rgba(240,196,25,0.25)'});
+  let t0=null;
+  function anim(ts){
+    if(t0===null)t0=ts;
+    const a=-Math.PI/2 + ((ts-t0)/9000)*2*Math.PI;
+    const x=cx+R*Math.cos(a), y=cy+R*Math.sin(a);
+    pulse.setAttribute('cx',x);pulse.setAttribute('cy',y);
+    glow.setAttribute('cx',x);glow.setAttribute('cy',y);
+    requestAnimationFrame(anim);
+  }
+  if(!REDUCED) requestAnimationFrame(anim);
+  else {pulse.setAttribute('cx',cx);pulse.setAttribute('cy',cy-R);glow.setAttribute('cx',cx);glow.setAttribute('cy',cy-R);}
+})();
+
+})();
+</script>
+</body>
+</html>

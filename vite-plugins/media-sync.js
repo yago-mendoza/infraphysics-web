@@ -36,6 +36,7 @@ export function mediaSyncPlugin() {
     name: 'infraphysics-media-sync',
     apply: /** @type {const} */ ('serve'),
     configureServer(server) {
+      if (process.env.MEDIA_SYNC === '0') return;
       const logger = server.config.logger;
       runSync(logger);
       server.watcher.add(MEDIA_DIR);

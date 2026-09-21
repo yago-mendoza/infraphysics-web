@@ -1,10 +1,11 @@
 import React from 'react';
 import {StatsExplorer, Timeline, type Exploration, type ExploreQuery} from './StatsExplorer';
 import { contentRoutes } from '../../lib/contentRoutes';
-import { HISTORICAL_PAGEVIEW_OFFSET, HISTORICAL_VISIT_OFFSET, HISTORICAL_VISITOR_OFFSET } from '../../config/analytics';
 
 type Row = {label:string; value:number};
 export type StatsData = {
+  range?:{from:string;to:string;days:number};
+  storage?:{bytes:number;hourlyRetentionDays:number|null;compactionPending:boolean;lastCompaction:string|null;compactionBatch:number};
   started:string; totals:{pageviews:number; sessions:number; visitors:number};
   daily:{day:string;key:string;value:number}[]; pages:{key:string;value:string}[];
   period?:Record<string,number>;
@@ -46,14 +47,13 @@ export function StatsReport({report,filters,range,onQuery,busy}:{report:StatsDat
   const startedDay=report.started.slice(0,10);
   const tabs:[typeof tab,string,string][]=[['log','Registro por fechas',`desde ${startedDay}`],['totals','Acumulado histórico','totales sin fecha']];
   return <>
+    {report.storage && <p className="admin-stats__scope">Base de datos: {num(Math.round(report.storage.bytes/1024))} KiB. {report.storage.hourlyRetentionDays ? `Detalle horario durante ${report.storage.hourlyRetentionDays} días; después, resúmenes diarios con los mismos desgloses.${report.storage.compactionPending ? ' Hay datos pendientes de resumir.' : ''}` : 'Se conserva todo el detalle horario.'} La descarga JSON usa un formato compacto sin perder campos.</p>}
     <div className="admin-stats__tabs" role="tablist" aria-label="Fuente de datos">{tabs.map(([key,name,hint])=><button key={key} type="button" role="tab" aria-selected={tab===key} onClick={()=>setTab(key)}><span>{name}</span><small>{hint}</small></button>)}</div>
     {tab==='totals' && <div role="tabpanel">
     <p className="admin-stats__scope">Contadores acumulados desde el inicio de la web. No tienen fecha, así que no entran en las gráficas ni responden al filtro de periodo; para eso está la pestaña Registro por fechas.</p>
     <h2>Acumulado del sitio</h2>
-    <Totals values={[["Páginas vistas",report.totals.pageviews+HISTORICAL_PAGEVIEW_OFFSET],["Sesiones",report.totals.sessions+HISTORICAL_VISIT_OFFSET],["Visitantes",report.totals.visitors+HISTORICAL_VISITOR_OFFSET],["Vistas de artículos",report.engagement?.views],["Corazones actuales",report.engagement?.hearts]]} />
-    <p>Incluye la base histórica. Registro medido: {num(report.totals.pageviews)} páginas + {HISTORICAL_PAGEVIEW_OFFSET} históricas; {num(report.totals.sessions)} sesiones + {HISTORICAL_VISIT_OFFSET}; {num(report.totals.visitors)} visitantes + {HISTORICAL_VISITOR_OFFSET}. Estos acumulados no cambian con los filtros.</p>
+    <Totals values={[["Páginas vistas",report.totals.pageviews],["Sesiones",report.totals.sessions],["Visitantes",report.totals.visitors],["Vistas de artículos",report.engagement?.views],["Corazones actuales",report.engagement?.hearts]]} />
     <p>Las vistas de artículos se deduplican por IP y artículo durante 24 horas. Las páginas vistas usan sesión y página durante 30 minutos; son medidas distintas.</p>
-    <details><summary>Por qué el contador público muestra otros totales</summary><p>La web suma los ajustes históricos documentados: +{HISTORICAL_PAGEVIEW_OFFSET} páginas, +{HISTORICAL_VISIT_OFFSET} sesiones y +{HISTORICAL_VISITOR_OFFSET} visitantes. Con esos ajustes: {num(report.totals.pageviews+HISTORICAL_PAGEVIEW_OFFSET)} / {num(report.totals.sessions+HISTORICAL_VISIT_OFFSET)} / {num(report.totals.visitors+HISTORICAL_VISITOR_OFFSET)}. No son visitas nuevas registradas por este panel.</p></details>
     <div className="admin-stats__grid">
       <Ranking title="Páginas más visitadas" group="page" rows={report.pages.map(row=>({label:row.key.replace('analytics:path:',''),value:Number(row.value)}))} description="Acumulado de páginas vistas desde que la analítica empezó a contar. Sin fecha: no responde al filtro de periodo." />
       <section className="admin-stats__panel"><h2>Artículos · vistas y corazones</h2><p>Contadores públicos de cada artículo, acumulados desde su publicación.</p>{!report.articles?.length?<p className="admin-stats__empty">Sin contadores de artículos disponibles.</p>:<div className="admin-stats__table-scroll"><table><thead><tr><th>Artículo</th><th>Vistas</th><th>Corazones</th></tr></thead><tbody>{report.articles.map(row=><tr key={row.path}><td><a href={route(row.path)} target="_blank" rel="noreferrer">{route(row.path)}</a></td><td>{num(row.views)}</td><td>{num(row.hearts)}</td></tr>)}</tbody></table></div>}</section>

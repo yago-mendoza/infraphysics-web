@@ -89,7 +89,18 @@ function processBlockquoteContent(content, placeholders, markedInstance) {
     const trimmed = para.trim();
     if (!trimmed) continue;
 
-    const restored = restoreBackticks(trimmed, placeholders);
+    let restored = restoreBackticks(trimmed, placeholders);
+
+    // The lead of a box (STYLE.md rule 4): an italic sentence that opens the
+    // first paragraph is set as a title line, so the box reads as titled
+    // without a title syntax.
+    if (htmlParts.length === 0) {
+      const lead = restored.match(/^\*([^*\n]{2,160}?[.:?!])\*[ \t]+(?=\S)/);
+      if (lead) {
+        restored = restored.slice(lead[0].length);
+        htmlParts.push(`<p class="bkqt-lead">${markedInstance.parseInline(lead[1])}</p>`);
+      }
+    }
 
     // Definition list: all "- " lines with ":: "
     if (/^- /.test(restored)) {
@@ -99,7 +110,7 @@ function processBlockquoteContent(content, placeholders, markedInstance) {
         htmlParts.push('<div class="defn-list">' + listLines.map(line => {
           const m = line.match(/^- (.+?):: (.+)$/);
           if (!m) return `<p>${markedInstance.parseInline(line)}</p>`;
-          return `<p class="defn"><strong>${markedInstance.parseInline(m[1].trim())}</strong> — ${markedInstance.parseInline(m[2].trim())}</p>`;
+          return definitionRow(m[1], m[2], markedInstance);
         }).join('\n') + '</div>');
         continue;
       }
@@ -218,6 +229,130 @@ export function processParamSheets(markdown, placeholders, markedInstance) {
     }
     const cols = option === '2' ? ' params-cols-2' : '';
     return `<div class="params${cols}">${parts.join('')}</div>`;
+  });
+}
+
+// ── Examples {example}...{/example} ──
+//
+// Labelled turns that show a piece of data as it is (a training example, a
+// prompt with its answers, a request and a reply), never prose:
+//   {example}
+//   Input: What is the capital of France?
+//   Output: The capital of France is Paris.
+//
+//   Input: Write a haiku about rain.
+//   Output: Silver drops descend / Dancing on the quiet earth / Petals bow in thanks
+//   {/example}
+// "Role: text" opens a turn (the role is one to three words before ": ";
+// "Role [faded]: text" dims that turn); a line without a role continues the
+// previous turn on a new line; a blank line separates examples, which share
+// one block and are divided by a rule. {example/split} lays each example out
+// as a grid: the first turn across the top, the other turns side by side.
+export function processExamples(markdown, placeholders, markedInstance) {
+  const regex = /^\{example(?:\/([a-z0-9]+))?\}[ \t]*\n([\s\S]*?)\n[ \t]*\{\/example\}/gm;
+  const inline = (s) => markedInstance.parseInline(restoreBackticks(s.trim(), placeholders));
+  return markdown.replace(regex, (_, option, body) => {
+    const split = option === 'split';
+    const items = [];
+    let turns = null;
+    const close = () => { if (turns && turns.length) items.push(turns); turns = null; };
+    for (const raw of body.split('\n')) {
+      const line = raw.trim();
+      if (!line) { close(); continue; }
+      if (!turns) turns = [];
+      const role = line.match(/^([A-Za-z][\w-]*(?: [\w-]+){0,2})(?: \[(faded)\])?: (.+)$/);
+      if (role) turns.push({ role: role[1], tone: role[2] || '', lines: [role[3]] });
+      else if (turns.length) turns[turns.length - 1].lines.push(line);
+      else turns.push({ role: '', tone: '', lines: [line] });
+    }
+    close();
+    const cards = items.map((item) => {
+      const rows = item.map(({ role, tone, lines }) =>
+        `<div class="example-turn${tone ? ` example-turn--${tone}` : ''}"><span class="example-role">${inline(role)}</span>` +
+        `<div class="example-text">${lines.map(inline).join('<br>')}</div></div>`).join('');
+      const cols = split ? ` style="--example-cols:${Math.max(1, item.length - 1)}"` : '';
+      return `<div class="example-item"${cols}>${rows}</div>`;
+    });
+    return `<div class="example${split ? ' example--split' : ''}"><div class="example-body">${cards.join('<hr class="example-rule">')}</div></div>`;
+  });
+}
+
+// ── Sequences {sequence}...{/sequence} ──
+//
+// Steps piled vertically as numbered nodes on one rail (the rail and its
+// chevrons are drawn by CSS on each .seq-step), one lane per line (several
+// lanes stand side by side as columns):
+//   {sequence}
+//   collect preferences # one time > train the reward model # one time > run PPO # many iterations
+//   {/sequence}
+//   {sequence}
+//   RLHF:: human preferences > reward model > PPO
+//   DPO:: human preferences > direct optimization
+//   {/sequence}
+// " > " (spaces mandatory) separates steps, the last " # " of a step is a
+// small note under it, "Label:: " at the start of a line names the lane.
+// {sequence/loop} joins the last step back to the first.
+export function processSequences(markdown, placeholders, markedInstance) {
+  const regex = /^\{sequence(?:\/([a-z0-9]+))?\}[ \t]*\n([\s\S]*?)\n[ \t]*\{\/sequence\}/gm;
+  const inline = (s) => markedInstance.parseInline(restoreBackticks(s.trim(), placeholders));
+  return markdown.replace(regex, (_, option, body) => {
+    const loop = option === 'loop';
+    const lanes = [];
+    for (const raw of body.split('\n')) {
+      let line = raw.trim();
+      if (!line) continue;
+      let label = '';
+      const labelled = line.match(/^(.+?):: (.+)$/);
+      if (labelled) { label = labelled[1]; line = labelled[2]; }
+      const steps = line.split(' > ').map((step, index) => {
+        const hash = step.lastIndexOf(' # ');
+        const text = hash >= 0 ? step.slice(0, hash) : step;
+        const note = hash >= 0 ? step.slice(hash + 3) : '';
+        return `<span class="seq-step"><span class="seq-dot">${index + 1}</span>` +
+          `<span class="seq-text">${inline(text)}${note ? `<small class="seq-note">${inline(note)}</small>` : ''}</span></span>`;
+      });
+      lanes.push(
+        `<div class="seq-lane${loop ? ' seq-lane--loop' : ''}">` +
+        (label ? `<span class="seq-label">${inline(label)}</span>` : '') +
+        `<div class="seq-steps">${steps.join('')}</div></div>`,
+      );
+    }
+    return `<div class="seq${lanes.some(l => l.includes('seq-label')) ? ' seq--labelled' : ''}">${lanes.join('')}</div>`;
+  });
+}
+
+// ── Tabs {tabs}...{/tabs} ──
+//
+// Two to four alternatives in one place, chosen with a row of buttons; only
+// the chosen panel is on screen (the click handler lives in WikiContent):
+//   {tabs}
+//   {tab|SFT}
+//   Markdown, fences included.
+//   {/tab}
+//   {tab|DPO}
+//   …
+//   {/tab}
+//   {/tabs}
+// The wrappers are emitted as HTML blocks with blank lines around them, so the
+// panel bodies stay Markdown for the rest of the pipeline. Fewer than two or
+// more than four panels is a build error (collected in opts.syntaxErrors).
+export function processTabs(markdown, placeholders, markedInstance, opts = {}) {
+  const regex = /^\{tabs\}[ \t]*\n([\s\S]*?)\n[ \t]*\{\/tabs\}/gm;
+  const inline = (s) => markedInstance.parseInline(restoreBackticks(s.trim(), placeholders));
+  return markdown.replace(regex, (_, body) => {
+    const panels = [];
+    const tabRegex = /^\{tab\|([^}\n]+)\}[ \t]*\n([\s\S]*?)\n[ \t]*\{\/tab\}/gm;
+    let m;
+    while ((m = tabRegex.exec(body)) !== null) panels.push({ label: m[1].trim(), content: m[2] });
+    if (panels.length < 2 || panels.length > 4) {
+      const msg = `{tabs} takes two to four {tab|…} panels, found ${panels.length}`;
+      if (opts.syntaxErrors) opts.syntaxErrors.push(msg);
+    }
+    const bar = panels.map((p, i) =>
+      `<button type="button" class="tabs-btn${i === 0 ? ' is-active' : ''}" role="tab" aria-selected="${i === 0}" data-tab="${i}">${inline(p.label)}</button>`).join('');
+    const bodies = panels.map((p, i) =>
+      `<div class="tabs-panel${i === 0 ? ' is-active' : ''}" role="tabpanel" data-tab="${i}">\n\n${p.content.trim()}\n\n</div>`).join('\n');
+    return `<div class="tabs">\n<div class="tabs-bar" role="tablist">${bar}</div>\n${bodies}\n</div>`;
   });
 }
 
@@ -408,6 +543,13 @@ export function protectReferencePipesInTables(markdown) {
 }
 
 // ── Definition lists ──
+//
+// "- TERM:: description" renders as one row of a two-column sheet: the term
+// in its own column, the description beside it, no separator character.
+function definitionRow(term, desc, markedInstance) {
+  return `<div class="defn"><span class="defn-term">${markedInstance.parseInline(term.trim())}</span>` +
+    `<span class="defn-desc">${markedInstance.parseInline(desc.trim())}</span></div>`;
+}
 
 export function processDefinitionLists(markdown, markedInstance) {
   return markdown.replace(
@@ -420,9 +562,7 @@ export function processDefinitionLists(markdown, markedInstance) {
       return '<div class="defn-list">' + lines.map(line => {
         const match = line.match(/^- (.+?):: (.+)$/);
         if (!match) return line;
-        const term = markedInstance.parseInline(match[1].trim());
-        const desc = markedInstance.parseInline(match[2].trim());
-        return `<p class="defn"><strong>${term}</strong> — ${desc}</p>`;
+        return definitionRow(match[1], match[2], markedInstance);
       }).join('\n') + '</div>';
     }
   );
@@ -502,10 +642,14 @@ export function processContextAnnotations(markdown, articleDate, markedInstance)
 
 // ── Heading formatting ──
 
+// Inline formatting is stripped from headings. A parenthesis that closes the
+// heading ("DPO (Direct Preference Optimization)") is kept but wrapped in
+// .heading-paren, which article.css sets at the body size and weight.
 export function stripHeadingFormatting(html) {
   return html.replace(/<(h[1-4])(\s[^>]*)?>(.+?)<\/\1>/gi, (match, tag, attrs, inner) => {
     const plain = inner.replace(/<[^>]*>/g, '');
-    return `<${tag}${attrs || ''}>${plain}</${tag}>`;
+    const withParen = plain.replace(/\s*(\([^()]+\))\s*$/, ' <span class="heading-paren">$1</span>');
+    return `<${tag}${attrs || ''}>${withParen}</${tag}>`;
   });
 }
 
@@ -591,7 +735,7 @@ export function highlightCodeBlocks(html, highlighter) {
  * @returns {string} - compiled HTML
  */
 export function compileMarkdown(rawMd, articleDate, options) {
-  const { markedInstance, compilerConfig, highlighter = null, katex = null, wikinote = false, droppedLabels = null } = options;
+  const { markedInstance, compilerConfig, highlighter = null, katex = null, wikinote = false, droppedLabels = null, syntaxErrors = null } = options;
 
   rawMd = rawMd.replace(/\r\n/g, '\n');
   const { text, placeholders } = protectBackticks(rawMd);
@@ -600,7 +744,10 @@ export function compileMarkdown(rawMd, articleDate, options) {
   const withBkqt = processCustomBlockquotes(withMath, placeholders, markedInstance, { dropLabels: wikinote, droppedLabels });
   const withLift = processLiftedParagraphs(withBkqt, placeholders, markedInstance);
   const withParams = processParamSheets(withLift, placeholders, markedInstance);
-  const restored = restoreBackticks(withParams, placeholders);
+  const withExamples = processExamples(withParams, placeholders, markedInstance);
+  const withSequences = processSequences(withExamples, placeholders, markedInstance);
+  const withTabs = processTabs(withSequences, placeholders, markedInstance, { syntaxErrors });
+  const restored = restoreBackticks(withTabs, placeholders);
   const withUrls = processExternalUrls(restored);
   const withSafeTableRefs = protectReferencePipesInTables(withUrls);
   const withDefs = processDefinitionLists(withSafeTableRefs, markedInstance);

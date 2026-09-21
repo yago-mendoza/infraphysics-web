@@ -1,7 +1,7 @@
 /* Article geometry shared by essays (production) and the Bits2Bricks lab:
    breadcrumb, sans title, meta line, rounded full-width hero, sticky index of
    top-level sections on the left and the body on the right. Category
-   typography (essay drop cap, Lora body, hashtags) still comes from
+   typography (essay drop cap, the --font-article body, hashtags) still comes from
    article.css / article-layout.css through the article-* wrapper classes. */
 
 .article-geometry.article-page-wrapper { max-width: none !important; }
@@ -33,8 +33,10 @@
 .article-geometry.article-page-wrapper .glab-engagement .article-share-btn { height: auto; padding: 0; border: 0; border-radius: 0; background: none; font-family: var(--font-sans); font-size: .8rem; color: var(--text-secondary); }
 .article-geometry.article-page-wrapper .glab-engagement .article-meta-views:hover,
 .article-geometry.article-page-wrapper .glab-engagement .article-heart-btn:hover,
-.article-geometry.article-page-wrapper .glab-engagement .article-heart-btn.hearted,
-.article-geometry.article-page-wrapper .glab-engagement .article-share-btn:hover { background: none; border: 0; color: var(--text-heading); }
+.article-geometry.article-page-wrapper .glab-engagement .article-heart-btn.hearted { background: none; border: 0; color: var(--text-heading); }
+/* Share answers in the category accent, like the base button and the Bits2Bricks row: without it
+   the mark grew under the pointer and stayed grey, which reads as no feedback at all. */
+.article-geometry.article-page-wrapper .glab-engagement .article-share-btn:hover { background: none; border: 0; color: var(--art-accent); }
 
 .glab-hero { margin: 0 0 2.6rem; overflow: hidden; border-radius: 14px; background: var(--bg-surface-alt); }
 .glab-hero img { display: block; width: 100%; max-height: 30rem; object-fit: cover; }
@@ -58,11 +60,14 @@
 .glab-index a { display: block; color: var(--text-secondary); font: 400 .82rem/1.35 var(--font-sans); transition: color .15s ease; }
 .glab-index a:hover { color: var(--text-heading); }
 .glab-index a.is-active,
-.glab-index a.article-toc-link--active { color: var(--text-heading); font-weight: 500; text-decoration: underline; text-decoration-color: var(--art-accent); text-underline-offset: .28em; }
+.glab-index a.article-toc-link--active { color: var(--text-heading); font-weight: 500; }
+/* Only the section name is underlined, never the number beside it. */
+.glab-index a.article-toc-link--active span { text-decoration: underline; text-decoration-color: var(--art-accent); text-underline-offset: .28em; }
 /* article.css uppercases and mono-styles .article-toc-link for the floating index; the side index keeps sentence case. */
 .article-geometry .glab-index a.article-toc-link { display: block; padding: 0; color: var(--text-secondary); font: 400 .82rem/1.35 var(--font-sans); letter-spacing: 0; text-transform: none; }
 /* Hover reads like the active entry: the accent underline appears under the pointer. */
-.article-geometry .glab-index a.article-toc-link:hover { color: var(--text-heading); text-decoration: underline; text-decoration-color: var(--art-accent); text-underline-offset: .28em; }
+.article-geometry .glab-index a.article-toc-link:hover { color: var(--text-heading); }
+.article-geometry .glab-index a.article-toc-link:hover span { text-decoration: underline; text-decoration-color: var(--art-accent); text-underline-offset: .28em; }
 
 .glab-body { min-width: 0; }
 /* The body column is the reading measure; category rules may cap it again at their own measure. */
@@ -134,7 +139,8 @@
   .article-geometry.article-essays .glab-index a.article-toc-link { display: inline; font: italic 400 .98rem/1.6 var(--essay-body-font); color: var(--text-secondary); }
   .article-geometry.article-essays .glab-index a.article-toc-link:hover,
   .article-geometry.article-essays .glab-index a.article-toc-link.is-active,
-  .article-geometry.article-essays .glab-index a.article-toc-link.article-toc-link--active { font-weight: 400; text-decoration: underline; text-decoration-color: var(--art-accent); text-underline-offset: .22em; }
+  .article-geometry.article-essays .glab-index a.article-toc-link.article-toc-link--active { font-weight: 400; }
+  .article-geometry.article-essays .glab-index a.article-toc-link.article-toc-link--active span { text-decoration: underline; text-decoration-color: var(--art-accent); text-underline-offset: .22em; }
   .article-geometry.article-essays .glab-grid { gap: 2.4rem; }
 }
 

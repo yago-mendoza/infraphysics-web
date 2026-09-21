@@ -2,7 +2,7 @@
   "version": 1,
   "publicBase": "https://cdn.infraphysics.net",
   "settings": "dd8519ee",
-  "updated": "2026-09-11",
+  "updated": "2026-09-18",
   "files": {
     "articles/1112121/cover.jpg": {
       "src": "articles/1112121/cover.png",
@@ -453,6 +453,46 @@
       "bytes": 219754,
       "type": "image/webp",
       "updated": "2026-09-07"
+    },
+    "articles/4028591/figures/kl-constraint.webp": {
+      "src": "articles/4028591/figures/kl-constraint.png",
+      "srcHash": "7686221f1d66",
+      "v": "6ae642ed",
+      "width": 1400,
+      "height": 700,
+      "bytes": 45900,
+      "type": "image/webp",
+      "updated": "2026-09-18"
+    },
+    "articles/4028591/figures/model-collapse.webp": {
+      "src": "articles/4028591/figures/model-collapse.png",
+      "srcHash": "9cf338503524",
+      "v": "37ef995a",
+      "width": 1400,
+      "height": 641,
+      "bytes": 58802,
+      "type": "image/webp",
+      "updated": "2026-09-18"
+    },
+    "articles/4028591/figures/rlhf-two-phases.webp": {
+      "src": "articles/4028591/figures/rlhf-two-phases.png",
+      "srcHash": "81afadb3e984",
+      "v": "3d4a798e",
+      "width": 1400,
+      "height": 590,
+      "bytes": 39072,
+      "type": "image/webp",
+      "updated": "2026-09-18"
+    },
+    "articles/4028591/figures/sft-lora-updates.webp": {
+      "src": "articles/4028591/figures/sft-lora-updates.png",
+      "srcHash": "b1d1bc1d9398",
+      "v": "6b149b70",
+      "width": 1400,
+      "height": 700,
+      "bytes": 50284,
+      "type": "image/webp",
+      "updated": "2026-09-18"
     },
     "articles/4419076/cover.jpg": {
       "src": "articles/4419076/cover.jpg",
@@ -1090,6 +1130,26 @@
       "hash": "b61b331d3a9b",
       "bytes": 321727,
       "updated": "2026-09-07"
+    },
+    "articles/4028591/figures/kl-constraint.png": {
+      "hash": "7686221f1d66",
+      "bytes": 1342309,
+      "updated": "2026-09-18"
+    },
+    "articles/4028591/figures/model-collapse.png": {
+      "hash": "9cf338503524",
+      "bytes": 1412454,
+      "updated": "2026-09-18"
+    },
+    "articles/4028591/figures/rlhf-two-phases.png": {
+      "hash": "81afadb3e984",
+      "bytes": 1176762,
+      "updated": "2026-09-18"
+    },
+    "articles/4028591/figures/sft-lora-updates.png": {
+      "hash": "b1d1bc1d9398",
+      "bytes": 1379356,
+      "updated": "2026-09-18"
     },
     "articles/4419076/cover.jpg": {
       "hash": "d9478e160f3e",

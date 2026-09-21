@@ -24,6 +24,7 @@
 
 - Sober, technical, present tense. No exclamation, no selling adjectives, no "note that", no "it is important to", no lists of advantages.
 - No em-dashes anywhere. Use a parenthesis, a period or a comma and rebuild the sentence.
+- No arrows anywhere (`→`, `->`, `=>`, `↔`): the symbol is forbidden across the whole site, wikinotes included ([../STYLE.md](../STYLE.md) rule 2). Write the sequence out, or use a `{sequence}` only where the note's allowed syntax permits it.
 - Second person only for a computational instruction ("name the velocity as a state").
 - Define by mechanism, not by category: *An equation whose unknown is a function and whose statement is about its rate of change*, never *X is an important concept in Y*.
 - **English throughout, always.** The wiki is written in English and only in English: proper nouns and quoted material keep their language, nothing else does. It is never translated. Articles may exist in a second language (see [../STYLE.md](../STYLE.md)); wikinotes do not, and an article in another language still links to the English note.

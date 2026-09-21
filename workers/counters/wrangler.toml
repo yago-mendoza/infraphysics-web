@@ -4,6 +4,9 @@ compatibility_date = "2026-09-01"
 workers_dev = false
 preview_urls = false
 
+[vars]
+ANALYTICS_COMPACT_HOURLY = "1"
+
 [[ratelimits]]
 name = "COUNTER_RATE_LIMITER"
 namespace_id = "2026091101"

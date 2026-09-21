@@ -79,8 +79,12 @@
 .article-page-wrapper:where(:not(.article-wiki)) .article-content > ol > li,
 .article-page-wrapper:where(:not(.article-wiki)) .article-content section > p,
 .article-page-wrapper:where(:not(.article-wiki)) .article-content .bkqt p,
-.article-page-wrapper:where(:not(.article-wiki)) .article-content .bkqt li {
-  font-family: var(--font-serif) !important;
+.article-page-wrapper:where(:not(.article-wiki)) .article-content .bkqt li,
+.article-page-wrapper:where(:not(.article-wiki)) .article-content .tabs-panel > p,
+.article-page-wrapper:where(:not(.article-wiki)) .article-content .tabs-panel > ul > li,
+.article-page-wrapper:where(:not(.article-wiki)) .article-content .tabs-panel > ol > li,
+.article-page-wrapper:where(:not(.article-wiki)) .article-content .defn {
+  font-family: var(--font-article) !important;
   font-size: clamp(1.13rem, 1.25vw, 1.27rem) !important;
   line-height: 1.78 !important;
   letter-spacing: -0.008em !important;
@@ -117,10 +121,11 @@
 .article-page-wrapper:where(:not(.article-wiki)) .article-content .defn {
   font-size: 1rem !important;
 }
-/* Tables stay compact (article.css sets the ledger style); a four or five
-   column table must fit the reading column without a horizontal scroll. */
+/* Tables (article.css sets the ledger style) sit a step under the body size;
+   a four or five column table must still fit the reading column without a
+   horizontal scroll. */
 .article-page-wrapper:where(:not(.article-wiki)) .article-content td {
-  font-size: 0.86rem !important;
+  font-size: 0.94rem !important;
 }
 
 .article-page-wrapper:where(:not(.article-wiki)) .article-content figcaption,
@@ -305,7 +310,10 @@
   .article-page-wrapper:where(:not(.article-wiki)) .article-content > ol > li,
   .article-page-wrapper:where(:not(.article-wiki)) .article-content section > p,
   .article-page-wrapper:where(:not(.article-wiki)) .article-content .bkqt p,
-  .article-page-wrapper:where(:not(.article-wiki)) .article-content .bkqt li {
+  .article-page-wrapper:where(:not(.article-wiki)) .article-content .bkqt li,
+  .article-page-wrapper:where(:not(.article-wiki)) .article-content .tabs-panel > p,
+  .article-page-wrapper:where(:not(.article-wiki)) .article-content .tabs-panel > ul > li,
+  .article-page-wrapper:where(:not(.article-wiki)) .article-content .tabs-panel > ol > li {
     font-size: 1.08rem !important;
     line-height: 1.72 !important;
   }
@@ -319,14 +327,15 @@
 
 /* ─────────────────────────────────────────────────────────────────────────────
    ESSAYS TYPOGRAPHY (category-wide). Decided in the style lab (/r*):
-   body and subtitle from r6 (Lora 1.06/1.8 on a 40rem column), title from r14
+   body and subtitle from r6 (1.06/1.8 on a 40rem column; the face was Lora until 2026-09-18 and
+   is now --font-article, the plain sans shared by every category), title from r14
    (Newsreader 400), drop cap on the opening paragraph, and a quiet meta row.
    Lives here, at the very end of the last layer, because global.css and the
    blocks above pin essay type with !important. Change values here, not there.
    ───────────────────────────────────────────────────────────────────────────── */
 .article-essays.article-page-wrapper:where(:not(.article-wiki)) {
   --essay-measure: 40rem;
-  --essay-body-font: 'Lora', Georgia, 'Times New Roman', serif;
+  --essay-body-font: var(--font-article);
   --essay-display-font: 'Newsreader', Georgia, 'Times New Roman', serif;
 }
 
@@ -356,7 +365,7 @@
   .article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-essays-hero-image.thumb-width-full { width: 100% !important; }
 }
 
-/* Body: Lora 1.06/1.8. Paragraphs, list items and blockquote text alike. */
+/* Body: --font-article at 1.06/1.8. Paragraphs, list items and blockquote text alike. */
 .article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content { font-family: var(--essay-body-font); }
 .article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content p,
 .article-essays.article-page-wrapper:where(:not(.article-wiki)) .article-content li {

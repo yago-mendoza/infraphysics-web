@@ -29,8 +29,13 @@ export const OgCardView: React.FC = () => {
     let cancelled = false;
     const settle = async () => {
       await document.fonts.ready;
-      const images = Array.from(document.images).filter(img => !img.complete);
-      await Promise.all(images.map(img => new Promise<void>(resolve => { img.onload = () => resolve(); img.onerror = () => resolve(); })));
+      const images = Array.from(document.querySelectorAll<HTMLImageElement>('.og-stage img'));
+      try {
+        await Promise.all(images.map(img => img.decode()));
+      } catch {
+        // A broken cover must not be published as a successfully rendered card.
+        return;
+      }
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       if (!cancelled) window.__ogReady = true;
     };

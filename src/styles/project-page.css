@@ -25,7 +25,7 @@
 .pj.article-projects .article-content > ol > li,
 .pj.article-projects .article-content section > p,
 .pj.article-projects .article-content .bkqt p,
-.pj.article-projects .article-content .bkqt li { font-family: var(--font-sans) !important; }
+.pj.article-projects .article-content .bkqt li { font-family: var(--font-article) !important; }
 .pj.article-projects .article-content .bkqt { margin: 1.6rem 0; }
 .pj.article-projects .article-content .bkqt-body { padding: 1rem 1.25rem; }
 .pj.article-projects .article-content > p:first-child { margin-top: 0; }
@@ -120,8 +120,10 @@
 .pj.article-page-wrapper .pj-engagement .article-share-btn { height: auto; padding: 0; border: 0; border-radius: 0; background: none; font-family: var(--font-sans); font-size: .8rem; color: var(--text-secondary); }
 .pj.article-page-wrapper .pj-engagement .article-meta-views:hover,
 .pj.article-page-wrapper .pj-engagement .article-heart-btn:hover,
-.pj.article-page-wrapper .pj-engagement .article-heart-btn.hearted,
-.pj.article-page-wrapper .pj-engagement .article-share-btn:hover { background: none; border: 0; color: var(--text-heading); }
+.pj.article-page-wrapper .pj-engagement .article-heart-btn.hearted { background: none; border: 0; color: var(--text-heading); }
+/* Share answers in the category accent, like the base button and the Bits2Bricks row: without it
+   the mark grew under the pointer and stayed grey, which reads as no feedback at all. */
+.pj.article-page-wrapper .pj-engagement .article-share-btn:hover { background: none; border: 0; color: var(--art-accent); }
 
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 

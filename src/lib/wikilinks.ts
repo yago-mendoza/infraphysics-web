@@ -1,7 +1,8 @@
-// Shared utility for resolving wiki-links at runtime
+// Shared utility for resolving wiki-links at runtime. A resolved link is the
+// label alone: the wiki icon that used to follow it was removed on 2026-09-18
+// at the author's request (every link to the wiki, everywhere).
 
 import { WikiNoteMeta } from '../types';
-import { WIKI_REF_ICON_HTML } from './icons';
 import { secondBrainPath } from '../config/categories';
 
 export function resolveWikiLinks(
@@ -21,7 +22,7 @@ export function resolveWikiLinks(
         const title = encodeURIComponent(target.name || target.displayTitle || displayText);
         const desc = encodeURIComponent(target.description || '');
         const address = encodeURIComponent(target.address || '');
-        return `<a class="wiki-ref wiki-ref-resolved" href="${secondBrainPath(target.id)}" data-uid="${uid}" data-title="${title}" data-description="${desc}" data-address="${address}"><span class="wiki-ref-label">${displayText}</span>${WIKI_REF_ICON_HTML}</a>`;
+        return `<a class="wiki-ref wiki-ref-resolved" href="${secondBrainPath(target.id)}" data-uid="${uid}" data-title="${title}" data-description="${desc}" data-address="${address}"><span class="wiki-ref-label">${displayText}</span></a>`;
       } else {
         return displayText;
       }

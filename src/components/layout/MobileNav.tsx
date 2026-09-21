@@ -49,7 +49,7 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?:
       navigate(secondBrainPath(notes[Math.floor(Math.random() * notes.length)].id));
     }).catch(() => undefined);
   };
-  useEffect(() => { setOpen(false); }, [location.pathname]);
+  useEffect(() => { setOpen(false); }, [location.key]);
   // Other fixed controls (the wiki's floating buttons) read this flag to step out of the bar's way.
   useEffect(() => {
     const shown = revealed;
@@ -57,8 +57,10 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?:
     return () => { delete document.documentElement.dataset.mobileNav; };
   }, [revealOnScrollUp, revealed]);
   useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = previous; };
   }, [open]);
 
   // The grouped rows: the desktop menus plus, on the phone only, a direct door to the graph.
@@ -91,7 +93,7 @@ export const MobileNav: React.FC<{ onOpenSearch?: () => void; revealOnScrollUp?:
                  destination sits at the right end of the label's own row instead of under it. */
               <div key={to} className="grid grid-cols-[2.8rem_1fr] items-baseline py-4 border-b border-th-border">
                 <span className="mobile-nav-num">0{index + 1}</span>
-                <span className="flex items-center gap-2 text-3xl font-serif text-th-heading">{label}{label === 'Wiki' && <ExternalLinkIcon className="wiki-context-icon mobile-nav-ext" />}{menus[label].length === 1 && <span className="mobile-nav-chips mobile-nav-chips-inline">{menus[label].map(item => <Link key={item.to} to={item.to} data-active={location.pathname === item.to || undefined}>{item.label}</Link>)}</span>}</span>
+                <span className="flex items-center gap-2 text-3xl font-serif text-th-heading"><Link to={to} onClick={() => { setOpen(false); if (label === 'Wiki') window.dispatchEvent(new Event('wiki-console-open')); }}>{label}</Link>{label === 'Wiki' && <ExternalLinkIcon className="wiki-context-icon mobile-nav-ext" />}{menus[label].length === 1 && <span className="mobile-nav-chips mobile-nav-chips-inline">{menus[label].map(item => <Link key={item.to} to={item.to} data-active={location.pathname === item.to || undefined}>{item.label}</Link>)}</span>}</span>
                 {menus[label].length > 1 && <span className="col-start-2 mobile-nav-chips">{menus[label].map(item => <Link key={item.to} to={item.to} data-active={(item.to.startsWith('/blog/') ? location.pathname.startsWith(item.to) : location.pathname === item.to) || undefined}>{item.label}</Link>)}</span>}
               </div>
             ) : <Link key={to} to={to} className="grid grid-cols-[2.8rem_1fr] items-baseline py-4 border-b border-th-border"><span className="mobile-nav-num">0{index + 1}</span><span className="flex items-center gap-2 text-3xl font-serif text-th-heading">{label}{label === 'Wiki' && <ExternalLinkIcon className="wiki-context-icon mobile-nav-ext" />}</span></Link>)}

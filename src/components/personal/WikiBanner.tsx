@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { secondBrainGraphPath } from '../../config/categories';
+import { secondBrainPath } from '../../config/categories';
 import { WikiBrainIcon } from '../icons';
 import { wikiNoteCount } from './GraphThumb';
 import { WikiTerritories } from './WikiTerritories';
@@ -20,7 +20,7 @@ export const WikiBanner: React.FC = () => (
     <div className="wiki-banner">
       <div className="wb-strip">
         <span><b>The wiki</b> · connected working notes</span>
-        <span className="wb-strip-count"><WikiBrainIcon size={13} /> {wikiNoteCount} notes</span>
+        <span className="wb-strip-count"><WikiBrainIcon size={13} /> {wikiNoteCount} nodes</span>
       </div>
       <div className="wb-intro">
         <strong className="wb-line">{LINE}</strong>
@@ -28,7 +28,7 @@ export const WikiBanner: React.FC = () => (
       </div>
       <WikiTerritories />
       {/* The console itself, peeking in from the bottom edge of the box at its real size, cut by the frame. */}
-      <Link to={secondBrainGraphPath()} className="wb-window" aria-label="Open the wiki console">
+      <Link to={secondBrainPath()} className="wb-window" aria-label="Open the wiki console">
         <span className="wb-window-bar"><i /><i /><i /><b>infraphysics.net/wiki</b></span>
         <span className="wb-shot">
           <img className="wb-shot-dark" src="/home-wiki-dark.png" alt="" loading="lazy" width={1040} height={560} />

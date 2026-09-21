@@ -1,9 +1,4 @@
 import { useEffect, useState } from 'react';
-import {
-  HISTORICAL_PAGEVIEW_OFFSET,
-  HISTORICAL_VISIT_OFFSET,
-  HISTORICAL_VISITOR_OFFSET,
-} from '../config/analytics';
 
 export type Presence = {
   lastVisitor: { city?: string; region?: string; country?: string } | null;
@@ -14,9 +9,9 @@ export type Presence = {
 
 let cachedPresence: Presence = {
   lastVisitor: null,
-  pageViews: HISTORICAL_PAGEVIEW_OFFSET,
-  visits: HISTORICAL_VISIT_OFFSET,
-  visitors: HISTORICAL_VISITOR_OFFSET,
+  pageViews: null,
+  visits: null,
+  visitors: null,
 };
 let request: Promise<Presence | null> | null = null;
 const listeners = new Set<(presence: Presence) => void>();

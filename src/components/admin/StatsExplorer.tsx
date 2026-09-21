@@ -1,14 +1,16 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 
 export type Metrics={opens:number;pageviews:number;samples:number;active_ms:number;scroll90:number};
 export type ExploreQuery={groupBy:string[];filters:Record<string,string>};
-export type Exploration={since:string|null;groups:string[];filters:Record<string,string>;totals:Metrics;rows:(Metrics&Record<string,string|number>)[];series:(Metrics&{bucket:string})[];options:Record<string,string[]>;flows:{source:string;target:string;hits:number}[];limit:number};
+export type Exploration={since:string|null;groups:string[];filters:Record<string,string>;totals:Metrics;rows:(Metrics&Record<string,string|number>)[];series:(Metrics&{bucket:string})[];options:Record<string,string[]>;flows:{source:string;target:string;hits:number}[];limit:number;resolution?:'hour'|'day'};
 const dimensions:Record<string,string>={path:'Página',country:'País',device:'Dispositivo',language:'Idioma',referrer:'Procedencia'};
 const n=(x:number)=>Number(x||0).toLocaleString('es-ES');
 const seconds=(ms:number,samples:number)=>samples?`${(ms/samples/1000).toFixed(1)} s`:'—';
 const percentage=(a:number,b:number)=>b?`${(100*a/b).toFixed(1)}%`:'—';
 export function Timeline({rows,title,metrics}:{rows:{bucket:string;[key:string]:string|number}[];title:string;metrics:Record<string,string>}) {
   const [metric,setMetric]=useState(Object.keys(metrics)[0]),[grain,setGrain]=useState('day');
+  const hasHours=rows.some(row=>row.bucket.length>10);
+  useEffect(()=>{if(grain==='hour'&&!hasHours)setGrain('day');},[grain,hasHours]);
   const grouped=new Map<string,number>();
   for(const row of rows){
     let key=row.bucket.slice(0,grain==='hour'?13:grain==='month'?7:10);
@@ -50,6 +52,7 @@ export function StatsExplorer({data,onQuery,busy}:{data:Exploration;onQuery:(q:E
     </form>
     <p className="admin-stats__scope">Cruce aplicado: {data.groups.map(k=>dimensions[k]).join(' × ')} · {Object.entries(data.filters).filter(([,v])=>v).map(([k,v])=>`${dimensions[k]}: ${v}`).join(' · ')||'Todos los segmentos'}. Las fechas del informe también se aplican.</p>
     <div className="admin-stats__totals"><div><span>Aperturas</span><strong>{n(t.opens)}</strong><small>Incluye recargas y regresos</small></div><div><span>Vistas deduplicadas</span><strong>{n(t.pageviews)}</strong><small>De estas aperturas</small></div><div><span>Tiempo visible medio</span><strong>{seconds(t.active_ms,t.samples)}</strong><small>{n(t.samples)} aperturas con medición</small></div><div><span>Alcanzaron el 90%</span><strong>{percentage(t.scroll90,t.samples)}</strong><small>Scroll; no prueba de lectura</small></div></div>
+    {data.resolution==='day'&&<p>Este periodo incluye resúmenes diarios. El gráfico conserva los totales, sin separación por horas.</p>}
     <Timeline title="Actividad del segmento" rows={data.series} metrics={{opens:'Aperturas',pageviews:'Vistas deduplicadas',samples:'Aperturas medidas',scroll90:'Llegaron al 90%'}} />
     <section className="admin-stats__panel"><div className="admin-stats__section-head"><h2>Resultados del cruce</h2><button onClick={csv}>Exportar CSV</button></div><p>Tiempo medio y scroll sobre aperturas con medición. Cobertura: {percentage(t.samples,t.opens)}. Hasta {data.limit} grupos; los totales incluyen todos los grupos coincidentes.</p>
       {!data.rows.length?<p className="admin-stats__empty">No hay datos que coincidan con estos filtros.</p>:<div className="admin-stats__table-scroll"><table><thead><tr>{data.groups.map(k=><th key={k}>{dimensions[k]}</th>)}<th>Aperturas</th><th>Vistas dedup.</th><th>Medidas</th><th>Tiempo medio</th><th>Scroll ≥90%</th></tr></thead><tbody>{data.rows.map((row,index)=><tr key={index}>{data.groups.map(k=><td key={k}>{row[k]}</td>)}<td>{n(row.opens)}</td><td>{n(row.pageviews)}</td><td>{n(row.samples)}</td><td>{seconds(row.active_ms,row.samples)}</td><td>{percentage(row.scroll90,row.samples)}</td></tr>)}</tbody></table></div>}

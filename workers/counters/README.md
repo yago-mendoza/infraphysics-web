@@ -14,8 +14,8 @@ Failures in durable mode return errors; they never silently write to KV.
 - New daily aggregates include page views, sessions, visitors, article views, heart adds/removals, entry pages, referrer groups, country, language and device class.
 - Daily entry/referrer/country/device/language metrics count new sessions, not every page load.
 - Raw IPs, referrer paths/query strings and literal searches are not stored. Existing IP hashes and visitor IDs are pseudonymous, not anonymous.
-- The public presence endpoint keeps its JSON shape and historical offsets, but new events expose country only, not a visitor's city. Imported legacy presence may retain its last city until replaced by a new event.
-- The admin report shows stored totals without the historical estimates from `src/config/analytics.ts`.
+- The public presence endpoint keeps its JSON shape and returns stored totals without added estimates; new events expose country only, not a visitor's city. Imported legacy presence may retain its last city until replaced by a new event.
+- The admin report and public counters both show stored totals without added historical estimates.
 - The client waits for visibility before counting, omits site analytics in Vite development, and honors DNT/GPC for site analytics. Article view counting remains separate.
 - Known bots are filtered by user agent. Bots that spoof browsers can still count; these are not verified-human metrics. Use Cloudflare edge rate limits if abuse appears.
 
@@ -32,7 +32,15 @@ The static page itself is public; the data API is authenticated. An ugly page, n
 
 For email-based access, configure Cloudflare Access for both `/admin/*` and `/api/admin/*` on every reachable hostname. Access is **not configured by this code**. Keep the API bearer check until Access JWT validation or an equivalent origin restriction is implemented; a custom-domain-only policy may leave the pages.dev hostname reachable.
 
-Reports accept optional `from` and `to` ISO dates. The dashboard separates all-time page/session/visitor counts, article views/hearts, daily activity, session entry pages, referrers, countries, browser languages and device classes. Period summaries and breakdowns are aggregated in SQL independently of the raw-row response limit. Each response includes at most 366 active days, 100 rows per ranking and 10,000 raw daily rows. Query smaller date ranges to access older data. These are response limits, not retention policies. Downloaded report JSON covers that query, not a complete database backup.
+Reports default to the last 30 UTC days and accept valid `from` and `to` ISO dates spanning at most 366 inclusive calendar days. Both Pages and the Worker enforce the range; older years remain accessible in separate requests. With only `to`, the preceding 30 days are selected; with only `from`, the end is today. Daily aggregates, exploration and selector options all use that range. All-time counters remain independent of dates. Prefix ranges on the entries primary key keep rankings from scanning visitor/session identities. Each response includes at most 366 active days, 100 rows per ranking and 10,000 raw daily rows. These output limits do not cap the SQL work within the requested period. Downloaded JSON is minified, retains descriptive field names, and includes the effective `range` plus its `rangeLabel`; it is a query report, not a complete database backup.
+
+## Long-term storage
+
+The report exposes SQLite `storage.bytes` and the panel displays the occupied KiB. This is allocated database space, not JSON size; compaction can free pages for reuse without immediately reducing this number. Period bounds reduce work as the site ages, but traffic volume within a period and permanent visitor identities still grow. No unlimited-storage guarantee is implied.
+
+Hourly-to-daily compaction is **enabled in `wrangler.toml`**. The Worker variable `ANALYTICS_COMPACT_HOURLY=1` makes the daily alarm fold up to 2,000 hourly rows before the UTC day seven days ago (seven complete days plus today remain hourly) into daily rows, preserving every dimension and all five summed metrics. It removes the original hourly rows in the same transaction; retries cannot double-count them. Only the separation by hour is lost, and cannot be recovered without a prior full database backup. The seven-day policy is approved. Before the first production activation, retain a recoverable database backup; the JSON report and KV export are not full backups. Removing the variable stops future compaction but does not reconstruct hours already summarized.
+
+A partial index selects old hourly rows without traversing accumulated daily rows. `storage.compactionPending` reports eligible rows and `lastCompaction` records the last successful compaction alarm. Large backlogs drain over multiple days; sustained growth above the batch budget requires revisiting that budget and write quotas. Periods containing daily rows return daily charts, including any remaining hourly rows in those days, so partial batches never produce misleading hourly graphs. Daily summaries, transitions, permanent visitor identities and lifetime counters are retained. This is summarization, not an external archive or a hard storage cap.
 
 ## Local verification
 
@@ -63,7 +71,7 @@ Wrangler is pinned; the Sharp override fixes a dependency advisory in the local 
 5. Set `COUNTERS_PAUSED=1` and `COUNTERS_MIGRATION_ENABLED=1`, redeploy Pages, and confirm POST views/reactions/analytics return 503. Reads continue from KV. Pause creates a small, explicit measurement gap; do not pretend these visits can be reconstructed later.
 6. Wait for old deployments/in-flight writes and KV propagation to settle. Set `COUNTERS_URL` and `COUNTERS_ADMIN_TOKEN` in the local process environment. From the repository root run `node scripts/counters-migrate.mjs export-kv`. It compares two snapshots 65 seconds apart. Two matching snapshots reduce risk but cannot mathematically prove eventual-consistency convergence; confirm the public write pause and deployment drain too.
 7. Run `node scripts/counters-migrate.mjs import room/counters-backups/<id>.json`. It rechecks KV, imports non-additively, compares every entry and expiration, then activates the object. Import batches can be retried. A conflicting snapshot is rejected. If the activation response is lost, query status and compare exports before retrying; do not reset the object.
-8. Set `COUNTERS_BACKEND=durable` while still paused, redeploy, compare counts and historical offsets. Set `COUNTERS_MIGRATION_ENABLED=0`, then `COUNTERS_PAUSED=0` and redeploy. Probe JSON responses from `/api/views/<known-path>`, `/api/reactions/<known-path>`, `/api/stats`, `/api/analytics`, `/api/presence` and authenticated admin report. A synthetic mutation is a real counted event: use a dedicated staging binding to test writes without polluting production.
+8. Set `COUNTERS_BACKEND=durable` while still paused, redeploy, compare stored and public counts. Set `COUNTERS_MIGRATION_ENABLED=0`, then `COUNTERS_PAUSED=0` and redeploy. Probe JSON responses from `/api/views/<known-path>`, `/api/reactions/<known-path>`, `/api/stats`, `/api/analytics`, `/api/presence` and authenticated admin report. A synthetic mutation is a real counted event: use a dedicated staging binding to test writes without polluting production.
 9. Keep KV and the ignored snapshot as recovery material. Restrict and rotate the admin credential as appropriate. Review actual Cloudflare usage after cutover.
 
 The migration endpoint remains in code but migration operations are disabled by default, require the secret and only run in paused KV mode. Removing the migration code after cutover is optional cleanup, not a protection on which the API depends.
@@ -80,7 +88,7 @@ Official references: [pricing](https://developers.cloudflare.com/durable-objects
 
 ## Exploration and measurement definitions
 
-The admin dashboard separates public all-time totals (including documented historical offsets) from measured daily activity. Historical offsets never enter time-series charts. Localhost admin requests proxy production; local public navigation does not send analytics events.
+The admin dashboard separates stored all-time totals from measured daily activity. No historical estimates are added to either. Localhost admin requests proxy production; local public navigation does not send analytics events.
 
 New visible page openings carry a random visit ID. Retries keep that ID, so a failed response cannot double-count the opening. Real reloads and returns produce new openings. Existing public article counters retain IP/article rolling-24-hour deduplication; site pageviews retain session/path rolling-30-minute deduplication. These are different metrics and are labeled separately.
 

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { StatsReport, type StatsData } from '../components/admin/StatsReport';
 import '../styles/admin-stats.css';
 import type {ExploreQuery} from '../components/admin/StatsExplorer';
+import {analyticsRange} from '../config/analytics';
 
 type Report = StatsData;
 
@@ -10,9 +11,9 @@ export function AdminStatsView() {
   const [report, setReport] = useState<Report | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [from, setFrom] = useState('');
-  const [to, setTo] = useState('');
-  const [range, setRange] = useState('Todo el periodo disponible');
+  const [from, setFrom] = useState(() => analyticsRange().from);
+  const [to, setTo] = useState(() => analyticsRange().to);
+  const [range, setRange] = useState('Últimos 30 días (UTC)');
   const credential = useRef('');
   const query=useRef<ExploreQuery>({groupBy:['path','device'],filters:{}});
   const controller = useRef<AbortController | null>(null);
@@ -29,9 +30,13 @@ export function AdminStatsView() {
     const pending = new AbortController(); controller.current = pending;
     const secret = credential.current || token.trim();
     try {
-      const response = await fetch('/api/admin/counters', {method:'POST', signal:pending.signal, headers:{'Content-Type':'application/json', Authorization:`Bearer ${secret}`}, body:JSON.stringify({op:'report', ...requested, from:from || undefined, to:to || undefined}), cache:'no-store'});
+      let dates;
+      try { dates = analyticsRange(from || undefined,to || undefined); }
+      catch { throw new Error('Elige fechas válidas y un periodo de hasta 366 días. Puedes consultar años anteriores por separado.'); }
+      const response = await fetch('/api/admin/counters', {method:'POST', signal:pending.signal, headers:{'Content-Type':'application/json', Authorization:`Bearer ${secret}`}, body:JSON.stringify({op:'report', ...requested, from:dates.from, to:dates.to}), cache:'no-store'});
       if (!response.ok) {
         const messages: Record<number, string> = {
+          400: 'Elige fechas válidas y un periodo de hasta 366 días.',
           401: 'Credencial incorrecta o acceso aún sin configurar.',
           403: 'La API ha rechazado el acceso desde esta dirección.',
           404: 'La API de estadísticas no está disponible en esta dirección.',
@@ -42,12 +47,14 @@ export function AdminStatsView() {
       const data = await response.json();
       if (pending.signal.aborted) return;
       setReport(data); query.current=requested; credential.current=secret; setToken('');
-      setRange(from || to ? `${from || 'Inicio'} → ${to || 'Hoy'} (UTC)` : 'Todo el periodo disponible');
+      const effective = data.range || dates;
+      setFrom(effective.from); setTo(effective.to);
+      setRange(`${effective.from} a ${effective.to} (UTC)`);
     } catch (err) { if(!pending.signal.aborted)setError(err instanceof Error ? err.message : 'No se pudo cargar el informe.'); }
     finally { if(!pending.signal.aborted)setBusy(false); }
   };
   const download = () => {
-    const url = URL.createObjectURL(new Blob([JSON.stringify({...report, range}, null, 2)], {type:'application/json'}));
+    const url = URL.createObjectURL(new Blob([JSON.stringify({...report, rangeLabel:range})], {type:'application/json'}));
     const link = document.createElement('a'); link.href = url; link.download = `infraphysics-stats-${new Date().toISOString().slice(0,10)}.json`; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };

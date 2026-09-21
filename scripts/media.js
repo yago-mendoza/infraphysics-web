@@ -69,6 +69,9 @@ const ENCODE_CONCURRENCY = Math.max(2, Math.min(os.cpus().length, 8));
 // Helpers
 
 function sha1(input) { return crypto.createHash('sha1').update(input).digest('hex'); }
+export function matchesObject(existing, buffer) {
+  return Boolean(existing && existing.etag === crypto.createHash('md5').update(buffer).digest('hex'));
+}
 function today() { return new Date().toISOString().slice(0, 10); }
 function fmtBytes(n) { return n >= 1e6 ? (n / 1e6).toFixed(1) + ' MB' : n >= 1e3 ? Math.round(n / 1e3) + ' KB' : n + ' B'; }
 function fail(message) { console.error(`\x1b[31m${message}\x1b[0m`); process.exit(1); }
@@ -125,7 +128,7 @@ function saveManifest(manifest) {
  *   media/site/<path>/<slug>.<ext>             page scaffolding: home, about, carousel art
  * Anything else is reported and skipped. `only` filters by article id or by 'site'.
  */
-function classify(rel) {
+export function classify(rel) {
   const parts = rel.split('/');
   const file = parts[parts.length - 1];
   const ext = path.extname(file).toLowerCase();
@@ -178,10 +181,10 @@ function scanLocal(only) {
 // ---------------------------------------------------------------------------
 // Encoding (cached by source hash + settings)
 
-async function encode(source, output) {
+export async function encode(source, output) {
   if (output.kind === 'copy') return { buffer: source.buffer, width: null, height: null };
   fs.mkdirSync(CACHE_DIR, { recursive: true });
-  const cacheFile = path.join(CACHE_DIR, `${source.hash}-${SETTINGS_HASH}-${output.kind}${output.kind === 'og' ? '.jpg' : '.webp'}`);
+  const cacheFile = path.join(CACHE_DIR, `${source.hash}-${SETTINGS_HASH}-${output.role}-${output.kind}${output.kind === 'og' ? '.jpg' : '.webp'}`);
   const metaFile = cacheFile + '.json';
   if (fs.existsSync(cacheFile) && fs.existsSync(metaFile)) {
     return { buffer: fs.readFileSync(cacheFile), ...JSON.parse(fs.readFileSync(metaFile, 'utf8')) };
@@ -293,12 +296,12 @@ async function push({ positional, flags }, { soft = false } = {}) {
     ...encoded.map(item => ({ key: item.job.output.key, buffer: item.buffer, type: item.job.output.type, cache: CACHE_CONTROL.articles, item })),
     ...jobs.filter(job => job.output.kind === 'original').map(job => ({ key: job.output.key, buffer: job.source.buffer, type: job.output.type, cache: CACHE_CONTROL.originals, job })),
   ];
-  // Resumable: an object the bucket already holds at the same size is not sent again
+  // Resumable: only reuse an object whose ETag matches the actual bytes
   // (an interrupted push, or a manifest lost between machines).
   let sent = 0, reused = 0;
   await mapLimit(uploads, UPLOAD_CONCURRENCY, async upload => {
     const existing = flags.force ? null : await r2.head(upload.key);
-    if (existing && existing.size === upload.buffer.length) reused += 1;
+    if (matchesObject(existing, upload.buffer)) reused += 1;
     else { await r2.put(upload.key, upload.buffer, upload.type, upload.cache); sent += upload.buffer.length; }
     if (upload.item) {
       const { job, buffer, width, height } = upload.item;
@@ -438,6 +441,7 @@ function url({ positional }) {
 
 // ---------------------------------------------------------------------------
 
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
 const { flags, positional } = parseArgs(process.argv.slice(2));
 const [command, ...rest] = positional;
 const commands = { push, sync, pull, ls, status, rm, mv, url };
@@ -447,3 +451,4 @@ if (!command || !commands[command]) {
 }
 try { await commands[command]({ positional: rest, flags }); }
 catch (error) { fail(`media ${command}: ${error?.message || error}`); }
+}

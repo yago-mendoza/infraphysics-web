@@ -39,7 +39,8 @@
 .wb-detail-cta:hover { color:var(--cat-wikinotes-accent); }
 
 @media (max-width:720px) {
-  .wiki-banner { padding:1.4rem 1.2rem 1.2rem; }
+  .wiki-banner { padding:0 1.2rem 1.2rem; }
+  .wb-strip { width:calc(100% + 2.4rem); margin-left:-1.2rem; margin-right:-1.2rem; gap:.5rem; }
   .wb-split { grid-template-columns:1fr; }
   .wb-territory-map { height:15rem; border-right:0; border-bottom:1px solid var(--border-default); }
   .wb-detail { min-height:9rem; }

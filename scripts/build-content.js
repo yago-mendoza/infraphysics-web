@@ -175,13 +175,14 @@ const buildErrors = [];
 
 // ── Local wrappers that bind the shared functions to this build's config ──
 
-function compileMarkdown(rawMd, articleDate, droppedLabels = null) {
+function compileMarkdown(rawMd, articleDate, droppedLabels = null, syntaxErrors = null) {
   return _compileMarkdown(rawMd, articleDate, {
     markedInstance: marked,
     compilerConfig,
     highlighter,
     katex,
     droppedLabels,
+    syntaxErrors,
   });
 }
 
@@ -220,7 +221,11 @@ const agentProfile = JSON.parse(fs.readFileSync(AGENT_PROFILE_SOURCE, 'utf-8'));
 // sequence out). Warnings rather than errors, because the rules postdate most of
 // the archive; a new or edited article should leave zero [STYLE] lines.
 function checkStyleRules(markdown, relativePath) {
-  const quoteHits = [], arrowHits = [], shortRuns = [];
+  const quoteHits = [], arrowHits = [], shortRuns = [], boldHits = [], shortLists = [];
+  // Rule 13: a list has at least three items. Consecutive top-level list lines
+  // (bullets, numbers, letters, definition rows) form one block.
+  let list = null;
+  const flushList = () => { if (list && list.count < 3) shortLists.push(list.start); list = null; };
   let inFence = false, inMath = false, frontmatterFences = 0;
   // Rule 5: a run of three or more consecutive short prose paragraphs.
   let run = [];
@@ -230,11 +235,19 @@ function checkStyleRules(markdown, relativePath) {
     // Line numbers refer to the file, so the frontmatter is skipped here rather
     // than stripped beforehand.
     if (frontmatterFences < 2) { if (line === '---') frontmatterFences += 1; return; }
-    if (/^(```|~~~)/.test(line)) { inFence = !inFence; flushRun(); return; }
+    if (/^(```|~~~)/.test(line)) { inFence = !inFence; flushRun(); flushList(); return; }
     if (inFence) return;
-    // Math blocks and parameter sheets are not prose: skipped whole.
-    if (/^\{(math|params)(\/[a-z0-9]+)?\}/.test(line)) inMath = true;
-    if (inMath) { if (/\{\/(math|params)\}/.test(line)) inMath = false; flushRun(); return; }
+    if (/^([-*+]|\d+\.|[a-zA-Z]\.) /.test(raw)) {
+      if (!list) list = { start: index + 1, count: 0 };
+      list.count += 1;
+    } else if (line && !/^\s/.test(raw)) {
+      // A non-list, non-indented line closes the block (a blank line does not:
+      // spaced items are still one list).
+      flushList();
+    }
+    // Math blocks, parameter sheets, examples and sequences are not prose: skipped whole.
+    if (/^\{(math|params|example|sequence)(\/[a-z0-9]+)?\}/.test(line)) inMath = true;
+    if (inMath) { if (/\{\/(math|params|example|sequence)\}/.test(line)) inMath = false; flushRun(); return; }
     const isProse = line && !/^(#|[-*+] |[a-z0-9]{1,3}\. |\d+\. |\||!\[|\{|<|>|\[\^)/.test(line);
     if (!line) { /* paragraph break: keep the run open */ }
     else if (!isProse) flushRun();
@@ -251,12 +264,20 @@ function checkStyleRules(markdown, relativePath) {
       .replace(/<[^>]+>/g, '');
     if (/→|←|⇒|⇐|⇔|↔|-->|->/.test(prose)) arrowHits.push(index + 1);
     if (/"[^"\n]{1,200}"/.test(prose)) quoteHits.push(index + 1);
+    // Rule 12: bold marks a claim, never a term. A bold span of three words or
+    // fewer is almost always a term or a label.
+    for (const m of prose.matchAll(/\*\*([^*\n]+?)\*\*/g)) {
+      if (m[1].trim().split(/\s+/).length <= 3) { boldHits.push(index + 1); break; }
+    }
   });
   flushRun();
+  flushList();
   const show = hits => hits.slice(0, 4).join(', ') + (hits.length > 4 ? ` (+${hits.length - 4} more)` : '');
   if (quoteHits.length) console.warn(`  \x1b[33m[STYLE] ${relativePath}: double quotes in prose on line ${show(quoteHits)} (use italics, STYLE.md rule 1)\x1b[0m`);
   if (arrowHits.length) console.warn(`  \x1b[33m[STYLE] ${relativePath}: arrows in prose on line ${show(arrowHits)} (write the sequence out, STYLE.md rule 2)\x1b[0m`);
   if (shortRuns.length) console.warn(`  \x1b[33m[STYLE] ${relativePath}: run of short one-line paragraphs starting at line ${show(shortRuns)} (dense paragraphs, STYLE.md rule 5)\x1b[0m`);
+  if (boldHits.length) console.warn(`  \x1b[33m[STYLE] ${relativePath}: bold on a term or label on line ${show(boldHits)} (bold marks a claim, never a term, STYLE.md rule 12)\x1b[0m`);
+  if (shortLists.length) console.warn(`  \x1b[33m[STYLE] ${relativePath}: list of fewer than three items starting at line ${show(shortLists)} (one or two items are a sentence, STYLE.md rule 13)\x1b[0m`);
 }
 
 // Wiki-links are never bold. A wiki-link already carries its own visual weight
@@ -322,10 +343,17 @@ function processMarkdownFile(filePath) {
   const relativePath = path.relative(PAGES_DIR, filePath).replace(/\\/g, '/');
   // Typed boxes take no title (STYLE.md rule 4): a label after the pipe is a build error.
   const droppedLabels = [];
-  const htmlContent = compileMarkdown(content, frontmatter.date, droppedLabels);
+  const syntaxErrors = [];
+  const htmlContent = compileMarkdown(content, frontmatter.date, droppedLabels, syntaxErrors);
   for (const label of droppedLabels) {
     const line = fileContent.split('\n').findIndex(l => l.includes('|' + label + '}')) + 1;
     const msg = `${relativePath}:${line || '?'} typed box has a title "${label}" (boxes take no title; make it the first sentence of the box, STYLE.md rule 4)`;
+    console.error(`  \x1b[31mERROR: ${msg}\x1b[0m`);
+    buildErrors.push(msg);
+  }
+  // Structural limits of the custom blocks ({tabs} takes two to four panels).
+  for (const error of syntaxErrors) {
+    const msg = `${relativePath}: ${error}`;
     console.error(`  \x1b[31mERROR: ${msg}\x1b[0m`);
     buildErrors.push(msg);
   }
@@ -555,6 +583,7 @@ function computeConfigHash() {
     path.join(__dirname, 'compiler.config.js'),
     path.join(__dirname, 'build-content.js'),
     path.join(__dirname, '../src/lib/content/compile.js'),
+    path.join(__dirname, '../src/lib/content/casing.js'),
   ];
   const compilerSource = compilerFiles.map(file => fs.readFileSync(file, 'utf-8')).join('\n/* compiler boundary */\n');
   return createHash('sha256').update(compilerSource).digest('hex').slice(0, 16);
@@ -772,6 +801,7 @@ const validation = validateWikinotes(wikinotePosts, allLinkedPosts, compilerConf
 const SYNTAX_GUARD = [
   { re: /\{\/?bkqt\b[^}]*\}/, label: 'literal {bkqt} tag — unclosed or malformed blockquote' },
   { re: /\{\/?math\}/,        label: 'literal {math} tag — unclosed math block' },
+  { re: /\{\/?(?:params|example|sequence|tabs?)\b[^}]*\}/, label: 'literal {params}, {example}, {sequence} or {tabs} tag — unclosed or malformed block' },
   { re: /\{shout:[^}]*\}/,    label: 'literal {shout:…} tag' },
   { re: /\{dots\}/,           label: 'literal {dots} tag' },
   { re: /\{\/?optional\b[^}]*\}|\{\/?option\b[^}]*\}/, label: 'literal optional-section tag — malformed or unclosed block' },

@@ -4,7 +4,8 @@ import {Miniflare, convertV4MiniflareOptions} from 'miniflare';
 import {fileURLToPath} from 'node:url';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const bundle = async options => (await build({bundle:true, write:false, format:'esm', platform:'browser', external:['cloudflare:workers'], ...options})).outputFiles[0].text;
-const worker = await bundle({entryPoints:[new URL('./src/index.ts',import.meta.url).pathname.replace(/^\/(\w:)/,'$1')]});
+// Fixture hooks exist only in the in-memory test bundle.
+const worker = await bundle({stdin:{resolveDir:root,contents:"\nimport {Counters as ProductionCounters} from './workers/counters/src/index.ts';\nimport {compactExploration} from './workers/counters/src/exploration.ts';\nexport class Counters extends ProductionCounters {\n async fetch(request) {\n  const path=new URL(request.url).pathname;\n  if(path==='/fixture') {\n   const statements=await request.json();\n   this.ctx.storage.transactionSync(()=>{for(const [sql,...args] of statements)this.ctx.storage.sql.exec(sql,...args);});\n   return Response.json({ok:true});\n  }\n  if(path==='/alarm'){await this.alarm();return Response.json({ok:true});}\n  if(path==='/compact')return Response.json(this.ctx.storage.transactionSync(()=>compactExploration(this.ctx.storage.sql)));\n  if(path==='/inspect') {\n   const sql=this.ctx.storage.sql;\n   return Response.json({rows:sql.exec('SELECT * FROM exploration ORDER BY bucket').toArray(),\n    totals:sql.exec('SELECT SUM(opens) AS opens,SUM(pageviews) AS pageviews,SUM(samples) AS samples,SUM(active_ms) AS active_ms,SUM(scroll90) AS scroll90 FROM exploration').one()});\n  }\n  return super.fetch(request);\n }\n}\nexport default {fetch(){return new Response('',{status:404});}};\n"}});
 const pages = await bundle({stdin:{resolveDir:root, contents:`
 import {onRequest as views} from './functions/api/views/[[slug]].ts';
 import {onRequest as hearts} from './functions/api/reactions/[[slug]].ts';
@@ -24,7 +25,7 @@ const mf = new Miniflare(convertV4MiniflareOptions({workers:[
   {name:'pages',modules:true,script:pages,compatibilityDate:'2026-09-01',kvNamespaces:['VIEWS'],
     bindings:{COUNTERS_BACKEND:'durable',COUNTERS_ADMIN_TOKEN:'test-only-secret-'.repeat(3),COUNTERS_MIGRATION_ENABLED:'1'},
     durableObjects:{COUNTERS:{className:'Counters',scriptName:'counters',useSQLite:true}}},
-  {name:'counters',modules:true,script:worker,compatibilityDate:'2026-09-01',ratelimits:{COUNTER_RATE_LIMITER:{namespace_id:'2026091101',simple:{limit:240,period:60}}},durableObjects:{COUNTERS:{className:'Counters',useSQLite:true}}},
+  {name:'counters',modules:true,script:worker,compatibilityDate:'2026-09-01',bindings:{ANALYTICS_COMPACT_HOURLY:'1'},ratelimits:{COUNTER_RATE_LIMITER:{namespace_id:'2026091101',simple:{limit:240,period:60}}},durableObjects:{COUNTERS:{className:'Counters',useSQLite:true}}},
 ]}));
 let checks=0;
 const check=(a,b)=>{assert.deepEqual(a,b); checks++;};
@@ -57,7 +58,7 @@ try {
   const event={path:'/home',visitorId:'visitor',sessionId:'session',referrer:'https://google.com/search?q=private',language:'es'};
   await Promise.all(Array.from({length:20},()=>request('/api/analytics',event)));
   check((await request('/api/analytics',{...event,path:'/home?private=1'})).status,400);
-  check((await (await request('/api/presence')).json()).pageViews,309);
+  check((await (await request('/api/presence')).json()).pageViews,9);
   check(await (await request('/api/stats',{slugs:['/lab/projects/6184744']})).json(),{'/lab/projects/6184744':{views:82}});
   const report=await admin({op:'report'});
   check(report.headers.get('Access-Control-Allow-Origin'),null);
@@ -77,6 +78,15 @@ try {
   check(emptyReport.breakdowns.referrer,[]);
   check(emptyReport.period,{});
   check(emptyReport.totals,data.totals);
+  check(data.range.days,30);
+  check(data.storage.bytes>0,true);
+  check(data.storage.hourlyRetentionDays,7);
+  check((await admin({op:'report',from:'2000-01-01',to:'2001-01-01'})).status,400);
+  check((await admin({op:'report',from:'2026-02-30',to:'2026-03-01'})).status,400);
+  check((await admin({op:'report',from:'2026-03-02',to:'2026-03-01'})).status,400);
+  check((await admin({op:'report',from:[],to:'2026-03-01'})).status,400);
+  check((await (await admin({op:'report',to:'2000-12-31'})).json()).range.from,'2000-12-02');
+
   const opening={...event,path:'/wiki',visitId:'opening-1'};
   await Promise.all(Array.from({length:10},()=>request('/api/analytics',opening)));
   await request('/api/analytics',{...opening,visitId:'opening-2'});
@@ -120,5 +130,56 @@ try {
   check((await admin({op:'report',groupBy:['invalid']})).headers.get('X-Content-Type-Options'),'nosniff');
   check((await request('/api/analytics',{...event,path:'/about/stack'})).status,200);
   check((await request('/api/views/wiki/artificial-intelligence',{})).status,404);
+
+  const ns=await mf.getDurableObjectNamespace('COUNTERS','counters');
+  const historical=ns.get(ns.idFromName('retention-test'));
+  const raw=async(path,body)=>await (await historical.fetch('https://test'+path,{method:'POST',body:JSON.stringify(body||{})})).json();
+  const fixture=[['INSERT OR REPLACE INTO meta VALUES(?,?)','state','ready'],['INSERT OR REPLACE INTO meta VALUES(?,?)','started','2000-01-01']];
+  for(let hour=0;hour<2001;hour++)fixture.push(['INSERT INTO exploration VALUES(?,?,?,?,?,?,?,?,?,?,?)',new Date(Date.UTC(2000,0,1,hour)).toISOString().slice(0,13),'/old','ZZ','desktop','zz','direct',1,1,1,100,1]);
+  fixture.push(['INSERT INTO exploration VALUES(?,?,?,?,?,?,?,?,?,?,?)','2000-01-01','/old','ZZ','desktop','zz','direct',5,5,5,500,5]);
+  const recent=new Date().toISOString().slice(0,13);
+  fixture.push(['INSERT INTO exploration VALUES(?,?,?,?,?,?,?,?,?,?,?)',recent,'/recent','ES','mobile','es','direct',2,2,1,20,0]);
+  await raw('/fixture',fixture);
+  const before=await raw('/inspect');
+  const bounded=await raw('/',{op:'report'});
+  check(bounded.exploration.totals.opens,2);
+  check(bounded.exploration.options.country,['ES']);
+  check(bounded.exploration.resolution,'hour');
+  check(await raw('/compact'),2000);
+  check((await raw('/inspect')).totals,before.totals);
+  check(await raw('/compact'),1);
+  check(await raw('/compact'),0);
+  const after=await raw('/inspect');
+  check(after.totals,before.totals);
+  check(after.rows.filter(r=>r.bucket.length===13).map(r=>r.bucket),[recent]);
+  check(after.rows.find(r=>r.bucket==='2000-01-01').opens,29);
+  const oldReport=await raw('/',{op:'report',from:'2000-01-01',to:'2000-12-31'});
+  check(oldReport.exploration.totals.opens,2006);
+  check(oldReport.exploration.resolution,'day');
+  check(oldReport.exploration.series.reduce((sum,r)=>sum+r.opens,0),2006);
+  check(oldReport.exploration.options.country,['ZZ']);
+
+  const cutoff=new Date(Date.now()-7*86400000).toISOString().slice(0,10);
+  const prior=new Date(Date.parse(cutoff+'T00:00:00Z')-86400000).toISOString().slice(0,10);
+  await raw('/fixture',[
+    ['INSERT INTO exploration VALUES(?,?,?,?,?,?,?,?,?,?,?)',prior+'T23','/boundary','ES','desktop','es','direct',3,2,1,99,1],
+    ['INSERT INTO exploration VALUES(?,?,?,?,?,?,?,?,?,?,?)',cutoff+'T00','/boundary','ES','desktop','es','direct',4,3,2,101,1],
+    ['INSERT INTO entries VALUES(?,?,NULL)','presence:last',JSON.stringify({city:'',country:'ES'})]
+  ]);
+  const beforeAlarm=await raw('/inspect');
+  const presenceBefore=await raw('/',{op:'presence'});
+  await raw('/alarm');
+  const afterAlarm=await raw('/inspect');
+  check(afterAlarm.totals,beforeAlarm.totals);
+  check(afterAlarm.rows.some(row=>row.bucket===prior+'T23'),false);
+  check(afterAlarm.rows.find(row=>row.bucket===prior).opens,3);
+  check(afterAlarm.rows.find(row=>row.bucket===cutoff+'T00').opens,4);
+  check(await raw('/',{op:'presence'}),presenceBefore);
+  await raw('/alarm');
+  check((await raw('/inspect')).totals,beforeAlarm.totals);
+  const retention=(await raw('/',{op:'report'})).storage;
+  check(retention.hourlyRetentionDays,7);
+  check(retention.compactionPending,false);
+  check(!!retention.lastCompaction,true);
   console.log(`PASS ${checks} assertions: binding, concurrency, dedup, migration, auth, privacy, cumulative engagement, retry identity and filtered exploration.`);
 } finally { await mf.dispose(); }

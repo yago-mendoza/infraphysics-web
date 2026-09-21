@@ -1,12 +1,15 @@
 // shareCards: what every shareable url puts on its share card. One CardData shape for the five kinds
 // (article, playground, wiki note, section shelf, personal page), built from the site's own data.
-// Consumed by the dev-only render routes (/og) that scripts/og-cards.js photographs; the script mirrors
-// the same lists to know which cards exist. Keep the two in step when adding a page or a playground.
+// Consumed by the dev-only render routes (/og) that scripts/og-cards.js photographs.
+// Both use share-card-catalog.js for the inventory.
 
 import { postSummaries } from '../data/postSummaries';
 import { catAccentVar, postPath, secondBrainPath } from '../config/categories';
 import type { PostSummary, WikiNoteMeta } from '../types';
 import type { CardData } from '../views/shareCardDesigns';
+
+import { SECTIONS, PAGES, PLAYGROUNDS } from './share-card-catalog.js';
+export { SECTIONS, PAGES, PLAYGROUNDS };
 
 const OXIDE = 'var(--brand-oxide)';
 /* The wiki's own accent is a pale lavender that reads grey on the black card; the cards use a fuller purple. */
@@ -16,26 +19,12 @@ const PLAYGROUND_GREY = '#b3ada2';
 
 const CATEGORY_LABEL: Record<string, string> = { projects: 'Projects', essays: 'Essays', bits2bricks: 'Bits2Bricks', wikinotes: 'Wiki' };
 
-export const SECTIONS = [
-  { id: 'projects', to: '/lab/projects', title: 'Projects', line: 'Things I build. Design decisions, dead ends and what stuck as it actually happened.' },
-  { id: 'essays', to: '/blog/essays', title: 'Essays', line: 'Essays, takes and personal rants about ideas that will not sit still.' },
-  { id: 'bits2bricks', to: '/blog/bits2bricks', title: 'Bits2Bricks', line: 'Subjects explained from the mechanism up, one lesson at a time.' },
-  { id: 'wikinotes', to: '/wiki', title: 'Wiki', line: 'The notes behind the work, connected to each other.' },
-] as const;
 
-export const PAGES = [
-  { id: 'home', to: '/home', title: 'From systems to bits and back.', line: 'Engineering is engineering. The substrate does not matter.' },
-  { id: 'about', to: '/about', title: 'Yago Mendoza', line: 'AI & Industrial Engineer. I work below the interface: the physics, the infrastructure and the failure modes of a system, whatever it runs on.' },
-  { id: 'cv', to: '/about/cv', title: 'Experience', line: 'Where I have worked, what I built there and what it taught me.' },
-  { id: 'stack', to: '/about/stack', title: 'Stack', line: 'The tools I reach for, and the few I would defend.' },
-  { id: 'contact', to: '/contact', title: 'Get in touch', line: 'Ideas, collaborations, corrections. Barcelona, ES / EN.' },
-] as const;
+
+
 
 /* The interactive pages under public/playgrounds/<article id>/<name>.html, with the title each one carries. */
-export const PLAYGROUNDS = [
-  { article: '3142718', file: 'tabla-arr', title: 'Two-tank model: ARR dependency table' },
-  { article: '7654321', file: 'telemetry-decoy', title: 'A day of microdischarges: signal vs. decoys' },
-] as const;
+
 
 export const playgroundId = (pg: { article: string; file: string }) => `${pg.article}--${pg.file}`;
 export const playgroundPath = (pg: { article: string; file: string }) => `/playgrounds/${pg.article}/${pg.file}.html`;

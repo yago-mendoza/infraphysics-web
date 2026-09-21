@@ -45,7 +45,7 @@ Also collect the `[STYLE]` warnings the build prints for this file. The build sk
 
 Read the article again for shape, not for rules. For each finding give the line range and the concrete change.
 
-- **One article or two.** Say whether the draft moves in one direction with enough pull, or whether a theme takes the spotlight for a few paragraphs and never returns (the sign of a second article hiding inside). Name the theme, the paragraphs, and whether it should shrink to a sentence, leave for `_studio/inbox/`, or stay. Guidance in `essays/README.md`, *One article or two*.
+- **One article or two.** Say whether the draft moves in one direction with enough pull, or whether a theme takes the spotlight for a few paragraphs and never returns (the sign of a second article hiding inside). Name the theme, the paragraphs, and whether it should shrink to a sentence, leave for `_studio/_inbox/bank/`, or stay. Guidance in `essays/README.md`, *One article or two*.
 - **Tables.** A paragraph that carries three or more figures, a comparison of several things along the same axes, a list of parameters: propose a table (SYNTAX *Tables*) or, in projects, a parameter sheet.
 - **Footnotes versus parentheses.** A parenthesis that only sources or qualifies a claim (a number's provenance, a caveat the sentence survives without) becomes `^[…]`; a footnote that changes the meaning of its sentence comes back into it as a parenthesis (STYLE rule 8).
 - **Paragraph distribution.** Where the text runs in one-line fragments, name the paragraphs that should merge and the sentence that should carry the join. Where one paragraph carries two movements of thought, name the split. Rhythm rules in VOICE.md (*Rhythm and register*); density in STYLE rule 5.

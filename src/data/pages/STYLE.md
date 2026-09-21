@@ -10,7 +10,7 @@ Do not open a sentence with the italic term (*Four-bit* as a first word reads as
 
 ## 2. No arrows. Write the sequence out.
 
-Symbols (`→`, `⇒`, `↔`) and typed forms (`->`, `=>`, `<-`, `-->`, `<->`) are the same thing: none of them between concepts in prose. Write the sequence as a sentence, a numbered list when the steps matter, or a table when several sequences sit side by side. Inside `{math}` an arrow is mathematics. Wikinotes too.
+**The arrow `→` is absolutely forbidden across the whole site.** Not only in prose: in headings, tables, captions, labels, notes, tldr bullets, context annotations, UI copy, share cards, commit messages, wikinotes, the studio, anywhere a reader or an agent can see it. Symbols (`→`, `⇒`, `↔`, `←`) and typed forms (`->`, `=>`, `<-`, `-->`, `<->`) are the same thing and carry the same ban. Write the sequence as a sentence, a numbered list when the steps matter, a [sequence](SYNTAX.md#sequences) when it should be drawn, or a table when several sequences sit side by side. The only place an arrow exists is inside `{math}` or `\( … \)`, where it is mathematics, and inside a code block that holds real code. The build flags every other occurrence in an article body as a `[STYLE]` warning.
 
 ## 3. No em-dashes as punctuation.
 
@@ -20,7 +20,7 @@ Never `—` as a break in body text, nor its lookalikes: the en dash `–`, the 
 
 ## 4. Typed boxes have no title.
 
-`{bkqt/note}`, `{bkqt/tip}`, `{bkqt/warning}`, `{bkqt/danger}`, `{bkqt/keyconcept}` open with the type and nothing else; `{bkqt/tip|Some title}` is a build error, and the compiler never prints the type's name. If the box needs a lead, it is the first sentence of the box, in italics when it has to stand apart.
+`{bkqt/note}`, `{bkqt/tip}`, `{bkqt/warning}`, `{bkqt/danger}`, `{bkqt/keyconcept}` open with the type and nothing else; `{bkqt/tip|Some title}` is a build error, and the compiler never prints the type's name. If the box needs a lead, it is the first sentence of the box, in italics: the compiler sets that opening italic sentence as the box's title line, so the lead is how a box gets a visible title. Never two boxes back to back ([SYNTAX.md](SYNTAX.md), Typed notes).
 
 ## 5. Dense paragraphs, not loose lines.
 
@@ -42,7 +42,9 @@ An article is a handful of `#` sections with real bodies. The default is one lev
 
 Never a heading directly under a heading: between `#` and its first `##` there is always body text that says what the section is and why it splits.
 
-Not checked mechanically: if the outline reads like the table of contents of a manual, flatten it.
+**A section that announces parts is their parent, never their sibling.** If the body of a section is the map of what follows (*there are two families, SFT and DPO on one side and RL on the other*, *the pipeline has three phases*, *four concepts to anchor first*), the sections it names are its subsections, and the map is the text between the `#` and the first `##`. Written as siblings, the index shows *02 The taxonomy, 03 SFT, 04 DPO, 05 RL* and hides that the last three are the branches of the second. Read the index on its own before publishing: every entry must be a peer of its neighbours, and an entry whose name is a category (*taxonomy*, *overview*, *the techniques*, *phases*, *components*) owns the entries that instantiate it. This is the one case where nesting is required and not merely allowed; the flatness above still holds for everything else, so the parts named by the map go down one level and nothing else does.
+
+Not checked mechanically: if the outline reads like the table of contents of a manual, flatten it; if a category sits beside its own members, nest them.
 
 ## 8. Footnotes are `^[…]`, placed before the period.
 
@@ -77,8 +79,16 @@ Phrases that never survive an edit, whatever the category; the sentence around t
 
 The one exception on record: *This is not a metaphor. This is literally what happens.* works once across the whole site (the transformers article) and nowhere else.
 
+## 12. Bold marks a claim, never a term.
+
+Bold goes on the part of a sentence that carries its weight: the clause the reader must not miss, the statement the paragraph was built to make. *SFT only teaches the model **what thinking looks like, not what thinking is useful for**.* It never goes on an isolated word or a noun phrase: not on a term (**online**, **RLAIF**, **reward model**), not on a label (**subjective** quality, **reasoning** tasks), not on a name at its first mention. A term that must stand out is in italics (rule 1) or becomes a wiki-link; a list whose items open with a label writes the label as plain text or as a definition list. The build flags a bold span of three words or fewer as a `[STYLE]` warning. Wikinotes keep their own convention (bold marks a term at the sentence that defines it, [wikinotes/STYLE.md](wikinotes/STYLE.md)); this rule is for articles.
+
+## 13. A list has at least three items.
+
+Bullets, numbered items, lettered items and definition rows alike: a list of one or two is a sentence. *Quality conflates two things: helpfulness (does the response help?) and harmlessness (does it avoid harm?)* stays in the paragraph; two bullets for it are a slide, not prose. Three or more items with the same shape earn the list. The build flags a list block of fewer than three items as a `[STYLE]` warning.
+
 ## Enforcement
 
-`checkStyleRules` in `scripts/build-content.js` scans the markdown body of every compiled article (fenced and inline code, math, link and image targets and raw HTML excluded) and prints one `[STYLE]` line per rule per file with the first offending lines: double quotes (rule 1), arrows (rule 2), runs of short paragraphs (rule 5). A typed-box title (rule 4) is a build error. A cached file is not re-scanned; edit it or clear `.content-cache.json`. The rest is read for.
+`checkStyleRules` in `scripts/build-content.js` scans the markdown body of every compiled article (fenced and inline code, math, link and image targets and raw HTML excluded) and prints one `[STYLE]` line per rule per file with the first offending lines: double quotes (rule 1), arrows (rule 2), runs of short paragraphs (rule 5), bold on three words or fewer (rule 12), lists of fewer than three items (rule 13). A typed-box title (rule 4) is a build error. A cached file is not re-scanned; edit it or clear `.content-cache.json`. The rest is read for.
 
 To add a rule: a numbered section with the rule, its exceptions and one example only where the rule is ambiguous; a check in `checkStyleRules` when it can be mechanical; a mention in the *On writing or editing ARTICLES content* block of `CLAUDE.md` if an assistant is likely to break it by habit.

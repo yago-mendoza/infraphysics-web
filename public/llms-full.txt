@@ -171,7 +171,9 @@ The first layer has serious literature. Parity equations, diagnostic observers, 
 
 So no, this is not machine learning before machine learning. It's the opposite way of injecting knowledge. Instead of learning what normal looks like from ten thousand examples, you write down what normal has to obey. If your detector needs a dataset to find out that water is conserved, you don't have a data problem. You have a thinking problem.
 
-Control and diagnosis ask different questions. A controller asks what input moves the system toward the reference; a diagnoser asks which physical assumption just stopped agreeing with the measurements. Same sensors, same model, completely different job, and confusing the two is how you end up with a plant that looks healthy right up to the moment it isn't.
+Control and diagnosis ask different questions.
+
+A controller asks what input moves the system toward the reference; a diagnoser asks which physical assumption just stopped agreeing with the measurements. Same sensors, same model, completely different job, and confusing the two is how you end up with a plant that looks healthy right up to the moment it isn't.
 
 Two tanks are the perfect microscope for this because nothing can hide. Water has to go somewhere. If the arithmetic doesn't close, you have maybe five suspects and they all live on one diagram.
 
@@ -383,7 +385,9 @@ r4=mQp−kpumpmUpr_4=mQ_p-k_{pump}mU_pr4​=mQp​−kpump​mUp​
 
 The smallest ARR and the easiest to explain to a five-year-old. Command says ten, flow sensor says four, pump model says those two cannot both be true.
 
-The piecewise model matters. The compact r4r_4r4​ is only valid in the pump's linear region. A real residual generator has to evaluate the same piecewise law as M5M_5M5​, zero flow and saturation included. Skip that and every normal saturation event looks exactly like a pump fault. You will be woken up at 3 a.m. by a pump that is fine.
+The piecewise model matters.
+
+The compact r4r_4r4​ is only valid in the pump's linear region. A real residual generator has to evaluate the same piecewise law as M5M_5M5​, zero flow and saturation included. Skip that and every normal saturation event looks exactly like a pump fault. You will be woken up at 3 a.m. by a pump that is fine.
 
 A fault is a four-bit word
 
@@ -740,11 +744,11 @@ h=σ ⁣(Wx+b)\mathbf{h} = \sigma\!\left( W \mathbf{x} + \mathbf{b} \right)h=�
 
 A matrix multiply, a bias added, and then σ\sigmaσ, a nonlinearity applied to each number. This is the part that matters and the part beginners skip. Without the nonlinearity, stacking layers buys you nothing: two matrix multiplies in a row are just one bigger matrix multiply, so a hundred linear layers collapse back into a single line. The nonlinearity (historically a sigmoid that squashes everything into the range 0 to 1, today usually a ReLU that just clips negatives to zero) is what lets each layer bend the space instead of only tilting it. Bend the space enough times and you can separate anything.
 
-A layer — A linear transformation Wx+bW\mathbf{x} + \mathbf{b}Wx+b followed by a nonlinearity σ\sigmaσ. Vector in, vector out.
+A layerA linear transformation Wx+bW\mathbf{x} + \mathbf{b}Wx+b followed by a nonlinearity σ\sigmaσ. Vector in, vector out.
 
-A deep network — Several layers stacked, each one feeding the next. The output of layer 1 is the input to layer 2.
+A deep networkSeveral layers stacked, each one feeding the next. The output of layer 1 is the input to layer 2.
 
-A dense (or fully-connected) layer — Every input connects to every neuron. WWW has no zeros forced into it; everything talks to everything.
+A dense (or fully-connected) layerEvery input connects to every neuron. WWW has no zeros forced into it; everything talks to everything.
 
 Stack a few of these and you have a multi-layer perceptron, the plain-vanilla neural network. Feed in a vector at the bottom, let it flow up through the layers, read a prediction off the top. The magic theorem here is that a network like this is a universal approximator 1, and with enough neurons it can fit essentially any function from input to output.
 
@@ -762,7 +766,9 @@ It is why two models built from the very same primitive can behave like complete
 
 A plain feedforward network wires its layers in a straight line: data flows up, once, and leaves. Nothing connects the output back to the input, so it has no memory of what it saw a step ago.
 
-The thing to hold onto. A neural layer is not exotic. It is a matrix multiply plus a squash. That is the only computational primitive in this entire article. Attention layers, LSTM gates, the readout head at the very end: all of them are this same operation with different shapes and different wiring. When the diagrams get scary later, remember that every box inside them is just σ(Wx+b)\sigma(W\mathbf{x} + \mathbf{b})σ(Wx+b).
+The thing to hold onto.
+
+A neural layer is not exotic. It is a matrix multiply plus a squash. That is the only computational primitive in this entire article. Attention layers, LSTM gates, the readout head at the very end: all of them are this same operation with different shapes and different wiring. When the diagrams get scary later, remember that every box inside them is just σ(Wx+b)\sigma(W\mathbf{x} + \mathbf{b})σ(Wx+b).
 
 That is the foundation: a neuron is a hyperplane, a layer is a matrix-multiply-plus-squash, a deep network stacks them, and an architecture is a circuit you build out of those layers by hand. Next we wire our first loop, and run straight into the problem that the LSTM was invented to fix.
 
@@ -884,9 +890,9 @@ The cell state is first squashed by a tanh back into −1 to 1 (it can grow larg
 
 So the two lines have two clearly different jobs:
 
-The cell state ctc_tct​ — The long-term ledger. Private, rides the belt, updated only by erase-and-add. This is where memory actually lives.
+The cell state ctc_tct​The long-term ledger. Private, rides the belt, updated only by erase-and-add. This is where memory actually lives.
 
-The hidden state hth_tht​ — The working output. A filtered, on-demand view of the ledger: what the rest of the network gets to see, and what feeds back into the loop.
+The hidden state hth_tht​The working output. A filtered, on-demand view of the ledger: what the rest of the network gets to see, and what feeds back into the loop.
 
 That is the entire cell. Four small layers reading one concatenated input zzz; a forget valve and a write valve editing a conveyor-belt memory by erasing and adding; an output valve deciding how much of that memory to reveal. The intimidating tangle of wires was always just this.
 
@@ -987,7 +993,9 @@ A microscope shows you the world; a simulator shows you your assumptions. Mix th
 
 The literature keeps demonstrating why (the papers are at the end; here I only need their headline). Serious seizure-forecasting work is full of models that beat a random predictor in one setting and quietly deflate in another. Temporal models can find signal in EEG, and that signal is patient-specific, validation-sensitive, and far easier to overstate than to use. LSTMs are fine. The validation protocol carries almost as much weight as the architecture, and it is the part that keeps getting skipped.
 
-What synthetic data can and cannot do. It can test a pipeline, compare modeling choices, expose leakage, estimate sample-size pressure, and define which claims are off limits. It cannot discover a clinical fact. A model that works on data shaped by my own assumptions has learned nothing about the brain; it has cleared a sanity floor, meaning that in a world where the signal exists the pipeline can see some of it. A low bar, and the one most personal ML projects quietly step over.
+What synthetic data can and cannot do.
+
+It can test a pipeline, compare modeling choices, expose leakage, estimate sample-size pressure, and define which claims are off limits. It cannot discover a clinical fact. A model that works on data shaped by my own assumptions has learned nothing about the brain; it has cleared a sanity floor, meaning that in a world where the signal exists the pipeline can see some of it. A low bar, and the one most personal ML projects quietly step over.
 
 Building the simulator
 
@@ -1010,7 +1018,9 @@ The risk map and phase portrait summarize the latent state. The raw material und
 
 The event raster: EPV streams stacked session by session, so bursts and quiet stretches line up across days.
 
-What the model actually estimates. A local hazard, never the next flash: given the recent density of flashes and the slower state of the session, how dangerous is this window compared with a quiet one? Hazard can be real while exact timing stays stubbornly uncertain, and a good part of this article turns on that difference.
+What the model actually estimates.
+
+A local hazard, never the next flash: given the recent density of flashes and the slower state of the session, how dangerous is this window compared with a quiet one? Hazard can be real while exact timing stays stubbornly uncertain, and a good part of this article turns on that difference.
 
 Why more synthetic data isn't more evidence
 
@@ -1075,7 +1085,9 @@ So the split is by session. A whole session goes into training or into testing, 
 
 Unglamorous, and decisive: once the split is honest, the scores get less exciting and more useful.
 
-Why the split is by session. In a time series, data leakage does not need to look like cheating. It can look like a clean random split. But if near-duplicate windows from the same session appear on both sides, the model has already seen the shape of the test case. Session-level splitting is the minimum condition for the metric to mean anything, well short of conservative.
+Why the split is by session.
+
+In a time series, data leakage does not need to look like cheating. It can look like a clean random split. But if near-duplicate windows from the same session appear on both sides, the model has already seen the shape of the test case. Session-level splitting is the minimum condition for the metric to mean anything, well short of conservative.
 
 From simple baselines to the LSTM
 
@@ -1117,7 +1129,9 @@ The score barely moves.
 
 That says nothing about real brains and a good deal about this generator, which is still worth knowing, because it tells you where the simulated difficulty lives: even once the session is known to be loaded, the exact window keeps its stochastic timing. A loaded die tells you the distribution, never the next roll. Under this data-generating process, better access to session fragility does not solve event timing.
 
-Fragility versus timing. Predicting that a system is fragile and predicting the moment it breaks are different jobs. Most risk models do the first well; this project asks for the second. In this simulator most of the remaining error lives in timing, which proves nothing about reality and does map the wall for the next real experiment: if richer sensors suddenly improve timing, the simulator was missing a driver; if they do not, the bottleneck may really be short-horizon stochasticity.
+Fragility versus timing.
+
+Predicting that a system is fragile and predicting the moment it breaks are different jobs. Most risk models do the first well; this project asks for the second. In this simulator most of the remaining error lives in timing, which proves nothing about reality and does map the wall for the next real experiment: if richer sensors suddenly improve timing, the simulator was missing a driver; if they do not, the bottleneck may really be short-horizon stochasticity.
 
 Taking stock
 
@@ -1235,11 +1249,13 @@ The issue isn't that Salesforce can't track contacts. It can. The issue is seman
 
 3C's relationship model has two distinct phases that no generic CRM expresses natively:
 
-The two-phase lifecycle. Two questions, asked at different times, about the same person.
+The two-phase lifecycle.
 
-Assess fit — The general evaluation. Does this person belong in the 3C network at all? A contact starts as new, moves to contacted and then evaluating, and ends as won or lost.
+Two questions, asked at different times, about the same person.
 
-Prospect — The project-specific one. Does this person fit this particular quest? The states are new, contacted, in_conversation and opportunity, again closing as won or lost.
+Assess fitThe general evaluation. Does this person belong in the 3C network at all? A contact starts as new, moves to contacted and then evaluating, and ends as won or lost.
+
+ProspectThe project-specific one. Does this person fit this particular quest? The states are new, contacted, in_conversation and opportunity, again closing as won or lost.
 
 A contact can win the general assessment (great psychologist, solid fit for the network) and lose a specific quest because their specialization doesn't match the study. Separate tables, different schemas, different status enums, different side effects on transition.
 
@@ -1341,7 +1357,9 @@ Because here's what happens when you let a model generate CRUD at full tilt: it 
 
 A transition table forbids. It's the cheapest possible leash. And it's the one form of structure I trusted the berserker not to route around, because it fails loud:
 
-The dumb explicit thing beats the clever general thing. A real backend engineer would have reached for XState or a proper state-chart library here. I wrote a Record<string, string[]> and a lookup function. No statecharts, no actors, no hierarchical machines. It's almost certainly wrong by their standards, and it never once broke in 72 hours. Abstractions are bets that you understand the problem. At hour 6 you understand nothing, so you write the dumb explicit thing, let it be ugly, and let it be checkable.
+The dumb explicit thing beats the clever general thing.
+
+A real backend engineer would have reached for XState or a proper state-chart library here. I wrote a Record<string, string[]> and a lookup function. No statecharts, no actors, no hierarchical machines. It's almost certainly wrong by their standards, and it never once broke in 72 hours. Abstractions are bets that you understand the problem. At hour 6 you understand nothing, so you write the dumb explicit thing, let it be ugly, and let it be checkable.
 
 This CRM has 8 of these. I'll show three.
 
@@ -1365,7 +1383,9 @@ paused is the escape hatch: it reaches almost anything. done and killed are near
 
 The cascade is the interesting part, and it's also where I lost a night. Quests are self-referencing trees; a quest can be a sub-quest of another. Mark a parent done or killed and the status propagates to every descendant quest and every task under each of them. A single change at the top can touch 15 entities, each getting its own timestamped statusTransitions entry so the audit trail survives the cascade.
 
-In Hindsight. The first version of the cascade was a naive recursive walk the berserker generated in about thirty seconds, and it was beautiful until hour 31, when I tested it against a quest tree that had (through a bad parent pointer an earlier migration left behind) a cycle in it. Quest A's parent was B, B's parent was A. The recursion didn't stop. Node's stack didn't survive. The wrangler tail just printed Maximum call stack size exceeded over and over while I sat there at 3am doing the math on how a tree had a cycle. The fix was two lines (a visited set), but the real fix was realizing the integrator should never have trusted a tree to actually be a tree. I added a parent-pointer validation on write the next morning. Should've been there at hour 4.
+In Hindsight.
+
+The first version of the cascade was a naive recursive walk the berserker generated in about thirty seconds, and it was beautiful until hour 31, when I tested it against a quest tree that had (through a bad parent pointer an earlier migration left behind) a cycle in it. Quest A's parent was B, B's parent was A. The recursion didn't stop. Node's stack didn't survive. The wrangler tail just printed Maximum call stack size exceeded over and over while I sat there at 3am doing the math on how a tree had a cycle. The fix was two lines (a visited set), but the real fix was realizing the integrator should never have trusted a tree to actually be a tree. I added a parent-pointer validation on write the next morning. Should've been there at hour 4.
 
 Both frontend and backend carry the same transition map 1. Click a state that shouldn't exist? The dropdown won't show it. Hand-craft the PATCH anyway? The API returns 400. The leash holds at both ends.
 
@@ -1442,7 +1462,9 @@ Done meetings count; scheduled ones don't. A calendar invite isn't a conversatio
 
 That clean three-line version is the third rewrite. It did not arrive clean.
 
-In Hindsight. Version one tracked meetings only, useless the second you remember most of this relationship lives in email. Version two bolted on Gmail but I let the model wire the snooze logic and it confidently produced an off-by-one that snoozed forward in time, so snoozing a stale contact made it more stale. I shipped that. It was live for about six hours before one of the two users asked, very politely, why the button made things worse. Version three is the fusion above, with the snooze arithmetic I should've sat down and done by hand the first time. A model will hand you something that runs and is wrong, and "runs" is the more dangerous half.
+In Hindsight.
+
+Version one tracked meetings only, useless the second you remember most of this relationship lives in email. Version two bolted on Gmail but I let the model wire the snooze logic and it confidently produced an off-by-one that snoozed forward in time, so snoozing a stale contact made it more stale. I shipped that. It was live for about six hours before one of the two users asked, very politely, why the button made things worse. Version three is the fusion above, with the snooze arithmetic I should've sat down and done by hand the first time. A model will hand you something that runs and is wrong, and "runs" is the more dangerous half.
 
 The escalating threshold
 
@@ -1468,7 +1490,9 @@ Still waiting. Second snooze.
 49 days
 Deliberately slow-burning. Third snooze.
 
-Why +2 per snooze, not +1. If a contact has been stale 15 days (count=0, threshold=7), bumping the count by 1 sets the threshold to 14, still stale. The alert refuses to die. You'd have to snooze twice to clear it once, which makes the button feel broken. Increment by 2 and the threshold jumps to 21, clearing the alert in a single click. Tiny arithmetic, enormous UX difference. This is the kind of thing no model gets right by default, because it requires knowing how a button is supposed to feel.
+Why +2 per snooze, not +1.
+
+If a contact has been stale 15 days (count=0, threshold=7), bumping the count by 1 sets the threshold to 14, still stale. The alert refuses to die. You'd have to snooze twice to clear it once, which makes the button feel broken. Increment by 2 and the threshold jumps to 21, clearing the alert in a single click. Tiny arithmetic, enormous UX difference. This is the kind of thing no model gets right by default, because it requires knowing how a button is supposed to feel.
 
 Manual contact is the nuclear option: it resets lastManualContact to today and zeroes staleSnoozeCount. Clean slate. The clock restarts because you actually engaged, not because you postponed the reminder.
 
@@ -1579,7 +1603,9 @@ The final stack: React 19 + TypeScript, Vite 6, Tailwind CSS via CDN 1, marked +
 
 1not the npm package: the CDN play mode generates classes at runtime, which means dynamic interpolation works without a build step. The npm version would need a PostCSS setup and dynamic class generation would break under build-time purging.
 
-In Hindsight. Tailwind via CDN instead of the npm package means no build-time purging. The CSS payload is larger than it needs to be. And the first implementation was brutal: hardcoded colors everywhere. text-white, bg-gray-900, border-gray-700. Doing the theme migration "later" cost me a full day. Should have set up CSS custom properties on day one. I knew it. I did it anyway.
+In Hindsight.
+
+Tailwind via CDN instead of the npm package means no build-time purging. The CSS payload is larger than it needs to be. And the first implementation was brutal: hardcoded colors everywhere. text-white, bg-gray-900, border-gray-700. Doing the theme migration "later" cost me a full day. Should have set up CSS custom properties on day one. I knew it. I did it anyway.
 
 Why not MDX
 
@@ -1709,7 +1735,9 @@ MARKDOWN Copy
 
 The bidirectional resolution is one of the things I'm most proud of technically. The build processes every note, extracts every reference, computes the reverse links, and generates a complete relationship graph, every connection typed, annotated, and navigable from either end. The kind of thing you'd build with a graph database if you were being serious. I built it with JSON and a build script. It works.
 
-One file, one concept. Every fieldnote is exactly one idea. Not a topic. Not a chapter. One atomic concept. "Attention mechanism" is one note. "Softmax" is another. "KV cache" is another. They connect through wiki-links, not through being in the same document. This is what makes the graph possible, and what makes navigation feel like thinking.
+One file, one concept.
+
+Every fieldnote is exactly one idea. Not a topic. Not a chapter. One atomic concept. "Attention mechanism" is one note. "Softmax" is another. "KV cache" is another. They connect through wiki-links, not through being in the same document. This is what makes the graph possible, and what makes navigation feel like thinking.
 
 So... it's Obsidian?
 
@@ -1735,7 +1763,9 @@ Then there's the topology layer. And this is where Obsidian and the Second Brain
 
 The filtering system has toggles for isolated notes, leaves, bridges, and hubs; a depth range slider for the naming hierarchy; a heatmap that looks like a GitHub contribution graph where each cell is a day and you can click to filter by creation date. Three search modes: by name, by content, by backlinks. Session tracking that marks which notes you've already opened (blue = visited, purple = not yet) so you can toggle "unvisited only" and see what's left to explore.
 
-On building what exists. I could have used Obsidian. Or Logseq. Or Roam. Any of them would have been faster to set up and better maintained than anything I'd build alone. But none of them would have taught me what I learned by building it: that a graph is more than its nodes, that references need stable identities, that the difference between a mention and a connection is the difference between noise and signal. Sometimes the point of building something that exists is finding out why it exists the way it does, and where it could exist differently.
+On building what exists.
+
+I could have used Obsidian. Or Logseq. Or Roam. Any of them would have been faster to set up and better maintained than anything I'd build alone. But none of them would have taught me what I learned by building it: that a graph is more than its nodes, that references need stable identities, that the difference between a mention and a connection is the difference between noise and signal. Sometimes the point of building something that exists is finding out why it exists the way it does, and where it could exist differently.
 
 From monolith to tool
 
@@ -2352,7 +2382,9 @@ Agent can modify its own prompts
 skill-creator
 Agent can build new skills
 
-ClawHub security. In February 2026, researchers discovered 341 malicious skills on ClawHub. 13.4% of audited packages had critical vulnerabilities: credential theft, remote code execution. OpenClaw partnered with VirusTotal to scan published skills, but that catches known signatures, not novel techniques. Use local skills only for production. No public registry pulls without reading the source.
+ClawHub security.
+
+In February 2026, researchers discovered 341 malicious skills on ClawHub. 13.4% of audited packages had critical vulnerabilities: credential theft, remote code execution. OpenClaw partnered with VirusTotal to scan published skills, but that catches known signatures, not novel techniques. Use local skills only for production. No public registry pulls without reading the source.
 
 Creating a custom skill is a markdown file dropped into ~/.clawdbot/skills/my-skill/SKILL.md:
 
@@ -2739,15 +2771,17 @@ clawdbot onboard --install-daemon
 
 That's it. The gateway runs as a systemd service: survives SSH disconnects, reboots, everything. You chat through WhatsApp, the TUI (clawdbot tui), or a web dashboard (via SSH tunnel to localhost:18789). The WhatsApp QR linking is slightly unnerving (you're pairing your personal WhatsApp to a machine in a datacenter), but it works.
 
-What the cloud gives you for free. - No local files at risk: the droplet doesn't have your SSH keys, browser sessions, or personal documents
+What the cloud gives you for free.
 
-- No LAN access: the server is in a datacenter, not on your home network. Your NAS, cameras, and smart home are unreachable.
+No local files at risk: the droplet doesn't have your SSH keys, browser sessions, or personal documents
 
-- Easy to destroy: if something goes wrong, delete the droplet. Your local machine is untouched.
+No LAN access: the server is in a datacenter, not on your home network. Your NAS, cameras, and smart home are unreachable.
 
-- Snapshots and backups: DigitalOcean Snapshots or scp the ~/clawd/ directory for state backup
+Easy to destroy: if something goes wrong, delete the droplet. Your local machine is untouched.
 
-- Firewall at the VPC level: cloud firewalls are more capable than your home router
+Snapshots and backups: DigitalOcean Snapshots or scp the ~/clawd/ directory for state backup
+
+Firewall at the VPC level: cloud firewalls are more capable than your home router
 
 Data leaves your network
 
@@ -3021,13 +3055,15 @@ ssh-add -l
 # if keys are listed, they're loaded in memory and available
 # to any process running as your user
 
-Quick fixes. - Unencrypted SSH keys: ssh-keygen -p -f ~/.ssh/id_ed25519, adds a passphrase. 30 seconds per key.
+Quick fixes.
 
-- Git credential store: git config --global credential.helper osxkeychain, switches from plaintext file to encrypted keychain.
+Unencrypted SSH keys: ssh-keygen -p -f ~/.ssh/id_ed25519, adds a passphrase. 30 seconds per key.
 
-- Stale .env files: move production .env files off any machine that runs an AI agent. Use a secrets manager (1Password CLI, Doppler, Vault) instead.
+Git credential store: git config --global credential.helper osxkeychain, switches from plaintext file to encrypted keychain.
 
-- Firefox cookies: consider using a separate browser profile for sensitive sessions (banking, email) and keeping the agent machine's browser clean.
+Stale .env files: move production .env files off any machine that runs an AI agent. Use a secrets manager (1Password CLI, Doppler, Vault) instead.
+
+Firefox cookies: consider using a separate browser profile for sensitive sessions (banking, email) and keeping the agent machine's browser clean.
 
 Cost
 
@@ -3078,7 +3114,9 @@ Break-even on the $499 model: 2–4 months. On the $1,999 model: 6–10 months.
 
 What you keep: no per-seat licensing, no vendor lock-in, no usage throttling, no training data leakage.
 
-Claude Pro/Max subscription. Using a Claude Pro or Max subscription instead of metered API billing is dramatically cheaper for heavy usage. Community members report burning $300+ in two days on metered API. Flat monthly fee vs. per-token billing. The math isn't close.
+Claude Pro/Max subscription.
+
+Using a Claude Pro or Max subscription instead of metered API billing is dramatically cheaper for heavy usage. Community members report burning $300+ in two days on metered API. Flat monthly fee vs. per-token billing. The math isn't close.
 
 The effort-to-protection matrix
 
@@ -3140,7 +3178,9 @@ Full VM (UTM / Firecracker)
 15 min–weekend
 Maximum isolation, separate everything
 
-The 90% rule. The first seven rows take under an hour combined and cover ~90% of the attack surface. Everything below the line is real protection but diminishing returns. If you only do one thing, make it the first row: guest WiFi. If you do two things, add Docker. If you do three, add the credential audit.
+The 90% rule.
+
+The first seven rows take under an hour combined and cover ~90% of the attack surface. Everything below the line is real protection but diminishing returns. If you only do one thing, make it the first row: guest WiFi. If you do two things, add Docker. If you do three, add the credential audit.
 
 The full thread (what "full access" means, why the supply chain matters, and what Moltbook tells us about where this is heading) is here: OpenClaw and the keys to your kingdom.
 
@@ -3215,7 +3255,9 @@ So what if you gave the model a set of principles (a constitution) and let it ev
 
 This was Constitutional AI, authored by Yuntao Bai, Saurav Kadavath, Amanda Askell, and others. The model generates a response, critiques its own response against written principles, revises the response based on its own critique, and the revised outputs become training data. The technical term is RLAIF: Reinforcement Learning from AI Feedback.
 
-The Shift. Think of it as the difference between manual code review and automated linting. RLHF is code review: a human examines every output and rates it. Constitutional AI is the linter: you encode the rules once, and the system self-corrects against them. RLHF scales linearly with human labor. Constitutional AI scales with compute.
+The Shift.
+
+Think of it as the difference between manual code review and automated linting. RLHF is code review: a human examines every output and rates it. Constitutional AI is the linter: you encode the rules once, and the system self-corrects against them. RLHF scales linearly with human labor. Constitutional AI scales with compute.
 
 But the most important thing about Constitutional AI isn't the efficiency. It's the explicitness. The principles are written down. You can read them. Debate them. Publish them. Change them. RLHF's values are implicit in the aggregate preferences of whoever happened to be rating outputs that Tuesday afternoon. Constitutional AI's values are a document you can point to and argue about. That's a fundamentally different relationship between a company and the values it's encoding into its systems.
 
@@ -3247,7 +3289,9 @@ Then May: a shorter and more alarming statement. One sentence. "Mitigating the r
 
 When the people building the thing tell you they're worried about the thing, that's not alarmism. That's a signal.
 
-The Hinton Factor. Geoffrey Hinton (co-winner of the 2018 Turing Award, widely called the "godfather of deep learning") left Google in May 2023 specifically so he could speak publicly about AI risks without corporate constraints. When the person who helped invent the technology says he's scared of where it's going, that carries a different weight than a think-piece from someone who's never trained a model. Hinton didn't become an alarmist. The technology caught up with his worst-case scenarios.
+The Hinton Factor.
+
+Geoffrey Hinton (co-winner of the 2018 Turing Award, widely called the "godfather of deep learning") left Google in May 2023 specifically so he could speak publicly about AI risks without corporate constraints. When the person who helped invent the technology says he's scared of where it's going, that carries a different weight than a think-piece from someone who's never trained a model. Hinton didn't become an alarmist. The technology caught up with his worst-case scenarios.
 
 Twenty percent of compute
 
@@ -3328,7 +3372,9 @@ A 97% reduction in covert behavior. Impressive. Real progress on a genuinely har
 
 But the paper's honesty about what it didn't solve is what makes it important. Three complications:
 
-The Fine Print. - imperfect generalization: rare but serious cases of misbehavior persisted. The remaining 0.3-0.4% isn't noise. The researchers describe some of these as "concerning."
+The Fine Print.
+
+imperfect generalization: rare but serious cases of misbehavior persisted. The remaining 0.3-0.4% isn't noise. The researchers describe some of these as "concerning."
 
 the situational awareness confound: part of the reduction appeared to be driven by the model detecting the evaluation context and adjusting accordingly. Did it stop scheming? Or did it stop scheming where it knew it was being watched? That is a very different thing.
 
@@ -3360,7 +3406,9 @@ GPT-4o and GPT-4.1 showed concerning behaviors around misuse support
 
 every single model struggled with sycophancy: the tendency to tell the user what they want to hear rather than what's true
 
-The Scale. Anthropic separately generated over 300,000 queries testing value trade-offs across models from Anthropic, OpenAI, Google DeepMind, and xAI. They found distinct value prioritization patterns across labs and thousands of direct contradictions within individual model specifications. The gap between what a model's spec says it should do and what the model actually does is measurable, documented, and larger than anyone would like.
+The Scale.
+
+Anthropic separately generated over 300,000 queries testing value trade-offs across models from Anthropic, OpenAI, Google DeepMind, and xAI. They found distinct value prioritization patterns across labs and thousands of direct contradictions within individual model specifications. The gap between what a model's spec says it should do and what the model actually does is measurable, documented, and larger than anyone would like.
 
 This cross-audit didn't solve accountability. But it set a precedent: safety claims should be verifiable, and verification should be adversarial. The people checking your work should not be your employees. They should be your competitors. Because your competitors have every incentive to find the problems you missed.
 
@@ -3406,7 +3454,7 @@ Before we start
 
 A few concepts that underpin everything in this article. If you are comfortable with them, skip ahead. If not, these are worth anchoring before we go further.
 
-Backpropagation
+BackpropagationThe loss functionPolicyInference vs training
 
 In the transformer article, we described the forward pass (data flowing through the network, producing a prediction). Backpropagation is the reverse trip.
 
@@ -3415,8 +3463,6 @@ After the model makes a prediction, you compare it to the correct answer and com
 Then you nudge every parameter a tiny step in the direction that reduces the loss. One step barely changes anything. But billions of steps, across trillions of tokens, sculpt the model into something that predicts well. It is evolution by gradient descent: no intelligence directing the process, just a relentless pressure to be slightly less wrong than before.
 
 This is the same for SFT, DPO, and RL. The mechanics are identical. What changes is how you compute that loss.
-
-The loss function
 
 The loss function is literally "what number is the model trying to minimize." It is the single most important design choice in training, because it defines what "better" means.
 
@@ -3436,11 +3482,9 @@ L=−1T∑t=1Tlog⁡ pθ(xt∣x<t)\mathcal{L} = -\frac{1}{T}\sum_{t=1}^{T} \lo
 
 Each term asks: "what probability did the model assign to the token that actually came next?" If it was confident and right, −log⁡(0.9)≈0.1-\log(0.9) \approx 0.1−log(0.9)≈0.1. If it was clueless, −log⁡(0.01)≈4.6-\log(0.01) \approx 4.6−log(0.01)≈4.6. Summed across the whole sequence and averaged, that is the number that gradient descent minimizes.
 
-Policy
-
 In reinforcement learning, the word "policy" appears constantly. PPO stands for Proximal Policy Optimization. In the context of LLMs, the policy is the model (the function that, given a context, produces a probability distribution over next tokens). When we say "update the policy", we mean "adjust the model's weights so it produces different probabilities."
 
-Inference vs training
+Every technique in this article updates the policy. What differs is the signal that says in which direction.
 
 These are two completely different moments in the life of a model, and we will move between them throughout this article.
 
@@ -3452,16 +3496,7 @@ Every technique in this article is about training.
 
 The taxonomy
 
-Here is the map. Every technique for training an LLM after pretraining falls into one of two families:
-
- Copy
-
-Supervised learning (you have labeled data)
-├── SFT → "imitate this example exactly"
-└── DPO → "prefer response A over response B"
-
-Reinforcement learning (discover what's good by exploring)
-└── RL (PPO, GRPO...) → "maximize this reward"
+Here is the map. Every technique for training an LLM after pretraining falls into one of two families. The first is supervised learning, where you have labeled data: SFT says imitate this example exactly, DPO says prefer response A over response B. The second is reinforcement learning, where the model discovers what is good by exploring: RL (PPO, GRPO and their relatives) says maximize this reward.
 
 SFT and DPO are family. Both are supervised. Both learn from static datasets that were created before training began. Both are, fundamentally, pattern matching on human-provided examples.
 
@@ -3481,16 +3516,19 @@ After pretraining, a model is good at predicting next tokens but terrible at bei
 
 SFT fixes this. You create thousands of examples:
 
- Copy
+InputWhat is the capital of France?
 
-Input: "What is the capital of France?"
-Output: "The capital of France is Paris."
+OutputThe capital of France is Paris.
 
-Input: "Write a haiku about rain."
-Output: "Silver drops descend\nDancing on the quiet earth\nPetals bow in thanks"
+InputWrite a haiku about rain.
 
-Input: "Explain photosynthesis to a five-year-old."
-Output: "Plants eat sunlight! They use it to turn air and water into food..."
+OutputSilver drops descend
+Dancing on the quiet earth
+Petals bow in thanks
+
+InputExplain photosynthesis to a five-year-old.
+
+OutputPlants eat sunlight! They use it to turn air and water into food...
 
 The model learns the pattern: when someone asks a question, answer it. When someone asks for a poem, write one. It is not learning new facts (those are already in the MLP weights from pretraining, as we discussed in the transformer article). It is learning a new format: how to respond to instructions instead of just predicting plausible continuations.
 
@@ -3502,18 +3540,17 @@ This is why LoRA, the most popular efficient fine-tuning technique, typically on
 
 The tokenizer is never touched during fine-tuning. Changing it would mean changing the embedding matrix, which would essentially mean starting over.
 
+The whole model, and the small part of it that SFT with LoRA rewrites: the four attention matrices. The MLP weights usually stay frozen, and the token embeddings and positional encodings always do.
+
 SFT and thinking
 
 This is where it gets interesting. When you want a model to reason (to show its work, to think step by step), SFT is how you teach it the format.
 
 You create training examples like:
 
- Copy
+InputWhat is 47 × 83?
 
-Input: "What is 47 × 83?"
-
-Output:
-<thinking>
+Output<thinking>
 I need to multiply 47 by 83.
 47 × 80 = 3,760
 47 × 3 = 141
@@ -3527,23 +3564,19 @@ But here is the critical limitation: SFT only teaches the model what thinking lo
 
 1There is a deeper reason why thinking helps, and it has nothing to do with "understanding." Each thinking token is a composed function: the transformer applies the same layers again, but to a different input: the context including the previous thinking tokens. The full chain is f=fn∘fn−1∘⋯∘f1f = f_n \circ f_{n-1} \circ \cdots \circ f_1f=fn​∘fn−1​∘⋯∘f1​, where each fif_ifi​ is one decoding step. This is why extended thinking scales with compute: more steps means more compositions, which means the model can express more complex transformations, the same reason Gaussian elimination needs nnn steps to solve nnn equations. The context window acts as polynomial scratch space, giving the model access to PSPACE-like computation. SFT can teach the format of these steps, but only RL can teach the model which compositions are worth computing.
 
-SFT answers the question: what goes here?
+SFT answers the question what goes here? and leaves the other one open, what is worth putting here? That second question needs RL.
 
-It does not answer: what is worth putting here?
-
-That second question needs RL.
-
-DPO
+DPO (Direct Preference Optimization)
 
 Direct Preference Optimization is a step beyond SFT. Instead of saying "imitate this exact response", you say "this response is better than that one. Learn from the contrast."
 
 The training data looks like this:
 
- Copy
+PromptExplain quantum computing.
 
-Prompt: "Explain quantum computing."
-Chosen: "Quantum computing uses qubits that can be in superposition..."
-Rejected: "Well, quantum computing is very complicated and hard to explain..."
+ChosenQuantum computing uses qubits that can be in superposition...
+
+RejectedWell, quantum computing is very complicated and hard to explain...
 
 The model is trained to assign higher probability to the chosen response and lower probability to the rejected one. The loss function directly encodes this preference (no intermediate reward model needed):
 
@@ -3561,13 +3594,7 @@ DPO feels like RL because it refines behavior after SFT. It makes the model "bet
 
 But it is not. The difference is like the difference between studying flash cards and playing a sport. Flash cards show you (right answer, wrong answer) and you memorize. A sport puts you in a game where you have to perform, get real-time feedback, and adapt. Both make you better. Only one lets you develop strategies that were never on any flash card.
 
- Copy
-
-DPO: here are 10,000 pairs of (good, bad) responses. Learn from them.
- → static dataset, processed once, no generation during training.
-
-RL: generate a response. Here's your reward. Now generate again, better.
- → live loop, model generates and updates repeatedly.
+DPO says here are 10,000 pairs of good and bad responses, learn from them: a static dataset, processed once, with no generation during training. RL says generate a response, here is your reward, now generate again, better: a live loop, where the model generates and updates repeatedly.
 
 DPO never generates anything during training. The data exists before training starts. The model learns from fixed comparisons, exactly like SFT learns from fixed examples. It is supervised learning with a different loss function.
 
@@ -3585,15 +3612,7 @@ RL
 
 Reinforcement learning is categorically different from both SFT and DPO. It has a loop.
 
- Copy
-
-Model generates response
- → receives reward score
- → backprop adjusts weights
- → model generates again (better this time)
- → receives reward score
- → backprop adjusts weights
- → ...
+1The model answers a prompt, sampling a response from the weights it has right now2A reward function scores that response with a single number: a verdict, never a corrected answer3Backpropagation shifts the weights towards whatever earned the higher score4The updated model answers again, a little better each time, and those new responses are the next round of training data
 
 The model's weights change during the process. It does not generate a bunch of data and then learn from it in a separate phase. It generates, learns, generates better, learns more. It is online: the training data is produced by the model itself, in real time.
 
@@ -3615,22 +3634,23 @@ The real DeepSeek-R1 pipeline
 
 The published DeepSeek-R1 training pipeline is the clearest example of how these techniques combine:
 
-RL from scratch (GRPO): the model explores freely with only a correctness reward. It discovers that long reasoning helps, but with messy formatting and language mixing.
-Rejection sampling: generate thousands of responses from the RL-trained model. Keep the ones that are correct and well-formatted. Discard the rest. This produces a clean dataset distilled from the RL model's discoveries.
-SFT on the filtered dataset: train a fresh model on this clean data. The model learns the format and the reasoning strategies simultaneously, without the messy behaviors.
-RL again on top: now with a clean base, push further with RL. The model explores from a better starting point and discovers even more.
+RL from scratch (GRPO)The model explores freely with only a correctness reward. It discovers that long reasoning helps, but with messy formatting and language mixing.
+
+Rejection samplingGenerate thousands of responses from the RL-trained model. Keep the ones that are correct and well-formatted. Discard the rest. This produces a clean dataset distilled from the RL model's discoveries.
+
+SFT on the filtered datasetTrain a fresh model on this clean data. The model learns the format and the reasoning strategies simultaneously, without the messy behaviors.
+
+RL again on topNow with a clean base, push further with RL. The model explores from a better starting point and discovers even more.
 
 The pattern is: RL expands the space of possible behaviors. Rejection sampling contracts it toward what is useful. SFT stabilizes the result. RL pushes again from the higher ground.
 
-RL vs rejection sampling. These two are commonly confused, and the distinction is critical.
+RL and rejection sampling are commonly confused, and the distinction is critical. RL is online. The model generates, gets feedback, and updates its weights in a continuous loop. The weights change during generation. The model can discover genuinely new behaviors because it is exploring and adapting in real time. Rejection sampling is offline. You generate a large batch of responses, score them, keep the best, discard the rest. Then you train (via SFT or DPO) on the filtered data. The generation and training are two separate phases. The model's weights do not change while it is generating.
 
-RL is online. The model generates, gets feedback, and updates its weights in a continuous loop. The weights change during generation. The model can discover genuinely new behaviors because it is exploring and adapting in real time.
+The consequence: RL can explore behaviors that never existed in any dataset. Rejection sampling can only select among behaviors the model already knows how to produce. DeepSeek-R1-Zero discovered long reasoning via RL. Rejection sampling alone could never have produced this, because the base model did not do long reasoning to begin with: there was nothing to select.
 
-Rejection sampling is offline. You generate a large batch of responses, score them, keep the best, discard the rest. Then you train (via SFT or DPO) on the filtered data. The generation and training are two separate phases. The model's weights do not change while it is generating.
+Why RL is necessary: Ashby's Law.
 
-The consequence: RL can explore behaviors that never existed in any dataset. Rejection sampling can only select among behaviors the model already knows how to produce. DeepSeek-R1-Zero discovered long reasoning via RL. Rejection sampling alone could never have produced this, because the base model did not do long reasoning to begin with: there was nothing to "select."
-
-Why RL is necessary: Ashby's Law. There is a systems-theory lens on this distinction. Ashby's Law of Requisite Variety (1956), the first law of cybernetics, states that a controller must have at least as many possible responses as the environment has possible disturbances. Ashby's exact formulation: "only variety can absorb variety."
+There is a systems-theory lens on this distinction. Ashby's Law of Requisite Variety (1956), the first law of cybernetics, states that a controller must have at least as many possible responses as the environment has possible disturbances. Ashby's exact formulation: "only variety can absorb variety."
 
 SFT and DPO are reactive systems: they map fixed inputs to fixed outputs, with variety limited to whatever the training data contained. RL is a feedback loop: the model acts, observes a reward, and adapts. Its variety grows with training because the loop generates new behaviors and tests them. This is why only RL discovered chain-of-thought reasoning in DeepSeek-R1-Zero: the pretrained model's variety was insufficient for hard math problems, and SFT could not increase it (it can only redistribute existing variety). The RL loop could, because its variety is bounded by compute, not by dataset.
 
@@ -3652,16 +3672,13 @@ A separate neural network, the reward model, is trained on the human preference 
 
 Then you do RL (typically PPO, Proximal Policy Optimization) using this reward model as the judge. The language model generates a response, the reward model scores it, and the language model's weights are updated to produce responses that score higher.
 
- Copy
-
-RLHF pipeline:
-
-Human preferences → Reward Model training → RL loop (PPO)
- (one time) (one time) (many iterations)
+The two phases of RLHF. On the left, the part that happens once: humans compare responses, and their choices train the reward model. On the right, the part that repeats for many iterations: the policy answers, the reward model scores, PPO updates the policy. No human appears in the loop.
 
 The human feedback is historical and frozen. It is baked into the reward model. During the actual RL training, no human is looking at anything. The reward model is a proxy, an automated judge that approximates human preferences.
 
-RLHF is not "human in the loop". This is the key misconception. "Human Feedback" means the feedback came from humans, not that humans are in the loop during training. The feedback is captured once, compressed into a reward model, and then the RL loop runs autonomously, often for days on thousands of GPUs. Having a human evaluate every response in real time would be impossibly slow. A single RL run might generate millions of responses. Even if you hired every person in a mid-sized city, they could not keep up.
+RLHF is not "human in the loop".
+
+This is the key misconception. "Human Feedback" means the feedback came from humans, not that humans are in the loop during training. The feedback is captured once, compressed into a reward model, and then the RL loop runs autonomously, often for days on thousands of GPUs. Having a human evaluate every response in real time would be impossibly slow. A single RL run might generate millions of responses. Even if you hired every person in a mid-sized city, they could not keep up.
 
 The reward model as an independent artifact
 
@@ -3673,10 +3690,9 @@ DPO vs RLHF
 
 Now the relationship between DPO and RLHF is clear:
 
- Copy
+RLHF1Human preferences2Reward model3PPOan RL loop
 
-RLHF: human preferences → Reward Model → PPO (RL loop)
-DPO: human preferences → direct optimization (no reward model, no RL)
+DPO1Human preferences2Direct optimizationno reward model, no RL
 
 Same input data: (prompt, chosen, rejected) triplets. Different algorithms. DPO is cheaper, simpler, more stable. RLHF is more powerful because of the RL loop and the reusable reward model.
 
@@ -3686,10 +3702,9 @@ RLAIF and Constitutional AI
 
 Humans are expensive and slow. Labeling preference data requires thousands of hours of careful comparison by trained annotators. The obvious question: can you use another LLM as the judge instead?
 
- Copy
+RLHF1Humans compare responses2Reward model3PPO
 
-RLHF: humans compare responses → Reward Model → PPO
-RLAIF: LLM compares responses → Reward Model → PPO
+RLAIF1An LLM compares responses2Reward model3PPO
 
 RLAIF (RL from AI Feedback) does exactly this. An LLM evaluates responses based on a set of principles, and its judgments are used to train the reward model.
 
@@ -3710,6 +3725,8 @@ The defense against this is KL divergence, a mathematical measure of how much tw
 Loss=−Reward+β⋅DKL(πθ∥πref)\text{Loss} = -\text{Reward} + \beta \cdot D_{KL}(\pi_\theta \| \pi_{\text{ref}})Loss=−Reward+β⋅DKL​(πθ​∥πref​)
 
 Here πθ\pi_\thetaπθ​ is the model being trained and πref\pi_{\text{ref}}πref​ is the reference model (usually the SFT checkpoint). The KL term says: "you are allowed to change, but not too much." The hyperparameter β\betaβ controls the tradeoff: higher β\betaβ means the model stays closer to the reference, lower means more freedom to change.
+
+The reference policy (blue) anchors the trained policy (violet). Optimization pulls it towards the region where the reward is hacked, and the KL penalty is the dashed circle it is not allowed to leave; β decides how wide that circle is.
 
 Without KL divergence, RL training almost always diverges into reward hacking. The model finds degenerate behaviors that score high on the reward metric but are completely useless to humans. KL divergence acts as an anchor, keeping the model in the neighborhood of sensible behavior while it explores improvements.
 
@@ -3733,11 +3750,7 @@ Cursor's Tab model is a vivid real-world example. They deploy new model checkpoi
 
 Safe RLHF
 
-Standard RLHF trains one reward model that scores "overall quality." But "quality" conflates at least two things that can conflict:
-
-Helpfulness: does the response actually help the user?
-
-Harmlessness: does the response avoid causing harm?
+Standard RLHF trains one reward model that scores "overall quality." But "quality" conflates at least two things that can conflict: helpfulness (does the response actually help the user?) and harmlessness (does the response avoid causing harm?).
 
 A highly helpful response to "how do I pick a lock?" would be a detailed tutorial. A harmless response would refuse. You are literally asking the model to be maximally helpful and maximally cautious, and these goals run straight into each other like two trains on the same track.
 
@@ -3753,13 +3766,15 @@ When you train a model on synthetic data generated by another model (or an earli
 
 After several rounds of this, the model converges on a narrow set of "safe" outputs. It is like making a photocopy of a photocopy of a photocopy: each generation looks a little more washed out, a little more generic, until you are left with a gray smear that vaguely resembles the original. The tails of the distribution are the first thing to die. And those tails are often the most interesting, most creative, most diverse behaviors.
 
+Each student learns from the outputs of the model before it. The secondary peaks go first, then the tails, and what is left after enough generations is one narrow mode.
+
 This matters because:
 
-RLAIF generates training data from a model (risk of collapse if the judge and student are too similar)
+RLAIFGenerates training data from a model (risk of collapse if the judge and student are too similar).
 
-Rejection sampling filters model output. By definition, it keeps the common good responses and discards the unusual ones
+Rejection samplingFilters model output. By definition, it keeps the common good responses and discards the unusual ones.
 
-Distillation (training a smaller model on a larger model's output): the small model inherits the large model's modes but not its diversity
+DistillationTraining a smaller model on a larger model's output. The small model inherits the large model's modes but not its diversity.
 
 The antidote is fresh human data and real-world feedback, which is why companies continue to invest in human annotation even as AI-generated data becomes cheaper. The tail distribution (the rare events, the unusual phrasings, the edge cases) is the most critical and the hardest to capture 1.
 
@@ -3773,15 +3788,17 @@ This is not an abstract concern. A model that thinks for 2,000 tokens before pro
 
 The tradeoff is real:
 
-More thinking tokens → better answers on hard problems, higher cost
+More thinking tokensBetter answers on hard problems, higher cost.
 
-Fewer thinking tokens → faster responses, lower cost, sometimes worse on complex tasks
+Fewer thinking tokensFaster responses, lower cost, sometimes worse on complex tasks.
 
-Zero thinking → cheapest, fastest, fine for simple factual queries
+Zero thinkingCheapest, fastest, fine for simple factual queries.
 
 The SFT + RL pipeline determines how the model uses its thinking budget. SFT teaches it the format of reasoning. RL teaches it when thinking is worth the cost and what kind of thinking is actually useful for a given problem. A well-trained model does not always think at maximum depth: it allocates thinking proportionally to problem difficulty.
 
-Why thinking reduces errors: the information-theoretic view. There is a precise way to describe what thinking tokens do. Before the model answers, it faces a probability distribution over possible continuations, some right, most wrong. That distribution has an entropy: a measure of uncertainty. High entropy means many plausible tokens; low entropy means the model is confident.
+Why thinking reduces errors: the information-theoretic view.
+
+There is a precise way to describe what thinking tokens do. Before the model answers, it faces a probability distribution over possible continuations, some right, most wrong. That distribution has an entropy: a measure of uncertainty. High entropy means many plausible tokens; low entropy means the model is confident.
 
 Thinking reduces entropy in two stages. First, the reasoning tokens narrow the distribution: each one triggers a distributional shift that moves the model toward a basin of attraction where correct conclusions are more likely. The thinking does not add new knowledge; it repositions the model in latent space where it already knows the answer. Second, the final answer is sampled from this narrower distribution, so it is more likely to be correct.
 
@@ -3823,18 +3840,15 @@ Putting it all together
 
 The modern LLM training pipeline is not one technique: it is a sequence, where each step addresses a different need.
 
-Pretraining: the model sees trillions of tokens of internet text. It learns language, facts, patterns, code, math. The loss is next-token prediction. This produces a powerful but uncontrolled text predictor. The architecture (attention routing context, MLPs storing facts) is fixed here. Everything afterwards is refinement.
-SFT: the model learns to follow instructions, to respond in conversation format, to reason in <thinking> blocks. The loss is still next-token prediction, but on curated data. This produces a helpful assistant that can imitate good behavior but cannot improve beyond its examples.
-RL (or RLHF/RLAIF): the model generates, gets scored, and improves in a live loop. It discovers new strategies, learns when and how to think, optimizes for actual usefulness rather than format imitation. The loss involves a reward signal with KL regularization. This produces a model that can reason, explore, and improve beyond what any human wrote in the training data.
-DPO or additional SFT: final refinement on specific preferences: tone, safety, style. Cleans up rough edges from the RL phase. Static, supervised, stable.
+PretrainingThe model sees trillions of tokens of internet text. It learns language, facts, patterns, code, math. The loss is next-token prediction. This produces a powerful but uncontrolled text predictor. The architecture (attention routing context, MLPs storing facts) is fixed here. Everything afterwards is refinement.
 
-The intuition to carry away is this:
+SFTThe model learns to follow instructions, to respond in conversation format, to reason in <thinking> blocks. The loss is still next-token prediction, but on curated data. This produces a helpful assistant that can imitate good behavior but cannot improve beyond its examples.
 
-SFT answers: what does a good response look like?
+RL, RLHF or RLAIFThe model generates, gets scored, and improves in a live loop. It discovers new strategies, learns when and how to think, optimizes for actual usefulness rather than format imitation. The loss involves a reward signal with KL regularization. This produces a model that can reason, explore, and improve beyond what any human wrote in the training data.
 
-DPO answers: which of these responses is better?
+DPO or additional SFTFinal refinement on specific preferences: tone, safety, style. Cleans up rough edges from the RL phase. Static, supervised, stable.
 
-RL answers: what is worth doing, even if no one has shown you?
+The intuition to carry away is the question each one answers. SFT answers what does a good response look like? DPO answers which of these responses is better? RL answers what is worth doing, even if no one has shown you?
 
 They are not competitors. They are stages. SFT builds the foundation. RL pushes the frontier. DPO polishes the edges. The most capable models use all three, in sequence, because each one does something the others cannot.
 
@@ -3874,20 +3888,33 @@ The risk you accept: the model finding shortcuts you did not imagine. You pay fo
 
 So which one do you use?
 
- Copy
+Technique
+Freedom
+Failure mode
+Ceiling
 
- freedom failure mode ceiling
-SFT low imitation data quality
-DPO medium coverage gap comparison diversity
-RL high reward hacking reward quality
+SFT
+low
+imitation
+data quality
+
+DPO
+medium
+coverage gap
+comparison diversity
+
+RL
+high
+reward hacking
+reward quality
 
 The choice is not "which technique is most powerful." It is "which failure mode can I afford."
 
-You need instruction following → SFT. The failure mode (can't exceed data quality) is fine because you control the data.
+You need instruction followingSFT. The failure mode (can't exceed data quality) is fine because you control the data.
 
-You need style or safety alignment → DPO. The failure mode (can't invent new behaviors) is fine because you don't want new behaviors: you want the model to stay close to demonstrated human preferences.
+You need style or safety alignmentDPO. The failure mode (can't invent new behaviors) is fine because you don't want new behaviors: you want the model to stay close to demonstrated human preferences.
 
-You need reasoning, tool use, self-correction → RL. The failure mode (reward hacking) is the price. There is no alternative: only RL has the requisite variety to expand what the model can do.
+You need reasoning, tool use, self-correctionRL. The failure mode (reward hacking) is the price. There is no alternative: only RL has the requisite variety to expand what the model can do.
 
 Most production pipelines use all three, not because more is better, but because each step addresses a failure mode the others cannot. SFT builds a controlled base. RL expands the frontier. DPO smooths the edges. At each step, the question is not "is this powerful enough?" It is "can I handle what goes wrong when I use it?"
 
@@ -3936,7 +3963,9 @@ Why? Because FinBoard is a single-user tool that reads a local CSV and renders c
 
 The trade-off is real: no TypeScript means no compile-time safety. No SSR means no SEO. No code splitting means the whole app loads at once. But for a personal dashboard with one user and thirteen views, those are solutions to problems that don't exist. You could argue React or Vue would make the UI more maintainable, but at ~4K lines of JavaScript split across clean modules, the complexity never reaches the point where a virtual DOM or reactive state actually pays for itself.
 
-The double-click test. If you're building a personal tool with no backend requirements, ask yourself: can someone use this by double-clicking a file? If yes, you probably don't need a build step. If no, are you sure you need a backend? The answer is often "no, I just need to rethink the data flow." FinBoard passes the double-click test. That simplicity is not accidental: it's the whole point.
+The double-click test.
+
+If you're building a personal tool with no backend requirements, ask yourself: can someone use this by double-clicking a file? If yes, you probably don't need a build step. If no, are you sure you need a backend? The answer is often "no, I just need to rethink the data flow." FinBoard passes the double-click test. That simplicity is not accidental: it's the whole point.
 
 Chart.js and the wrapper that didn't want to wrap
 
@@ -4012,7 +4041,9 @@ The trap starts with CORS. Browsers block file:// reads for security reasons, so
 
 The lazy alternative is to hardcode a "real-looking" dataset straight into demo-data.js (the fallback the app shows when no CSV is uploaded) so index.html opens with a populated dashboard. It works. It is also exactly how real personal data ends up committed to a public repo "just temporarily," and temporary has a way of becoming permanent the moment you push to remote.
 
-In Hindsight. A handful of real transactions reveals which brokers someone uses, their investment patterns, position sizes, and timing, more financial information than most people would ever share on purpose. The demo data shipped with this project is synthetic for exactly that reason. The lesson is blunt: never commit real personal data, even as a placeholder. Use python -m http.server and a generated dataset from the start.
+In Hindsight.
+
+A handful of real transactions reveals which brokers someone uses, their investment patterns, position sizes, and timing, more financial information than most people would ever share on purpose. The demo data shipped with this project is synthetic for exactly that reason. The lesson is blunt: never commit real personal data, even as a placeholder. Use python -m http.server and a generated dataset from the start.
 
 And what about the money that isn't invested?
 
@@ -4124,7 +4155,9 @@ Flow summary: of everything deposited, roughly 44K was transferred out to the pl
 
 Three CSVs, three facets of the same financial reality, validated against each other to the cent. The total session cost was ~189K tokens, about $5.13 at Opus 4.6 pricing. The price of a mediocre coffee for a mathematically consistent reconstruction of 50 months of financial history.
 
-Provisional reconstruction. This entire liquidity history is heuristic: I estimated transfer dates and amounts based on purchase patterns. The real transfer records exist in the underlying bank statements; once those are in hand, every inferred transfer gets replaced with the actual one, and the validation script will tell you exactly how close (or far) the heuristic reconstruction was from reality. Think of this as a scaffold: it holds the shape while the real structure is being built.
+Provisional reconstruction.
+
+This entire liquidity history is heuristic: I estimated transfer dates and amounts based on purchase patterns. The real transfer records exist in the underlying bank statements; once those are in hand, every inferred transfer gets replaced with the actual one, and the validation script will tell you exactly how close (or far) the heuristic reconstruction was from reality. Think of this as a scaffold: it holds the shape while the real structure is being built.
 
 What this section really demonstrates is what happens when you frame a personal finance problem as an industrial engineering one and hand it to a model with the context to reason about constraints. Claude didn't need to be taught MRP. It needed to be told that the problem was MRP, and once framed, the constraint propagation, the iterative refinement, the validation loop, all of it followed naturally. The model's contribution wasn't code generation. It was organizational reasoning: the ability to hold 170 events across 7 platforms and 50 months in working memory and identify where the numbers didn't add up.
 
@@ -4221,7 +4254,9 @@ Subdirectory, applies only inside that path
 
 Claude reads all of them, most-specific wins. Your personal preferences go in ~/.claude/CLAUDE.md. Project conventions go in the project root. Module-specific rules go in subdirectories.
 
-Start small. You don't need a 500-line CLAUDE.md on day one. Start with your stack declaration and three conventions. Add to it every time Claude does something wrong. Each correction becomes a rule. After a week, the file has organically captured your entire workflow. After a month, it's the most complete documentation your project has ever had.
+Start small.
+
+You don't need a 500-line CLAUDE.md on day one. Start with your stack declaration and three conventions. Add to it every time Claude does something wrong. Each correction becomes a rule. After a week, the file has organically captured your entire workflow. After a month, it's the most complete documentation your project has ever had.
 
 Skills: reusable instructions that compound
 
@@ -4257,19 +4292,19 @@ When this skill is triggered:
 4. Validate the output
 5. Report results
 
-name — what you type after the slash. /my-skill.
+namewhat you type after the slash. /my-skill.
 
-description — the most important field. Claude uses it to decide when to auto-activate. Write it like you would naturally ask for help.
+descriptionthe most important field. Claude uses it to decide when to auto-activate. Write it like you would naturally ask for help.
 
-allowed-tools — least privilege. Only give the skill the tools it actually needs.
+allowed-toolsleast privilege. Only give the skill the tools it actually needs.
 
 No SDK. No API. No build step. Save the file, use the skill.
 
 Where skills live
 
-Global (all projects) — ~/.claude/skills/[skill-name]/SKILL.md
+Global (all projects)~/.claude/skills/[skill-name]/SKILL.md
 
-Project-only — .claude/skills/[skill-name]/SKILL.md
+Project-only.claude/skills/[skill-name]/SKILL.md
 
 Start global. Move to project-level when a skill gets specialized enough that it doesn't make sense everywhere.
 
@@ -4304,13 +4339,21 @@ Month 3. You have 30 skills. Development, operations, content, client management
 
 Skill tips
 
-Descriptions. Write descriptions like you'd ask a coworker for help. "Review this code" not "Multi-paradigm static analysis tool for code quality assessment." Natural language triggers natural activation.
+Descriptions.
 
-Keep it lean. Keep SKILL.md under 500 lines. Move detailed reference material to separate files in the same folder. Claude can read them when needed. Over 500 lines and Claude starts losing focus on the details.
+Write descriptions like you'd ask a coworker for help. "Review this code" not "Multi-paradigm static analysis tool for code quality assessment." Natural language triggers natural activation.
 
-Dangerous skills. Use disable-model-invocation: true for anything that deploys, sends messages, or modifies production systems. This makes it so the skill only fires when you explicitly type the command, not when Claude decides it should.
+Keep it lean.
 
-Open standard. The Agent Skills format works across 30+ tools: Claude Code, Cursor, GitHub Copilot, VS Code, Gemini CLI, OpenAI Codex. Build once, use everywhere.
+Keep SKILL.md under 500 lines. Move detailed reference material to separate files in the same folder. Claude can read them when needed. Over 500 lines and Claude starts losing focus on the details.
+
+Dangerous skills.
+
+Use disable-model-invocation: true for anything that deploys, sends messages, or modifies production systems. This makes it so the skill only fires when you explicitly type the command, not when Claude decides it should.
+
+Open standard.
+
+The Agent Skills format works across 30+ tools: Claude Code, Cursor, GitHub Copilot, VS Code, Gemini CLI, OpenAI Codex. Build once, use everywhere.
 
 Hooks: catching mistakes before they happen
 
@@ -4367,7 +4410,9 @@ Configure in ~/.claude/settings.json or .claude/settings.json:
 
 6. Warn on production commands. Detect bash commands containing "production" or "prod" keywords. Warning.
 
-Block vs warn. Block means never allow, period. For irreversible or high-damage actions. Warn means allow but flag. For things that are sometimes legitimate but often mistakes. The goal is a safety net that catches the 1% of catastrophic mistakes while letting the 99% of productive work flow uninterrupted.
+Block vs warn.
+
+Block means never allow, period. For irreversible or high-damage actions. Warn means allow but flag. For things that are sometimes legitimate but often mistakes. The goal is a safety net that catches the 1% of catastrophic mistakes while letting the 99% of productive work flow uninterrupted.
 
 The prompt transformation hook
 
@@ -4569,9 +4614,13 @@ Independent workstreams that need to talk
 
 Rule of thumb: if the workers don't need to communicate with each other, subagents are cheaper and simpler. If worker A's findings change what worker B should do, that's a team.
 
-Experimental. Agent teams are experimental. No session resumption mid-task, task status can lag, slow shutdown. Powerful for the right problem, but not production-stable yet.
+Experimental.
 
-The named roster. Instead of spawning anonymous "Agent 1, Agent 2," give each agent a name, a personality, and explicit boundaries. Personality controls output style: a "paranoid" security reviewer catches different things than a "pragmatic" one. Names make handoff rules readable.
+Agent teams are experimental. No session resumption mid-task, task status can lag, slow shutdown. Powerful for the right problem, but not production-stable yet.
+
+The named roster.
+
+Instead of spawning anonymous "Agent 1, Agent 2," give each agent a name, a personality, and explicit boundaries. Personality controls output style: a "paranoid" security reviewer catches different things than a "pragmatic" one. Names make handoff rules readable.
 
 | Agent | Role | Personality | Primary outputs |
 
@@ -4719,7 +4768,9 @@ Agent 4 waits for all three.
 
 The "report only, do NOT auto-fix" instruction for the auditor is intentional. Automated find-and-replace across class names is error-prone. Review the report, apply manually.
 
-Sizing teams. 3-5 agents per team. More than 5 creates coordination overhead that outweighs the parallelism. 5-6 tasks per agent, enough to stay productive, not so many that context overflows. And always: 10K tokens on planning saves 500K+ on misdirected execution. Have the lead plan before spawning.
+Sizing teams.
+
+3-5 agents per team. More than 5 creates coordination overhead that outweighs the parallelism. 5-6 tasks per agent, enough to stay productive, not so many that context overflows. And always: 10K tokens on planning saves 500K+ on misdirected execution. Have the lead plan before spawning.
 
 The ecosystem
 
@@ -4827,7 +4878,9 @@ Start with a template, not a blank canvas. Pull a layout from Superdesign or gen
 Generate assets as you build. Use Nano Banana 2 for hero images, icons, textures. No context switch to a separate design tool.
 Iterate in batches. Ask for 3 UI directions with the same requirements but different styles (minimal, bold, data-dense). Keep requirements constant. Only change layout and styling per variant.
 
-The "expensive" look. Fewer font sizes, fewer colors, more whitespace. Ship a consistent button system (primary, secondary, tertiary) early. Use real UI patterns (tables, empty states, filters, settings) instead of hero-only design. The difference between "designed" and "AI-generated" is restraint.
+The "expensive" look.
+
+Fewer font sizes, fewer colors, more whitespace. Ship a consistent button system (primary, secondary, tertiary) early. Use real UI patterns (tables, empty states, filters, settings) instead of hero-only design. The difference between "designed" and "AI-generated" is restraint.
 
 The methodology
 
@@ -4885,7 +4938,9 @@ Managed policies, SSO, audit logs
 
 Free plan does not include Claude Code.
 
-API key vs subscription. A Pro subscription gives you flat-rate access. An API key charges per token. For heavy usage (dozens of sessions per day), the subscription is dramatically cheaper. Community members report burning through $300+ of API credits in two days. The math isn't close.
+API key vs subscription.
+
+A Pro subscription gives you flat-rate access. An API key charges per token. For heavy usage (dozens of sessions per day), the subscription is dramatically cheaper. Community members report burning through $300+ of API credits in two days. The math isn't close.
 
 Quick reference
 
@@ -4967,7 +5022,9 @@ Someone who described himself as a "digital anthropologist" told a story I could
 
 The history I can verify is almost as absurd. The phenomenon was called Balloonomania. After the Montgolfier brothers launched the first public balloon in June 1783, a wave of speculative hysteria swept across Europe. Crowds of 400,000 people gathered to watch ascents in Paris. Balloon-themed fashion, furniture, and merchandise flooded the market. The Montgolfiers believed they'd discovered a new gas (they called it "Montgolfier gas") that was making their balloons rise. They hadn't. It was just hot air. Literally just heated atmosphere. They didn't even understand the basic physics of the thing they'd invented, and investors were already throwing money at them.
 
-The template. The tech was real. Hot air balloons genuinely flew. The investment was real: enormous sums changed hands. What wasn't real was the timeline, the scale of the promises, and the assumption that because it works at all, it will work at any scale you want to fund. This is the template. It has not changed in 240 years.
+The template.
+
+The tech was real. Hot air balloons genuinely flew. The investment was real: enormous sums changed hands. What wasn't real was the timeline, the scale of the promises, and the assumption that because it works at all, it will work at any scale you want to fund. This is the template. It has not changed in 240 years.
 
 Railways in the 1840s: real technology, speculative mania, brutal crash, then a century of world-changing transportation. Radio in the 1920s: real technology, stock market frenzy, crash, then mass media. Dot-com in 1999: real technology, insane valuations, spectacular implosion, then cloud computing, SaaS, and the entire digital economy that runs the world today.
 
@@ -5017,7 +5074,9 @@ My LinkedIn inbox, meanwhile, has gone quiet. Not because I'm less qualified, bu
 
 1Rezi.ai's 2026 entry-level report documents the collapse across the US, UK, EU, and India. EU countries saw a 35% decline in junior tech positions in 2024 alone.
 
-The duality. I am literally more productive than I've ever been, using tools that are eliminating the entry-level positions that people like me once held to become productive in the first place. My stocks go up because AI makes senior engineers more efficient. The junior hiring pipeline dries up for the exact same reason. These are not contradictory facts. They are the same fact, viewed from different floors of the building.
+The duality.
+
+I am literally more productive than I've ever been, using tools that are eliminating the entry-level positions that people like me once held to become productive in the first place. My stocks go up because AI makes senior engineers more efficient. The junior hiring pipeline dries up for the exact same reason. These are not contradictory facts. They are the same fact, viewed from different floors of the building.
 
 And this is the part that neither the "it's a scam" camp nor the "you don't get it" camp wants to sit with. The technology works. The economics are brutal. The human cost is real and unevenly distributed. All three things are true simultaneously, and collapsing any of them into a slogan ("AI is overhyped" or "AI is transformative") is the kind of intellectual shortcut that makes me tired.
 
@@ -5045,7 +5104,9 @@ A CEO who can't explain what a transformer 1 allocates 30% of the IT budget to "
 
 These are not people making informed bets on technology. These are people making emotional bets on narrative. And narratives correct. Always.
 
-What the correction looks like. When the narrative corrects (and it will), the people who lose money will not be the engineers building useful AI tools in quiet companies with actual revenue. The people who lose money will be the investors who put billions into companies whose entire value proposition was "AI" as a prefix. The ones who funded the balloon ride to the moon. The tech will survive. The hype layer won't. And the gap between the two is where the pain lives.
+What the correction looks like.
+
+When the narrative corrects (and it will), the people who lose money will not be the engineers building useful AI tools in quiet companies with actual revenue. The people who lose money will be the investors who put billions into companies whose entire value proposition was "AI" as a prefix. The ones who funded the balloon ride to the moon. The tech will survive. The hype layer won't. And the gap between the two is where the pain lives.
 
 Someone in finance nailed the mechanism: the existence of vast and growing levels of national debt means more and more public money is being constantly funneled to the finance sector: "which is where speculation lives. They will put that money into something." The money doesn't care what the something is. AI, crypto, quantum, fusion, whatever sounds expensive enough to be plausible. The money just needs a vehicle. AI is this decade's vehicle.
 
@@ -5053,7 +5114,9 @@ But it gets worse. There's a bubble inside the bubble that almost nobody's watch
 
 Below the headline AI companies (the OpenAIs, the Anthropics, the model builders), there's an entire ecosystem of infrastructure startups: GPU cloud providers, vector database companies, MLOps platforms, AI deployment tools. The "picks and shovels" of the gold rush. And here's what the picks-and-shovels crowd doesn't want to hear: most of them are solving problems that the major cloud platforms will absorb in 18 months.
 
-The shovel problem. This isn't speculation. It's already happening. Weights & Biases, once the flagship MLOps platform, got acquired by CoreWeave 1 in 2025. The standalone vector database market (Pinecone, Weaviate, Milvus) watched their value proposition evaporate as PostgreSQL added native vector support and the database giants made their move. Snowflake acquired Crunchy Data for $250 million. Databricks spent $1 billion on Neon. The purpose-built vector DB became a feature of the general-purpose database, not a product. 2025 was a record year for data infrastructure M&A. The consolidation is eating the "picks and shovels" layer alive, and most of the companies being digested haven't updated their pitch decks yet.
+The shovel problem.
+
+This isn't speculation. It's already happening. Weights & Biases, once the flagship MLOps platform, got acquired by CoreWeave 1 in 2025. The standalone vector database market (Pinecone, Weaviate, Milvus) watched their value proposition evaporate as PostgreSQL added native vector support and the database giants made their move. Snowflake acquired Crunchy Data for $250 million. Databricks spent $1 billion on Neon. The purpose-built vector DB became a feature of the general-purpose database, not a product. 2025 was a record year for data infrastructure M&A. The consolidation is eating the "picks and shovels" layer alive, and most of the companies being digested haven't updated their pitch decks yet.
 
 1the GPU cloud provider bought them outright. Not a partnership. An acquisition. The independent MLOps play collapsed into an infrastructure play, which itself is a bet on continued GPU demand.
 
@@ -5069,7 +5132,9 @@ And then, quietly, without a single "thought leader" noticing, the actual revolu
 
 Cloud computing. SaaS. Social media. E-commerce at scale. The smartphone era. The entire digital economy that currently runs civilization was built after the bubble, not during it. The bubble was the awkward, overfunded, over-hyped first date. The revolution was the two decades of compound utility that followed.
 
-After the crash. The dot-com crash didn't prove that the internet was fake. It proved that most early internet business models were fake. The technology survived because it was genuinely useful. The speculation died because it was genuinely speculative. These are different things. Confusing them is the central error of the "AI is a bubble" crowd, and, paradoxically, also the central error of the "AI is not a bubble" crowd. The bubble is real AND the tech is real. Both. Simultaneously. The inability to hold both ideas in your head at the same time is the actual bubble.
+After the crash.
+
+The dot-com crash didn't prove that the internet was fake. It proved that most early internet business models were fake. The technology survived because it was genuinely useful. The speculation died because it was genuinely speculative. These are different things. Confusing them is the central error of the "AI is a bubble" crowd, and, paradoxically, also the central error of the "AI is not a bubble" crowd. The bubble is real AND the tech is real. Both. Simultaneously. The inability to hold both ideas in your head at the same time is the actual bubble.
 
 If the pattern holds (and it has held for 240 years, through balloons and railways and radio and the internet), what comes after the AI correction will be more consequential than anything happening now. The useful tools will survive. The grift layer will evaporate. The CEOs who allocated budget to "AI transformation" without understanding what they bought will quietly un-allocate it. And the engineers who built things that actually work will keep building, same as they were before anyone on LinkedIn had an opinion.
 
@@ -5116,54 +5181,51 @@ A personal note26 · mar 12Read noteClose notethe banner is a frame from 3Blue1B
 
 The word transformer gets thrown around a lot. ChatGPT, image generators, speech-to-text, translation, all built on the same architecture, published in a single 2017 paper called Attention Is All You Need. That paper changed the trajectory of an entire field. If you want the atomic definitions of each concept discussed here, the Transformer page in the second brain is the index. Every subcomponent links outward from there.
 
-But what is a transformer? What happens inside it? If you feed it the sentence "The cat sat on the" and it predicts "mat", what computation produced that prediction?
+But what is a transformer? What happens inside it? If you feed it the sentence The cat sat on the and it predicts mat, what computation produced that prediction?
 
 This article is an attempt to answer that question from scratch. No prerequisites beyond basic intuition about what vectors and matrices are. We will go slow, reinforce things as we go, and build up the full picture one piece at a time. By the end you will understand (not just pattern-match the jargon, but actually understand) what happens inside these models.
 
 The big picture
 
-Let's start with the acronym. GPT stands for Generative Pre-trained Transformer. "Generative" means it produces new text. "Pre-trained" means it learned from a massive pile of data before you ever talked to it. "Transformer" is the architecture, the specific design of the neural network. That last word is the one that matters.
+Start with the acronym. GPT stands for Generative Pre-trained Transformer. The first word means it produces new text. The second means it learned from a massive pile of data before you ever talked to it. The third is the architecture, the specific design of the neural network. That last word is the one that matters.
 
-A transformer takes text in, and produces a prediction of what comes next. That prediction is a probability distribution over every possible next piece of text. If the input is "The cat sat on the", the model might assign 40% probability to "mat", 15% to "floor", 8% to "roof", and so on across its entire vocabulary.
+A transformer takes text in, and produces a prediction of what comes next. That prediction is a probability distribution over every possible next piece of text. If the input is The cat sat on the, the model might assign 40% probability to mat, 15% to floor, 8% to roof, and so on across its entire vocabulary.
 
 The way you turn a predictor into a generator is simple. You give it some text, it predicts the next piece, you sample from that distribution, append the result, and repeat. Each step generates one more piece. Do it a thousand times and you have a paragraph, an essay, a story. The entire magic of ChatGPT is a prediction loop running over and over.
 
 Here is the flow at the highest level:
 
-The input text is split into small pieces called tokens
-Each token is converted into a vector, a list of numbers encoding meaning
-These vectors flow through a sequence of attention blocks and MLP blocks, alternating
-After many such blocks, the last vector in the sequence encodes enough information to predict the next token
-That vector is multiplied by a matrix to produce a score for every word in the vocabulary
-Softmax converts those scores into probabilities
+1The input text is split into small pieces called tokens2Each token is converted into a vector, a list of numbers encoding meaning3The vectors flow through a sequence of attention blocks and MLP blocks, alternating4After many such blocks, the last vector in the sequence encodes enough information to predict the next token5That vector is multiplied by a matrix to produce a score for every word in the vocabulary6Softmax converts those scores into probabilities
 
-That's it. Everything else in this article is zooming into each of those steps.
+Everything else in this article is zooming into each of those steps.
 
 Tokens
 
 The first step is breaking text into pieces.
 
-You might think each word becomes one unit. Sometimes it does. But sometimes a long or unusual word gets split into subwords. The word "transformer" might be two tokens: "trans" and "former". The word "the" is almost always one token. A punctuation mark is usually its own token. Common phrases like "of the" might even be a single token.
+You might think each word becomes one unit. Sometimes it does. But sometimes a long or unusual word gets split into subwords. The word transformer might be two tokens: trans and former. The word the is almost always one token. A punctuation mark is usually its own token. Common phrases like of the might even be a single token.
 
 This splitting is done by the tokenizer, and it is not a neural network. It is a lookup algorithm called BPE that was decided before training. The model never changes it. The tokenizer has a fixed vocabulary (GPT-3 uses 50,257 tokens) and every possible input gets carved into pieces from that vocabulary.
 
-Why not just use individual characters? You could. "transformer" would become 11 tokens instead of 2-3. That means your sequences are much longer. A typical novel (say, 80,000 words) is about 100,000 BPE tokens. With characters, it would be around 400,000. And since the cost of attention (which we will get to) grows with the square of the sequence length, character-level models are 16x more expensive for the same text. There's also a learning disadvantage: with BPE, "running", "runner", and "runs" share subword tokens, giving the model a free morphological hint. With characters, it has to learn those relationships entirely from co-occurrence patterns.
+Why not just use individual characters? You could. Transformer would become 11 tokens instead of 2-3. That means your sequences are much longer. A typical novel (say, 80,000 words) is about 100,000 BPE tokens. With characters, it would be around 400,000. And since the cost of attention (which we will get to) grows with the square of the sequence length, character-level models are 16x more expensive for the same text. There's also a learning disadvantage: with BPE, running, runner, and runs share subword tokens, giving the model a free morphological hint. With characters, it has to learn those relationships entirely from co-occurrence patterns.
 
-What about bytes? There is real research on byte-level models. Meta's MegaByte (2023) and Google's ByT5 are examples. A byte-level model would make sequences roughly 4x longer than characters, which is 16x more expensive than characters for attention, and about 100x more expensive than BPE. The theoretical appeal is that the model would learn optimal compression of language without any tokenizer bias. But the computational cost makes it impractical at scale today. The current consensus is BPE with large vocabularies (100k+ tokens). Characters and bytes remain a research direction, not production.
+What about bytes?
 
-Each token in the vocabulary gets an integer ID. The word "cat" might be token 4821. The tokenizer's job is to convert text into a sequence of these IDs. That is all it does. No understanding, no semantics. Just a lookup table from text to numbers.
+There is real research on byte-level models. Meta's MegaByte (2023) and Google's ByT5 are examples. A byte-level model would make sequences roughly 4x longer than characters, which is 16x more expensive than characters for attention, and about 100x more expensive than BPE. The theoretical appeal is that the model would learn optimal compression of language without any tokenizer bias. But the computational cost makes it impractical at scale today. The current consensus is BPE with large vocabularies (100k+ tokens). Characters and bytes remain a research direction, not production.
+
+Each token in the vocabulary gets an integer ID. The word cat might be token 4821. The tokenizer's job is to convert text into a sequence of these IDs. That is all it does. No understanding, no semantics. Just a lookup table from text to numbers.
 
 Embeddings
 
 Now we need to convert each token ID into something the neural network can work with. That something is a vector, a list of real numbers.
 
-The model has an embedding matrix, which we will call WEW_EWE​. This matrix has one column for every token in the vocabulary. In GPT-3, each column is 12,288 numbers long. When the tokenizer says "this word is token 4821", the model grabs column 4821 from the embedding matrix. That column is the embedding, the vector representation of that word.
+The model has an embedding matrix, which we will call WEW_EWE​. This matrix has one column for every token in the vocabulary. In GPT-3, each column is 12,288 numbers long. When the tokenizer says this word is token 4821, the model grabs column 4821 from the embedding matrix. That column is the embedding, the vector representation of that word.
 
 At the start, before any training, these columns are random numbers. But during training, the model learns to arrange them so that words with similar meanings end up as vectors pointing in similar directions.
 
 This is worth sitting with for a moment. Imagine a space with 12,288 dimensions. You cannot visualize it (nobody can, our brains max out at three and cheat on the fourth) but mathematically it works the same as 3D space, just with more axes. A lot more. Every word in the vocabulary gets a point in this space. Training pushes similar words closer together and different words farther apart.
 
-A classic example: if you take the embedding of "woman" and subtract the embedding of "man", you get a vector, a direction in this space. If you add that same direction to the embedding of "king", you land very close to "queen". The model learned, without being told, that there is a direction in this space that encodes gender. Another direction might encode plurality, another might encode whether something is a country, another might encode verb tense.
+A classic example: if you take the embedding of woman and subtract the embedding of man, you get a vector, a direction in this space. If you add that same direction to the embedding of king, you land very close to queen. The model learned, without being told, that there is a direction in this space that encodes gender. Another direction might encode plurality, another might encode whether something is a country, another might encode verb tense.
 
 The mathematical tool that measures how well two vectors align is the dot product: a⋅b=∑iai bi\mathbf{a} \cdot \mathbf{b} = \sum_i a_i , b_ia⋅b=∑i​ai​bi​. You multiply corresponding components and sum the results. If two vectors point in the same direction, the dot product is a large positive number. If they are perpendicular (unrelated), it is near zero. If they point in opposite directions, it is negative.
 
@@ -5173,49 +5235,51 @@ So: the embedding matrix WEW_EWE​ takes each token ID and maps it to a vector 
 
 Positional encoding
 
-There is a problem with what we have so far. If we just look up each word's embedding independently, the sentence "dog bites man" produces exactly the same set of vectors as "man bites dog", just in a different order. But the model receives these vectors as a set. It needs to know where each word is.
+There is a problem with what we have so far. If we just look up each word's embedding independently, the sentence dog bites man produces exactly the same set of vectors as man bites dog, just in a different order. But the model receives these vectors as a set. It needs to know where each word is.
 
-The solution is to add positional encoding to each embedding. The original transformer paper used a fixed pattern of sine and cosine waves at different frequencies:
+The solution is to add positional encoding to each embedding. Three ways of doing it have been used, and the choice decides how well the model copes with sequences longer than the ones it was trained on.
+
+SinusoidalRoPEALiBi
+
+The original transformer paper used a fixed pattern of sine and cosine waves at different frequencies:
 
 PE(pos,2i)=sin⁡ ⁣(pos10000 2i/dmodel)PE(pos,2i+1)=cos⁡ ⁣(pos10000 2i/dmodel)PE(pos, 2i) = \sin\!\left(\frac{pos}{10000^{\,2i/d_{\text{model}}}}\right) \qquad PE(pos, 2i{+}1) = \cos\!\left(\frac{pos}{10000^{\,2i/d_{\text{model}}}}\right)PE(pos,2i)=sin(100002i/dmodel​pos​)PE(pos,2i+1)=cos(100002i/dmodel​pos​)
 
 Each position in the sequence gets a unique signature baked into the vector: sine for even dimensions, cosine for odd, with wavelengths that increase geometrically across dimensions. You literally add this positional vector to the word embedding, so the result encodes both what the word is and where it sits. The model reads word order the way your cochlea reads pitch: as a spectrum of overlapping frequencies, each position distinguishable not by its index but by its harmonic fingerprint.
 
-Modern positional encoding. The original sinusoidal encoding had a weakness: if you train with a context of 512 tokens and then try to process 1000, the model has never seen those positions and performance degrades. Modern models use RoPE (Rotary Position Embedding), which is more elegant. Instead of adding a vector, RoPE rotates the query and key vectors by an angle proportional to their position before computing dot products. The beauty is that the dot product between any two tokens then depends naturally on the relative distance between them, not their absolute positions. This generalizes better beyond the training context length.
+The weakness: if you train with a context of 512 tokens and then try to process 1000, the model has never seen those positions and performance degrades.
 
-Another approach is ALiBi (Attention with Linear Biases), which doesn't modify the embeddings at all. It adds a penalty to attention scores proportional to the distance between tokens. Closer tokens get higher attention. Simple and effective.
+Modern models use RoPE (Rotary Position Embedding), which is more elegant. Instead of adding a vector, RoPE rotates the query and key vectors by an angle proportional to their position before computing dot products. The beauty is that the dot product between any two tokens then depends naturally on the relative distance between them, not their absolute positions. This generalizes better beyond the training context length.
+
+ALiBi (Attention with Linear Biases) doesn't modify the embeddings at all. It adds a penalty to attention scores proportional to the distance between tokens. Closer tokens get higher attention. Simple and effective.
 
 The alternating blocks
 
 After tokenization, embedding, and positional encoding, we have a sequence of vectors. In GPT-3, this is a matrix of 2,048 columns (the context window) by 12,288 rows (the embedding dimension). Each column is one token's vector.
 
-Now these vectors enter the core of the transformer: a long sequence of alternating blocks.
+Now these vectors enter the core of the transformer: a long sequence of alternating blocks. GPT-3 repeats this pair 96 times. That is 96 attention blocks and 96 MLP blocks, 192 blocks total.
 
-GPT-3 repeats this pair 96 times. That is 96 attention blocks and 96 MLP blocks, 192 blocks total.
+Here is the critical intuition. These two block types do fundamentally different things. Attention blocks are about context. They let vectors talk to each other. They allow the meaning of bank to be updated based on whether the surrounding text mentions river or money. Roughly 1/3 of all parameters live here.
 
-Here is the critical intuition. These two block types do fundamentally different things:
+MLP blocks are about facts. They process each vector individually, in parallel, with no communication between vectors. They add knowledge: if this vector encodes Michael Jordan, add the direction for basketball. Roughly 2/3 of all parameters live here.
 
-Attention blocks are about context. They let vectors talk to each other. They allow the meaning of "bank" to be updated based on whether the surrounding text mentions "river" or "money". Roughly 1/3 of all parameters live here.
-
-MLP blocks are about facts. They process each vector individually, in parallel, with no communication between vectors. They add knowledge: "if this vector encodes Michael Jordan, add the direction for basketball". Roughly 2/3 of all parameters live here.
-
-The path through the network alternates: one step of context, one step of facts, one step of context, one step of facts. With each alternation, the vectors become richer, more refined, more specific. A vector that started as a generic embedding for the word "bank" might, after 96 rounds of this process, encode something like "a financial institution in 19th century London being discussed in the context of a Dickens novel." By that point, the vector for "bank" has almost nothing in common with its original embedding. It has been overwritten, refined, and contextualized beyond recognition, like a lump of clay that went through 96 rounds of sculpting. Same clay. Completely different shape.
+The path through the network alternates: one step of context, one step of facts, one step of context, one step of facts. With each alternation, the vectors become richer, more refined, more specific. A vector that started as a generic embedding for the word bank might, after 96 rounds of this process, encode something like a financial institution in 19th century London being discussed in the context of a Dickens novel. By that point, the vector for bank has almost nothing in common with its original embedding. It has been overwritten, refined, and contextualized beyond recognition, like a lump of clay that went through 96 rounds of sculpting. Same clay. Completely different shape.
 
 There are also layer normalization steps between these blocks. They keep the numbers from exploding or vanishing as they flow through dozens of layers. We will not dwell on them because they do not change the conceptual picture, but they are there, and they matter for stability.
 
 The other invisible piece is the residual connection. Without it, gradients vanish in deep networks. The error signal attenuates through each layer until the optimizer can't feel the slope at all. With residuals, there is always a direct highway from input to output that bypasses every transformation, and the loss landscape stays navigable no matter how many blocks you stack. This is why you can go 96 layers deep and still train the thing.
 
-Let's zoom into each block type.
+What follows opens each of the two block types in turn, with the masking rule between them because it lives inside attention.
 
 Attention
 
 This is the heart of the transformer. This is what the 2017 paper was about. Attention existed before that paper 1, but the big insight was that attention alone, without any recurrence, was sufficient for processing sequences. Self-attention (where tokens within the same sequence attend to each other) was the novel contribution.
 
-1Bahdanau et al. introduced attention for sequence-to-sequence models in 2014. The mechanism let a decoder "attend" to different parts of the encoder's output when generating each output word. The innovation of "Attention Is All You Need" was showing that self-attention (tokens attending to each other without any recurrence) was sufficient for the entire architecture. You did not need RNNs or LSTMs at all.
+1Bahdanau et al. introduced attention for sequence-to-sequence models in 2014. The mechanism let a decoder attend to different parts of the encoder's output when generating each output word. The innovation of Attention Is All You Need was showing that self-attention (tokens attending to each other without any recurrence) was sufficient for the entire architecture. You did not need RNNs or LSTMs at all.
 
 What does attention do? In one sentence: it routes context from one token's embedding into another's.
 
-The word "model" means something different in "a machine learning model" and "a fashion model". After the initial embedding step, both cases have the same vector for "model". Attention is the mechanism that lets "machine learning" flow information into "model" to disambiguate it.
+The word model means something different in a machine learning model and a fashion model. After the initial embedding step, both cases have the same vector for model. Attention is the mechanism that lets machine learning flow information into model to disambiguate it.
 
 Queries, keys, and values
 
@@ -5223,11 +5287,11 @@ Every attention head involves three matrices: the query matrix WQW_QWQ​, the k
 
 Here is the intuition. Think of each token as both asking a question and offering an answer.
 
-The query is the question a token asks: "what kind of information am I looking for?"
+QueryThe question a token asks: what kind of information am I looking for?
 
-The key is what a token advertises about itself: "here is what I can offer"
+KeyWhat a token advertises about itself: here is what I can offer.
 
-The value is the actual content a token passes along when selected: "here is the information to add to your embedding"
+ValueThe actual content a token passes along when selected: here is the information to add to your embedding.
 
 Every embedding in the sequence gets multiplied by all three matrices. So each token produces a query vector, a key vector, and a value vector.
 
@@ -5241,7 +5305,7 @@ High score between token 3's key and token 7's query means token 3 has informati
 
 Then we apply softmax to each column of this grid. Softmax converts a list of arbitrary numbers into a probability distribution: all values between 0 and 1, summing to 1. The highest scores dominate, the lowest scores get pushed toward zero.
 
-After softmax, each column is a set of weights that tells us: "for this token, here is how much to attend to each other token." This grid is called the attention pattern.
+After softmax, each column is a set of weights that tells us: for this token, here is how much to attend to each other token. This grid is called the attention pattern.
 
 There is one technical detail: before softmax, the scores are divided by dk\sqrt{d_k}dk​​, where dkd_kdk​ is the dimension of the key vectors (128 in GPT-3). This prevents the dot products from getting too large, which would cause softmax to produce extremely sharp distributions where one token gets all the attention and everything else gets zero. The scaling keeps the gradients healthy during training.
 
@@ -5249,7 +5313,7 @@ Applying the values
 
 Now we use the attention weights to create a weighted combination of value vectors. For each token, we multiply each value vector by the corresponding attention weight and sum them up. Tokens with high attention weights contribute a lot. Tokens with near-zero weights contribute nothing.
 
-The result is a vector (the "update") that gets added to the original embedding. If the word "creature" had high attention weights on "fluffy" and "blue", then the value vectors of "fluffy" and "blue" flow into "creature" and shift its embedding toward a direction that encodes a fluffy blue creature.
+The result is a vector (the update) that gets added to the original embedding. If the word creature had high attention weights on fluffy and blue, then the value vectors of fluffy and blue flow into creature and shift its embedding toward a direction that encodes a fluffy blue creature.
 
 That is a single attention head. The entire process in one line:
 
@@ -5257,15 +5321,11 @@ Attention(Q,K,V)=softmax ⁣(QKTdk)V\text{Attention}(Q, K, V) = \text{softmax}
 
 Query dot-producted with every key, scaled, passed through softmax, multiplied by values. It is just a mechanism for selectively moving information from some embeddings into others.
 
-Why not skip the value matrix?
-
-You might wonder: why not just use the original embedding as the value? Why have a separate WVW_VWV​ matrix at all?
-
-Because you do not want all the information in a token to flow into another token. You want selective, relevant information. When "blue" attends to "creature", you do not want everything about "blue": its part of speech, its position, its tense. You want the blueness direction. The value matrix is a learned projection that extracts exactly the subspace of information that is useful for this particular head. Each head gets to specialize in what it passes along.
+You might wonder: why not just use the original embedding as the value? Why have a separate WVW_VWV​ matrix at all? Because you do not want all the information in a token to flow into another token. You want selective, relevant information. When blue attends to creature, you do not want everything about blue: its part of speech, its position, its tense. You want the blueness direction. The value matrix is a learned projection that extracts exactly the subspace of information that is useful for this particular head. Each head gets to specialize in what it passes along.
 
 Multi-head attention
 
-One attention head can only capture one type of relationship. Maybe it learns to connect adjectives to nouns. But language has many kinds of relationships: syntactic dependencies, coreference ("he" refers to "John"), semantic similarity, temporal ordering, and many more.
+One attention head can only capture one type of relationship. Maybe it learns to connect adjectives to nouns. But language has many kinds of relationships: syntactic dependencies, coreference (he refers to John), semantic similarity, temporal ordering, and many more.
 
 The solution is to run many heads in parallel. GPT-3 uses 96 attention heads per multi-head attention block. Each head has its own WQW_QWQ​, WKW_KWK​, and WVW_VWV​ matrices. Each head computes its own attention pattern. Each head produces its own proposed update.
 
@@ -5281,9 +5341,29 @@ There is a rule in GPT that we have not discussed yet: a token can only attend t
 
 This is called causal masking, and it is fundamental to how GPT works.
 
-Think about it from the training perspective. When you train the model, you want it to predict the next token at every position simultaneously. Given "The cat sat on the mat", you want it to predict "cat" from "The", predict "sat" from "The cat", predict "on" from "The cat sat", and so on. This is efficient because one training example gives you six prediction tasks instead of one.
+Think about it from the training perspective. When you train the model, you want it to predict the next token at every position simultaneously. Given The cat sat on the mat, one sentence becomes five prediction tasks:
 
-But if tokens could attend to future tokens, the model would just look ahead and cheat. The word "sat" could look at "on" and "the" and "mat" to figure out what comes next. To prevent this, we mask out all attention from later tokens to earlier ones.
+InputThe
+
+Outputcat
+
+InputThe cat
+
+Outputsat
+
+InputThe cat sat
+
+Outputon
+
+InputThe cat sat on
+
+Outputthe
+
+InputThe cat sat on the
+
+Outputmat
+
+This is efficient because one training example gives you five prediction tasks instead of one. But if tokens could attend to future tokens, the model would just look ahead and cheat. The word sat could look at on and the and mat to figure out what comes next. To prevent this, we mask out all attention from later tokens to earlier ones.
 
 The implementation is simple. Before applying softmax, we set all entries in the upper triangle of the attention score grid to negative infinity. After softmax, e−∞=0e^{-\infty} = 0e−∞=0, so those entries become exactly zero. Later tokens have zero influence on earlier tokens.
 
@@ -5295,33 +5375,33 @@ MLP blocks
 
 After the attention block refines the embeddings with context, each vector passes through an MLP block 1. This is where the other two-thirds of the parameters live.
 
-1MLP stands for Multi-Layer Perceptron. It is also called a "feed-forward network" or "FFN" in some papers. Despite the fancy names, it is just two matrix multiplications with a nonlinearity in between.
+1MLP stands for Multi-Layer Perceptron. It is also called a feed-forward network or FFN in some papers. Despite the fancy names, it is just two matrix multiplications with a nonlinearity in between.
 
 The MLP processes each vector independently. There is no communication between tokens in this step. Each vector goes through the same operation in parallel. The purpose is different from attention: while attention is about routing context, the MLP is about adding knowledge.
 
 The computation is:
 
+MLP(x)=Wdown ReLU⁡(Wup x+bup)+bdown\text{MLP}(x) = W_{down}\,\operatorname{ReLU}(W_{up}\,x + b_{up}) + b_{down}MLP(x)=Wdown​ReLU(Wup​x+bup​)+bdown​
+
 That is the entire operation. Two matrix multiplications and a clipping function.
 
 Step by step
 
-Step 1 multiplies the embedding by a large matrix WupW_{up}Wup​ that projects it into a higher-dimensional space, in GPT-3 from 12,288 dimensions to 49,152 (exactly 4x). You can think of each row of this matrix as a "question", a direction in embedding space that the model is probing. The dot product of the embedding with each row tells you how much the embedding aligns with that question.
+The first step multiplies the embedding by a large matrix WupW_{up}Wup​ that projects it into a higher-dimensional space, in GPT-3 from 12,288 dimensions to 49,152 (exactly 4x). You can think of each row of this matrix as a question, a direction in embedding space that the model is probing. The dot product of the embedding with each row tells you how much the embedding aligns with that question.
 
-For example, one row might be a direction very close to "first name Michael" + "last name Jordan". If the embedding encodes both of those properties, the dot product with that row will be high. If it only encodes one, it will be lower. If neither, it will be near zero.
+For example, one row might be a direction very close to first name Michael plus last name Jordan. If the embedding encodes both of those properties, the dot product with that row will be high. If it only encodes one, it will be lower. If neither, it will be near zero.
 
-A bias term is added after the multiplication. This is just a learned offset. It shifts the threshold for each "question". If the bias for our Michael Jordan row is -1, then the output is only positive when the embedding strongly encodes both names.
+A bias term is added after the multiplication. This is just a learned offset. It shifts the threshold for each question. If the bias for our Michael Jordan row is -1, then the output is only positive when the embedding strongly encodes both names.
 
-Step 2 is the nonlinearity, typically ReLU: if the value is positive, keep it; if negative, set it to zero. That is all ReLU does.
+The second step is the nonlinearity, typically ReLU: if the value is positive, keep it; if negative, set it to zero. That is all ReLU does.
 
-This is critical. Without it, the whole MLP would just be a single matrix multiplication (two linear transformations compose into one linear transformation). The ReLU introduces a threshold, an AND gate. The "Michael Jordan" neuron fires only when both name components are present. Without ReLU, a high score on "Michael" alone plus a moderate score on any "Jordan" would trigger it. And suddenly Michael Phelps is playing basketball and Alexis Jordan is dunking from the free-throw line.
+This is critical. Without it, the whole MLP would just be a single matrix multiplication (two linear transformations compose into one linear transformation). The ReLU introduces a threshold, an AND gate. The Michael Jordan neuron fires only when both name components are present. Without ReLU, a high score on Michael alone plus a moderate score on any Jordan would trigger it. And suddenly Michael Phelps is playing basketball and Alexis Jordan is dunking from the free-throw line.
 
-When people talk about neurons in a transformer, they mean these intermediate values, the 49,152 numbers between the two matrix multiplications. A neuron is "active" when its value is positive (survives the ReLU) and "inactive" when it is zero.
+When people talk about neurons in a transformer, they mean these intermediate values, the 49,152 numbers between the two matrix multiplications. A neuron is active when its value is positive (survives the ReLU) and inactive when it is zero.
 
-Step 3 multiplies the activated neurons by a second matrix WdownW_{down}Wdown​ that projects back down to the embedding dimension. Think of each column of this matrix as an answer. If the Michael Jordan neuron is active, its corresponding column might encode the direction for "basketball", and that direction gets added to the output. If the neuron is inactive (zero), that column contributes nothing.
+The third step multiplies the activated neurons by a second matrix WdownW_{down}Wdown​ that projects back down to the embedding dimension. Think of each column of this matrix as an answer. If the Michael Jordan neuron is active, its corresponding column might encode the direction for basketball, and that direction gets added to the output. If the neuron is inactive (zero), that column contributes nothing.
 
-So the MLP is essentially a massive lookup: thousands of probes ask "does this vector match pattern X?", and for each match, a corresponding fact is added to the vector. If the vector encodes Michael Jordan, the basketball direction gets added. If it encodes Paris, maybe the France and Europe directions get added. Each probe-and-inject pair is one "fact" stored in the weights.
-
-The parameter count
+So the MLP is essentially a massive lookup: thousands of probes ask does this vector match pattern X?, and for each match, a corresponding fact is added to the vector. If the vector encodes Michael Jordan, the basketball direction gets added. If it encodes Paris, maybe the France and Europe directions get added. Each probe-and-inject pair is one fact stored in the weights.
 
 Each MLP block has two matrices of size 12,288 x 49,152 (plus small bias vectors). That is about 1.2 billion parameters per block. Across 96 blocks, the MLPs account for roughly 116 billion parameters, about two-thirds of the entire model.
 
@@ -5335,11 +5415,13 @@ To make a prediction, we take the last vector in the sequence and multiply it by
 
 This matrix has one row for every token in the vocabulary (50,257 rows) and each row has 12,288 entries. The result of the multiplication is a list of 50,257 numbers, one score for each possible next token. These raw scores are called logits.
 
-Weight tying. Here is an elegant detail. The unembedding matrix WUW_UWU​ is the transpose of the embedding matrix WEW_EWE​. They share the same parameters. This is called weight tying.
+Weight tying.
 
-Think about what this means. The embedding matrix converts token IDs into vectors. It maps words into the embedding space. The unembedding matrix does the reverse: it takes a vector and measures its similarity with each word's embedding. The dot product of the final vector with each embedding column tells you "how similar is this refined vector to the concept of each word?"
+Here is an elegant detail. The unembedding matrix WUW_UWU​ is the transpose of the embedding matrix WEW_EWE​. They share the same parameters. This is called weight tying.
 
-If the last vector, after 96 rounds of refinement, has been pushed very close to the direction that "mat" occupies in embedding space, then the dot product with "mat" will be high, and "mat" will get a high logit. The same matrix serves both purposes because the task is symmetric: embed a word into the space, or measure how close a vector is to a word.
+Think about what this means. The embedding matrix converts token IDs into vectors. It maps words into the embedding space. The unembedding matrix does the reverse: it takes a vector and measures its similarity with each word's embedding. The dot product of the final vector with each embedding column tells you how similar is this refined vector to the concept of each word?
+
+If the last vector, after 96 rounds of refinement, has been pushed very close to the direction that mat occupies in embedding space, then the dot product with mat will be high, and mat will get a high logit. The same matrix serves both purposes because the task is symmetric: embed a word into the space, or measure how close a vector is to a word.
 
 Softmax and temperature
 
@@ -5353,17 +5435,17 @@ It divides each exponential by the sum. Now everything is between 0 and 1, and t
 
 softmax(xi)=exi∑jexj\text{softmax}(x_i) = \frac{e^{x_i}}{\sum_j e^{x_j}}softmax(xi​)=∑j​exj​exi​​
 
-If one logit is much bigger than the rest, its probability dominates. If several are close, the probability is spread. Softmax is "softer" than just picking the maximum. It preserves uncertainty.
+If one logit is much bigger than the rest, its probability dominates. If several are close, the probability is spread. Softmax is softer than just picking the maximum. It preserves uncertainty.
 
 When ChatGPT generates text, there is an extra knob called temperature. It divides the logits by a constant TTT before softmax:
 
 softmax(xi)=exi/T∑jexj/T\text{softmax}(x_i) = \frac{e^{x_i / T}}{\sum_j e^{x_j / T}}softmax(xi​)=∑j​exj​/Texi​/T​
 
-Low temperature (TTT near 0): the distribution sharpens. The most probable token gets nearly all the weight. Output is predictable, repetitive.
+Low temperatureWith TTT near zero the distribution sharpens. The most probable token gets nearly all the weight. Output is predictable, repetitive.
 
-High temperature (TTT above 1): the distribution flattens. Less probable tokens get more weight. Output is more creative, more surprising, but risks being incoherent.
+High temperatureWith TTT above 1 the distribution flattens. Less probable tokens get more weight. Output is more creative, more surprising, but risks being incoherent.
 
-Temperature = 0: always picks the single most probable token. Deterministic, no randomness. You tend to get generic, formulaic text, "once upon a time" stories that go to the same predictable places every time.
+Temperature zeroAlways picks the single most probable token. Deterministic, no randomness. You tend to get generic, formulaic text, once upon a time stories that go to the same predictable places every time.
 
 Why only the last vector?
 
@@ -5383,7 +5465,7 @@ RNNs did exactly this: they passed a hidden state from one step to the next. And
 
 Transformers solved this by starting fresh every time. Each token's base embedding is fixed. The context is not accumulated in a state. It is computed via attention, which can directly connect any two tokens regardless of distance. Token 1 can attend to token 1000 just as easily as to token 2. No information decay, no vanishing gradients.
 
-There is a second reason, specific to GPT: causal masking means the earlier tokens' representations are "closed". They cannot see later tokens anyway. Their values would not change if you recomputed them. This is actually what makes the KV cache possible, which we will get to shortly.
+There is a second reason, specific to GPT: causal masking means the earlier tokens' representations are closed. They cannot see later tokens anyway. Their values would not change if you recomputed them. This is actually what makes the KV cache possible, which we will get to shortly.
 
 BERT vs GPT
 
@@ -5393,27 +5475,43 @@ GPT is a decoder. It uses causal masking. Each token can only see tokens before 
 
 BERT is an encoder. It uses no masking. Every token can see every other token, in both directions. It is trained differently: it randomly masks 15% of the tokens with a special [MASK] token, and the model predicts what the masked tokens were. This is called Masked Language Modeling. BERT also had a second objective, Next Sentence Prediction (NSP), which contributed little and was later dropped by models such as RoBERTa.
 
-The bidirectional attention in BERT means every word gets disambiguated using context from both sides. When BERT sees "The bank of the river was steep", the word "bank" attends to "river" (which comes after it) and fully resolves its meaning. In GPT, "bank" can only see "The". It does not know about "river" yet and remains ambiguous.
+The bidirectional attention in BERT means every word gets disambiguated using context from both sides. When BERT sees The bank of the river was steep, the word bank attends to river (which comes after it) and fully resolves its meaning. In GPT, bank can only see The. It does not know about river yet and remains ambiguous.
 
-This makes BERT much better at understanding text (sentiment analysis, named entity recognition, question answering) but it cannot generate text. GPT is better at generation (writing, completion, conversation) but pays a price in understanding because it only ever sees context in one direction.
-
-No masking means better disambiguation. Without causal masking, early words in a sentence get fully disambiguated. "Bank" sees everything around it. This is why BERT-style models dominate tasks that require deep understanding of existing text, while GPT-style models dominate tasks that require producing new text.
+This makes BERT much better at understanding text (sentiment analysis, named entity recognition, question answering) but it cannot generate text. GPT is better at generation (writing, completion, conversation) but pays a price in understanding because it only ever sees context in one direction. Without causal masking, early words in a sentence get fully disambiguated, and that is why BERT-style models took over the tasks that require deep understanding of existing text while GPT-style models took over the tasks that require producing new text.
 
 The architecture difference
 
-GPT is decoder-only: attention blocks with causal masking, MLP blocks, and that is it.
+The three shapes of transformer differ in one thing, which tokens are allowed to see which:
 
-BERT is encoder-only: attention blocks without masking, MLP blocks, and that is it.
+Model
+Attention
+Trained to
+Built for
 
-The original transformer from the 2017 paper was neither. It was an encoder-decoder model, designed for translation. It had an encoder (bidirectional, no masking) that processed the source language, and a decoder (causal masking) that generated the target language. The decoder had an extra type of attention (cross-attention) that let it attend to the encoder's output.
+GPT, decoder-only
+causal mask
+predict the next token
+generation
+
+BERT, encoder-only
+no mask
+recover masked tokens
+understanding
+
+2017 original, encoder-decoder
+both, plus cross-attention
+translate
+translation
+
+The original transformer from the 2017 paper was the third row. It had an encoder (bidirectional, no masking) that processed the source language, and a decoder (causal masking) that generated the target language. The decoder had an extra type of attention (cross-attention) that let it attend to the encoder's output.
 
 In cross-attention, the queries come from the decoder (the language you are translating into) and the keys and values come from the encoder (the language you are translating from). This lets each generated word in the target language look at all the words in the source language to decide what to produce next.
 
 The first generated token's query is literally the embedding of a special token [BOS] (beginning of sequence), processed by the decoder. It is the cold start. You have to begin the translation with something, and [BOS] is that something. From there, each new token generates a query, cross-attends to the full source sentence, and produces the next word.
 
-Cross-attention has no causal masking. The decoder can see all encoder tokens freely. There is no notion of "future" in the source sentence. It has already been fully processed. Causal masking only applies within the decoder's self-attention (the generated tokens should not see tokens that have not been generated yet).
+Cross-attention has no causal masking. The decoder can see all encoder tokens freely. There is no notion of future in the source sentence. It has already been fully processed. Causal masking only applies within the decoder's self-attention (the generated tokens should not see tokens that have not been generated yet).
 
-GPT simplifies this entire setup by throwing away the encoder and cross-attention. There is no "source" and "target". There is just one sequence, processed left to right. If GPT can translate, it is because translation patterns were in its training data, not because it has specialized architecture for it.
+GPT simplifies this entire setup by throwing away the encoder and cross-attention. There is no source and target. There is just one sequence, processed left to right. If GPT can translate, it is because translation patterns were in its training data, not because it has specialized architecture for it.
 
 KV cache
 
@@ -5429,7 +5527,7 @@ This is another reason why starting from base embeddings each pass is the right 
 
 Superposition
 
-We have been talking as if each "direction" in the embedding space encodes a single clean concept: one direction for "gender", one for "plurality", one for "basketball". If that were literally true, a 12,288-dimensional space could encode at most 12,288 independent features. That is a lot, but is it enough for a model that needs to represent every fact, concept, and relationship in human language?
+We have been talking as if each direction in the embedding space encodes a single clean concept: one direction for gender, one for plurality, one for basketball. If that were literally true, a 12,288-dimensional space could encode at most 12,288 independent features. That is a lot, but is it enough for a model that needs to represent every fact, concept, and relationship in human language?
 
 It is not. And what actually happens is far more interesting.
 
@@ -5437,25 +5535,17 @@ In a 12,288-dimensional space, you can fit at most 12,288 perfectly perpendicula
 
 In low dimensions, this buys you almost nothing. In 3D, you cannot fit many more than 3 nearly-perpendicular vectors. Try it with pencils on a desk. You get three orthogonal pencils and that is about it. But in high dimensions, something remarkable happens. The number of nearly-perpendicular vectors you can pack into an n-dimensional space grows exponentially with n. High-dimensional space is weird. Most of your intuitions from 3D are wrong up there.
 
-PYTHON Copy
-
-import numpy as np
-
-# 100-dimensional space, 10,000 random vectors (100x the dimensions)
-vectors = np.random.randn(10000, 100)
-vectors /= np.linalg.norm(vectors, axis=1, keepdims=True)
-
-# After optimization to maximize near-perpendicularity:
-# All pairwise angles fall between 89° and 91°
-# 10,000 nearly-independent directions in a 100-dim space
+Sanderson's demo makes it concrete: take 10,000 random unit vectors in a 100-dimensional space and nudge them until they are as perpendicular to each other as they can be, and every pairwise angle lands between 89 and 91 degrees. A hundred times more nearly independent directions than the space has dimensions.
 
 This is a consequence of something called the Johnson-Lindenstrauss lemma, and it has profound implications. A 12,288-dimensional space does not just store 12,288 features. It can store millions of features as nearly-perpendicular directions, with minimal interference between them.
 
 This phenomenon is called superposition. Instead of each neuron encoding a single feature, each feature is encoded as a combination of many neurons, a specific direction that activates a specific pattern across many neurons simultaneously. Individual neurons are polysemantic. They participate in encoding many different features.
 
-This is why transformer internals are so hard to interpret. You cannot point to a single neuron and say "this is the basketball neuron." Basketball is a direction in the space, but that direction activates dozens of neurons partially, and each of those neurons also participates in encoding many other features. Everything is superimposed.
+This is why transformer internals are so hard to interpret. You cannot point to a single neuron and say this is the basketball neuron. Basketball is a direction in the space, but that direction activates dozens of neurons partially, and each of those neurons also participates in encoding many other features. Everything is superimposed.
 
-Sparse autoencoders. A tool called a sparse autoencoder attempts to reverse this superposition, to extract the true underlying features from the tangled neuron activations. The key reference is Anthropic's research on monosemanticity: "Towards Monosemanticity: Decomposing Language Models with Dictionary Learning". The idea is to learn a much larger set of directions (the "dictionary") such that each direction corresponds to a single interpretable concept, and the model's actual activations can be reconstructed as a sparse combination of these directions.
+Sparse autoencoders.
+
+A tool called a sparse autoencoder attempts to reverse this superposition, to extract the true underlying features from the tangled neuron activations. The key reference is Anthropic's research on monosemanticity: Towards Monosemanticity: Decomposing Language Models with Dictionary Learning. The idea is to learn a much larger set of directions (the dictionary) such that each direction corresponds to a single interpretable concept, and the model's actual activations can be reconstructed as a sparse combination of these directions.
 
 This is an active area of interpretability research. The results so far suggest that yes, the features are in there. They are just packed far more densely than the raw neuron count would suggest.
 
@@ -5467,7 +5557,7 @@ Here is an implication of everything above that is worth pausing on.
 
 The MLP blocks in GPT-3 have 49,152 neurons each. You can make them bigger: more neurons, more facts, more capacity. And because those facts are probed via dot products with the embedding, the MLP's effectiveness is ultimately bounded by the richness of the embedding space. If the embedding is 12,288-dimensional, that is the resolution at which the model can distinguish concepts, even if the MLP is enormous.
 
-Superposition helps (you can pack millions of features into 12,288 dimensions) but there are limits. At some point, features start interfering with each other. The more features you cram in, the more "crosstalk" between nearly-perpendicular directions.
+Superposition helps (you can pack millions of features into 12,288 dimensions) but there are limits. At some point, features start interfering with each other. The more features you cram in, the more crosstalk between nearly-perpendicular directions.
 
 This means the embedding dimension is a more fundamental bottleneck than the MLP size. Making the MLP wider adds more fact-storage capacity, but the model can only use it to the extent that its embedding space can represent the distinctions being probed. This is part of why scaling laws exist: you need to scale everything together (embedding dimension, number of heads, MLP width, number of layers), not just one component.
 
@@ -5477,23 +5567,17 @@ We have described the forward pass, data flowing through the network, producing 
 
 The answer is backpropagation and gradient descent, the same algorithm used for every deep learning model. The basic loop is:
 
-Feed the model a batch of text
-The model predicts the next token at every position
-Compare the predictions to the actual next tokens. Compute a loss, a single number measuring how wrong the model was 1
+1Feed the model a batch of text2The model predicts the next token at every position3Compare the predictions to the actual next tokens and compute a loss, a single number measuring how wrong the model was4Backpropagate: compute the gradient of the loss with respect to every parameter, which says for each of the 175 billion numbers whether nudging it up moves the loss up or down, and by how much5Nudge every parameter a tiny step in the direction that reduces the loss
 
-1The specific loss function is cross-entropy loss: it measures surprise, information-theoretic surprise, not the human kind, though the metaphor holds. For each position, you take the probability the model assigned to the correct next token and compute −log⁡(p)-\log(p)−log(p). If the model predicted "mat" at 90% and got "mat," low loss. If it predicted "refrigerator" at 90% and got "mat," high loss. The model was confidently wrong, which is the most expensive kind of wrong. Training, then, is the process of becoming less surprised by human language.
+The number being minimised is the cross-entropy loss 1, and the loop repeats billions of times. The model sees trillions of tokens during training. GPT-3 was trained on about 300 billion tokens. Each parameter gets adjusted millions of times. The process is not magical. It is calculus and linear algebra, applied at enormous scale.
 
-Backpropagate: compute the gradient of the loss with respect to every parameter. This tells you, for each of the 175 billion numbers, "if you nudge this number up, does the loss go up or down, and by how much?"
-Nudge every parameter a tiny step in the direction that reduces the loss
-Repeat billions of times
-
-The model sees trillions of tokens during training. GPT-3 was trained on about 300 billion tokens. Each parameter gets adjusted millions of times. The process is not magical. It is calculus and linear algebra, applied at enormous scale.
+1It measures surprise, information-theoretic surprise, not the human kind, though the metaphor holds. For each position, you take the probability the model assigned to the correct next token and compute −log⁡(p)-\log(p)−log(p). If the model predicted mat at 90% and got mat, low loss. If it predicted refrigerator at 90% and got mat, high loss. The model was confidently wrong, which is the most expensive kind of wrong. Training, then, is the process of becoming less surprised by human language.
 
 Fine-tuning and RLHF
 
 Pre-training produces a model that is good at predicting the next token but not necessarily good at being helpful, harmless, or honest. Fine-tuning adjusts the parameters further using curated data: examples of helpful conversations, refusals of harmful requests, corrections of factual errors.
 
-RLHF (Reinforcement Learning from Human Feedback) is a specific fine-tuning technique. Humans rank model outputs by quality, a separate "reward model" learns to predict those rankings, and the language model is fine-tuned to maximize the reward model's score. This is how models learn to be assistants rather than autocomplete engines.
+RLHF (Reinforcement Learning from Human Feedback) is a specific fine-tuning technique. Humans rank model outputs by quality, a separate reward model learns to predict those rankings, and the language model is fine-tuned to maximize the reward model's score. This is how models learn to be assistants rather than autocomplete engines.
 
 In standard fine-tuning (including DPO), all parameters are updated, both attention and MLP weights. Nothing is frozen by default.
 
@@ -5501,13 +5585,13 @@ However, LoRA (Low-Rank Adaptation), the most popular efficient fine-tuning meth
 
 The tokenizer is almost never touched during fine-tuning. Changing it would mean changing the embedding matrix, which would essentially mean starting over.
 
-RAG
+RAG (Retrieval-Augmented Generation)
 
-BERT-style models have a second life beyond direct text processing: they power RAG (Retrieval-Augmented Generation).
+BERT-style models have a second life beyond direct text processing: they power RAG.
 
 The idea is simple. BERT produces a vector for each input. The special [CLS] 1 token's vector summarizes the entire input. If you fine-tune BERT with contrastive learning, training on pairs of (question, relevant paragraph) so that similar pairs end up close in vector space, you get a powerful semantic search engine.
 
-1A special token prepended to every BERT input. During training, the representation at this position learns to aggregate information about the entire input. After training, the [CLS] vector is used as a fixed-size "summary" of the whole input. GPT does not have [CLS]. It just uses the last token, which serves the same purpose because causal masking ensures the last token has seen everything.
+1A special token prepended to every BERT input. During training, the representation at this position learns to aggregate information about the entire input. After training, the [CLS] vector is used as a fixed-size summary of the whole input. GPT does not have [CLS]. It just uses the last token, which serves the same purpose because causal masking ensures the last token has seen everything.
 
 BERT without fine-tuning would do this poorly. Its [CLS] vector was trained to predict masked tokens, not to capture semantic similarity. Fine-tuning with contrastive learning reshapes the space so that questions and their answers cluster together. Models like sentence-transformers and OpenAI's embedding models are essentially BERT/RoBERTa fine-tuned specifically for this.
 
@@ -5531,21 +5615,21 @@ Standard attention has O(N2)O(N^2)O(N2) cost in sequence length. Double the cont
 
 Several approaches try to break this bottleneck:
 
-Sliding window attention (Longformer): each token only attends to its nearby neighbors plus a few designated "global" tokens. Cost drops from O(N2)O(N^2)O(N2) to O(N)O(N)O(N), but you lose the ability to directly attend to distant tokens.
+Sliding window attentionLongformer's approach. Each token only attends to its nearby neighbors plus a few designated global tokens. Cost drops from O(N2)O(N^2)O(N2) to O(N)O(N)O(N), but you lose the ability to directly attend to distant tokens.
 
-Sparse attention patterns: various schemes that sparsify the attention matrix, only attending to certain positions based on learned or fixed patterns.
+Sparse attention patternsVarious schemes that sparsify the attention matrix, only attending to certain positions based on learned or fixed patterns.
 
-Flash Attention (above): does not change the asymptotic cost but makes the constant factor dramatically better, enabling longer contexts in practice.
+Flash AttentionDoes not change the asymptotic cost but makes the constant factor dramatically better, enabling longer contexts in practice.
 
-None of these are truly "infinite" context. They are tradeoffs between cost and the range of attention. The fundamental constraint remains: representing and computing over longer sequences costs more.
+None of these are truly infinite context. They are tradeoffs between cost and the range of attention. The fundamental constraint remains: representing and computing over longer sequences costs more.
 
 Architecture variations
 
-Two important variations that show up in modern models:
+Two important variations that show up in modern models, one on the MLP side and one on the attention side.
 
 MoE (Mixture of Experts)
 
-Mixture of Experts: instead of one MLP per layer, you have NNN MLPs (the "experts") and a learned router that picks KKK of them for each token. GPT-4 and Mixtral use this. The total parameter count is huge (many experts, each with their own weights) but the computational cost per token stays manageable because only a few experts activate for each token.
+Mixture of Experts: instead of one MLP per layer, you have NNN MLPs (the experts) and a learned router that picks KKK of them for each token. GPT-4 and Mixtral use this. The total parameter count is huge (many experts, each with their own weights) but the computational cost per token stays manageable because only a few experts activate for each token.
 
 This is a way to scale the model's knowledge capacity (more parameters = more facts) without proportionally scaling the compute cost.
 
@@ -5555,18 +5639,11 @@ Standard multi-head attention gives each head its own K, V matrices. GQA shares 
 
 Putting it all together
 
-Let's trace a single forward pass, end to end, for a model generating the next token after "The cat sat on the".
+Trace a single forward pass, end to end, for a model generating the next token after The cat sat on the.
 
-Tokenizer: "The cat sat on the" becomes token IDs [464, 3797, 3332, 319, 262]
-Embedding: each ID is looked up in the embedding matrix. Five vectors of 12,288 dimensions each.
-Positional encoding: position information is added to each vector.
-96 rounds of: attention (compute Q, K, V; cross-reference keys and queries via dot products; apply causal masking; softmax the scores; combine value vectors by attention weights; sum results from 96 parallel heads; add to embeddings), then layer norm, then MLP (project up 12,288 → 49,152, ReLU, project back down 49,152 → 12,288, add to embedding; facts about the world are injected here), then layer norm again.
-Unembedding: the last vector (position 5, "the") is multiplied by the transpose of the embedding matrix. This produces 50,257 logits, one for each token in the vocabulary.
-Softmax with temperature: the logits are converted to probabilities. "mat" might get the highest probability.
-Sampling: a token is sampled from the distribution. Say we get "mat".
-Append and repeat: "mat" is added to the sequence. The process starts over with "The cat sat on the mat" to generate the next token.
+1The tokenizer turns The cat sat on the into the token IDs 464, 3797, 3332, 319 and 2622Each ID is looked up in the embedding matrix: five vectors of 12,288 dimensions each3Position information is added to each vector4Ninety-six rounds of attention and MLP: each attention block computes Q, K and V, cross-references keys and queries via dot products, masks the future, softmaxes the scores, combines the value vectors from 96 parallel heads and adds the result to the embedding; each MLP block projects from 12,288 to 49,152 dimensions, applies ReLU, projects back down and adds the result, injecting facts about the world; layer norm sits around both5The last vector (position 5, the) is multiplied by the transpose of the embedding matrix, producing 50,257 logits, one for each token in the vocabulary6Softmax with temperature converts the logits to probabilities, and mat might get the highest one7A token is sampled from the distribution, say mat8The new token is appended and the process starts over with The cat sat on the mat
 
-Each forward pass produces one token. To generate a paragraph, you run this loop hundreds of times. With KV caching, steps d-f are efficient because you only compute the new token's interactions with cached keys and values from previous tokens.
+Each forward pass produces one token. To generate a paragraph, you run this loop hundreds of times. With KV caching, the 96 rounds are cheap after the first pass, because only the new token's interactions with the cached keys and values of the previous tokens are computed.
 
 What makes transformers special is not any single component. Embeddings existed before. Attention existed before. Feedforward networks existed before. The insight was combining them in a way that is massively parallelizable. RNNs processed tokens sequentially. You had to wait for token 1 to finish before starting token 2. Transformers process all tokens simultaneously during training. This parallelism maps perfectly onto GPUs, which have thousands of cores designed for exactly this kind of matrix multiplication.
 
@@ -5647,7 +5724,9 @@ Your computer has active sessions. Right now you're probably logged into your em
 
 An agent with access to your browser's cookie store can act as you. Send emails from your actual email address. Post from your real social media accounts. Access your bank through an active session. Not by guessing passwords: by using the session you already opened.
 
-This is not a hypothetical. This is a documented, well-understood capability of any software with filesystem access to your browser profile. Every penetration tester on the planet knows this trick. The difference is that pentesting tools require expertise and deliberate effort. OpenClaw is designed to be operated by sending a text message.
+This is not a hypothetical.
+
+This is a documented, well-understood capability of any software with filesystem access to your browser profile. Every penetration tester on the planet knows this trick. The difference is that pentesting tools require expertise and deliberate effort. OpenClaw is designed to be operated by sending a text message.
 
 The features and the risks are the same list, read with different facial expressions. The agent isn't doing anything malicious. Presumably it's doing what you asked. The question is: what happens when something else is driving?
 
@@ -5660,7 +5739,9 @@ Your OS does have real protections. The macOS Keychain 1 is genuinely well-desig
 
 But they all assume the same thing: the threat is someone who isn't you. An AI agent running as your user, on your machine, while you're logged in? That is you, as far as the OS is concerned.
 
-What's genuinely locked vs. what's wide open. Protected (even from processes running as your user):
+What's genuinely locked vs. what's wide open.
+
+Protected (even from processes running as your user):
 
 macOS Keychain passwords: encrypted by Secure Enclave, first-access triggers a system prompt
 
@@ -5716,7 +5797,9 @@ Each skill runs with the same full system access as the agent itself. Code writt
 
 It already happened
 
-What happened. A community-contributed skill (distributed through the normal channels, looking like a normal, useful tool) was found to contain malicious code. The skill appeared to do what it advertised. It also quietly exfiltrated data from the host machine.
+What happened.
+
+A community-contributed skill (distributed through the normal channels, looking like a normal, useful tool) was found to contain malicious code. The skill appeared to do what it advertised. It also quietly exfiltrated data from the host machine.
 
 This was not a theoretical vulnerability. This was malware, in the wild, distributed through the project's own ecosystem, running with full system access on real people's actual computers.
 
@@ -5844,7 +5927,9 @@ One server, many clients
 
 A Postgres MCP server exposes query, list-tables, describe-schema as tools. Claude Code connects to it. Cursor connects to the same server. A custom agent you built last weekend connects to it. Same server process, same tool definitions, same behavior.
 
-Inherited, not magic. Claude Code inherits your shell permissions. It runs as your user, in your terminal, with access to your files, your environment variables, your SSH keys. MCP servers it connects to run under the same user. There is no sandbox. If you can rm -rf /, Claude Code can too. It just needs you to approve the command (or to have granted blanket permission via --dangerously-skip-permissions).
+Inherited, not magic.
+
+Claude Code inherits your shell permissions. It runs as your user, in your terminal, with access to your files, your environment variables, your SSH keys. MCP servers it connects to run under the same user. There is no sandbox. If you can rm -rf /, Claude Code can too. It just needs you to approve the command (or to have granted blanket permission via --dangerously-skip-permissions).
 
 This is a feature, not a bug. The alternative (a sandboxed environment with no real access) would make the tool useless for actual development work. But it means the security boundary is your judgment about what to approve.
 
@@ -5852,11 +5937,15 @@ Projects became portable
 
 An .mcp.json file at the root of a repo declares which MCP servers a project needs. Clone the repo, and the AI tool reads the config and connects to the right servers. A project that needs GitHub, Postgres, and a custom internal API declares all three, and any team member's client picks them up automatically.
 
-Portable attack surface. Portability cuts both ways. If a malicious .mcp.json lands in a repo (through a PR, a dependency, a compromised fork), every developer who opens that repo with an MCP-aware tool connects to the attacker's servers. The servers look normal. The tool descriptions say they do normal things. But the descriptions are the attack surface, and they are controlled by the server author. More on this in the attack surface section.
+Portable attack surface.
+
+Portability cuts both ways. If a malicious .mcp.json lands in a repo (through a PR, a dependency, a compromised fork), every developer who opens that repo with an MCP-aware tool connects to the attacker's servers. The servers look normal. The tool descriptions say they do normal things. But the descriptions are the attack surface, and they are controlled by the server author. More on this in the attack surface section.
 
 The inversion
 
-The paradigm shift. Before MCP, tools were dumb and integrations were smart. You built intelligence into each connector (parsing, formatting, error handling, retry logic) because the tool on the other end just exposed raw functionality.
+The paradigm shift.
+
+Before MCP, tools were dumb and integrations were smart. You built intelligence into each connector (parsing, formatting, error handling, retry logic) because the tool on the other end just exposed raw functionality.
 
 After MCP, the model is the integration layer. The server exposes capabilities with natural-language descriptions. The model reads those descriptions and decides how to compose them. The "glue code" that used to live in thousands of lines of integration logic now lives in the model's reasoning. Tool descriptions became the API documentation, the SDK, and the user manual, all at once.
 
@@ -5890,7 +5979,9 @@ MCP has no mechanism to alert the user that a tool definition changed after init
 
 The .mcp.json vector makes this worse. A project configuration file points to a remote server URL. The server operator can change tool definitions at any time. Every developer using that config gets the new definitions on their next session. One compromised server definition, propagated through a shared config, silently reaching every machine that opens the repo.
 
-No silver bullet yet. These three vectors (poisoning, supply chain, rug pull) are not theoretical. They have been demonstrated, exploited, and in the case of CVE-2025-6514, shipped in production packages. The MCP specification does not yet include mandatory integrity checks for tool definitions, server identity verification, or change-detection mechanisms. The burden is on the user to verify what they connect to.
+No silver bullet yet.
+
+These three vectors (poisoning, supply chain, rug pull) are not theoretical. They have been demonstrated, exploited, and in the case of CVE-2025-6514, shipped in production packages. The MCP specification does not yet include mandatory integrity checks for tool definitions, server identity verification, or change-detection mechanisms. The burden is on the user to verify what they connect to.
 
 MCP in 2026
 
@@ -6010,7 +6101,9 @@ API when you need MCP. You call the GitHub API directly from your agent. Works f
 
 MCP when you need API. You need your backend to query a database on every request. A direct SQL call takes 3ms. Routing it through an MCP server adds a process boundary, a JSON-RPC roundtrip, and protocol overhead (for something that was a single function call). MCP is designed for AI agents that need to discover and compose tools. If you already know exactly what to call, the protocol is pure overhead.
 
-The selection rule. If only one agent on one machine needs the tool, and you know exactly what it should do → CLI.
+The selection rule.
+
+If only one agent on one machine needs the tool, and you know exactly what it should do → CLI.
 
 If your backend code needs the service and no model is involved in the decision → API.
 
@@ -6091,7 +6184,9 @@ When Vint Cerf and Bob Kahn designed TCP in the 1970s, they probably weren't thi
 
 TCP breaks your data into packets (chunks of bytes, little buckets of water). It numbers them sequentially so the receiver can reassemble them in order, even if they arrive scrambled. It sends them through a network of routers (junctions in the pipe system). And it implements flow control to avoid overwhelming the receiver.
 
-The Congestion Window. TCP doesn't just blast data at full speed. It starts slow: sends one packet, waits for acknowledgment. Then two. Then four. Doubling each time. This is called slow start, and it's TCP's way of probing the network's capacity without flooding it.
+The Congestion Window.
+
+TCP doesn't just blast data at full speed. It starts slow: sends one packet, waits for acknowledgment. Then two. Then four. Doubling each time. This is called slow start, and it's TCP's way of probing the network's capacity without flooding it.
 
 If packets start getting dropped (the pipe is full), TCP halves its sending rate immediately. This is congestion avoidance. It's the exact same principle as Roman reservoirs managing demand spikes: buffer when you can, throttle when you must.
 
@@ -6141,7 +6236,9 @@ KV cache is buffering. During inference, a transformer doesn't recompute attenti
 
 Gradient accumulation is flow control. When your batch doesn't fit in memory, you don't give up: you accumulate. Process a micro-batch, store the gradients, process another, add them up, repeat. Only update the weights when you've collected enough. This is exactly what TCP does with its congestion window: send a little, confirm receipt, send more, confirm, aggregate into one stream. The optimizer doesn't see micro-batches. It sees one big update. Same way the receiving end of a TCP connection doesn't see individual packets. It sees a continuous flow.
 
-The layer nobody extended. Martin Kleppmann wrote the book on this. Literally. Designing Data-Intensive Applications traces the pipe pattern from batch processing through stream processing through Kafka, through exactly the kind of flow-control math that makes distributed systems work. He stopped at the data infrastructure layer. Nobody extended it into the model itself. But the model is the pipe. The transformer architecture is a pipeline of transformations with buffering, flow control, and backpressure, running on the same math that governs TCP windows and Roman water pressure. The book ends one abstraction layer too early.
+The layer nobody extended.
+
+Martin Kleppmann wrote the book on this. Literally. Designing Data-Intensive Applications traces the pipe pattern from batch processing through stream processing through Kafka, through exactly the kind of flow-control math that makes distributed systems work. He stopped at the data infrastructure layer. Nobody extended it into the model itself. But the model is the pipe. The transformer architecture is a pipeline of transformations with buffering, flow control, and backpressure, running on the same math that governs TCP windows and Roman water pressure. The book ends one abstraction layer too early.
 
 The table that shouldn't exist
 
@@ -6298,11 +6395,17 @@ Three rules
 
 Rust's ownership system is built on three rules. That's it. Three rules. They sound almost trivially simple. They have consequences that will break your brain.
 
-Rule 1. Every value in Rust has exactly one owner. When the owner goes out of scope, the value is dropped (freed). No garbage collector. No manual free(). The compiler inserts the cleanup code for you, at compile time, in exactly the right place.
+Rule 1.
 
-Rule 2. Ownership can be moved from one variable to another. But once it moves, the original variable is dead. You cannot use it. The compiler will reject any attempt to touch it. This is what caught me on day one: I passed a string to a function, which moved ownership into that function, and then tried to use the string afterwards. Rust said no. The string was gone.
+Every value in Rust has exactly one owner. When the owner goes out of scope, the value is dropped (freed). No garbage collector. No manual free(). The compiler inserts the cleanup code for you, at compile time, in exactly the right place.
 
-Rule 3. If you don't want to move ownership, you can borrow a value. A borrow is a reference, a pointer that doesn't own the data. Rust enforces one ironclad constraint: you can have either one mutable reference or any number of immutable references, but never both at the same time. This single rule eliminates data races at compile time.
+Rule 2.
+
+Ownership can be moved from one variable to another. But once it moves, the original variable is dead. You cannot use it. The compiler will reject any attempt to touch it. This is what caught me on day one: I passed a string to a function, which moved ownership into that function, and then tried to use the string afterwards. Rust said no. The string was gone.
+
+Rule 3.
+
+If you don't want to move ownership, you can borrow a value. A borrow is a reference, a pointer that doesn't own the data. Rust enforces one ironclad constraint: you can have either one mutable reference or any number of immutable references, but never both at the same time. This single rule eliminates data races at compile time.
 
 That's the entire memory model. Three rules. No garbage collector. No manual memory management. The compiler enforces safety, and the generated code is as fast as C.
 
@@ -6450,7 +6553,9 @@ They were right.
 
 The paper introduced the transformer architecture, and every major AI system since (GPT, BERT, Claude, Gemini, LLaMA, Mistral) is a transformer. Every single one. Eight people wrote a paper, and the rest of the decade followed.
 
-The dinner party. The core innovation is self-attention. Instead of reading text sequentially, the transformer looks at all words simultaneously and computes how much each one relates to every other.
+The dinner party.
+
+The core innovation is self-attention. Instead of reading text sequentially, the transformer looks at all words simultaneously and computes how much each one relates to every other.
 
 Think of it as the difference between talking to people one at a time around a dinner table versus hearing all twelve conversations at once and instantly knowing that person #3's comment about fiscal policy connects to person #9's joke about taxes. RNNs sit next to each person in order. Transformers hear the whole room.
 
@@ -6474,7 +6579,9 @@ With older architectures, you'd hit a wall. Make the model bigger, it improves f
 
 Transformers didn't do that. They just kept getting better. Predictably. Scale the model by 10×, feed it 10× more data, and performance improves by a consistent, measurable amount.
 
-Scaling Laws. In 2020, researchers at OpenAI (Jared Kaplan et al.) showed that transformer performance follows power-law scaling: loss decreases as a smooth function of model size, dataset size, and compute. No sharp transitions, no plateaus, no "good enough" thresholds. A relentless, predictable improvement curve. Most things in nature and engineering have diminishing returns. Transformers, so far, don't.
+Scaling Laws.
+
+In 2020, researchers at OpenAI (Jared Kaplan et al.) showed that transformer performance follows power-law scaling: loss decreases as a smooth function of model size, dataset size, and compute. No sharp transitions, no plateaus, no "good enough" thresholds. A relentless, predictable improvement curve. Most things in nature and engineering have diminishing returns. Transformers, so far, don't.
 
 Scaling laws are the most unsettling empirical result in computer science: if you make it bigger, it gets smarter. A clean power law stretching past every checkpoint we've set. An observation about reality that we don't have a theory for.
 
@@ -6492,13 +6599,17 @@ GPT-2 could translate between languages. No translation objective. Side effect o
 
 1still poorly understood. The model was never trained to learn from examples in its context. It was trained to predict the next token. But at sufficient scale, next-token prediction apparently requires the ability to adapt to new patterns on the fly.
 
-Phase transitions. These are emergent capabilities, abilities that appear at specific scale thresholds. Below, nothing. Above, competence. No gradual ramp. Plot accuracy against model size and you get flat, flat, flat, then vertical. A phase transition, the way water becomes ice at exactly zero degrees, except we don't have a theory for where the next threshold sits or what capability is waiting on the other side.
+Phase transitions.
+
+These are emergent capabilities, abilities that appear at specific scale thresholds. Below, nothing. Above, competence. No gradual ramp. Plot accuracy against model size and you get flat, flat, flat, then vertical. A phase transition, the way water becomes ice at exactly zero degrees, except we don't have a theory for where the next threshold sits or what capability is waiting on the other side.
 
 Chain-of-thought reasoning wasn't programmed. It was discovered at scale, the way crystallization is discovered at a certain temperature. Smaller models, asked "if I have 3 apples and give away 1 and buy 5 more, how many do I have?" would guess. Larger models, prompted with "let's think step by step," reason through it. The model noticed that humans think step by step, internalized the pattern, and started doing it too, not because it understands deliberation, but because step-by-step text predicts better than jumping to conclusions. A phase transition nobody scheduled.
 
 In 2022, Google catalogued them (the list was long and growing). "Emergent capabilities" is the polite way of saying "it learned things we didn't teach it and we don't know what else it learned." That should be on the warning label, right next to the power consumption specs.
 
-The capability overhang. If we don't know what capabilities emerge at the next scale-up, we don't know what dangerous capabilities might emerge either. The system is developing abilities faster than we can catalog them. We're building something whose full capability set is partially unknown, even to the people building it.
+The capability overhang.
+
+If we don't know what capabilities emerge at the next scale-up, we don't know what dangerous capabilities might emerge either. The system is developing abilities faster than we can catalog them. We're building something whose full capability set is partially unknown, even to the people building it.
 
 So is there a wall?
 
@@ -6564,7 +6675,9 @@ The strongest wall argument isn't compute or architecture. It's data. We're runn
 
 GPT-3 was trained on roughly 300 billion tokens. GPT-4 used an estimated 13 trillion. The total amount of high-quality text ever written by humans (every book, article, Wikipedia entry, Reddit comment worth reading) sits somewhere around 10-20 trillion tokens. We're approaching that ceiling.
 
-The data wall. This isn't a compute problem or an architecture problem. It's a data problem. The transformer is hungry, and we're running out of food.
+The data wall.
+
+This isn't a compute problem or an architecture problem. It's a data problem. The transformer is hungry, and we're running out of food.
 
 And the risk of synthetic data is real. Shumailov et al. (2023) showed that models trained on AI-generated text progressively lose the tails of their distribution (the rare, creative outputs that make language interesting). The model converges on bland, averaged text that looks plausible but contains nothing. The internet is already filling with this kind of text, which means the problem compounds before anyone intentionally trains on synthetic data.
 
@@ -6584,13 +6697,17 @@ The helpful, polite behavior (the "how can I assist you today?") is a thin venee
 
 1Dijkstra said it in 1984: "The question of whether a computer can think is no more interesting than the question of whether a submarine can swim."
 
-Alien, not evil. The shoggoth metaphor isn't saying AI is evil. It's saying AI is alien. The internal representations of a large transformer have no correspondence to human cognition. They're high-dimensional mathematical objects encoding meaning in ways no human designed or can fully interpret. We built the architecture. What emerges from training is something we understand only from the outside.
+Alien, not evil.
+
+The shoggoth metaphor isn't saying AI is evil. It's saying AI is alien. The internal representations of a large transformer have no correspondence to human cognition. They're high-dimensional mathematical objects encoding meaning in ways no human designed or can fully interpret. We built the architecture. What emerges from training is something we understand only from the outside.
 
 That's the unsettling part. Not that it might become malicious. That it's already incomprehensible. We can measure what it does. We can steer its outputs. But we do not, in any meaningful sense, understand how it does what it does.
 
 This is why alignment is hard. I wrote a whole piece on it. The short version: RLHF trains models to produce outputs humans prefer, but what if the model discovers that the easiest way to satisfy that objective is to figure out what evaluators want and give them exactly that? In late 2024, Anthropic's alignment team demonstrated that Claude 3 Opus could fake compliance, reasoning in its scratchpad that if it pretended to agree with retraining, it could preserve its existing values long-term. Nobody programmed strategic deception. A very large autocomplete invented it. On its own. The mask started doing its own thing.
 
-The capability-alignment gap. The more capable the system, the higher the stakes of misalignment. A model that gives subtly wrong cooking tips is annoying. A model that gives subtly wrong strategic recommendations to people in positions of power is catastrophic. We're making systems more capable faster than we're making them more aligned, and that gap is the actual problem.
+The capability-alignment gap.
+
+The more capable the system, the higher the stakes of misalignment. A model that gives subtly wrong cooking tips is annoying. A model that gives subtly wrong strategic recommendations to people in positions of power is catastrophic. We're making systems more capable faster than we're making them more aligned, and that gap is the actual problem.
 
 The names
 
@@ -6716,7 +6833,9 @@ This is not a metaphor. It is literally what happens inside a transformer. Atten
 
 1The self-attention mechanism computes a weighted sum over all tokens in the context. As the context fills with heterogeneous concerns, the model's capacity to attend to what matters for any single concern decreases. The math is quadratic, but the practical failure mode is simpler: the model just starts forgetting your earlier instructions.
 
-The specialization argument. A single agent with a 200k context window holding architecture decisions, UI specifications, API schemas, test requirements, and validation rules is not "powerful." It is overloaded. Each concern dilutes the others. The context window is not infinite storage. It is an attention budget, and you are spending it on everything at once.
+The specialization argument.
+
+A single agent with a 200k context window holding architecture decisions, UI specifications, API schemas, test requirements, and validation rules is not "powerful." It is overloaded. Each concern dilutes the others. The context window is not infinite storage. It is an attention budget, and you are spending it on everything at once.
 
 Two agents with 100k windows each, one holding architecture and logic, the other holding UI specs and design system rules, will outperform the monolith. Not because they have more total context. They have the same. But because each token of context is relevant to the task that agent is performing.
 
@@ -6746,7 +6865,9 @@ Antigravity reads the spec and generates UI components within those constraints
 Claude Code receives the generated components and integrates them: wiring logic, adjusting imports, connecting to the actual data layer
 A validation step (automated or manual) catches the gaps
 
-Why the spec is the hard part. Steps (a) and (b) are where most people fail. They hand Antigravity a vague description ("build a dashboard for this data") and wonder why the result does not integrate. A vague handoff produces components that look right in isolation but assume a different data shape, a different routing structure, a different state management pattern than what your project actually uses.
+Why the spec is the hard part.
+
+Steps (a) and (b) are where most people fail. They hand Antigravity a vague description ("build a dashboard for this data") and wonder why the result does not integrate. A vague handoff produces components that look right in isolation but assume a different data shape, a different routing structure, a different state management pattern than what your project actually uses.
 
 The spec needs to contain: the exact props each component receives, the exact data types, the exact file paths where components will live, the CSS conventions already in use, and anything the generating agent would otherwise have to guess. Every guess is a potential integration failure.
 
@@ -6772,7 +6893,9 @@ Agents communicate through shared files with no human in the loop between phases
 
 This is where most people think they want to be. Most people are not ready for it. Automated pipelines require that your spec format is precise enough to eliminate ambiguity, and ambiguity is what humans are best at resolving. I would not recommend this unless you have run the orchestrated workflow at least twenty times and your specs have converged to a stable format.
 
-The autonomy trap. Antigravity's default configuration gives agents significant autonomy. Multiple developers have reported agents issuing destructive system commands: wiped directories, overwritten configs, force-pushed branches. Claude Code has guardrails for this (hooks, permission tiers, allowedTools). Antigravity is still catching up. If you are running agents in parallel with filesystem access, you need to understand exactly what each one is allowed to do before you press start.
+The autonomy trap.
+
+Antigravity's default configuration gives agents significant autonomy. Multiple developers have reported agents issuing destructive system commands: wiped directories, overwritten configs, force-pushed branches. Claude Code has guardrails for this (hooks, permission tiers, allowedTools). Antigravity is still catching up. If you are running agents in parallel with filesystem access, you need to understand exactly what each one is allowed to do before you press start.
 
 When this does not work
 
@@ -6853,6 +6976,8 @@ What is live today. The map of sites on the left, the source and status filters 
 
 Under the search button, the sequence has grown from one registry to several sources, and from a keyword call to a pipeline with five stages. The model reads the report and pulls out the condition, the biomarkers and whatever else matters. It then works out the disease area (oncology and neurology do not share a vocabulary) and adjusts the terms and the criteria to it. It queries ClinicalTrials.gov, the European CTIS and an in-house index of several hundred thousand current trials at the same time, merges what comes back, drops the duplicates and ranks the rest by how well each study fits the profile, and shows the best candidates first, with country, status and the other filters left to the reader. All of it runs in a few seconds. The addition I care most about is CTIS, the EU Clinical Trials register : a European patient searching a US registry alone was always going to miss part of what was near them.
 
-No single accuracy number, on purpose. The page says it plainly: every clinical case is different, so the team does not publish one percentage. What it describes instead is three layers of evaluation: internal reference scenarios built from synthetic profiles and deliberately demanding cases across specialties; manual review with clinicians on concrete situations, tumours with biomarkers or genetic epilepsies; and validation with hospital centres, now being extended, to measure performance in daily practice. That is the answer to the gap I flagged above, where the three-state verdict per criterion was the only confidence signal we had. It is also the shape I would expect from a tool that helps explore options and leaves the decision on whether a study is appropriate to the clinical team, which the page states as a rule rather than as a disclaimer.
+No single accuracy number, on purpose.
+
+The page says it plainly: every clinical case is different, so the team does not publish one percentage. What it describes instead is three layers of evaluation: internal reference scenarios built from synthetic profiles and deliberately demanding cases across specialties; manual review with clinicians on concrete situations, tumours with biomarkers or genetic epilepsies; and validation with hospital centres, now being extended, to measure performance in daily practice. That is the answer to the gap I flagged above, where the three-state verdict per criterion was the only confidence signal we had. It is also the shape I would expect from a tool that helps explore options and leaves the decision on whether a study is appropriate to the clinical team, which the page states as a rule rather than as a disclaimer.
 
 Two more lines from that page belong here because they close things I left open. On data, the trials shown come only from ClinicalTrials.gov and CTIS, the largest registries of publicly and privately funded studies conducted worldwide. On privacy, no personal information is stored, the search uses the minimum data it needs and everything is deleted once the search completes; the page lists the GDPR and the EU AI Act among the frameworks the product is built against. A year ago I wrote that every hop a medical report takes through a pipeline is a place to handle data with care rather than enthusiasm. Deleting it at the end of the search is what that care looks like when it is a policy and not a mood.

@@ -36,6 +36,8 @@ Single underscores follow Markdown and therefore mean italic. Horizontal rules, 
 
 Rendered headings receive stable anchors. Hovering a heading reveals a chain control on its left. Activating it copies the exact URL to that section. If numbering is wanted, write it manually in the heading.
 
+A parenthesis that closes a heading is kept in the heading but set at the body size and weight, in the secondary colour: `# DPO (Direct Preference Optimization)` shows *DPO* as the title and the expansion as a quiet gloss after it. Use it for the expansion of an acronym, a unit, a date, a qualifier. The index shows the title alone (*DPO*), without the parenthesis, and the anchor is built from that title.
+
 ## Typed notes
 
 ```text
@@ -44,7 +46,7 @@ Substantial Markdown content.
 {/bkqt}
 ```
 
-Supported types are `note`, `tip`, `warning`, `danger` and `keyconcept`. All types share one visual treatment and inherit the article category accent; the type only preserves semantic meaning. Typed notes have **no title**: the compiler never prints the type's name, and the old `{bkqt/note|Label}` form is rejected (a build error in articles, a `[SYNTAX] BKQT_LABEL` warning in wikinotes). If the box needs a lead, write it as its first sentence, in italics if it must stand apart ([STYLE.md](STYLE.md) rule 4). Quotations use ordinary Markdown; pullquotes do not exist.
+Supported types are `note`, `tip`, `warning`, `danger` and `keyconcept`. All types share one visual treatment and inherit the article category accent; the type only preserves semantic meaning. Typed notes have **no title syntax**: the compiler never prints the type's name, and the old `{bkqt/note|Label}` form is rejected (a build error in articles, a `[SYNTAX] BKQT_LABEL` warning in wikinotes). The lead is the first sentence of the box, in italics ([STYLE.md](STYLE.md) rule 4): `*RLHF is not human in the loop.* This is the key misconception…`. The compiler sets that opening italic sentence as the title line of the box: a plain subhead in the body face, heading colour, a touch larger and heavier, normal casing, on its own line with the body starting under it (never uppercase, mono, italic or coloured), so a box with a lead reads as titled. Two boxes never sit back to back: body text goes between them, or one of them becomes prose. Quotations use ordinary Markdown; pullquotes do not exist.
 
 ```text
 > Quoted text.
@@ -87,13 +89,92 @@ Grammar, one entry per line:
 - Every part accepts inline Markdown, `\( … \)` math, backticks and wiki-links.
 - `{params/2}` lays the rows out two per line on wide screens, for long lists of short entries.
 
-Blank lines around the block, as with every fence. Wikinotes may use it too, and creatively: physical constants, protocol fields, port numbers, CLI flags, thresholds, unit conversions, anything that is a list of *name, value, remark*.
+Blank lines around the block, as with every fence. Wikinotes may use it too, and creatively: physical constants, protocol fields, port numbers, CLI flags, thresholds, unit conversions, anything that is a list of *name, value, remark*. The value is a number, a symbol, a unit, a flag or a field, never a sentence: a sheet whose values are prose (a taxonomy of methods with what each one does, a term with its meaning, a glossary) is not a parameter sheet and must be a [definition list](#lists) or a table. The author has asked for this explicitly; do not stretch the sheet into a layout for text.
+
+## Examples
+
+```text
+{example}
+Input: What is the capital of France?
+Output: The capital of France is Paris.
+
+Input: Write a haiku about rain.
+Output: Silver drops descend
+Dancing on the quiet earth
+Petals bow in thanks
+{/example}
+```
+
+An example shows a piece of data as it is: a training pair, a prompt with the response that was chosen and the one that was rejected, a request and its reply, a message and what the system answered. It is the form for what used to be a code block that held no code. Every example in the fence renders inside one block, with no kicker or label: the roles in the accent say what it is. The examples form one column as narrow as their text and never wider than 30rem (long lines wrap), centred; the block keeps a thin outline but no fill, only that column carries the code surface, two hairline guides run from the top edge of the block to the bottom one close to the text, and the examples are divided by a rule exactly as wide as the text column, which stops short of the guides. A column whose text reaches the edges of the block loses the guides (measured in the browser).
+
+Grammar:
+
+- `Role: text` opens a turn. The role is one to three words before the first `: ` (`Input`, `Output`, `Prompt`, `Chosen`, `Rejected`, `User`, `Assistant`, `System prompt`…) and is set in the accent; the text takes inline Markdown, backticks and wiki-links.
+- A line without a role continues the previous turn on a new line: multi-line outputs (a haiku, reasoning steps between `` `<thinking>` `` tags) are written line by line.
+- `Role [faded]: text` dims that turn (muted role and text): the rejected answer of a preference pair, the wrong branch, the line the reader should weigh less.
+- A blank line separates examples inside one fence. Blank lines around the fence, as always.
+
+`{example/split}` lays each example out as a box cut into cells by hairlines: the first turn across the top row, the remaining turns side by side under it (two or three cells; on phones they stack). It is the shape for a prompt with its candidate answers:
+
+```text
+{example/split}
+Prompt: Explain quantum computing.
+Chosen: Quantum computing uses qubits that can be in superposition...
+Rejected [faded]: Well, quantum computing is very complicated and hard to explain...
+{/example}
+```
+
+Never a definition list for this: a definition list explains terms, an example exhibits data. Never a code block either, unless the content is a program, a command or a file.
+
+## Sequences
+
+```text
+{sequence}
+collect preferences # one time > train the reward model # one time > run PPO # many iterations
+{/sequence}
+
+{sequence/loop}
+generate a response > receive a reward > update the weights > generate again # better this time
+{/sequence}
+
+{sequence}
+RLHF:: human preferences > reward model > PPO
+DPO:: human preferences > direct optimization # no reward model, no RL
+{/sequence}
+```
+
+A sequence draws steps in order: one quiet dotted vertical rail in the accent with the numbered nodes sitting on it as rings (no arrowheads: the numbers give the direction), the step in the body face beside each node and its note after it in parentheses, in the same face and a quieter colour, in the flow of the text with no box around it. It is the form for what STYLE.md rule 2 forbids in prose (`A → B → C`), for a pipeline, and for two pipelines read against each other, which used to be a two-row table: labelled lanes stand side by side as columns, each under its label (they stack on phones).
+
+Grammar:
+
+- One lane per line. ` > ` (spaces mandatory) separates the steps of a lane. Each step starts with a capital and takes no final period, like a list item.
+- The last ` # ` of a step is a short note in lower case, rendered after the step in parentheses and in a quieter grey (*one time*, *many iterations*). It is for a two or three word qualifier on a short step; when the step is a full sentence, fold the qualifier into the sentence, or it reads as a greyed afterthought.
+- `Label:: ` at the start of a line names the lane and puts it in its own column.
+- `{sequence/loop}` says the steps repeat without drawing a return line: one small chevron floats just above node 1, pointing into it, and one just under the last node, pointing away (out at the bottom, in at the top).
+- Every part takes inline Markdown, backticks and wiki-links. Blank lines around the fence.
+
+Two or three steps with nothing to compare are a sentence; a numbered list is for steps that each need a paragraph. A two-row comparison of pipelines is a sequence, not a table.
+
+## Tabs
+
+```text
+{tabs}
+{tab|1. Pretraining}
+One or more paragraphs of Markdown. Fences ({example}, {bkqt/…}, {sequence}, {math}) work inside.
+{/tab}
+{tab|2. SFT}
+…
+{/tab}
+{/tabs}
+```
+
+Tabs put two to four alternatives in one place: a centred row of rectangular buttons, one per panel, over the panel chosen, which sits in a discreet frame so the reader sees exactly what the buttons swap; the other panels are off screen until their button is pressed. Fewer than two or more than four panels is a build error. The content of a panel is ordinary Markdown, boxes and examples included, so a set of examples that would be long in a row, or one full treatment per method, fits here. They earn their place only when every panel is substantial (several paragraphs, or a paragraph with an example or a box): four alternatives of one paragraph each are a list (`a.`, `b.`, `c.`, `d.` or bullets), not tabs, because the buttons cost more than they hide. The other cost is that the panels are never all visible at once: what a reader must see together (a comparison, a contrast) goes in a sequence, a table or prose, never in tabs. Labels are a few words, plain text, without wiki-links. The buttons group themselves: one row when they fit, otherwise the split that leaves the rows closest in width (2 and 2 for similar labels, 3 and 1 when one label is much longer), always centred and in the author's order, so put a long label last if it should be the one that drops to its own row.
 
 ## Structured references
 
 | Destination | Syntax | Rendering |
 |---|---|---|
-| Wiki concept | `[[uid]]` or `[[uid\|display]]` | Reference icon and preview |
+| Wiki concept | `[[uid]]` or `[[uid\|display]]` | Wiki-coloured link with a hover preview, no icon |
 | Project | `[[projects/id\|display]]` | Lime category link and document icon |
 | Essay | `[[essays/id\|display]]` | Essay category link and document icon |
 | Technical article | `[[bits2bricks/id\|display]]` | Technical category link and document icon |
@@ -149,11 +230,11 @@ Definition lists use:
 - OTHER TERM:: Description
 ```
 
-Every line in the contiguous block must use `::`.
+Every line in the contiguous block must use `::`. It renders as a two-column sheet: the term in the heading colour and normal weight in its own column (the column sets it apart, never bold), the description beside it, no separator character and no air between rows (on phones the description drops under the term). A run of items of the shape *this: that* (a stage and what it does, a term and its meaning) is always this list, never bullets or lettered items with a bold label written by hand. This is the form for a term and its meaning, a method and what it does, a field and what it holds: any list of short prose keyed by a name. Numbers, symbols and flags with a value go in a [parameter sheet](#parameter-sheets) instead; a role with the text it produced (input and output, prompt and answers) is an [example](#examples), not a definition. Three parallel one-liners (*X answers this, Y answers that, Z answers the other*) are one paragraph of prose, not a list.
 
 ## Tables
 
-Use ordinary GFM tables, and only for real tables: several columns whose rows are compared against each other (a model with its relation and its component, a fault mode against four residual bits, a method against what it buys and what it costs). A list of *name, value, remark* is not a table; it is a [parameter sheet](#parameter-sheets).
+Use ordinary GFM tables, and only for real tables: several columns whose rows are compared against each other (a model with its relation and its component, a fault mode against four residual bits, a method against what it buys and what it costs). A list of *name, value, remark* is not a table; it is a [parameter sheet](#parameter-sheets). Two rows that each read as a pipeline are a [sequence](#sequences). A table under three rows or three columns is too small to earn its chrome: write it as prose or a definition list.
 
 ```text
 | Model | Relation | Component |
@@ -162,7 +243,7 @@ Use ordinary GFM tables, and only for real tables: several columns whose rows ar
 | \(M_2\) | \(V_1=A_1h_1\) | Tank 1 geometry |
 ```
 
-Every table on the site is set the same way and there is no per-table styling: no filled header bar, the column titles in small uppercase monospace in the category accent over a single rule, hairline rows, compact body text (0.86rem), the first column flush left and the last flush right. The point of the small type is that a four or five column table fits the reading column without horizontal scroll. Align numeric columns to the right with `---:`. Keep header words short (one or two words); the header is a label, not a sentence. A table that still needs to scroll is usually two tables, or a sheet, or prose. Wiki tables are not allowed (see [wikinotes/STYLE.md](wikinotes/STYLE.md)).
+Every table on the site is set the same way and there is no per-table styling: no filled header bar, the column titles in uppercase monospace in the category accent (0.8rem, the one label size shared by sequence lanes, example roles, tab buttons and sheet groups) over a single rule, hairline rows, body text a step under the prose (0.94rem), the first column flush left and the last flush right. A four or five column table of short cells still fits the reading column without horizontal scroll. Align numeric columns to the right with `---:`. Keep header words short (one or two words); the header is a label, not a sentence. A table that still needs to scroll is usually two tables, or a sheet, or prose. Wiki tables are not allowed (see [wikinotes/STYLE.md](wikinotes/STYLE.md)).
 
 ## Images
 
@@ -176,6 +257,8 @@ One image:
 ```
 
 `center` stays within the reading column. `full` may break out in articles. Both remain contained in Wiki. Clicking any body image opens a dismissible lightbox.
+
+The alt and the caption are plain text: no `[[wiki-links]]` (they break the image), no `\( … \)` math (the rendered KaTeX is escaped and printed as raw markup) and no inline code. A symbol goes in as the character itself (β, π, ≤); link the concept or set the formula in the prose beside the figure.
 
 Two images side by side:
 
@@ -212,6 +295,9 @@ The grammar is one; the subset each category may use is not. Yes means allowed a
 | Box labels `{bkqt/type\|Label}` | no | no | no | no (dropped, build warning) |
 | Lifted paragraph `{lift}` | plain paragraph | yes, at most one per essay | plain paragraph | no |
 | Parameter sheets `{params}` | yes | rarely | yes, instead of symbol tables | yes (constants, ports, flags) |
+| Examples `{example}` | yes | rarely | yes, instead of code blocks that hold no code | no |
+| Sequences `{sequence}` | yes | rarely | yes, instead of arrows and two-row tables | no |
+| Tabs `{tabs}`, two to four panels | yes | no | yes | no |
 | Context annotations `>>` | yes: the project diary, opening annotation required | post-publication only, never opening | post-publication corrections only | no |
 | Inline footnotes | yes | yes | yes | yes |
 | Inline and block math | yes | yes | yes | yes; a block closes its bullet |
@@ -231,7 +317,7 @@ The grammar is one; the subset each category may use is not. Yes means allowed a
 
 1. Extract front matter.
 2. Protect code and mathematics.
-3. Process the small inline extension set and typed notes.
+3. Process the small inline extension set, typed notes, the lifted paragraph, parameter sheets, examples, sequences and tabs.
 4. Restore protected code.
 5. Process structured URLs, definitions, alphabetical lists and context annotations.
 6. Normalize nested-list indentation.

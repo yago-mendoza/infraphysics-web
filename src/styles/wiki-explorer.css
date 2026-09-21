@@ -1,0 +1,71 @@
+.wiki-surface, [data-wiki-workspace], .wiki-console-head, .hub-scrollbar {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.wiki-surface input, .wiki-surface textarea, [data-wiki-workspace] input, .hub-scrollbar input {
+  -webkit-user-select: text;
+  user-select: text;
+}
+.wiki-search-control { position: relative; display: flex; flex: 1; min-width: 0; align-items: center; }
+.wiki-search-control input { min-width: 0; flex: 1; width: 100%; background: transparent; outline: none; color: var(--text-primary); font: 12px var(--font-mono); }
+.wiki-clear-control { display: inline-grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; font: 24px/1 var(--font-sans); color: var(--text-secondary); touch-action: manipulation; }
+.wiki-clear-control:hover { color: var(--text-heading); background: var(--bg-surface); }
+/* The base control is a 44px touch target with a 24px glyph, sized for the search fields. In the
+   small flyout headers (legend, lenses, 8px labels) that made a cross several times the size of
+   the title beside it: those use the compact variant, which only grows back on touch screens. */
+.wiki-clear-control--compact { width: 18px; height: 18px; font-size: 14px; }
+@media (pointer: coarse) { .wiki-clear-control--compact { width: 32px; height: 32px; font-size: 18px; } }
+.wiki-search-suggestions { position: absolute; top: 100%; left: 0; right: 0; z-index: 90; border: 1px solid var(--border-default); background: var(--bg-base); box-shadow: 0 8px 24px #0004; max-height: 220px; overflow-y: auto; }
+.wiki-search-suggestions button { display: flex; flex-direction: column; width: 100%; text-align: left; padding: 9px 10px; min-height: 44px; color: var(--text-primary); }
+.wiki-search-suggestions button:hover { background: var(--bg-surface); }
+.wiki-search-suggestions strong { font-size: 12px; font-weight: 500; }
+.wiki-search-suggestions span { font-size: 9px; color: var(--text-muted); }
+/* Lenses: one row per lens. The dot is the colour the lens paints on the graph,
+   the second line says what it selects, the count sits at the right. In the
+   narrow graph flyout the rows stack; in the console they share the width. */
+.wiki-lenses { padding: 8px 10px 10px; border-bottom: 1px solid var(--border-default); color: var(--text-secondary); font: 11px var(--font-sans); }
+.wiki-lenses-label { display: block; margin-bottom: 6px; color: var(--text-muted); font: 9px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
+.graph-flyout .wiki-lenses { padding: 4px 2px 4px; border-bottom: 0; }
+.graph-flyout .wiki-lenses-label { display: none; }
+.wiki-lenses-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: 4px; }
+.wiki-lens { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; column-gap: 9px; min-height: 40px; padding: 6px 9px; border: 1px solid var(--border-default); border-left: 2px solid transparent; background: transparent; color: inherit; text-align: left; cursor: pointer; transition: background-color .15s ease, border-color .15s ease, color .15s ease; }
+.wiki-lens:hover:not(:disabled) { background: var(--bg-surface); color: var(--text-primary); }
+.wiki-lens[aria-pressed="true"] { border-color: color-mix(in srgb, var(--wiki-400) 55%, transparent); border-left-color: var(--wiki-400); background: color-mix(in srgb, var(--wiki-400) 10%, transparent); color: var(--text-heading); }
+.wiki-lens:disabled { opacity: .38; cursor: default; }
+.wiki-lens-dot { width: 8px; height: 8px; border-radius: 999px; flex: none; }
+.wiki-lens-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.wiki-lens-name { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wiki-lens-hint { font-size: 9.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wiki-lens-count { font: 10px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-secondary); }
+.wiki-lens[aria-pressed="true"] .wiki-lens-count { color: var(--wiki-300); }
+.wiki-lenses-extra { display: flex; gap: 6px; align-items: center; margin-top: 8px; font-size: 10.5px; color: var(--text-secondary); }
+.wiki-lenses input { width: 46px; padding: 4px 5px; border: 1px solid var(--border-default); color: var(--text-primary); background: var(--bg-surface); font: 10px var(--font-mono); }
+/* Compact lenses: a quiet line of chips at the far right of the console's filter row. */
+.wiki-lenses-compact { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-left: auto; font: 10px var(--font-sans); color: var(--text-tertiary, var(--text-secondary)); }
+.wiki-lenses-compact-label { margin-right: 2px; color: var(--text-muted); font: 9px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+.wiki-lens-chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 6px; border: 1px solid var(--border-default); background: transparent; color: inherit; cursor: pointer; transition: color .15s ease, border-color .15s ease, background-color .15s ease; }
+.wiki-lens-chip .wiki-lens-dot { width: 6px; height: 6px; opacity: .85; }
+.wiki-lens-chip .wiki-lens-count { font-size: 9px; color: var(--text-muted); }
+.wiki-lens-chip:hover:not(:disabled) { color: var(--text-primary); border-color: var(--border-hover, var(--border-default)); }
+.wiki-lens-chip[aria-pressed="true"] { color: var(--wiki-300); border-color: color-mix(in srgb, var(--wiki-400) 45%, transparent); background: color-mix(in srgb, var(--wiki-400) 14%, transparent); }
+.wiki-lens-chip[aria-pressed="true"] .wiki-lens-count { color: var(--wiki-300); }
+.wiki-lens-chip:disabled { opacity: .35; cursor: default; }
+.wiki-lenses-compact-extra { display: inline-flex; align-items: center; gap: 4px; }
+.wiki-lenses-compact input { width: 40px; padding: 2px 4px; border: 1px solid var(--border-default); color: var(--text-primary); background: var(--bg-surface); font: 10px var(--font-mono); }
+.wiki-lenses-clear { padding: 0; border: 0; background: none; color: var(--wiki-300); cursor: pointer; text-decoration: underline; text-underline-offset: .2em; }
+[data-wiki-workspace] { overscroll-behavior: none; }
+[data-wiki-workspace] canvas { touch-action: none; }
+[data-wiki-workspace] nav[aria-label="Graph tools"] { overscroll-behavior: contain; touch-action: pan-y; }
+@media (max-width: 767px) {
+  .wiki-search-control input { font-size: 16px; }
+  html[data-wiki-expanded] #root { visibility: hidden; }
+  html[data-wiki-expanded] { overflow: hidden; overscroll-behavior: none; }
+  [data-wiki-workspace] { border-left: 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
+  [data-wiki-workspace] nav[aria-label="Graph tools"] { bottom: max(12px, env(safe-area-inset-bottom, 0px)); max-height: none; }
+  [data-wiki-workspace] .graph-edges, [data-wiki-workspace] .graph-topright { top: 6.4rem; }
+  [data-wiki-workspace] nav[aria-label="Graph tools"] { top: 9.3rem; }
+  [data-wiki-workspace] .graph-flyout { top: 9.3rem !important; }
+  [data-wiki-workspace] .graph-flyout { max-height: calc(100% - 10rem); overflow-y: auto; width: min(17rem, calc(100vw - 4.3rem)); overscroll-behavior: contain; }
+  .wiki-lens { min-height: 44px; }
+}

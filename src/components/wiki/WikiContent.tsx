@@ -211,6 +211,23 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allWikiNotes, cl
     };
 
     const onClick = (e: MouseEvent) => {
+      // Tabs ({tabs} in SYNTAX.md): the pressed button's panel becomes the visible one.
+      const tabBtn = (e.target as HTMLElement).closest('.tabs-btn') as HTMLButtonElement | null;
+      if (tabBtn) {
+        e.preventDefault();
+        const tabs = tabBtn.closest('.tabs');
+        const index = tabBtn.dataset.tab;
+        if (!tabs || index === undefined) return;
+        tabs.querySelectorAll<HTMLElement>(':scope > .tabs-bar > .tabs-btn').forEach((btn) => {
+          const active = btn.dataset.tab === index;
+          btn.classList.toggle('is-active', active);
+          btn.setAttribute('aria-selected', String(active));
+        });
+        tabs.querySelectorAll<HTMLElement>(':scope > .tabs-panel').forEach((panel) => {
+          panel.classList.toggle('is-active', panel.dataset.tab === index);
+        });
+        return;
+      }
       // Context note: open the <details> first, then add .is-open on the next frame so the body can
       // transition in; on close, transition out and only then remove [open] (article.css, E6b).
       const ctxSummary = (e.target as HTMLElement).closest('.ctx-note-summary') as HTMLElement | null;
@@ -308,6 +325,27 @@ export const WikiContent: React.FC<WikiContentProps> = ({ html, allWikiNotes, cl
       window.dispatchEvent(new CustomEvent('wiki-link-preview', { detail: null }));
     };
   }, [clearHide]);
+
+  // Examples ({example} in SYNTAX.md) sit centred between two hairline guides as
+  // narrow as their text; a body whose text reaches the block's edges gets .is-wide
+  // and loses the guides. Measured again whenever the content or the width changes.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const blocks: HTMLElement[] = Array.from(el.querySelectorAll<HTMLElement>('.example:not(.example--split)'));
+    if (blocks.length === 0) return;
+    const measure = () => {
+      for (const block of blocks) {
+        const room = block.clientWidth;
+        const items: HTMLElement[] = Array.from(block.querySelectorAll<HTMLElement>(':scope > .example-body'));
+        for (const item of items) item.classList.toggle('is-wide', room - item.offsetWidth < 56);
+      }
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    for (const block of blocks) observer.observe(block);
+    return () => observer.disconnect();
+  }, [resolvedHtml]);
 
   return (
     <>

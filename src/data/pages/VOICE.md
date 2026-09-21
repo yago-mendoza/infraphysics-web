@@ -47,7 +47,7 @@ A model writes setup, execution, result, conclusion, and everything works. A per
 - **Short sentences earn their brevity.** Some points need a line. A wind-up followed by *That's it.*, repeated, is a formula; so is the line built to be screenshotted.
 - **Performative self-awareness**, the most insidious residue: undirected admiration (*it changed how I think more than anything I'd read*: name the thing or cut it), section selling (*here's where it gets practical*: delete it and start the section), metacommentary (*let me be direct*: adopt the posture instead of announcing it).
 - **Do not restate what landed.** After a strong concrete image, move forward or add a new detail. Test: skip the restatement; if nothing is lost, it was a crutch.
-- **Proportions.** Thesis in the first line; sections as long as their difficulty, never equal by template; brief conclusions after heavy bodies.
+- **Proportions.** Open on what is happening and let the claim arrive once the reader has seen it (NO-TICS.md, describe before naming); sections as long as their difficulty, never equal by template; brief conclusions after heavy bodies.
 
 ## Numbers as texture
 

@@ -4,8 +4,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export const GRAPH_PREF_EVENT = 'wiki-graph-pref-change';
-export const GRAPH_PINS_KEY = 'wiki-graph-pins';
-export const MAX_PINS = 3;
 
 export function useSharedPref<T>(key: string, fallback: T): [T, (next: T | ((current: T) => T)) => void] {
   const [value, setValue] = useState<T>(() => {
@@ -29,7 +27,3 @@ export function useSharedPref<T>(key: string, fallback: T): [T, (next: T | ((cur
   }, [key]);
   return [value, update];
 }
-
-/** Toggle a note in the pinned list, keeping at most MAX_PINS (the oldest pin makes room). */
-export const togglePinned = (pins: string[], id: string): string[] =>
-  pins.includes(id) ? pins.filter(pin => pin !== id) : [...pins.slice(-(MAX_PINS - 1)), id];

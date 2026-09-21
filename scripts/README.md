@@ -7,7 +7,11 @@ Operational reference for the build-time content pipeline. Supported authoring s
 ```bash
 npm run content       # compile content and validate references
 npm run content:fix   # compile and offer interactive fixes
-npm run build         # content + production Vite build
+npm run build         # content + production Vite build, no uploads or studio writes
+npm run typecheck     # browser and Pages Function types
+npm test              # local regression suites
+npm run docs:check    # local guide links and heading anchors
+npm run context:check # report stale studio packs without writing
 ```
 
 Delete `.content-cache.json` or pass `--force` to `build-content.js` when a full content rebuild is required.
@@ -36,20 +40,25 @@ The active per-document pipeline is:
 10. Render paragraph-scoped footnotes.
 11. Resolve Wiki and cross-document references after every document is compiled.
 
-`compiler.config.js` contains only active configuration: marked options, Wiki-link matching, image positions, the three inline preprocessors and validation flags. Changing it invalidates the content cache.
+`compiler.config.js` contains only active configuration: marked options, Wiki-link matching, image positions, the three inline preprocessors and validation flags. Changes to it, the build script, the shared compiler or its casing helper invalidate the content cache.
 
 ## Outputs
 
 | Output | Purpose |
 |---|---|
-| `src/data/posts.generated.json` | Full compiled Projects, Essays and Technical content |
+| `src/data/posts.generated.json` | Full compiled Projects, Essays and Bits2Bricks content |
 | `src/data/posts-index.generated.json` | Lightweight listing/search metadata |
 | `src/data/wikinotes-index.generated.json` | Wikinote metadata without full bodies |
 | `public/wikinotes/{uid}.json` | One compiled body per wikinote |
 | `src/data/categories.generated.json` | Category configuration |
 | `src/data/graph-relevance.generated.json` | Graph relevance and bridge metrics |
 | `src/data/graph-thumb.generated.json` | Static layout of the whole wiki graph (positions, root colours, typed edges) drawn as inline SVG on the Home spotlight |
-| `public/og-manifest.json` | Social metadata lookup |
+| `src/data/content-routes.generated.json` | Canonical slugs, stable IDs, translations and historical paths |
+| `src/data/field-of-view.generated.json` | Home domain evidence and layout |
+| `public/wikinotes-index.json` | Public Wiki metadata and search text |
+| `public/og-manifest.json` | Social metadata and crawler text lookup |
+| `public/llms.txt`, `public/llms-full.txt` | Curated summary with generated listings, and full article text |
+| `public/agent-profile.json` | Public machine-readable profile |
 | `public/sitemap.xml` | Search sitemap |
 | `public/feed.xml` | RSS feed |
 
@@ -85,10 +94,10 @@ Malformed or retired syntax leaking into output is caught by the syntax guard. R
 | `analyze-pairs.js` | Relationship inspection |
 | `compute-graph-relevance.js` | Graph scoring data |
 | `compute-graph-thumb.js` | Deterministic force layout of the wiki graph for the Home spotlight |
-| `og-cards.js` | Share cards (og:image). `npm run og` (it starts a Vite server of its own on port 5197, or use a running one with `--base <url>`) drives headless Chrome through `/og/card/<kind>/<id>` for every article, playground, wiki note, section and personal page, encodes a 1200 x 630 JPEG under 550 KB, uploads it to R2 as `og/<kind>/<id>.jpg` and records it in `src/data/og-cards.json` (tracked). Incremental: a card is redone only when its text, cover or the design sources change; `--force` redoes the scope, `--dry` renders without writing, `--limit N` samples. The git pre-commit hook (`.githooks/pre-commit`, `og-precommit.js`, activated per clone by `npm install`) runs this automatically when a staged file touches the cards (an article, a translation, the card designs, a cover) and stages the two manifests into the same commit; `SKIP_OG=1` skips it, and without Chrome or R2 credentials it only warns. Then `npm run content` points `og-manifest.json` at the cards |
+| `og-cards.js` / `og-precommit.js` | Photograph and publish incremental social cards; see [Share cards](#share-cards) |
 | `obsidian-export.js` / `obsidian-import.js` | Obsidian synchronization |
 | `media.js` | Article images: optimize masters from `media/` and sync them to Cloudflare R2 |
-| `check-tank-lesson.mjs` / `render-tank-figures.mjs` | Validate article 3142718's teaching simulation and regenerate its vector plots; see [experiment notes](../public/playgrounds/3142718/README.md) |
+| `check-tank-lesson.mjs` / `render-tank-figures.mjs` | Validate article 3142718's teaching simulation and regenerate its vector plots; the simulation is [tabla-arr.html](../public/playgrounds/3142718/tabla-arr.html) |
 
 Detailed flags and edge cases for wikinote operations remain in the wikinotes management guide rather than being duplicated here.
 
@@ -106,8 +115,8 @@ Names are lowercase slugs. `scripts/media.js` encodes and uploads to the R2 buck
 
 | Command | Does |
 |---|---|
-| `npm run media -- push [id\|site …]` | Encode what changed (WebP, 1600px covers, 1400px figures, no upscaling; SVG/GIF copied as is; a JPEG twin of the cover for og:image), upload it plus the master under `originals/`, print the URLs. Resumable: objects already on the CDN at the same size are not re-sent. |
-| `npm run media -- sync --soft` | Same for everything; never fails. Runs first in `npm run build`, and skips when `.env` has no R2 credentials (CI). `npm run dev` runs it too, at start and again whenever a file under `media/` is added or replaced (`vite-plugins/media-sync.js`), so in day-to-day work you never call push by hand: drop the file in, wait a few seconds, paste the url. |
+| `npm run media -- push [id\|site …]` | Encode what changed (WebP, 1600px covers, 1400px figures, no upscaling; SVG/GIF copied as is; a JPEG twin of the cover for og:image), upload it plus the master under `originals/`, print the URLs. Resumable: objects whose ETag matches the encoded bytes are not re-sent. |
+| `npm run media -- sync --soft` | Same for everything; upload errors warn and continue. Explicit command, skips without R2 credentials. `npm run dev` runs it too, at start and again whenever a file under `media/` is added or replaced (`vite-plugins/media-sync.js`), so in day-to-day work you never call push by hand: drop the file in, wait a few seconds, paste the url. |
 | `npm run media -- pull [id\|site …]` | Download the masters into `media/` on another machine. |
 | `npm run media -- ls [id] [--by date\|size\|name] [--all]` | List the bucket (the dashboard cannot sort). |
 | `npm run media -- status` | Local masters vs manifest vs bucket: new, changed, missing, orphans. |
@@ -119,8 +128,30 @@ Bucket keys: `articles/<id>/cover.webp`, `articles/<id>/cover.jpg`, `articles/<i
 
 ## Context packs
 
-`npm run context` (also a step of `npm run build`) runs `scripts/context-pack.js`, which writes `_studio/ai-ctx/<articles|tweets>/<input>-<output>.md`, one pasteable document per job: the prompt for that job, the no-tics paragraph from `_studio/NO-TICS.md`, then the relevant docs concatenated verbatim, for an AI outside the repo. The sources are the docs in `src/data/pages/`, the review skill and `_studio/twitter/STRATEGY.md`; `_studio/ai-ctx/tweets/_add-ctx/` is hand-written and never regenerated; the packs are generated output, tracked in git so they can be copied from anywhere, and never edited by hand. Adding a doc to a pack is one line in the `PACKS` table of the script.
+`npm run context` explicitly runs `scripts/context-pack.js`. It writes two kinds of output, both tracked in git and never edited by hand. Only named generated files are updated, only when their bytes change; there is no timestamp churn or directory cleanup. `npm run context:check` lists stale or missing outputs and exits 1 without writing. The production build does not regenerate studio material.
+
+`_studio/articles/1-articles-format/write-<category>.md`, one pasteable pack per article job: the prompt for that job, the no-tics paragraph, then the frontmatter/pipeline hub, syntax, hard rules, voice, visual guide and category README in `src/data/pages/` assembled with headings shifted down one level and relative links redirected to their source files, for an AI outside the repo. Adding a doc to a pack is one line in the `PACKS` table of the script.
+
+`_studio/twitter/0-gen_prompts/_format_ctx/NO-TICS.md`, a copy of `src/data/pages/NO-TICS.md` with relative links redirected to their source files. The tweet prompts beside it are hand-written, because tweets follow no canon and there is no format doc to concatenate; the paragraph is the one thing both channels share, so the compile drops it there and each prompt names it. Everything else under `_format_ctx/` is the author's own material and is never regenerated.
 
 ## Finding studio pieces
 
-`npm run find -- <filters>` runs `scripts/studio-find.js`: it reads the frontmatter of every piece under `_studio/twitter/` and `_studio/inbox/` and prints the matches (`--tag`, repeatable; `--kind`, `--status`, `--mood`, `--format`, `--lang`, `--signal`, `--source`, `--text`; `--tags` lists the vocabulary with counts and flags tags missing from `_studio/twitter/TAGS.md`; `--tvb <text>` searches the lines of `_studio/ai-ctx/tweets/_add-ctx/`). The schema is in `_studio/twitter/README.md`. The script is a tool for whoever searches, the agent included: extend it when a question needs a filter it lacks.
+`npm run find -- <filters>` runs `scripts/studio-find.js`: it reads titled frontmatter pieces (plain prompts and reference lists are excluded) under `_studio/_inbox/`, `_studio/twitter/` and `_studio/articles/` (skipping the generated packs) and prints the matches (`--folder` for bank categories; `--tag`, repeatable; `--kind`, `--status`, `--mood`, `--format`, `--lang`, `--signal`, `--source`, `--text`). `--tags` lists the vocabulary with counts and flags tags missing from `_studio/twitter/gen_prompts/_format_ctx/_vocabulary/TAGS.md`. `--links` prints the traceability graph between `_studio/_inbox/bank/` and `_studio/articles/queue/` and lists what is broken (a one-way link, a dead slug, a topic with no source). --folder accepts a branch path (articles/projects) or a folder name (additions, across categories). Bank items are read recursively, derive their kind from the folder, and use folder-qualified references such as `articles/essays/watts-and-tons`; queues retain their frontmatter kind. Nothing enforces those fields at build time, so this is the only check. `--tvb <text>` searches the hand-written line-per-entry files (`_format_ctx/` and `_inbox/motherlode/`). The schema is in `_studio/README.md`. The script is a tool for whoever searches, the agent included: extend it when a question needs a filter it lacks.
+
+## Share cards
+
+The shared inventory is [share-card-catalog.js](../src/lib/share-card-catalog.js); [shareCards.ts](../src/lib/shareCards.ts) maps content onto the designs in [shareCardDesigns.tsx](../src/views/shareCardDesigns.tsx). Register personal pages, sections and playgrounds once in that inventory. Articles and Wiki notes come from compiled indexes; translated articles share the English card.
+
+Run `npm run content` first, then `npm run og -- <kind|id>`, then `npm run content` to connect the new cards to crawler metadata. The renderer starts Vite at 127.0.0.1:5197 with media synchronization disabled, uses headless Chrome at a 1200 x 630 viewport, and uploads JPEGs capped at 550 KB. Credentials are the same as media; Chrome is discovered locally or through `CHROME_PATH`.
+
+`--dry --force --limit 1` renders a sample without uploading or changing manifests (Chrome still writes its local profile/cache). `--base <url>` uses an existing Vite server whose own media-watcher settings remain in effect. `--force` refreshes the selected scope. Text, versioned covers, shared design sources, icons, avatar, theme/font declarations and the essay background invalidate cached cards. Missing images fail readiness. Obsolete routes are pruned only on unscoped runs; objects still used by a current route are retained after slug renames.
+
+`npm install` activates [.githooks/pre-commit](../.githooks/pre-commit). The hook compiles content, renders changed cards and recompiles metadata if necessary, then stages the two card manifests. It skips with a warning when tooling is missing or card inputs/manifests have unstaged edits, preserving partial staging. `SKIP_OG=1` skips explicitly. Rendering failures are reported but do not block the commit; check the output before publishing. CI consumes the tracked manifests and does not photograph or upload cards.
+
+## Build and verification boundaries
+
+`npm run build` compiles Markdown, resolves links, writes crawler/discovery assets and bundles the SPA into `dist/`. It reads tracked media/card manifests and never reads or writes studio content. Media uploads and context regeneration are explicit commands; development still syncs images automatically unless `MEDIA_SYNC=0` is set. Push changed masters before building their references.
+
+`npm run docs:check` checks local Markdown links and heading targets across repository guides, excluding published articles, disposable `room/` and studio by default. Add `-- --studio` for a read-only studio link audit. External URLs and inline code paths are not checked. `npm run find -- --links` reports studio traceability gaps; it does not fail the site build.
+
+The validation workflow runs the production build, both TypeScript projects, local regression suites, guide links and Wiki reference checks. Worker integration checks are separate: [counters verification](../workers/counters/README.md#local-verification). Cloudflare Pages deploys independently of GitHub Actions, so a failed validation does not itself block a deployment.

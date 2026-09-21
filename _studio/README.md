@@ -1,38 +1,79 @@
 # Studio
 
-The workshop next to the site. Nothing here is compiled, served or listed anywhere: the build reads `src/data/pages/`, the studio reads the build. It holds three things the site does not: material on its way in (tweets saved, links, half ideas), the style base of a second channel (Twitter, with its own voice, structures and drawings), and the playbook for turning what the site already knows into new pieces for either channel.
+The workshop next to the site. Nothing here is compiled, served or listed anywhere: the build reads `src/data/pages/`, the studio reads the build. It holds three things the site does not: material on its way in (saved tweets, links, facts, half ideas), the style base of a second channel (Twitter, with its own voice and structures), and the playbook for turning what the site already knows into new pieces for either channel.
 
 ```
 _studio/
-  README.md            this file: the flow, and how ideas are mined from the wiki and the articles
-  inbox/               one file per idea or saved item, for articles and for Twitter (see its README)
-  facts/               dated pieces of information (a number, a claim, a quote) with source and verification status
-  ai-ctx/              generated: one pasteable prompt plus docs per job, named by input and output (articles/, tweets/); never edited by hand
-  NO-TICS.md           the one paragraph of machine residue every text here must lose, pasted into every prompt
+  README.md                  this file: the flow, the frontmatter schema, how ideas are mined from the site
+
+  _inbox/                    everything on its way in
+    bank/                    material classified by folder, never by kind
+      ideas/                 concepts, questions, takes (not developed yet)
+      facts/                 datums: figures, stats, quotes (with tags for discovery)
+      sources/               long-form references: articles, papers, guides (enciclopedia-like)
+      articles/              (optional: topics joined from bank items)
+        essays/              essay seeds
+        projects/            project seeds
+        bits2bricks/         tutorial seeds
+    motherlode/              favourite places to look things up, one line per source (searched by --tvb)
+
+  articles/
+    articles-format/         GENERATED: one pasteable pack per article job (prompt, no-tics, the site's docs verbatim)
+    queue/                   article topics: bank items joined into an angle worth writing. Not drafts
 
   twitter/
-    README.md          the three states of a piece (bank, queue, posted) and the daily shape
-    STRATEGY.md        the phase the account is in and why, what to do tomorrow, what to measure
-    bank/              reusable takes, prepared replies, one-liners, memes with captions: no date, no target yet
-    queue/             what is going out: dated, with the target url for replies and quotes, image beside the file
-    posted/            what went out, with the link: the history
-    examples/          tweets and threads by others worth keeping, with the pattern they show
+    STRATEGY.md              the phase the account is in and why, what to do tomorrow, what to measure
+    gen_prompts/             hand-written prompts: post-from-idea, reply-to-post, quote-of-post, thread-from-article
+      _format_ctx/           what those prompts share: the account block, the author's material, NO-TICS (generated)
+    queue/                   finished pieces not yet posted, with the target url for replies and quotes
+
   visuals/
-    articles/          image styles the author wants for article images, with a STYLE.md line per reference
+    aesthetics-examples/     image styles wanted for the site, with a STYLE.md line per reference
 ```
 
-The site's own style lives with the site: [pages/STYLE.md](../src/data/pages/STYLE.md) (hard rules), [pages/VOICE.md](../src/data/pages/VOICE.md) (how an article sounds), [pages/VISUAL.md](../src/data/pages/VISUAL.md) (how an image looks) and the category READMEs. Twitter borrows none of it on purpose: what goes out there follows no canon, so there is no style file under `twitter/`.
+The site's own style lives with the site: [pages/STYLE.md](../src/data/pages/STYLE.md) (hard rules), [pages/VOICE.md](../src/data/pages/VOICE.md) (how an article sounds), [pages/VISUAL.md](../src/data/pages/VISUAL.md) (how an image looks), [pages/NO-TICS.md](../src/data/pages/NO-TICS.md) (the machine residue every text must lose) and the category READMEs. Twitter borrows none of it except the last one: what goes out there follows no canon, so there is no style file under `twitter/`.
 
 ## The flow
 
-1. **Capture.** Something worth keeping (a tweet, a thread, a link, a sentence, a drawing) goes into `inbox/` as one file, raw, with a title and where it came from. A dated piece of information (a figure, a claim, a quote) goes to `facts/` with its source and `status: unverified` until a primary source is opened. A tweet or thread that is kept for *how it is written* rather than for what it says goes to `twitter/examples/` instead, with the pattern named. An image kept for a style wanted on the site goes to `visuals/articles/`; an image for a tweet sits beside the tweet's file.
+1. **Capture.** Material comes in three types (see [INTAKE.md](INTAKE.md)):
+   - **Idea:** concept, question, take. One line to one paragraph. Goes to `bank/ideas/`.
+   - **Fact:** datum with source. Figure, stat, quote. Goes to `bank/facts/` with `status: unverified` (then `verified`). Tags are critical here: they are how you find it later when writing an article.
+   - **Source:** long-form reference. Article, paper, guide. Goes to `bank/sources/` with a `why:` annotation (context for when you'd use it).
+   - An image kept for a style wanted on the site goes to `visuals/aesthetics-examples/`; an image for a tweet sits beside the tweet's file.
 2. **Grow.** A file gains material over weeks: a second link, a counterargument, the paragraph that would open it. Its `status` moves from `seed` to `growing`.
-3. **Decide the channel.** The same idea can become a tweet, a thread, a wikinote or an article, and often more than one in sequence (a thread that works becomes the spine of an essay; an essay ships as a thread). The `kind` field records the current bet, not a promise.
-4. **Draft.** A tweet or thread is written in `twitter/queue/` (or, with no date and no target yet, in `twitter/bank/`); an article moves to `src/data/pages/<category>/` as a draft with `hidden: true`. The inbox file stays behind marked `drafting`, then `done`.
+3. **Decide the channel.** The same idea can become a tweet, a thread, a wikinote or an article, and often more than one in sequence (a thread that works becomes the spine of an essay; an essay ships as a thread). The bank folder records the current destination; do not repeat it in `kind`. Move the file and update its references when that destination changes. Record alternative formats in its body. The queues retain their own `kind` fields.
+4. **Draft.** A tweet or thread is written into `twitter/queue/` with a date and a target, finished. An article is not: bank items are joined into a topic in `articles/queue/`, which says what the piece would argue, and only then moves to `src/data/pages/<category>/` as a draft with `hidden: true`. That asymmetry is the point: the Twitter queue holds pieces ready to send, the article queue holds angles.
+5. **Trace.** A topic in `articles/queue/` carries `bank:` with the slugs it is built on, and each of those items carries `topics:` back. `npm run find -- --links` prints the graph and flags anything one-way or dead. Details in [articles/queue/README.md](articles/queue/README.md) and [_inbox/bank/README.md](_inbox/bank/README.md).
+
+## Frontmatter
+
+Every piece under `_inbox/` and the two queues carries a frontmatter built for retrieval. See [INTAKE.md](INTAKE.md) for per-type guidance.
+
+| Field | Used By | Values |
+|---|---|---|
+| `date` | All bank items | the day it was saved (or published, for facts/sources) |
+| `tags` | **Fact, Source, Ideas** | topic tags; for facts, these are critical (you'll search them later); from `twitter/gen_prompts/_format_ctx/_vocabulary/TAGS.md` |
+| `source` | **Fact, Source** | URL or publication name; for facts, also include `status: unverified\|verified\|stale` |
+| `why` | **Source only** | why you saved it, what article type it might feed |
+| `read` | Source (optional) | `true` or `false` |
+| `kind` | Queues only | bank items use folders instead. `post`, `thread`, `reply`, `quote`, `essay`, `project`, `bits2bricks`, `addition` |
+| `status` | Articles/Queues | `idea`, `seed`, `growing`, `ready`, `drafting`, `done`, `posted` |
+| `language` | All | `en`, `es` |
+| `target`, `target_author` | Queue tweets | the url and handle a reply or quote answers |
+| `bank` | Article topics | paths relative to `_inbox/bank/`, including the folder and omitting `.md` |
+| `topics` | Bank items | the `articles/queue/` slugs this item feeds |
 
 ## Finding what is already here
 
-Every piece under `twitter/` and `inbox/` carries a frontmatter built for retrieval (tags from `twitter/TAGS.md`, kind, status, format, language, source, and `mood` when it helps): `npm run find -- --tag agents --status ready` lists what matches without anyone reading the folder, `npm run find -- --tags` lists the vocabulary in use, `npm run find -- --tvb gwern` searches the hand-written `_add-ctx/` folders under `ai-ctx/`. The schema is in `twitter/README.md`. An agent asked *find me something about X* runs the finder; it does not open files. The finder is a tool, not an interface: when a question would be faster with a new filter or output, the agent changes `scripts/studio-find.js` and says so.
+`npm run find -- --folder projects` selects bank items by folder; add `--tag`, `--text` or `--status` to narrow them. `npm run find -- --tag agents --status ready` lists what matches without anyone opening a folder; `--tags` lists the vocabulary in use with counts and flags tags missing from TAGS.md; `--links` prints the bank-to-topic graph; `--tvb <text>` searches the hand-written line-per-entry files (the author's expressions, sentences, moves, allergies, and the sources in `_inbox/motherlode/`). An agent asked *find me something about X* runs the finder; it does not open files. The finder is a tool, not an interface: when a question would be faster with a new filter or output, the agent changes `scripts/studio-find.js` and says so.
+
+## What an AI is given
+
+**For an article**, one file from `articles/articles-format/`: `write-essay.md`, `write-project.md` or `write-bits2bricks.md`. Each is the whole format contract in one paste (the prompt for that job, the no-tics paragraph, the site's authoring docs verbatim), generated by `scripts/context-pack.js` from the sources so there is never a second copy to keep in step. After the pack comes the material: the topic from `articles/queue/` with the bank items it names, the draft, or the wikinotes it draws on (`src/data/wikinotes-index.generated.json` has every note's description and plain body).
+
+**For a tweet**, the prompts in `twitter/gen_prompts/` are hand-written instead, because tweets follow no canon and there is no format doc to concatenate. Each prompt names what to paste and in what order; the shared parts live in `_format_ctx/` (`ACCOUNT.md` first, then the generated `NO-TICS.md`, then `STRATEGY.md`), and the whole of `twitter/queue/` goes in with them, because an unposted piece is live material: it may already be the right answer to the post in front of you. Every tweet job returns three variations, never one. The author's own colour (`expressions-*.md`, `sentences.md`, `moves.md`, `avoid.md`) is optional and hand-written, never scraped from his articles.
+
+To find ideas, the context is this file plus the index. Nothing in the studio is read by `/review-article`; the two worlds share the hard rules and nothing else.
 
 ## Mining the site for ideas
 
@@ -49,12 +90,8 @@ The site is the raw material; the studio is where it is cut. What each layer yie
 | A project's facts sheet and brief | Real numbers and dates | Tweets that show the metric, not the story |
 | A Bits2Bricks section index | A tutorial already sequenced | A thread that teaches one section, linking the rest |
 | Papers already digested (Chinchilla, the transformer, RLHF) | Explanations already written in the wiki | Explainer threads |
-| The inbox itself | Ideas that have grown | Whatever the file's `kind` says |
+| The bank itself | Ideas that have grown | The destination indicated by its folder |
 
 Scale of what a cluster yields: one note is a tweet; two notes with a contrast are a thread; five notes of a cluster are a short video or a long thread; ten notes are a long piece; twenty notes of a domain are an article. The knowledge is already structured; the studio only takes it out of the domain and puts it where people are.
 
 Two rules that came from the strategy notes and still hold: never publish a piece without a place to distribute it (a piece nobody sees does not exist), and never translate. Each piece is written in one language from scratch: English when the value is technical and the audience is global, Spanish when the value is the voice, the opinion or the audience. The site's articles are the exception that the language layer handles (an essay may have a Spanish sibling); tweets and threads are not.
-
-## What an AI is given
-
-An AI outside this repo (a browser chat, another tool) gets one file from `ai-ctx/`: the pack for the job, named by its input and its output (`articles/essay-from-notes`, `tweets/reply-to-post`, the rest in `ai-ctx/README.md`): the prompt for that job, the no-tics paragraph and the relevant documentation concatenated verbatim, generated by `scripts/context-pack.js` from the sources so there is never a second copy to keep in step. Two hand-written folders sit beside the generated files and can be pasted after a pack: `ai-ctx/_add-ctx/` (shared: favourite sources to look things up) and `ai-ctx/tweets/_add-ctx/` (the author's own expressions, sentences, moves, allergies, for tweets only). After the pack comes the material: the draft, the wikinotes or article it draws on (`src/data/wikinotes-index.generated.json` has every note's description and plain body), or a few files from `twitter/examples/` and `twitter/posted/` when the job is a tweet (there the AI is told to match the account, not a rulebook: tweets follow no canon). To find ideas, the context is this file plus the index. Nothing in the studio is read by `/review-article`; the two worlds share the hard rules and nothing else.

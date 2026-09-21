@@ -16,7 +16,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - run: npm ci
@@ -25,8 +25,13 @@ jobs:
         run: npm run build
 
       - name: Type check
-        run: npx tsc --noEmit
-        continue-on-error: true
+        run: npm run typecheck
+
+      - name: Regression tests
+        run: npm test
+
+      - name: Documentation links
+        run: npm run docs:check
 
       - name: Validate wikinote references
         run: node scripts/check-references.js
