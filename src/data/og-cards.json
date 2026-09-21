@@ -1,7 +1,7 @@
 {
   "version": 1,
   "publicBase": "https://cdn.infraphysics.net",
-  "updated": "2026-09-11",
+  "updated": "2026-09-21",
   "cards": {
     "/about": {
       "key": "og/page/about.jpg",
@@ -33,52 +33,52 @@
     },
     "/blog/bits2bricks/claude-code-from-zero-to-production": {
       "key": "og/article/7722440.jpg",
-      "hash": "5021384767ac",
+      "hash": "664ab80c1f61",
       "v": "1cbc9892",
       "bytes": 103524,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/bits2bricks/how-llms-learn": {
       "key": "og/article/4028591.jpg",
-      "hash": "bb7afb108edb",
+      "hash": "5d529ad29c35",
       "v": "2075e851",
       "bytes": 127577,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/bits2bricks/lstms-from-scratch": {
       "key": "og/article/3819540.jpg",
-      "hash": "3459b73b9c04",
+      "hash": "bbba3b897513",
       "v": "226acff7",
       "bytes": 113959,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/bits2bricks/mcp-before-and-after": {
       "key": "og/article/6184729.jpg",
-      "hash": "2e31c56ea360",
+      "hash": "2f5b81828432",
       "v": "ab091734",
       "bytes": 84551,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/bits2bricks/the-complete-openclaw-playbook": {
       "key": "og/article/7463810.jpg",
-      "hash": "92a644441e58",
+      "hash": "4bd9ede76d62",
       "v": "7057e09a",
       "bytes": 101178,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/bits2bricks/transformers-from-scratch": {
       "key": "og/article/5917362.jpg",
-      "hash": "d75c3dffc86a",
+      "hash": "fe8ca43b8500",
       "v": "412998f3",
       "bytes": 113885,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/bits2bricks/two-tank-fault-detection": {
       "key": "og/article/3142718.jpg",
-      "hash": "c932f00fa0ee",
+      "hash": "5c6e9e995f36",
       "v": "9fa843b1",
       "bytes": 139978,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/essays": {
       "key": "og/section/essays.jpg",
@@ -89,115 +89,115 @@
     },
     "/blog/essays/244-pages-of-mythos": {
       "key": "og/article/8266901.jpg",
-      "hash": "51ba0ac8e711",
+      "hash": "b71245db1221",
       "v": "911d4d96",
       "bytes": 92553,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/essays/alignment-is-not-a-vibe-check": {
       "key": "og/article/8888777.jpg",
-      "hash": "9a8daa4b7986",
+      "hash": "3a84df4d6923",
       "v": "615b217d",
       "bytes": 100528,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/essays/chain-of-thought-monitoring": {
       "key": "og/article/9962668.jpg",
-      "hash": "df725eecf26d",
+      "hash": "d39fade9fb7c",
       "v": "fef093eb",
       "bytes": 87951,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/essays/everybody-has-an-opinion-on-ai": {
       "key": "og/article/1147290.jpg",
-      "hash": "c1181da326ff",
+      "hash": "dbe3b2b80926",
       "v": "eeb2adf8",
       "bytes": 100979,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/essays/everything-is-a-pipe": {
       "key": "og/article/7733621.jpg",
-      "hash": "c7bae4f02795",
+      "hash": "495da957b111",
       "v": "0092bdda",
       "bytes": 96019,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/essays/is-there-a-wall-for-ai": {
       "key": "og/article/3841205.jpg",
-      "hash": "20b35f68423d",
+      "hash": "616de58bc910",
       "v": "98b298ca",
       "bytes": 95749,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/essays/openclaw-and-the-keys-to-your-kingdom": {
       "key": "og/article/5528103.jpg",
-      "hash": "3138cbc484b8",
+      "hash": "e71c2224598d",
       "v": "f9d4d517",
       "bytes": 105768,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/essays/silicon-shell": {
       "key": "og/article/7270022.jpg",
-      "hash": "f27c55a747a4",
+      "hash": "244bdbcd9a7f",
       "v": "3e7b405b",
       "bytes": 91895,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/essays/splitting-the-context-window": {
       "key": "og/article/4481937.jpg",
-      "hash": "183fee48d2b3",
+      "hash": "c38f74013201",
       "v": "9c359088",
       "bytes": 100927,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/essays/the-bitter-lesson": {
       "key": "og/article/9150483.jpg",
-      "hash": "cbc98103e70f",
+      "hash": "19702a889437",
       "v": "7593f2be",
       "bytes": 94203,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/essays/the-cost-of-reproducing-industrial-know-how": {
       "key": "og/article/6820451.jpg",
-      "hash": "3c2090fcf5c2",
+      "hash": "80bd74383dac",
       "v": "00dee81d",
       "bytes": 109886,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/essays/the-moving-ceiling-of-ai": {
       "key": "og/article/6616933.jpg",
-      "hash": "fddb5f6bc289",
+      "hash": "eb0049d9aaff",
       "v": "6e45dad3",
       "bytes": 76408,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/essays/the-palest-ink": {
       "key": "og/article/2929333.jpg",
-      "hash": "cb31230df516",
+      "hash": "cb4233a0bef2",
       "v": "5db93317",
       "bytes": 106535,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/essays/the-years-we-thought-we-had": {
       "key": "og/article/3358174.jpg",
-      "hash": "00867f55b63f",
+      "hash": "ebb98282be84",
       "v": "db55de6d",
       "bytes": 100387,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/essays/why-rust-exists": {
       "key": "og/article/4419076.jpg",
-      "hash": "e26737e7557f",
+      "hash": "9798e34deebb",
       "v": "e9af40ee",
       "bytes": 94537,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/blog/essays/working-with-ai-is-addictive": {
       "key": "og/article/2387542.jpg",
-      "hash": "592c95a16713",
+      "hash": "607aff3f6509",
       "v": "31f29f68",
       "bytes": 100463,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/contact": {
       "key": "og/page/contact.jpg",
@@ -222,52 +222,52 @@
     },
     "/lab/projects/building-infraphysics": {
       "key": "og/article/6184744.jpg",
-      "hash": "0b5f21f4078b",
+      "hash": "d139f7444f79",
       "v": "0f5edc5d",
       "bytes": 114820,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/lab/projects/forecasting-visual-auras": {
       "key": "og/article/7654321.jpg",
-      "hash": "2d26c903c723",
+      "hash": "07e18d905c63",
       "v": "3bcaaf86",
       "bytes": 111415,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/lab/projects/health-tech-crm": {
       "key": "og/article/3141592.jpg",
-      "hash": "38e7d64af1f4",
+      "hash": "ad6aa81c3cc3",
       "v": "4b1a2e4a",
       "bytes": 89869,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/lab/projects/investment-dashboard": {
       "key": "og/article/1112121.jpg",
-      "hash": "05345daf6fa1",
+      "hash": "e62d677702ea",
       "v": "ed32ecb5",
       "bytes": 80046,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/lab/projects/trialgpt-clinical-trial-matching": {
       "key": "og/article/2718281.jpg",
-      "hash": "606b5976bebe",
+      "hash": "32a3a3c4a985",
       "v": "cdaf811b",
       "bytes": 100068,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/playgrounds/3142718/tabla-arr.html": {
       "key": "og/playground/3142718--tabla-arr.jpg",
-      "hash": "a5868204a8cb",
+      "hash": "c0d330aa21b9",
       "v": "4cbf3ca5",
       "bytes": 94418,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/playgrounds/7654321/telemetry-decoy.html": {
       "key": "og/playground/7654321--telemetry-decoy.jpg",
-      "hash": "beafa96b0ee1",
-      "v": "0dd2e435",
-      "bytes": 97336,
-      "updated": "2026-09-11"
+      "hash": "efa5d179c8f2",
+      "v": "0fb7e126",
+      "bytes": 97324,
+      "updated": "2026-09-21"
     },
     "/wiki": {
       "key": "og/section/wikinotes.jpg",
@@ -278,2768 +278,2810 @@
     },
     "/wiki/4-20-ma": {
       "key": "og/wiki/83sE6PZQ.jpg",
-      "hash": "ae0d77055415",
+      "hash": "db0be989eee8",
       "v": "9b7d25c0",
       "bytes": 111413,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/a100": {
       "key": "og/wiki/z9wBHP2x.jpg",
-      "hash": "1d908af01cd3",
-      "v": "935076fe",
-      "bytes": 82611,
-      "updated": "2026-09-11"
+      "hash": "e58c47d3dcda",
+      "v": "561f9c58",
+      "bytes": 82586,
+      "updated": "2026-09-21"
+    },
+    "/wiki/account-cloudflare": {
+      "key": "og/wiki/Ac9nXh5T.jpg",
+      "hash": "19e267402309",
+      "v": "713c49cd",
+      "bytes": 111650,
+      "updated": "2026-09-21"
     },
     "/wiki/activation-function": {
       "key": "og/wiki/RXHPrtTB.jpg",
-      "hash": "41b256bae644",
-      "v": "5eb2e5f3",
-      "bytes": 84251,
-      "updated": "2026-09-11"
+      "hash": "b875ab55ddf9",
+      "v": "74733582",
+      "bytes": 84241,
+      "updated": "2026-09-21"
     },
     "/wiki/activation-steering": {
       "key": "og/wiki/Qv7mXk2N.jpg",
-      "hash": "1b46608419e6",
-      "v": "e82f761c",
-      "bytes": 108709,
-      "updated": "2026-09-11"
+      "hash": "a26ae2d48603",
+      "v": "ceb18188",
+      "bytes": 108716,
+      "updated": "2026-09-21"
     },
     "/wiki/activation-verbalizer": {
       "key": "og/wiki/Hm6sYd1R.jpg",
-      "hash": "30852043e19a",
+      "hash": "774817effcdc",
       "v": "d04c8a84",
       "bytes": 109466,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/active-perception": {
       "key": "og/wiki/ActP3rcp.jpg",
-      "hash": "f2dbfcc88f3e",
+      "hash": "0b7ecec8a937",
       "v": "1d827547",
       "bytes": 115505,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/actuator": {
       "key": "og/wiki/2TNcXgxM.jpg",
-      "hash": "9481c7363ce3",
-      "v": "673549fc",
-      "bytes": 102432,
-      "updated": "2026-09-11"
+      "hash": "1f08007c1aba",
+      "v": "c0ad259b",
+      "bytes": 102423,
+      "updated": "2026-09-21"
     },
     "/wiki/adam": {
       "key": "og/wiki/OEOSluOX.jpg",
-      "hash": "54fdb11df33c",
-      "v": "f29aa883",
-      "bytes": 102999,
-      "updated": "2026-09-11"
+      "hash": "f11ec3c9b6e5",
+      "v": "dd7200ba",
+      "bytes": 102995,
+      "updated": "2026-09-21"
     },
     "/wiki/adjacency-and-degree": {
       "key": "og/wiki/YRGQ0acp.jpg",
-      "hash": "a68ed1ca31c3",
+      "hash": "ad31eee96bc4",
       "v": "4edecb43",
       "bytes": 132303,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/admin-console": {
       "key": "og/wiki/Qc71eVI9.jpg",
-      "hash": "d05656f13ade",
-      "v": "f6804c42",
-      "bytes": 100906,
-      "updated": "2026-09-11"
+      "hash": "d8039757ca97",
+      "v": "509a19bc",
+      "bytes": 100924,
+      "updated": "2026-09-21"
     },
     "/wiki/aeo": {
       "key": "og/wiki/Ax4kJn8M.jpg",
-      "hash": "9d6f8ce027a7",
+      "hash": "5b472ae8647f",
       "v": "0fd4f0cb",
       "bytes": 95465,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/aftermarket": {
       "key": "og/wiki/o0FC5b14.jpg",
-      "hash": "d1f8b9b4fb2f",
-      "v": "588c5353",
-      "bytes": 118269,
-      "updated": "2026-09-11"
+      "hash": "83d9aa481272",
+      "v": "c36b9864",
+      "bytes": 118273,
+      "updated": "2026-09-21"
     },
     "/wiki/agent": {
       "key": "og/wiki/WA8fVNaT.jpg",
-      "hash": "0203aebd7aa6",
-      "v": "1ebca04b",
-      "bytes": 98765,
-      "updated": "2026-09-11"
+      "hash": "849b297ebdcf",
+      "v": "acfce0cc",
+      "bytes": 98768,
+      "updated": "2026-09-21"
     },
     "/wiki/agent-autonomy": {
       "key": "og/wiki/Aut0n0my.jpg",
-      "hash": "74a14138cf2f",
+      "hash": "a6141d461ef4",
       "v": "a8e84c4f",
       "bytes": 112815,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/agent-computer-interface": {
       "key": "og/wiki/Aci2405X.jpg",
-      "hash": "7b90020eed95",
+      "hash": "54a3fcfad174",
       "v": "4eaae2f9",
       "bytes": 125098,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/agent-containment": {
       "key": "og/wiki/AgCnt9Zm.jpg",
-      "hash": "35d7e53b5c5b",
+      "hash": "43220a0b31f4",
       "v": "83d6d122",
       "bytes": 111080,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/agent-harness": {
       "key": "og/wiki/HaRn3sA1.jpg",
-      "hash": "4604c80862bf",
+      "hash": "253e0e534ddb",
       "v": "efcb361a",
       "bytes": 108348,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/agent-loop": {
       "key": "og/wiki/AgL00p8Q.jpg",
-      "hash": "f43db1042725",
-      "v": "99705a2b",
-      "bytes": 101696,
-      "updated": "2026-09-11"
+      "hash": "14c2095db06c",
+      "v": "8881d1d9",
+      "bytes": 101693,
+      "updated": "2026-09-21"
     },
     "/wiki/agent-objective": {
       "key": "og/wiki/ObjFun6c.jpg",
-      "hash": "b6223739486a",
+      "hash": "d6d5c1e3a0c9",
       "v": "f7b8f12c",
       "bytes": 112579,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/agentic-system": {
       "key": "og/wiki/AgSys4mK.jpg",
-      "hash": "f40db63341ef",
+      "hash": "c15b9bd69780",
       "v": "4ba367d4",
       "bytes": 113287,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/ai-accelerator": {
       "key": "og/wiki/AiAccel5.jpg",
-      "hash": "0c3f17b58b10",
+      "hash": "2a4418efe9a4",
       "v": "ffa1eb79",
       "bytes": 120803,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/ai-infrastructure-stack": {
       "key": "og/wiki/AiStack7.jpg",
-      "hash": "7b444b0d5acb",
+      "hash": "57c148e4b367",
       "v": "7cf63292",
       "bytes": 113112,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/ai-safety": {
       "key": "og/wiki/gc9jYTaE.jpg",
-      "hash": "a1972e46734a",
-      "v": "413a5269",
-      "bytes": 86849,
-      "updated": "2026-09-11"
+      "hash": "d43e6b3fda86",
+      "v": "b5f5e256",
+      "bytes": 86845,
+      "updated": "2026-09-21"
     },
     "/wiki/alibi": {
       "key": "og/wiki/Al5fD9kX.jpg",
-      "hash": "563adf77dd13",
-      "v": "21920a01",
+      "hash": "18b651edf76a",
+      "v": "4ccd8c09",
       "bytes": 93349,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/alignment": {
       "key": "og/wiki/3EKErev3.jpg",
-      "hash": "99ec92cbf445",
-      "v": "ae544f9d",
-      "bytes": 84915,
-      "updated": "2026-09-11"
+      "hash": "e36ae4f2ae91",
+      "v": "f3add436",
+      "bytes": 84882,
+      "updated": "2026-09-21"
     },
     "/wiki/alignment-faking": {
       "key": "og/wiki/Jt4pWr8L.jpg",
-      "hash": "1b151deb2a89",
-      "v": "2e31af7f",
-      "bytes": 98273,
-      "updated": "2026-09-11"
+      "hash": "a3c74dc50886",
+      "v": "98dfd04f",
+      "bytes": 98270,
+      "updated": "2026-09-21"
     },
     "/wiki/alphacode": {
       "key": "og/wiki/0d4jIS2z.jpg",
-      "hash": "cb41d48cebba",
-      "v": "51e8fb15",
-      "bytes": 112081,
-      "updated": "2026-09-11"
+      "hash": "bfb43b6dff5d",
+      "v": "31c0fb67",
+      "bytes": 112088,
+      "updated": "2026-09-21"
     },
     "/wiki/alphago": {
       "key": "og/wiki/d0Dpp2md.jpg",
-      "hash": "2e31db0f2196",
+      "hash": "0d725061c6e3",
       "v": "5b283ed2",
       "bytes": 108561,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/alu": {
       "key": "og/wiki/egoxqpmC.jpg",
-      "hash": "0d3da6123f98",
-      "v": "62796bc8",
-      "bytes": 80079,
-      "updated": "2026-09-11"
+      "hash": "1cb6593e982a",
+      "v": "fd5a1356",
+      "bytes": 80081,
+      "updated": "2026-09-21"
     },
     "/wiki/analytics": {
       "key": "og/wiki/U99MuNPb.jpg",
-      "hash": "5ff6a5cac756",
-      "v": "39f571c7",
-      "bytes": 96030,
-      "updated": "2026-09-11"
+      "hash": "df8cbb21d7f6",
+      "v": "082bd917",
+      "bytes": 96007,
+      "updated": "2026-09-21"
+    },
+    "/wiki/apex": {
+      "key": "og/wiki/Ax2wJf6R.jpg",
+      "hash": "8799d2696885",
+      "v": "c69722ca",
+      "bytes": 121930,
+      "updated": "2026-09-21"
     },
     "/wiki/api": {
       "key": "og/wiki/Ap8rTm3K.jpg",
-      "hash": "374c1bb6a46c",
+      "hash": "f7365b18b909",
       "v": "b723b0c0",
       "bytes": 98697,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/api-key": {
       "key": "og/wiki/PkRkL6kd.jpg",
-      "hash": "7e45dce0b661",
-      "v": "c4728460",
+      "hash": "487b0e84692a",
+      "v": "21e937e7",
       "bytes": 88267,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
+    },
+    "/wiki/api-token-cloudflare": {
+      "key": "og/wiki/At2rGm7K.jpg",
+      "hash": "8166b1d94fc0",
+      "v": "e046f0af",
+      "bytes": 125714,
+      "updated": "2026-09-21"
     },
     "/wiki/apis": {
       "key": "og/wiki/vf6KPYwT.jpg",
-      "hash": "b23ec89ffb3c",
+      "hash": "9da3b16cdc25",
       "v": "46bb66cb",
       "bytes": 95666,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/arc-agi": {
       "key": "og/wiki/O9JoB79C.jpg",
-      "hash": "4d9a300e0034",
-      "v": "001d6021",
+      "hash": "b2f9d7ac522c",
+      "v": "0afca1cb",
       "bytes": 85921,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/architecture": {
       "key": "og/wiki/oInUhOGM.jpg",
-      "hash": "85335dafe1c0",
-      "v": "eb294e79",
-      "bytes": 97008,
-      "updated": "2026-09-11"
+      "hash": "c00bde6dfc4a",
+      "v": "64fac6cb",
+      "bytes": 96993,
+      "updated": "2026-09-21"
     },
     "/wiki/arm": {
       "key": "og/wiki/HaT1Oozw.jpg",
-      "hash": "92710ae0ca3a",
-      "v": "2c1099b3",
-      "bytes": 84470,
-      "updated": "2026-09-11"
+      "hash": "84032960df9f",
+      "v": "9152f1da",
+      "bytes": 84461,
+      "updated": "2026-09-21"
     },
     "/wiki/ashbys-law": {
       "key": "og/wiki/JdSKWaAz.jpg",
-      "hash": "1f1f31df6ccf",
-      "v": "d543569a",
-      "bytes": 104808,
-      "updated": "2026-09-11"
+      "hash": "7efe0c75bdbc",
+      "v": "037defbd",
+      "bytes": 104776,
+      "updated": "2026-09-21"
     },
     "/wiki/asic": {
       "key": "og/wiki/6YzJQiig.jpg",
-      "hash": "af014a7ca5f2",
-      "v": "f0517ede",
-      "bytes": 85740,
-      "updated": "2026-09-11"
+      "hash": "af164e6a6518",
+      "v": "6bdde0bc",
+      "bytes": 85735,
+      "updated": "2026-09-21"
     },
     "/wiki/astro": {
       "key": "og/wiki/As8kTm3F.jpg",
-      "hash": "42f20c6d4859",
+      "hash": "5907696e7cb7",
       "v": "a326606b",
       "bytes": 97540,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/attack-surface": {
       "key": "og/wiki/AtkSurf7.jpg",
-      "hash": "d79e7ed1d444",
+      "hash": "82a4a4b5d689",
       "v": "9f494994",
       "bytes": 112238,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/attention": {
       "key": "og/wiki/ml8njOQc.jpg",
-      "hash": "e798b401e787",
+      "hash": "cce257d0f898",
       "v": "dc73716b",
       "bytes": 102314,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/attention-head": {
       "key": "og/wiki/Hd4nK8xS.jpg",
-      "hash": "7c90b530bca1",
-      "v": "c844c7fe",
-      "bytes": 100445,
-      "updated": "2026-09-11"
+      "hash": "5cc703538a9e",
+      "v": "c9557a82",
+      "bytes": 100446,
+      "updated": "2026-09-21"
     },
     "/wiki/attention-sink": {
       "key": "og/wiki/As6nR2hQ.jpg",
-      "hash": "1e27713ce7fc",
+      "hash": "5022d5fc39da",
       "v": "699f2063",
       "bytes": 123263,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/attestation": {
       "key": "og/wiki/NPhAUEqa.jpg",
-      "hash": "793a8b0948b4",
-      "v": "b41dd4e1",
-      "bytes": 94609,
-      "updated": "2026-09-11"
+      "hash": "742016582789",
+      "v": "6c9a014b",
+      "bytes": 94599,
+      "updated": "2026-09-21"
     },
     "/wiki/auth": {
       "key": "og/wiki/JD6PRNFD.jpg",
-      "hash": "f7038dda3be0",
+      "hash": "ec365507dbbe",
       "v": "91d8dc29",
       "bytes": 116516,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/authentication": {
       "key": "og/wiki/4fbNv0Bm.jpg",
-      "hash": "15b453475fed",
-      "v": "e7cd95ab",
-      "bytes": 88086,
-      "updated": "2026-09-11"
+      "hash": "beca7a221325",
+      "v": "2a8337e4",
+      "bytes": 88109,
+      "updated": "2026-09-21"
     },
     "/wiki/automation": {
       "key": "og/wiki/FECBNsTl.jpg",
-      "hash": "26157fe96c72",
-      "v": "6593c63a",
-      "bytes": 95588,
-      "updated": "2026-09-11"
+      "hash": "90ba8c22f901",
+      "v": "b0dee6ab",
+      "bytes": 95568,
+      "updated": "2026-09-21"
     },
     "/wiki/automation-pyramid": {
       "key": "og/wiki/WY7g1n8W.jpg",
-      "hash": "41088e9f038e",
-      "v": "110d6530",
-      "bytes": 108060,
-      "updated": "2026-09-11"
+      "hash": "5db845c899d2",
+      "v": "c538aa4a",
+      "bytes": 108049,
+      "updated": "2026-09-21"
     },
     "/wiki/automation-vendor": {
       "key": "og/wiki/Xu7qzqlL.jpg",
-      "hash": "4dcd3868628a",
+      "hash": "ad7893f09cd8",
       "v": "09969829",
       "bytes": 119313,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/autonomous-system": {
       "key": "og/wiki/z2Ozbisa.jpg",
-      "hash": "ad624e93dc14",
-      "v": "d6db5f0e",
-      "bytes": 111748,
-      "updated": "2026-09-11"
+      "hash": "d2e7290ae9d1",
+      "v": "253eac8f",
+      "bytes": 111759,
+      "updated": "2026-09-21"
     },
     "/wiki/autoregressive": {
       "key": "og/wiki/Ar7mK4nQ.jpg",
-      "hash": "40696d673b27",
+      "hash": "982d41c2e8e8",
       "v": "7d2f73c5",
       "bytes": 94329,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/autoregressive-control": {
       "key": "og/wiki/AuCtR1l9.jpg",
-      "hash": "d8cb9043b1fb",
+      "hash": "bf57cc9ca0f4",
       "v": "7ddbdb72",
       "bytes": 131861,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/aws": {
       "key": "og/wiki/Aw2pDx6F.jpg",
-      "hash": "91265df0c6fc",
-      "v": "071ca4a6",
-      "bytes": 91486,
-      "updated": "2026-09-11"
+      "hash": "675d7a3f406f",
+      "v": "f2f4b4db",
+      "bytes": 91484,
+      "updated": "2026-09-21"
     },
     "/wiki/backend": {
       "key": "og/wiki/Bk9sTm2J.jpg",
-      "hash": "4dc4d31f35f8",
+      "hash": "317890903047",
       "v": "8e7bed63",
       "bytes": 100685,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/backpropagation": {
       "key": "og/wiki/aufHHy2p.jpg",
-      "hash": "054a21452a29",
-      "v": "ffe7380c",
-      "bytes": 97643,
-      "updated": "2026-09-11"
+      "hash": "ba45e9ca9001",
+      "v": "608db12d",
+      "bytes": 97653,
+      "updated": "2026-09-21"
     },
     "/wiki/backpropagation-through-time": {
       "key": "og/wiki/Bptt05xe.jpg",
-      "hash": "853564681dd4",
-      "v": "573582da",
-      "bytes": 98739,
-      "updated": "2026-09-11"
+      "hash": "397b48dd885a",
+      "v": "1e24c390",
+      "bytes": 98731,
+      "updated": "2026-09-21"
     },
     "/wiki/balance-equation": {
       "key": "og/wiki/Vsap2qco.jpg",
-      "hash": "1f156c7c5882",
-      "v": "fb2a7fd9",
-      "bytes": 100337,
-      "updated": "2026-09-11"
+      "hash": "b58700dd6fb6",
+      "v": "d2c9d196",
+      "bytes": 100324,
+      "updated": "2026-09-21"
     },
     "/wiki/basin-of-attraction": {
       "key": "og/wiki/Ba6mR3kL.jpg",
-      "hash": "a69084379ed5",
-      "v": "3b0d48ed",
-      "bytes": 104230,
-      "updated": "2026-09-11"
+      "hash": "53516c4d59a0",
+      "v": "022fb26e",
+      "bytes": 104201,
+      "updated": "2026-09-21"
     },
     "/wiki/batch-normalization": {
       "key": "og/wiki/Bn8xR7wP.jpg",
-      "hash": "c3eb8f344f5e",
+      "hash": "1b21df27e310",
       "v": "d849953e",
       "bytes": 114312,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/beam-search": {
       "key": "og/wiki/Bs8fH2xP.jpg",
-      "hash": "2f56cd4d5780",
+      "hash": "c6f707864f9f",
       "v": "402c5f14",
       "bytes": 110713,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/behavioral-detection": {
       "key": "og/wiki/BehDet9N.jpg",
-      "hash": "258c0557e7de",
-      "v": "29b5009e",
-      "bytes": 103581,
-      "updated": "2026-09-11"
+      "hash": "8d4fb32a33e9",
+      "v": "1e28fe83",
+      "bytes": 103586,
+      "updated": "2026-09-21"
     },
     "/wiki/benchmark": {
       "key": "og/wiki/d6uchFbH.jpg",
-      "hash": "6564337f5356",
+      "hash": "320c6fbe4366",
       "v": "a85af2e9",
       "bytes": 109002,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/bert": {
       "key": "og/wiki/MwbJnjdN.jpg",
-      "hash": "ccaf4b4a2528",
-      "v": "d3dc8eb5",
-      "bytes": 82650,
-      "updated": "2026-09-11"
+      "hash": "b44537dda693",
+      "v": "b528b7bc",
+      "bytes": 82649,
+      "updated": "2026-09-21"
     },
     "/wiki/besu": {
       "key": "og/wiki/C3w8sWpi.jpg",
-      "hash": "2dd0c9183e10",
-      "v": "c8e1b1cc",
-      "bytes": 88974,
-      "updated": "2026-09-11"
+      "hash": "7c0bdf303788",
+      "v": "1bd6a720",
+      "bytes": 88998,
+      "updated": "2026-09-21"
     },
     "/wiki/big-bench": {
       "key": "og/wiki/JwmqxIUm.jpg",
-      "hash": "8af6141ab29e",
-      "v": "bcea2305",
-      "bytes": 97651,
-      "updated": "2026-09-11"
+      "hash": "5de872028bdb",
+      "v": "2b081e13",
+      "bytes": 97653,
+      "updated": "2026-09-21"
     },
     "/wiki/blessing-of-dimensionality": {
       "key": "og/wiki/Bx4nK9wP.jpg",
-      "hash": "2ce51ec02a22",
+      "hash": "2e1ea814a4d4",
       "v": "95ee730e",
       "bytes": 125125,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/blip": {
       "key": "og/wiki/S1sknKcL.jpg",
-      "hash": "cdee54149cd2",
-      "v": "db9dd5d1",
-      "bytes": 87273,
-      "updated": "2026-09-11"
+      "hash": "1f05478f2475",
+      "v": "3304657b",
+      "bytes": 87262,
+      "updated": "2026-09-21"
     },
     "/wiki/block": {
       "key": "og/wiki/ojSLgMEs.jpg",
-      "hash": "9f3fa2b8f4a2",
-      "v": "df3bf8fd",
-      "bytes": 82827,
-      "updated": "2026-09-11"
+      "hash": "b2646e5582e8",
+      "v": "4f7e14c6",
+      "bytes": 82836,
+      "updated": "2026-09-21"
     },
     "/wiki/blockchain": {
       "key": "og/wiki/cK9Sp4ST.jpg",
-      "hash": "c4460abc10e4",
-      "v": "9952dc4a",
-      "bytes": 87381,
-      "updated": "2026-09-11"
+      "hash": "819a73fa2666",
+      "v": "5a8beb34",
+      "bytes": 87377,
+      "updated": "2026-09-21"
     },
     "/wiki/bm25": {
       "key": "og/wiki/2CN85TFL.jpg",
-      "hash": "4682ffd734f9",
-      "v": "9b9545f0",
-      "bytes": 84287,
-      "updated": "2026-09-11"
+      "hash": "8f7ccee62a56",
+      "v": "43184266",
+      "bytes": 84279,
+      "updated": "2026-09-21"
     },
     "/wiki/bootnode-besu": {
       "key": "og/wiki/J2OCjPpb.jpg",
-      "hash": "e3964bf78e32",
-      "v": "fd00ed1a",
-      "bytes": 93958,
-      "updated": "2026-09-11"
+      "hash": "971f0aaa4e50",
+      "v": "d3af75d8",
+      "bytes": 93955,
+      "updated": "2026-09-21"
     },
     "/wiki/bootnode-blockchain": {
       "key": "og/wiki/Wp2y5eP8.jpg",
-      "hash": "ac5583cf4f8b",
-      "v": "720dcb6c",
-      "bytes": 91163,
-      "updated": "2026-09-11"
+      "hash": "b0c00da69ff4",
+      "v": "72dd5723",
+      "bytes": 91159,
+      "updated": "2026-09-21"
     },
     "/wiki/bootstrap": {
       "key": "og/wiki/BtsP21xu.jpg",
-      "hash": "4738eb2cb15c",
-      "v": "653c474a",
-      "bytes": 101461,
-      "updated": "2026-09-11"
+      "hash": "4ec6da06ca63",
+      "v": "94a9f0a3",
+      "bytes": 101453,
+      "updated": "2026-09-21"
     },
     "/wiki/bpe": {
       "key": "og/wiki/KjZsXIft.jpg",
-      "hash": "8ff08d664869",
-      "v": "a8d3aff2",
-      "bytes": 98509,
-      "updated": "2026-09-11"
+      "hash": "18e13c6908c7",
+      "v": "8baaa04c",
+      "bytes": 98521,
+      "updated": "2026-09-21"
     },
     "/wiki/browser-automation": {
       "key": "og/wiki/rSBc7TP1.jpg",
-      "hash": "71bcf00b6a7d",
-      "v": "70719bc3",
-      "bytes": 106478,
-      "updated": "2026-09-11"
+      "hash": "d3827b2a6a13",
+      "v": "1eccdeae",
+      "bytes": 106459,
+      "updated": "2026-09-21"
     },
     "/wiki/btw": {
       "key": "og/wiki/O8l8z5vL.jpg",
-      "hash": "6b67072d5776",
-      "v": "392f5ac8",
-      "bytes": 74617,
-      "updated": "2026-09-11"
+      "hash": "c6d2a11f93ba",
+      "v": "455b3e7b",
+      "bytes": 74609,
+      "updated": "2026-09-21"
     },
     "/wiki/bucket": {
       "key": "og/wiki/Bx3hKp8M.jpg",
-      "hash": "f64c77525788",
-      "v": "800fe214",
-      "bytes": 106350,
-      "updated": "2026-09-11"
+      "hash": "e2335b91b882",
+      "v": "766c23ed",
+      "bytes": 106335,
+      "updated": "2026-09-21"
     },
     "/wiki/build": {
       "key": "og/wiki/Ht6nWx3K.jpg",
-      "hash": "61bf57a58e92",
-      "v": "af2668fe",
+      "hash": "5c1cbd8feba7",
+      "v": "fefcb825",
       "bytes": 92548,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/byte-level-model": {
       "key": "og/wiki/By2tN6hF.jpg",
-      "hash": "4f6c9410324f",
-      "v": "270e3252",
-      "bytes": 96860,
-      "updated": "2026-09-11"
+      "hash": "c60761909bb5",
+      "v": "f60080f2",
+      "bytes": 96851,
+      "updated": "2026-09-21"
     },
     "/wiki/cache-cpu": {
       "key": "og/wiki/rItXgdUN.jpg",
-      "hash": "0af39c5f8163",
-      "v": "35454039",
-      "bytes": 81587,
-      "updated": "2026-09-11"
+      "hash": "13a97dfacc4a",
+      "v": "872e8be3",
+      "bytes": 81576,
+      "updated": "2026-09-21"
     },
     "/wiki/cache-networks": {
       "key": "og/wiki/Q1kGheNp.jpg",
-      "hash": "607ec26be5fe",
-      "v": "cdf2b61e",
-      "bytes": 85500,
-      "updated": "2026-09-11"
+      "hash": "14ce7e527225",
+      "v": "537015a6",
+      "bytes": 85504,
+      "updated": "2026-09-21"
     },
     "/wiki/cache-storage": {
       "key": "og/wiki/Xgibd7Nl.jpg",
-      "hash": "a35c94cd226d",
-      "v": "e9b938d0",
-      "bytes": 88874,
-      "updated": "2026-09-11"
+      "hash": "c2a055f8a3d9",
+      "v": "5eb917e7",
+      "bytes": 88864,
+      "updated": "2026-09-21"
     },
     "/wiki/callback-url": {
       "key": "og/wiki/odwaJwaf.jpg",
-      "hash": "dafa025c0738",
-      "v": "d28f2a47",
-      "bytes": 97956,
-      "updated": "2026-09-11"
+      "hash": "c252f6ce3896",
+      "v": "d92aea6e",
+      "bytes": 97959,
+      "updated": "2026-09-21"
     },
     "/wiki/camera": {
       "key": "og/wiki/5hSqc1Yd.jpg",
-      "hash": "c607a8d216bf",
-      "v": "505a6863",
-      "bytes": 83317,
-      "updated": "2026-09-11"
+      "hash": "e89c252c5e0b",
+      "v": "107cbc23",
+      "bytes": 83328,
+      "updated": "2026-09-21"
     },
     "/wiki/can": {
       "key": "og/wiki/giue07uO.jpg",
-      "hash": "ddbe9bbfbee2",
+      "hash": "303442664dd8",
       "v": "a5c61e01",
       "bytes": 114815,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/can-arbitration": {
       "key": "og/wiki/RE6GdytM.jpg",
-      "hash": "498f7902fbab",
+      "hash": "ed7902ac40d5",
       "v": "c503b588",
       "bytes": 131470,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/canonical": {
       "key": "og/wiki/7CmKo3ct.jpg",
-      "hash": "21087771eb4b",
-      "v": "a843793f",
-      "bytes": 92099,
-      "updated": "2026-09-11"
+      "hash": "883ed8652876",
+      "v": "4366c51b",
+      "bytes": 92081,
+      "updated": "2026-09-21"
     },
     "/wiki/capability-evaluation": {
       "key": "og/wiki/CapEval9.jpg",
-      "hash": "6f9057631f96",
+      "hash": "cd90b5bce41c",
       "v": "43080754",
       "bytes": 110193,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/capacitor": {
       "key": "og/wiki/nlro5GOJ.jpg",
-      "hash": "ff6921948019",
-      "v": "0851d367",
-      "bytes": 93805,
-      "updated": "2026-09-11"
+      "hash": "78544042fda7",
+      "v": "5289a486",
+      "bytes": 93792,
+      "updated": "2026-09-21"
     },
     "/wiki/capex": {
       "key": "og/wiki/CapEx4Fn.jpg",
-      "hash": "b14331c0d4de",
+      "hash": "30d20f8754f3",
       "v": "fe3710dd",
       "bytes": 118271,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/catastrophic-forgetting": {
       "key": "og/wiki/Cf8cD3vX.jpg",
-      "hash": "c9990bdcd82c",
-      "v": "86322179",
-      "bytes": 118934,
-      "updated": "2026-09-11"
+      "hash": "07a3cf5bb508",
+      "v": "ce197c9c",
+      "bytes": 118930,
+      "updated": "2026-09-21"
     },
     "/wiki/causal-language-modeling": {
       "key": "og/wiki/Cl2rB6nL.jpg",
-      "hash": "59790ba855d3",
+      "hash": "983c75a3293a",
       "v": "f2f4b903",
       "bytes": 99060,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/causal-masking": {
       "key": "og/wiki/Cm7jR4sQ.jpg",
-      "hash": "94fc84aade7a",
-      "v": "3a2cfcd6",
-      "bytes": 103078,
-      "updated": "2026-09-11"
+      "hash": "d4cdfec3d963",
+      "v": "4397e67a",
+      "bytes": 103065,
+      "updated": "2026-09-21"
     },
     "/wiki/cc-link-ie": {
       "key": "og/wiki/bDoQ6dcM.jpg",
-      "hash": "46331cb34031",
+      "hash": "a387656b4be0",
       "v": "1a2a1fd0",
       "bytes": 115067,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/cfg": {
       "key": "og/wiki/Cg7tD3vH.jpg",
-      "hash": "78f2a042cc82",
-      "v": "6f14a74f",
-      "bytes": 102390,
-      "updated": "2026-09-11"
+      "hash": "4c4ead596200",
+      "v": "f2c11223",
+      "bytes": 102400,
+      "updated": "2026-09-21"
     },
     "/wiki/chain-id": {
       "key": "og/wiki/8mybr8ae.jpg",
-      "hash": "e0126278b1e0",
-      "v": "02f01196",
-      "bytes": 91400,
-      "updated": "2026-09-11"
+      "hash": "e89db070ecad",
+      "v": "8eed6d52",
+      "bytes": 91363,
+      "updated": "2026-09-21"
     },
     "/wiki/chain-of-thought": {
       "key": "og/wiki/ct4swTMy.jpg",
-      "hash": "9db911f46dbf",
-      "v": "601abd36",
-      "bytes": 89165,
-      "updated": "2026-09-11"
+      "hash": "074e4ef250c2",
+      "v": "68131df8",
+      "bytes": 89147,
+      "updated": "2026-09-21"
     },
     "/wiki/channel-capacity": {
       "key": "og/wiki/2oN0bPZY.jpg",
-      "hash": "a67cd78e7dde",
+      "hash": "63f584de03ee",
       "v": "459b9cf4",
       "bytes": 132061,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/chatgpt": {
       "key": "og/wiki/Wb0yDrNZ.jpg",
-      "hash": "a0bf86f0d423",
-      "v": "7f742a4c",
-      "bytes": 102998,
-      "updated": "2026-09-11"
+      "hash": "96ded2f6a7f2",
+      "v": "ce8d8fa6",
+      "bytes": 102980,
+      "updated": "2026-09-21"
     },
     "/wiki/chinchilla": {
       "key": "og/wiki/Fx87vKe3.jpg",
-      "hash": "3ac90c3c0a7b",
-      "v": "e9e8f24e",
-      "bytes": 90798,
-      "updated": "2026-09-11"
+      "hash": "7638839bfa62",
+      "v": "378820d1",
+      "bytes": 90795,
+      "updated": "2026-09-21"
     },
     "/wiki/chip": {
       "key": "og/wiki/MTfcKkH5.jpg",
-      "hash": "0e8c1f4b41f1",
-      "v": "984952fe",
-      "bytes": 78362,
-      "updated": "2026-09-11"
+      "hash": "cf7f96a8ee46",
+      "v": "ec77c50a",
+      "bytes": 78372,
+      "updated": "2026-09-21"
     },
     "/wiki/chunking-strategy": {
       "key": "og/wiki/l3B9q1cM.jpg",
-      "hash": "67ec68efdba1",
-      "v": "b1ea6386",
-      "bytes": 86048,
-      "updated": "2026-09-11"
+      "hash": "65da5ab5b8c1",
+      "v": "0ff88a72",
+      "bytes": 86053,
+      "updated": "2026-09-21"
     },
     "/wiki/ci-cd-infraphysics": {
       "key": "og/wiki/nx78Mf8d.jpg",
-      "hash": "b19dbbb4abd4",
-      "v": "84d4ec2f",
-      "bytes": 87017,
-      "updated": "2026-09-11"
+      "hash": "d6cbfad3d7f3",
+      "v": "2ce65238",
+      "bytes": 87009,
+      "updated": "2026-09-21"
     },
     "/wiki/ci-cd-web": {
       "key": "og/wiki/Gk6tPm2H.jpg",
-      "hash": "0fd556b4fe1a",
-      "v": "41b25b3e",
-      "bytes": 92475,
-      "updated": "2026-09-11"
+      "hash": "806c264b118b",
+      "v": "f30cce60",
+      "bytes": 92471,
+      "updated": "2026-09-21"
     },
     "/wiki/circuit": {
       "key": "og/wiki/Ci3jT7bR.jpg",
-      "hash": "779598d1e7ae",
-      "v": "fbbf9693",
+      "hash": "09f5022b2f22",
+      "v": "c384856a",
       "bytes": 108322,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/class-imbalance": {
       "key": "og/wiki/ClIm16xp.jpg",
-      "hash": "eac4d11aca1d",
-      "v": "76f5dd8c",
-      "bytes": 98881,
-      "updated": "2026-09-11"
+      "hash": "1fcc4e0a1a57",
+      "v": "64f0ec41",
+      "bytes": 98873,
+      "updated": "2026-09-21"
     },
     "/wiki/claude": {
       "key": "og/wiki/JdOhceqx.jpg",
-      "hash": "52f8afa4f16f",
-      "v": "397257f0",
-      "bytes": 87681,
-      "updated": "2026-09-11"
+      "hash": "ddfe04f1c55f",
+      "v": "cf841f71",
+      "bytes": 87676,
+      "updated": "2026-09-21"
     },
     "/wiki/claude-code": {
       "key": "og/wiki/gk4wYqzk.jpg",
-      "hash": "5932b0112950",
-      "v": "686ec559",
-      "bytes": 77978,
-      "updated": "2026-09-11"
+      "hash": "5fc16a314f0f",
+      "v": "56f988b9",
+      "bytes": 78000,
+      "updated": "2026-09-21"
     },
     "/wiki/claude-directory": {
       "key": "og/wiki/vJBANeek.jpg",
-      "hash": "b9a349781c7e",
-      "v": "3078090a",
-      "bytes": 94096,
-      "updated": "2026-09-11"
+      "hash": "aaf48a0b7f19",
+      "v": "a95a040d",
+      "bytes": 94074,
+      "updated": "2026-09-21"
     },
     "/wiki/clip": {
       "key": "og/wiki/pJmh7BBn.jpg",
-      "hash": "06c56588bdf6",
-      "v": "56beccde",
-      "bytes": 80475,
-      "updated": "2026-09-11"
+      "hash": "4523caf9b945",
+      "v": "0ce8d258",
+      "bytes": 80480,
+      "updated": "2026-09-21"
     },
     "/wiki/clique": {
       "key": "og/wiki/chH7mwPq.jpg",
-      "hash": "be63ab6cd7c9",
-      "v": "62d93de3",
-      "bytes": 92291,
-      "updated": "2026-09-11"
+      "hash": "4dcba2212587",
+      "v": "f57a171d",
+      "bytes": 92269,
+      "updated": "2026-09-21"
     },
     "/wiki/clock": {
       "key": "og/wiki/IcUoe3YA.jpg",
-      "hash": "727f5a6c5e76",
-      "v": "3d22e5b6",
-      "bytes": 95141,
-      "updated": "2026-09-11"
+      "hash": "435d38bc4d4f",
+      "v": "b9cb9ed0",
+      "bytes": 95133,
+      "updated": "2026-09-21"
     },
     "/wiki/closed-model": {
       "key": "og/wiki/ClosdM7P.jpg",
-      "hash": "b51e06e66c1e",
+      "hash": "feec7694e374",
       "v": "39aa7c7a",
       "bytes": 110461,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/cloud-computing": {
       "key": "og/wiki/CloudCmp.jpg",
-      "hash": "2fb95be60022",
+      "hash": "318e71cde9cf",
       "v": "b3ef043f",
       "bytes": 111045,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/cloud-console": {
       "key": "og/wiki/Ng9LJhY5.jpg",
-      "hash": "2000e958c56e",
-      "v": "65b173d6",
-      "bytes": 105441,
-      "updated": "2026-09-11"
+      "hash": "aa45caf567b2",
+      "v": "b1ad2997",
+      "bytes": 105445,
+      "updated": "2026-09-21"
     },
     "/wiki/cloudflare": {
       "key": "og/wiki/Hp5nVw9C.jpg",
-      "hash": "bad2df757e8c",
-      "v": "c708c477",
-      "bytes": 95679,
-      "updated": "2026-09-11"
+      "hash": "faea4ac937af",
+      "v": "0e89e4dd",
+      "bytes": 95706,
+      "updated": "2026-09-21"
     },
     "/wiki/cnn": {
       "key": "og/wiki/G1JW8o79.jpg",
-      "hash": "196c464776c4",
-      "v": "76162d00",
-      "bytes": 77510,
-      "updated": "2026-09-11"
+      "hash": "280ad17e4536",
+      "v": "75ead351",
+      "bytes": 77513,
+      "updated": "2026-09-21"
     },
     "/wiki/code-generation": {
       "key": "og/wiki/LV1qRnuc.jpg",
-      "hash": "207bad02aa61",
-      "v": "03e4ecd1",
-      "bytes": 88972,
-      "updated": "2026-09-11"
+      "hash": "504c5990f3d7",
+      "v": "34c0a2e3",
+      "bytes": 88962,
+      "updated": "2026-09-21"
     },
     "/wiki/codex": {
       "key": "og/wiki/SCj1ykXv.jpg",
-      "hash": "7d7c9b480868",
-      "v": "aeccee9c",
-      "bytes": 90488,
-      "updated": "2026-09-11"
+      "hash": "a955ba8eef06",
+      "v": "d97fcb67",
+      "bytes": 90492,
+      "updated": "2026-09-21"
     },
     "/wiki/colbert": {
       "key": "og/wiki/OcTW3eWK.jpg",
-      "hash": "b4faff2ee1a6",
-      "v": "365383ec",
-      "bytes": 90219,
-      "updated": "2026-09-11"
+      "hash": "740c6bcef4f3",
+      "v": "20ed6d7f",
+      "bytes": 90202,
+      "updated": "2026-09-21"
     },
     "/wiki/cold-start": {
       "key": "og/wiki/Cs5nWm7K.jpg",
-      "hash": "c72f1ab5cbd6",
+      "hash": "cb93d5c144e8",
       "v": "31de004d",
       "bytes": 112068,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/common-crawl": {
       "key": "og/wiki/Xe6SbANI.jpg",
-      "hash": "d994d9d09a4a",
-      "v": "cbabb62f",
-      "bytes": 106189,
-      "updated": "2026-09-11"
+      "hash": "88cfb0d1bf4e",
+      "v": "f2f17e7e",
+      "bytes": 106195,
+      "updated": "2026-09-21"
     },
     "/wiki/compiler": {
       "key": "og/wiki/E9olQ6Ox.jpg",
-      "hash": "caca53a9f48d",
-      "v": "6bec3f81",
-      "bytes": 85712,
-      "updated": "2026-09-11"
+      "hash": "49b27efc4877",
+      "v": "7ecf2460",
+      "bytes": 85709,
+      "updated": "2026-09-21"
     },
     "/wiki/complexity-theory": {
       "key": "og/wiki/4w2EhstR.jpg",
-      "hash": "4b694bab075c",
-      "v": "4ff92a2c",
-      "bytes": 98180,
-      "updated": "2026-09-11"
+      "hash": "96aa7984ebf1",
+      "v": "1cb845d3",
+      "bytes": 98175,
+      "updated": "2026-09-21"
     },
     "/wiki/component": {
       "key": "og/wiki/funjp65c.jpg",
-      "hash": "b72f7b69acc0",
-      "v": "de8a639d",
-      "bytes": 95972,
-      "updated": "2026-09-11"
+      "hash": "c14816aae2de",
+      "v": "62300c64",
+      "bytes": 95958,
+      "updated": "2026-09-21"
     },
     "/wiki/compositionality": {
       "key": "og/wiki/Wkwgtznl.jpg",
-      "hash": "d4637701cfc5",
-      "v": "7b248bc9",
-      "bytes": 101034,
-      "updated": "2026-09-11"
+      "hash": "8ebfe90f2949",
+      "v": "bcb8f5da",
+      "bytes": 101030,
+      "updated": "2026-09-21"
     },
     "/wiki/compute-bound": {
       "key": "og/wiki/CmpB0und.jpg",
-      "hash": "797651580b28",
-      "v": "004c922e",
-      "bytes": 112519,
-      "updated": "2026-09-11"
+      "hash": "d125b422345f",
+      "v": "6044d229",
+      "bytes": 112516,
+      "updated": "2026-09-21"
     },
     "/wiki/computer-science": {
       "key": "og/wiki/AduX5VvK.jpg",
-      "hash": "7c30ef709017",
-      "v": "900bb5cd",
-      "bytes": 94495,
-      "updated": "2026-09-11"
+      "hash": "8f503c5c37eb",
+      "v": "d292aa0f",
+      "bytes": 94464,
+      "updated": "2026-09-21"
     },
     "/wiki/concurrency": {
       "key": "og/wiki/GcSpHzEs.jpg",
-      "hash": "07b5e9fd5535",
-      "v": "c50f5237",
-      "bytes": 97358,
-      "updated": "2026-09-11"
+      "hash": "be9f34ba2bf5",
+      "v": "dd2b5aa7",
+      "bytes": 97341,
+      "updated": "2026-09-21"
     },
     "/wiki/config": {
       "key": "og/wiki/ALVPHbmK.jpg",
-      "hash": "70ac4b4f4f57",
-      "v": "8817d6fa",
-      "bytes": 86986,
-      "updated": "2026-09-11"
+      "hash": "fdbdfc8f46a8",
+      "v": "9bf38848",
+      "bytes": 87011,
+      "updated": "2026-09-21"
     },
     "/wiki/configurable-data-model": {
       "key": "og/wiki/OXNcf33H.jpg",
-      "hash": "4f6d4ee66b0d",
+      "hash": "3db435f857de",
       "v": "26bf4877",
       "bytes": 122113,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/consensus": {
       "key": "og/wiki/Fo4opNIG.jpg",
-      "hash": "65e2c6cb1c3d",
-      "v": "6bbc499d",
-      "bytes": 88254,
-      "updated": "2026-09-11"
+      "hash": "fdb1483ba8cd",
+      "v": "652dd3b3",
+      "bytes": 88239,
+      "updated": "2026-09-21"
     },
     "/wiki/consistency-model": {
       "key": "og/wiki/Wek5Z0Un.jpg",
-      "hash": "4ea91655b478",
-      "v": "b2ded7db",
-      "bytes": 97040,
-      "updated": "2026-09-11"
+      "hash": "6505f7eef9ae",
+      "v": "4764efbf",
+      "bytes": 97027,
+      "updated": "2026-09-21"
     },
     "/wiki/constitutional-ai": {
       "key": "og/wiki/mCK28lZ6.jpg",
-      "hash": "c0a49cb71ced",
-      "v": "8ae2916e",
-      "bytes": 89058,
-      "updated": "2026-09-11"
+      "hash": "3956ae1f7638",
+      "v": "8a7ead89",
+      "bytes": 89057,
+      "updated": "2026-09-21"
     },
     "/wiki/constraint": {
       "key": "og/wiki/AdHDszdQ.jpg",
-      "hash": "8862a5b3d929",
+      "hash": "2c6e02fb0043",
       "v": "b65a7305",
       "bytes": 115950,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/content-pipeline": {
       "key": "og/wiki/BoSed9wO.jpg",
-      "hash": "af0140fec7de",
-      "v": "fd40adbb",
-      "bytes": 90779,
-      "updated": "2026-09-11"
+      "hash": "9ce17cfda586",
+      "v": "28317ef7",
+      "bytes": 90767,
+      "updated": "2026-09-21"
     },
     "/wiki/context-engineering": {
       "key": "og/wiki/CtxEng42.jpg",
-      "hash": "747d11bbe372",
-      "v": "30cf61b1",
-      "bytes": 98423,
-      "updated": "2026-09-11"
+      "hash": "8ecfad879727",
+      "v": "90ad0765",
+      "bytes": 98394,
+      "updated": "2026-09-21"
     },
     "/wiki/context-window": {
       "key": "og/wiki/JUby2DIy.jpg",
-      "hash": "216d8b2adfbb",
-      "v": "47b3cc66",
-      "bytes": 102064,
-      "updated": "2026-09-11"
+      "hash": "c1a399156490",
+      "v": "122227b1",
+      "bytes": 102076,
+      "updated": "2026-09-21"
     },
     "/wiki/contrastive-learning": {
       "key": "og/wiki/Ct9xL5mW.jpg",
-      "hash": "8a1c074f5bfd",
-      "v": "e2c88367",
-      "bytes": 99043,
-      "updated": "2026-09-11"
+      "hash": "417b55333954",
+      "v": "5193ca29",
+      "bytes": 99050,
+      "updated": "2026-09-21"
     },
     "/wiki/control": {
       "key": "og/wiki/38QY7o3A.jpg",
-      "hash": "47908eef6ec8",
-      "v": "b35b6da7",
-      "bytes": 100707,
-      "updated": "2026-09-11"
+      "hash": "08668621c393",
+      "v": "fe17e4a3",
+      "bytes": 100696,
+      "updated": "2026-09-21"
     },
     "/wiki/controllability-and-observability": {
       "key": "og/wiki/u0TgVFYF.jpg",
-      "hash": "95b1abb0b33c",
+      "hash": "58934a9a2a6a",
       "v": "f0521fc5",
       "bytes": 118608,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/convolution": {
       "key": "og/wiki/A9DuyXJ2.jpg",
-      "hash": "df2167ff2195",
-      "v": "c60a56fa",
-      "bytes": 102249,
-      "updated": "2026-09-11"
+      "hash": "cd67854cbae3",
+      "v": "3dfc6ba3",
+      "bytes": 102251,
+      "updated": "2026-09-21"
     },
     "/wiki/cookie": {
       "key": "og/wiki/Kg1BQEh8.jpg",
-      "hash": "025696876083",
-      "v": "ee7706c3",
-      "bytes": 102959,
-      "updated": "2026-09-11"
+      "hash": "f5b430aabf17",
+      "v": "4899c073",
+      "bytes": 102953,
+      "updated": "2026-09-21"
     },
     "/wiki/core": {
       "key": "og/wiki/Z9W6rweD.jpg",
-      "hash": "15d89eeacd18",
-      "v": "2b9be76c",
-      "bytes": 82150,
-      "updated": "2026-09-11"
+      "hash": "3aea421aeca8",
+      "v": "71a16d63",
+      "bytes": 82142,
+      "updated": "2026-09-21"
     },
     "/wiki/cors": {
       "key": "og/wiki/3kmFrjfS.jpg",
-      "hash": "77ab37822f0c",
-      "v": "d220e5f5",
-      "bytes": 90751,
-      "updated": "2026-09-11"
+      "hash": "b82f3c2cfc32",
+      "v": "b551ddf1",
+      "bytes": 90741,
+      "updated": "2026-09-21"
     },
     "/wiki/cortex-a": {
       "key": "og/wiki/7wngT1lE.jpg",
-      "hash": "4972d8eeca07",
-      "v": "b43c77fe",
-      "bytes": 93125,
-      "updated": "2026-09-11"
+      "hash": "c88c568aee63",
+      "v": "4ec0ade0",
+      "bytes": 93112,
+      "updated": "2026-09-21"
     },
     "/wiki/cortex-m": {
       "key": "og/wiki/OQmzx1Vg.jpg",
-      "hash": "997b5fbf4b65",
-      "v": "3781263f",
-      "bytes": 95973,
-      "updated": "2026-09-11"
+      "hash": "55772c3f59d3",
+      "v": "2ef19857",
+      "bytes": 95972,
+      "updated": "2026-09-21"
     },
     "/wiki/cortex-r": {
       "key": "og/wiki/9SciTeo3.jpg",
-      "hash": "b75d700754bf",
-      "v": "23a20832",
-      "bytes": 92961,
-      "updated": "2026-09-11"
+      "hash": "f2c365d74730",
+      "v": "59a0f25b",
+      "bytes": 92956,
+      "updated": "2026-09-21"
     },
     "/wiki/cosine-similarity": {
       "key": "og/wiki/Cs3jT7bR.jpg",
-      "hash": "cfe1bbdc2087",
+      "hash": "5ad2544c9f04",
       "v": "5f823e1e",
       "bytes": 101884,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/coupling": {
       "key": "og/wiki/u38TIs0J.jpg",
-      "hash": "a8deac30188b",
-      "v": "fff93e44",
-      "bytes": 101447,
-      "updated": "2026-09-11"
+      "hash": "65213b756d64",
+      "v": "afb06899",
+      "bytes": 101456,
+      "updated": "2026-09-21"
     },
     "/wiki/covariance": {
       "key": "og/wiki/G8apPDCM.jpg",
-      "hash": "2e22acd5120b",
-      "v": "edbd5eb5",
-      "bytes": 97238,
-      "updated": "2026-09-11"
+      "hash": "5301b2d711fb",
+      "v": "c96c498b",
+      "bytes": 97232,
+      "updated": "2026-09-21"
     },
     "/wiki/covariance-matrix": {
       "key": "og/wiki/m5zFVv4g.jpg",
-      "hash": "78396cd4b07b",
+      "hash": "504670e2c2ad",
       "v": "fe33f9b9",
       "bytes": 106439,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/cpu": {
       "key": "og/wiki/OkJJJyxX.jpg",
-      "hash": "13ac8c97d223",
-      "v": "53c1a95a",
-      "bytes": 89841,
-      "updated": "2026-09-11"
+      "hash": "0778fba359b9",
+      "v": "cc4eaefb",
+      "bytes": 89823,
+      "updated": "2026-09-21"
     },
     "/wiki/cpu-time": {
       "key": "og/wiki/Ct7rBn4D.jpg",
-      "hash": "dd69d1fdb656",
-      "v": "35af258a",
-      "bytes": 102027,
-      "updated": "2026-09-11"
+      "hash": "94a636dfce35",
+      "v": "649cfc5b",
+      "bytes": 102005,
+      "updated": "2026-09-21"
     },
     "/wiki/crawler": {
       "key": "og/wiki/Cw5rNx6K.jpg",
-      "hash": "d928dc0f6407",
-      "v": "e1a9cc48",
-      "bytes": 95639,
-      "updated": "2026-09-11"
+      "hash": "44d191a9fdec",
+      "v": "2ed149fa",
+      "bytes": 95635,
+      "updated": "2026-09-21"
     },
     "/wiki/crawling": {
       "key": "og/wiki/RBmlX4Ar.jpg",
-      "hash": "62a7f2030d72",
+      "hash": "dd8d6227ffb7",
       "v": "bc3d0eb2",
       "bytes": 109785,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/credentials": {
       "key": "og/wiki/HKOAZq4x.jpg",
-      "hash": "9581b5d88e21",
+      "hash": "9e6ee95ff36b",
       "v": "8f876256",
       "bytes": 99303,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/criticgpt": {
       "key": "og/wiki/wsXQoUbJ.jpg",
-      "hash": "df6b790fd851",
-      "v": "9d85d393",
-      "bytes": 86055,
-      "updated": "2026-09-11"
+      "hash": "fe7415757bd6",
+      "v": "aacf6a2d",
+      "bytes": 86033,
+      "updated": "2026-09-21"
     },
     "/wiki/cron-jobs": {
       "key": "og/wiki/Cr6kNm2H.jpg",
-      "hash": "605509213562",
-      "v": "80159d17",
-      "bytes": 94904,
-      "updated": "2026-09-11"
+      "hash": "e406ca237cbb",
+      "v": "fb8f41e5",
+      "bytes": 94892,
+      "updated": "2026-09-21"
     },
     "/wiki/cross-attention": {
       "key": "og/wiki/LZEkMuDa.jpg",
-      "hash": "26a56be33f19",
-      "v": "8dc42ea2",
-      "bytes": 98060,
-      "updated": "2026-09-11"
+      "hash": "cc3f66f3a885",
+      "v": "4e76d689",
+      "bytes": 98038,
+      "updated": "2026-09-21"
     },
     "/wiki/cross-entropy": {
       "key": "og/wiki/q3MjogvW.jpg",
-      "hash": "ebfd93e76384",
-      "v": "f1039a92",
-      "bytes": 101345,
-      "updated": "2026-09-11"
+      "hash": "bf2cb04af476",
+      "v": "72b40a17",
+      "bytes": 101298,
+      "updated": "2026-09-21"
     },
     "/wiki/cross-validation": {
       "key": "og/wiki/CvXv15xo.jpg",
-      "hash": "cddb0af538b5",
-      "v": "e2efb7f3",
-      "bytes": 95235,
-      "updated": "2026-09-11"
+      "hash": "022eb8340500",
+      "v": "733259ab",
+      "bytes": 95234,
+      "updated": "2026-09-21"
     },
     "/wiki/crud": {
       "key": "og/wiki/Uf7pLs4Q.jpg",
-      "hash": "41dc3fc363a1",
-      "v": "d3db4e59",
-      "bytes": 92525,
-      "updated": "2026-09-11"
+      "hash": "9ef7ad25d3b7",
+      "v": "7825ba19",
+      "bytes": 92517,
+      "updated": "2026-09-21"
     },
     "/wiki/cryptography": {
       "key": "og/wiki/HJEZD7NK.jpg",
-      "hash": "3e2a7dff3698",
+      "hash": "75c3f6bdefa8",
       "v": "1b411fba",
       "bytes": 91906,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/csr": {
       "key": "og/wiki/Dq9rVPgJ.jpg",
-      "hash": "f02ff57dd43d",
+      "hash": "37e615722db2",
       "v": "be4bf50a",
       "bytes": 97041,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/cuda": {
       "key": "og/wiki/zRzhxaXk.jpg",
-      "hash": "06469f7fc4e4",
-      "v": "e70d8955",
-      "bytes": 90676,
-      "updated": "2026-09-11"
+      "hash": "cacd5ca1cafd",
+      "v": "1d402df5",
+      "bytes": 90672,
+      "updated": "2026-09-21"
     },
     "/wiki/curse-of-dimensionality": {
       "key": "og/wiki/Cx7mT5nQ.jpg",
-      "hash": "8b3beabe0d0c",
+      "hash": "0bffb1056853",
       "v": "9bc046e1",
       "bytes": 112757,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
+    },
+    "/wiki/custom-domain": {
+      "key": "og/wiki/Cd6yMw2S.jpg",
+      "hash": "ebab8109a41c",
+      "v": "84b48f73",
+      "bytes": 122230,
+      "updated": "2026-09-21"
     },
     "/wiki/custom-syntax": {
       "key": "og/wiki/JkzQf7qt.jpg",
-      "hash": "6894d7dd2d53",
+      "hash": "58a61e822c8c",
       "v": "2446193c",
       "bytes": 118063,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/cybernetics": {
       "key": "og/wiki/h9K0How0.jpg",
-      "hash": "f2e92bb1c3d8",
-      "v": "ec689636",
-      "bytes": 94991,
-      "updated": "2026-09-11"
+      "hash": "8da3d48cbaa3",
+      "v": "ef9a52c7",
+      "bytes": 94989,
+      "updated": "2026-09-21"
     },
     "/wiki/cybersecurity-evaluation": {
       "key": "og/wiki/CybEval7.jpg",
-      "hash": "f73e1ae30918",
+      "hash": "a4535e1d55a4",
       "v": "c8f5760e",
       "bytes": 116267,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/d1": {
       "key": "og/wiki/Wn4pCx7H.jpg",
-      "hash": "155599bd86e5",
-      "v": "5d7dd58a",
-      "bytes": 99296,
-      "updated": "2026-09-11"
+      "hash": "10dfdb9e9a47",
+      "v": "e0c1d762",
+      "bytes": 99300,
+      "updated": "2026-09-21"
     },
     "/wiki/dall-e": {
       "key": "og/wiki/oZeWLvGF.jpg",
-      "hash": "67de706ddaec",
-      "v": "2bd1a1ab",
-      "bytes": 77071,
-      "updated": "2026-09-11"
+      "hash": "64f1068db231",
+      "v": "30c11d8e",
+      "bytes": 77052,
+      "updated": "2026-09-21"
     },
     "/wiki/data-augmentation": {
       "key": "og/wiki/Da9cD4vX.jpg",
-      "hash": "aa3df843d494",
-      "v": "9dc92746",
-      "bytes": 111150,
-      "updated": "2026-09-11"
+      "hash": "b3be98357088",
+      "v": "6f458850",
+      "bytes": 111134,
+      "updated": "2026-09-21"
     },
     "/wiki/data-contamination": {
       "key": "og/wiki/ajmeKZbD.jpg",
-      "hash": "90b78cd4bba4",
-      "v": "327fcda2",
-      "bytes": 90562,
-      "updated": "2026-09-11"
+      "hash": "e9ab1f2ef71d",
+      "v": "9a64eb68",
+      "bytes": 90535,
+      "updated": "2026-09-21"
     },
     "/wiki/data-contextualization": {
       "key": "og/wiki/3xSClPzE.jpg",
-      "hash": "38c46ac9b15a",
+      "hash": "79aeb6c2872c",
       "v": "4121f5e9",
       "bytes": 135776,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/data-holders": {
       "key": "og/wiki/oWY2KCh3.jpg",
-      "hash": "fa49be32535f",
+      "hash": "3186abadb5e7",
       "v": "517ba513",
       "bytes": 124224,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/data-leakage": {
       "key": "og/wiki/DtLk14xn.jpg",
-      "hash": "668dce402824",
-      "v": "f3f81c70",
-      "bytes": 95051,
-      "updated": "2026-09-11"
+      "hash": "bdf0a07069da",
+      "v": "47ad99a6",
+      "bytes": 95042,
+      "updated": "2026-09-21"
     },
     "/wiki/data-residency": {
       "key": "og/wiki/DataRs6D.jpg",
-      "hash": "54665c5a7e07",
-      "v": "15a50acb",
-      "bytes": 108166,
-      "updated": "2026-09-11"
+      "hash": "89494c3de3f3",
+      "v": "faae1c6c",
+      "bytes": 108172,
+      "updated": "2026-09-21"
     },
     "/wiki/dataset": {
       "key": "og/wiki/EFKsfm4D.jpg",
-      "hash": "c9894bde4bcb",
-      "v": "1ed38493",
-      "bytes": 79574,
-      "updated": "2026-09-11"
+      "hash": "c8439e24df29",
+      "v": "f3546c11",
+      "bytes": 79568,
+      "updated": "2026-09-21"
     },
     "/wiki/dcs": {
       "key": "og/wiki/7NrcWZUv.jpg",
-      "hash": "c8eaa4bccb6c",
+      "hash": "f2568663bc7e",
       "v": "9987d5c7",
       "bytes": 124563,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/ddl": {
       "key": "og/wiki/1sqlzLdR.jpg",
-      "hash": "8a26cbeaaaae",
-      "v": "474a2cc1",
-      "bytes": 94585,
-      "updated": "2026-09-11"
+      "hash": "e0c43d9652f5",
+      "v": "40f79a01",
+      "bytes": 94577,
+      "updated": "2026-09-21"
     },
     "/wiki/ddpm": {
       "key": "og/wiki/steRXbqf.jpg",
-      "hash": "7955fe9c4460",
-      "v": "343bca1a",
-      "bytes": 83171,
-      "updated": "2026-09-11"
+      "hash": "e753f79798ce",
+      "v": "6af66c73",
+      "bytes": 83180,
+      "updated": "2026-09-21"
     },
     "/wiki/deadband": {
       "key": "og/wiki/GQxDKEj0.jpg",
-      "hash": "0c8fa691fc52",
+      "hash": "1d6b359e73bd",
       "v": "5635ad43",
       "bytes": 121937,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/decoder": {
       "key": "og/wiki/Dc8sW4nR.jpg",
-      "hash": "8fe0f7817280",
-      "v": "0ac07e02",
-      "bytes": 92942,
-      "updated": "2026-09-11"
+      "hash": "eb8ae214de0f",
+      "v": "0047b7d1",
+      "bytes": 92935,
+      "updated": "2026-09-21"
     },
     "/wiki/decoding-step": {
       "key": "og/wiki/Ds4pJ8kF.jpg",
-      "hash": "050d73b25c56",
-      "v": "205e8a50",
-      "bytes": 95000,
-      "updated": "2026-09-11"
+      "hash": "cdbd74358e4a",
+      "v": "2430f46c",
+      "bytes": 95015,
+      "updated": "2026-09-21"
     },
     "/wiki/deepseek": {
       "key": "og/wiki/nUKlfmSO.jpg",
-      "hash": "91a7b240a41e",
-      "v": "eca65039",
-      "bytes": 99441,
-      "updated": "2026-09-11"
+      "hash": "5ea90b2bb0ef",
+      "v": "d56823c3",
+      "bytes": 99448,
+      "updated": "2026-09-21"
     },
     "/wiki/defense-in-depth": {
       "key": "og/wiki/DfDepth8.jpg",
-      "hash": "863f0f0b9600",
+      "hash": "3417ffd262d1",
       "v": "bb7b836d",
       "bytes": 114981,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/delay-and-lag": {
       "key": "og/wiki/hSeQakhh.jpg",
-      "hash": "4a65c606fb6b",
+      "hash": "fd3d236367ea",
       "v": "6e47e2de",
       "bytes": 109797,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/deploy": {
       "key": "og/wiki/Dx8yLn3F.jpg",
-      "hash": "6afe66cd1a10",
-      "v": "774e13b3",
-      "bytes": 81152,
-      "updated": "2026-09-11"
+      "hash": "25c5f67ecfba",
+      "v": "3bd7d0a3",
+      "bytes": 81140,
+      "updated": "2026-09-21"
     },
     "/wiki/deployment": {
       "key": "og/wiki/4ZR2Fcfz.jpg",
-      "hash": "2d7fa41b80cc",
+      "hash": "2acdad4dd3f3",
       "v": "3671b417",
       "bytes": 98704,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/deployment-risk": {
       "key": "og/wiki/DepRisk4.jpg",
-      "hash": "8ed2618eeb8e",
+      "hash": "306335de5645",
       "v": "8beddcfa",
       "bytes": 109570,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/derivation-path": {
       "key": "og/wiki/am0dWrWy.jpg",
-      "hash": "ba06f925ff3b",
-      "v": "f187f8cb",
-      "bytes": 89821,
-      "updated": "2026-09-11"
+      "hash": "504ff2cc8b01",
+      "v": "04d89554",
+      "bytes": 89851,
+      "updated": "2026-09-21"
     },
     "/wiki/desktop-cpu": {
       "key": "og/wiki/S4Lv70Vk.jpg",
-      "hash": "4e7862e773cb",
-      "v": "873695ec",
-      "bytes": 93146,
-      "updated": "2026-09-11"
+      "hash": "4cc18f6d175c",
+      "v": "13140f21",
+      "bytes": 93135,
+      "updated": "2026-09-21"
     },
     "/wiki/determinism": {
       "key": "og/wiki/xHZIkyPb.jpg",
-      "hash": "4e9277b8fb7a",
-      "v": "4b7e4033",
-      "bytes": 114007,
-      "updated": "2026-09-11"
+      "hash": "ac68827b366b",
+      "v": "4e69ca5f",
+      "bytes": 114002,
+      "updated": "2026-09-21"
     },
     "/wiki/dev-proxy": {
       "key": "og/wiki/Mn3gRp6H.jpg",
-      "hash": "14318eba3d34",
+      "hash": "c8c3392c8d63",
       "v": "e6e3410c",
       "bytes": 116528,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/differential-equations": {
       "key": "og/wiki/AjNT7Eno.jpg",
-      "hash": "dbcd2070161b",
+      "hash": "c6c5bd816cf0",
       "v": "7e2ccf7d",
       "bytes": 117242,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/diffusion-and-consensus": {
       "key": "og/wiki/4cU0TSmY.jpg",
-      "hash": "77449b32fc13",
-      "v": "3c3a3759",
-      "bytes": 106846,
-      "updated": "2026-09-11"
+      "hash": "eaa02035a635",
+      "v": "fac1a6d1",
+      "bytes": 106870,
+      "updated": "2026-09-21"
     },
     "/wiki/diffusion-equation": {
       "key": "og/wiki/lHnt7xrH.jpg",
-      "hash": "36e1ca42a57d",
-      "v": "15a8aead",
-      "bytes": 107510,
-      "updated": "2026-09-11"
+      "hash": "525973d52f70",
+      "v": "a1f86322",
+      "bytes": 107495,
+      "updated": "2026-09-21"
     },
     "/wiki/diffusion-model": {
       "key": "og/wiki/sr0JBXRW.jpg",
-      "hash": "e838ec16ee2c",
-      "v": "f11091a8",
-      "bytes": 89375,
-      "updated": "2026-09-11"
+      "hash": "87e6ea7df750",
+      "v": "b84ba22c",
+      "bytes": 89368,
+      "updated": "2026-09-21"
     },
     "/wiki/digital-sovereignty": {
       "key": "og/wiki/DigSov8N.jpg",
-      "hash": "8a984d7740ef",
-      "v": "2281f721",
-      "bytes": 119130,
-      "updated": "2026-09-11"
+      "hash": "7ffec41e89a7",
+      "v": "a41e55fe",
+      "bytes": 119139,
+      "updated": "2026-09-21"
     },
     "/wiki/dimensionality-reduction": {
       "key": "og/wiki/dr9Kx5mW.jpg",
-      "hash": "667fc33ddb54",
+      "hash": "0eba2c26517f",
       "v": "93a1e7c2",
       "bytes": 117572,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/direct-deploy": {
       "key": "og/wiki/Rw4sVx7J.jpg",
-      "hash": "3156f2ce09cc",
-      "v": "4aeee88e",
-      "bytes": 96858,
-      "updated": "2026-09-11"
+      "hash": "3a518a47b0e7",
+      "v": "c318cd61",
+      "bytes": 96856,
+      "updated": "2026-09-21"
     },
     "/wiki/directionality": {
       "key": "og/wiki/Dr6kN2wY.jpg",
-      "hash": "98a60730e00f",
-      "v": "2e577f62",
-      "bytes": 100420,
-      "updated": "2026-09-11"
+      "hash": "1c492435105d",
+      "v": "bd5666ea",
+      "bytes": 100406,
+      "updated": "2026-09-21"
     },
     "/wiki/discovery": {
       "key": "og/wiki/OkRULEb0.jpg",
-      "hash": "b52914db980f",
-      "v": "e61132c1",
-      "bytes": 98677,
-      "updated": "2026-09-11"
+      "hash": "d7819042fe5d",
+      "v": "97afb7c8",
+      "bytes": 98659,
+      "updated": "2026-09-21"
     },
     "/wiki/discrete": {
       "key": "og/wiki/LxUj37D3.jpg",
-      "hash": "9d092fbb425b",
-      "v": "dd0bb4b8",
-      "bytes": 86363,
-      "updated": "2026-09-11"
+      "hash": "057f18b92860",
+      "v": "bfec6452",
+      "bytes": 86366,
+      "updated": "2026-09-21"
     },
     "/wiki/discrete-automation": {
       "key": "og/wiki/pHiCzY68.jpg",
-      "hash": "c01f1418d142",
+      "hash": "249acca568fe",
       "v": "41509fa2",
       "bytes": 122324,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/discretization": {
       "key": "og/wiki/SQo89ykf.jpg",
-      "hash": "4df472ff8c4c",
+      "hash": "6b26e934fc43",
       "v": "9f21f7ea",
       "bytes": 116407,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/distributed-training": {
       "key": "og/wiki/kJfQz2vH.jpg",
-      "hash": "2a5398c4f076",
-      "v": "1f501651",
-      "bytes": 84189,
-      "updated": "2026-09-11"
+      "hash": "479d4c9b7eaa",
+      "v": "39477c46",
+      "bytes": 84172,
+      "updated": "2026-09-21"
     },
     "/wiki/distributional-shift": {
       "key": "og/wiki/Ds3fR7kX.jpg",
-      "hash": "2bbd4aa7ad00",
-      "v": "5716c70a",
-      "bytes": 105648,
-      "updated": "2026-09-11"
+      "hash": "d9724191d22b",
+      "v": "d18c6d93",
+      "bytes": 105645,
+      "updated": "2026-09-21"
     },
     "/wiki/dit": {
       "key": "og/wiki/L7lWic03.jpg",
-      "hash": "2b0104712d32",
-      "v": "41e2018b",
-      "bytes": 90352,
-      "updated": "2026-09-11"
+      "hash": "3900e1f3ea20",
+      "v": "8c9f5611",
+      "bytes": 90332,
+      "updated": "2026-09-21"
     },
     "/wiki/dma": {
       "key": "og/wiki/2p1K1HEC.jpg",
-      "hash": "1e57baa18811",
-      "v": "34c31ed3",
-      "bytes": 93673,
-      "updated": "2026-09-11"
+      "hash": "b796f2f41e14",
+      "v": "18d20221",
+      "bytes": 93672,
+      "updated": "2026-09-21"
     },
     "/wiki/dns": {
       "key": "og/wiki/Jt7nKx4S.jpg",
-      "hash": "aef80ee4cb25",
-      "v": "165af8db",
-      "bytes": 89094,
-      "updated": "2026-09-11"
+      "hash": "316e5712a645",
+      "v": "54343757",
+      "bytes": 110334,
+      "updated": "2026-09-21"
     },
     "/wiki/docker": {
       "key": "og/wiki/FlMHYCjo.jpg",
-      "hash": "922a3429772a",
-      "v": "51255478",
-      "bytes": 99963,
-      "updated": "2026-09-11"
+      "hash": "2fabde3c4a40",
+      "v": "fdb2902a",
+      "bytes": 99949,
+      "updated": "2026-09-21"
     },
     "/wiki/docker-path": {
       "key": "og/wiki/x0YktUDc.jpg",
-      "hash": "4e9eee3f07c1",
-      "v": "ea8bd658",
-      "bytes": 93899,
-      "updated": "2026-09-11"
+      "hash": "44bdcffcb3e7",
+      "v": "2bc8ba9d",
+      "bytes": 93891,
+      "updated": "2026-09-21"
     },
     "/wiki/dom": {
       "key": "og/wiki/jaoEDAPx.jpg",
-      "hash": "13868848ead3",
-      "v": "6c451f9a",
-      "bytes": 111587,
-      "updated": "2026-09-11"
+      "hash": "797fd738bd8d",
+      "v": "97fb6e68",
+      "bytes": 111600,
+      "updated": "2026-09-21"
     },
     "/wiki/domain": {
       "key": "og/wiki/Pv3wHm8R.jpg",
-      "hash": "47761b67a2dc",
-      "v": "ae106bbb",
-      "bytes": 87459,
-      "updated": "2026-09-11"
+      "hash": "2b0ed4350d4b",
+      "v": "38c0ccf9",
+      "bytes": 106219,
+      "updated": "2026-09-21"
     },
     "/wiki/dot-product-attention": {
       "key": "og/wiki/Dp2kN6wF.jpg",
-      "hash": "2da375eeeb65",
-      "v": "a08438f9",
-      "bytes": 107315,
-      "updated": "2026-09-11"
+      "hash": "8b652b1c532a",
+      "v": "d5f1d62e",
+      "bytes": 107300,
+      "updated": "2026-09-21"
     },
     "/wiki/downstream-layer": {
       "key": "og/wiki/Dl5mK9cJ.jpg",
-      "hash": "70af6d6c2ffb",
-      "v": "ebdec99d",
-      "bytes": 100577,
-      "updated": "2026-09-11"
+      "hash": "d00f7d68f602",
+      "v": "1aeaebfe",
+      "bytes": 100575,
+      "updated": "2026-09-21"
     },
     "/wiki/dpo": {
       "key": "og/wiki/YwfNaR4R.jpg",
-      "hash": "9396b36b9dc8",
-      "v": "28ad0943",
-      "bytes": 101851,
-      "updated": "2026-09-11"
+      "hash": "81a7d587ff16",
+      "v": "b559758b",
+      "bytes": 101826,
+      "updated": "2026-09-21"
     },
     "/wiki/dropout": {
       "key": "og/wiki/vRoRcYcl.jpg",
-      "hash": "b44bae364ae6",
-      "v": "9ab5fb87",
-      "bytes": 96600,
-      "updated": "2026-09-11"
+      "hash": "57c524477200",
+      "v": "85d8c08c",
+      "bytes": 96568,
+      "updated": "2026-09-21"
     },
     "/wiki/dsl": {
       "key": "og/wiki/HF9my2tV.jpg",
-      "hash": "0e3c54aa22e2",
+      "hash": "91f8a48aa1d0",
       "v": "69b95da5",
       "bytes": 111315,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/dspy": {
       "key": "og/wiki/K9NDm3NN.jpg",
-      "hash": "40ac5421c275",
-      "v": "5c9bf67b",
-      "bytes": 92464,
-      "updated": "2026-09-11"
+      "hash": "7c288bd57323",
+      "v": "35ff0af0",
+      "bytes": 92466,
+      "updated": "2026-09-21"
     },
     "/wiki/dynamical-systems": {
       "key": "og/wiki/kkZ5fiaf.jpg",
-      "hash": "0b437e036f16",
-      "v": "6e2aee5a",
-      "bytes": 99028,
-      "updated": "2026-09-11"
+      "hash": "64ec5999ae28",
+      "v": "98611432",
+      "bytes": 99011,
+      "updated": "2026-09-21"
     },
     "/wiki/early-stopping": {
       "key": "og/wiki/ErlS10xj.jpg",
-      "hash": "261f99a01b1f",
-      "v": "9f8967cb",
-      "bytes": 100282,
-      "updated": "2026-09-11"
+      "hash": "5e69c6529e87",
+      "v": "cc1d5576",
+      "bytes": 100302,
+      "updated": "2026-09-21"
     },
     "/wiki/eav": {
       "key": "og/wiki/1jNpLuZz.jpg",
-      "hash": "0ab33c9e21fd",
-      "v": "22dd4e0d",
-      "bytes": 100455,
-      "updated": "2026-09-11"
+      "hash": "d9cd506ca2da",
+      "v": "3b4cb2be",
+      "bytes": 100473,
+      "updated": "2026-09-21"
     },
     "/wiki/ecdsa": {
       "key": "og/wiki/Ixdu9hgo.jpg",
-      "hash": "52dbe3d8921e",
-      "v": "41905434",
-      "bytes": 94934,
-      "updated": "2026-09-11"
+      "hash": "71324142b1c5",
+      "v": "39209c77",
+      "bytes": 94929,
+      "updated": "2026-09-21"
     },
     "/wiki/economics": {
       "key": "og/wiki/Economy1.jpg",
-      "hash": "77a299beac87",
+      "hash": "af5496799818",
       "v": "f7f83ab2",
       "bytes": 107384,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/edge-ai": {
       "key": "og/wiki/sfCH7K8e.jpg",
-      "hash": "7cdbce9239cc",
-      "v": "f1905647",
+      "hash": "bf52bff7e02a",
+      "v": "c359caf1",
       "bytes": 106438,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/edge-computing": {
       "key": "og/wiki/Tm6yRs2K.jpg",
-      "hash": "31f3b4c60d51",
-      "v": "74a40ba5",
-      "bytes": 114764,
-      "updated": "2026-09-11"
+      "hash": "f1d0ace3ba1b",
+      "v": "079ba07b",
+      "bytes": 114753,
+      "updated": "2026-09-21"
     },
     "/wiki/edge-gateway": {
       "key": "og/wiki/4jKIn7fG.jpg",
-      "hash": "e568f29fd886",
+      "hash": "3b725fc927da",
       "v": "8d6d8cfd",
       "bytes": 124815,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/edr": {
       "key": "og/wiki/Edr7P0nt.jpg",
-      "hash": "c95be837cb61",
+      "hash": "2fc52b316230",
       "v": "183182f9",
       "bytes": 111804,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/eigenvalue": {
       "key": "og/wiki/Ev3kM5nQ.jpg",
-      "hash": "8f7cda2a1dea",
+      "hash": "c2b00f8fd2d5",
       "v": "42036f9f",
       "bytes": 120849,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/electronics": {
       "key": "og/wiki/kQheVgur.jpg",
-      "hash": "1eb34dcb5e8a",
+      "hash": "e084571d3118",
       "v": "54707536",
       "bytes": 108397,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
+    },
+    "/wiki/email-records": {
+      "key": "og/wiki/Em3xRt9B.jpg",
+      "hash": "9085ebe6db67",
+      "v": "e2a2ddd1",
+      "bytes": 111455,
+      "updated": "2026-09-21"
     },
     "/wiki/embedding": {
       "key": "og/wiki/haA3MDhG.jpg",
-      "hash": "942117f9c24e",
-      "v": "5b63e01b",
-      "bytes": 98796,
-      "updated": "2026-09-11"
+      "hash": "0d2e126c422a",
+      "v": "34ec6053",
+      "bytes": 98801,
+      "updated": "2026-09-21"
     },
     "/wiki/embedding-matrix": {
       "key": "og/wiki/Em3xR7wP.jpg",
-      "hash": "3de667afcd01",
-      "v": "a1789202",
-      "bytes": 102577,
-      "updated": "2026-09-11"
+      "hash": "856b9c835c1d",
+      "v": "d3c02152",
+      "bytes": 102745,
+      "updated": "2026-09-21"
     },
     "/wiki/embedding-model": {
       "key": "og/wiki/KugYH1TK.jpg",
-      "hash": "aac0677f0845",
-      "v": "16bb068f",
-      "bytes": 93900,
-      "updated": "2026-09-11"
+      "hash": "d5abff7127f7",
+      "v": "922d4a70",
+      "bytes": 93883,
+      "updated": "2026-09-21"
     },
     "/wiki/emergence": {
       "key": "og/wiki/gd9F2E5b.jpg",
-      "hash": "09df751e105d",
-      "v": "68011e25",
-      "bytes": 98120,
-      "updated": "2026-09-11"
+      "hash": "1be22bb41388",
+      "v": "77c3fb12",
+      "bytes": 98112,
+      "updated": "2026-09-21"
     },
     "/wiki/emergent-behavior": {
       "key": "og/wiki/h7ZzT64Z.jpg",
-      "hash": "68ed5b1727c5",
-      "v": "6fd2ca52",
-      "bytes": 98888,
-      "updated": "2026-09-11"
+      "hash": "79a3d695ef16",
+      "v": "fd4f1116",
+      "bytes": 98873,
+      "updated": "2026-09-21"
     },
     "/wiki/emergent-coordination": {
       "key": "og/wiki/EmC00rdN.jpg",
-      "hash": "04700466b15c",
+      "hash": "e97f22014183",
       "v": "954913a1",
       "bytes": 111409,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/empty-blocks": {
       "key": "og/wiki/4scEGyLH.jpg",
-      "hash": "b4234de594fe",
-      "v": "199dc85b",
-      "bytes": 96546,
-      "updated": "2026-09-11"
+      "hash": "61ed9342e501",
+      "v": "f3c3cd63",
+      "bytes": 96537,
+      "updated": "2026-09-21"
     },
     "/wiki/encoder": {
       "key": "og/wiki/En6fL2qY.jpg",
-      "hash": "534734d8215c",
-      "v": "3d70bf27",
-      "bytes": 86781,
-      "updated": "2026-09-11"
+      "hash": "141440683096",
+      "v": "73dc0557",
+      "bytes": 86767,
+      "updated": "2026-09-21"
     },
     "/wiki/encoder-decoder": {
       "key": "og/wiki/4WOV3Wpt.jpg",
-      "hash": "546a4f418dbc",
-      "v": "fed6dd53",
+      "hash": "f0ef3060681f",
+      "v": "f1a89200",
       "bytes": 103340,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/engineering-station": {
       "key": "og/wiki/O59rx1hI.jpg",
-      "hash": "40229137e890",
+      "hash": "3f64a287de5e",
       "v": "94676219",
       "bytes": 119341,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/enode": {
       "key": "og/wiki/ML9qhFCx.jpg",
-      "hash": "ddda4ddfe126",
-      "v": "630c89f6",
-      "bytes": 91301,
-      "updated": "2026-09-11"
+      "hash": "a8b63969e46c",
+      "v": "e428de54",
+      "bytes": 91298,
+      "updated": "2026-09-21"
     },
     "/wiki/entropy": {
       "key": "og/wiki/JsSUul6f.jpg",
-      "hash": "0c9de29aa406",
-      "v": "a7c8d75d",
-      "bytes": 102368,
-      "updated": "2026-09-11"
+      "hash": "0cca612d7c78",
+      "v": "e9642aa7",
+      "bytes": 102334,
+      "updated": "2026-09-21"
     },
     "/wiki/environment-variable": {
       "key": "og/wiki/tHKwydrv.jpg",
-      "hash": "e1ef5e2e3e8a",
-      "v": "04ad71d7",
-      "bytes": 96248,
-      "updated": "2026-09-11"
+      "hash": "ad82bbc4f12e",
+      "v": "0a6430c3",
+      "bytes": 96228,
+      "updated": "2026-09-21"
     },
     "/wiki/epc": {
       "key": "og/wiki/HHIC3rhB.jpg",
-      "hash": "89a277ad7f5b",
+      "hash": "d209a65d99a2",
       "v": "47094012",
       "bytes": 111091,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/epistemic-interface": {
       "key": "og/wiki/Ep1st3mI.jpg",
-      "hash": "e5aae0c2b480",
+      "hash": "1eb5a25ffa67",
       "v": "101d247a",
       "bytes": 117672,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/equilibrium-and-stability": {
       "key": "og/wiki/l8kVhz53.jpg",
-      "hash": "5fd5b4f346df",
+      "hash": "5c15f4a6439f",
       "v": "d3e800fd",
       "bytes": 129612,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/erp": {
       "key": "og/wiki/o6N4rqGz.jpg",
-      "hash": "a41a3c1288f1",
+      "hash": "aabab69b4fa6",
       "v": "ad75ab65",
       "bytes": 111436,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/esp32": {
       "key": "og/wiki/xVyHlNQa.jpg",
-      "hash": "66a33ef4b0ba",
-      "v": "a9f8fb27",
-      "bytes": 84131,
-      "updated": "2026-09-11"
+      "hash": "20bc4603758e",
+      "v": "6d30ccb4",
+      "bytes": 84136,
+      "updated": "2026-09-21"
     },
     "/wiki/ethercat": {
       "key": "og/wiki/gWjNvMXi.jpg",
-      "hash": "0ab3953faaf3",
-      "v": "e943e482",
-      "bytes": 99372,
-      "updated": "2026-09-11"
+      "hash": "f9d2622c5c80",
+      "v": "76bcde8b",
+      "bytes": 99360,
+      "updated": "2026-09-21"
     },
     "/wiki/ethernet": {
       "key": "og/wiki/aHC0Nhas.jpg",
-      "hash": "c92034bcabf3",
+      "hash": "1c9d3002a16a",
       "v": "7aa12be5",
       "bytes": 111833,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/ethernet-ip": {
       "key": "og/wiki/1FXDPm6s.jpg",
-      "hash": "18107a5c194d",
+      "hash": "7c811dabe7c1",
       "v": "5922c4d9",
       "bytes": 113268,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/evaluation": {
       "key": "og/wiki/EvalP0aa.jpg",
-      "hash": "1eaf5c9be6ed",
-      "v": "93d8775a",
-      "bytes": 102510,
-      "updated": "2026-09-11"
+      "hash": "62e866cfb56e",
+      "v": "ff3455ec",
+      "bytes": 102523,
+      "updated": "2026-09-21"
     },
     "/wiki/evaluation-awareness": {
       "key": "og/wiki/Xc9nBf3K.jpg",
-      "hash": "7cefc8d56288",
-      "v": "2c13ad79",
-      "bytes": 98099,
-      "updated": "2026-09-11"
+      "hash": "60c5c96d78c6",
+      "v": "04f8dc03",
+      "bytes": 98086,
+      "updated": "2026-09-21"
     },
     "/wiki/evaluation-harness": {
       "key": "og/wiki/EvHarn6S.jpg",
-      "hash": "4c59648a1ec3",
+      "hash": "fc33f2860bc8",
       "v": "e22b42a6",
       "bytes": 110883,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/event": {
       "key": "og/wiki/a79KQL3v.jpg",
-      "hash": "29acf265dc2e",
+      "hash": "5b2fa0ecfe8b",
       "v": "885df174",
       "bytes": 106478,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/event-driven-api": {
       "key": "og/wiki/Ev3pNx7L.jpg",
-      "hash": "f2dd0f2cb9bd",
-      "v": "43a4667f",
-      "bytes": 104396,
-      "updated": "2026-09-11"
+      "hash": "45e317f52af0",
+      "v": "0f5fc950",
+      "bytes": 104421,
+      "updated": "2026-09-21"
     },
     "/wiki/event-loop": {
       "key": "og/wiki/cgxZ1IJb.jpg",
-      "hash": "b85ae02e8741",
-      "v": "012bd27e",
-      "bytes": 99361,
-      "updated": "2026-09-11"
+      "hash": "4f041c8ced4e",
+      "v": "191fed38",
+      "bytes": 99364,
+      "updated": "2026-09-21"
     },
     "/wiki/ewma": {
       "key": "og/wiki/Ewma20xt.jpg",
-      "hash": "2c73d2b6df79",
-      "v": "dc86f673",
-      "bytes": 98012,
-      "updated": "2026-09-11"
+      "hash": "e1d285229f4b",
+      "v": "ab6f0be6",
+      "bytes": 98005,
+      "updated": "2026-09-21"
     },
     "/wiki/exploit": {
       "key": "og/wiki/Expl01tQ.jpg",
-      "hash": "dd48e8832a74",
+      "hash": "6e64d299b576",
       "v": "6f65a66d",
       "bytes": 99381,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/exponential-decay": {
       "key": "og/wiki/gN72WrAO.jpg",
-      "hash": "4edb8ebcac6b",
-      "v": "bd253ab0",
-      "bytes": 102601,
-      "updated": "2026-09-11"
+      "hash": "07985a353e2c",
+      "v": "b7016f77",
+      "bytes": 102690,
+      "updated": "2026-09-21"
     },
     "/wiki/exposure-bias": {
       "key": "og/wiki/Eb4kN7xS.jpg",
-      "hash": "440039db4f7f",
+      "hash": "5313fd7a43cd",
       "v": "e3040f6f",
       "bytes": 116918,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/express": {
       "key": "og/wiki/Yg4rVn8L.jpg",
-      "hash": "b90f815df762",
-      "v": "058b5128",
-      "bytes": 97247,
-      "updated": "2026-09-11"
+      "hash": "76d37d53c53a",
+      "v": "0246225d",
+      "bytes": 97244,
+      "updated": "2026-09-21"
     },
     "/wiki/extended-thinking": {
       "key": "og/wiki/Et5mN8wJ.jpg",
-      "hash": "4416b6e881a2",
-      "v": "0db2b1a5",
-      "bytes": 104272,
-      "updated": "2026-09-11"
+      "hash": "6c7213e6865f",
+      "v": "2dbfaf07",
+      "bytes": 104256,
+      "updated": "2026-09-21"
     },
     "/wiki/external-api": {
       "key": "og/wiki/Ex5rTm9K.jpg",
-      "hash": "2acc89cd3ae6",
-      "v": "4d2d3c3f",
-      "bytes": 99770,
-      "updated": "2026-09-11"
+      "hash": "7dcac8dbef75",
+      "v": "fc5a61b6",
+      "bytes": 99754,
+      "updated": "2026-09-21"
     },
     "/wiki/external-forcing": {
       "key": "og/wiki/Dzjzq527.jpg",
-      "hash": "6bba32eac77d",
-      "v": "76dce2e1",
-      "bytes": 106801,
-      "updated": "2026-09-11"
+      "hash": "e9f119eec5be",
+      "v": "3e3196da",
+      "bytes": 106790,
+      "updated": "2026-09-21"
     },
     "/wiki/extradata": {
       "key": "og/wiki/W30pa8xC.jpg",
-      "hash": "8c4dff995eb5",
-      "v": "c675eb55",
-      "bytes": 97212,
-      "updated": "2026-09-11"
+      "hash": "00d9c185029a",
+      "v": "9777734f",
+      "bytes": 97192,
+      "updated": "2026-09-21"
     },
     "/wiki/fab": {
       "key": "og/wiki/ZzRsypXy.jpg",
-      "hash": "f8d3349438e6",
-      "v": "4c735776",
-      "bytes": 91469,
-      "updated": "2026-09-11"
+      "hash": "f9b68121cda0",
+      "v": "a6af479e",
+      "bytes": 91453,
+      "updated": "2026-09-21"
     },
     "/wiki/faiss": {
       "key": "og/wiki/AxURBGX7.jpg",
-      "hash": "8d11dbe13e3a",
-      "v": "a3d792aa",
-      "bytes": 90451,
-      "updated": "2026-09-11"
+      "hash": "e427126ef7b5",
+      "v": "f429e928",
+      "bytes": 90427,
+      "updated": "2026-09-21"
     },
     "/wiki/fault-diagnosis": {
       "key": "og/wiki/830fc080.jpg",
-      "hash": "6afd938a8d32",
+      "hash": "2b1ac1cdc6ff",
       "v": "74cc4de1",
       "bytes": 122946,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/fault-semantics": {
       "key": "og/wiki/N3kQDfIx.jpg",
-      "hash": "155603e194fb",
+      "hash": "d64946030006",
       "v": "1b620f8f",
       "bytes": 112467,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/feature": {
       "key": "og/wiki/Ft9pL5hS.jpg",
-      "hash": "8e11d21ae3b1",
-      "v": "c85be679",
-      "bytes": 95396,
-      "updated": "2026-09-11"
+      "hash": "c2955c144dee",
+      "v": "544055bb",
+      "bytes": 95393,
+      "updated": "2026-09-21"
     },
     "/wiki/feature-selection": {
       "key": "og/wiki/FtSl09xi.jpg",
-      "hash": "aa122738b862",
-      "v": "6c5a3160",
-      "bytes": 92738,
-      "updated": "2026-09-11"
+      "hash": "f48fe4c53a3c",
+      "v": "f88e707d",
+      "bytes": 92726,
+      "updated": "2026-09-21"
     },
     "/wiki/feed-forward-network": {
       "key": "og/wiki/Pr8dt3wz.jpg",
-      "hash": "9d26ebd989fa",
-      "v": "79e583e2",
-      "bytes": 103847,
-      "updated": "2026-09-11"
+      "hash": "d4ac0ec9293d",
+      "v": "f4a11025",
+      "bytes": 103845,
+      "updated": "2026-09-21"
     },
     "/wiki/feedback-control": {
       "key": "og/wiki/5zL83qyU.jpg",
-      "hash": "27db12331739",
+      "hash": "1c9f967f67a9",
       "v": "46687a66",
       "bytes": 113830,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/feedback-loop": {
       "key": "og/wiki/iOGYFvso.jpg",
-      "hash": "0dced7d7687d",
+      "hash": "b75c39a4ee60",
       "v": "17bd45d8",
       "bytes": 114539,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/fetching": {
       "key": "og/wiki/JGc7uotQ.jpg",
-      "hash": "5743c4947a6d",
+      "hash": "e367c8315c26",
       "v": "6a1d0bb4",
       "bytes": 100229,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/few-shot-learning": {
       "key": "og/wiki/IdfB7mVS.jpg",
-      "hash": "bdad268356a3",
-      "v": "3f14467e",
-      "bytes": 93881,
-      "updated": "2026-09-11"
+      "hash": "aad2f38cf81a",
+      "v": "aab94348",
+      "bytes": 93871,
+      "updated": "2026-09-21"
     },
     "/wiki/fieldbus": {
       "key": "og/wiki/ctpMShFs.jpg",
-      "hash": "5f61553ea38a",
+      "hash": "5c36fcee5850",
       "v": "85465b8f",
       "bytes": 99787,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/fine-tuning": {
       "key": "og/wiki/esHo5jMx.jpg",
-      "hash": "10a1b51a46fa",
-      "v": "a4f78eda",
-      "bytes": 93967,
-      "updated": "2026-09-11"
+      "hash": "b9138920b5c8",
+      "v": "52ca1c69",
+      "bytes": 93980,
+      "updated": "2026-09-21"
     },
     "/wiki/firewall": {
       "key": "og/wiki/Firew4lL.jpg",
-      "hash": "7dcb825b90e6",
+      "hash": "92dc5a25603c",
       "v": "41ec6e29",
       "bytes": 109602,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/firmware": {
       "key": "og/wiki/sNxMwfUX.jpg",
-      "hash": "663fad9d5329",
-      "v": "22340798",
-      "bytes": 99132,
-      "updated": "2026-09-11"
+      "hash": "a5d6879188e1",
+      "v": "011a1830",
+      "bytes": 99108,
+      "updated": "2026-09-21"
     },
     "/wiki/flash-attention": {
       "key": "og/wiki/Fa9tL3hP.jpg",
-      "hash": "6a574d3700f2",
-      "v": "ff98bc2f",
-      "bytes": 89580,
-      "updated": "2026-09-11"
+      "hash": "0ce03b4b5e90",
+      "v": "cd085ab5",
+      "bytes": 89574,
+      "updated": "2026-09-21"
     },
     "/wiki/flat-vs-sharp-minima": {
       "key": "og/wiki/Fv6tR3nQ.jpg",
-      "hash": "aa896f17a263",
-      "v": "b511924a",
-      "bytes": 122287,
-      "updated": "2026-09-11"
+      "hash": "8398ced28dd3",
+      "v": "7ac79582",
+      "bytes": 122286,
+      "updated": "2026-09-21"
     },
     "/wiki/fleet-data": {
       "key": "og/wiki/hso3itYC.jpg",
-      "hash": "d17bf3f7ac47",
+      "hash": "8cd1ff20aac0",
       "v": "9eb1eb6f",
       "bytes": 127727,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/flux": {
       "key": "og/wiki/IoT0wPoc.jpg",
-      "hash": "6205fd30af12",
-      "v": "733503e3",
-      "bytes": 93263,
-      "updated": "2026-09-11"
+      "hash": "bae183c6dea3",
+      "v": "ea4b4909",
+      "bytes": 93274,
+      "updated": "2026-09-21"
     },
     "/wiki/fly-io": {
       "key": "og/wiki/Fl4kNm8H.jpg",
-      "hash": "bd540fe5720e",
+      "hash": "1a01f2ab83b1",
       "v": "18a2c7ca",
       "bytes": 96425,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/fork": {
       "key": "og/wiki/TvW02yaC.jpg",
-      "hash": "87dcf1197755",
-      "v": "20cd05b8",
-      "bytes": 92137,
-      "updated": "2026-09-11"
+      "hash": "ba1a60d79d9c",
+      "v": "68373933",
+      "bytes": 92125,
+      "updated": "2026-09-21"
     },
     "/wiki/forward-pass": {
       "key": "og/wiki/Fw4pJ8mS.jpg",
-      "hash": "99cb740602c5",
+      "hash": "b37716ab8ea4",
       "v": "0108f4fb",
       "bytes": 99812,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/fpga": {
       "key": "og/wiki/FpGa7Cfg.jpg",
-      "hash": "fe54f379bab3",
+      "hash": "7e1525cefbf7",
       "v": "0ec7f911",
       "bytes": 121951,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/framework": {
       "key": "og/wiki/Jf5tCm8N.jpg",
-      "hash": "97fa5ca160cd",
+      "hash": "0d25d2ff9bdf",
       "v": "a9af6be0",
       "bytes": 108771,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/from-atom-to-token": {
       "key": "og/wiki/AtmTk2n6.jpg",
-      "hash": "13503192a5db",
+      "hash": "5fdd5c9f86cd",
       "v": "bdeb2f13",
       "bytes": 119745,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/frontend": {
       "key": "og/wiki/ISjyfjZ6.jpg",
-      "hash": "6a4f1da820cd",
-      "v": "07e40e1c",
-      "bytes": 100944,
-      "updated": "2026-09-11"
+      "hash": "fec147f6dd0c",
+      "v": "9c3b7f2e",
+      "bytes": 100943,
+      "updated": "2026-09-21"
     },
     "/wiki/full-node": {
       "key": "og/wiki/8rIt8ncJ.jpg",
-      "hash": "09cb6b4fa835",
-      "v": "782e9fc8",
-      "bytes": 93561,
-      "updated": "2026-09-11"
+      "hash": "b3d698a967f2",
+      "v": "be7a3b8c",
+      "bytes": 93588,
+      "updated": "2026-09-21"
     },
     "/wiki/function-calling": {
       "key": "og/wiki/5jy6Ik4M.jpg",
-      "hash": "506d21e1aebc",
+      "hash": "bea40b5615ad",
       "v": "154d1639",
       "bytes": 109643,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/funding": {
       "key": "og/wiki/Nohc505O.jpg",
-      "hash": "00c888ca969f",
-      "v": "2f013fc6",
-      "bytes": 94793,
-      "updated": "2026-09-11"
+      "hash": "560634b60e6d",
+      "v": "7cde061e",
+      "bytes": 94789,
+      "updated": "2026-09-21"
     },
     "/wiki/fuzzy-matching": {
       "key": "og/wiki/xr0O9rcf.jpg",
-      "hash": "8c24ecc0729d",
-      "v": "f2982cbf",
-      "bytes": 96411,
-      "updated": "2026-09-11"
+      "hash": "96f38ecc8ce0",
+      "v": "c68165e4",
+      "bytes": 96559,
+      "updated": "2026-09-21"
     },
     "/wiki/gan": {
       "key": "og/wiki/JP0VCiWq.jpg",
-      "hash": "f2a837072a67",
-      "v": "eb4cedc3",
-      "bytes": 79682,
-      "updated": "2026-09-11"
+      "hash": "575354dbedc5",
+      "v": "324c3205",
+      "bytes": 79680,
+      "updated": "2026-09-21"
     },
     "/wiki/gateway": {
       "key": "og/wiki/uMaVCTAm.jpg",
-      "hash": "2c4b33d85ad7",
-      "v": "1989ead1",
-      "bytes": 92097,
-      "updated": "2026-09-11"
+      "hash": "2b78352a1d85",
+      "v": "8800719b",
+      "bytes": 92078,
+      "updated": "2026-09-21"
     },
     "/wiki/gelu": {
       "key": "og/wiki/uuSdeqbX.jpg",
-      "hash": "29c774420491",
+      "hash": "e7f94d0067ff",
       "v": "e1b2e878",
       "bytes": 89435,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/gemini": {
       "key": "og/wiki/SvBXQ1nv.jpg",
-      "hash": "3b7290c3f2c3",
-      "v": "6472148b",
-      "bytes": 81061,
-      "updated": "2026-09-11"
+      "hash": "258f1bb5f89f",
+      "v": "3884bca4",
+      "bytes": 81048,
+      "updated": "2026-09-21"
     },
     "/wiki/genesis": {
       "key": "og/wiki/UFgfX2Jv.jpg",
-      "hash": "3b77afa51605",
-      "v": "3096c6ea",
-      "bytes": 92244,
-      "updated": "2026-09-11"
+      "hash": "9e686ad55f7e",
+      "v": "64663a99",
+      "bytes": 92232,
+      "updated": "2026-09-21"
     },
     "/wiki/gil": {
       "key": "og/wiki/azuwblly.jpg",
-      "hash": "b3760fa8cedb",
-      "v": "1c376ba4",
-      "bytes": 91431,
-      "updated": "2026-09-11"
+      "hash": "1c0881839c9a",
+      "v": "77723ca9",
+      "bytes": 91423,
+      "updated": "2026-09-21"
+    },
+    "/wiki/git-integration": {
+      "key": "og/wiki/Gi7bQs3L.jpg",
+      "hash": "3733c82b2fca",
+      "v": "937c7f13",
+      "bytes": 127320,
+      "updated": "2026-09-21"
     },
     "/wiki/github-actions": {
       "key": "og/wiki/NnPGeWsu.jpg",
-      "hash": "fbdedc7c748a",
+      "hash": "b512aff2023f",
       "v": "298646c0",
       "bytes": 97068,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/gmail-api": {
       "key": "og/wiki/2DTZTKbQ.jpg",
-      "hash": "662c11187d91",
-      "v": "3b0c8e4f",
-      "bytes": 96635,
-      "updated": "2026-09-11"
+      "hash": "6880183acca8",
+      "v": "0cbb39df",
+      "bytes": 96632,
+      "updated": "2026-09-21"
     },
     "/wiki/goodharts-curse": {
       "key": "og/wiki/Bk7UXmQT.jpg",
-      "hash": "cb610ab791f6",
-      "v": "099f9c2b",
-      "bytes": 89327,
-      "updated": "2026-09-11"
+      "hash": "0644c6a533e1",
+      "v": "d6ab8218",
+      "bytes": 89317,
+      "updated": "2026-09-21"
     },
     "/wiki/google": {
       "key": "og/wiki/oaFI1HMZ.jpg",
-      "hash": "aee4580a80a4",
+      "hash": "4ea02dbbd682",
       "v": "0f9153b6",
       "bytes": 105719,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/gossip": {
       "key": "og/wiki/6AczGctL.jpg",
-      "hash": "013f560d07a7",
-      "v": "350910a8",
-      "bytes": 91373,
-      "updated": "2026-09-11"
+      "hash": "dadb8fbf9fae",
+      "v": "02de3418",
+      "bytes": 91358,
+      "updated": "2026-09-21"
     },
     "/wiki/gpqa": {
       "key": "og/wiki/xJDUBSRn.jpg",
-      "hash": "01a000314ea5",
+      "hash": "0d6a1ce16837",
       "v": "f0a03c5d",
       "bytes": 94220,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/gpt": {
       "key": "og/wiki/U7ljk7Wf.jpg",
-      "hash": "b0db6471bb60",
-      "v": "29031867",
-      "bytes": 90019,
-      "updated": "2026-09-11"
+      "hash": "0b0738793a69",
+      "v": "9a70877a",
+      "bytes": 90030,
+      "updated": "2026-09-21"
     },
     "/wiki/gpt-1": {
       "key": "og/wiki/29LsyGvx.jpg",
-      "hash": "47cd649bda27",
-      "v": "bfc98320",
-      "bytes": 78650,
-      "updated": "2026-09-11"
+      "hash": "9b2daf2955c0",
+      "v": "1fb4201f",
+      "bytes": 78655,
+      "updated": "2026-09-21"
     },
     "/wiki/gpt-2": {
       "key": "og/wiki/SfCOccLg.jpg",
-      "hash": "8efc3c30c632",
-      "v": "4bd3fb4b",
-      "bytes": 86061,
-      "updated": "2026-09-11"
+      "hash": "90226b1a1402",
+      "v": "ad9bc96b",
+      "bytes": 86056,
+      "updated": "2026-09-21"
     },
     "/wiki/gpt-3": {
       "key": "og/wiki/gfRFzkBN.jpg",
-      "hash": "525fb00c902f",
-      "v": "064dbdb3",
-      "bytes": 82813,
-      "updated": "2026-09-11"
+      "hash": "58b9af37e0c1",
+      "v": "141b8cb3",
+      "bytes": 82807,
+      "updated": "2026-09-21"
     },
     "/wiki/gpt-4": {
       "key": "og/wiki/3KwJhySH.jpg",
-      "hash": "1ddf06b2bad0",
-      "v": "fdfe4591",
-      "bytes": 82248,
-      "updated": "2026-09-11"
+      "hash": "d6d6db0d4b9c",
+      "v": "93cacd70",
+      "bytes": 82220,
+      "updated": "2026-09-21"
     },
     "/wiki/gpu": {
       "key": "og/wiki/WEUTQwqv.jpg",
-      "hash": "9cdfd934468d",
+      "hash": "8e978def5771",
       "v": "d4d1f97b",
       "bytes": 104105,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/gqa": {
       "key": "og/wiki/Gq6mB2vY.jpg",
-      "hash": "a6e2047a599f",
-      "v": "adb71f59",
-      "bytes": 94462,
-      "updated": "2026-09-11"
+      "hash": "b4a84ed31fed",
+      "v": "47f21667",
+      "bytes": 94461,
+      "updated": "2026-09-21"
     },
     "/wiki/gradient-boosting": {
       "key": "og/wiki/GbTr08xh.jpg",
-      "hash": "6806b572a95d",
-      "v": "e0cbfe43",
-      "bytes": 99405,
-      "updated": "2026-09-11"
+      "hash": "994098e40666",
+      "v": "05c80d58",
+      "bytes": 99401,
+      "updated": "2026-09-21"
     },
     "/wiki/gradient-descent": {
       "key": "og/wiki/Gd5tR8wP.jpg",
-      "hash": "850745a9d043",
+      "hash": "ad8036ed7654",
       "v": "2ff8422b",
       "bytes": 114124,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/gradient-divergence-and-curl": {
       "key": "og/wiki/ko3I0fbY.jpg",
-      "hash": "ee526776935a",
-      "v": "caa803cd",
-      "bytes": 122004,
-      "updated": "2026-09-11"
+      "hash": "756a9cced5b5",
+      "v": "d28b8c64",
+      "bytes": 121976,
+      "updated": "2026-09-21"
     },
     "/wiki/graph-laplacian": {
       "key": "og/wiki/4tV2QGXX.jpg",
-      "hash": "275817d2d64c",
-      "v": "0ebe798f",
-      "bytes": 100367,
-      "updated": "2026-09-11"
+      "hash": "502332c7c9a3",
+      "v": "c9a5f398",
+      "bytes": 100357,
+      "updated": "2026-09-21"
     },
     "/wiki/graph-theory": {
       "key": "og/wiki/w7r1VbtG.jpg",
-      "hash": "02282b1a45cf",
+      "hash": "d027ef72fc41",
       "v": "79a11cb7",
       "bytes": 110318,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/graphrag": {
       "key": "og/wiki/GX96ud02.jpg",
-      "hash": "4318ecc1b315",
-      "v": "3e634c43",
-      "bytes": 95083,
-      "updated": "2026-09-11"
+      "hash": "5dae8515e2a2",
+      "v": "50009fcc",
+      "bytes": 95075,
+      "updated": "2026-09-21"
     },
     "/wiki/greedy-decoding": {
       "key": "og/wiki/Gk5pJ7mS.jpg",
-      "hash": "246150c6f769",
-      "v": "03799687",
-      "bytes": 115776,
-      "updated": "2026-09-11"
+      "hash": "c9949faf1119",
+      "v": "b25ae026",
+      "bytes": 115781,
+      "updated": "2026-09-21"
     },
     "/wiki/grpo": {
       "key": "og/wiki/HRgl17gQ.jpg",
-      "hash": "0d461bd86558",
-      "v": "48334602",
-      "bytes": 87592,
-      "updated": "2026-09-11"
+      "hash": "46e17cb05fca",
+      "v": "57a04fd1",
+      "bytes": 87577,
+      "updated": "2026-09-21"
     },
     "/wiki/gru": {
       "key": "og/wiki/Gr6rH8nW.jpg",
-      "hash": "a54192d9dabf",
+      "hash": "a0eb91026eec",
       "v": "aa97cafa",
       "bytes": 102934,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/gui": {
       "key": "og/wiki/PRWiYzcG.jpg",
-      "hash": "afd092d4c5ff",
-      "v": "a3215aa5",
-      "bytes": 108623,
-      "updated": "2026-09-11"
+      "hash": "220578b4e00f",
+      "v": "f8505b5f",
+      "bytes": 108608,
+      "updated": "2026-09-21"
     },
     "/wiki/h100": {
       "key": "og/wiki/j7ZpMrPl.jpg",
-      "hash": "729329fd0469",
-      "v": "e164ebba",
-      "bytes": 85158,
-      "updated": "2026-09-11"
+      "hash": "f7200ae1f133",
+      "v": "e9fccb72",
+      "bytes": 85180,
+      "updated": "2026-09-21"
     },
     "/wiki/hallucination": {
       "key": "og/wiki/tG39sLwD.jpg",
-      "hash": "75592c569e14",
-      "v": "82bc5b34",
-      "bytes": 84381,
-      "updated": "2026-09-11"
+      "hash": "d054e305e591",
+      "v": "8618cd79",
+      "bytes": 84370,
+      "updated": "2026-09-21"
     },
     "/wiki/handshake": {
       "key": "og/wiki/NmSjnVn2.jpg",
-      "hash": "87394a407707",
+      "hash": "705a134cf302",
       "v": "5686ed34",
       "bytes": 99883,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/hardware": {
       "key": "og/wiki/ORK3Ok1m.jpg",
-      "hash": "910302b8b438",
-      "v": "346586fa",
-      "bytes": 88721,
-      "updated": "2026-09-11"
+      "hash": "34da406e4ef0",
+      "v": "3aff6ad1",
+      "bytes": 88724,
+      "updated": "2026-09-21"
     },
     "/wiki/harness-equivalence": {
       "key": "og/wiki/HrEqv7Lc.jpg",
-      "hash": "39ba1027e138",
+      "hash": "71c145e6c973",
       "v": "89b65f76",
       "bytes": 115569,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/hart": {
       "key": "og/wiki/uOw615AL.jpg",
-      "hash": "b2a6f7a1a7c8",
+      "hash": "c199c53aa862",
       "v": "d580c9d0",
       "bytes": 115584,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/hawkes-process": {
       "key": "og/wiki/HwkP17xq.jpg",
-      "hash": "31ec65a3aa8c",
-      "v": "bfb3e956",
-      "bytes": 100311,
-      "updated": "2026-09-11"
+      "hash": "92e4ade51d08",
+      "v": "e2a23dba",
+      "bytes": 100330,
+      "updated": "2026-09-21"
     },
     "/wiki/hazard-function": {
       "key": "og/wiki/HzFn19xs.jpg",
-      "hash": "4833e5755d4d",
-      "v": "739a7689",
-      "bytes": 100863,
-      "updated": "2026-09-11"
+      "hash": "641938b9e082",
+      "v": "785333fc",
+      "bytes": 100858,
+      "updated": "2026-09-21"
     },
     "/wiki/hd-wallet": {
       "key": "og/wiki/kQcY7a5n.jpg",
-      "hash": "62be2ae67020",
-      "v": "0bd256b5",
-      "bytes": 90403,
-      "updated": "2026-09-11"
+      "hash": "91c9557faf7c",
+      "v": "09944b17",
+      "bytes": 90378,
+      "updated": "2026-09-21"
     },
     "/wiki/healthcare": {
       "key": "og/wiki/bf60bc28.jpg",
-      "hash": "95344c5b5ca8",
+      "hash": "150dd7f9bc7f",
       "v": "44211f90",
       "bytes": 120806,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/hessian": {
       "key": "og/wiki/Hs6mT4nQ.jpg",
-      "hash": "8f6ecea2f505",
+      "hash": "940826a456c4",
       "v": "1643c776",
       "bytes": 112977,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/hidden-abi": {
       "key": "og/wiki/HidAb1P9.jpg",
-      "hash": "c7ed842957bd",
-      "v": "7109dbd2",
-      "bytes": 100924,
-      "updated": "2026-09-11"
+      "hash": "eca510693f2a",
+      "v": "d29676b1",
+      "bytes": 100914,
+      "updated": "2026-09-21"
     },
     "/wiki/hidden-state": {
       "key": "og/wiki/HdnS06xf.jpg",
-      "hash": "a0d447b1e2ca",
-      "v": "a30a0cfd",
-      "bytes": 94707,
-      "updated": "2026-09-11"
+      "hash": "779dd049f3b7",
+      "v": "8fceb256",
+      "bytes": 94695,
+      "updated": "2026-09-21"
     },
     "/wiki/historian": {
       "key": "og/wiki/OShEuklQ.jpg",
-      "hash": "c6ea42e1b759",
+      "hash": "ea3fcaee1a0c",
       "v": "1d1be4e7",
       "bytes": 116372,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/hmi": {
       "key": "og/wiki/NgpDKDPB.jpg",
-      "hash": "35763444e620",
-      "v": "3bcf849c",
-      "bytes": 94885,
-      "updated": "2026-09-11"
+      "hash": "59c1d28652eb",
+      "v": "c12be5b4",
+      "bytes": 94872,
+      "updated": "2026-09-21"
     },
     "/wiki/hmr": {
       "key": "og/wiki/Qk4sTn9L.jpg",
-      "hash": "6c5bd081a434",
+      "hash": "bb7dfe6cbd0a",
       "v": "2f97f4b9",
       "bytes": 97774,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/hnsw": {
       "key": "og/wiki/wV5gFH9z.jpg",
-      "hash": "73b47649fd7a",
-      "v": "670b9ad0",
-      "bytes": 92121,
-      "updated": "2026-09-11"
+      "hash": "4b082adf121e",
+      "v": "43514e45",
+      "bytes": 92114,
+      "updated": "2026-09-21"
     },
     "/wiki/hono": {
       "key": "og/wiki/Xd9kLw4B.jpg",
-      "hash": "805e3e8adacb",
+      "hash": "eb8039c59190",
       "v": "40b37177",
       "bytes": 92701,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/hooks": {
       "key": "og/wiki/0C6FXSnp.jpg",
-      "hash": "ec1835a03f6f",
-      "v": "e761cbac",
-      "bytes": 95503,
-      "updated": "2026-09-11"
+      "hash": "9b45c9a79810",
+      "v": "26ad1688",
+      "bytes": 95501,
+      "updated": "2026-09-21"
     },
     "/wiki/https": {
       "key": "og/wiki/g9jb8QD1.jpg",
-      "hash": "597ee60a0b33",
-      "v": "b2b9b101",
-      "bytes": 100012,
-      "updated": "2026-09-11"
+      "hash": "37db0bf65c50",
+      "v": "68c5a268",
+      "bytes": 99972,
+      "updated": "2026-09-21"
     },
     "/wiki/human-in-the-loop": {
       "key": "og/wiki/HuL00p7A.jpg",
-      "hash": "70a74775f81d",
+      "hash": "12d9be87d027",
       "v": "088c071e",
       "bytes": 112788,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/humaneval": {
       "key": "og/wiki/zGQrmDMu.jpg",
-      "hash": "ae58fec2ceaa",
-      "v": "4a4f9e8b",
-      "bytes": 84516,
-      "updated": "2026-09-11"
+      "hash": "e971225d32ad",
+      "v": "aab06986",
+      "bytes": 84527,
+      "updated": "2026-09-21"
     },
     "/wiki/hybrid-agent": {
       "key": "og/wiki/rpdysn6f.jpg",
-      "hash": "c3c6fc38484d",
+      "hash": "1e919436580b",
       "v": "1f9c2f40",
       "bytes": 111393,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/hybrid-search": {
       "key": "og/wiki/ebRm86zw.jpg",
-      "hash": "27676c2f127d",
-      "v": "2c2b9b84",
-      "bytes": 86864,
-      "updated": "2026-09-11"
+      "hash": "b5cf9795637e",
+      "v": "ce5415b1",
+      "bytes": 86863,
+      "updated": "2026-09-21"
     },
     "/wiki/hyde": {
       "key": "og/wiki/CBYUhW1g.jpg",
-      "hash": "535970422bb5",
+      "hash": "f3ef4db3a95d",
       "v": "9359f88c",
       "bytes": 89990,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/hydration": {
       "key": "og/wiki/w3zHyIAB.jpg",
-      "hash": "16ef424d4234",
+      "hash": "d620ed98597f",
       "v": "67200725",
       "bytes": 101787,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/i-o": {
       "key": "og/wiki/zS3Nqz7G.jpg",
-      "hash": "c8df3d69a202",
-      "v": "bc3b86bc",
-      "bytes": 85461,
-      "updated": "2026-09-11"
+      "hash": "472e17c19d71",
+      "v": "ab132cb2",
+      "bytes": 85435,
+      "updated": "2026-09-21"
     },
     "/wiki/iec-61131-3": {
       "key": "og/wiki/nnXbK36S.jpg",
-      "hash": "0a23b2e5b078",
-      "v": "ac6d6ef8",
-      "bytes": 100970,
-      "updated": "2026-09-11"
+      "hash": "901370ea2224",
+      "v": "7051a7cd",
+      "bytes": 100938,
+      "updated": "2026-09-21"
     },
     "/wiki/ifeval": {
       "key": "og/wiki/AgeVOYER.jpg",
-      "hash": "96e92bff038e",
-      "v": "5b66edc2",
-      "bytes": 94399,
-      "updated": "2026-09-11"
+      "hash": "5898e94cf471",
+      "v": "24f883ce",
+      "bytes": 94381,
+      "updated": "2026-09-21"
     },
     "/wiki/iiot": {
       "key": "og/wiki/R1zrc3TC.jpg",
-      "hash": "cdf13e48a17b",
+      "hash": "4e6cf64bf3e2",
       "v": "9e39af83",
       "bytes": 113212,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/imagen": {
       "key": "og/wiki/v5wwjCcZ.jpg",
-      "hash": "a3395eb02f1f",
-      "v": "eb2daa29",
-      "bytes": 91168,
-      "updated": "2026-09-11"
+      "hash": "c926ed8d338c",
+      "v": "0ce06d0b",
+      "bytes": 91170,
+      "updated": "2026-09-21"
     },
     "/wiki/in-context-learning": {
       "key": "og/wiki/oBpGr85I.jpg",
-      "hash": "4d5b2b7a3644",
-      "v": "4243ff2c",
-      "bytes": 99458,
-      "updated": "2026-09-11"
+      "hash": "abd5fd565819",
+      "v": "06519eac",
+      "bytes": 99453,
+      "updated": "2026-09-21"
     },
     "/wiki/index": {
       "key": "og/wiki/UU9d6RWw.jpg",
-      "hash": "90520e2e1c83",
+      "hash": "b6f14cfbcaa9",
       "v": "b5972d77",
       "bytes": 99581,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/indexability": {
       "key": "og/wiki/qmp1wh7j.jpg",
-      "hash": "f64a0b8c43d7",
+      "hash": "235d8f180751",
       "v": "5697b6c1",
       "bytes": 101905,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/indexing": {
       "key": "og/wiki/GYSeFtBh.jpg",
-      "hash": "605f15edfc88",
-      "v": "f6e7a3d1",
-      "bytes": 100411,
-      "updated": "2026-09-11"
+      "hash": "0f463a573235",
+      "v": "fc65cdcd",
+      "bytes": 100400,
+      "updated": "2026-09-21"
     },
     "/wiki/induction-head": {
       "key": "og/wiki/Ih8nK5xW.jpg",
-      "hash": "20b0e6bbf438",
-      "v": "57f730d9",
-      "bytes": 102409,
-      "updated": "2026-09-11"
+      "hash": "78bffcb5c91f",
+      "v": "3ebcfa94",
+      "bytes": 102412,
+      "updated": "2026-09-21"
     },
     "/wiki/industrial": {
       "key": "og/wiki/QCZzt6BG.jpg",
-      "hash": "e970b9325af8",
+      "hash": "f8195535a4eb",
       "v": "784adc96",
       "bytes": 108535,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/industrial-automation": {
       "key": "og/wiki/mckHgOqe.jpg",
-      "hash": "c13f08a546d2",
+      "hash": "57e8415ad268",
       "v": "ad368745",
       "bytes": 130516,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/industrial-data-layer": {
       "key": "og/wiki/KApGpKIt.jpg",
-      "hash": "9f8ef9060d35",
+      "hash": "db2e2a136eb4",
       "v": "2cf149ca",
       "bytes": 118425,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/industrial-ecosystem": {
       "key": "og/wiki/nLtOMdEo.jpg",
-      "hash": "9ff332d9f39b",
+      "hash": "d2aaa803a8b4",
       "v": "a34e5b73",
       "bytes": 117969,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/industrial-ethernet": {
       "key": "og/wiki/1pkzK8nT.jpg",
-      "hash": "464527075506",
+      "hash": "f23c0a339620",
       "v": "1a91d7b1",
       "bytes": 119861,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/industrial-switch": {
       "key": "og/wiki/WhD8fGtf.jpg",
-      "hash": "654bab838f6c",
+      "hash": "28d6a1091dad",
       "v": "832fb37a",
       "bytes": 130513,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/inference": {
       "key": "og/wiki/Rx5QMqad.jpg",
-      "hash": "5fda818efbb2",
+      "hash": "5933e06d2fd2",
       "v": "699b8575",
       "bytes": 105807,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/inference-batching": {
       "key": "og/wiki/Batch1ng.jpg",
-      "hash": "bda7fdd82e98",
-      "v": "6e49cd89",
-      "bytes": 102715,
-      "updated": "2026-09-11"
+      "hash": "baddfac29e6b",
+      "v": "b79d87e3",
+      "bytes": 102722,
+      "updated": "2026-09-21"
     },
     "/wiki/inference-economics": {
       "key": "og/wiki/InfEcon9.jpg",
-      "hash": "048befc4de93",
-      "v": "57e8c361",
-      "bytes": 115900,
-      "updated": "2026-09-11"
+      "hash": "8284852e743f",
+      "v": "de46ee71",
+      "bytes": 115903,
+      "updated": "2026-09-21"
     },
     "/wiki/information-theory": {
       "key": "og/wiki/avUhQygt.jpg",
-      "hash": "e98ad6bdae92",
+      "hash": "b423333821f0",
       "v": "7b33f963",
       "bytes": 102672,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/infraphysics": {
       "key": "og/wiki/x8NRc1xE.jpg",
-      "hash": "af134c3bf2e1",
-      "v": "151141dc",
-      "bytes": 96406,
-      "updated": "2026-09-11"
+      "hash": "e7195f9b430f",
+      "v": "e483ed98",
+      "bytes": 96388,
+      "updated": "2026-09-21"
     },
     "/wiki/infrastructure": {
       "key": "og/wiki/Kv8cRm3Q.jpg",
-      "hash": "e3083d3abf5f",
+      "hash": "df03a83a5853",
       "v": "d4616a84",
       "bytes": 107937,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/infura": {
       "key": "og/wiki/onclkd8c.jpg",
-      "hash": "cd286b84cca1",
-      "v": "20bfc771",
-      "bytes": 86641,
-      "updated": "2026-09-11"
+      "hash": "ea7c65512a4c",
+      "v": "661a6ff0",
+      "bytes": 86630,
+      "updated": "2026-09-21"
     },
     "/wiki/initial-condition": {
       "key": "og/wiki/wwPZUijW.jpg",
-      "hash": "10eb143cae01",
-      "v": "e519c61d",
-      "bytes": 110621,
-      "updated": "2026-09-11"
+      "hash": "7352a4fffa6f",
+      "v": "8ff2c72f",
+      "bytes": 110603,
+      "updated": "2026-09-21"
     },
     "/wiki/inngest": {
       "key": "og/wiki/In7tWs3K.jpg",
-      "hash": "b2230c85d89e",
-      "v": "1af74549",
-      "bytes": 103265,
-      "updated": "2026-09-11"
+      "hash": "3226a5a76d66",
+      "v": "8f91e645",
+      "bytes": 103249,
+      "updated": "2026-09-21"
     },
     "/wiki/instructgpt": {
       "key": "og/wiki/sRfwFcjG.jpg",
-      "hash": "8ae6fffa4ada",
-      "v": "02562816",
-      "bytes": 85051,
-      "updated": "2026-09-11"
+      "hash": "ad9d05a0f00d",
+      "v": "a260afd6",
+      "bytes": 85042,
+      "updated": "2026-09-21"
     },
     "/wiki/instrumental-behavior": {
       "key": "og/wiki/InsBeh4V.jpg",
-      "hash": "bc788256c0ac",
-      "v": "3391f276",
-      "bytes": 115225,
-      "updated": "2026-09-11"
+      "hash": "5cf635ecc67b",
+      "v": "ab3cebd0",
+      "bytes": 115226,
+      "updated": "2026-09-21"
     },
     "/wiki/instrumentation": {
       "key": "og/wiki/vthpJTg1.jpg",
-      "hash": "15a7358c473b",
-      "v": "c7349099",
-      "bytes": 105444,
-      "updated": "2026-09-11"
+      "hash": "52d53685097f",
+      "v": "e2e9d64b",
+      "bytes": 105437,
+      "updated": "2026-09-21"
     },
     "/wiki/integrated": {
       "key": "og/wiki/a2FkPabO.jpg",
-      "hash": "b6fb25ce1799",
-      "v": "18014dca",
-      "bytes": 97294,
-      "updated": "2026-09-11"
+      "hash": "7444db24c6b0",
+      "v": "449af49c",
+      "bytes": 97279,
+      "updated": "2026-09-21"
     },
     "/wiki/interaction-term": {
       "key": "og/wiki/B0rLSdHG.jpg",
-      "hash": "c653181e0766",
-      "v": "09d97ebe",
-      "bytes": 104542,
-      "updated": "2026-09-11"
+      "hash": "725d40adf292",
+      "v": "b7c4399c",
+      "bytes": 104532,
+      "updated": "2026-09-21"
     },
     "/wiki/ipc": {
       "key": "og/wiki/iJg3vN8L.jpg",
-      "hash": "35fe74ddf723",
+      "hash": "77a01dfce289",
       "v": "e8910ffb",
       "bytes": 112637,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/j1939": {
       "key": "og/wiki/Qs03T05L.jpg",
-      "hash": "4367a3279175",
+      "hash": "2e0e1ad9a385",
       "v": "db5fafa8",
       "bytes": 101371,
-      "updated": "2026-09-11"
+      "updated": "2026-09-21"
     },
     "/wiki/jailbreak": {
       "key": "og/wiki/EEUGaAWQ.jpg",
-      "hash": "75a9282fd199",
-      "v": "a9b0c345",
-      "bytes": 86473,
-      "updated": "2026-09-11"
+      "hash": "38dbf95c3b4b",
+      "v": "24050a4b",
+      "bytes": 86476,
+      "updated": "2026-09-21"
     },
     "/wiki/jetson": {
       "key": "og/wiki/HjOAbpcL.jpg",
-      "hash": "de705aef5ba3",
-      "v": "399c5034",
-      "bytes": 93104,
-      "updated": "2026-09-11"
+      "hash": "42136a686e31",
+      "v": "1dc25d3c",
+      "bytes": 93100,
+      "updated": "2026-09-21"
     },
     "/wiki/json-rpc": {
       "key": "og/wiki/DGPxwG79.jpg",
-      "hash": "06afdc683877",
-      "v": "7beaa56f",
-      "bytes": 86199,
-      "updated": "2026-09-11"
+      "hash": "95bbe6e0e908",
+      "v": "219c57a6",
+      "bytes": 86202,
+      "updated": "2026-09-21"
     },
     "/wiki/k-means": {
       "key": "og/wiki/9ELAQ3ap.jpg",
-      "hash": "2e271c929cd5",
-      "v": "f5e36d37",
-      "bytes": 107804,
-      "updated": "2026-09-11"
+      "hash": "b2685e0a11d5",
+      "v": "7a12cef1",
+      "bytes": 107792,
+      "updated": "2026-09-21"
     },
     "/wiki/kernel-space": {
       "key": "og/wiki/xYh5GUtH.jpg",
-      "hash": "b363a15e1c4d",
-      "v": "ebbfb132",
-      "bytes": 89891,
-      "updated": "2026-09-11"
+      "hash": "70b395e6f790",
+      "v": "d7eb2bc4",
+      "bytes": 89883,
+      "updated": "2026-09-21"
     },
     "/wiki/key-pair": {
       "key": "og/wiki/B5zrSBqy.jpg",
-      "hash": "f54a70d0c156",
-      "v": "ee485c52",
-      "bytes": 95437,
-      "updated": "2026-09-11"
+      "hash": "1c63f6b68a64",
+      "v": "4b8d2a53",
+      "bytes": 95431,
+      "updated": "2026-09-21"
     },
     "/wiki/keystore": {
       "key": "og/wiki/2HSHagKF.jpg",
-      "hash": "2204568ad0f4",
-      "v": "0fd098f3",
-      "bytes": 93402,
-      "updated": "2026-09-11"
+      "hash": "87a911326804",
+      "v": "9f4f0b20",
+      "bytes": 93387,
+      "updated": "2026-09-21"
     },
     "/wiki/knowledge-cutoff": {
       "key": "og/wiki/Kc9mNx4R.jpg",
-      "hash": "24a58fed71dc",
-      "v": "01d85a23",
-      "bytes": 95046,
-      "updated": "2026-09-11"
+      "hash": "3d378f5b7cf3",
+      "v": "1e037a2a",
+      "bytes": 95017,
+      "updated": "2026-09-21"
     },
     "/wiki/knowledge-distillation": {
       "key": "og/wiki/Kd3yK6jL.jpg",
-      "hash": "124ccbdc41e5",
-      "v": "b4073b14",
-      "bytes": 104747,
-      "updated": "2026-09-11"
+      "hash": "f26a79f41ea5",
+      "v": "c23e2519",
+      "bytes": 104737,
+      "updated": "2026-09-21"
     },
     "/wiki/knowledge-management": {
       "key": "og/wiki/c023531b.jpg",
